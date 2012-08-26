@@ -11,13 +11,13 @@
 ##
 
 ## base directories
-BOOST_DIR = /usr/local/boost_1_49_0
-MPI_DIR = /usr/local/openmpi-1.6
+BOOST_DIR = /usr/local/boost_1_45_0
+MPI_DIR = /usr/local
 CUDA_DIR = /usr/local/cuda
-HDF5_DIR = /usr/local/hdf5-1.8.9
-Z_DIR = /usr/local/zlib-1.2.7
-SZ_DIR = /usr/local/szip-2.1
-TIFF_LIB_DIR = /usr/local/lib
+HDF5_DIR = /home/asarje/local/hdf5-1.8.8-gnu/parallel
+Z_DIR = /root/zlib-1.2.7
+SZ_DIR = /root/szip-2.1
+TIFF_LIB_DIR = /usr/local
 
 ## compilers
 CXX = mpicxx	#g++
@@ -32,8 +32,8 @@ BOOST_INCL = -I $(BOOST_DIR)
 BOOST_LIBS = -lboost_system -lboost_filesystem
 
 ## parallel hdf5
-HDF5_INCL = -I $(HDF5_DIR)/include -I$(SZ_DIR)/include -I$(Z_DIR)/include
-HDF5_LIBS = -L $(SZ_DIR)/lib -L$(Z_DIR)/lib -L$(HDF5_DIR)/lib -lhdf5 -lz -lsz -lm
+HDF5_INCL = -I $(HDF5_DIR)/include -I$(SZ_DIR)/szlib/include -I$(Z_DIR)/include
+HDF5_LIBS = -L $(SZ_DIR)/szip/lib -L$(Z_DIR)/lib -L$(HDF5_DIR)/lib -lhdf5 -lz -lsz -lm
 HDF5_FLAGS = -Wl,-rpath -Wl,$(HDF5_DIR)/lib -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -D_POSIX_SOURCE -D_BSD_SOURCE
 
 ## mpi (openmpi)
@@ -85,7 +85,7 @@ OBJECTS = reduction.o ff_num_gpu.o utilities.o compute_params.o hig_input.o imag
 OBJ_BIN = $(patsubst %,$(OBJ_DIR)/%,$(OBJECTS))
 
 $(BIN_DIR)/$(BINARY): $(OBJ_BIN)
-	$(CXX) -o $@ $^ $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_LIBS)
+	$(H5CC) -o $@ $^ $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_LIBS)
 
 ## cuda compilation
 _DEPS_NV = %.cuh
