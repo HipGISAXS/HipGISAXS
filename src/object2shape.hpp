@@ -1,0 +1,76 @@
+/**
+ * $Id: object2shape.hpp 38 2012-08-09 23:01:20Z asarje $
+ */
+
+#ifndef _OBJECT2SHAPE_H_
+#define _OBJECT2SHAPE_H_
+
+#include <iostream>
+#include <string>
+#include <sstream>
+#include <fstream>
+#include <vector>
+#include <cmath>
+#include <mpi.h>
+
+extern "C" {
+void s2h_converter(float_t** shape_def, unsigned int num_triangles, char* hdf5_filename, MPI_Comm comm);
+}
+
+enum token_t {
+	COMMENT,
+	VERTEX,
+	TEXTURE,
+	SUB_MESH,
+	MATERIAL_LIBRARY,
+	MATERIAL_NAME,
+	LINE,
+	SMOOTH_SHADING,
+	NORMAL,
+	FACE,
+	UNKNOWN
+}; //enum
+
+typedef struct {
+	float_t x;
+	float_t y;
+	float_t z;
+} vertex_t;
+
+typedef struct {
+	int a;
+	int b;
+	int c;
+	int d;
+} poly_index_t;
+
+class o2s_converter {
+	public:
+		o2s_converter(char* filename, char* outfilename, MPI_Comm comm, bool hdf5 = true);
+		~o2s_converter() {
+			if(filename_ != NULL) delete filename_;
+			if(outfilename_ != NULL) delete outfilename_;
+			if(shape_def_ != NULL) delete[] shape_def_;
+		} // ~converter()
+
+	private:
+		void load_object(char* filename, std::vector<vertex_t> &vertices,
+				std::vector<poly_index_t> &Vn3, std::vector<poly_index_t> &Vn4,
+				std::vector<poly_index_t> &F3, std::vector<poly_index_t> &F4);
+		float_t* convert(char* outfilename, std::vector<poly_index_t> F3,
+				std::vector<vertex_t> vertices, bool hdf5);
+
+		void get_triangle_params(vertex_t v1, vertex_t v2, vertex_t v3,
+				float_t &s_area, vertex_t &normal, vertex_t &center);
+		token_t token_hash(std::string const &str);
+		void findall(std::string str, char c, std::vector<int> &pos_list);
+		void display_vertices(std::vector<vertex_t> &vertices);
+		void display_poly_index(std::vector<poly_index_t> &indices);
+
+		std::string *filename_;
+		std::string *outfilename_;
+		float_t* shape_def_;
+		MPI_Comm comm_;
+}; // class o2s_converter
+
+#endif // _OBJECT2SHAPE_H_

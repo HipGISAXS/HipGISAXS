@@ -1,0 +1,48 @@
+hipGisaxsInput = {
+	shape = {
+		key = "s1",	 		# a unique key to identify this shape in this file
+		name = "Shape_85.hd5"		# name of the file containing the discretized shape data
+		#name = "opv.hd5"	# name of the file containing the discretized shape data
+	},
+	layer = {
+		key = "substr",	 	# special key for case of the substrate layer infinite in lower half space
+		order = -1 ,	 	# special order code for the substrate layer
+		refindex = { delta = 4.88E-06, beta = 7.37E-08 }
+	},
+	layer = {
+		key = "l1",
+		order = 1,
+		thickness = 150,
+		refindex = { delta = 1.95e-6, beta = 2.15E-9 }
+	},
+	structure = {
+		key = "st1",
+		grain = {
+			shape:key = "s1",
+			refindex = { delta = 2.4E-06, beta = 3.37E-08 },
+			layer:key = "l1"
+		},
+		ensemble = { }
+	},
+	instrumentation = {
+		scattering = {
+			expt = "gisaxs",
+			alphai = { min = 0.12, max = 0.12, step = 0.01 },	# incidence angles
+			photon = { value = 10000, unit = "ev" }				# photon energy
+		},
+		detector = {
+			pixelsize = 0.172,	 				# pixel size of the detector
+			sdd = 4128.62,						# sample to detector distance
+			directbeam = [ 489.916 843.076 ]	# position of direct beam
+		}
+	},
+	computation = {
+		pathprefix = ".",						# path to input files directory
+		runname = "85",						# name for current run and folder name for outputs
+		method = "dwba",						# theorical approach (see list)
+		outputregion = { type = "pixels" , minpoint = [ 350 710 ], maxpoint = [ 550 900 ] },
+		#outputregion = { type = "qspace" , minpoint = [ 350 710 ], maxpoint = [ 550 900 ] },
+		resolution = [ 1 1 ],				# number of q points per pixel
+		nslices = 0								# max number of slices for slicing algorithm
+	}
+}

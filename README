@@ -1,0 +1,14 @@
+Prerequisites:
+-------------
+gnu c++ compiler - c++0x: >= 4.3, c++11: >= 4.7
+standard template library (generally comes with c++ compiler)
+boost library
+numeric extension to boost library
+openmpi library (> 1.4.4)
+nvidia cuda (> 4.0)
+parallel hdf5 library
+libtiff library
+
+prerequisites of hdf5:
+libz
+libsz
