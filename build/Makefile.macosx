@@ -11,13 +11,13 @@
 ##
 
 ## base directories
-BOOST_DIR = /usr/local/boost_1_49_0
-MPI_DIR = /usr/local/openmpi-1.6
+BOOST_DIR = /usr/local
+MPI_DIR = /usr/local
 CUDA_DIR = /usr/local/cuda
 HDF5_DIR = /usr/local/hdf5-1.8.9
-Z_DIR = /usr/local/zlib-1.2.7
-SZ_DIR = /usr/local/szip-2.1
-TIFF_LIB_DIR = /usr/local/lib
+Z_DIR = /usr/local
+SZ_DIR = /Users/asarje/temp/szip-2.1/szip
+TIFF_LIB_DIR = /usr/local
 
 ## compilers
 CXX = $(MPI_DIR)/bin/mpicxx	#g++
