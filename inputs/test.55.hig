@@ -37,7 +37,7 @@ hipGisaxsInput = {
 		}
 	},
 	computation = {
-		pathprefix = ".",						# path to output files directory
+		pathprefix = "../hipgisaxs.test/",		# path to output files directory
 		runname = "55",							# name for current run and folder name for outputs
 		method = "dwba",						# theorical approach (see list)
 		outputregion = { type = "pixels" , minpoint = [ 350 710 ], maxpoint = [ 550 900 ] },

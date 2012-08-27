@@ -1,7 +1,7 @@
 hipGisaxsInput = {
 	shape = {
 		key = "s1",	 		# a unique key to identify this shape in this file
-		name = "Shape_88.hd5"		# name of the file containing the discretized shape data
+		name = "data/Shape_88.hd5"		# name of the file containing the discretized shape data
 		#name = "opv.hd5"	# name of the file containing the discretized shape data
 	},
 	layer = {
@@ -37,7 +37,7 @@ hipGisaxsInput = {
 		}
 	},
 	computation = {
-		pathprefix = ".",						# path to input files directory
+		pathprefix = "../hipgisaxs.test",						# path to input files directory
 		runname = "88",						# name for current run and folder name for outputs
 		method = "dwba",						# theorical approach (see list)
 		outputregion = { type = "pixels" , minpoint = [ 350 710 ], maxpoint = [ 550 900 ] },

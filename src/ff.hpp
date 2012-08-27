@@ -5,7 +5,7 @@
   *
   *  File: ff.hpp
   *  Created: Jul 18, 2012
-  *  Modified: Wed 22 Aug 2012 06:22:00 PM PDT
+  *  Modified: Mon 27 Aug 2012 02:00:30 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -15,6 +15,7 @@
 
 #include <string>
 
+#include "typedefs.hpp"
 #include "ff_ana.hpp"
 #include "ff_num.hpp"
 
@@ -25,10 +26,11 @@ namespace hig {
 	class FormFactor {
 		private:
 			std::vector <complex_t> ff_;						/* the form factor data */
-			cucomplex_t* nff_;									/* the cuda version for numeric */
-			//NumericFormFactor <float_t, cucomplex_t> numeric_ff_; // same as MFormFactor
-			NumericFormFactor <float, cuFloatComplex> numeric_ff_; // same as MFormFactor
 			AnalyticFormFactor analytic_ff_;
+
+			cucomplex_t* nff_;									/* the cuda version for numeric */
+			NumericFormFactor <float_t, cucomplex_t> numeric_ff_; // same as MFormFactor
+			//NumericFormFactor <float, cuFloatComplex> numeric_ff_; // same as MFormFactor
 
 		public:
 			FormFactor(int a, int b, int c): numeric_ff_(a, b, c), nff_(NULL) { }
@@ -54,7 +56,7 @@ namespace hig {
 
 			// for testing only ... remove ...
 			cucomplex_t* nff() { return nff_; }
-			bool read_form_factor(const char* filename, unsigned int nqx, unsigned int nqy, unsigned int nqz);		// for testing
+			bool read_form_factor(const char* filename, unsigned int nqx, unsigned int nqy, unsigned int nqz);
 			void print_ff(unsigned int nqx, unsigned int nqy, unsigned int nqz);
 			void save_ff(unsigned int nqx, unsigned int nqy, unsigned int nqz, const char* filename);
 			void printff(unsigned int nqx, unsigned int nqy, unsigned int nqz) {
