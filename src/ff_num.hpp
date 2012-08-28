@@ -5,7 +5,7 @@
  *
  *  File: ff_num.hpp
  *  Created: Nov 05, 2011
- *  Modified: Thu 23 Aug 2012 02:02:59 PM PDT
+ *  Modified: Mon 27 Aug 2012 11:55:28 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -163,8 +163,8 @@ namespace hig {
 		int p_z = num_procs / p_y;
 		
 		int p_nqx = nqx;
-		int p_nqy = nqy / p_y + (((rank / p_z) < nqy % p_y) ? 1 : 0);
-		int p_nqz = nqz / p_z + (((rank % p_z) < nqz % p_z) ? 1 : 0);
+		int p_nqy = nqy / p_y + (((rank / p_z) < (int)nqy % p_y) ? 1 : 0);
+		int p_nqz = nqz / p_z + (((rank % p_z) < (int)nqz % p_z) ? 1 : 0);
 	
 		mem_end = MPI::Wtime();
 		mem_time += mem_end - mem_start;
@@ -228,13 +228,13 @@ namespace hig {
 			float_t* qy_h = new (std::nothrow) float_t[nqy]();
 			complex_t* qz_h = new (std::nothrow) complex_t[nqz]();
 			// create qy_h and qz_h using qgrid instance
-			for(int i = 0; i < nqx; ++ i) {
+			for(unsigned int i = 0; i < nqx; ++ i) {
 				qx_h[i] = QGrid::instance().qx(i);
 			} // for
-			for(int i = 0; i < nqy; ++ i) {
+			for(unsigned int i = 0; i < nqy; ++ i) {
 				qy_h[i] = QGrid::instance().qy(i);
 			} // for
-			for(int i = 0; i < nqz; ++ i) {
+			for(unsigned int i = 0; i < nqz; ++ i) {
 				qz_h[i].x = QGrid::instance().qz_extended(i).real();
 				qz_h[i].y = QGrid::instance().qz_extended(i).imag();
 			} // for
@@ -478,7 +478,7 @@ namespace hig {
 		float_t min_b = shape_def[5], max_b = shape_def[5];
 		float_t min_c = shape_def[6], max_c = shape_def[6];
 	
-		for(int i = 0; i + 6 < shape_def.size(); i += 7) {
+		for(unsigned int i = 0; i + 6 < shape_def.size(); i += 7) {
 			min_a = (min_a > shape_def[i + 4]) ? shape_def[i + 4] : min_a ;
 			max_a = (max_a < shape_def[i + 4]) ? shape_def[i + 4] : max_a ;
 			min_b = (min_b > shape_def[i + 5]) ? shape_def[i + 5] : min_b ;
@@ -526,8 +526,9 @@ namespace hig {
 		double* temp_shape_def = NULL;
 	
 		h5_shape_reader(filename, &temp_shape_def, &num_triangles/*, comm*/);
-		for(int i = 0; i < num_triangles * 7; ++ i)	shape_def.push_back((float_t)temp_shape_def[i]);
-	
+		for(unsigned int i = 0; i < num_triangles * 7; ++ i)
+			shape_def.push_back((float_t)temp_shape_def[i]);
+
 		return num_triangles;
 	} // NumericFormFactor::read_shapes_hdf5()
 	

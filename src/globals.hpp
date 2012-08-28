@@ -5,7 +5,7 @@
   *
   *  File: globals.hpp
   *  Created: Jun 05, 2012
-  *  Modified: Thu 02 Aug 2012 05:12:31 PM PDT
+  *  Modified: Mon 27 Aug 2012 10:38:54 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -55,10 +55,12 @@ namespace hig {
 
 		vector2_t& operator=(const vector2_t& a) {
 			vec_ = a.vec_;
+			return *this;
 		} // operator=
 
 		vector2_t& operator=(vector2_t& a) {
 			vec_ = a.vec_;
+			return *this;
 		} // operator=
 
 		float_t& operator[](int i) {
@@ -92,10 +94,12 @@ namespace hig {
 
 		vector3_t& operator=(const vector3_t& a) {
 			vec_ = a.vec_;
+			return *this;
 		} // operator=
 
 		vector3_t& operator=(vector3_t& a) {
 			vec_ = a.vec_;
+			return *this;
 		} // operator=
 
 		float_t& operator[](int i) {
@@ -156,6 +160,7 @@ namespace hig {
 			for(int i = 0; i < 3; ++ i)
 				for(int j = 0; j < 3; ++ j)
 					mat_[i][j] = a[i][j];
+			return *this;
 		} // operstor=()
 
 		matrix3x3_t operator+(int toadd) {

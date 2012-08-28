@@ -5,7 +5,7 @@
   *
   *  File: ff_ana.cpp
   *  Created: Jul 12, 2012
-  *  Modified: Thu 09 Aug 2012 03:59:51 PM PDT
+  *  Modified: Mon 27 Aug 2012 11:49:32 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -39,9 +39,9 @@ namespace hig {
 		mesh_qz_.clear();
 
 		// this is very inefficient! improve ...
-		for(int i = 0; i < nqz_; ++ i) {
-			for(int j = 0; j < nqy_; ++ j) {
-				for(int k = 0; k < nqx_; ++ k) {
+		for(unsigned int i = 0; i < nqz_; ++ i) {
+			for(unsigned int j = 0; j < nqy_; ++ j) {
+				for(unsigned int k = 0; k < nqx_; ++ k) {
 					mesh_qx_.push_back(rot1[0] * QGrid::instance().qx(k) +
 										rot1[1] * QGrid::instance().qy(j) +
 										rot1[2] * QGrid::instance().qz(i));
@@ -221,24 +221,24 @@ namespace hig {
 			return false;
 		} // if
 
-		std::vector<complex_t> mesh_qm = mat_mul(tan(tau), nqx, nqy, nqz,
+		std::vector<complex_t> mesh_qm = mat_mul(tan(tau), //nqx, nqy, nqz,
 												mat_add(nqx, nqy, nqz,
-												mat_mul(nqx, nqy, nqz, mesh_qx_, sin(eta)),
+												mat_mul(/*nqx, nqy, nqz,*/ mesh_qx_, sin(eta)),
 												nqx, nqy, nqz,
-												mat_mul(nqx_, nqy_, nqz_, mesh_qy_, cos(eta))));
+												mat_mul(/*nqx_, nqy_, nqz_,*/ mesh_qy_, cos(eta))));
 		// ff computation for a box
-		for(int i_z = 0; i_z < z.size(); ++ i_z) {
-			for(int i_y = 0; i_y < y.size(); ++ i_y) {
-				for(int i_x = 0; i_x < x.size(); ++ i_x) {
+		for(unsigned int i_z = 0; i_z < z.size(); ++ i_z) {
+			for(unsigned int i_y = 0; i_y < y.size(); ++ i_y) {
+				for(unsigned int i_x = 0; i_x < x.size(); ++ i_x) {
 					// scalar matrix multiplication
 					ff = mat_add(nqx_, nqy_, nqz_, ff, nqx_, nqy_, nqz_,
 							mat_mul(distr_x[i_x] * distr_y[i_y] * distr_z[i_z] * 4 * z[i_z] * x[i_x],
-							nqx, nqy, nqz,
+							//nqx, nqy, nqz,
 							mat_dot_prod(nqx, nqy, nqz,
 							mat_dot_prod(nqx, nqy, nqz,
-							mat_sinc(nqx, nqy, nqz, mat_mul(nqx, nqy, nqz, mesh_qx_, x[i_x])),
+							mat_sinc(nqx, nqy, nqz, mat_mul(/*nqx, nqy, nqz,*/ mesh_qx_, x[i_x])),
 							nqx, nqy, nqz, mat_sinc(nqx, nqy, nqz,
-							mat_mul(nqx, nqy, nqz, mesh_qz_, z[i_z]))),
+							mat_mul(/*nqx, nqy, nqz,*/ mesh_qz_, z[i_z]))),
 							nqx, nqy, nqz,
 							mat_fq_inv(nqx, nqy, nqz,
 							mat_add(nqx, nqy, nqz, mesh_qz_, nqx, nqy, nqz, mesh_qm),
@@ -301,25 +301,25 @@ namespace hig {
 			return false;
 		} // if
 
-		std::vector<complex_t> qpar = mat_sqrt(nqx_, nqy_, nqz_,
+		std::vector<complex_t> qpar = mat_sqrt(//nqx_, nqy_, nqz_,
 										mat_add(nqx_, nqy_, nqz_,
-										mat_sqr(nqx_, nqy_, nqz_, mesh_qx_),
+										mat_sqr(/*nqx_, nqy_, nqz_,*/ mesh_qx_),
 										nqx_, nqy_, nqz_,
-										mat_sqr(nqx_, nqy_, nqz_, mesh_qy_)));
-		std::vector<complex_t> qm = mat_mul(nqx_, nqy_, nqz_, tan(tau),
+										mat_sqr(/*nqx_, nqy_, nqz_,*/ mesh_qy_)));
+		std::vector<complex_t> qm = mat_mul(/*nqx_, nqy_, nqz_,*/ tan(tau),
 										mat_add(nqx_, nqy_, nqz_,
-										mat_mul(nqx_, nqy_, nqz_, mesh_qx_, sin(eta)),
+										mat_mul(/*nqx_, nqy_, nqz_,*/ mesh_qx_, sin(eta)),
 										nqx_, nqy_, nqz_,
-										mat_mul(nqx_, nqy_, nqz_, mesh_qy_, cos(eta))));
-		for(int i_r = 0; i_r < r.size(); ++ i_r) {
-			for(int i_h = 0; i_h < h.size(); ++ i_h) {
+										mat_mul(/*nqx_, nqy_, nqz_,*/ mesh_qy_, cos(eta))));
+		for(unsigned int i_r = 0; i_r < r.size(); ++ i_r) {
+			for(unsigned int i_h = 0; i_h < h.size(); ++ i_h) {
 				ff = mat_add(nqx_, nqy_, nqz_, ff, nqx_, nqy_, nqz_,
-						mat_mul(distr_r[i_r] * distr_h[i_h] * 2.0 * PI_ * pow(r[i_r], 2), nqx_, nqy_, nqz_,
+						mat_mul(distr_r[i_r] * distr_h[i_h] * 2.0 * PI_ * pow(r[i_r], 2), //nqx_, nqy_, nqz_,
 						mat_dot_prod(nqx_, nqy_, nqz_,
 						mat_dot_div(nqx_, nqy_, nqz_,
 						mat_besselj(1, nqx_, nqy_, nqz_,
-						mat_mul(nqx_, nqy_, nqz_, qpar, r[i_r])), nqx_, nqy_, nqz_,
-						mat_mul(nqx_, nqy_, nqz_, qpar, r[i_r])), nqx_, nqy_, nqz_,
+						mat_mul(/*nqx_, nqy_, nqz_,*/ qpar, r[i_r])), nqx_, nqy_, nqz_,
+						mat_mul(/*nqx_, nqy_, nqz_,*/ qpar, r[i_r])), nqx_, nqy_, nqz_,
 						mat_fq_inv(nqx_, nqy_, nqz_,
 						mat_add(nqx_, nqy_, nqz_, mesh_qz_, nqx_, nqy_, nqz_, qm), h[i_h]))));
 			} // for h
@@ -413,9 +413,9 @@ namespace hig {
 
 		complex_t unit(0, 1);
 
-		for(int z = 0; z < nqz_; ++ z) {
-			for(int y = 0; y < nqy_; ++ y) {
-				for(int x = 0; x < nqx_; ++ x) {
+		for(unsigned int z = 0; z < nqz_; ++ z) {
+			for(unsigned int y = 0; y < nqy_; ++ y) {
+				for(unsigned int x = 0; x < nqx_; ++ x) {
 					unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
 					complex_t temp_qpar = sqrt(mesh_qz_[index] * mesh_qz_[index] +
 												mesh_qy_[index] * mesh_qy_[index]);
@@ -470,9 +470,9 @@ namespace hig {
 		//							mat_sqr(nqx_, nqy_, nqz_, mesh_qy_)), nqx_, nqy_, nqz_,
 		//							mat_sqr(nqx_, nqy_, nqz_, mesh_qz_)));
 		std::vector <complex_t> q;
-		for(int z = 0; z < nqz_; ++ z) {
-			for(int y = 0; y < nqy_; ++ y) {
-				for(int x = 0; x < nqx_; ++ x) {
+		for(unsigned int z = 0; z < nqz_; ++ z) {
+			for(unsigned int y = 0; y < nqy_; ++ y) {
+				for(unsigned int x = 0; x < nqx_; ++ x) {
 					unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
 					complex_t temp_qx = mesh_qx_[index] * mesh_qx_[index];
 					complex_t temp_qy = mesh_qy_[index] * mesh_qy_[index];
@@ -482,7 +482,7 @@ namespace hig {
 			} // for
 		} // for
 
-		for(int i = 0; i < nqx_ * nqy_ * nqz_; ++ i) ff.push_back(complex_t(0, 0));
+		for(unsigned int i = 0; i < nqx_ * nqy_ * nqz_; ++ i) ff.push_back(complex_t(0, 0));
 
 		//std::vector <float_t> iter_r = r.begin();
 		//std::vector <float_t> iter_d = distr_r.begin();
@@ -507,9 +507,9 @@ namespace hig {
 		std::vector<float_t>::iterator iter_r = r.begin();
 		std::vector<float_t>::iterator iter_d = distr_r.begin();
 		for(; iter_r != r.end(); ++ iter_r, ++ iter_d) {
-			for(int z = 0; z < nqz_; ++ z) {
-				for(int y = 0; y < nqy_; ++ y) {
-					for(int x = 0; x < nqx_; ++ x) {
+			for(unsigned int z = 0; z < nqz_; ++ z) {
+				for(unsigned int y = 0; y < nqy_; ++ y) {
+					for(unsigned int x = 0; x < nqx_; ++ x) {
 						unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
 						ff[index] += (*iter_d) * 4 * PI_ * pow((*iter_r), 3) *
 										((sin(q[index] * (*iter_r)) -
@@ -572,9 +572,9 @@ namespace hig {
 
 		float_t sqrt3 = sqrt(3.0);
 		complex_t unit(0, 1.0);
-		for(int z = 0; z < nqz_; ++ z) {
-			for(int y = 0; y < nqy_; ++ y) {
-				for(int x = 0; x < nqx_; ++ x) {
+		for(unsigned int z = 0; z < nqz_; ++ z) {
+			for(unsigned int y = 0; y < nqy_; ++ y) {
+				for(unsigned int x = 0; x < nqx_; ++ x) {
 					unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
 					//float_t qm = tan(tau) * (mesh_qx_[index] * sin(eta) +
 					//				mesh_qy_[index] * cos(eta));
@@ -823,7 +823,7 @@ namespace hig {
 		if(param.stat() == stat_none || param.stat() == stat_null) {	// just one value
 			dim_vals.push_back(1.0);
 		} else if(param.stat() == stat_uniform) {
-			for(int i = 0; i < dim.size(); ++ i) {
+			for(unsigned int i = 0; i < dim.size(); ++ i) {
 				dim_vals.push_back(1.0);
 			} // for
 		} else if(param.stat() == stat_gaussian) {
@@ -831,7 +831,7 @@ namespace hig {
 			if(!boost::math::isfinite(mean)) {
 				mean = (dim[0] + dim[dim.size() - 1]) / 2;
 			} // if
-			for(int i = 0; i < dim.size(); ++ i) {
+			for(unsigned int i = 0; i < dim.size(); ++ i) {
 				dim_vals.push_back(exp(-1.0 * pow((dim[i] - mean), 2) / 2 * pow(param.deviation(), 2))
 									/ (sqrt(2 * PI_) * param.deviation()));
 			} // for

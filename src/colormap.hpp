@@ -5,7 +5,7 @@
   *
   *  File: colormap.hpp
   *  Created: Jul 02, 2012
-  *  Modified: Mon 20 Aug 2012 11:08:51 AM PDT
+  *  Modified: Mon 27 Aug 2012 05:20:49 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -36,7 +36,7 @@ namespace hig {
 			color_t operator[](unsigned int index) {
 				color_t colors;
 				colors[0] = colors[1] = colors[2] = 0;
-				if(index >= palette_size_ || index < 0) {
+				if(index >= palette_size_) {
 					std::cerr << "error: color map index is out of range: "
 							<< index << " / " << palette_size_ << std::endl;
 					return colors;
@@ -51,7 +51,7 @@ namespace hig {
 	
 			bool color_map(unsigned int index,
 							unsigned char& red, unsigned char& green, unsigned char& blue) {
-				if(index >= palette_size_ || index < 0) {
+				if(index >= palette_size_) {
 					std::cerr << "error: color map index is out of range: " << index << std::endl;
 					return false;
 				} // if

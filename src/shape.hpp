@@ -5,7 +5,7 @@
   *
   *  File: shape.hpp
   *  Created: Jun 05, 2012
-  *  Modified: Thu 02 Aug 2012 05:21:00 PM PDT
+  *  Modified: Mon 27 Aug 2012 11:37:23 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -35,7 +35,7 @@ namespace hig {
 			bool isvalid_;
 
 		public:
-			ShapeParam(): isvalid_(false), stat_(stat_none) { init(); };
+			ShapeParam(): stat_(stat_none), isvalid_(false) { init(); };
 			~ShapeParam() { }
 
 			void init();
@@ -44,7 +44,7 @@ namespace hig {
 			/* getters */
 			bool isvalid() const { return isvalid_; }
 			const std::string& type_name() const { return type_name_; }
-			const ShapeParamType type() const { return type_; }
+			ShapeParamType type() const { return type_; }
 			float_t max() const { return max_; }
 			float_t min() const { return min_; }
 			StatisticType stat() const { return stat_; }

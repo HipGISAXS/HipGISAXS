@@ -5,7 +5,7 @@
   *
   *  File: image.cpp
   *  Created: Jun 18, 2012
-  *  Modified: Thu 23 Aug 2012 01:59:34 PM PDT
+  *  Modified: Mon 27 Aug 2012 11:40:59 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -307,13 +307,13 @@ namespace hig {
 		// mapping from new to old
 		boost::gil::point2 <int> new_p;
 
-		for(new_p.y = 0; new_p.y < new_y; ++ new_p.y) {
+		for(new_p.y = 0; new_p.y < (int)new_y; ++ new_p.y) {
 			//float_t* curr_row = new_data + new_x * new_p.y;
-			for(new_p.x = 0; new_p.x < new_x; ++ new_p.x) {
+			for(new_p.x = 0; new_p.x < (int)new_x; ++ new_p.x) {
 				//sample_pixel(old_x, old_y, old_data, boost::gil::transform(mat, new_p), curr_row[new_p.x]);
 				boost::gil::point2 <float_t> trans_p = boost::gil::transform(mat, new_p);
 				boost::gil::point2 <int> center(boost::math::iround(trans_p.x), boost::math::iround(trans_p.y));
-				if(center.x >= 0 && center.y >= 0 && center.x < old_x && center.y < old_y) //{
+				if(center.x >= 0 && center.y >= 0 && center.x < (int)old_x && center.y < (int)old_y) //{
 					new_data[new_x * new_p.y + new_p.x] = old_data[old_x * center.y + center.x];
 				//} else {
 				//	new_data[new_x * new_p.y + new_p.x] = 0;
@@ -412,7 +412,7 @@ namespace hig {
 	/**
 	 * construct a 2D image slice from existing 3D image object
 	 */
-	bool Image::slice(Image* &img, int xval) {
+	bool Image::slice(Image* &img, unsigned int xval) {
 		if(xval >= nx_) {
 			std::cerr << "error: the requested slice does not exist" << std::endl;
 			return false;

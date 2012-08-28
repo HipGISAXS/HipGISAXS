@@ -5,7 +5,7 @@
   *
   *  File: utilities.hpp
   *  Created: Jun 25, 2012
-  *  Modified: Fri 03 Aug 2012 11:16:19 AM PDT
+  *  Modified: Mon 27 Aug 2012 10:45:18 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -116,10 +116,10 @@ namespace hig {
 	extern vector3_t floor(vector3_t a);
 
 
-	extern std::vector<complex_t>& mat_sqr(unsigned int, unsigned int, unsigned int,
+	extern std::vector<complex_t>& mat_sqr(//unsigned int, unsigned int, unsigned int,
 											std::vector<complex_t>&);
 
-	extern std::vector<complex_t>& mat_sqrt(unsigned int, unsigned int, unsigned int,
+	extern std::vector<complex_t>& mat_sqrt(//unsigned int, unsigned int, unsigned int,
 											std::vector<complex_t>&);
 
 	extern std::vector<complex_t>& mat_besselj(int, unsigned int, unsigned int, unsigned int,
@@ -133,19 +133,19 @@ namespace hig {
 	/** mat_mul for a scalar and matrix
 	 */
 	extern std::vector<complex_t>& mat_mul(float_t scalar,
-										unsigned int x_size, unsigned int y_size, unsigned int z_size,
+										//unsigned int x_size, unsigned int y_size, unsigned int z_size,
 										std::vector<complex_t>& matrix);
 
 	extern std::vector<complex_t>& mat_mul(complex_t scalar,
-										unsigned int x_size, unsigned int y_size, unsigned int z_size,
+										//unsigned int x_size, unsigned int y_size, unsigned int z_size,
 										std::vector<complex_t>& matrix);
 
 	/** mat_mul for a scalar and matrix
 	 */
-	extern std::vector<complex_t>& mat_mul(unsigned int x_size, unsigned int y_size, unsigned int z_size,
+	extern std::vector<complex_t>& mat_mul(//unsigned int x_size, unsigned int y_size, unsigned int z_size,
 										std::vector<complex_t>& matrix, float_t scalar);
 
-	extern std::vector<complex_t>& mat_mul(unsigned int x_size, unsigned int y_size, unsigned int z_size,
+	extern std::vector<complex_t>& mat_mul(//unsigned int x_size, unsigned int y_size, unsigned int z_size,
 										std::vector<complex_t>& matrix, complex_t scalar);
 
 	/** matrix-matrix element-by-element product

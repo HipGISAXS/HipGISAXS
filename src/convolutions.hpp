@@ -5,7 +5,7 @@
   *
   *  File: convolutions.hpp
   *  Created: Jul 03, 2012
-  *  Modified: Thu 23 Aug 2012 01:57:49 PM PDT
+  *  Modified: Mon 27 Aug 2012 06:36:47 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -242,13 +242,13 @@ namespace hig {
 						float_t sum = 0.0;
 						//for(int m = 0; m <= std::min(i, (int)a_ysize); ++ m) {
 						//	for(int n = 0; n <= std::min(j, (int)a_xsize); ++ n) {
-						for(int m = 0; m <= a_ysize; ++ m) {
-							for(int n = 0; n <= a_xsize; ++ n) {
-								int ax = n;
-								int ay = m;
-								int bx = j - n;
-								int by = i - m;
-								if(bx < b_xsize && by < b_ysize && bx >= 0 && by >= 0)
+						for(unsigned int m = 0; m <= a_ysize; ++ m) {
+							for(unsigned int n = 0; n <= a_xsize; ++ n) {
+								int ax = (int)n;
+								int ay = (int)m;
+								int bx = (int)j - (int)n;
+								int by = (int)i - (int)m;
+								if(bx < (int)b_xsize && by < (int)b_ysize && bx >= 0 && by >= 0)
 									sum += a[a_xsize * ay + ax] * b[b_xsize * by + bx];
 							} // for n
 						} // for m
@@ -262,8 +262,8 @@ namespace hig {
 						} // if
 						c[cy * c_xsize + cx] = sum;
 						++ cx;
-						if(cx >= c_xsize) { cx = 0; ++ cy; }
-						if(cy > c_ysize) std::cout << "error: overflowing convolutions" << std::endl;
+						if(cx >= (int)c_xsize) { cx = 0; ++ cy; }
+						if(cy > (int)c_ysize) std::cout << "error: overflowing convolutions" << std::endl;
 
 						++ count;
 						if(count % 1000 == 0) std::cout << "." << std::flush;
@@ -297,16 +297,16 @@ namespace hig {
 
 				c = new (std::nothrow) float_t[c_xsize * c_ysize];
 //				int cx = 0, cy = 0;
-				for(int i = 0; i < c_ysize; ++ i) {
-					for(int j = 0; j < c_xsize; ++ j) {
+				for(unsigned int i = 0; i < c_ysize; ++ i) {
+					for(unsigned int j = 0; j < c_xsize; ++ j) {
 						float_t sum = 0.0;
-						for(int m = 0; m < a_ysize; ++ m) {
-							for(int n = 0; n < a_xsize; ++ n) {
-								int ax = n;
-								int ay = m;
-								int bx = j - n;
-								int by = i - m;
-								if(bx >= 0 && by >= 0 && bx < b_xsize && by < b_ysize)
+						for(unsigned int m = 0; m < a_ysize; ++ m) {
+							for(unsigned int n = 0; n < a_xsize; ++ n) {
+								int ax = (int)n;
+								int ay = (int)m;
+								int bx = (int)j - (int)n;
+								int by = (int)i - (int)m;
+								if(bx >= 0 && by >= 0 && bx < (int)b_xsize && by < (int)b_ysize)
 									sum += a[a_xsize * ay + ax] * b[b_xsize * by + bx];
 							} // for n
 						} // for m

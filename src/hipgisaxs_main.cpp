@@ -5,7 +5,7 @@
   *
   *  File: hipgisaxs_main.cpp
   *  Created: Jun 14, 2012
-  *  Modified: Thu 23 Aug 2012 01:58:32 PM PDT
+  *  Modified: Tue 28 Aug 2012 12:05:45 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -346,7 +346,7 @@ namespace hig {
 
 			vector3_t grain_repeats = (*s).second.grain_repetition();
 
-			int num_domains = 0, num_coords = 0;
+			int num_domains = 0; //, num_coords = 0;
 			int num_nn = 0;
 			float_t *dd = NULL, *nn = NULL;		// come back to this ...
 												// these structures can be improved ...
@@ -373,7 +373,7 @@ namespace hig {
 			ShapeName shape_name = HiGInput::instance().shape_name((*s).second);
 			float_t shape_tau = HiGInput::instance().shape_tau((*s).second);
 			float_t shape_eta = HiGInput::instance().shape_eta((*s).second);
-			vector3_t shape_originvec = HiGInput::instance().shape_originvec((*s).second);
+			//vector3_t shape_originvec = HiGInput::instance().shape_originvec((*s).second);
 			std::string shape_file = HiGInput::instance().shape_filename((*s).second);
 			shape_param_list_t shape_params = HiGInput::instance().shape_params((*s).second);
 
@@ -481,9 +481,9 @@ namespace hig {
 
 						// base_id = dn2 * (amm .* sf() .* ff() + amp .* sf() .* ff() +
 						//				apm .* sf() .* ff() + app .* sf() .* ff());
-						for(int z = 0; z < nqz_; ++ z) {
-							for(int y = 0; y < nqy_; ++ y) {
-								for(int x = 0; x < nqx_; ++ x) {
+						for(unsigned int z = 0; z < nqz_; ++ z) {
+							for(unsigned int y = 0; y < nqy_; ++ y) {
+								for(unsigned int x = 0; x < nqx_; ++ x) {
 									unsigned int curr_index = nqx_ * nqy_ * z + nqx_ * y + x;
 									unsigned int curr_index_0 = curr_index;
 									unsigned int curr_index_1 = nqx_ * nqy_ * nqz_ + curr_index;
@@ -507,9 +507,9 @@ namespace hig {
 										(*s).second.grain_refindex().beta()));
 
 						// what happens in the case when sf and ff have nqz_extended = 4 * nqz  ... ?
-						for(int z = 0; z < nqz_; ++ z) {
-							for(int y = 0; y < nqy_; ++ y) {
-								for(int x = 0; x < nqx_; ++ x) {
+						for(unsigned int z = 0; z < nqz_; ++ z) {
+							for(unsigned int y = 0; y < nqy_; ++ y) {
+								for(unsigned int x = 0; x < nqx_; ++ x) {
 									unsigned int curr_index = nqx_ * nqy_ * z + nqx_ * y + x;
 									base_id[curr_index] = dn2 * sf_[curr_index] * ff_[curr_index];
 								} // for x
@@ -520,9 +520,9 @@ namespace hig {
 						complex_t dn2(-2.0 * (*s).second.grain_refindex().delta(),
 										-2.0 * (*s).second.grain_refindex().beta());
 
-						for(int z = 0; z < nqz_; ++ z) {
-							for(int y = 0; y < nqy_; ++ y) {
-								for(int x = 0; x < nqx_; ++ x) {
+						for(unsigned int z = 0; z < nqz_; ++ z) {
+							for(unsigned int y = 0; y < nqy_; ++ y) {
+								for(unsigned int x = 0; x < nqx_; ++ x) {
 									unsigned int curr_index = nqx_ * nqy_ * z + nqx_ * y + x;
 									unsigned int curr_index_0 = curr_index;
 									unsigned int curr_index_1 = nqx_ * nqy_ * nqz_ + curr_index;
@@ -569,9 +569,9 @@ namespace hig {
 			// nqz_extended ... ?? ...
 			if(corr_doms == 1) {		// note: currently this is hardcoded as 0
 				unsigned int soffset = s_num * nqx_ * nqy_ * nqz_;
-				for(int z = 0; z < nqz_; ++ z) {
-					for(int y = 0; y < nqy_; ++ y) {
-						for(int x = 0; x < nqx_; ++ x) {
+				for(unsigned int z = 0; z < nqz_; ++ z) {
+					for(unsigned int y = 0; y < nqy_; ++ y) {
+						for(unsigned int x = 0; x < nqx_; ++ x) {
 							unsigned int curr_index = nqx_ * nqy_ * z + nqx_ * y + x;
 							complex_t sum(0.0, 0.0);
 							for(int d = 0; d < num_domains; ++ d) {
@@ -896,7 +896,7 @@ namespace hig {
 			std::cerr << "error: failed to allocate memory for a1mf, a1pf" << std::endl;
 			return false;
 		} // if
-		for(int i = 0; i < nqx_ * nqy_ * nqz_; ++ i) {
+		for(unsigned int i = 0; i < nqx_ * nqy_ * nqz_; ++ i) {
 			a1mf[i] = a1pf[i] = complex_t(0.0, 0.0);
 		} // for
 
@@ -915,7 +915,7 @@ namespace hig {
 		std::cout << std::endl;
 */
 		//for(int z = nqz_ - 1; z >= 0; z --) {
-		for(int z = 0; z < nqz_; ++ z) {
+		for(unsigned int z = 0; z < nqz_; ++ z) {
 			complex_t a1m_nkfz1, a1p_nkfz1;
 			float_t kfz0 = QGrid::instance().qz(z) + kiz0;
 
@@ -923,8 +923,8 @@ namespace hig {
 				a1m_nkfz1 = complex_t(0.0, 0.0);
 				a1p_nkfz1 = complex_t(0.0, 0.0);
 
-				for(int y = 0; y < nqy_; y ++) {
-					for(int x = 0; x < nqx_; x ++) {
+				for(unsigned int y = 0; y < nqy_; y ++) {
+					for(unsigned int x = 0; x < nqx_; x ++) {
 						fc_[4 * nqx_ * nqy_ * nqz_ + z * nqx_ * nqy_ + y * nqx_ + x] = complex_t(0.0, 0.0);
 					} // for x
 				} // for y
@@ -947,15 +947,15 @@ namespace hig {
 							((float_t) 1.0 + r01_nkfz1 * r12_nkfz1 * temp);
 				a1p_nkfz1 = a1m_nkfz1 * r12_nkfz1 * temp;
 
-				for(int y = 0; y < nqy_; y ++) {
-					for(int x = 0; x < nqx_; x ++) {
+				for(unsigned int y = 0; y < nqy_; y ++) {
+					for(unsigned int x = 0; x < nqx_; x ++) {
 						fc_[4 * nqx_ * nqy_ * nqz_ + z * nqx_ * nqy_ + y * nqx_ + x] = complex_t(1.0, 0.0);
 					} // for x
 				} // for y
 			} // if-else
 
-			for(int y = 0; y < nqy_; y ++) {							// these can be aliminated ...
-				for(int x = 0; x < nqx_; x ++) {
+			for(unsigned int y = 0; y < nqy_; y ++) {							// these can be aliminated ...
+				for(unsigned int x = 0; x < nqx_; x ++) {
 					a1mf[z * nqx_ * nqy_ + y * nqx_ + x] = a1m_nkfz1;
 					a1pf[z * nqx_ * nqy_ + y * nqx_ + x] = a1p_nkfz1;
 				} // for x
@@ -969,9 +969,9 @@ namespace hig {
 		std::cout << std::endl;
 */
 		// the element-element products
-		for(int z = 0; z < nqz_; z ++) {
-			for(int y = 0; y < nqy_; y ++) {
-				for(int x = 0; x < nqx_; x ++) {
+		for(unsigned int z = 0; z < nqz_; z ++) {
+			for(unsigned int y = 0; y < nqy_; y ++) {
+				for(unsigned int x = 0; x < nqx_; x ++) {
 					fc_[0 * nqx_ * nqy_ * nqz_ + z * nqx_ * nqy_ + y * nqx_ + x] =
 						a1mi[z * nqx_ * nqy_ + y * nqx_ + x] * a1mf[z * nqx_ * nqy_ + y * nqx_ + x];
 					fc_[1 * nqx_ * nqy_ * nqz_ + z * nqx_ * nqy_ + y * nqx_ + x] =
@@ -1015,7 +1015,8 @@ namespace hig {
 
 		float_t k1z = -1.0 * k0_ * sin(alpha_i);
 		complex_t tk2, rk2;
-		for(unsigned int z = nqz_ - 1; z >= 0; -- z) {
+		//for(unsigned int z = nqz_ - 1; z >= 0; -- z) {
+		for(unsigned int z = 0; z < nqz_; ++ z) {
 			complex_t k2z = QGrid::instance().qz(z) + k1z;
 			if(k2z < 0) {
 				tk2 = complex_t(0.0, 0.0);
@@ -1074,7 +1075,7 @@ namespace hig {
 
 				d = new (std::nothrow) float_t[rand_dim_x * rand_dim_y * 4];
 
-				int base_index = 0;
+				//int base_index = 0;
 				float_t mul_val1 = vol_[0] / 2;
 				float_t mul_val2 = vol_[1] / 2;
 				float_t mul_val3 = vol_[2];
@@ -1259,15 +1260,15 @@ namespace hig {
 		std::ofstream qout(filename);
 
 		qout << nqx_ << " " << nqy_ << " " << nqz_extended_ << std::endl;
-		for(int i = 0; i < nqx_; ++ i) {
+		for(unsigned int i = 0; i < nqx_; ++ i) {
 			qout << QGrid::instance().qx(i) << " ";
 		} // for
 		qout << std::endl;
-		for(int i = 0; i < nqy_; ++ i) {
+		for(unsigned int i = 0; i < nqy_; ++ i) {
 			qout << QGrid::instance().qy(i) << " ";
 		} // for
 		qout << std::endl;
-		for(int i = 0; i < nqz_extended_; ++ i) {
+		for(unsigned int i = 0; i < nqz_extended_; ++ i) {
 			qout << QGrid::instance().qz_extended(i).real() << " "
 					<< QGrid::instance().qz_extended(i).imag() << " ";
 		} // for

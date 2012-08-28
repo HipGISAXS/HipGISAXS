@@ -5,7 +5,7 @@
   *
   *  File: ff.cpp
   *  Created: Jul 17, 2012
-  *  Modified: Wed 22 Aug 2012 05:32:27 PM PDT
+  *  Modified: Mon 27 Aug 2012 11:51:48 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -45,9 +45,9 @@ namespace hig {
 									unsigned int nqx, unsigned int nqy, unsigned int nqz) {
 		std::ifstream f(filename);
 		nff_ = new (std::nothrow) cucomplex_t[nqx * nqy * nqz];
-		for(int z = 0; z < nqz; ++ z) {
-			for(int y = 0; y < nqy; ++ y) {
-				for(int x = 0; x < nqx; ++ x) {
+		for(unsigned int z = 0; z < nqz; ++ z) {
+			for(unsigned int y = 0; y < nqy; ++ y) {
+				for(unsigned int x = 0; x < nqx; ++ x) {
 					unsigned int index = nqx * nqy * z + nqx * y + x;
 					f >> nff_[index].x;
 					f >> nff_[index].y;
@@ -61,9 +61,9 @@ namespace hig {
 
 
 	void FormFactor::print_ff(unsigned int nqx, unsigned int nqy, unsigned int nqz) {
-		for(int z = 0; z < nqz; ++ z) {
-			for(int y = 0; y < nqy; ++ y) {
-				for(int x = 0; x < nqx; ++ x) {
+		for(unsigned int z = 0; z < nqz; ++ z) {
+			for(unsigned int y = 0; y < nqy; ++ y) {
+				for(unsigned int x = 0; x < nqx; ++ x) {
 					unsigned int index = nqx * nqy * z + nqx * y + x;
 					std::cout << nff_[index].x << "," << nff_[index].y << "\t";
 				} // for
@@ -75,9 +75,9 @@ namespace hig {
 
 	void FormFactor::save_ff(unsigned int nqx, unsigned int nqy, unsigned int nqz, const char* filename) {
 		std::ofstream f(filename);
-		for(int z = 0; z < nqz; ++ z) {
-			for(int y = 0; y < nqy; ++ y) {
-				for(int x = 0; x < nqx; ++ x) {
+		for(unsigned int z = 0; z < nqz; ++ z) {
+			for(unsigned int y = 0; y < nqy; ++ y) {
+				for(unsigned int x = 0; x < nqx; ++ x) {
 					unsigned int index = nqx * nqy * z + nqx * y + x;
 					f << nff_[index].x << "\t" << nff_[index].y << std::endl;
 				} // for

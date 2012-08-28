@@ -5,7 +5,7 @@
   *
   *  File: hig_input.cpp
   *  Created: Jun 11, 2012
-  *  Modified: Thu 23 Aug 2012 01:14:06 PM PDT
+  *  Modified: Mon 27 Aug 2012 11:38:32 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -1363,7 +1363,7 @@ namespace hig {
 		min_dim[0] = min_dim[1] = min_dim[2] = 0.0;		// starting points
 		max_dim[0] = max_dim[1] = max_dim[2] = 0.0;		// improve ...
 
-		for(int i = 0; i + 6 < shape_def_.size(); i += 7) {
+		for(unsigned int i = 0; i + 6 < shape_def_.size(); i += 7) {
 			min_dim[0] = (min_dim[0] > shape_def_[i + 4]) ? shape_def_[i + 4] : min_dim[0] ;
 			max_dim[0] = (max_dim[0] < shape_def_[i + 4]) ? shape_def_[i + 4] : max_dim[0] ;
 			min_dim[1] = (min_dim[1] > shape_def_[i + 5]) ? shape_def_[i + 5] : min_dim[1] ;
@@ -1418,7 +1418,7 @@ namespace hig {
 
 		// ASSUMING THERE ARE 7 ENTRIES FOR EACH TRIANGLE ... IMPROVE/GENERALIZE ...
 		HiGFileReader::instance().hdf5_shape_reader(filename, temp_shape_def, num_triangles);
-		for(int i = 0; i < 7 * num_triangles; ++ i) shape_def_.push_back((float_t)temp_shape_def[i]);
+		for(unsigned int i = 0; i < 7 * num_triangles; ++ i) shape_def_.push_back((float_t)temp_shape_def[i]);
 
 		return num_triangles;
 	} // HiGInput::read_shape_file_shape()
@@ -1489,8 +1489,8 @@ namespace hig {
 	} // HiGInput::substrate_refindex()
 
 
-	Layer& HiGInput::single_layer() {		// if there is exactly 1 layer
-														// excluding substrate
+	Layer& HiGInput::single_layer() {	// if there is exactly 1 layer
+										// excluding substrate
 		layer_iterator_t i = layers_.begin();
 		if(has_substrate_layer() && layers_.size() == 2) {
 			if((*i).first == -1) { ++ i; return (*i).second; }

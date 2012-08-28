@@ -5,7 +5,7 @@
   *
   *  File: distributions.hpp
   *  Created: Jul 02, 2012
-  *  Modified: Wed 22 Aug 2012 03:52:26 PM PDT
+  *  Modified: Mon 27 Aug 2012 06:30:34 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -44,10 +44,10 @@ namespace hig {
 										float_t* &out_matrix) {
 
 				int x_min = x_mean - std::floor((float_t)x_size / 2.0);
-				if(x_size & 0x01 == 0) x_min = x_min - 1;
+				if((x_size & 0x01) == 0) x_min = x_min - 1;
 				int x_max = x_mean + std::floor((float_t)x_size / 2.0);
 				int y_min = y_mean - std::floor((float_t)y_size / 2.0);
-				if(y_size & 0x01 == 0) y_min = y_min - 1;
+				if((y_size & 0x01) == 0) y_min = y_min - 1;
 				int y_max = y_mean + std::floor((float_t)y_size / 2.0);
 
 				out_matrix = new (std::nothrow) float_t[x_size * y_size];
@@ -90,7 +90,7 @@ namespace hig {
 
 
 			std::vector<float_t>& uniform_dist_1d(unsigned int size, std::vector<float_t> &out_arr) {
-				for(int i = 0; i < size; ++ i) out_arr.push_back(1.0);
+				for(unsigned int i = 0; i < size; ++ i) out_arr.push_back(1.0);
 				return out_arr;
 			} // uniform_dist()
 

@@ -5,7 +5,7 @@
   *
   *  File: utilities.cpp
   *  Created: Jun 25, 2012
-  *  Modified: Tue 21 Aug 2012 06:55:25 PM PDT
+  *  Modified: Mon 27 Aug 2012 10:44:20 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -42,7 +42,7 @@ namespace hig {
 	 * apply log10 to all elements of the 2D matrix
 	 */
 	bool mat_log10_2d(unsigned int x_size, unsigned int y_size, float_t* &data) {
-		for(int i = 0; i < x_size * y_size; ++ i) {
+		for(unsigned int i = 0; i < x_size * y_size; ++ i) {
 			if(data[i] <= 0) {
 				if(data[i] == 0) {
 					std::cerr << "warning: matrix has a zero value. cannot calculate logarithm. keeping zero."
@@ -72,8 +72,8 @@ namespace hig {
 
 		transp = new (std::nothrow) float_t[x_size * y_size];
 
-		for(int y = 0; y < y_size; ++ y) {
-			for(int x = 0; x < x_size; ++ x) {
+		for(unsigned int y = 0; y < y_size; ++ y) {
+			for(unsigned int x = 0; x < x_size; ++ x) {
 				transp[y_size * x + y] = matrix[x_size * y + x];
 			} // for x
 		} // for y
@@ -258,7 +258,7 @@ namespace hig {
 	 * scalar-matrix multiplication
 	 */
 	std::vector<complex_t>& mat_mul(float_t scalar,
-									unsigned int x_size, unsigned int y_size, unsigned int z_size,
+									//unsigned int x_size, unsigned int y_size, unsigned int z_size,
 									std::vector<complex_t>& matrix) {
 		for(std::vector<complex_t>::iterator i = matrix.begin(); i != matrix.end(); ++ i) {
 			(*i) = (*i) * scalar;
@@ -270,7 +270,7 @@ namespace hig {
 
 
 	std::vector<complex_t>& mat_mul(complex_t scalar,
-									unsigned int x_size, unsigned int y_size, unsigned int z_size,
+									//unsigned int x_size, unsigned int y_size, unsigned int z_size,
 									std::vector<complex_t>& matrix) {
 		for(std::vector<complex_t>::iterator i = matrix.begin(); i != matrix.end(); ++ i) {
 			(*i) = (*i) * scalar;
@@ -284,15 +284,15 @@ namespace hig {
 	} // mat_mul()
 
 
-	std::vector<complex_t>& mat_mul(unsigned int x_size, unsigned int y_size, unsigned int z_size,
+	std::vector<complex_t>& mat_mul(//unsigned int x_size, unsigned int y_size, unsigned int z_size,
 									std::vector<complex_t>& matrix, float_t scalar) {
-		return mat_mul(scalar, x_size, y_size, z_size, matrix);
+		return mat_mul(scalar, /*x_size, y_size, z_size,*/ matrix);
 	} // mat_mul()
 
 
-	std::vector<complex_t>& mat_mul(unsigned int x_size, unsigned int y_size, unsigned int z_size,
+	std::vector<complex_t>& mat_mul(//unsigned int x_size, unsigned int y_size, unsigned int z_size,
 									std::vector<complex_t>& matrix, complex_t scalar) {
-		return mat_mul(scalar, x_size, y_size, z_size, matrix);
+		return mat_mul(scalar, /*x_size, y_size, z_size,*/ matrix);
 	} // mat_mul()
 
 
@@ -350,7 +350,7 @@ namespace hig {
 	} // mat_dot_div()
 
 
-	std::vector<complex_t>& mat_sqr(unsigned int nx, unsigned int ny, unsigned int nz,
+	std::vector<complex_t>& mat_sqr(//unsigned int nx, unsigned int ny, unsigned int nz,
 									std::vector<complex_t>& matrix) {
 		for(std::vector<complex_t>::iterator i = matrix.begin(); i != matrix.end(); ++ i) {
 			(*i) = (*i) * (*i);
@@ -365,7 +365,7 @@ namespace hig {
 	} // mat_sqr()
 
 
-	std::vector<complex_t>& mat_sqrt(unsigned int nx, unsigned int ny, unsigned int nz,
+	std::vector<complex_t>& mat_sqrt(//unsigned int nx, unsigned int ny, unsigned int nz,
 									std::vector<complex_t>& matrix) {
 		for(std::vector<complex_t>::iterator i = matrix.begin(); i != matrix.end(); ++ i) {
 			(*i) = sqrt(*i);

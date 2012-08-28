@@ -5,7 +5,7 @@
   *
   *  File: token_mapper.hpp
   *  Created: Jun 05, 2012
-  *  Modified: Wed 08 Aug 2012 11:08:59 PM PDT
+  *  Modified: Mon 27 Aug 2012 05:13:51 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -231,7 +231,7 @@ namespace hig {
 		TokenMapper& operator=(const TokenMapper&);
 
 		bool has_extension(const std::string& s, const std::string& e) const {
-			int p = s.rfind(e);
+			unsigned int p = s.rfind(e);
 			if(p != s.length() - e.length())	// s is not a suffix of
 				return false;
 			return true;

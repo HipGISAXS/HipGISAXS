@@ -5,7 +5,7 @@
   *
   *  File: sf.cpp
   *  Created: Jun 18, 2012
-  *  Modified: Tue 21 Aug 2012 06:29:25 PM PDT
+  *  Modified: Mon 27 Aug 2012 11:44:22 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -33,7 +33,6 @@ namespace hig {
 							Lattice* lattice, vector3_t repet,
 							vector3_t rotation_1, vector3_t rotation_2, vector3_t rotation_3,
 							MPI::Intracomm& world_comm) {
-
 		nx_ = QGrid::instance().nqx();
 		ny_ = QGrid::instance().nqy();
 		if(expt == "saxs")

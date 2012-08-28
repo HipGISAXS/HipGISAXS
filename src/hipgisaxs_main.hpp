@@ -5,7 +5,7 @@
   *
   *  File: hipgisaxs_main.hpp
   *  Created: Jun 11, 2012
-  *  Modified: Thu 23 Aug 2012 10:46:32 AM PDT
+  *  Modified: Mon 27 Aug 2012 11:58:24 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -107,13 +107,14 @@ namespace hig {
 
 		public:
 			HipGISAXS(): freq_(0.0), k0_(0.0),
-#ifdef KERNEL2
-						ff_(2, 4, 4),
-#else
-						ff_(4),
-#endif // KERNEL2
 						num_layers_(0), num_structures_(0),
-						nqx_(0), nqy_(0), nqz_(0), nqz_extended_(0) {
+						nqx_(0), nqy_(0), nqz_(0), nqz_extended_(0), 
+#ifdef KERNEL2
+						ff_(2, 4, 4)
+#else
+						ff_(4)
+#endif // KERNEL2
+						{
 				single_layer_refindex_.delta(0.0);
 				single_layer_refindex_.beta(0.0);
 				single_layer_thickness_ = 0.0;

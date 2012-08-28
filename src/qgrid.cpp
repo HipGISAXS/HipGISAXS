@@ -5,7 +5,7 @@
   *
   *  File: qgrid.cpp
   *  Created: Jun 17, 2012
-  *  Modified: Thu 23 Aug 2012 01:46:01 PM PDT
+  *  Modified: Mon 27 Aug 2012 11:43:15 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -57,7 +57,7 @@ namespace hig {
 		/* one-pixel range in k-space
 		 * in order to resolve a pixel, dq must be <= qpixel and lower to resolve subpixels */
 		vector2_t pixel_res = HiGInput::instance().param_resolution();
-		int num_q_pixel = pixel_res[0] * pixel_res[1];	// number of q-points per pixel
+		//int num_q_pixel = pixel_res[0] * pixel_res[1];	// number of q-points per pixel
 
 		vector3_t q0, q1, q_pixel;
 		pixel_to_kspace(vector2_t(0, 0), k0, alpha_i, pixel_size, sd_distance, beam, q0);
