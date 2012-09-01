@@ -5,13 +5,14 @@
   *
   *  File: utilities.hpp
   *  Created: Jun 25, 2012
-  *  Modified: Mon 27 Aug 2012 10:45:18 PM PDT
+  *  Modified: Tue 28 Aug 2012 05:39:03 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
 
 #ifndef _UTILITIES_HPP_
 #define _UTILITIES_HPP_
+
 
 #include "globals.hpp"
 #include "typedefs.hpp"
@@ -125,7 +126,7 @@ namespace hig {
 	extern std::vector<complex_t>& mat_besselj(int, unsigned int, unsigned int, unsigned int,
 											std::vector<complex_t>&);
 
-	extern float_t besselj(int, complex_t);
+	extern complex_t besselj(int, complex_t);
 
 	extern std::vector<complex_t>& mat_add(unsigned int, unsigned int, unsigned int, std::vector<complex_t>&,
 										unsigned int, unsigned int, unsigned int, std::vector<complex_t>&);

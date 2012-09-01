@@ -1,7 +1,7 @@
 hipGisaxsInput = {
 	shape = {
 		key = "s1",	 		# a unique key to identify this shape in this file
-		name = "opv.hd5"	# name of the file containing the discretized shape data
+		name = "data/opv.hd5"	# name of the file containing the discretized shape data
 	},
 	layer = {
 		key = "substr",	 	# special key for case of the substrate layer infinite in lower half space
@@ -27,7 +27,7 @@ hipGisaxsInput = {
 		scattering = {
 			expt = "gisaxs",
 			alphai = { min = 0.12, max = 0.12, step = 0.01 },	# incidence angles
-			photon = { value = 10000, unit = "ev" }			# photon energy
+			photon = { value = 10000, unit = "ev" }				# photon energy
 		},
 		detector = {
 			pixelsize = 0.172,	 				# pixel size of the detector
@@ -36,11 +36,12 @@ hipGisaxsInput = {
 		}
 	},
 	computation = {
-		pathprefix = ".",						# path to input files directory
-		runname = "opvmodel1",					# name for current run and folder name for outputs
-		method = "dwba",						# theorical approach (see list)
-		outputregion = { type = "pixels" , minpoint = [ 300 750 ], maxpoint = [ 600 1000 ] },
-		resolution = [ 0.125 0.125 ],					# number of q points per pixel
+		pathprefix = "../hipgisaxs.test",	# path to input files directory
+		runname = "opv",					# name for current run and folder name for outputs
+		method = "dwba",					# theorical approach (see list)
+		#outputregion = { type = "pixels" , minpoint = [ 300 750 ], maxpoint = [ 600 1000 ] },
+		outputregion = { type = "pixels" , minpoint = [ 400 750 ], maxpoint = [ 550 900 ] },
+		resolution = [ 0.125 0.125 ],		# number of q points per pixel
 		nslices = 0							# max number of slices for slicing algorithm
 	}
 }

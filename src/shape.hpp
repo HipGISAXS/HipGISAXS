@@ -5,7 +5,7 @@
   *
   *  File: shape.hpp
   *  Created: Jun 05, 2012
-  *  Modified: Mon 27 Aug 2012 11:37:23 PM PDT
+  *  Modified: Thu 30 Aug 2012 03:10:40 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -78,6 +78,7 @@ namespace hig {
 				p1_ = a.p1_;
 				p2_ = a.p2_;
 				nvalues_ = a.nvalues_;
+				isvalid_ = a.isvalid_;
 
 				return *this;
 			} // operator=()

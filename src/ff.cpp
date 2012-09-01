@@ -5,7 +5,7 @@
   *
   *  File: ff.cpp
   *  Created: Jul 17, 2012
-  *  Modified: Mon 27 Aug 2012 11:51:48 PM PDT
+  *  Modified: Thu 30 Aug 2012 03:35:17 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -26,10 +26,12 @@ namespace hig {
 										MPI::Intracomm& world_comm) {
 		if(shape == shape_custom) {
 			/* compute numerically */
+			is_analytic_ = false;
 			numeric_ff_.init();
 			numeric_ff_.compute(shape_filename.c_str(), nff_, world_comm);
 		} else {
 			/* compute analytically */
+			is_analytic_ = true;
 			analytic_ff_.init(rot1, rot2, rot3, ff_);
 			analytic_ff_.compute(shape, shp_tau, shp_eta, transvec,
 								ff_, params, single_thickness, rot1, rot2, rot3, world_comm);
@@ -79,7 +81,11 @@ namespace hig {
 			for(unsigned int y = 0; y < nqy; ++ y) {
 				for(unsigned int x = 0; x < nqx; ++ x) {
 					unsigned int index = nqx * nqy * z + nqx * y + x;
-					f << nff_[index].x << "\t" << nff_[index].y << std::endl;
+					if(is_analytic_) {
+						f << ff_[index].real() << "\t" << ff_[index].imag() << std::endl;
+					} else {
+						f << nff_[index].x << "\t" << nff_[index].y << std::endl;
+					}
 				} // for
 				f << std::endl;
 			} // for

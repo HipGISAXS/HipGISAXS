@@ -5,7 +5,7 @@
   *
   *  File: hipgisaxs_main.cpp
   *  Created: Jun 14, 2012
-  *  Modified: Tue 28 Aug 2012 12:05:45 AM PDT
+  *  Modified: Fri 31 Aug 2012 01:48:13 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -126,6 +126,16 @@ namespace hig {
 			if(mpi_rank == 0) std::cerr << "error: could not construct domain sizes" << std::endl;
 			return false;
 		} // if
+		std::cout << "++ Domain min point: " << min_vec[0] << ", " << min_vec[1]
+					<< ", " << min_vec[2] << std::endl;
+		std::cout << "++ Domain max point: " << max_vec[0] << ", " << max_vec[1]
+					<< ", " << max_vec[2] << std::endl;
+		std::cout << "++ Domain z max and min: " << z_max_0 << ", " << z_min_0 << std::endl;
+		std::cout << "++ Domain dimensions: " << max_vec[0] - min_vec[0] << " x "
+					<< max_vec[1] - min_vec[1] << " x "
+					<< max_vec[2] - min_vec[2] << " ("
+					<< z_max_0 - z_min_0 << ")" << std::endl;
+
 		// min_vec and max_vec are the domain
 		cell_[0] = fabs(max_vec[0] - min_vec[0]);
 		cell_[1] = fabs(max_vec[1] - min_vec[1]);
@@ -422,7 +432,7 @@ namespace hig {
 				//sf_.printsf();
 
 				// write q grid
-				//write_qgrid("current_qgrid");
+				write_qgrid("temp_qgrid");
 				//exit(0);
 
 				//read_form_factor("curr_ff.out");
@@ -747,7 +757,7 @@ namespace hig {
 			} else {
 				// the sample is described by 2 or more layers, slicing scheme will be applied
 				// NOTE: the case where a structure is implicitly in 2 different layers is
-				// not currently handled.
+				// not currently handled ...
 				std::cerr << "uh-oh: this case (num_layers > 1) has not yet been implemented yet"
 							<< std::endl;
 				std::cerr << "go get yourself a nice cup of yummmy hot chocolate instead!" << std::endl;
@@ -1129,9 +1139,11 @@ namespace hig {
 				} // for x
 			} else if(dim == 2) {
 				std::cerr << "error: dim == 2 case not implemented" << std::endl;
+				// ...
 				return false;
 			} else if(dim == 1) {
 				std::cerr << "error: dim == 1 case not implemented" << std::endl;
+				// ...
 				return false;
 			} else {
 				std::cerr << "error: invalid dim size " << dim << std::endl;
@@ -1190,9 +1202,11 @@ namespace hig {
 				delete[] dx;
 			} else if(dim == 2) {
 				std::cerr << "error: dim == 2 case not implemented" << std::endl;
+				// ...
 				return false;
 			} else if(dim == 1) {
 				std::cerr << "error: dim == 1 case not implemented" << std::endl;
+				// ...
 				return false;
 			} else {
 				std::cerr << "error: invalid dim size " << dim << std::endl;

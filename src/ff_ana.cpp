@@ -5,7 +5,7 @@
   *
   *  File: ff_ana.cpp
   *  Created: Jul 12, 2012
-  *  Modified: Mon 27 Aug 2012 11:49:32 PM PDT
+  *  Modified: Thu 30 Aug 2012 10:55:22 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -24,16 +24,10 @@ namespace hig {
 				std::vector<complex_t> &ff) {
 		nqx_ = QGrid::instance().nqx();
 		nqy_ = QGrid::instance().nqy();
-		nqz_ = QGrid::instance().nqz();
+		nqz_ = QGrid::instance().nqz_extended();	// check if this is indeed extended ...
 
-		//ff_ = new (std::nothrow) complex_t[nqx_ * nqy_ * nqz_];	// change to vector? ...
-		//ff = ff_;		// i hope this works
 		ff.clear();
 
-		// make these into vector ...
-		//mesh_qx_ = new (std::nothrow) float_t[nqx_ * nqy_ * nqz_];
-		//mesh_qy_ = new (std::nothrow) float_t[nqx_ * nqy_ * nqz_];
-		//mesh_qz_ = new (std::nothrow) float_t[nqx_ * nqy_ * nqz_];
 		mesh_qx_.clear();
 		mesh_qy_.clear();
 		mesh_qz_.clear();
@@ -51,15 +45,6 @@ namespace hig {
 					mesh_qz_.push_back(rot3[0] * QGrid::instance().qx(k) +
 										rot3[1] * QGrid::instance().qy(j) +
 										rot3[2] * QGrid::instance().qz(i));
-					/*mesh_qx_[nqx_ * nqz_ * i + nqx_ * j + k] = rot1[0] * QGrid::instance().qx(k) +
-																rot1[1] * QGrid::instance().qy(j) +
-																rot1[2] * QGrid::instance().qz(i);
-					mesh_qy_[nqx_ * nqz_ * i + nqx_ * j + k] = rot2[0] * QGrid::instance().qx(k) +
-																rot2[1] * QGrid::instance().qy(j) +
-																rot2[2] * QGrid::instance().qz(i);
-					mesh_qz_[nqx_ * nqz_ * i + nqx_ * j + k] = rot3[0] * QGrid::instance().qx(k) +
-																rot3[1] * QGrid::instance().qy(j) +
-																rot3[2] * QGrid::instance().qz(i); */
 				} // for k
 			} // for j
 		} // for i
@@ -221,33 +206,46 @@ namespace hig {
 			return false;
 		} // if
 
-		std::vector<complex_t> mesh_qm = mat_mul(tan(tau), //nqx, nqy, nqz,
+		std::vector<complex_t> mesh_qm = mat_mul(tan(tau),
 												mat_add(nqx, nqy, nqz,
-												mat_mul(/*nqx, nqy, nqz,*/ mesh_qx_, sin(eta)),
+												mat_mul(mesh_qx_, sin(eta)),
 												nqx, nqy, nqz,
-												mat_mul(/*nqx_, nqy_, nqz_,*/ mesh_qy_, cos(eta))));
+												mat_mul(mesh_qy_, cos(eta))));
+		// initialize ff
+		ff.reserve(nqz * nqy * nqx);
+		for(unsigned int i = 0; i < nqz * nqy * nqx; ++ i) ff.push_back(complex_t(0, 0));
 		// ff computation for a box
 		for(unsigned int i_z = 0; i_z < z.size(); ++ i_z) {
 			for(unsigned int i_y = 0; i_y < y.size(); ++ i_y) {
 				for(unsigned int i_x = 0; i_x < x.size(); ++ i_x) {
-					// scalar matrix multiplication
-					ff = mat_add(nqx_, nqy_, nqz_, ff, nqx_, nqy_, nqz_,
+					std::vector<complex_t> temp1 = mat_add(nqx, nqy, nqz, mesh_qz_, nqx, nqy, nqz, mesh_qm);
+					std::vector<complex_t> temp2 = mat_mul(mesh_qz_, z[i_z]);
+					std::vector<complex_t> temp3 = mat_mul(mesh_qx_, x[i_x]);	// all 0s
+					std::vector<complex_t> temp4 = mat_fq_inv(nqx, nqy, nqz, temp1, y[i_y]);
+					std::vector<complex_t> temp5 = mat_sinc(nqx, nqy, nqz, temp2);
+					std::vector<complex_t> temp6 = mat_sinc(nqx, nqy, nqz, temp3);	// nans
+					std::vector<complex_t> temp7 = mat_dot_prod(nqx, nqy, nqz, temp6, nqx, nqy, nqz, temp5);
+					std::vector<complex_t> temp8 = mat_dot_prod(nqx, nqy, nqz, temp7, nqx, nqy, nqz, temp4);
+					complex_t temp9 = distr_x[i_x] * distr_y[i_y] * distr_z[i_z] * 4 * z[i_z] * x[i_x];
+										// 0: all distr_. are 0
+					std::vector<complex_t> temp10 = mat_mul(temp9, temp8);
+					ff = mat_add(nqx, nqy, nqz, ff, nqx, nqy, nqz, temp10);
+					/*ff = mat_add(nqx, nqy, nqz, ff, nqx, nqy, nqz,
 							mat_mul(distr_x[i_x] * distr_y[i_y] * distr_z[i_z] * 4 * z[i_z] * x[i_x],
-							//nqx, nqy, nqz,
 							mat_dot_prod(nqx, nqy, nqz,
 							mat_dot_prod(nqx, nqy, nqz,
-							mat_sinc(nqx, nqy, nqz, mat_mul(/*nqx, nqy, nqz,*/ mesh_qx_, x[i_x])),
+							mat_sinc(nqx, nqy, nqz, mat_mul(mesh_qx_, x[i_x])),
 							nqx, nqy, nqz, mat_sinc(nqx, nqy, nqz,
-							mat_mul(/*nqx, nqy, nqz,*/ mesh_qz_, z[i_z]))),
+							mat_mul(mesh_qz_, z[i_z]))),
 							nqx, nqy, nqz,
 							mat_fq_inv(nqx, nqy, nqz,
 							mat_add(nqx, nqy, nqz, mesh_qz_, nqx, nqy, nqz, mesh_qm),
-							y[i_y]))));
+							y[i_y])))); */
 				} // for i_x
 			} // for i_y
 		} // for i_z
 
-		std::vector<complex_t>::iterator i_qx = mesh_qx_.begin();
+		/*std::vector<complex_t>::iterator i_qx = mesh_qx_.begin();
 		std::vector<complex_t>::iterator i_qy = mesh_qy_.begin();
 		std::vector<complex_t>::iterator i_qz = mesh_qz_.begin();
 		for(int i_z = 0; i_qz != mesh_qz_.end(); ++ i_qz, ++ i_z) {
@@ -257,6 +255,18 @@ namespace hig {
 										mesh_qy_[i_y] * transvec[1] +
 										mesh_qz_[i_z] * transvec[2]);
 					ff[nqx * nqy * i_z + nqx * i_y + i_x] *= temp;
+				} // for x
+			} // for y
+		} // for z
+*/
+		for(int i_z = 0; i_z < nqz; ++ i_z) {
+			for(int i_y = 0; i_y < nqy; ++ i_y) {
+				for(int i_x = 0; i_x < nqx; ++ i_x) {
+					unsigned int index = nqx * nqy * i_z + nqx * i_y + i_x;
+					complex_t temp = exp(mesh_qx_[index] * transvec[0] +
+										mesh_qy_[index] * transvec[1] +
+										mesh_qz_[index] * transvec[2]);
+					ff[index] *= temp;
 				} // for x
 			} // for y
 		} // for z
@@ -409,7 +419,7 @@ namespace hig {
 			return false;
 		} // if
 
-		// why not doing range ??? ...
+		// why not doing range of r and h ??? ...
 
 		complex_t unit(0, 1);
 
@@ -775,9 +785,9 @@ namespace hig {
 
 
 	std::vector<complex_t>& AnalyticFormFactor::mat_sinc(unsigned int x_size,
-													unsigned int y_size,
-													unsigned int z_size,
-													std::vector<complex_t>& matrix) {
+															unsigned int y_size,
+															unsigned int z_size,
+															std::vector<complex_t>& matrix) {
 		for(std::vector<complex_t>::iterator iter = matrix.begin(); iter != matrix.end(); ++ iter) {
 			complex_t temp = sin((*iter).real()) / (*iter).real();
 			if(fabs(temp) <= 1e-14) temp = 1.0;
@@ -809,15 +819,17 @@ namespace hig {
 			std::cerr << "error: empty parameter found (nvalues = 0)" << std::endl;
 			return false;
 		} // if
+		float_t pmax = param.max(), pmin = param.min();
+		if(pmax < pmin) pmax = pmin;
 		if(param.nvalues() > 1) {
-			float_t step = fabs(param.max() - param.min()) / (param.nvalues() - 1);
-			float_t curr = param.min();
+			float_t step = fabs(pmax - pmin) / (param.nvalues() - 1);
+			float_t curr = pmin;
 			do {
 				dim.push_back(curr);
 				curr += step;
-			} while(curr <= param.max());	// assumes min < max ...
+			} while(curr < param.max());	// assumes min < max ...
 		} else {
-			dim.push_back(param.min());
+			dim.push_back(pmin);
 		} // if-else
 
 		if(param.stat() == stat_none || param.stat() == stat_null) {	// just one value

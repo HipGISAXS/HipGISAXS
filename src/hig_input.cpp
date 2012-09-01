@@ -5,7 +5,7 @@
   *
   *  File: hig_input.cpp
   *  Created: Jun 11, 2012
-  *  Modified: Mon 27 Aug 2012 11:38:32 PM PDT
+  *  Modified: Fri 31 Aug 2012 08:41:42 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -128,6 +128,8 @@ namespace hig {
 						break;
 
 					case shape_param_token:
+						curr_shape_param_.set();
+						curr_shape_param_.print();
 						curr_shape_.insert_param(curr_shape_param_.type_name(), curr_shape_param_);
 						curr_shape_param_.clear();
 						break;
@@ -1135,6 +1137,7 @@ namespace hig {
 							std::cerr << "error: invalid parameter found in a shape" << std::endl;
 							return false;
 					} // switch
+					++ param;
 				} // while
 				return true;
 
@@ -1170,6 +1173,7 @@ namespace hig {
 							std::cerr << "error: invalid parameter found in a shape" << std::endl;
 							return false;
 					} // switch
+					++ param;
 				} // while
 				return true;
 
@@ -1207,6 +1211,7 @@ namespace hig {
 							std::cerr << "error: invalid parameter found in a shape" << std::endl;
 							return false;
 					} // switch
+					++ param;
 				} // while
 				return true;
 
@@ -1243,6 +1248,7 @@ namespace hig {
 							std::cerr << "error: invalid parameter found in a shape" << std::endl;
 							return false;
 					} // switch
+					++ param;
 				} // while
 				return true;
 
@@ -1279,6 +1285,7 @@ namespace hig {
 							std::cerr << "error: invalid parameter found in a shape" << std::endl;
 							return false;
 					} // switch
+					++ param;
 				} // while
 				return true;
 
@@ -1315,6 +1322,7 @@ namespace hig {
 							std::cerr << "error: invalid parameter found in a shape" << std::endl;
 							return false;
 					} // switch
+					++ param;
 				} // while
 				return true;
 
@@ -1333,6 +1341,7 @@ namespace hig {
 							std::cerr << "error: invalid parameter found in a shape" << std::endl;
 							return false;
 					} // switch
+					++ param;
 				} // while
 				return true;
 
@@ -1360,17 +1369,71 @@ namespace hig {
 
 
 	bool HiGInput::compute_shapedef_minmax(vector3_t& min_dim, vector3_t& max_dim) {
-		min_dim[0] = min_dim[1] = min_dim[2] = 0.0;		// starting points
-		max_dim[0] = max_dim[1] = max_dim[2] = 0.0;		// improve ...
+		float_t min_a = shape_def_[4], max_a = shape_def_[4];
+		float_t min_b = shape_def_[5], max_b = shape_def_[5];
+		float_t min_c = shape_def_[6], max_c = shape_def_[6];
 
-		for(unsigned int i = 0; i + 6 < shape_def_.size(); i += 7) {
-			min_dim[0] = (min_dim[0] > shape_def_[i + 4]) ? shape_def_[i + 4] : min_dim[0] ;
-			max_dim[0] = (max_dim[0] < shape_def_[i + 4]) ? shape_def_[i + 4] : max_dim[0] ;
-			min_dim[1] = (min_dim[1] > shape_def_[i + 5]) ? shape_def_[i + 5] : min_dim[1] ;
-			max_dim[1] = (max_dim[1] < shape_def_[i + 5]) ? shape_def_[i + 5] : max_dim[1] ;
-			min_dim[2] = (min_dim[2] > shape_def_[i + 6]) ? shape_def_[i + 6] : min_dim[2] ;
-			max_dim[2] = (max_dim[2] < shape_def_[i + 6]) ? shape_def_[i + 6] : max_dim[2] ;
+		for(int i = 0; i + 6 < shape_def_.size(); i += 7) {
+			min_a = (min_a > shape_def_[i + 4]) ? shape_def_[i + 4] : min_a ;
+			max_a = (max_a < shape_def_[i + 4]) ? shape_def_[i + 4] : max_a ;
+			min_b = (min_b > shape_def_[i + 5]) ? shape_def_[i + 5] : min_b ;
+			max_b = (max_b < shape_def_[i + 5]) ? shape_def_[i + 5] : max_b ;
+			min_c = (min_c > shape_def_[i + 6]) ? shape_def_[i + 6] : min_c ;
+			max_c = (max_c < shape_def_[i + 6]) ? shape_def_[i + 6] : max_c ;
 		} // for
+
+		float_t diff_a = max_a - min_a;
+        float_t diff_b = max_b - min_b;
+        float_t diff_c = max_c - min_c;
+
+        std::cout << "++ diff_a = " << diff_a << ", diff_b = " << diff_b
+                    << ", diff_c = " << diff_c << std::endl;
+
+		vector3_t axes;
+        // axes[i] = j
+        // i: x=0 y=1 z=2
+        // j: 0=a 1=b 2=c
+
+#ifndef AXIS_ROT		// no rotation of shape axes
+        axes[0] = 0; axes[1] = 1; axes[2] = 2;
+        min_dim[0] = min_a; min_dim[1] = min_b; min_dim[2] = min_c;
+        max_dim[0] = max_a; max_dim[1] = max_b; max_dim[2] = max_c;
+#else
+        // the smallest one is x, other two are y and z
+        if(diff_a < diff_b) {
+            if(diff_a < diff_c) {
+                // x is a
+                axes[0] = 0; axes[1] = 1; axes[2] = 2;
+                min_dim[0] = min_a; min_dim[1] = min_b; min_dim[2] = min_c;
+                max_dim[0] = max_a; max_dim[1] = max_b; max_dim[2] = max_c;
+            } else {
+                // x is c
+                axes[0] = 2; axes[1] = 0; axes[2] = 1;
+                min_dim[0] = min_c; min_dim[1] = min_a; min_dim[2] = min_b;
+                max_dim[0] = max_c; max_dim[1] = max_a; max_dim[2] = max_b;
+            } // if-else
+        } else {
+            if(diff_b < diff_c) {
+                // x is b
+                axes[0] = 1; axes[1] = 0; axes[2] = 2;
+                min_dim[0] = min_b; min_dim[1] = min_a; min_dim[2] = min_c;
+                max_dim[0] = max_b; max_dim[1] = max_a; max_dim[2] = max_c;
+            } else {
+                // x is c
+                axes[0] = 2; axes[1] = 0; axes[2] = 1;
+                min_dim[0] = min_c; min_dim[1] = min_a; min_dim[2] = min_b;
+                max_dim[0] = max_c; max_dim[1] = max_a; max_dim[2] = max_b;
+            } // if-else
+        } // if-else
+#endif
+        std::cout << "++ Final shape min point: " << min_dim[0] << ", "
+                    << min_dim[1] << ", " << min_dim[2] << std::endl;
+        std::cout << "++ Final shape max point: " << max_dim[0] << ", "
+                    << max_dim[1] << ", " << max_dim[2] << std::endl;
+        std::cout << "++ Final shape dimensions: "
+                    << fabs(max_dim[0] - min_dim[0]) << " x "
+                    << fabs(max_dim[1] - min_dim[1]) << " x "
+                    << fabs(max_dim[2] - min_dim[2]) << std::endl;
 
 		return true;
 	} // HiGInput::compute_shapedef_minmax()
@@ -1569,6 +1632,14 @@ namespace hig {
 			Shape curr_shape = shapes_[(*s).second.grain_shape_key()];
 			vector3_t shape_min(0.0, 0.0, 0.0), shape_max(0.0, 0.0, 0.0);
 			compute_shape_domain(curr_shape, shape_min, shape_max);
+
+			std::cout << "++ Shape min point: " << shape_min[0] << ", " << shape_min[1]
+						<< ", " << shape_min[2] << std::endl;
+			std::cout << "++ Shape max point: " << shape_max[0] << ", " << shape_max[1]
+						<< ", " << shape_max[2] << std::endl;
+			std::cout << "++ Shape dimensions: " << shape_max[0] - shape_min[0] << " x "
+						<< shape_max[1] - shape_min[1] << " x "
+						<< shape_max[2] - shape_min[2] << std::endl;
 
 			/* determine the structure's position in the sample configuration */
 			float_t zc_l = layer_origin_z((*s).second);
