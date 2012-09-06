@@ -207,6 +207,7 @@ namespace hig {
 		float kernel_time, reduce_time, total_kernel_time = 0.0, total_reduce_time = 0.0,
 				temp_mem_time = 0.0, total_mem_time = 0.0;
 		//cudaSetDevice(2);		////////////////////////////////////////////////////////////////////////////
+		//if(rank == 1) cudaSetDevice(2);
 		cudaEvent_t begin_event, end_event;
 		cudaEvent_t total_begin_event, total_end_event;
 		cudaEvent_t mem_begin_event, mem_end_event;

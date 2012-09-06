@@ -5,7 +5,7 @@
   *
   *  File: hipgisaxs_main.cpp
   *  Created: Jun 14, 2012
-  *  Modified: Thu 06 Sep 2012 03:24:44 PM EDT
+  *  Modified: Thu 06 Sep 2012 03:54:16 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -432,7 +432,7 @@ namespace hig {
 				//sf_.printsf();
 
 				// write q grid
-				write_qgrid("temp_qgrid");
+				//write_qgrid("temp_qgrid");
 				//exit(0);
 
 				//read_form_factor("curr_ff.out");
@@ -470,6 +470,8 @@ namespace hig {
 				for(int i = 0; i < nqx_ * nqy_ * nqz_; ++ i)
 					std::cout << ff_[i].x << "+" << ff_[i].y << "i ";
 				std::cout << std::endl;*/
+
+				if(mpi_rank == 0) {
 
 				complex_t* base_id = id + j * nqx_ * nqy_ * nqz_;
 
@@ -562,6 +564,9 @@ namespace hig {
 									<< std::endl;
 					return false;
 				} // if-else
+
+				} // if mpi_rank == 0
+
 			} // for num_domains
 
 			delete[] nn;

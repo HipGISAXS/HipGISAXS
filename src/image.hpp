@@ -5,7 +5,7 @@
   *
   *  File: image.hpp
   *  Created: Jun 18, 2012
-  *  Modified: Mon 27 Aug 2012 11:41:15 PM PDT
+  *  Modified: Thu 06 Sep 2012 10:32:33 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -56,8 +56,8 @@ namespace hig {
 			Image(unsigned int nx, unsigned int ny, unsigned int nz, std::string palette);
 			~Image();
 
-			bool construct_image(const float_t* data);
 			bool construct_image(const float_t* data, int slice);
+			bool construct_image(float_t* data);
 			bool save(std::string filename);			/* save the current image buffer */
 			bool save(char* filename);					/* if buffer has 3D data, it will
 														   save all slices */
