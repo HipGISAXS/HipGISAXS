@@ -984,54 +984,57 @@ namespace hig {
 	*/
 
 	/**
-	 * For single and double precision.
+	 * For single precision.
 	 */
 	__device__ cuFloatComplex compute_fq(float s, cuFloatComplex qt_d, cuFloatComplex qn_d) {
 		cuFloatComplex v1 = cuCmulf(qn_d, make_cuFloatComplex(cosf(qt_d.x), sinf(qt_d.x)));
 		float v2 = s * expf(qt_d.y);
-		return cuCmulf(v1, make_cuFloatComplex(v2, 0));
+		return cuCmulf(v1, make_cuFloatComplex(v2, 0.0f));
 	} // compute_fq()
 
+	/**
+	 * For double precision.
+	 */
 	__device__ cuDoubleComplex compute_fq(double s, cuDoubleComplex qt_d, cuDoubleComplex qn_d) {
 		cuDoubleComplex v1 = cuCmul(qn_d, make_cuDoubleComplex(cos(qt_d.x), sin(qt_d.x)));
 		double v2 = s * exp(qt_d.y);
-		return cuCmul(v1, make_cuDoubleComplex(v2, 0));
+		return cuCmul(v1, make_cuDoubleComplex(v2, 0.0));
 	} // compute_fq()
 
 	//template <typename float_t, typename complex_t>
 	__device__ void compute_z(cuFloatComplex temp_z, float nz, float z,
 				cuFloatComplex& qz2, cuFloatComplex& qzn, cuFloatComplex& qzt) {
 		qz2 = cuCmulf(temp_z, temp_z);
-		qzn = cuCmulf(temp_z, make_cuFloatComplex(nz, 0));
-		qzt = cuCmulf(temp_z, make_cuFloatComplex(z, 0));
+		qzn = cuCmulf(temp_z, make_cuFloatComplex(nz, 0.0f));
+		qzt = cuCmulf(temp_z, make_cuFloatComplex(z, 0.0f));
 	} // compute_z()
 
 	//template <typename float_t, typename complex_t>
 	__device__ void compute_z(cuDoubleComplex temp_z, double nz, double z,
 				cuDoubleComplex& qz2, cuDoubleComplex& qzn, cuDoubleComplex& qzt) {
 		qz2 = cuCmul(temp_z, temp_z);
-		qzn = cuCmul(temp_z, make_cuDoubleComplex(nz, 0));
-		qzt = cuCmul(temp_z, make_cuDoubleComplex(z, 0));
+		qzn = cuCmul(temp_z, make_cuDoubleComplex(nz, 0.0));
+		qzt = cuCmul(temp_z, make_cuDoubleComplex(z, 0.0));
 	} // compute_z()
 
 	//template <typename float_t, typename complex_t>
 	__device__ void compute_x(float temp_x, float qy2, cuFloatComplex qz2, float nx, float qyn,
 				cuFloatComplex qzn, float x, float qyt,	cuFloatComplex qzt,
 				cuFloatComplex& qn_d, cuFloatComplex& qt_d) {
-		cuFloatComplex q2 = cuCaddf(make_cuFloatComplex(temp_x * temp_x + qy2, 0), qz2);
-		qn_d = cuCdivf(cuCaddf(make_cuFloatComplex(temp_x * nx, 0),
-								cuCaddf(make_cuFloatComplex(qyn, 0), qzn)), q2);
-		qt_d = cuCaddf(make_cuFloatComplex(temp_x * x + qyt, 0), qzt);
+		cuFloatComplex q2 = cuCaddf(make_cuFloatComplex(temp_x * temp_x + qy2, 0.0f), qz2);
+		qn_d = cuCdivf(cuCaddf(make_cuFloatComplex(temp_x * nx, 0.0f),
+								cuCaddf(make_cuFloatComplex(qyn, 0.0f), qzn)), q2);
+		qt_d = cuCaddf(make_cuFloatComplex(temp_x * x + qyt, 0.0f), qzt);
 	} // compute_x()
 
 	//template <typename float_t, typename complex_t>
 	__device__ void compute_x(double temp_x, double qy2, cuDoubleComplex qz2, double nx, double qyn,
 				cuDoubleComplex qzn, double x, double qyt,	cuDoubleComplex qzt,
 				cuDoubleComplex& qn_d, cuDoubleComplex& qt_d) {
-		cuDoubleComplex q2 = cuCadd(make_cuDoubleComplex(temp_x * temp_x + qy2, 0), qz2);
-		qn_d = cuCdiv(cuCadd(make_cuDoubleComplex(temp_x * nx, 0),
-								cuCadd(make_cuDoubleComplex(qyn, 0), qzn)), q2);
-		qt_d = cuCadd(make_cuDoubleComplex(temp_x * x + qyt, 0), qzt);
+		cuDoubleComplex q2 = cuCadd(make_cuDoubleComplex(temp_x * temp_x + qy2, 0.0), qz2);
+		qn_d = cuCdiv(cuCadd(make_cuDoubleComplex(temp_x * nx, 0.0),
+								cuCadd(make_cuDoubleComplex(qyn, 0.0), qzn)), q2);
+		qt_d = cuCadd(make_cuDoubleComplex(temp_x * x + qyt, 0.0), qzt);
 	} // compute_x()
 
 } // namespace hig
