@@ -5,7 +5,7 @@
   *
   *  File: hipgisaxs_main.cpp
   *  Created: Jun 14, 2012
-  *  Modified: Fri 31 Aug 2012 01:48:13 PM PDT
+  *  Modified: Thu 06 Sep 2012 03:24:44 PM EDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -440,17 +440,19 @@ namespace hig {
 							shape_tau, shape_eta, r_tot1, r_tot2, r_tot3, world_comm);
 				//ff_.print_ff(nqx_, nqy_, nqz_extended_);
 				//ff_.printff(nqx_, nqy_, nqz_extended_);
-				std::stringstream alphai_b, phi_b, tilt_b;
-				std::string alphai_s, phi_s, tilt_s;
-				alphai_b << alpha_i; alphai_s = alphai_b.str();
-				phi_b << phi; phi_s = phi_b.str();
-				tilt_b << tilt; tilt_s = tilt_b.str();
-				std::string ff_output(HiGInput::instance().param_pathprefix() +
-								"/" + HiGInput::instance().runname() +
-								"/ff_ai=" + alphai_s + "_rot=" + phi_s +
-								"_tilt=" + tilt_s + ".out");
-				std::cout << "-- Saving form factor in " << ff_output << " ..." << std::endl;
-				ff_.save_ff(nqx_, nqy_, nqz_extended_, ff_output.c_str());
+				if(mpi_rank == 0) {
+					std::stringstream alphai_b, phi_b, tilt_b;
+					std::string alphai_s, phi_s, tilt_s;
+					alphai_b << alpha_i; alphai_s = alphai_b.str();
+					phi_b << phi; phi_s = phi_b.str();
+					tilt_b << tilt; tilt_s = tilt_b.str();
+					std::string ff_output(HiGInput::instance().param_pathprefix() +
+									"/" + HiGInput::instance().runname() +
+									"/ff_ai=" + alphai_s + "_rot=" + phi_s +
+									"_tilt=" + tilt_s + ".out");
+					std::cout << "-- Saving form factor in " << ff_output << " ..." << std::endl;
+					ff_.save_ff(nqx_, nqy_, nqz_extended_, ff_output.c_str());
+				} // if
 
 //				} else {
 //					if(mpi_rank == 0)
