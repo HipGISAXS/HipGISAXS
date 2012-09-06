@@ -1,5 +1,5 @@
 ##
-# $Id: Makefile 46 2012-08-23 02:01:21Z asarje $
+# $Id: Makefile 35 2012-08-09 18:29:50Z asarje $
 #
 # Project: HipGISAXS
 #
@@ -13,40 +13,62 @@
 ## base directories
 BOOST_DIR = /sw/xk6/boost/1.49.0/cle4.0_gnu4.6.2
 MPI_DIR = /opt/cray/mpt/5.5.0/gni/mpich2-gnu/47
-CUDA_DIR = #/usr/local/cuda
+CUDA_DIR =
 HDF5_DIR = /opt/cray/hdf5-parallel/1.8.8/gnu/47
 Z_DIR = /sw/xk6/zlib/1.2.6/sles11.1_gnu4.3.4
 SZ_DIR = /sw/xk6/szip/2.1/sles11.1_gnu4.5.3
 TIFF_DIR = /tmp/work/asarje/opt/tiff-4.0.2
+PARI_DIR = #/usr/local/pari-2.5.2
+
+## compilers
+CXX = CC
+H5CC = cc
+NVCC = nvcc
+
+## compiler flags
+CXX_FLAGS = -std=c++0x -v -Wall -Wextra
+## gnu c++ compilers >= 4.3 support -std=c++0x [requirement for hipgisaxs 4.3.x <= g++ <= 4.6.x]
+## gnu c++ compilers >= 4.7 also support -std=c++11, but they are not supported by cuda
 
 ## boost
 BOOST_INCL = -I $(BOOST_DIR)/include -I /tmp/work/asarje/opt/boost-gil-numeric
 BOOST_LIBS = -L $(BOOST_DIR)/lib -lboost_system -lboost_filesystem
 
 ## parallel hdf5
-HDF5_INCL = -I $(HDF5_DIR)/include -I$(SZ_DIR)/include -I$(Z_DIR)/include
-HDF5_LIBS = -L $(SZ_DIR)/lib -L$(Z_DIR)/lib -L$(HDF5_DIR)/lib -lhdf5 -lz -lsz -lm
-HDF5_FLAGS = -Wl,-rpath -Wl,$(HDF5_DIR)/lib -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -D_POSIX_SOURCE -D_BSD_SOURCE
+HDF5_INCL = -I$(HDF5_DIR)/include -I$(SZ_DIR)/include -I$(Z_DIR)/include
+HDF5_LIBS = -L$(SZ_DIR)/lib -L$(Z_DIR)/lib -L$(HDF5_DIR)/lib -lhdf5 -lz -lsz -lm
+HDF5_FLAGS = -Wl,-rpath -Wl,$(HDF5_DIR)/lib
+HDF5_FLAGS += -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -D_POSIX_SOURCE -D_BSD_SOURCE
 
 ## mpi (openmpi)
 MPI_INCL = -I $(MPI_DIR)/include
-MPI_LIBS = -L $(MPI_DIR)/lib -lmpi_cxx -lmpi
+MPI_LIBS = -L $(MPI_DIR)/lib -lmpichcxx -lmpich
 
 ## cuda
-CUDA_INCL = -I $(CUDA_DIR)/include -I.
-CUDA_LIBS = -L $(CUDA_DIR)/lib64 -lcudart -lcufft
-NVCC_FLAGS = -Xcompiler -fPIC -Xcompiler -fopenmp -gencode arch=compute_20,code=sm_20
+CUDA_INCL = -I$(CUDA_DIR)/include
+CUDA_LIBS = -L$(CUDA_DIR)/lib64 -lcudart -lcufft
+NVCC_FLAGS = -Xcompiler -fPIC -Xcompiler -fopenmp -m 64
+NVCC_FLAGS += -gencode arch=compute_20,code=sm_20
+NVCC_FLAGS += -Xptxas -v -Xcompiler -v -Xlinker -v
+NVCC_FLAGS += -DGPUR #-DKERNEL2 #-DFINDBLOCK
 NVLIB_FLAGS = -Xlinker -lgomp
+NVLIB_FLAGS += -Wl,-rpath -Wl,$(CUDA_DIR)/lib64
 
-## tiff
+## libtiff
 TIFF_INCL = -I $(TIFF_DIR)/include
 TIFF_LIBS = -L $(TIFF_DIR)/lib -Wl,-rpath=$(TIFF_DIR)/lib -ltiff
 
+## pari
+PARI_INCL = -I $(PARI_DIR)/include
+PARI_LIBS = -L $(PARI_DIR)/lib
+PARI_LIB_FLAGS = #-Wl,-rpath -Wl,$(PARI_DIR)/lib -lpari
+
 ## miscellaneous
-MISC_FLAGS = -DGPUR #-DKERNEL2 #-DFINDBLOCK
+MISC_INCL =
+MISC_FLAGS =
 
 ## choose optimization levels, debug flags, gprof flag, etc
-#OPT_FLAGS = -g -DDEBUG #-v #-pg
+#OPT_FLAGS = -g -DDEBUG #-v #-G #-pg
 OPT_FLAGS = -O3 -DNDEBUG #-v
 
 ## choose single or double precision here
@@ -55,144 +77,91 @@ PREC_FLAG =			# leave empty for single precision
 
 
 ## all includes
-ALL_INCL = $(BOOST_INCL) $(TIFF_INCL) $(HDF5_INCL) # $(MPI_INCL) $(CUDA_INCL)
+ALL_INCL = $(MPI_INCL) $(CUDA_INCL) $(BOOST_INCL) $(HDF5_INCL) $(TIFF_INCL) $(PARI_INCL) $(MISC_INCL)
 
 ## all libraries
-ALL_LIBS = $(TIFF_LIBS) $(BOOST_LIBS) $(NVLIB_FLAGS) $(HDF5_LIBS) $(TIFF_LIBS) #$(MPI_LIBS) $(CUDA_LIBS)
+ALL_LIBS = $(BOOST_LIBS) $(MPI_LIBS) $(NVLIB_FLAGS) $(CUDA_LIBS) $(HDF5_LIBS) $(TIFF_LIBS) \
+		   $(PARI_LIBS) $(PARI_LIB_FLAGS)
 
 
-## compilers
-CXX = CC	# mpicxx
-CXX_FLAGS = -std=c++0x
-## gnu c++ compilers >= 4.3 support -std=c++0x [least requirement for hipgisaxs]
-## gnu c++ compilers >= 4.7 also support -std=c++11
-H5CC = cc # h5pcc
-NVCC = nvcc
-
-
+PREFIX = $(PWD)
 BINARY = hipgisaxs
+BIN_DIR = $(PREFIX)/bin
+OBJ_DIR = $(PREFIX)/obj
+SRC_DIR = $(PREFIX)/src
 
-OBJECTS = utilities.o compute_params.o hig_input.o image.o inst_detector.o \
-		  inst_scattering.o layer.o qgrid.o read_oo_input.o sf.o ffcu.o ff_ana.o ff_num.o \
-		  ff.o shape.o structure.o object2hdf5.o reduction.o hipgisaxs_main.o
+## all objects
+OBJECTS = reduction.o ff_num_gpu.o utilities.o compute_params.o hig_input.o \
+		  image.o inst_detector.o inst_scattering.o layer.o qgrid.o read_oo_input.o sf.o \
+		  ff_ana.o ff_num.o ff.o shape.o structure.o object2hdf5.o hipgisaxs_main.o
+
+## the main binary
+OBJ_BIN = $(patsubst %,$(OBJ_DIR)/%,$(OBJECTS))
+
+$(BINARY): $(OBJ_BIN)
+	$(CXX) -o $(BIN_DIR)/$@ $^ $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(MISC_FLAGS) $(ALL_LIBS)
+
+## cuda compilation
+_DEPS_NV = %.cuh
+DEPS_NV = $(patsubst %,$(SRC_DIR)/%,$(_DEPS_NV))
+
+#### dont know why is this happenning ...
+$(OBJ_DIR)/ff_num_gpu.o: $(SRC_DIR)/ff_num_gpu.cu
+	$(NVCC) -c $< -o $@ $(OPT_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS) $(NVCC_FLAGS)
+
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cu $(DEPS_NV)
+	$(NVCC) -c $< -o $@ $(OPT_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS) $(NVCC_FLAGS)
+
+## hdf5-parallel compilation
+_DEPS_HDF = object2hdf5.h
+DEPS_HDF = $(patsubst %,$(SRC_DIR)/%,$(_DEPS_HDF))
+
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(DEPS_HDF)
+	$(H5CC) -c $< -o $@ $(OPT_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS)
+
+## c++ compilation
+_DEPS_CXX = %.hpp
+DEPS_CXX = $(patsubst %,$(SRC_DIR)/%,$(_DEPS_CXX))
+
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp $(DEPS_CXX)
+	$(CXX) -c $< -o $@ $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS)
 
 
-## main binary
+## test binaries
 
-$(BINARY): $(OBJECTS)
-	$(CXX) $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $^ -o $@ $(ALL_LIBS)
+OBJECTS_CONV = test_conv.o
+test_conv: $(patsubst %,$(OBJ_DIR)/%,$(OBJECTS_CONV))
+	$(CXX) -o $(BIN_DIR)/$@ $^ $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(MISC_FLAGS) $(ALL_LIBS)
+$(OBJ_DIR)/$(OBJECTS_CONV): $(SRC_DIR)/test_conv.cpp
+	$(CXX) -c $< -o $@ $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS)
 
-all: hipgisaxs test_read test_conv test_ff test_image plotff
-
-## ff plotting
-plotff: plot_ff.o image.o utilities.o
-	$(CXX) $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $^ -o $@ $(ALL_LIBS)
-
-plot_ff.o: plot_ff.cpp plot_ff.hpp image.cpp image.cpp
-	$(CXX) -c $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $< -o $@
-
-
-## testing binaries
-
-test_conv.o: test_conv.cpp convolutions.hpp
-	$(CXX) -c $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $< -o $@
-
-test_conv: test_conv.o
-	$(CXX) $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $< -o $@ $(ALL_LIBS)
-
-test_read.o: test_read.cpp read_oo_input.hpp tokens.hpp hig_input.hpp
-	$(CXX) -c $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $< -o $@
-
-test_read: test_read.o read_oo_input.o hig_input.o utilities.o compute_params.o \
+OBJECTS_READ = test_read.o read_oo_input.o hig_input.o utilities.o compute_params.o \
 	inst_detector.o inst_scattering.o layer.o shape.o structure.o object2hdf5.o
-	$(CXX) $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $^ -o $@ $(ALL_LIBS)
+test_read: $(patsubst %,$(OBJ_DIR)/%,$(OBJECTS_READ))
+	$(CXX) -o $(BIN_DIR)/$@ $^ $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(MISC_FLAGS) $(ALL_LIBS)
+$(OBJ_DIR)/test_read.o: $(SRC_DIR)/test_read.cpp
+	$(CXX) -c $< -o $@ $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS)
 
-qgrid_test_create.o: qgrid_test_create.cpp qgrid.cpp qgrid.hpp
-	$(CXX) -c $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $< -o $@
+OBJECTS_FF = test_ff.o ff_num.o qgrid.o qgrid_test_create.o object2hdf5.o structure.o \
+	shape.o	inst_scattering.o inst_detector.o layer.o ff_num_gpu.o reduction.o hig_input.o \
+	compute_params.o read_oo_input.o utilities.o
+test_ff: $(patsubst %,$(OBJ_DIR)/%,$(OBJECTS_FF))
+	$(CXX) -o $(BIN_DIR)/$@ $^ $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(MISC_FLAGS) $(ALL_LIBS)
+$(OBJ_DIR)/test_ff.o: $(SRC_DIR)/test_ff.cpp
+	$(CXX) -c $< -o $@ $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS)
+$(OBJ_DIR)/qgrid_test_create.o: $(SRC_DIR)/qgrid_test_create.cpp
+	$(CXX) -c $< -o $@ $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS)
 
-test_ff.o: test_ff.cpp ff_num.hpp ff_num.cpp qgrid.hpp qgrid_test_create.cpp qgrid.cpp
-	$(CXX) -c $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $< -o $@
-
-test_ff: test_ff.o ff_num.o qgrid.o qgrid_test_create.o object2hdf5.o structure.o shape.o \
-	inst_scattering.o inst_detector.o layer.o ffcu.o reduction.o hig_input.o \
-	compute_params.o read_oo_input.o
-	$(CXX) $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $^ -o $@ $(ALL_LIBS)
-
-test_image.o: test_image.cpp image.hpp colormap.hpp typedefs.hpp distributions.hpp\
-	convolutions.hpp utilities.hpp
-	$(CXX) -c $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $< -o $@
-
-test_image: test_image.o image.o utilities.o
-	$(CXX) $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $^ -o $@ $(ALL_LIBS)
+OBJECTS_IMAGE = test_image.o image.o utilities.o
+test_image: $(patsubst %,$(OBJ_DIR)/%,$(OBJECTS_IMAGE))
+	$(CXX) -o $(BIN_DIR)/$@ $^ $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(MISC_FLAGS) $(ALL_LIBS)
+$(OBJ_DIR)/test_image.o: $(SRC_DIR)/test_image.cpp
+	$(CXX) -c $< -o $@ $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS)
 
 
-## all supporting code
+all: hipgisaxs test_conv test_read test_ff test_image
 
-utilities.o: utilities.cpp utilities.hpp typedefs.hpp globals.hpp
-	$(CXX) -c $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $< -o $@
-
-shape.o: shape.cpp shape.hpp enums.hpp globals.hpp tokens.hpp
-	$(CXX) -c $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $< -o $@
-
-read_oo_input.o: read_oo_input.cpp read_oo_input.hpp globals.hpp \
-	token_mapper.hpp tokens.hpp
-	$(CXX) -c $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $< -o $@
-
-compute_params.o: compute_params.cpp compute_params.hpp globals.hpp \
-	enums.hpp tokens.hpp
-	$(CXX) -c $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $< -o $@
-
-hig_input.o: hig_input.cpp hig_input.hpp globals.hpp tokens.hpp \
-	token_mapper.hpp shape.hpp layer.hpp structure.hpp inst_scattering.hpp \
-	inst_detector.hpp compute_params.hpp read_oo_input.hpp
-	$(CXX) -c $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $< -o $@
-
-inst_detector.o: inst_detector.cpp inst_detector.hpp globals.hpp tokens.hpp
-	$(CXX) -c $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $< -o $@
-
-inst_scattering.o: inst_scattering.cpp inst_scattering.hpp globals.hpp \
-	tokens.hpp
-	$(CXX) -c $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $< -o $@
-
-layer.o: layer.cpp layer.hpp common.hpp tokens.hpp
-	$(CXX) -c $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $< -o $@
-
-structure.o: structure.cpp structure.hpp globals.hpp enums.hpp common.hpp \
-	tokens.hpp
-	$(CXX) -c $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $< -o $@
-
-qgrid.o: qgrid.cpp qgrid.hpp hig_input.hpp 
-	$(CXX) -c $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $< -o $@
-
-image.o: image.cpp image.hpp colormap.hpp distributions.hpp convolutions.hpp \
-	utilities.cpp utilities.hpp
-	$(CXX) -c $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $< -o $@ -fopenmp
-
-sf.o: sf.cpp sf.hpp qgrid.hpp structure.hpp typedefs.hpp globals.hpp
-	$(CXX) -c $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $< -o $@
-
-reduction.o: reduction.cu reduction.hpp
-	$(NVCC) -c $(OPT_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS) \
-		$(NVCC_FLAGS) $< -o $@
-
-ffcu.o: ff.cu ff.hpp ff_num.cpp ff_num.hpp
-	$(NVCC) -c $(OPT_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS) \
-		$(NVCC_FLAGS) $< -o $@
-
-ff_num.o: ff_num.cpp ff_num.hpp ffcu.o
-	$(CXX) -c $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $< -o $@
-
-ff_ana.o: ff_ana.cpp ff_ana.hpp
-	$(CXX) -c $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $< -o $@
-
-ff.o: ff.cpp ff.hpp ff_ana.o ff_num.o
-	$(CXX) -c $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $< -o $@
-
-object2hdf5.o: object2hdf5.c object2hdf5.h
-	$(H5CC) -c $(OPT_FLAGS) $(PREC_FLAG) $(ALL_INCL) $< -o $@
-
-hipgisaxs_main.o: *.cpp *.hpp *.cu *.c *.h
-	$(CXX) -c $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) hipgisaxs_main.cpp -o $@
+.PHONY: clean
 
 clean:
-	rm -f $(OBJECTS) $(BINARY) test_conv test_read test_ff test_image
+	rm -f $(OBJ_BIN) $(BIN_DIR)/$(BINARY) $(BIN_DIR)/test_conv $(OBJ_DIR)/test_conv.o $(BIN_DIR)/test_read $(OBJ_DIR)/test_read.o $(BIN_DIR)/test_ff $(OBJ_DIR)/test_ff.o $(BIN_DIR)/test_image $(OBJ_DIR)/test_image.o $(OBJ_DIR)/qgrid_test_create.o
