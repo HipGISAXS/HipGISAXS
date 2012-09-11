@@ -5,7 +5,7 @@
   *
   *  File: qgrid_test_create.cpp
   *  Created: Aug 01, 2012
-  *  Modified: Thu 02 Aug 2012 05:22:25 PM PDT
+  *  Modified: Sat 01 Sep 2012 09:57:43 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -40,7 +40,7 @@ namespace hig {
 		float_t kzi_0 = -1.0 * k0 * sin(alphai);
 		std::complex<float_t> dnl_q(2.0 * 1.95e-06, 2.0 * 2.15e-09);
 		std::complex<float_t> kzi_q_temp(pow(sin(alphai), 2), 0);
-		std::complex<float_t> kzi_q = -1.0 * k0 * sqrt(kzi_q_temp - dnl_q);
+		std::complex<float_t> kzi_q = (float_t)- k0 * sqrt(kzi_q_temp - dnl_q);
 		create_qz_extended(k0, kzi_0, kzi_q, dnl_q);
 
 		return true;

@@ -5,7 +5,7 @@
   *
   *  File: hipgisaxs_main.cpp
   *  Created: Jun 14, 2012
-  *  Modified: Tue 28 Aug 2012 12:05:45 AM PDT
+  *  Modified: Thu 06 Sep 2012 03:54:16 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -126,6 +126,16 @@ namespace hig {
 			if(mpi_rank == 0) std::cerr << "error: could not construct domain sizes" << std::endl;
 			return false;
 		} // if
+		std::cout << "++ Domain min point: " << min_vec[0] << ", " << min_vec[1]
+					<< ", " << min_vec[2] << std::endl;
+		std::cout << "++ Domain max point: " << max_vec[0] << ", " << max_vec[1]
+					<< ", " << max_vec[2] << std::endl;
+		std::cout << "++ Domain z max and min: " << z_max_0 << ", " << z_min_0 << std::endl;
+		std::cout << "++ Domain dimensions: " << max_vec[0] - min_vec[0] << " x "
+					<< max_vec[1] - min_vec[1] << " x "
+					<< max_vec[2] - min_vec[2] << " ("
+					<< z_max_0 - z_min_0 << ")" << std::endl;
+
 		// min_vec and max_vec are the domain
 		cell_[0] = fabs(max_vec[0] - min_vec[0]);
 		cell_[1] = fabs(max_vec[1] - min_vec[1]);
@@ -422,7 +432,7 @@ namespace hig {
 				//sf_.printsf();
 
 				// write q grid
-				//write_qgrid("current_qgrid");
+				//write_qgrid("temp_qgrid");
 				//exit(0);
 
 				//read_form_factor("curr_ff.out");
@@ -430,17 +440,19 @@ namespace hig {
 							shape_tau, shape_eta, r_tot1, r_tot2, r_tot3, world_comm);
 				//ff_.print_ff(nqx_, nqy_, nqz_extended_);
 				//ff_.printff(nqx_, nqy_, nqz_extended_);
-				std::stringstream alphai_b, phi_b, tilt_b;
-				std::string alphai_s, phi_s, tilt_s;
-				alphai_b << alpha_i; alphai_s = alphai_b.str();
-				phi_b << phi; phi_s = phi_b.str();
-				tilt_b << tilt; tilt_s = tilt_b.str();
-				std::string ff_output(HiGInput::instance().param_pathprefix() +
-								"/" + HiGInput::instance().runname() +
-								"/ff_ai=" + alphai_s + "_rot=" + phi_s +
-								"_tilt=" + tilt_s + ".out");
-				std::cout << "-- Saving form factor in " << ff_output << " ..." << std::endl;
-				ff_.save_ff(nqx_, nqy_, nqz_extended_, ff_output.c_str());
+				if(mpi_rank == 0) {
+					std::stringstream alphai_b, phi_b, tilt_b;
+					std::string alphai_s, phi_s, tilt_s;
+					alphai_b << alpha_i; alphai_s = alphai_b.str();
+					phi_b << phi; phi_s = phi_b.str();
+					tilt_b << tilt; tilt_s = tilt_b.str();
+					std::string ff_output(HiGInput::instance().param_pathprefix() +
+									"/" + HiGInput::instance().runname() +
+									"/ff_ai=" + alphai_s + "_rot=" + phi_s +
+									"_tilt=" + tilt_s + ".out");
+					std::cout << "-- Saving form factor in " << ff_output << " ..." << std::endl;
+					ff_.save_ff(nqx_, nqy_, nqz_extended_, ff_output.c_str());
+				} // if
 
 //				} else {
 //					if(mpi_rank == 0)
@@ -458,6 +470,8 @@ namespace hig {
 				for(int i = 0; i < nqx_ * nqy_ * nqz_; ++ i)
 					std::cout << ff_[i].x << "+" << ff_[i].y << "i ";
 				std::cout << std::endl;*/
+
+				if(mpi_rank == 0) {
 
 				complex_t* base_id = id + j * nqx_ * nqy_ * nqz_;
 
@@ -550,6 +564,9 @@ namespace hig {
 									<< std::endl;
 					return false;
 				} // if-else
+
+				} // if mpi_rank == 0
+
 			} // for num_domains
 
 			delete[] nn;
@@ -747,7 +764,7 @@ namespace hig {
 			} else {
 				// the sample is described by 2 or more layers, slicing scheme will be applied
 				// NOTE: the case where a structure is implicitly in 2 different layers is
-				// not currently handled.
+				// not currently handled ...
 				std::cerr << "uh-oh: this case (num_layers > 1) has not yet been implemented yet"
 							<< std::endl;
 				std::cerr << "go get yourself a nice cup of yummmy hot chocolate instead!" << std::endl;
@@ -1129,9 +1146,11 @@ namespace hig {
 				} // for x
 			} else if(dim == 2) {
 				std::cerr << "error: dim == 2 case not implemented" << std::endl;
+				// ...
 				return false;
 			} else if(dim == 1) {
 				std::cerr << "error: dim == 1 case not implemented" << std::endl;
+				// ...
 				return false;
 			} else {
 				std::cerr << "error: invalid dim size " << dim << std::endl;
@@ -1190,9 +1209,11 @@ namespace hig {
 				delete[] dx;
 			} else if(dim == 2) {
 				std::cerr << "error: dim == 2 case not implemented" << std::endl;
+				// ...
 				return false;
 			} else if(dim == 1) {
 				std::cerr << "error: dim == 1 case not implemented" << std::endl;
+				// ...
 				return false;
 			} else {
 				std::cerr << "error: invalid dim size " << dim << std::endl;

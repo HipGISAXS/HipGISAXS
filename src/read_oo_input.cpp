@@ -5,7 +5,7 @@
  *
  *  File: read_oo_input.cpp
  *  Created: Jul 04, 2012
- *  Modified: Tue 21 Aug 2012 06:28:31 PM PDT
+ *  Modified: Tue 28 Aug 2012 12:35:47 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -284,7 +284,7 @@ namespace hig {
 
 
 	bool InputReader::skip_comments(void) {
-		//input_stream_.ignore(1 << 31, '\n');	// what if its \r or \f or \v
+		//input_stream_.ignore(1 << 31, '\n');	// what if its \r or \f or \v ...
 		char c;
 		input_stream_.get(c);
 		while(c != '\n') input_stream_.get(c);

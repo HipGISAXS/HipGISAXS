@@ -5,13 +5,15 @@
   *
   *  File: utilities.cpp
   *  Created: Jun 25, 2012
-  *  Modified: Mon 27 Aug 2012 10:44:20 PM PDT
+  *  Modified: Thu 30 Aug 2012 10:15:42 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
 
 #include <iostream>
 #include <cmath>
+//#include <boost/math/special_functions/bessel.hpp>
+#include <pari/pari.h>	// for bessel functions
 
 #include "utilities.hpp"
 
@@ -242,15 +244,14 @@ namespace hig {
 			std::cerr << "error: matrix sizes are not the same for addition operation" << std::endl;
 			return matrix1;
 		} // if
+		std::vector<complex_t> result;
 		std::vector<complex_t>::iterator i1 = matrix1.begin();
 		std::vector<complex_t>::iterator i2 = matrix2.begin();
 		for(; i1 != matrix1.end(); ++ i1, ++ i2) {
-			(*i1) = (*i1) + (*i2);
-			//(*i1).x += (*i2).x;
-			//(*i1).y += (*i2).y;
+			result.push_back((*i1) + (*i2));
 		} // for
 
-		return matrix1;
+		return result;
 	} // mat_add()
 
 
@@ -260,39 +261,32 @@ namespace hig {
 	std::vector<complex_t>& mat_mul(float_t scalar,
 									//unsigned int x_size, unsigned int y_size, unsigned int z_size,
 									std::vector<complex_t>& matrix) {
+		std::vector<complex_t> result;
 		for(std::vector<complex_t>::iterator i = matrix.begin(); i != matrix.end(); ++ i) {
-			(*i) = (*i) * scalar;
-			//(*i).x = (*i).x * scalar;
-			//(*i).y = (*i).y * scalar;
+			result.push_back((*i) * scalar);
 		} // for
-		return matrix;
+		return result;
 	} // mat_mul()
 
 
 	std::vector<complex_t>& mat_mul(complex_t scalar,
 									//unsigned int x_size, unsigned int y_size, unsigned int z_size,
 									std::vector<complex_t>& matrix) {
+		std::vector<complex_t> result;
 		for(std::vector<complex_t>::iterator i = matrix.begin(); i != matrix.end(); ++ i) {
-			(*i) = (*i) * scalar;
-			//complex_t temp;
-			//temp.x = (*i).x * (scalar).x - (*i).y * (scalar).y;
-			//temp.y = (*i).x * (scalar).y + (*i).y * (scalar).x;
-			//(*i).x = temp.x;
-			//(*i).y = temp.y;
+			result.push_back((*i) * scalar);
 		} // for
-		return matrix;
+		return result;
 	} // mat_mul()
 
 
-	std::vector<complex_t>& mat_mul(//unsigned int x_size, unsigned int y_size, unsigned int z_size,
-									std::vector<complex_t>& matrix, float_t scalar) {
-		return mat_mul(scalar, /*x_size, y_size, z_size,*/ matrix);
+	std::vector<complex_t>& mat_mul(std::vector<complex_t>& matrix, float_t scalar) {
+		return mat_mul(scalar, matrix);
 	} // mat_mul()
 
 
-	std::vector<complex_t>& mat_mul(//unsigned int x_size, unsigned int y_size, unsigned int z_size,
-									std::vector<complex_t>& matrix, complex_t scalar) {
-		return mat_mul(scalar, /*x_size, y_size, z_size,*/ matrix);
+	std::vector<complex_t>& mat_mul(std::vector<complex_t>& matrix, complex_t scalar) {
+		return mat_mul(scalar, matrix);
 	} // mat_mul()
 
 
@@ -310,18 +304,14 @@ namespace hig {
 			return matrix1;
 		} // if
 
+		std::vector<complex_t> result;
 		std::vector<complex_t>::iterator i1 = matrix1.begin();
 		std::vector<complex_t>::iterator i2 = matrix2.begin();
 		for(; i1 != matrix1.end(); ++ i1, ++ i2) {
-			(*i1) = (*i1) * (*i2);
-			//complex_t temp;
-			//temp.x = (*i1).x * (*i2).x - (*i1).y * (*i2).y;
-			//temp.y = (*i1).x * (*i2).y + (*i1).y * (*i2).x;
-			//(*i1).x = temp.x;
-			//(*i1).y = temp.y;
+			result.push_back((*i1) * (*i2));
 		} // for
 
-		return matrix1;
+		return result;
 	} // mat_dot_prod()
 
 
@@ -335,59 +325,99 @@ namespace hig {
 			return matrix1;
 		} // if
 
+		std::vector<complex_t> result;
 		std::vector<complex_t>::iterator i1 = matrix1.begin();
 		std::vector<complex_t>::iterator i2 = matrix2.begin();
 		for(; i1 != matrix1.end(); ++ i1, ++ i2) {
-			(*i1) = (*i1) / (*i2);
-			//complex_t temp;
-			//temp.x = ((*i1).x * (*i2).x + (*i1).y * (*i2).y) / ((*i2).x * (*i2).x + (*i2).y * (*i2).y);
-			//temp.y = ((*i1).y * (*i2).x - (*i1).x * (*i2).y) / ((*i2).x * (*i2).x + (*i2).y * (*i2).y);
-			//(*i1).x = temp.x;
-			//(*i1).y = temp.y;
+			result.push_back((*i1) / (*i2));
 		} // for
 
-		return matrix1;
+		return result;
 	} // mat_dot_div()
 
 
 	std::vector<complex_t>& mat_sqr(//unsigned int nx, unsigned int ny, unsigned int nz,
 									std::vector<complex_t>& matrix) {
+		std::vector<complex_t> result;
 		for(std::vector<complex_t>::iterator i = matrix.begin(); i != matrix.end(); ++ i) {
-			(*i) = (*i) * (*i);
-			//complex_t temp;
-			//temp.x = (*i).x * (*i).x - (*i).y * (*i).y;
-			//temp.y = (*i).x * (*i).y + (*i).y * (*i).x;
-			//(*i).x = temp.x;
-			//(*i).y = temp.y;
+			result.push_back((*i) * (*i));
 		} // for
 
-		return matrix;
+		return result;
 	} // mat_sqr()
 
 
 	std::vector<complex_t>& mat_sqrt(//unsigned int nx, unsigned int ny, unsigned int nz,
 									std::vector<complex_t>& matrix) {
+		std::vector<complex_t> result;
 		for(std::vector<complex_t>::iterator i = matrix.begin(); i != matrix.end(); ++ i) {
-			(*i) = sqrt(*i);
-			//std::complex<float_t> temp((*i).x, (*i).y);
-			//temp = sqrt(temp);
-			//(*i).x = temp.real();
-			//(*i).y = temp.imag();
+			result.push_back(sqrt(*i));
 		} // for
 
-		return matrix;
+		return result;
 	} // mat_sqrt()
 
 
 	std::vector<complex_t>& mat_besselj(int j, unsigned int nx, unsigned int ny, unsigned int nz,
 										std::vector<complex_t>& matrix) {
-		// ...
+		std::vector<complex_t> result;
+		for(std::vector<complex_t>::iterator i = matrix.begin(); i != matrix.end(); ++ i)
+			result.push_back(besselj(1, *i));
+
+		return result;
 	} // mat_besselj()
 
 
-	float_t besselj(int j, complex_t m) {
-		// ...
+	// pari
+	complex_t besselj(int j, complex_t m) {
+		pari_init(5000000, 100000);
+		GEN inp_m = cgetc(64);	/* using double precision */
+		gel(inp_m, 1) = dbltor(m.real());
+		gel(inp_m, 2) = dbltor(m.imag());
+		GEN unit = cgetc(64);
+		gel(unit, 1) = stoi(j);
+		gel(unit, 2) = stoi(0);
+
+		GEN out_res = cgetc(64);
+		out_res = jbessel(unit, inp_m, 64);
+
+		float_t out_real = rtodbl(gel(out_res, 1));
+		float_t out_imag = rtodbl(gel(out_res, 2));
+
+		pari_close();
+		return complex_t(out_real, out_imag);
 	} // besselj()
 
+
+/*	extern "C" {
+		void zbesj_(double* real, double* imag, double* fnu, int* kode, int* n,
+					double** creal, double** cimag, int* nz, int* err);
+	} // extern "C"
+
+	complex_t besselj(int j, complex_t m) {
+		// amos
+		double real = m.real(), imag = m.imag(), fnu = 1;
+		int n = 1, kode = 1;
+		double *creal = new double[n];
+		double *cimag = new double[n];
+		int nz = 0, err = 0;
+
+		zbesj_(&real, &imag, &fnu, &kode, &n, &creal, &cimag, &nz, &err);
+		if(err != 0) {
+			std::cerr << "error: something went wrong in computing bessel function of "
+						<< m << ". error code = " << err << std::endl;
+			delete[] creal;
+			delete[] cimag;
+			return complex_t(0, 0);
+		} // if
+		complex_t result((float_t)creal[0], (float_t)cimag[0]);
+
+		delete[] creal;
+		delete[] cimag;
+		
+		return result; */
+		/* // boost
+		return boost::math::cyl_bessel_j(j, m);
+	}*/
 
 } // namespace hig

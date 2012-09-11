@@ -5,7 +5,7 @@
   *
   *  File: image.cpp
   *  Created: Jun 18, 2012
-  *  Modified: Mon 27 Aug 2012 11:40:59 PM PDT
+  *  Modified: Thu 06 Sep 2012 10:29:37 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -117,25 +117,25 @@ namespace hig {
 	 * in case of 3d (not implemented), nx_ images will be created into image_buffer_
 	 */
 	// parallelize this for multicore
-	bool Image::construct_image(const float_t* data) {						// and here ...
+	bool Image::construct_image(float_t* data) {						// and here ...
 		if(data == NULL) {
 			std::cerr << "empty data found while constructing image" << std::endl;
 			return false;
 		} // if
 		if(nx_ == 1) {	// a single slice
 			// apply transpose on data
-			std::cout << "  -- Transposing ..." << std::endl;
-			float_t* data_transp = NULL;
-			transpose(ny_, nz_, data, data_transp);
-			unsigned int temp = ny_;
-			ny_ = nz_; nz_ = temp;
-//			float_t* data_transp = (float_t*)data;
+//			std::cout << "  -- Transposing ..." << std::endl;
+//			float_t* data_transp = NULL;
+//			transpose(ny_, nz_, data, data_transp);
+//			unsigned int temp = ny_;
+//			ny_ = nz_; nz_ = temp;
 
 			// temporary workaround ... find and fix the nan/inf generating bug ...
-			remove_nans_infs(ny_, nz_, data_transp);
+//			remove_nans_infs(ny_, nz_, data_transp);
+			remove_nans_infs(ny_, nz_, data);
 
 			// construct a gaussian matrix of size 5
-			float_t* gaussian = NULL;
+	/*		float_t* gaussian = NULL;
 			StatisticalDistributions::instance().gaussian_dist_2d(5, 5, 0, 0, 2, 2, gaussian);
 			// apply convolution on resulting data
 			std::cout << "  -- Applying convolution filter ...";
@@ -145,18 +145,20 @@ namespace hig {
 													5, 5, gaussian, new_ny, new_nz, new_data);
 //			std::cout << "convoluted: " << std::endl;
 //			print_arr_2d(new_data, new_ny, new_nz);
-
+*/
 			std::cout << "  -- Translating ..." << std::endl;
-			if(!translate_pixels_to_positive(new_ny, new_nz, new_data)) {
+//			if(!translate_pixels_to_positive(new_ny, new_nz, new_data)) {
 //			if(!translate_pixels_to_positive(ny_, nz_, data_transp)) {
+			if(!translate_pixels_to_positive(ny_, nz_, data)) {
 				std::cerr << "error: something went awfully wrong in data translation" << std::endl;
 				return false;
 			} // if
 
 			// apply log(10) on the resulting data
 			std::cout << "  -- Applying log10() ..." << std::endl;
-			if(!mat_log10_2d(new_ny, new_nz, new_data)) {
+//			if(!mat_log10_2d(new_ny, new_nz, new_data)) {
 //			if(!mat_log10_2d(ny_, nz_, data_transp)) {
+			if(!mat_log10_2d(ny_, nz_, data)) {
 				std::cerr << "error: something went wrong in mat_log10_2d" << std::endl;
 				return false;
 			} // if
@@ -165,7 +167,7 @@ namespace hig {
 			//print_arr_2d(data_transp, ny_, nz_);
 //
 			// scale the data to image size
-			ny_ = new_ny; nz_ = new_nz;
+	//		ny_ = new_ny; nz_ = new_nz;
 //			std::cout << "  scaling ..." << std::endl;
 //			float_t* scaled_data;
 //			if(!scale_image(new_ny, new_nz, ny_, nz_, new_data, scaled_data)) {
@@ -177,8 +179,9 @@ namespace hig {
 
 			std::cout << "  -- Normalizing ..." << std::endl;
 //			if(!normalize_pixels(ny_, nz_, scaled_data)) {
-			if(!normalize_pixels(ny_, nz_, new_data)) {
+//			if(!normalize_pixels(ny_, nz_, new_data)) {
 //			if(!normalize_pixels(ny_, nz_, data_transp)) {
+			if(!normalize_pixels(ny_, nz_, data)) {
 				std::cerr << "error: something went awfully wrong in pixel normalization" << std::endl;
 				return false;
 			} // if
@@ -189,16 +192,17 @@ namespace hig {
 			// construct image_buffer_ with rgb values for each point in data
 			std::cout << "  -- Mapping data to the color palette ..." << std::endl;
 //			if(!convert_to_rgb_pixels(ny_, nz_, scaled_data)) {
-			if(!convert_to_rgb_pixels(ny_, nz_, new_data)) {
+//			if(!convert_to_rgb_pixels(ny_, nz_, new_data)) {
 //			if(!convert_to_rgb_pixels(ny_, nz_, data_transp)) {
+			if(!convert_to_rgb_pixels(ny_, nz_, data)) {
 				std::cerr << "error: something went terribly wrong in convert_to_rgb_pixels" << std::endl;
 				return false;
 			} // if
 			//std::cout << "rgb data: " << std::endl;
 			//print_rgb_2d(image_buffer_, ny_, nz_);
 
-			delete[] data_transp;
-			delete[] new_data;
+//			delete[] data_transp;
+//			delete[] new_data;
 //			delete[] scaled_data;
 	//		std::cout << "pixelated: " << std::endl;
 	//		print_arr_2d(image_buffer_, ny_, nz_);

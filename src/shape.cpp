@@ -5,7 +5,7 @@
   *
   *  File: shape.cpp
   *  Created: Jun 05, 2012
-  *  Modified: Wed 22 Aug 2012 12:37:16 PM PDT
+  *  Modified: Thu 30 Aug 2012 03:06:46 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -43,6 +43,7 @@ namespace hig {
 					<< "  p1_ = " << p1_ << std::endl
 					<< "  p2_ = " << p2_ << std::endl
 					<< "  nvalues_ = " << nvalues_ << std::endl
+					<< "  isvalid_ = " << isvalid_ << std::endl
 					<< std::endl;
 	} // ShapeParam::print()
 

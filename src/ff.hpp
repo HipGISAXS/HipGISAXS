@@ -5,7 +5,7 @@
   *
   *  File: ff.hpp
   *  Created: Jul 18, 2012
-  *  Modified: Mon 27 Aug 2012 11:51:13 PM PDT
+  *  Modified: Thu 30 Aug 2012 05:17:51 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -25,6 +25,7 @@ namespace hig {
 	// fix the numeric and non-numeric version ... unify them somehow ...
 	class FormFactor {
 		private:
+			bool is_analytic_;
 			std::vector <complex_t> ff_;						/* the form factor data */
 			AnalyticFormFactor analytic_ff_;
 
@@ -33,12 +34,12 @@ namespace hig {
 			//NumericFormFactor <float, cuFloatComplex> numeric_ff_; // same as MFormFactor
 
 		public:
-			FormFactor(int a, int b, int c): nff_(NULL), numeric_ff_(a, b, c) { }
-			FormFactor(int s): nff_(NULL), numeric_ff_(s) { }
+			FormFactor(int a, int b, int c): nff_(NULL), numeric_ff_(a, b, c), is_analytic_(false) { }
+			FormFactor(int s): nff_(NULL), numeric_ff_(s), is_analytic_(false) { }
 #ifdef KERNEL2
-			FormFactor(): nff_(NULL), numeric_ff_(2, 4, 4) { } // default cuda block size
+			FormFactor(): nff_(NULL), numeric_ff_(2, 4, 4), is_analytic_(false) { } // default cuda block size
 #else
-			FormFactor(): nff_(NULL), numeric_ff_(4) { } // default cuda block size
+			FormFactor(): nff_(NULL), numeric_ff_(4), is_analytic_(false) { } // default cuda block size
 #endif // KERNEL2
 			~FormFactor() {
 				if(nff_ != NULL) delete[] nff_;
@@ -52,7 +53,10 @@ namespace hig {
 									MPI::Intracomm& world_comm);
 
 			//cucomplex_t operator[](unsigned int i) const { return nff_[i]; }
-			complex_t operator[](unsigned int i) const { return complex_t(nff_[i].x, nff_[i].y); }
+			complex_t operator[](unsigned int i) const {
+				if(is_analytic_) return ff_[i];
+				else return complex_t(nff_[i].x, nff_[i].y);
+			} // operator[]
 
 			// for testing only ... remove ...
 			cucomplex_t* nff() { return nff_; }

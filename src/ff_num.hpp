@@ -5,7 +5,7 @@
  *
  *  File: ff_num.hpp
  *  Created: Nov 05, 2011
- *  Modified: Mon 27 Aug 2012 11:55:28 PM PDT
+ *  Modified: Wed 05 Sep 2012 02:35:19 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -142,8 +142,12 @@ namespace hig {
 		std::vector<short int> axes(4);			// axes[i] = j
 												// i: x=0 y=1 z=2
 												// j: 0=a 1=b 2=c
+#ifndef AXIS_ROT
+		axes[0] = 0; axes[1] = 1; axes[2] = 2;	// default values
+#else
 		find_axes_orientation(shape_def, axes);
-	
+#endif
+
 		if(rank == 0) {
 			std::cout << std::endl
 				<< "**        Using input shape file: " << filename << std::endl
@@ -159,7 +163,7 @@ namespace hig {
 		} // if
 	
 		// decompose along y and z directions into blocks
-		int p_y = floor(sqrt(num_procs));	// some procs may be idle ...
+		int p_y = floor(sqrt((float_t)num_procs));	// some procs may be idle ...
 		int p_z = num_procs / p_y;
 		
 		int p_nqx = nqx;
@@ -276,6 +280,7 @@ namespace hig {
 			comp_end = MPI::Wtime();
 			comp_time += comp_end - comp_start;
 	
+			// gather everything on proc 0
 			if(ret_nt > 0) {
 				temp_mem_time = 0.0; temp_comm_time = 0.0;
 				construct_ff(rank, nidle_num_procs, main_comm, col_comm, row_comm,
@@ -312,13 +317,13 @@ namespace hig {
 			mem_time += mem_end - mem_start;
 	
 			if(rank == 0) {
-				std::cout << "**                   Kernel time: " << kernel_time / 1000 << "s." << std::endl;
-				std::cout << "**                Reduction time: " << red_time / 1000 << "s." << std::endl;
-				std::cout << "**            Memory and IO time: " << mem_time << "s." << std::endl;
+				std::cout << "**                FF kernel time: " << kernel_time / 1000 << "s." << std::endl;
+				std::cout << "**             FF reduction time: " << red_time / 1000 << "s." << std::endl;
+				std::cout << "**         FF memory and IO time: " << mem_time << "s." << std::endl;
 				std::cout << "**            Communication time: " << comm_time << "s." << std::endl;
 				//std::cout << "**                    Total time: " << ((kernel_time + red_time) / 1000 +
 				//												mem_time + comm_time) << "s." << std::endl;
-				std::cout << "**                    Total time: " << total_time << "s." << std::endl;
+				std::cout << "**                  Total FF time: " << total_time << "s." << std::endl;
 				std::cout << std::flush;
 				//std::cout << std::endl << std::flush;
 			} // if
@@ -494,25 +499,47 @@ namespace hig {
 		// axes[i] = j
 		// i: x=0 y=1 z=2
 		// j: 0=a 1=b 2=c
+
+		//std::cout << "++ diff_a = " << diff_a << ", diff_b = " << diff_b
+		//			<< ", diff_c = " << diff_c << std::endl;
+
+		std::vector<float_t> min_point, max_point;
 	
 		// the smallest one is x, other two are y and z
 		if(diff_a < diff_b) {
 			if(diff_a < diff_c) {
 				// x is a
 				axes[0] = 0; axes[1] = 1; axes[2] = 2;
+				min_point.push_back(min_a); min_point.push_back(min_b); min_point.push_back(min_c);
+				max_point.push_back(max_a); max_point.push_back(max_b); max_point.push_back(max_c);
 			} else {
 				// x is c
 				axes[0] = 2; axes[1] = 0; axes[2] = 1;
+				min_point.push_back(min_c); min_point.push_back(min_a); min_point.push_back(min_b);
+				max_point.push_back(max_c); max_point.push_back(max_a); max_point.push_back(max_b);
 			} // if-else
 		} else {
 			if(diff_b < diff_c) {
 				// x is b
-				axes[0] = 2; axes[1] = 0; axes[2] = 1;
+				axes[0] = 1; axes[1] = 0; axes[2] = 2;
+				min_point.push_back(min_b); min_point.push_back(min_a); min_point.push_back(min_c);
+				max_point.push_back(max_b); max_point.push_back(max_a); max_point.push_back(max_c);
 			} else {
 				// x is c
 				axes[0] = 2; axes[1] = 0; axes[2] = 1;
+				min_point.push_back(min_c); min_point.push_back(min_a); min_point.push_back(min_b);
+				max_point.push_back(max_c); max_point.push_back(max_a); max_point.push_back(max_b);
 			} // if-else
 		} // if-else
+
+		std::cout << "++ Shape min point: " << min_point[0] << ", "
+					<< min_point[1] << ", " << min_point[2] << std::endl;
+		std::cout << "++ Shape max point: " << max_point[0] << ", "
+					<< max_point[1] << ", " << max_point[2] << std::endl;
+		std::cout << "++ Shape dimensions: "
+					<< fabs(max_point[0] - min_point[0]) << " x "
+					<< fabs(max_point[1] - min_point[1]) << " x "
+					<< fabs(max_point[2] - min_point[2]) << std::endl;
 	} // NumericFormFactor::find_axes_orientation()
 	
 	
