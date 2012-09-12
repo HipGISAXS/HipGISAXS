@@ -5,7 +5,7 @@
   *
   *  File: hipgisaxs_main.cpp
   *  Created: Jun 14, 2012
-  *  Modified: Wed 12 Sep 2012 02:10:32 PM PDT
+  *  Modified: Wed 12 Sep 2012 02:53:44 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -443,8 +443,6 @@ namespace hig {
 					std::cout << "-- Saving structure factor in " << sf_output << " ..." << std::endl;
 					sf_.save_sf(nqx_, nqy_, nqz_extended_, sf_output.c_str());
 				} // if
-
-				exit(0);
 
 				// write q grid
 				//write_qgrid("temp_qgrid");
