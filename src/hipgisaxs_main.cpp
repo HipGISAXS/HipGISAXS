@@ -5,7 +5,7 @@
   *
   *  File: hipgisaxs_main.cpp
   *  Created: Jun 14, 2012
-  *  Modified: Wed 12 Sep 2012 10:01:30 PM PDT
+  *  Modified: Thu 13 Sep 2012 01:31:33 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -507,7 +507,7 @@ namespace hig {
 						//std::cout << "DN2 = " << dn2 << std::endl;
 
 						// for testing
-						std::ofstream f1("amm.out");
+						/*std::ofstream f1("amm.out");
 						for(unsigned int z = 0; z < nqz_; ++ z) {
 							for(unsigned int y = 0; y < nqy_; ++ y) {
 								for(unsigned int x = 0; x < nqx_; ++ x) {
@@ -554,7 +554,7 @@ namespace hig {
 							} // for
 							f4 << std::endl;
 						} // for
-						f4.close();
+						f4.close();*/
 
 						// base_id = dn2 * (amm .* sf() .* ff() + amp .* sf() .* ff() +
 						//				apm .* sf() .* ff() + app .* sf() .* ff());
@@ -635,7 +635,7 @@ namespace hig {
 			delete[] nn;
 			delete[] dd;
 
-			std::ofstream f("id.out");
+			/*std::ofstream f("id.out");
 			for(unsigned int z = 0; z < nqz_; ++ z) {
 				for(unsigned int y = 0; y < nqy_; ++ y) {
 					for(unsigned int x = 0; x < nqx_; ++ x) {
@@ -646,7 +646,7 @@ namespace hig {
 				} // for
 				f << std::endl;
 			} // for
-			f.close();
+			f.close(); */
 
 			/*std::cout << "ID: nqx = " << nqx_ << ", nqy = " << nqy_ << ", nqz = " << nqz_ << std::endl;
 			for(int i = 0; i < nqx_ * nqy_ * nqz_; ++ i) {
@@ -700,7 +700,7 @@ namespace hig {
 		} // for num_structs
 		int num_structs = s_num;
 
-		std::ofstream fs("structure_intensity.out");
+		/*std::ofstream fs("structure_intensity.out");
 		for(unsigned int z = 0; z < nqz_; ++ z) {
 			for(unsigned int y = 0; y < nqy_; ++ y) {
 				for(unsigned int x = 0; x < nqx_; ++ x) {
@@ -711,7 +711,7 @@ namespace hig {
 			} // for
 			fs << std::endl;
 		} // for
-		fs.close();
+		fs.close();*/
 
 		// arrays struct_intensity and id etc can be eliminated/reduced in size to nqx*nqy*nqz only
 		// ...
