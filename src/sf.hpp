@@ -5,7 +5,7 @@
   *
   *  File: sf.hpp
   *  Created: Jun 18, 2012
-  *  Modified: Wed 22 Aug 2012 06:27:18 PM PDT
+  *  Modified: Wed 12 Sep 2012 01:41:50 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -45,6 +45,7 @@ namespace hig {
 				} // for
 				std::cout << std::endl;
 			} // printsf()
+			void save_sf(unsigned int nqx, unsigned int nqy, unsigned int nqz, const char* filename);
 	}; // class StructureFactor
 
 } // namespace hig

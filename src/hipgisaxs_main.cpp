@@ -5,7 +5,7 @@
   *
   *  File: hipgisaxs_main.cpp
   *  Created: Jun 14, 2012
-  *  Modified: Thu 06 Sep 2012 03:54:16 PM PDT
+  *  Modified: Wed 12 Sep 2012 02:53:44 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -430,6 +430,19 @@ namespace hig {
 				structure_factor(HiGInput::instance().experiment(), center,
 							curr_lattice, grain_repeats, r_tot1, r_tot2, r_tot3, world_comm);
 				//sf_.printsf();
+				if(mpi_rank == 0) {
+					std::stringstream alphai_b, phi_b, tilt_b;
+					std::string alphai_s, phi_s, tilt_s;
+					alphai_b << alpha_i; alphai_s = alphai_b.str();
+					phi_b << phi; phi_s = phi_b.str();
+					tilt_b << tilt; tilt_s = tilt_b.str();
+					std::string sf_output(HiGInput::instance().param_pathprefix() +
+									"/" + HiGInput::instance().runname() +
+									"/sf_ai=" + alphai_s + "_rot=" + phi_s +
+									"_tilt=" + tilt_s + ".out");
+					std::cout << "-- Saving structure factor in " << sf_output << " ..." << std::endl;
+					sf_.save_sf(nqx_, nqy_, nqz_extended_, sf_output.c_str());
+				} // if
 
 				// write q grid
 				//write_qgrid("temp_qgrid");
