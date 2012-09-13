@@ -5,7 +5,7 @@
   *
   *  File: hipgisaxs_main.cpp
   *  Created: Jun 14, 2012
-  *  Modified: Wed 12 Sep 2012 02:53:44 PM PDT
+  *  Modified: Wed 12 Sep 2012 10:01:30 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -506,6 +506,56 @@ namespace hig {
 
 						//std::cout << "DN2 = " << dn2 << std::endl;
 
+						// for testing
+						std::ofstream f1("amm.out");
+						for(unsigned int z = 0; z < nqz_; ++ z) {
+							for(unsigned int y = 0; y < nqy_; ++ y) {
+								for(unsigned int x = 0; x < nqx_; ++ x) {
+									unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
+									f1 << amm[index].real() << "\t" << amm[index].imag() << std::endl;
+								} // for
+								f1 << std::endl;
+							} // for
+							f1 << std::endl;
+						} // for
+						f1.close();
+						std::ofstream f2("amp.out");
+						for(unsigned int z = 0; z < nqz_; ++ z) {
+							for(unsigned int y = 0; y < nqy_; ++ y) {
+								for(unsigned int x = 0; x < nqx_; ++ x) {
+									unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
+									f2 << amp[index].real() << "\t" << amp[index].imag() << std::endl;
+								} // for
+								f2 << std::endl;
+							} // for
+							f2 << std::endl;
+						} // for
+						f2.close();
+						std::ofstream f3("apm.out");
+						for(unsigned int z = 0; z < nqz_; ++ z) {
+							for(unsigned int y = 0; y < nqy_; ++ y) {
+								for(unsigned int x = 0; x < nqx_; ++ x) {
+									unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
+									f3 << apm[index].real() << "\t" << apm[index].imag() << std::endl;
+								} // for
+								f3 << std::endl;
+							} // for
+							f3 << std::endl;
+						} // for
+						f3.close();
+						std::ofstream f4("app.out");
+						for(unsigned int z = 0; z < nqz_; ++ z) {
+							for(unsigned int y = 0; y < nqy_; ++ y) {
+								for(unsigned int x = 0; x < nqx_; ++ x) {
+									unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
+									f4 << app[index].real() << "\t" << app[index].imag() << std::endl;
+								} // for
+								f4 << std::endl;
+							} // for
+							f4 << std::endl;
+						} // for
+						f4.close();
+
 						// base_id = dn2 * (amm .* sf() .* ff() + amp .* sf() .* ff() +
 						//				apm .* sf() .* ff() + app .* sf() .* ff());
 						for(unsigned int z = 0; z < nqz_; ++ z) {
@@ -585,6 +635,19 @@ namespace hig {
 			delete[] nn;
 			delete[] dd;
 
+			std::ofstream f("id.out");
+			for(unsigned int z = 0; z < nqz_; ++ z) {
+				for(unsigned int y = 0; y < nqy_; ++ y) {
+					for(unsigned int x = 0; x < nqx_; ++ x) {
+						unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
+						f << id[index].real() << "\t" << id[index].imag() << std::endl;
+					} // for
+					f << std::endl;
+				} // for
+				f << std::endl;
+			} // for
+			f.close();
+
 			/*std::cout << "ID: nqx = " << nqx_ << ", nqy = " << nqy_ << ", nqz = " << nqz_ << std::endl;
 			for(int i = 0; i < nqx_ * nqy_ * nqz_; ++ i) {
 				std::cout << id[i] << " ";
@@ -629,13 +692,26 @@ namespace hig {
 						} // for x
 					} // for y
 				} // for z
-			} // if-elseo
+			} // if-else
 
 			//printfr("struct_intensity", struct_intensity, nqx_ * nqy_ * nqz_);
 
 			delete[] id;
 		} // for num_structs
 		int num_structs = s_num;
+
+		std::ofstream fs("structure_intensity.out");
+		for(unsigned int z = 0; z < nqz_; ++ z) {
+			for(unsigned int y = 0; y < nqy_; ++ y) {
+				for(unsigned int x = 0; x < nqx_; ++ x) {
+					unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
+					fs << struct_intensity[index] << "\t0.0"	<< std::endl;
+				} // for
+				fs << std::endl;
+			} // for
+			fs << std::endl;
+		} // for
+		fs.close();
 
 		// arrays struct_intensity and id etc can be eliminated/reduced in size to nqx*nqy*nqz only
 		// ...
