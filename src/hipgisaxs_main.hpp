@@ -5,7 +5,7 @@
   *
   *  File: hipgisaxs_main.hpp
   *  Created: Jun 11, 2012
-  *  Modified: Mon 27 Aug 2012 11:58:24 PM PDT
+  *  Modified: Wed 12 Sep 2012 03:50:26 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */

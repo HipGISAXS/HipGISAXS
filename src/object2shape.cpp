@@ -3,9 +3,14 @@
  */
 
 #include <iomanip>
+#include <boost/lexical_cast.hpp>
+
 #include "object2shape.hpp"
 
 
+/**
+ * constructor: read input object file, convert to shape and write to output file
+ */
 o2s_converter::o2s_converter(char* filename, char* outfilename, MPI_Comm comm, bool hdf5) {
 	filename_ = NULL; outfilename_ = NULL; shape_def_ = NULL;
 
@@ -14,38 +19,48 @@ o2s_converter::o2s_converter(char* filename, char* outfilename, MPI_Comm comm, b
 	comm_ = comm;
 
 	std::vector<vertex_t> vertices;
-	std::vector<poly_index_t> Vn3, Vn4, F3, F4;
+	//std::vector<poly_index_t> Vn3, Vn4, F3, F4;
 
-	load_object(filename, vertices, Vn3, Vn4, F3, F4);
+	std::vector<std::vector<int> > face_list_3v, face_list_4v;
+	load_object(filename, vertices, face_list_3v, face_list_4v);
+
+	//load_object(filename, vertices, Vn3, Vn4, F3, F4);
 	//std::cout << "Vertices: " << std::endl;	display_vertices(vertices);
 	//std::cout << "F3: " << std::endl;		display_poly_index(F3);
 	//std::cout << "F4: " << std::endl;		display_poly_index(F4);
-	convert(outfilename, F3, vertices, hdf5);
+
+	if(face_list_4v.size() > 0)
+		std::cerr << "warning: ignoring faces with four vertices. may be fix it" << std::endl;
+	convert(outfilename, face_list_3v, vertices, hdf5);
 } // o2s_converter()
 
 
+/**
+ * load input object file into local data structures in memory
+ */
 void o2s_converter::load_object(char* filename,
-		std::vector<vertex_t> &vertices, std::vector<poly_index_t> &Vn3, std::vector<poly_index_t> &Vn4,
-		std::vector<poly_index_t> &F3, std::vector<poly_index_t> &F4) {
+		std::vector<vertex_t> &vertices, /*std::vector<poly_index_t> &Vn3, std::vector<poly_index_t> &Vn4,
+		std::vector<poly_index_t> &F3, std::vector<poly_index_t> &F4,*/
+		std::vector<std::vector<int> > &face_list_3v, std::vector<std::vector<int> > &face_list_4v) {
+
 	std::ifstream input(filename);
 	if(!input.is_open()) {
 		std::cout << "Unable to open file " << filename << std::endl;
 		return;
 	} // if
 
-	//std::cout << "Opened file " << filename << std::endl;
-
 	int num_texture = 0, num_normal = 0;
-	std::vector<int> g3num, g4num;
-	int f3num = 0, f4num = 0;
+	//std::vector<int> g3num, g4num;
+	//int f3num = 0, f4num = 0;
+	//char discard;
+	//float_t data[12], tc1[4], vn1[4];
+	//poly_index_t f1;
 
-	char discard;
-	float_t data[12], tc1[4], vn1[4];
-	poly_index_t f1;
+	std::vector<int> face_vi, face_vti, face_vni;
+	int face_num_3v, face_num_4v;
+	tokenizer_t::iterator iter1, iter2;
+	char* temp_line = new char[257];	// will not work if line has more than 256 characters
 
-	int q = 0;
-
-	char* temp_line = new char[257];
 	while(!input.eof()) {
 		input.getline(temp_line, 256);
 		std::string temp_string(temp_line);
@@ -56,7 +71,10 @@ void o2s_converter::load_object(char* filename,
 		temp_stream >> token;
 
 		std::vector<int> pos_face_vertices, pos_slash;
-		int num_face_vertices = 0, num_slash = 0, dbslash = 0;
+		//int num_face_vertices = 0, num_slash = 0, dbslash = 0;
+
+		token_separator_t sep1(" ");
+		tokenizer_t tokens1(temp_string, sep1);
 
 		switch(token_hash(token)) {
 			case VERTEX:
@@ -67,20 +85,22 @@ void o2s_converter::load_object(char* filename,
 				vertices.push_back(v);
 				break;
 
-			case TEXTURE:
+			case TEXTURE:		// not using
 				++ num_texture;
 				break;
 
-			case SUB_MESH:
-				g3num.push_back(f3num);
-				g4num.push_back(f4num);
+			case SUB_MESH:		// not using
+				//g3num.push_back(face_num_3v);
+				//g4num.push_back(face_num_4v);
 				break;
 
-			case NORMAL:
+			case NORMAL:		// not using
 				++ num_normal;
 				break;
 
-			case FACE:
+			/*case FACE:
+				pos_face_vertices.clear();
+				pos_slash.clear();
 				findall(temp_string, ' ', pos_face_vertices);
 				num_face_vertices = pos_face_vertices.size();
 				findall(temp_string, '/', pos_slash);
@@ -105,7 +125,6 @@ void o2s_converter::load_object(char* filename,
 						f1.a = data[0]; f1.b = data[2]; f1.c = data[4]; f1.d = data[6];
 						tc1[0] = data[1]; tc1[1] = data[3]; tc1[2] = data[5]; tc1[3] = data[7];
 					} // if
-
 				} else if(num_slash == 2 * num_face_vertices && dbslash == 1) {
 					temp_stream >> data[0] >> discard >> discard >> data[1];
 					temp_stream >> data[2] >> discard >> discard >> data[3];
@@ -139,7 +158,6 @@ void o2s_converter::load_object(char* filename,
 						Vn4.push_back(f1);
 					} // if
 				} // if-else
-
 				if(num_face_vertices == 3) {
 					F3.push_back(f1);
 					++ f3num;
@@ -149,14 +167,51 @@ void o2s_converter::load_object(char* filename,
 				} else {
 					std::cout << "Warning: something is not right!" << std::endl;
 				} // if-else
+				break;*/
 
+			case FACE:	// new processing
+				face_vi.clear();	// vertex indices
+				face_vti.clear();	// vertex texture indices
+				face_vni.clear();	// vertex normal indices
+				iter1 = tokens1.begin();
+				++ iter1;	// ignore the first token
+				for(; iter1 != tokens1.end(); ++ iter1) {
+					token_separator_t sep2("/", " ", boost::keep_empty_tokens);
+					tokenizer_t tokens2(*iter1, sep2);
+					// cases: v v/vt v/vt/vn v//vn
+					iter2 = tokens2.begin();
+					face_vi.push_back(boost::lexical_cast<int>(*iter2));
+					++ iter2;
+					if(iter2 != tokens2.end()) {
+						if(!(*iter2).empty()) face_vti.push_back(boost::lexical_cast<int>(*iter2));
+						++ iter2;
+					} // if
+					if(iter2 != tokens2.end()) {
+						face_vni.push_back(boost::lexical_cast<int>(*iter2));
+						++ iter2;
+					} // if
+					if(iter2 != tokens2.end()) {
+						std::cerr << "error: could not understand the input line '"
+								<< temp_string << "'" << std::endl;
+						return;
+					} // if-else
+				} // for
+				if(face_vi.size() == 3) {
+					face_list_3v.push_back(face_vi);
+					++ face_num_3v;
+				} else if(face_vi.size() == 4) {
+					face_list_4v.push_back(face_vi);
+					++ face_num_4v;
+				} else {
+					std::cerr << "warning: ignoring face with more than four vertices" << std::endl;
+				} // if-else
 				break;
 
-			case COMMENT:
 			case MATERIAL_LIBRARY:
 			case MATERIAL_NAME:
 			case LINE:
 			case SMOOTH_SHADING:
+			case COMMENT:
 				break;
 
 			default:
@@ -169,9 +224,12 @@ void o2s_converter::load_object(char* filename,
 } // load_object()
 
 
-float_t* o2s_converter::convert(char* outfilename, std::vector<poly_index_t> F3,
-			std::vector<vertex_t> vertices, bool hdf5) {
-	int num_triangles = F3.size();
+/**
+ * given the boolean 'hdf5', convert and save the shape definition as is, or in hdf5 format
+ */
+float_t* o2s_converter::convert(char* outfilename,
+		std::vector<std::vector<int> > face_list_3v, std::vector<vertex_t> vertices, bool hdf5) {
+	int num_triangles = face_list_3v.size();
 	shape_def_ = new float_t[num_triangles * 7];
 
 	std::ofstream output;
@@ -179,13 +237,13 @@ float_t* o2s_converter::convert(char* outfilename, std::vector<poly_index_t> F3,
 		output.open(outfilename);
 
 	int count = 0;
-	for(std::vector<poly_index_t>::iterator i = F3.begin(); i != F3.end(); ++ i) {
+	for(std::vector<std::vector<int> >::iterator i = face_list_3v.begin(); i != face_list_3v.end(); ++ i) {
 		float_t s_area = 0.0;
 		vertex_t norm, center;
-		get_triangle_params(vertices[(*i).a - 1], vertices[(*i).b - 1], vertices[(*i).c - 1],
+		get_triangle_params(vertices[(*i)[0] - 1], vertices[(*i)[1] - 1], vertices[(*i)[2] - 1],
 							s_area, norm, center);
 		if(!hdf5) {
-			output << std::setiosflags(std::ios::fixed) << std::setprecision(6)
+			output << std::setiosflags(std::ios::fixed) << std::setprecision(16)
 				<< s_area << "\t" << norm.x << "\t" << norm.y << "\t" << norm.z << "\t"
 				<< center.x << "\t" << center.y << "\t" << center.z << std::endl;
 		} // if
@@ -215,6 +273,9 @@ float_t* o2s_converter::convert(char* outfilename, std::vector<poly_index_t> F3,
 } // convert()
 
 
+/**
+ * given the vertices of a triangle in order, compute surface area, normal and center
+ */
 void o2s_converter::get_triangle_params(vertex_t v1, vertex_t v2, vertex_t v3,
 		float_t &s_area, vertex_t &normal, vertex_t &center) {
 	center.x = (v1.x + v2.x + v3.x) / 3.0;
@@ -239,6 +300,9 @@ void o2s_converter::get_triangle_params(vertex_t v1, vertex_t v2, vertex_t v3,
 } // get_triangle_params()
 
 
+/**
+ * hashing of tokens. a token is the first character of a line.
+ */
 token_t o2s_converter::token_hash(std::string const &str) {
 	if(str == "#") return COMMENT;
 	if(str == "v") return VERTEX;
@@ -254,10 +318,13 @@ token_t o2s_converter::token_hash(std::string const &str) {
 } // token_hash
 
 
+/**
+ * find positions of all occurances of character 'c' in string 'str'
+ */
 void o2s_converter::findall(std::string str, char c, std::vector<int> &pos_list) {
 	int pos = 0;
 	pos = str.find(c, pos);
-	while(pos != std::string::npos) {
+	while(pos != (int)std::string::npos) {
 		pos_list.push_back(pos);
 		pos = str.find(c, pos + 1);
 	} // while

@@ -5,7 +5,7 @@
   *
   *  File: sf.cpp
   *  Created: Jun 18, 2012
-  *  Modified: Wed 12 Sep 2012 02:48:49 PM PDT
+  *  Modified: Thu 13 Sep 2012 12:10:54 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -67,16 +67,10 @@ namespace hig {
 		} // if
 
 		if(my_rank == 0) {
-			std::cout << "**        Using input shape file: data/opv_zyplane.hd5";
+			std::cout << "**        Using input shape file: data/opv_zyplane.hd5" << std::endl;
 			std::cout << "-- Computing structure factor ... " << std::endl;
 			std::cout << "**               nqx x nqy x nqz: " << nx_ << " x "
 						<< ny_ << " x " << nz_ << std::endl;
-		} // if
-
-		if(my_rank == 0) {
-			std::cout << "arot: " << arot[0] << ", " << arot[1] << ", " << arot[2] << std::endl;
-			std::cout << "brot: " << brot[0] << ", " << brot[1] << ", " << brot[2] << std::endl;
-			std::cout << "crot: " << crot[0] << ", " << crot[1] << ", " << crot[2] << std::endl;
 		} // if
 
 		std::complex<float_t> unit_c(1, 0);

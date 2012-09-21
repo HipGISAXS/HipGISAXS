@@ -13,20 +13,20 @@ shape2hdf5_converter::shape2hdf5_converter(char* filename, char* outfilename, MP
 	outfilename_ = new std::string(outfilename);
 	comm_ = comm;
 
-	std::vector<float_t> shape_def;
+	std::vector<double> shape_def;
 
 	load_shape(filename, shape_def);
 	convert(outfilename, shape_def);
 } // o2s_converter()
 
 
-int shape2hdf5_converter::load_shape(char* filename, std::vector<float_t> &shape_def) {
+int shape2hdf5_converter::load_shape(char* filename, std::vector<double> &shape_def) {
     std::ifstream f(filename);
     if(!f.is_open()) {
         std::cout << "Cannot open file " << filename << std::endl;
         return -1;
     } // if
-    float_t s = 0.0, cx = 0.0, cy = 0.0, cz = 0.0, nx = 0.0, ny = 0.0, nz = 0.0;
+    double s = 0.0, cx = 0.0, cy = 0.0, cz = 0.0, nx = 0.0, ny = 0.0, nz = 0.0;
 
     while(true) {
         f >> s;
@@ -47,11 +47,11 @@ int shape2hdf5_converter::load_shape(char* filename, std::vector<float_t> &shape
 } // load_shape()
 
 
-void shape2hdf5_converter::convert(char* outfilename, std::vector<float_t> shape_def) {
-	shape_def_ = new float_t[shape_def.size()];
+void shape2hdf5_converter::convert(char* outfilename, std::vector<double> shape_def) {
+	shape_def_ = new double[shape_def.size()];
 
 	int count = 0;
-	for(std::vector<float_t>::iterator i = shape_def.begin(); i != shape_def.end(); ++ i)
+	for(std::vector<double>::iterator i = shape_def.begin(); i != shape_def.end(); ++ i)
 		shape_def_[count ++] = *i;
 
 	// call the C HDF5 function

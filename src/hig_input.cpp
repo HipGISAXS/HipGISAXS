@@ -5,7 +5,7 @@
   *
   *  File: hig_input.cpp
   *  Created: Jun 11, 2012
-  *  Modified: Fri 31 Aug 2012 08:41:42 PM PDT
+  *  Modified: Thu 13 Sep 2012 03:31:15 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -1382,6 +1382,9 @@ namespace hig {
 			max_c = (max_c < shape_def_[i + 6]) ? shape_def_[i + 6] : max_c ;
 		} // for
 
+		std::cout << "------ min = " << min_a << ", " << min_b << ", " << min_c << std::endl;
+		std::cout << "------ max = " << max_a << ", " << max_b << ", " << max_c << std::endl;
+
 		float_t diff_a = max_a - min_a;
         float_t diff_b = max_b - min_b;
         float_t diff_c = max_c - min_c;
@@ -1481,8 +1484,26 @@ namespace hig {
 
 		// ASSUMING THERE ARE 7 ENTRIES FOR EACH TRIANGLE ... IMPROVE/GENERALIZE ...
 		HiGFileReader::instance().hdf5_shape_reader(filename, temp_shape_def, num_triangles);
+		shape_def_.clear();
+		// temporary scaling ....
+		/*float_t scale_factor = 1;
+		for(unsigned int i = 0; i < 7 * num_triangles; i += 7) {
+			float_t s = (float_t)temp_shape_def[i];
+			shape_def_.push_back(s * scale_factor * scale_factor);
+			float_t nx = (float_t)temp_shape_def[i + 1];
+			shape_def_.push_back(nx);
+			float_t ny = (float_t)temp_shape_def[i + 2];
+			shape_def_.push_back(ny);
+			float_t nz = (float_t)temp_shape_def[i + 3];
+			shape_def_.push_back(nz);
+			float_t x = (float_t)temp_shape_def[i + 4];
+			shape_def_.push_back(x * scale_factor);
+			float_t y = (float_t)temp_shape_def[i + 5];
+			shape_def_.push_back(y * scale_factor);
+			float_t z = (float_t)temp_shape_def[i + 6];
+			shape_def_.push_back(z * scale_factor);
+		} // for */
 		for(unsigned int i = 0; i < 7 * num_triangles; ++ i) shape_def_.push_back((float_t)temp_shape_def[i]);
-
 		return num_triangles;
 	} // HiGInput::read_shape_file_shape()
 

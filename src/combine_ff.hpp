@@ -3,9 +3,9 @@
   *
   *  Project:
   *
-  *  File: plot_ff.hpp
+  *  File: combine_ff.hpp
   *  Created: Aug 22, 2012
-  *  Modified: Thu 13 Sep 2012 07:05:05 PM PDT
+  *  Modified: Thu 13 Sep 2012 06:56:56 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -18,15 +18,15 @@
 
 namespace hig {
 
-	class Plot {
+	class PlotCombined {
 		public:
-			Plot(unsigned int nx, unsigned int ny, unsigned int nz):
-					nx_(nx), ny_(ny), nz_(nz), plot_(nx, ny, nz) {
+			PlotCombined(unsigned int nx, unsigned int ny, unsigned int nz):
+					nx_(nx), ny_(ny), nz_(nz), plot_(nx, ny, nz / 4) {
 				raw_data_ = new (std::nothrow) complex_t[nx * ny * nz];
-				mag_data_ = new (std::nothrow) float_t[nx * ny * nz];
+				mag_data_ = new (std::nothrow) float_t[nx * ny * (nz / 4)];
 			} // Plot()
 
-			~Plot() {
+			~PlotCombined() {
 				delete[] mag_data_;
 				delete[] raw_data_;
 			} // ~Plot()
@@ -34,7 +34,7 @@ namespace hig {
 
 			bool plot(const char* infile, const char* outfile) {
 				read_in(infile);
-				convert_to_mag();
+				combine_to_mag();
 				plot_.construct_image(mag_data_);
 				plot_.save(std::string(outfile));
 				return true;
@@ -67,14 +67,14 @@ namespace hig {
 			} // read_in()
 
 
-			bool convert_to_mag() {
-				for(unsigned int i = 0; i < nx_ * ny_ * nz_; ++ i) mag_data_[i] = 0.0;
-				for(int p = 0; p < 4; ++ p) {
-					for(unsigned int i = 0; i < nx_ * ny_ * (nz_ / 4); ++ i) {
-						complex_t temp = raw_data_[nx_ * ny_ * (nz_ / 4) * p + i];
-						mag_data_[nx_ * ny_ * (nz_ / 4) * p + i] =
-								sqrt(pow(temp.real(), 2.0) + pow(temp.imag(), 2.0));
+			bool combine_to_mag() {
+				for(unsigned int i = 0; i < nx_ * ny_ * (nz_ / 4); ++ i) mag_data_[i] = 0.0;
+				for(unsigned int i = 0; i < nx_ * ny_ * (nz_ / 4); ++ i) {
+					complex_t sum = 0;
+					for(int p = 0; p < 4; ++ p) {
+						sum += raw_data_[nx_ * ny_ * (nz_ / 4) * p + i];
 					} // for
+					mag_data_[i] = sqrt(pow(sum.real(), 2.0) + pow(sum.imag(), 2.0));
 				} // for
 				return true;
 			} // convert_to_mag()
