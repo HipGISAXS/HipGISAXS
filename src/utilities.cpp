@@ -13,7 +13,7 @@
 #include <iostream>
 #include <cmath>
 //#include <boost/math/special_functions/bessel.hpp>
-#include <pari/pari.h>	// for bessel functions
+//#include <pari/pari.h>	// for bessel functions
 
 #include "utilities.hpp"
 
@@ -370,8 +370,8 @@ namespace hig {
 
 	// pari
 	complex_t besselj(int j, complex_t m) {
-		pari_init(5000000, 100000);
-		GEN inp_m = cgetc(64);	/* using double precision */
+/*		pari_init(5000000, 100000);
+		GEN inp_m = cgetc(64);	// using double precision
 		gel(inp_m, 1) = dbltor(m.real());
 		gel(inp_m, 2) = dbltor(m.imag());
 		GEN unit = cgetc(64);
@@ -385,7 +385,7 @@ namespace hig {
 		float_t out_imag = rtodbl(gel(out_res, 2));
 
 		pari_close();
-		return complex_t(out_real, out_imag);
+		return complex_t(out_real, out_imag); */
 	} // besselj()
 
 
