@@ -5,7 +5,7 @@
   *
   *  File: hipgisaxs_main.cpp
   *  Created: Jun 14, 2012
-  *  Modified: Thu 13 Sep 2012 01:31:33 PM PDT
+  *  Modified: Thu 13 Sep 2012 03:30:25 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -485,151 +485,149 @@ namespace hig {
 				std::cout << std::endl;*/
 
 				if(mpi_rank == 0) {
+					complex_t* base_id = id + j * nqx_ * nqy_ * nqz_;
 
-				complex_t* base_id = id + j * nqx_ * nqy_ * nqz_;
+					unsigned int nslices = HiGInput::instance().param_nslices();
+					if(nslices <= 1) {
+						/* without slicing */
+						if(HiGInput::instance().structure_layer_order((*s).second) == 1) {
+														// structure is inside a layer, on top of substrate
+							if(single_layer_refindex_.delta() < 0 || single_layer_refindex_.beta() < 0) {
+								// this should never happen
+								//if(mpi_rank == 0)
+								std::cerr << "error: single layer information not correctly set"
+										<< std::endl;
+								return false;
+							} // if
+							complex_t dn2(-2.0 * ((*s).second.grain_refindex().delta() -
+											single_layer_refindex_.delta()),
+											-2.0 * ((*s).second.grain_refindex().beta() -
+											single_layer_refindex_.beta()));
 
-				unsigned int nslices = HiGInput::instance().param_nslices();
-				if(nslices <= 1) {
-					/* without slicing */
-					if(HiGInput::instance().structure_layer_order((*s).second) == 1) {
-													// structure is inside a layer, on top of substrate
-						if(single_layer_refindex_.delta() < 0 || single_layer_refindex_.beta() < 0) {
-							// this should never happen
-							if(mpi_rank == 0)
-								std::cerr << "error: single layer information not correctly set" << std::endl;
-							return false;
-						} // if
-						complex_t dn2(-2.0 * ((*s).second.grain_refindex().delta() -
-										single_layer_refindex_.delta()),
-										-2.0 * ((*s).second.grain_refindex().beta() -
-										single_layer_refindex_.beta()));
+							//std::cout << "DN2 = " << dn2 << std::endl;
 
-						//std::cout << "DN2 = " << dn2 << std::endl;
-
-						// for testing
-						/*std::ofstream f1("amm.out");
-						for(unsigned int z = 0; z < nqz_; ++ z) {
-							for(unsigned int y = 0; y < nqy_; ++ y) {
-								for(unsigned int x = 0; x < nqx_; ++ x) {
-									unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
-									f1 << amm[index].real() << "\t" << amm[index].imag() << std::endl;
+							// for testing
+							/*std::ofstream f1("amm.out");
+							for(unsigned int z = 0; z < nqz_; ++ z) {
+								for(unsigned int y = 0; y < nqy_; ++ y) {
+									for(unsigned int x = 0; x < nqx_; ++ x) {
+										unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
+										f1 << amm[index].real() << "\t" << amm[index].imag() << std::endl;
+									} // for
+									f1 << std::endl;
 								} // for
 								f1 << std::endl;
 							} // for
-							f1 << std::endl;
-						} // for
-						f1.close();
-						std::ofstream f2("amp.out");
-						for(unsigned int z = 0; z < nqz_; ++ z) {
-							for(unsigned int y = 0; y < nqy_; ++ y) {
-								for(unsigned int x = 0; x < nqx_; ++ x) {
-									unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
-									f2 << amp[index].real() << "\t" << amp[index].imag() << std::endl;
+							f1.close();
+							std::ofstream f2("amp.out");
+							for(unsigned int z = 0; z < nqz_; ++ z) {
+								for(unsigned int y = 0; y < nqy_; ++ y) {
+									for(unsigned int x = 0; x < nqx_; ++ x) {
+										unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
+										f2 << amp[index].real() << "\t" << amp[index].imag() << std::endl;
+									} // for
+									f2 << std::endl;
 								} // for
 								f2 << std::endl;
 							} // for
-							f2 << std::endl;
-						} // for
-						f2.close();
-						std::ofstream f3("apm.out");
-						for(unsigned int z = 0; z < nqz_; ++ z) {
-							for(unsigned int y = 0; y < nqy_; ++ y) {
-								for(unsigned int x = 0; x < nqx_; ++ x) {
-									unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
-									f3 << apm[index].real() << "\t" << apm[index].imag() << std::endl;
+							f2.close();
+							std::ofstream f3("apm.out");
+							for(unsigned int z = 0; z < nqz_; ++ z) {
+								for(unsigned int y = 0; y < nqy_; ++ y) {
+									for(unsigned int x = 0; x < nqx_; ++ x) {
+										unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
+										f3 << apm[index].real() << "\t" << apm[index].imag() << std::endl;
+									} // for
+									f3 << std::endl;
 								} // for
 								f3 << std::endl;
 							} // for
-							f3 << std::endl;
-						} // for
-						f3.close();
-						std::ofstream f4("app.out");
-						for(unsigned int z = 0; z < nqz_; ++ z) {
-							for(unsigned int y = 0; y < nqy_; ++ y) {
-								for(unsigned int x = 0; x < nqx_; ++ x) {
-									unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
-									f4 << app[index].real() << "\t" << app[index].imag() << std::endl;
+							f3.close();
+							std::ofstream f4("app.out");
+							for(unsigned int z = 0; z < nqz_; ++ z) {
+								for(unsigned int y = 0; y < nqy_; ++ y) {
+									for(unsigned int x = 0; x < nqx_; ++ x) {
+										unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
+										f4 << app[index].real() << "\t" << app[index].imag() << std::endl;
+									} // for
+									f4 << std::endl;
 								} // for
 								f4 << std::endl;
 							} // for
-							f4 << std::endl;
-						} // for
-						f4.close();*/
+							f4.close();*/
 
-						// base_id = dn2 * (amm .* sf() .* ff() + amp .* sf() .* ff() +
-						//				apm .* sf() .* ff() + app .* sf() .* ff());
-						for(unsigned int z = 0; z < nqz_; ++ z) {
-							for(unsigned int y = 0; y < nqy_; ++ y) {
-								for(unsigned int x = 0; x < nqx_; ++ x) {
-									unsigned int curr_index = nqx_ * nqy_ * z + nqx_ * y + x;
-									unsigned int curr_index_0 = curr_index;
-									unsigned int curr_index_1 = nqx_ * nqy_ * nqz_ + curr_index;
-									unsigned int curr_index_2 = 2 * nqx_ * nqy_ * nqz_ + curr_index;
-									unsigned int curr_index_3 = 3 * nqx_ * nqy_ * nqz_ + curr_index;
+							// base_id = dn2 * (amm .* sf() .* ff() + amp .* sf() .* ff() +
+							//				apm .* sf() .* ff() + app .* sf() .* ff());
+							for(unsigned int z = 0; z < nqz_; ++ z) {
+								for(unsigned int y = 0; y < nqy_; ++ y) {
+									for(unsigned int x = 0; x < nqx_; ++ x) {
+										unsigned int curr_index = nqx_ * nqy_ * z + nqx_ * y + x;
+										unsigned int curr_index_0 = curr_index;
+										unsigned int curr_index_1 = nqx_ * nqy_ * nqz_ + curr_index;
+										unsigned int curr_index_2 = 2 * nqx_ * nqy_ * nqz_ + curr_index;
+										unsigned int curr_index_3 = 3 * nqx_ * nqy_ * nqz_ + curr_index;
 
-									// what happends in case of "saxs" ? ... when nqz_ext == nqz
-									base_id[curr_index] = dn2 *
-										(amm[curr_index] * sf_[curr_index_0] * ff_[curr_index_0] +
-										amp[curr_index] * sf_[curr_index_1] * ff_[curr_index_1] +
-										apm[curr_index] * sf_[curr_index_2] * ff_[curr_index_2] +
-										app[curr_index] * sf_[curr_index_3] * ff_[curr_index_3]);
-								} // for x
-							} // for y
-						} // for z
-					} else if(HiGInput::instance().structure_layer_order((*s).second) == -1) {
-														// structure burried in substrate
-						complex_t dn2(-2.0 * (substrate_refindex_.delta() -
-										(*s).second.grain_refindex().delta()),
-										-2.0 * (substrate_refindex_.beta() -
-										(*s).second.grain_refindex().beta()));
+										// what happends in case of "saxs" ? ... when nqz_ext == nqz
+										base_id[curr_index] = dn2 *
+											(amm[curr_index] * sf_[curr_index_0] * ff_[curr_index_0] +
+											amp[curr_index] * sf_[curr_index_1] * ff_[curr_index_1] +
+											apm[curr_index] * sf_[curr_index_2] * ff_[curr_index_2] +
+											app[curr_index] * sf_[curr_index_3] * ff_[curr_index_3]);
+									} // for x
+								} // for y
+							} // for z
+						} else if(HiGInput::instance().structure_layer_order((*s).second) == -1) {
+															// structure burried in substrate
+							complex_t dn2(-2.0 * (substrate_refindex_.delta() -
+											(*s).second.grain_refindex().delta()),
+											-2.0 * (substrate_refindex_.beta() -
+											(*s).second.grain_refindex().beta()));
 
-						// what happens in the case when sf and ff have nqz_extended = 4 * nqz  ... ?
-						for(unsigned int z = 0; z < nqz_; ++ z) {
-							for(unsigned int y = 0; y < nqy_; ++ y) {
-								for(unsigned int x = 0; x < nqx_; ++ x) {
-									unsigned int curr_index = nqx_ * nqy_ * z + nqx_ * y + x;
-									base_id[curr_index] = dn2 * sf_[curr_index] * ff_[curr_index];
-								} // for x
-							} // for y
-						} // for z
-					} else if(HiGInput::instance().structure_layer_order((*s).second) == 0) {
-														// structure on top of substrate
-						complex_t dn2(-2.0 * (*s).second.grain_refindex().delta(),
-										-2.0 * (*s).second.grain_refindex().beta());
-
-						for(unsigned int z = 0; z < nqz_; ++ z) {
-							for(unsigned int y = 0; y < nqy_; ++ y) {
-								for(unsigned int x = 0; x < nqx_; ++ x) {
-									unsigned int curr_index = nqx_ * nqy_ * z + nqx_ * y + x;
-									unsigned int curr_index_0 = curr_index;
-									unsigned int curr_index_1 = nqx_ * nqy_ * nqz_ + curr_index;
-									unsigned int curr_index_2 = 2 * nqx_ * nqy_ * nqz_ + curr_index;
-									unsigned int curr_index_3 = 3 * nqx_ * nqy_ * nqz_ + curr_index;
-									base_id[curr_index] = dn2 *
-										(h0[curr_index] * sf_[curr_index_0] * ff_[curr_index_0] +
-										rk2[curr_index] * sf_[curr_index_1] * ff_[curr_index_1] +
-										rk1[curr_index] * sf_[curr_index_2] * ff_[curr_index_2] +
-										rk1rk2[curr_index] * sf_[curr_index_3] * ff_[curr_index_3]);
-								} // for x
-							} // for y
-						} // for z
+							// what happens in the case when sf and ff have nqz_extended = 4 * nqz  ... ?
+							for(unsigned int z = 0; z < nqz_; ++ z) {
+								for(unsigned int y = 0; y < nqy_; ++ y) {
+									for(unsigned int x = 0; x < nqx_; ++ x) {
+										unsigned int curr_index = nqx_ * nqy_ * z + nqx_ * y + x;
+										base_id[curr_index] = dn2 * sf_[curr_index] * ff_[curr_index];
+									} // for x
+								} // for y
+							} // for z
+						} else if(HiGInput::instance().structure_layer_order((*s).second) == 0) {
+															// structure on top of substrate
+							complex_t dn2(-2.0 * (*s).second.grain_refindex().delta(),
+											-2.0 * (*s).second.grain_refindex().beta());
+	
+							for(unsigned int z = 0; z < nqz_; ++ z) {
+								for(unsigned int y = 0; y < nqy_; ++ y) {
+									for(unsigned int x = 0; x < nqx_; ++ x) {
+										unsigned int curr_index = nqx_ * nqy_ * z + nqx_ * y + x;
+										unsigned int curr_index_0 = curr_index;
+										unsigned int curr_index_1 = nqx_ * nqy_ * nqz_ + curr_index;
+										unsigned int curr_index_2 = 2 * nqx_ * nqy_ * nqz_ + curr_index;
+										unsigned int curr_index_3 = 3 * nqx_ * nqy_ * nqz_ + curr_index;
+										base_id[curr_index] = dn2 *
+											(h0[curr_index] * sf_[curr_index_0] * ff_[curr_index_0] +
+											rk2[curr_index] * sf_[curr_index_1] * ff_[curr_index_1] +
+											rk1[curr_index] * sf_[curr_index_2] * ff_[curr_index_2] +
+											rk1rk2[curr_index] * sf_[curr_index_3] * ff_[curr_index_3]);
+									} // for x
+								} // for y
+							} // for z
+						} else {
+							//if(mpi_rank == 0)
+								std::cerr << "error: unable to determine sample structure. "
+											<< "make sure the layer order is correct" << std::endl;
+								return false;
+						} // if-else
 					} else {
-						if(mpi_rank == 0)
-							std::cerr << "error: unable to determine sample structure. "
-										<< "make sure the layer order is correct" << std::endl;
-						return false;
-					} // if-else
-				} else {
-					/* perform slicing */
-					// not yet implemented ...
-					if(mpi_rank == 0)
+						/* perform slicing */
+						// not yet implemented ...
+						//if(mpi_rank == 0)
 						std::cout << "uh-oh: ever thought about implementing the slicing scheme?"
 									<< std::endl;
-					return false;
-				} // if-else
-
+						return false;
+					} // if-else
 				} // if mpi_rank == 0
-
 			} // for num_domains
 
 			delete[] nn;
@@ -660,39 +658,41 @@ namespace hig {
 			// i think it should be outside because it is summing
 			// over the 4th dimension which is the set of domains ...
 			// nqz_extended ... ?? ...
-			if(corr_doms == 1) {		// note: currently this is hardcoded as 0
-				unsigned int soffset = s_num * nqx_ * nqy_ * nqz_;
-				for(unsigned int z = 0; z < nqz_; ++ z) {
-					for(unsigned int y = 0; y < nqy_; ++ y) {
-						for(unsigned int x = 0; x < nqx_; ++ x) {
-							unsigned int curr_index = nqx_ * nqy_ * z + nqx_ * y + x;
-							complex_t sum(0.0, 0.0);
-							for(int d = 0; d < num_domains; ++ d) {
-								unsigned int id_index = d * nqx_ * nqy_ * nqz_ + curr_index;
-								sum += id[id_index];
-							} // for d
-							struct_intensity[soffset + curr_index] = sum.real() * sum.real() +
-																		sum.imag() * sum.imag();
-						} // for x
-					} // for y
-				} // for z
-			} else {
-				unsigned int soffset = s_num * nqx_ * nqy_ * nqz_;
-				for(unsigned int z = 0; z < nqz_; ++ z) {
-					for(unsigned int y = 0; y < nqy_; ++ y) {
-						for(unsigned int x = 0; x < nqx_; ++ x) {
-							unsigned int curr_index = nqx_ * nqy_ * z + nqx_ * y + x;
-							float_t sum = 0.0;
-							for(int d = 0; d < num_domains; ++ d) {
-								unsigned int id_index = d * nqx_ * nqy_ * nqz_ + curr_index;
-								sum += id[id_index].real() * id[id_index].real() +
-										id[id_index].imag() * id[id_index].imag();
-							} // for d
-							struct_intensity[soffset + curr_index] = sum;
-						} // for x
-					} // for y
-				} // for z
-			} // if-else
+			if(mpi_rank == 0) {
+				if(corr_doms == 1) {		// note: currently this is hardcoded as 0
+					unsigned int soffset = s_num * nqx_ * nqy_ * nqz_;
+					for(unsigned int z = 0; z < nqz_; ++ z) {
+						for(unsigned int y = 0; y < nqy_; ++ y) {
+							for(unsigned int x = 0; x < nqx_; ++ x) {
+								unsigned int curr_index = nqx_ * nqy_ * z + nqx_ * y + x;
+								complex_t sum(0.0, 0.0);
+								for(int d = 0; d < num_domains; ++ d) {
+									unsigned int id_index = d * nqx_ * nqy_ * nqz_ + curr_index;
+									sum += id[id_index];
+								} // for d
+								struct_intensity[soffset + curr_index] = sum.real() * sum.real() +
+																			sum.imag() * sum.imag();
+							} // for x
+						} // for y
+					} // for z
+				} else {
+					unsigned int soffset = s_num * nqx_ * nqy_ * nqz_;
+					for(unsigned int z = 0; z < nqz_; ++ z) {
+						for(unsigned int y = 0; y < nqy_; ++ y) {
+							for(unsigned int x = 0; x < nqx_; ++ x) {
+								unsigned int curr_index = nqx_ * nqy_ * z + nqx_ * y + x;
+								float_t sum = 0.0;
+								for(int d = 0; d < num_domains; ++ d) {
+									unsigned int id_index = d * nqx_ * nqy_ * nqz_ + curr_index;
+									sum += id[id_index].real() * id[id_index].real() +
+											id[id_index].imag() * id[id_index].imag();
+								} // for d
+								struct_intensity[soffset + curr_index] = sum;
+							} // for x
+						} // for y
+					} // for z
+				} // if-else
+			} // if mpi_rank == 0
 
 			//printfr("struct_intensity", struct_intensity, nqx_ * nqy_ * nqz_);
 
@@ -723,28 +723,30 @@ namespace hig {
 		} // for
 		std::cout << std::endl;
 */
-		img3d = new (std::nothrow) float_t[nqx_ * nqy_ * nqz_];
-		// sum of struct_intensity into intensity
-		for(unsigned int z = 0; z < nqz_; ++ z) {
-			for(unsigned int y = 0; y < nqy_; ++ y) {
-				for(unsigned int x = 0; x < nqx_; ++ x) {
-					unsigned int curr_index = nqx_ * nqy_ * z + nqx_ * y + x;
-					float_t sum = 0.0;
-					for(int s = 0; s < num_structs; ++ s) {
-						unsigned int index = s * nqx_ * nqy_ * nqz_ + curr_index;
-						sum += struct_intensity[index];
-					} // for d
-					img3d[curr_index] = sum;
-				} // for x
-			} // for y
-		} // for z
+		if(mpi_rank == 0) {
+			img3d = new (std::nothrow) float_t[nqx_ * nqy_ * nqz_];
+			// sum of struct_intensity into intensity
+			for(unsigned int z = 0; z < nqz_; ++ z) {
+				for(unsigned int y = 0; y < nqy_; ++ y) {
+					for(unsigned int x = 0; x < nqx_; ++ x) {
+						unsigned int curr_index = nqx_ * nqy_ * z + nqx_ * y + x;
+						float_t sum = 0.0;
+						for(int s = 0; s < num_structs; ++ s) {
+							unsigned int index = s * nqx_ * nqy_ * nqz_ + curr_index;
+							sum += struct_intensity[index];
+						} // for d
+						img3d[curr_index] = sum;
+					} // for x
+				} // for y
+			} // for z
 
-/*		std::cout << "IMG3D: nqx = " << nqx_ << ", nqy = " << nqy_ << ", nqz = " << nqz_ << std::endl;
-		for(int i = 0; i < nqx_ * nqy_ * nqz_; ++ i) {
-			std::cout << img3d[i] << " ";
-		} // for
-		std::cout << std::endl;
+/*			std::cout << "IMG3D: nqx = " << nqx_ << ", nqy = " << nqy_ << ", nqz = " << nqz_ << std::endl;
+			for(int i = 0; i < nqx_ * nqy_ * nqz_; ++ i) {
+				std::cout << img3d[i] << " ";
+			} // for
+			std::cout << std::endl;
 */
+		} // if mpi_rank == 0
 		delete[] struct_intensity;
 		delete[] fc_;
 

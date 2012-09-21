@@ -12,6 +12,7 @@
 #include <vector>
 #include <cmath>
 #include <mpi.h>
+#include <boost/tokenizer.hpp>
 
 extern "C" {
 void s2h_converter(float_t** shape_def, unsigned int num_triangles, char* hdf5_filename, MPI_Comm comm);
@@ -35,6 +36,7 @@ typedef struct {
 	float_t x;
 	float_t y;
 	float_t z;
+	float_t w; 	// for format's completeness
 } vertex_t;
 
 typedef struct {
@@ -43,6 +45,9 @@ typedef struct {
 	int c;
 	int d;
 } poly_index_t;
+
+typedef boost::char_separator<char> token_separator_t;
+typedef boost::tokenizer<token_separator_t> tokenizer_t;
 
 class o2s_converter {
 	public:
@@ -55,9 +60,15 @@ class o2s_converter {
 
 	private:
 		void load_object(char* filename, std::vector<vertex_t> &vertices,
-				std::vector<poly_index_t> &Vn3, std::vector<poly_index_t> &Vn4,
-				std::vector<poly_index_t> &F3, std::vector<poly_index_t> &F4);
-		float_t* convert(char* outfilename, std::vector<poly_index_t> F3,
+				std::vector<std::vector<int> > &face_list_3v,
+				std::vector<std::vector<int> > &face_list_4v);
+		//void load_object(char* filename, std::vector<vertex_t> &vertices,
+		//		std::vector<poly_index_t> &Vn3, std::vector<poly_index_t> &Vn4,
+		//		std::vector<poly_index_t> &F3, std::vector<poly_index_t> &F4);
+		//float_t* convert(char* outfilename, std::vector<poly_index_t> F3,
+		//		std::vector<vertex_t> vertices, bool hdf5);
+		float_t* convert(char* outfilename,
+				std::vector<std::vector<int> > face_list_3v,
 				std::vector<vertex_t> vertices, bool hdf5);
 
 		void get_triangle_params(vertex_t v1, vertex_t v2, vertex_t v3,

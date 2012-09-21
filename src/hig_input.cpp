@@ -5,7 +5,7 @@
   *
   *  File: hig_input.cpp
   *  Created: Jun 11, 2012
-  *  Modified: Thu 13 Sep 2012 12:23:18 PM PDT
+  *  Modified: Thu 13 Sep 2012 03:31:15 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -1484,9 +1484,9 @@ namespace hig {
 
 		// ASSUMING THERE ARE 7 ENTRIES FOR EACH TRIANGLE ... IMPROVE/GENERALIZE ...
 		HiGFileReader::instance().hdf5_shape_reader(filename, temp_shape_def, num_triangles);
-		// temporary scaling ....
-		float_t scale_factor = 1;
 		shape_def_.clear();
+		// temporary scaling ....
+		/*float_t scale_factor = 1;
 		for(unsigned int i = 0; i < 7 * num_triangles; i += 7) {
 			float_t s = (float_t)temp_shape_def[i];
 			shape_def_.push_back(s * scale_factor * scale_factor);
@@ -1502,8 +1502,8 @@ namespace hig {
 			shape_def_.push_back(y * scale_factor);
 			float_t z = (float_t)temp_shape_def[i + 6];
 			shape_def_.push_back(z * scale_factor);
-		} // for
-		//for(unsigned int i = 0; i < 7 * num_triangles; ++ i) shape_def_.push_back((float_t)temp_shape_def[i]);
+		} // for */
+		for(unsigned int i = 0; i < 7 * num_triangles; ++ i) shape_def_.push_back((float_t)temp_shape_def[i]);
 		return num_triangles;
 	} // HiGInput::read_shape_file_shape()
 

@@ -14,7 +14,7 @@
 #include <mpi.h>
 
 extern "C" {
-void s2h_converter(float_t** shape_def, unsigned int num_triangles, char* hdf5_filename, MPI_Comm comm);
+void s2h_converter(double** shape_def, unsigned int num_triangles, char* hdf5_filename, MPI_Comm comm);
 }
 
 class shape2hdf5_converter {
@@ -27,12 +27,12 @@ class shape2hdf5_converter {
 		} // ~converter()
 
 	private:
-		int load_shape(char* filename, std::vector<float_t> &shape_def);
-		void convert(char* outfilename, std::vector<float_t> shape_def);
+		int load_shape(char* filename, std::vector<double> &shape_def);
+		void convert(char* outfilename, std::vector<double> shape_def);
 
 		std::string *filename_;
 		std::string *outfilename_;
-		float_t* shape_def_;
+		double* shape_def_;
 		MPI_Comm comm_;
 }; // class shape2hdf5_converter
 

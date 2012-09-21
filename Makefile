@@ -64,7 +64,7 @@ PARI_LIB_FLAGS = -Wl,-rpath -Wl,$(PARI_DIR)/lib -lpari
 
 ## miscellaneous
 MISC_INCL =
-MISC_FLAGS =
+MISC_FLAGS = #-DAXIS_ROT
 
 ## choose optimization levels, debug flags, gprof flag, etc
 OPT_FLAGS = -g -DDEBUG #-v #-G #-pg
@@ -157,8 +157,39 @@ test_image: $(patsubst %,$(OBJ_DIR)/%,$(OBJECTS_IMAGE))
 $(OBJ_DIR)/test_image.o: $(SRC_DIR)/test_image.cpp
 	$(CXX) -c $< -o $@ $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS)
 
+## misc tools binaries
 
-all: hipgisaxs test_conv test_read test_ff test_image
+OBJECTS_PLOT_FF = plot_ff.o image.o utilities.o
+plot_ff: $(patsubst %,$(OBJ_DIR)/%,$(OBJECTS_PLOT_FF))
+	$(CXX) -o $(BIN_DIR)/$@ $^ $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(MISC_FLAGS) $(ALL_LIBS)
+$(OBJ_DIR)/plot_ff.o: $(SRC_DIR)/plot_ff.cpp
+	$(CXX) -c $< -o $@ $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS)
+
+OBJECTS_COMBINE_FF = combine_ff.o image.o utilities.o
+combine_ff: $(patsubst %,$(OBJ_DIR)/%,$(OBJECTS_COMBINE_FF))
+	$(CXX) -o $(BIN_DIR)/$@ $^ $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(MISC_FLAGS) $(ALL_LIBS)
+$(OBJ_DIR)/combine_ff.o: $(SRC_DIR)/combine_ff.cpp
+	$(CXX) -c $< -o $@ $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS)
+
+OBJECTS_O2S = object2shape.o object2shape_main.o object2hdf5.o
+object2shape: $(patsubst %,$(OBJ_DIR)/%,$(OBJECTS_O2S))
+	$(CXX) -o $(BIN_DIR)/$@ $^ $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(MISC_FLAGS) $(ALL_LIBS)
+$(OBJ_DIR)/object2shape%.o: $(SRC_DIR)/object2shape%.cpp
+	$(CXX) -c $< -o $@ $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS)
+
+OBJECTS_S2H = shape2hdf5.o shape2hdf5_main.o object2hdf5.o
+shape2hdf5: $(patsubst %,$(OBJ_DIR)/%,$(OBJECTS_S2H))
+	$(CXX) -o $(BIN_DIR)/$@ $^ $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(MISC_FLAGS) $(ALL_LIBS)
+$(OBJ_DIR)/shape2hdf5%.o: $(SRC_DIR)/shape2hdf5%.cpp
+	$(CXX) -c $< -o $@ $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS)
+
+OBJECTS_O2H = object2hdf5.o
+#object2hdf5: $(patsubst %,$(OBJ_DIR)/%,$(OBJECTS_O2H))
+#	$(H5CC) -o $(BIN_DIR)/$@ $^ $(OPT_FLAGS) $(PREC_FLAG) $(MISC_FLAGS) $(ALL_LIBS)
+$(OBJ_DIR)/objec2hdf5.o: $(SRC_DIR)/object2hdf5.c
+	$(H5CC) -c $< -o $@ $(OPT_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS)
+
+all: hipgisaxs test_conv test_read test_ff test_image object2shape shape2hdf5
 
 .PHONY: clean
 

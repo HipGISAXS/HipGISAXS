@@ -24,8 +24,8 @@ void s2h_converter(double** shape_def, unsigned int num_triangles, char* hdf5_fi
 
 //	double** temp_shape = (double **) malloc(num_triangles * sizeof(double *));
 	//double temp_shape[num_triangles][7];
-/*	double* temp_shape = (double*) malloc(num_triangles * 8 * sizeof(double));
 	int i, j;
+/*	double* temp_shape = (double*) malloc(num_triangles * 8 * sizeof(double));
 	for(i = 0; i < num_triangles; ++ i) {
 //		temp_shape[i] = (*shape_def) + i * 7;
 		for(j = 0; j < 7; ++ j)
@@ -33,6 +33,12 @@ void s2h_converter(double** shape_def, unsigned int num_triangles, char* hdf5_fi
 			temp_shape[7 * i + j] = (*shape_def)[7 * i + j];
 	} // for
 */
+	/*for(i = 0; i < num_triangles; ++ i) {
+		for(j = 0; j < 7; ++ j)
+			printf("%f\t", (*shape_def)[7 * i + j]);
+		printf("\n");
+	} // for */
+
 	dataspace = H5Screate_simple(num_dims, dims, NULL);
 	datatype = H5Tcopy(H5T_NATIVE_DOUBLE);
 	herr_t status = H5Tset_order(datatype, H5T_ORDER_LE);
@@ -87,6 +93,13 @@ void h5_shape_reader(const char* hdf5_filename, double** shape_def, unsigned int
 //	for(i = 0; i < dims[0]; ++ i)
 //		for(j = 0; j < dims[1]; ++ j)
 //			(*shape_def)[i * dims[1] + j] = temp[i][j];
+
+	/*int i = 0, j = 0;
+	for(i = 0; i < dims[0]; ++ i) {
+		for(j = 0; j < dims[1]; ++ j)
+			printf("%f\t", (*shape_def)[i * dims[1] + j]);
+		printf("\n");
+	} // for */
 
 	free(max_dims);
 	free(dims);
