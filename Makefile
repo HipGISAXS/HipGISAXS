@@ -11,14 +11,13 @@
 ##
 
 ## base directories
-BOOST_DIR = /usr/local
-MPI_DIR = /usr/local
-CUDA_DIR = /usr/local/cuda
+BOOST_DIR = /usr/local/boost_1_49_0
+MPI_DIR = /usr/local/openmpi-1.6
+CUDA_DIR = /usr/local/cuda-5.0/cuda
 HDF5_DIR = /usr/local/hdf5-1.8.9
-Z_DIR = /usr/local
-SZ_DIR = /Users/asarje/temp/szip-2.1/szip
-TIFF_LIB_DIR = /usr/local
-PARI_DIR = /usr/local/pari-2.5.2
+Z_DIR = /usr/local/zlib-1.2.7
+SZ_DIR = /usr/local/szip-2.1
+TIFF_LIB_DIR = /usr/local/lib
 
 ## compilers
 CXX = $(MPI_DIR)/bin/mpicxx	#g++
@@ -31,7 +30,7 @@ CXX_FLAGS = -std=c++0x -v -Wall -Wextra
 ## gnu c++ compilers >= 4.7 also support -std=c++11, but they are not supported by cuda
 
 ## boost
-BOOST_INCL = -I $(BOOST_DIR)/boost_1_49_0
+BOOST_INCL = -I $(BOOST_DIR)
 BOOST_LIBS = -L $(BOOST_DIR)/lib -lboost_system -lboost_filesystem
 
 ## parallel hdf5
@@ -46,7 +45,7 @@ MPI_LIBS = -L $(MPI_DIR)/lib -lmpi_cxx -lmpi
 
 ## cuda
 CUDA_INCL = -I$(CUDA_DIR)/include
-CUDA_LIBS = -L$(CUDA_DIR)/lib -lcudart -lcufft
+CUDA_LIBS = -L$(CUDA_DIR)/lib64 -lcudart -lcufft
 NVCC_FLAGS = -Xcompiler -fPIC -Xcompiler -fopenmp -m 64
 NVCC_FLAGS += -gencode arch=compute_20,code=sm_20 -gencode arch=compute_30,code=sm_30
 NVCC_FLAGS += -Xptxas -v -Xcompiler -v -Xlinker -v
@@ -55,12 +54,12 @@ NVLIB_FLAGS = -Xlinker -lgomp
 NVLIB_FLAGS += -Wl,-rpath -Wl,$(CUDA_DIR)/lib
 
 ## libtiff
-TIFF_LIBS = -L $(TIFF_DIR)/lib -ltiff
+TIFF_LIBS = -L $(TIFF_LIB_DIR) -ltiff
 
 ## pari
-PARI_INCL = -I $(PARI_DIR)/include
-PARI_LIBS = -L $(PARI_DIR)/lib
-PARI_LIB_FLAGS = -Wl,-rpath -Wl,$(PARI_DIR)/lib -lpari
+#PARI_INCL = -I $(PARI_DIR)/include
+#PARI_LIBS = -L $(PARI_DIR)/lib
+#PARI_LIB_FLAGS = -Wl,-rpath -Wl,$(PARI_DIR)/lib -lpari
 
 ## miscellaneous
 MISC_INCL =

@@ -5,7 +5,7 @@
   *
   *  File: combine_ff.hpp
   *  Created: Aug 22, 2012
-  *  Modified: Thu 13 Sep 2012 06:56:56 PM PDT
+  *  Modified: Sat 22 Sep 2012 11:47:32 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -70,11 +70,13 @@ namespace hig {
 			bool combine_to_mag() {
 				for(unsigned int i = 0; i < nx_ * ny_ * (nz_ / 4); ++ i) mag_data_[i] = 0.0;
 				for(unsigned int i = 0; i < nx_ * ny_ * (nz_ / 4); ++ i) {
-					complex_t sum = 0;
+					float_t sum = 0.0;
+					complex_t temp;
 					for(int p = 0; p < 4; ++ p) {
-						sum += raw_data_[nx_ * ny_ * (nz_ / 4) * p + i];
+						temp = raw_data_[nx_ * ny_ * (nz_ / 4) * p + i];
+						sum += sqrt(pow(temp.real(), 2.0) + pow(temp.imag(), 2.0));
 					} // for
-					mag_data_[i] = sqrt(pow(sum.real(), 2.0) + pow(sum.imag(), 2.0));
+					mag_data_[i] = sum;
 				} // for
 				return true;
 			} // convert_to_mag()
