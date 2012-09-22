@@ -32,7 +32,9 @@ CXX_FLAGS = -std=c++0x -v -Wall -Wextra
 
 ## boost
 BOOST_INCL = -I $(BOOST_DIR)/include
-BOOST_LIBS = -L $(BOOST_DIR)/lib -lboost_system -lboost_filesystem
+BOOST_LIBS = -L $(BOOST_DIR)/lib
+BOOST_LIB_FLAGS = -Wl,-rpath -Wl,$(BOOST_DIR)/lib
+BOOST_LIB_FLAGS += -lboost_system -lboost_filesystem
 
 ## parallel hdf5
 HDF5_INCL = -I$(HDF5_DIR)/include -I$(SZ_DIR)/include -I$(Z_DIR)/include
@@ -45,23 +47,23 @@ MPI_INCL = -I $(MPI_DIR)/include
 MPI_LIBS = -L $(MPI_DIR)/lib -lmpi_cxx -lmpi
 
 ## cuda
-CUDA_INCL = -I$(CUDA_DIR)/include
-CUDA_LIBS = -L$(CUDA_DIR)/lib64 -lcudart -lcufft
 NVCC_FLAGS = -Xcompiler -fPIC -Xcompiler -fopenmp -m 64
 NVCC_FLAGS += -gencode arch=compute_20,code=sm_20
 NVCC_FLAGS += -Xptxas -v -Xcompiler -v -Xlinker -v --ptxas-options="-v"
 NVCC_FLAGS += -DGPUR #-DKERNEL2 #-DFINDBLOCK
+CUDA_INCL = -I $(CUDA_DIR)/include
+CUDA_LIBS = -L $(CUDA_DIR)/lib64 -lcudart -lcufft
 NVLIB_FLAGS = -Xlinker -lgomp
 NVLIB_FLAGS += -Wl,-rpath -Wl,$(CUDA_DIR)/lib64
 
 ## libtiff
 TIFF_INCL = -I $(TIFF_DIR)/include
-TIFF_LIBS = -L $(TIFF_DIR)/lib -Wl,-rpath=$(TIFF_DIR)/lib -ltiff
+TIFF_LIBS = -L $(TIFF_DIR)/lib -ltiff
 
 ## pari
-PARI_INCL = -I $(PARI_DIR)/include
-PARI_LIBS = -L $(PARI_DIR)/lib
-PARI_LIB_FLAGS = #-Wl,-rpath -Wl,$(PARI_DIR)/lib -lpari
+#PARI_INCL = -I $(PARI_DIR)/include
+#PARI_LIBS = -L $(PARI_DIR)/lib
+#PARI_LIB_FLAGS = -Wl,-rpath -Wl,$(PARI_DIR)/lib -lpari
 
 ## miscellaneous
 MISC_INCL =
@@ -80,8 +82,8 @@ PREC_FLAG =			# leave empty for single precision
 ALL_INCL = $(MPI_INCL) $(CUDA_INCL) $(BOOST_INCL) $(HDF5_INCL) $(TIFF_INCL) $(PARI_INCL) $(MISC_INCL)
 
 ## all libraries
-ALL_LIBS = $(BOOST_LIBS) $(MPI_LIBS) $(NVLIB_FLAGS) $(CUDA_LIBS) $(HDF5_LIBS) $(TIFF_LIBS) \
-		   $(PARI_LIBS) $(PARI_LIB_FLAGS)
+ALL_LIBS = $(BOOST_LIBS) $(BOOST_LIB_FLAGS) $(MPI_LIBS) $(NVLIB_FLAGS) $(CUDA_LIBS) \
+		   $(HDF5_LIBS) $(TIFF_LIBS) $(PARI_LIBS) $(PARI_LIB_FLAGS)
 
 
 PREFIX = $(PWD)
