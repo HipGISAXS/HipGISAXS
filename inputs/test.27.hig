@@ -1,7 +1,7 @@
 hipGisaxsInput = {
 	shape = {
 		key = "s1",	 		# a unique key to identify this shape in this file
-		name = "Shape_27.hd5"		# name of the file containing the discretized shape data
+		name = "data/Shape_27.hd5"		# name of the file containing the discretized shape data
 		#name = "opv.hd5"	# name of the file containing the discretized shape data
 	},
 	layer = {
