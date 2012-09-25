@@ -51,7 +51,7 @@ NVCC_FLAGS += -gencode arch=compute_20,code=sm_20 -gencode arch=compute_30,code=
 NVCC_FLAGS += -Xptxas -v -Xcompiler -v -Xlinker -v
 NVCC_FLAGS += -DGPUR #-DKERNEL2 #-DFINDBLOCK
 NVLIB_FLAGS = -Xlinker -lgomp
-NVLIB_FLAGS += -Wl,-rpath -Wl,$(CUDA_DIR)/lib
+NVLIB_FLAGS += -Wl,-rpath -Wl,$(CUDA_DIR)/lib64
 
 ## libtiff
 TIFF_LIBS = -L $(TIFF_LIB_DIR) -ltiff
