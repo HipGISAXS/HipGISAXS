@@ -31,7 +31,7 @@ CXX_FLAGS = -std=c++0x -v -Wall -Wextra
 
 ## boost
 BOOST_INCL = -I $(BOOST_DIR)
-BOOST_LIBS = -lboost_system -lboost_filesystem
+BOOST_LIBS = -L $(BOOST_DIR)/lib -lboost_system -lboost_filesystem
 
 ## parallel hdf5
 HDF5_INCL = -I$(HDF5_DIR)/include -I$(SZ_DIR)/include -I$(Z_DIR)/include
