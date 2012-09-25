@@ -1,20 +1,46 @@
 HipGISAXS Version 0.01-alpha: QUICK STARTER GUIDE
 =================================================
 
-NOTE: The included tar ball contains an already compiled binary for Carver/Dirac system in the directory "bin".
+NOTE: The included tar ball contains a compiled binary for Carver/Dirac system in the directory "bin".
 
 
-** PRE-REQUISITES:
-   --------------
+** SUPPORTED PLATFORMS:
+   -------------------
+HipGISAXS has been tested on, and supports, only the following.
+
+A. Operating System Platforms:
+   --------------------------
+1. GNU/Linux x86_64: Ubuntu, Red Hat Linux, SUSE Linux, Cray Linux Environment (XT5, XE5, XK6).
+2. Darwin x86_64: Mac OS X (Lion, Mountain Lion).
+3. You could try HipGISAXS on any UNIX based OS, but it may or may not support it.
+   Please let us know about your platform so that we can include it in our list.
+
+B. System Hardware (COMPUTE ENVIRONMENT):
+   -------------------------------------
+1. Clusters/Supercomputers equipped with GPUs as accelerators on each node.
+2. Generic desktop equipped with a compute GPU (see next point).
+3. Coming soon: Any generic CPU (multi-cores), without GPU accelerators.
+
+C. System Hardware (GPU/CPU):
+   -------------------------
+1. Fermi or Kepler architecture based Nvidia GPUs.
+   Compute capability of these GPUs >= 2.x.
+2. Intel/AMD processors (including multi-cores).
+   We have not extensively tested on various types of processors yet.
+
+
+** SOFTWARE PRE-REQUISITES:
+   -----------------------
 Current version of HipGISAXS suppports only compute GPU equipped systems.
 This software uses third-party libraries, and they need to be installed and available in order to compile and run this code.
 Use software already available on your system.
 Alternatively, download and install it yourself.
 NOTE: The supplied compiled binary is dynamically linked with these libraries, some of them installed in /global/homes/a/asarje/local.
 The following are the dependencies of this software:
-1. GNU C/C++ compilers, version >= 4.3 and < 4.6.
+1. GNU C/C++ compilers, version >= 4.3 and <= 4.5.x.
 2. Nvidia CUDA version 4.x.
    CUDA can be obtained from: http://developer.nvidia.com/cuda/cuda-downloads
+   NOTE: CUDA version 5.0rc is also supported.
 3. GNU compiled OpenMPI version > 1.4.4.
    OpenMPI can be obtained from: http://www.open-mpi.org/software
 4. Boost and numeric extension to Boost GIL.
