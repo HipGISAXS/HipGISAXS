@@ -45,7 +45,11 @@ The following are the dependencies of this software:
    OpenMPI can be obtained from: http://www.open-mpi.org/software
 4. Boost and numeric extension to Boost GIL.
    Boost can be obtained from: http://www.boost.org
-   Numeric extension to Boost GIL can be obtained from: http://sourceforge.net/adobe/genimglib/wiki/Downloads
+   Numeric extension to Boost GIL can be obtained from the following (file name 'numeric.zip'):
+     http://sourceforge.net/adobe/genimglib/wiki/Downloads
+     http://gil-contributions.googlecode.com/svn/trunk
+   After downloading, unzip the file, generating a directory named 'numeric'.
+   Copy this directory under boost/gil/extensions/ at your Boost installation location.
    NOTE: These are also installed at /global/homes/a/asarje/local/boost_1_49_0 on Carver/Dirac.
 5. Parallel HDF5 library.
    HDF5 can be obtained from: http://www.hdfgroup.org/downloads
