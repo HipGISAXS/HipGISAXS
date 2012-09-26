@@ -1,18 +1,46 @@
-HipGISAXS Version 0.01-alpha
-============================
+HipGISAXS Version 0.01-alpha: QUICK STARTER GUIDE
+=================================================
 
-NOTE: The included tar ball contains an already compiled binary for Carver/Dirac system in the directory "bin".
+NOTE: The included tar ball contains a compiled binary for Carver/Dirac system in the directory "bin".
 
 
-** Pre-requisites:
-   --------------
+** SUPPORTED PLATFORMS:
+   -------------------
+HipGISAXS has been tested on, and supports, only the following.
+
+A. Operating System Platforms:
+   --------------------------
+1. GNU/Linux x86_64: Ubuntu, Red Hat Linux, SUSE Linux, Cray Linux Environment (XT5, XE5, XK6).
+2. Darwin x86_64: Mac OS X (Lion, Mountain Lion).
+3. You could try HipGISAXS on any UNIX based OS, but it may or may not support it.
+   Please let us know about your platform so that we can include it in our list.
+
+B. System Hardware (COMPUTE ENVIRONMENT):
+   -------------------------------------
+1. Clusters/Supercomputers equipped with GPUs as accelerators on each node.
+2. Generic desktop equipped with a compute GPU (see next point).
+3. Coming soon: Any generic CPU (multi-cores), without GPU accelerators.
+
+C. System Hardware (GPU/CPU):
+   -------------------------
+1. Fermi or Kepler architecture based Nvidia GPUs.
+   Compute capability of these GPUs >= 2.x.
+2. Intel/AMD processors (including multi-cores).
+   We have not extensively tested on various types of processors yet.
+
+
+** SOFTWARE PRE-REQUISITES:
+   -----------------------
+Current version of HipGISAXS suppports only compute GPU equipped systems.
 This software uses third-party libraries, and they need to be installed and available in order to compile and run this code.
-Use software already available on your system. Alternatively, download and install it yourself.
+Use software already available on your system.
+Alternatively, download and install it yourself.
 NOTE: The supplied compiled binary is dynamically linked with these libraries, some of them installed in /global/homes/a/asarje/local.
 The following are the dependencies of this software:
-1. GNU C/C++ compilers, version >= 4.3 and < 4.6.
+1. GNU C/C++ compilers, version >= 4.3 and <= 4.5.x.
 2. Nvidia CUDA version 4.x.
    CUDA can be obtained from: http://developer.nvidia.com/cuda/cuda-downloads
+   NOTE: CUDA version 5.0rc is also supported.
 3. GNU compiled OpenMPI version > 1.4.4.
    OpenMPI can be obtained from: http://www.open-mpi.org/software
 4. Boost and numeric extension to Boost GIL.
@@ -30,7 +58,7 @@ The following are the dependencies of this software:
    NOTE: It is also installed at /global/homes/a/asarje/local/tiff-4.0.2 on Carver/Dirac.
 
 
-** HipGISAXS directory layout:
+** HipGISAXS DIRECTORY LAYOUT:
    --------------------------
    hipgisaxs
        |- Makefile: This is the main makefile to build HipGISAXS.
@@ -45,7 +73,7 @@ The following are the dependencies of this software:
        |- src     : This is the main source directory containing the whole code.
 
 
-** To re-build:
+** TO RE-BUILD:
    -----------
 If you want to re-build the binaries, use "make" as in the following cases:
 
@@ -90,9 +118,33 @@ B. On a generic Linux system:
     $ make clean
     $ make
 
+C. For certain users, on saxs-waxs-gpu:
+   -----------------------------------
+1. Replace the current "Makefile" with the one for saxs-waxs-gpu (and name it as "Makefile"):
+    $ cp build/Makefile.saxs1 Makefile
+2. All "base directories" in the provided Makefile are set to the correct locations.
+   If you want to use your own installation of any of the required softwares, please edit its corresponding entry in the Makefile.
+   Example:
+    $ cat Makefile
+	...
+    ## base directories
+    BOOST_DIR = /usr/local/boost_1_45_0
+    MPI_DIR = /usr/local
+    CUDA_DIR = /usr/local/cuda
+    HDF5_DIR = /home/asarje/local/hdf5-1.8.8-gnu/parallel
+    Z_DIR = /root/zlib-1.2.7
+    SZ_DIR = /root/szip-2.1
+    TIFF_LIB_DIR = /usr/local
+	...
+3. Build the code from within the code's main directory:
+    $ make clean
+    $ make
+   This will generate the binary in directory "bin".
+   All the generated object files are in the directory "obj".
 
-** To run:
-   -----------------------------
+
+** TO RUN:
+   ------
    
 A. Interactively on Dirac:
    ----------------------
@@ -146,8 +198,16 @@ B. Submit batch job for multiple GPU nodes:
 4. For detailed information on writing and submitting job scripts for Dirac, please refer to:
     http://www.nersc.gov/users/computational-systems/dirac/running-jobs/batch
 
+C. Interactively on a generic Linux machine equipped with GPU (including saxs-waxs-gpu):
+   ----------------------------------------------------------------------------------
+1. Make sure all the paths (data, output) and other variables are correctly set in the input HiG file.
+2. Execute the binary:
+	Usage: ./bin/hipgisaxs <input-file-in-HiG>
+   Example:
+	$ ./bin/hipgisaxs inputs/test.27.hig
 
-** Inputs:
+
+** INPUTS:
    ------
 The HipGISAXS binary takes as input a file in HiG format.
 Please refer to detailed HipGISAXS documentation for details of the HiG format.
