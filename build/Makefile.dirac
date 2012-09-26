@@ -11,10 +11,10 @@
 ##
 
 ## base directories
-BOOST_DIR = $(HOME)/local/boost_1_49_0
+BOOST_DIR = /global/homes/a/asarje/local/boost_1_49_0
 MPI_DIR = 
 CUDA_DIR = /usr/common/usg/cuda/4.1
-HDF5_DIR = $(HOME)/local/hdf5-1.8.8-gnu/parallel
+HDF5_DIR = /global/homes/a/asarje/local/hdf5-1.8.8-gnu/parallel
 Z_DIR = $(ZLIB_DIR)
 SZ_DIR = $(SZIP_DIR)
 TIFF_DIR = /global/homes/a/asarje/local/tiff-4.0.2
@@ -22,7 +22,7 @@ PARI_DIR = #/usr/local/pari-2.5.2
 
 ## compilers
 CXX = mpicxx
-H5CC = h5pcc
+H5CC = $(HDF5_DIR)/bin/h5pcc
 NVCC = nvcc
 
 ## compiler flags
