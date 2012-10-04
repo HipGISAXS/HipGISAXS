@@ -1,11 +1,11 @@
 /***
   *  $Id$
   *
-  *  Project:
+  *  Project: HipGISAXS (High-Performance GISAXS)
   *
   *  File: plot_ff.cpp
   *  Created: Aug 22, 2012
-  *  Modified: Wed 22 Aug 2012 06:02:37 PM PDT
+  *  Modified: Mon 01 Oct 2012 11:16:11 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */

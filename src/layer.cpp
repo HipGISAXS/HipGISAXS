@@ -1,11 +1,11 @@
 /***
   *  $Id: layer.cpp 27 2012-07-15 05:37:29Z asarje $
   *
-  *  Project:
+  *  Project: HipGISAXS (High-Performance GISAXS)
   *
   *  File: layer.cpp
   *  Created: Jun 13, 2012
-  *  Modified: Tue 10 Jul 2012 11:14:51 PM PDT
+  *  Modified: Mon 01 Oct 2012 11:14:49 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */

@@ -1,11 +1,11 @@
 /***
   *  $Id: hipgisaxs_main.hpp 47 2012-08-23 21:05:16Z asarje $
   *
-  *  Project: HipGISAXS - High Performance GISAXS
+  *  Project: HipGISAXS (High-Performance GISAXS)
   *
   *  File: hipgisaxs_main.hpp
   *  Created: Jun 11, 2012
-  *  Modified: Wed 12 Sep 2012 03:50:26 PM PDT
+  *  Modified: Thu 04 Oct 2012 10:43:55 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -94,6 +94,8 @@ namespace hig {
 			bool compute_rotation_matrix_x(float_t, vector3_t&, vector3_t&, vector3_t&);
 			bool compute_rotation_matrix_y(float_t, vector3_t&, vector3_t&, vector3_t&);
 			bool compute_rotation_matrix_z(float_t, vector3_t&, vector3_t&, vector3_t&);
+
+			void save_gisaxs(float_t *final_data, std::string output);
 
 			bool illuminated_volume(float_t, float_t, int, RefractiveIndex);
 			bool spatial_distribution(structure_iterator_t, float_t, int, int&, int&, float_t*&);

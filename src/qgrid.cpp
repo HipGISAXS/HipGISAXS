@@ -1,11 +1,11 @@
 /***
   *  $Id: qgrid.cpp 47 2012-08-23 21:05:16Z asarje $
   *
-  *  Project:
+  *  Project: HipGISAXS (High-Performance GISAXS)
   *
   *  File: qgrid.cpp
   *  Created: Jun 17, 2012
-  *  Modified: Mon 27 Aug 2012 11:43:15 PM PDT
+  *  Modified: Mon 01 Oct 2012 11:16:23 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */

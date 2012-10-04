@@ -1,11 +1,11 @@
 /***
   *  $Id: shape.cpp 46 2012-08-23 02:01:21Z asarje $
   *
-  *  Project:
+  *  Project: HipGISAXS (High-Performance GISAXS)
   *
   *  File: shape.cpp
   *  Created: Jun 05, 2012
-  *  Modified: Thu 30 Aug 2012 03:06:46 PM PDT
+  *  Modified: Mon 01 Oct 2012 11:18:22 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */

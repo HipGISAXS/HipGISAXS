@@ -1,11 +1,9 @@
 /***
-  *  $Id$
-  *
-  *  Project:
+  *  Project: HipGISAXS (High-Performance GISAXS)
   *
   *  File: combine_ff.cpp
   *  Created: Aug 22, 2012
-  *  Modified: Thu 13 Sep 2012 06:56:47 PM PDT
+  *  Modified: Mon 01 Oct 2012 11:11:30 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */

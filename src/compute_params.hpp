@@ -1,11 +1,11 @@
 /***
   *  $Id: compute_params.hpp 42 2012-08-22 05:07:05Z asarje $
   *
-  *  Project: HipGISAXS - High Performance GISAXS
+  *  Project: HipGISAXS (High-Performance GISAXS)
   *
   *  File: compute_params.hpp
   *  Created: Jun 05, 2012
-  *  Modified: Tue 21 Aug 2012 06:23:08 PM PDT
+  *  Modified: Mon 01 Oct 2012 11:12:00 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */

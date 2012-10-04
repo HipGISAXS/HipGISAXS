@@ -1,11 +1,11 @@
 /***
   *  $Id: enums.hpp 29 2012-07-19 01:46:00Z asarje $
   *
-  *  Project: HipGISAXS - High Performance GISAXS
+  *  Project: HipGISAXS (High-Performance GISAXS)
   *
   *  File: enums.hpp
   *  Created: Jun 11, 2012
-  *  Modified: Wed 18 Jul 2012 10:51:29 AM PDT
+  *  Modified: Mon 01 Oct 2012 11:12:35 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */

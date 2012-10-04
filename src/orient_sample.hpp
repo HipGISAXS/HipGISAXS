@@ -1,5 +1,7 @@
 /**
  * $Id: shape2hdf5.hpp 38 2012-08-09 23:01:20Z asarje $
+ *
+ * Project: HipGISAXS (High-Performance GISAXS)
  */
 
 #ifndef _ORIENT_SAMPLE_HPP_

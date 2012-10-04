@@ -1,11 +1,11 @@
 /**
  *  $Id: ff_num.hpp 47 2012-08-23 21:05:16Z asarje $
  *
- *  Project: HipGISAXS
+ *  Project: HipGISAXS (High-Performance GISAXS)
  *
  *  File: ff_num.hpp
  *  Created: Nov 05, 2011
- *  Modified: Wed 05 Sep 2012 02:35:19 PM PDT
+ *  Modified: Mon 01 Oct 2012 11:13:16 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */

@@ -1,13 +1,14 @@
 /***
-  *  $Id: colormap.hpp 40 2012-08-21 20:43:52Z asarje $
-  *
-  *  Project:
+  *  Project: HipGISAXS (High-Performance GISAXS)
   *
   *  File: colormap.hpp
   *  Created: Jul 02, 2012
-  *  Modified: Mon 27 Aug 2012 05:20:49 PM PDT
+  *  Modified: Mon 01 Oct 2012 11:10:58 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
+  *
+  *  Developers: Slim Chourou, Abhinav Sarje, Elaine Chan, Alexander Hexemer, Xiaoye Li
+  *  Affiliation: Lawrence Berkeley National Laboratory, Berkeley, CA, USA
   */
 
 #ifndef _COLORMAP_HPP_

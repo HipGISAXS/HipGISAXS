@@ -1,11 +1,11 @@
 /***
   *  $Id: inst_detector.cpp 46 2012-08-23 02:01:21Z asarje $
   *
-  *  Project:
+  *  Project: HipGISAXS (High-Performance GISAXS)
   *
   *  File: inst_detector.cpp
   *  Created: Jun 12, 2012
-  *  Modified: Wed 22 Aug 2012 12:37:53 PM PDT
+  *  Modified: Mon 01 Oct 2012 11:14:30 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */

@@ -1,11 +1,11 @@
 /***
   *  $Id: token_mapper.hpp 35 2012-08-09 18:29:50Z asarje $
   *
-  *  Project: HipGISAXS - High Performance GISAXS
+  *  Project: HipGISAXS (High-Performance GISAXS)
   *
   *  File: token_mapper.hpp
   *  Created: Jun 05, 2012
-  *  Modified: Mon 27 Aug 2012 05:13:51 PM PDT
+  *  Modified: Mon 01 Oct 2012 11:19:30 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */

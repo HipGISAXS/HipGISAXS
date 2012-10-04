@@ -1,11 +1,11 @@
 /***
   *  $Id: ff_ana.hpp 38 2012-08-09 23:01:20Z asarje $
   *
-  *  Project:
+  *  Project: HipGISAXS (High-Performance GISAXS)
   *
   *  File: ff_ana.hpp
   *  Created: Jul 12, 2012
-  *  Modified: Thu 02 Aug 2012 05:15:56 PM PDT
+  *  Modified: Mon 01 Oct 2012 11:12:45 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */

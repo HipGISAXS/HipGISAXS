@@ -1,11 +1,11 @@
 /***
   *  $Id: distributions.hpp 46 2012-08-23 02:01:21Z asarje $
   *
-  *  Project: HipGISAXS
+  *  Project: HipGISAXS (High-Performance GISAXS)
   *
   *  File: distributions.hpp
   *  Created: Jul 02, 2012
-  *  Modified: Mon 27 Aug 2012 06:30:34 PM PDT
+  *  Modified: Mon 01 Oct 2012 11:12:29 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */

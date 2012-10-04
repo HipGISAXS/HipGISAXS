@@ -1,11 +1,11 @@
 /***
   *  $Id: convolutions.hpp 47 2012-08-23 21:05:16Z asarje $
   *
-  *  Project:
+  *  Project: HipGISAXS (High-Performance GISAXS)
   *
   *  File: convolutions.hpp
   *  Created: Jul 03, 2012
-  *  Modified: Mon 27 Aug 2012 06:36:47 PM PDT
+  *  Modified: Mon 01 Oct 2012 11:12:22 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */

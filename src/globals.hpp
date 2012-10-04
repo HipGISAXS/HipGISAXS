@@ -1,11 +1,11 @@
 /***
   *  $Id: globals.hpp 33 2012-08-06 16:22:01Z asarje $
   *
-  *  Project: HipGISAXS - High Performance GISAXS
+  *  Project: HipGISAXS (High-Performance GISAXS)
   *
   *  File: globals.hpp
   *  Created: Jun 05, 2012
-  *  Modified: Mon 27 Aug 2012 10:38:54 PM PDT
+  *  Modified: Mon 01 Oct 2012 11:13:23 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */

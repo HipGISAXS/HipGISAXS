@@ -1,11 +1,11 @@
 /***
   *  $Id: hig_file_reader.hpp 38 2012-08-09 23:01:20Z asarje $
   *
-  *  Project:
+  *  Project: HipGISAXS (High-Performance GISAXS)
   *
   *  File: hig_file_reader.hpp
   *  Created: Jul 11, 2012
-  *  Modified: Wed 08 Aug 2012 10:59:23 PM PDT
+  *  Modified: Mon 01 Oct 2012 11:13:30 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */

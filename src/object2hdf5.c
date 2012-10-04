@@ -1,5 +1,7 @@
 /**
  * $Id: object2hdf5.c 39 2012-08-17 18:16:05Z asarje $
+ *
+ * Project: HipGISAXS (High-Performance GISAXS)
  */
 
 #include "object2hdf5.h"

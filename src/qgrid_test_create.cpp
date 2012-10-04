@@ -1,11 +1,11 @@
 /***
   *  $Id: qgrid_test_create.cpp 38 2012-08-09 23:01:20Z asarje $
   *
-  *  Project:
+  *  Project: HipGISAXS (High-Performance GISAXS)
   *
   *  File: qgrid_test_create.cpp
   *  Created: Aug 01, 2012
-  *  Modified: Sat 01 Sep 2012 09:57:43 AM PDT
+  *  Modified: Mon 01 Oct 2012 11:16:32 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */

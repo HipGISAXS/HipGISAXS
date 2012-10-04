@@ -1,3 +1,7 @@
+/***
+  * Project: HipGISAXS (High-Performance GISAXS)
+  */
+
 #include "hig_input.hpp"
 
 using namespace std;

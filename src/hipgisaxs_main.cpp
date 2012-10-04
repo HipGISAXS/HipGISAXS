@@ -1,11 +1,11 @@
 /***
   *  $Id: hipgisaxs_main.cpp 47 2012-08-23 21:05:16Z asarje $
   *
-  *  Project: HipGISAXS
+  *  Project: HipGISAXS (High-Performance GISAXS)
   *
   *  File: hipgisaxs_main.cpp
   *  Created: Jun 14, 2012
-  *  Modified: Thu 13 Sep 2012 03:30:25 PM PDT
+  *  Modified: Thu 04 Oct 2012 11:51:35 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -235,6 +235,14 @@ namespace hig {
 						std::cout << "-- Saving image in " << output << " ..." << std::endl;
 						img.save(output);
 
+						// save the actual data into a file also
+						std::string data_file(HiGInput::instance().param_pathprefix() +
+										"/" + HiGInput::instance().runname() +
+										"/gisaxs_ai=" + alphai_s + "_rot=" + phi_s +
+										"_tilt=" + tilt_s + ".out");
+						std::cout << "-- Saving raw data in " << data_file << " ..." << std::endl;
+						save_gisaxs(final_data, data_file);
+
 						// for future ...
 						/*for(int x = x_min; x <= x_max; x += x_step) {
 							Image *img2d = NULL;
@@ -265,6 +273,20 @@ namespace hig {
 
 		return true;
 	} // HipGISAXS::run_all_gisaxs()
+
+	
+	void HipGISAXS::save_gisaxs(float_t *final_data, std::string output) {
+		std::ofstream f(output);
+		std::cout << "NQY x NQZ: " << nqy_ << " x " << nqz_ << std::endl;
+		for(unsigned int z = 0; z < nqz_; ++ z) {
+			for(unsigned int y = 0; y < nqy_; ++ y) {
+				unsigned int index = nqy_ * z + y;
+				f << final_data[index] << "\t";
+			} // for
+			f << std::endl;
+		} // for
+		f.close();
+	} // HipGISAXS::save_gisaxs()
 	
 	
 	void HipGISAXS::printfr(const char* name, float_t* arr, unsigned int size) {

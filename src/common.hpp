@@ -1,11 +1,11 @@
 /***
   *  $Id: common.hpp 33 2012-08-06 16:22:01Z asarje $
   *
-  *  Project:
+  *  Project: HipGISAXS (High-Performance GISAXS)
   *
   *  File: common.hpp
   *  Created: Jun 13, 2012
-  *  Modified: Thu 02 Aug 2012 05:19:34 PM PDT
+  *  Modified: Mon 01 Oct 2012 11:11:43 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */

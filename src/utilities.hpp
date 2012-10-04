@@ -1,11 +1,11 @@
 /***
   *  $Id: utilities.hpp 33 2012-08-06 16:22:01Z asarje $
   *
-  *  Project: HipGISAXS
+  *  Project: HipGISAXS (High-Performance GISAXS)
   *
   *  File: utilities.hpp
   *  Created: Jun 25, 2012
-  *  Modified: Tue 28 Aug 2012 05:39:03 PM PDT
+  *  Modified: Mon 01 Oct 2012 11:19:55 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */

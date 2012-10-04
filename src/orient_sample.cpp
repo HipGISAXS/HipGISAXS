@@ -1,5 +1,7 @@
 /**
  * $Id$
+ *
+ * Project: HipGISAXS (High-Performance GISAXS)
  */
 
 #include <iomanip>

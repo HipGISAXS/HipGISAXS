@@ -1,5 +1,7 @@
 /**
  * $Id: object2shape_test.cpp 120 2012-02-28 05:41:05Z asarje $
+ *
+ * Project: HipGISAXS (High-Performance GISAXS)
  */
 
 #include "object2shape.hpp"

@@ -1,11 +1,11 @@
 /***
   *  $Id: read_oo_input.hpp 33 2012-08-06 16:22:01Z asarje $
   *
-  *  Project: HipGISAXS - High Performance GISAXS
+  *  Project: HipGISAXS (High-Performance GISAXS)
   *
   *  File: read_oo_output.hpp
   *  Created: Jun 09, 2012
-  *  Modified: Thu 02 Aug 2012 05:24:22 PM PDT
+  *  Modified: Mon 01 Oct 2012 11:16:43 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */

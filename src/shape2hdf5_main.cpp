@@ -1,5 +1,7 @@
 /**
  * $Id: shape2hdf5_test.cpp 120 2012-02-28 05:41:05Z asarje $
+ *
+ * Project: HipGISAXS (High-Performance GISAXS)
  */
 
 #include "shape2hdf5.hpp"

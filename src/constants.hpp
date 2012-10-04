@@ -1,5 +1,7 @@
 /**
  * $Id: constants.hpp 38 2012-08-09 23:01:20Z asarje $
+ *
+ * Project: HipGISAXS (High-Performance GISAXS)
  */
 
 #ifndef _CONSTANTS_H_

@@ -1,11 +1,11 @@
 /***
   *  $Id: structure.cpp 42 2012-08-22 05:07:05Z asarje $
   *
-  *  Project:
+  *  Project: HipGISAXS (High-Performance GISAXS)
   *
   *  File: structure.cpp
   *  Created: Jun 12, 2012
-  *  Modified: Tue 21 Aug 2012 06:32:56 PM PDT
+  *  Modified: Mon 01 Oct 2012 11:18:34 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */

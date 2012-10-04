@@ -1,6 +1,8 @@
 /**
- * $Id: shape2hdf5.hpp 38 2012-08-09 23:01:20Z asarje $
- */
+  *  $Id: shape2hdf5.hpp 38 2012-08-09 23:01:20Z asarje $
+  *
+  *  Project: HipGISAXS (High-Performance GISAXS)
+  */
 
 #ifndef _SHAPE2HDF5_H_
 #define _SHAPE2HDF5_H_

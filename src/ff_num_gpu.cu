@@ -1,5 +1,7 @@
 /**
  * $Id: ff.cu 40 2012-08-21 20:43:52Z asarje $
+ *
+ * Project: HipGISAXS (High-Performance GISAXS)
  */
 
 //#ifndef _FF_CU_

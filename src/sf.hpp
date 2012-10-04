@@ -1,11 +1,11 @@
 /***
   *  $Id: sf.hpp 46 2012-08-23 02:01:21Z asarje $
   *
-  *  Project: HipGISAXS - High Performance GISAXS
+  *  Project: HipGISAXS (High-Performance GISAXS)
   *
   *  File: sf.hpp
   *  Created: Jun 18, 2012
-  *  Modified: Wed 12 Sep 2012 01:41:50 PM PDT
+  *  Modified: Mon 01 Oct 2012 11:17:28 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */

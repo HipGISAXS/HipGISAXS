@@ -1,11 +1,11 @@
 /***
   *  $Id: hig_input.cpp 47 2012-08-23 21:05:16Z asarje $
   *
-  *  Project:
+  *  Project: HipGISAXS (High-Performance GISAXS)
   *
   *  File: hig_input.cpp
   *  Created: Jun 11, 2012
-  *  Modified: Thu 13 Sep 2012 03:31:15 PM PDT
+  *  Modified: Mon 01 Oct 2012 11:13:36 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */

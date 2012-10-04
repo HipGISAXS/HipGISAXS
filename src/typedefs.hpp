@@ -1,11 +1,11 @@
 /***
   *  $Id: typedefs.hpp 30 2012-07-24 20:17:58Z asarje $
   *
-  *  Project:
+  *  Project: HipGISAXS (High-Performance GISAXS)
   *
   *  File: typedefs.hpp
   *  Created: Jul 08, 2012
-  *  Modified: Tue 24 Jul 2012 12:35:18 PM PDT
+  *  Modified: Mon 01 Oct 2012 11:19:44 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
