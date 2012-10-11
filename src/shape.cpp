@@ -5,7 +5,7 @@
   *
   *  File: shape.cpp
   *  Created: Jun 05, 2012
-  *  Modified: Mon 01 Oct 2012 11:18:22 AM PDT
+  *  Modified: Mon 08 Oct 2012 10:49:09 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -20,10 +20,10 @@ namespace hig {
 
 	void ShapeParam::init() {
 		type_ = param_error;	// this object is required from user
-		stat_ = stat_error;
+		stat_ = stat_none;
 		type_name_.clear();
 		max_ = min_ = p1_ = p2_ = 0.0;
-		nvalues_ = 0;
+		nvalues_ = 1;			// default nvalue
 	} // ShapeParam::init()
 
 	void ShapeParam::clear() {
@@ -31,7 +31,7 @@ namespace hig {
 		type_ = param_null;
 		stat_ = stat_null;
 		max_ = min_ = p1_ = p2_ = 0.0;
-		nvalues_ = 0;
+		nvalues_ = 1;
 	} // ShapeParam::clear()
 
 	void ShapeParam::print() {

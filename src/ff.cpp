@@ -5,7 +5,7 @@
   *
   *  File: ff.cpp
   *  Created: Jul 17, 2012
-  *  Modified: Mon 01 Oct 2012 11:12:51 AM PDT
+  *  Modified: Tue 09 Oct 2012 12:02:21 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -16,6 +16,14 @@
 #include "ff.hpp"
 
 namespace hig {
+
+	void FormFactor::clear() {
+		ff_.clear();
+		analytic_ff_.clear();
+		if(nff_ != NULL) delete[] nff_;
+		nff_ = NULL;
+		numeric_ff_.clear();
+	} // FormFactor::clear()
 
 	//template<typename float_t, typename complex_t>
 	//bool FormFactor<float_t, complex_t>::compute_form_factor(ShapeName shape, std::string shape_filename,

@@ -5,7 +5,7 @@
   *
   *  File: utilities.hpp
   *  Created: Jun 25, 2012
-  *  Modified: Mon 01 Oct 2012 11:19:55 AM PDT
+  *  Modified: Tue 09 Oct 2012 12:09:54 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -98,6 +98,8 @@ namespace hig {
 	extern complex_t operator*(complex_t s, cucomplex_t c);
 	extern complex_t operator*(cucomplex_t c, complex_t s);
 
+	extern std::complex<long double> operator*(std::complex<long double> c, long double s);
+
 	extern complex_t operator+(float_t s, cucomplex_t c);
 	extern complex_t operator+(cucomplex_t c, float_t s);
 	extern complex_t operator+(complex_t s, cucomplex_t c);
@@ -108,63 +110,55 @@ namespace hig {
 	 * use boost libs ...
 	 */
 
-	/** apply log10 to all elements of the 2D matrix
-	 */
 	extern bool mat_log10_2d(unsigned int x_size, unsigned int y_size, float_t* &data);
-
-	/** compute floor for each element in a vector
-	 */ 
 	extern vector3_t floor(vector3_t a);
 
-
-	extern std::vector<complex_t>& mat_sqr(//unsigned int, unsigned int, unsigned int,
-											std::vector<complex_t>&);
-
-	extern std::vector<complex_t>& mat_sqrt(//unsigned int, unsigned int, unsigned int,
-											std::vector<complex_t>&);
-
-	extern std::vector<complex_t>& mat_besselj(int, unsigned int, unsigned int, unsigned int,
-											std::vector<complex_t>&);
-
+	extern complex_vec_t& mat_sqr(complex_vec_t&);
+	extern bool mat_sqr(const complex_vec_t&, complex_vec_t&);
+	extern bool mat_sqr_in(complex_vec_t&);
+	extern complex_vec_t& mat_sqrt(complex_vec_t&);
+	extern bool mat_sqrt(const complex_vec_t&, complex_vec_t&);
+	extern bool mat_sqrt_in(complex_vec_t&);
+	extern bool mat_exp(complex_vec_t& matrix, complex_vec_t& result);
+	extern bool mat_exp_in(complex_vec_t& matrix);
+	extern complex_vec_t& mat_besselj(int, unsigned int, unsigned int, unsigned int, complex_vec_t&);
+	extern bool mat_besselj(int, unsigned int, unsigned int, unsigned int, const complex_vec_t&,
+						complex_vec_t&);
+	extern bool mat_besselj_in(int, unsigned int, unsigned int, unsigned int, complex_vec_t&);
 	extern complex_t besselj(int, complex_t);
 
-	extern std::vector<complex_t>& mat_add(unsigned int, unsigned int, unsigned int, std::vector<complex_t>&,
-										unsigned int, unsigned int, unsigned int, std::vector<complex_t>&);
-
-	/** mat_mul for a scalar and matrix
-	 */
-	extern std::vector<complex_t>& mat_mul(float_t scalar,
-										//unsigned int x_size, unsigned int y_size, unsigned int z_size,
-										std::vector<complex_t>& matrix);
-
-	extern std::vector<complex_t>& mat_mul(complex_t scalar,
-										//unsigned int x_size, unsigned int y_size, unsigned int z_size,
-										std::vector<complex_t>& matrix);
-
-	/** mat_mul for a scalar and matrix
-	 */
-	extern std::vector<complex_t>& mat_mul(//unsigned int x_size, unsigned int y_size, unsigned int z_size,
-										std::vector<complex_t>& matrix, float_t scalar);
-
-	extern std::vector<complex_t>& mat_mul(//unsigned int x_size, unsigned int y_size, unsigned int z_size,
-										std::vector<complex_t>& matrix, complex_t scalar);
-
-	/** matrix-matrix element-by-element product
-	 */
-	extern std::vector<complex_t>& mat_dot_prod(unsigned int, unsigned int, unsigned int,
-												std::vector<complex_t>&,
-												unsigned int, unsigned int, unsigned int,
-												std::vector<complex_t>&);
-
-	extern std::vector<complex_t>& mat_dot_div(unsigned int, unsigned int, unsigned int,
-												std::vector<complex_t>&,
-												unsigned int, unsigned int, unsigned int,
-												std::vector<complex_t>&);
-
-	/** a special compute function on a matrix
-	 */
-	extern std::vector<complex_t>& mat_sinc(unsigned int, unsigned int, unsigned int,
-											std::vector<complex_t>& matrix);
+	extern complex_vec_t& mat_add(unsigned int, unsigned int, unsigned int, complex_vec_t&,
+						unsigned int, unsigned int, unsigned int, complex_vec_t&);
+	extern bool mat_add(unsigned int, unsigned int, unsigned int, const complex_vec_t&,
+						unsigned int, unsigned int, unsigned int, const complex_vec_t&,
+						complex_vec_t&);
+	extern bool mat_add_in(unsigned int, unsigned int, unsigned int, complex_vec_t&,
+						unsigned int, unsigned int, unsigned int, complex_vec_t&);
+	extern complex_vec_t& mat_mul(float_t scalar, std::vector<complex_t>& matrix);
+	extern complex_vec_t& mat_mul(complex_t scalar, std::vector<complex_t>& matrix);
+	extern complex_vec_t& mat_mul(std::vector<complex_t>& matrix, float_t scalar);
+	extern complex_vec_t& mat_mul(std::vector<complex_t>& matrix, complex_t scalar);
+	extern bool mat_mul(float_t, const std::vector<complex_t>&, complex_vec_t&);
+	extern bool mat_mul(complex_t, const std::vector<complex_t>&, complex_vec_t&);
+	extern bool mat_mul(const std::vector<complex_t>&, float_t, complex_vec_t&);
+	extern bool mat_mul(const std::vector<complex_t>&, complex_t, complex_vec_t&);
+	extern bool mat_mul_in(float_t scalar, std::vector<complex_t>& matrix);
+	extern bool mat_mul_in(complex_t scalar, std::vector<complex_t>& matrix);
+	extern bool mat_mul_in(std::vector<complex_t>& matrix, float_t scalar);
+	extern bool mat_mul_in(std::vector<complex_t>& matrix, complex_t scalar);
+	extern complex_vec_t& mat_dot_prod(unsigned int, unsigned int, unsigned int, complex_vec_t&,
+						unsigned int, unsigned int, unsigned int, complex_vec_t&);
+	extern bool mat_dot_prod(unsigned int, unsigned int, unsigned int, const complex_vec_t&,
+						unsigned int, unsigned int, unsigned int, const complex_vec_t&, complex_vec_t&);
+	extern bool mat_dot_prod_in(unsigned int, unsigned int, unsigned int, complex_vec_t&,
+						unsigned int, unsigned int, unsigned int, complex_vec_t&);
+	extern complex_vec_t& mat_dot_div(unsigned int, unsigned int, unsigned int, complex_vec_t&,
+						unsigned int, unsigned int, unsigned int, complex_vec_t&);
+	extern bool mat_dot_div(unsigned int, unsigned int, unsigned int, const complex_vec_t&,
+						unsigned int, unsigned int, unsigned int, const complex_vec_t&, complex_vec_t&);
+	extern bool mat_dot_div_in(unsigned int, unsigned int, unsigned int, complex_vec_t&,
+						unsigned int, unsigned int, unsigned int, complex_vec_t&);
+	//extern std::vector<complex_t>& mat_sinc(unsigned int, unsigned int, unsigned int, complex_vec_t&);
 
 	/** compute the transpose of a matrix
 	 */
@@ -191,12 +185,6 @@ namespace hig {
 	 * use boost libs ...
 	 */
 	extern bool mat_mul_3x1(vector3_t a, vector3_t b, vector3_t c, vector3_t d, vector3_t& x);
-
-	//extern std::vector<float_t>& mat_mul(float_t,
-	//									unsigned int, unsigned int, unsigned int, std::vector<float_t>&);
-
-	//extern std::vector<float_t>& mat_mul(unsigned int, unsigned int, unsigned int, std::vector<float_t>&,
-	//									float_t);
 
 } // namespace hig
 

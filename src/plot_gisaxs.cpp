@@ -5,12 +5,12 @@
   *
   *  File: plot_ff.cpp
   *  Created: Aug 22, 2012
-  *  Modified: Wed 10 Oct 2012 09:44:53 PM PDT
+  *  Modified: Wed 10 Oct 2012 10:08:19 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
 
-#include "plot_ff.hpp"
+#include "plot_gisaxs.hpp"
 
 int main(int narg, char** args) {
 
@@ -30,7 +30,7 @@ int main(int narg, char** args) {
 	unsigned int b = std::atoi(args[8]);
 
 	//hig::Plot new_plot(nx, ny, nz);
-	hig::Plot new_plot(nx, ny, nz, r, g, b);
+	hig::PlotGISAXS new_plot(nx, ny, nz, r, g, b);
 	new_plot.plot(infile, outfile);
 
 	return 0;

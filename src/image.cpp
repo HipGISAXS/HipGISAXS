@@ -5,7 +5,7 @@
   *
   *  File: image.cpp
   *  Created: Jun 18, 2012
-  *  Modified: Mon 01 Oct 2012 11:14:06 AM PDT
+  *  Modified: Thu 11 Oct 2012 11:46:20 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -60,6 +60,14 @@ namespace hig {
 
 	Image::Image(unsigned int nx, unsigned int ny, unsigned int nz, std::string palette):
 					nx_(nx), ny_(ny), nz_(nz), color_map_(palette) {
+		image_buffer_ = NULL;
+	//	image_buffer_ = new (std::nothrow) float_t[nx_ * ny_ * nz_]();
+	} // Image::Image()
+
+
+	Image::Image(unsigned int nx, unsigned int ny, unsigned int nz,
+			unsigned int r, unsigned int g, unsigned int b):
+					nx_(nx), ny_(ny), nz_(nz), new_color_map_(r, g, b) {
 		image_buffer_ = NULL;
 	//	image_buffer_ = new (std::nothrow) float_t[nx_ * ny_ * nz_]();
 	} // Image::Image()
@@ -402,8 +410,9 @@ namespace hig {
 				std::cerr << "a pixel value not within range: " << image[i] << std::endl;
 				return false;
 			} // if
-			unsigned int color_i = boost::math::iround(image[i] * (color_map_.palette_size() - 1));
-			boost::array<unsigned char, 3> color_rgb = color_map_[color_i];
+			//unsigned int color_i = boost::math::iround(image[i] * (color_map_.palette_size() - 1));
+			//boost::array<unsigned char, 3> color_rgb = color_map_[color_i];
+			boost::array<unsigned char, 3> color_rgb = new_color_map_.color_map(image[i]);
 			boost::gil::rgb8_pixel_t temp =
 							boost::gil::rgb8_pixel_t(color_rgb[0], color_rgb[1], color_rgb[2]);
 			image_buffer_[i] = temp;

@@ -5,7 +5,7 @@
   *
   *  File: image.hpp
   *  Created: Jun 18, 2012
-  *  Modified: Mon 01 Oct 2012 11:14:26 AM PDT
+  *  Modified: Wed 10 Oct 2012 09:40:08 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -32,6 +32,7 @@ namespace hig {
 			unsigned int nz_;				/* z dimension */
 			boost::gil::rgb8_pixel_t* image_buffer_;	/* this will hold the final rgb values */
 			ColorMap8 color_map_;			/* defines mapping to colors in the defined palette */
+			ColorMap new_color_map_;		/* new color mapping */
 
 			bool scale_image(unsigned int, unsigned int, unsigned int, unsigned int,
 							float_t*, float_t*&);
@@ -54,6 +55,8 @@ namespace hig {
 			Image(unsigned int nx, unsigned int ny, unsigned int nz);	/* initialize a 3D image object */
 			Image(unsigned int nx, unsigned int ny, unsigned int nz, char* palette);
 			Image(unsigned int nx, unsigned int ny, unsigned int nz, std::string palette);
+			Image(unsigned int nx, unsigned int ny, unsigned int nz,
+					unsigned int r, unsigned int g, unsigned int b);
 			~Image();
 
 			bool construct_image(const float_t* data, int slice);

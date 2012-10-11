@@ -5,7 +5,7 @@
   *
   *  File: sf.cpp
   *  Created: Jun 18, 2012
-  *  Modified: Mon 01 Oct 2012 11:17:16 AM PDT
+  *  Modified: Wed 10 Oct 2012 08:57:03 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -27,7 +27,15 @@ namespace hig {
 
 	StructureFactor::~StructureFactor() {
 		if(sf_ != NULL) delete[] sf_;
+		sf_ = NULL;
 	} // StructureFactor::~StructureFactor()
+
+
+	void StructureFactor::clear() {
+		if(sf_ != NULL) delete[] sf_;
+		sf_ = NULL;
+		nx_ = ny_ = nz_ = 0;
+	} // StructureFactor::clear()
 
 
 	bool StructureFactor::compute_structure_factor(std::string expt, vector3_t center,
@@ -50,11 +58,11 @@ namespace hig {
 		if(repet[2] < 1) repet[2] = 1;
 
 		vector3_t arot(0, 0, 0), brot(0, 0, 0), crot(0, 0, 0);
-		vector3_t temp_la(lattice->a()), temp_lb(lattice->b());
+		vector3_t temp_la(lattice->a()), temp_lb(lattice->b()), temp_lc(lattice->c());
 		temp_la[2] = 0; temp_lb[2] = 0;
 		mat_mul_3x1(rotation_1, rotation_2, rotation_3, temp_la, arot);
 		mat_mul_3x1(rotation_1, rotation_2, rotation_3, temp_lb, brot);
-		mat_mul_3x1(rotation_1, rotation_2, rotation_3, lattice->c(), crot);
+		mat_mul_3x1(rotation_1, rotation_2, rotation_3, temp_lc, crot);
 
 		vector3_t l_t = lattice->t();
 
@@ -67,10 +75,9 @@ namespace hig {
 		} // if
 
 		if(my_rank == 0) {
-			std::cout << "**        Using input shape file: data/opv_zyplane.hd5" << std::endl;
-			std::cout << "-- Computing structure factor ... " << std::endl;
-			std::cout << "**               nqx x nqy x nqz: " << nx_ << " x "
-						<< ny_ << " x " << nz_ << std::endl;
+			std::cout << "-- Computing structure factor with ";
+			std::cout << "nqx x nqy x nqz: " << nx_ << " x "
+						<< ny_ << " x " << nz_ << " ..." << std::endl;
 		} // if
 
 		std::complex<float_t> unit_c(1, 0);
@@ -80,39 +87,8 @@ namespace hig {
 		for(unsigned int z = 0; z < nz_; ++ z) {
 			for(unsigned int y = 0; y < ny_; ++ y) {
 				for(unsigned int x = 0; x < nx_; ++ x) {
-					/*std::complex<float_t> temp1, temp_x2, temp_y3, temp_y4, temp_x5;
-					std::complex<float_t> sa, sb, sc;
-
-					temp1 = exp(std::complex<float_t>(0, arot[0] * x + arot[1] * y + arot[2] * z));
-					temp_x2 = unit_c - pow(temp1, repet[0]);
-					temp_y3 = unit_c / (unit_c - temp1);
-					temp_y4 = unit_c / (unit_c / temp_y3 + (float_t)(!boost::math::isfinite(temp_y3)));
-					temp_x5 = temp_x2 + repet[0] * (!boost::math::isfinite(unit_c / temp_x2));
-					sa = pow(temp1, (1 - repet[0]) / 2) * temp_y4 * temp_x5;
-
-					temp1 = exp(std::complex<float_t>(0, brot[0] * x + brot[1] * y + brot[2] * z));
-					temp_x2 = unit_c - pow(temp1, repet[1]);
-					temp_y3 = unit_c / (unit_c - temp1);
-					temp_y4 = unit_c / (unit_c / temp_y3 + (float_t)(!boost::math::isfinite(temp_y3)));
-					temp_x5 = temp_x2 + repet[1] * (!boost::math::isfinite(unit_c / temp_x2));
-					sb = pow(temp1, (1 - repet[1]) / 2) * temp_y4 * temp_x5;
-
-					temp1 = exp(std::complex<float_t>(0, crot[0] * x + crot[1] * y + crot[2] * z));
-					temp_x2 = unit_c - pow(temp1, repet[2]);
-					temp_y3 = unit_c / (unit_c - temp1);
-					temp_y4 = unit_c / (unit_c / temp_y3 + (float_t)(!boost::math::isfinite(temp_y3)));
-					temp_x5 = temp_x2 + repet[2] * (!boost::math::isfinite(unit_c / temp_x2));
-					sc = temp_y4 * temp_x5;
-
-					std::complex<float_t> temp6 = exp(std::complex<float_t>(0, 1) *
-									(center[0] * x + center[1] * y + center[2] * z)) *
-									sa * sb * sc *
-									(unit_c + exp(std::complex<float_t>(0, 1) *
-									(l_t[0] * x + l_t[1] * y + l_t[2] * z)));
-					sf_[nx_ * ny_ * z + nx_ * y + x].x = temp6.real();
-					sf_[nx_ * ny_ * z + nx_ * y + x].y = temp6.imag(); */
-
 					complex_t temp1, temp_x2, temp_y3, temp_y4, temp_x5;
+					float_t temp_f;
 					complex_t sa, sb, sc;
 					float_t qx = QGrid::instance().qx(x);
 					float_t qy = QGrid::instance().qy(y);
@@ -125,45 +101,52 @@ namespace hig {
 					temp1 = exp(unit_ci * (arot[0] * qx + arot[1] * qy + arot[2] * qz));
 					temp_x2 = unit_c - pow(temp1, repet[0]);
 					temp_y3 = unit_c / (unit_c - temp1);
-					//std::cout << "temp_y3 = " << temp_y3 << ", isfinite = "
-					//			<< boost::math::isfinite(temp_y3)
-					//			<< ", unit_c / temp_x2 = " << unit_c / temp_x2 << ", isfinite = "
-					//			<< boost::math::isfinite(unit_c / temp_x2)
-					//			<< std::endl;
-					temp_y4 = unit_c / (unit_c / temp_y3 + (float_t)(!boost::math::isfinite(temp_y3)));
-					temp_x5 = temp_x2 + repet[0] * (!boost::math::isfinite(unit_c / temp_x2));
-					sa = pow(temp1, (1 - repet[0]) / 2) * temp_y4 * temp_x5;
+					temp_f = (float_t)(!((boost::math::isfinite)(temp_y3.real()) &&
+											(boost::math::isfinite)(temp_y3.imag())));
+					temp_y4 = unit_c / (unit_c / temp_y3 + temp_f);
+					temp_f = (float_t)(!((boost::math::isfinite)((unit_c / temp_x2).real()) &&
+											(boost::math::isfinite)((unit_c / temp_x2).imag())));
+					temp_x5 = temp_x2 + repet[0] * temp_f;
+					sa = pow(temp1, ((float_t)1.0 - repet[0]) / (float_t)2.0) * temp_y4 * temp_x5;
 
 					temp1 = exp(unit_ci * (brot[0] * qx + brot[1] * qy + brot[2] * qz));
 					temp_x2 = unit_c - pow(temp1, repet[1]);
 					temp_y3 = unit_c / (unit_c - temp1);
-					//std::cout << "temp_y3 = " << temp_y3 << ", isfinite = "
-					//			<< boost::math::isfinite(temp_y3)
-					//			<< ", unit_c / temp_x2 = " << unit_c / temp_x2 << ", isfinite = "
-					//			<< boost::math::isfinite(unit_c / temp_x2)
-					//			<< std::endl;
-					temp_y4 = unit_c / (unit_c / temp_y3 + (float_t)(!boost::math::isfinite(temp_y3)));
-					temp_x5 = temp_x2 + repet[1] * (!boost::math::isfinite(unit_c / temp_x2));
-					sb = pow(temp1, (1 - repet[1]) / 2) * temp_y4 * temp_x5;
+					temp_f = (float_t)(!((boost::math::isfinite)(temp_y3.real()) &&
+											(boost::math::isfinite)(temp_y3.imag())));
+					temp_y4 = unit_c / (unit_c / temp_y3 + temp_f);
+					temp_f = (float_t)(!((boost::math::isfinite)((unit_c / temp_x2).real()) &&
+											(boost::math::isfinite)((unit_c / temp_x2).imag())));
+					temp_x5 = temp_x2 + repet[1] * temp_f;
+					sb = pow(temp1, ((float_t)1.0 - repet[1]) / (float_t)2.0) * temp_y4 * temp_x5;
 
 					temp1 = exp(unit_ci * (crot[0] * qx + crot[1] * qy + crot[2] * qz));
 					temp_x2 = unit_c - pow(temp1, repet[2]);
 					temp_y3 = unit_c / (unit_c - temp1);
-					//std::cout << "temp_y3 = " << temp_y3 << ", isfinite = "
-					//			<< boost::math::isfinite(temp_y3)
-					//			<< ", unit_c / temp_x2 = " << unit_c / temp_x2 << ", isfinite = "
-					//			<< boost::math::isfinite(unit_c / temp_x2)
-					//			<< std::endl;
-					temp_y4 = unit_c / (unit_c / temp_y3 + (float_t)(!boost::math::isfinite(temp_y3)));
-					temp_x5 = temp_x2 + repet[2] * (!boost::math::isfinite(unit_c / temp_x2));
+					temp_f = (float_t)(!((boost::math::isfinite)(temp_y3.real()) &&
+											(boost::math::isfinite)(temp_y3.imag())));
+					temp_y4 = unit_c / (unit_c / temp_y3 + temp_f);
+					temp_f = (float_t)(!((boost::math::isfinite)((unit_c / temp_x2).real()) &&
+											(boost::math::isfinite)((unit_c / temp_x2).imag())));
+					temp_x5 = temp_x2 + repet[2] * temp_f;
 					sc = temp_y4 * temp_x5;
 
+					/*if(!((boost::math::isfinite)(sa.real()) && (boost::math::isfinite)(sa.imag()))) {
+						std::cout << "sa sa sa sa sa sa sa: " << x << ", " << y << ", " << z << std::endl; }
+					if(!((boost::math::isfinite)(sb.real()) && (boost::math::isfinite)(sb.imag()))) {
+						std::cout << "sb sb sb sb sb sb sb: " << x << ", " << y << ", " << z << std::endl; }
+					if(!((boost::math::isfinite)(sc.real()) && (boost::math::isfinite)(sc.imag()))) {
+						std::cout << "sc sc sc sc sc sc sc: " << x << ", " << y << ", " << z << std::endl; }
+*/
 					sf_[nx_ * ny_ * z + nx_ * y + x] = exp(unit_ci *
 									(center[0] * qx + center[1] * qy + center[2] * qz)) *
 									sa * sb * sc *
 									(unit_c + exp(unit_ci * (l_t[0] * qx + l_t[1] * qy + l_t[2] * qz)));
 
-				} // for x
+/*					if(!((boost::math::isfinite)(sf_[nx_ * ny_ * z + nx_ * y + x].real()) &&
+								(boost::math::isfinite)(sf_[nx_ * ny_ * z + nx_ * y + x].imag()))) {
+						std::cout << "sf sf sf sf sf sf sf: " << x << ", " << y << ", " << z << std::endl; }
+*/				} // for x
 			} // for y
 		} // for z
 

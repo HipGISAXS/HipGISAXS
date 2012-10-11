@@ -5,7 +5,7 @@
   *
   *  File: plot_ff.hpp
   *  Created: Aug 22, 2012
-  *  Modified: Mon 01 Oct 2012 11:16:18 AM PDT
+  *  Modified: Wed 10 Oct 2012 09:36:32 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -22,6 +22,13 @@ namespace hig {
 		public:
 			Plot(unsigned int nx, unsigned int ny, unsigned int nz):
 					nx_(nx), ny_(ny), nz_(nz), plot_(nx, ny, nz) {
+				raw_data_ = new (std::nothrow) complex_t[nx * ny * nz];
+				mag_data_ = new (std::nothrow) float_t[nx * ny * nz];
+			} // Plot()
+
+			Plot(unsigned int nx, unsigned int ny, unsigned int nz,
+					unsigned int r, unsigned int g, unsigned int b):
+					nx_(nx), ny_(ny), nz_(nz), plot_(nx, ny, nz, r, g, b) {
 				raw_data_ = new (std::nothrow) complex_t[nx * ny * nz];
 				mag_data_ = new (std::nothrow) float_t[nx * ny * nz];
 			} // Plot()

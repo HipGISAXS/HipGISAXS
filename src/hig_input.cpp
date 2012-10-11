@@ -5,7 +5,7 @@
   *
   *  File: hig_input.cpp
   *  Created: Jun 11, 2012
-  *  Modified: Mon 01 Oct 2012 11:13:36 AM PDT
+  *  Modified: Mon 08 Oct 2012 02:44:40 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -35,6 +35,7 @@ namespace hig {
 		scattering_.init();
 		detector_.init();
 		compute_.init();
+		struct_in_layer_ = false;
 
 		shape_def_.clear();
 	} // init();
@@ -1022,6 +1023,7 @@ namespace hig {
 
 			case struct_grain_lkey_token:
 				curr_structure_.grain_layer_key(str);
+				struct_in_layer_ = true;
 				break;
 
 			case struct_ensemble_distribution_token:

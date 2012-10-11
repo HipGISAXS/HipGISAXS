@@ -5,7 +5,7 @@
   *
   *  File: sf.hpp
   *  Created: Jun 18, 2012
-  *  Modified: Mon 01 Oct 2012 11:17:28 AM PDT
+  *  Modified: Tue 09 Oct 2012 11:51:33 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -31,6 +31,8 @@ namespace hig {
 		public:
 			StructureFactor();
 			~StructureFactor();
+
+			void clear(void);
 
 			bool compute_structure_factor(std::string, vector3_t, Lattice*, vector3_t,
 											vector3_t, vector3_t, vector3_t, MPI::Intracomm&);

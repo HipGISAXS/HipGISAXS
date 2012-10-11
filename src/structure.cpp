@@ -5,7 +5,7 @@
   *
   *  File: structure.cpp
   *  Created: Jun 12, 2012
-  *  Modified: Mon 01 Oct 2012 11:18:34 AM PDT
+  *  Modified: Tue 09 Oct 2012 12:18:11 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -112,7 +112,7 @@ namespace hig {
 			case lattice_hex:
 				a_[0] = 1; a_[1] = 0; a_[2] = 0;
 				b_[0] = 0.5; b_[1] = 1 / (2.0 * sqrt3); b_[2] = 0;
-				c_[0] = 0; b_[1] = 0; c_[2] = 0;
+				c_[0] = 0; c_[1] = 0; c_[2] = 0;
 				t_[0] = 0; t_[1] = 0; t_[2] = 0;
 				break;
 
@@ -173,6 +173,7 @@ namespace hig {
 
 	void Grain::init() {
 		layer_key_ = "";
+		in_layer_ = false;
 		lattice_.init();
 		transvec_[0] = transvec_[1] = transvec_[2] = 0;
 		scaling_ = 1;
@@ -183,6 +184,7 @@ namespace hig {
 	void Grain::clear() {
 		shape_key_.clear();
 		layer_key_.clear();
+		in_layer_ = false;
 		scaling_ = 0.0;
 		lattice_.clear();
 	} // Grain::clear()

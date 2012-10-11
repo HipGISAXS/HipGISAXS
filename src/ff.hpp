@@ -5,7 +5,7 @@
   *
   *  File: ff.hpp
   *  Created: Jul 18, 2012
-  *  Modified: Mon 01 Oct 2012 11:12:55 AM PDT
+  *  Modified: Tue 09 Oct 2012 12:02:35 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -43,7 +43,10 @@ namespace hig {
 #endif // KERNEL2
 			~FormFactor() {
 				if(nff_ != NULL) delete[] nff_;
+				nff_ = NULL;
 			} // ~FormFactor()
+
+			void clear(void);
 
 			bool compute_form_factor(ShapeName shape, std::string shape_filename,
 									shape_param_list_t& params,

@@ -5,7 +5,7 @@
   *
   *  File: utilities.cpp
   *  Created: Jun 25, 2012
-  *  Modified: Mon 01 Oct 2012 11:19:49 AM PDT
+  *  Modified: Tue 09 Oct 2012 12:23:39 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -13,9 +13,10 @@
 #include <iostream>
 #include <cmath>
 //#include <boost/math/special_functions/bessel.hpp>
-//#include <pari/pari.h>	// for bessel functions
+#include <pari/pari.h>	// for bessel functions
 
 #include "utilities.hpp"
+#include "numeric_utils.hpp"
 
 namespace hig {
 
@@ -28,7 +29,6 @@ namespace hig {
 		return vector3_t((a[0] < b[0] ? a[0] : b[0]), (a[1] < b[1] ? a[1] : b[1]),
 						(a[2] < b[2] ? a[2] : b[2]));
 	} // min <vector3_t>
-
 
 	/**
 	 * specialization for vector3_t
@@ -44,11 +44,16 @@ namespace hig {
 	 * apply log10 to all elements of the 2D matrix
 	 */
 	bool mat_log10_2d(unsigned int x_size, unsigned int y_size, float_t* &data) {
+		if(data == NULL) {
+			std::cerr << "error: data is null while calculating log10" << std::endl;
+			return false;
+		} // if
 		for(unsigned int i = 0; i < x_size * y_size; ++ i) {
 			if(data[i] <= 0) {
 				if(data[i] == 0) {
-					std::cerr << "warning: matrix has a zero value. cannot calculate logarithm. keeping zero."
-							<< std::endl;
+					//std::cerr << "warning: matrix has a zero value. "
+					//		<< "cannot calculate logarithm. keeping zero."
+					//		<< std::endl;
 					data[i] = 0;
 					continue;
 				} else {
@@ -69,11 +74,10 @@ namespace hig {
 	 */
 	bool transpose(unsigned int x_size, unsigned int y_size, const float_t *matrix, float_t* &transp) {
 		if(matrix == NULL) {
+			std::cerr << "error: matrix is NULL while tranposing" << std::endl;
 			return false;
 		} // if
-
 		transp = new (std::nothrow) float_t[x_size * y_size];
-
 		for(unsigned int y = 0; y < y_size; ++ y) {
 			for(unsigned int x = 0; x < x_size; ++ x) {
 				transp[y_size * x + y] = matrix[x_size * y + x];
@@ -164,33 +168,9 @@ namespace hig {
 	} // operator<()
 
 
-	/*cucomplex_t operator*(float_t s, cucomplex_t c) {
-		cucomplex_t temp;
-		temp.x = s * c.x;
-		temp.y = s * c.y;
-		return temp;
-	} // operator*()
-
-	cucomplex_t operator*(cucomplex_t c, float_t s) {
-		cucomplex_t temp;
-		temp.x = s * c.x;
-		temp.y = s * c.y;
-		return temp;
-	} // operator*()
-
-	cucomplex_t operator*(complex_t s, cucomplex_t c) {
-		cucomplex_t temp;
-		temp.x = s.real() * c.x - s.imag() * c.y;
-		temp.y = s.real() * c.y + s.imag() * c.x;
-		return temp;
-	} // operator*()
-
-	cucomplex_t operator*(cucomplex_t c, complex_t s) {
-		cucomplex_t temp;
-		temp.x = s.real() * c.x - s.imag() * c.y;
-		temp.y = s.real() * c.y + s.imag() * c.x;
-		return temp;
-	} // operator*() */
+	/**
+	 * arithmetic operators for complex types
+	 */
 
 	complex_t operator*(complex_t c, float_t s) {
 		return complex_t(c.real() * s, c.imag() * s);
@@ -200,11 +180,11 @@ namespace hig {
 		return complex_t(c.real() * s, c.imag() * s);
 	} // operator*()
 
-	complex_t operator*(float_t s, cucomplex_t c) {
+	complex_t operator*(cucomplex_t c, float_t s) {
 		return complex_t(s * c.x, s * c.y);
 	} // operator*()
 
-	complex_t operator*(cucomplex_t c, float_t s) {
+	complex_t operator*(float_t s, cucomplex_t c) {
 		return complex_t(s * c.x, s * c.y);
 	} // operator*()
 
@@ -216,13 +196,13 @@ namespace hig {
 		return complex_t(s.real() * c.x - s.imag() * c.y, s.real() * c.y + s.imag() * c.x);
 	} // operator*()
 
-	complex_t operator+(float_t s, cucomplex_t c) {
-		return complex_t(s + c.x, c.y);
-	} // operator+()
+	std::complex<long double> operator*(std::complex<long double> c, long double s) {
+		return std::complex<long double>(c.real() * s, c.imag() * s);
+	} // operator*()
 
-	complex_t operator+(cucomplex_t c, float_t s) {
-		return complex_t(s + c.x, c.y);
-	} // operator+()
+	std::complex<long double> operator/(std::complex<long double> c, long double s) {
+		return std::complex<long double>(c.real() / s, c.imag() / s);
+	} // operator*()
 
 	complex_t operator+(complex_t s, cucomplex_t c) {
 		return complex_t(s.real() + c.x, s.imag() + c.y);
@@ -232,8 +212,17 @@ namespace hig {
 		return complex_t(s.real() + c.x, s.imag() + c.y);
 	} // operator+()
 
+	complex_t operator+(cucomplex_t c, float_t s) {
+		return complex_t(s + c.x, c.y);
+	} // operator+()
+
+	complex_t operator+(float_t s, cucomplex_t c) {
+		return complex_t(s + c.x, c.y);
+	} // operator+()
+
+
 	/**
-	 * returns element-by-element sum of two matrices
+	 * returns element-by-element sum of two matrices	WRONG ...
 	 */
 	std::vector<complex_t>& mat_add(unsigned int x1_size, unsigned int y1_size, unsigned int z1_size,
 									std::vector<complex_t>& matrix1,
@@ -254,9 +243,51 @@ namespace hig {
 		return result;
 	} // mat_add()
 
+	/**
+	 * constructs element-by-element sum of two matrices into result
+	 */
+	bool mat_add(unsigned int x1_size, unsigned int y1_size, unsigned int z1_size,
+					const std::vector<complex_t>& matrix1,
+					unsigned int x2_size, unsigned int y2_size, unsigned int z2_size,
+					const std::vector<complex_t>& matrix2,
+					std::vector<complex_t>& result) {
+		if(x1_size != x2_size || y1_size != y2_size || z1_size != z2_size
+				|| matrix1.size() != matrix2.size()) {
+			std::cerr << "error: matrix sizes are not the same for addition operation" << std::endl;
+			return false;
+		} // if
+		result.clear();
+		std::vector<complex_t>::const_iterator i1 = matrix1.begin();
+		std::vector<complex_t>::const_iterator i2 = matrix2.begin();
+		for(; i1 != matrix1.end(); ++ i1, ++ i2) {
+			result.push_back((*i1) + (*i2));
+		} // for
+		return true;
+	} // mat_add()
 
 	/**
-	 * scalar-matrix multiplication
+	 * performs in-place element-by-element sum of two matrices into first matrix
+	 */
+	bool mat_add_in(unsigned int x1_size, unsigned int y1_size, unsigned int z1_size,
+					std::vector<complex_t>& matrix1,
+					unsigned int x2_size, unsigned int y2_size, unsigned int z2_size,
+					std::vector<complex_t>& matrix2) {
+		if(x1_size != x2_size || y1_size != y2_size || z1_size != z2_size
+				|| matrix1.size() != matrix2.size()) {
+			std::cerr << "error: matrix sizes are not the same for addition operation" << std::endl;
+			return false;
+		} // if
+		std::vector<complex_t>::iterator i1 = matrix1.begin();
+		std::vector<complex_t>::iterator i2 = matrix2.begin();
+		for(; i1 != matrix1.end(); ++ i1, ++ i2) {
+			*i1 = (*i1) + (*i2);
+		} // for
+		return true;
+	} // mat_add()
+
+
+	/**
+	 * scalar-matrix multiplication		WRONG ...
 	 */
 	std::vector<complex_t>& mat_mul(float_t scalar,
 									//unsigned int x_size, unsigned int y_size, unsigned int z_size,
@@ -268,7 +299,6 @@ namespace hig {
 		return result;
 	} // mat_mul()
 
-
 	std::vector<complex_t>& mat_mul(complex_t scalar,
 									//unsigned int x_size, unsigned int y_size, unsigned int z_size,
 									std::vector<complex_t>& matrix) {
@@ -279,20 +309,69 @@ namespace hig {
 		return result;
 	} // mat_mul()
 
-
 	std::vector<complex_t>& mat_mul(std::vector<complex_t>& matrix, float_t scalar) {
 		return mat_mul(scalar, matrix);
 	} // mat_mul()
-
 
 	std::vector<complex_t>& mat_mul(std::vector<complex_t>& matrix, complex_t scalar) {
 		return mat_mul(scalar, matrix);
 	} // mat_mul()
 
+	/**
+	 * scalar-matrix multiplication into result
+	 */
+	bool mat_mul(float_t scalar, const complex_vec_t& matrix, complex_vec_t& result) {
+		result.clear();
+		for(std::vector<complex_t>::const_iterator i = matrix.begin(); i != matrix.end(); ++ i) {
+			result.push_back((*i) * scalar);
+		} // for
+		return true;
+	} // mat_mul()
+
+	bool mat_mul(complex_t scalar, const complex_vec_t& matrix, complex_vec_t& result) {
+		result.clear();
+		for(complex_vec_t::const_iterator i = matrix.begin(); i != matrix.end(); ++ i) {
+			result.push_back((*i) * scalar);
+		} // for
+		return true;
+	} // mat_mul()
+
+	bool mat_mul(const complex_vec_t& matrix, float_t scalar, complex_vec_t& result) {
+		return mat_mul(scalar, matrix, result);
+	} // mat_mul()
+
+	bool mat_mul(const complex_vec_t& matrix, complex_t scalar, complex_vec_t& result) {
+		return mat_mul(scalar, matrix, result);
+	} // mat_mul()
 
 	/**
-	 * returns element-by-element product of two matrices
-	 * it modifies the first matrix to store the result
+	 * in-place scalar-matrix multiplication
+	 */
+	bool mat_mul_in(float_t scalar,	complex_vec_t& matrix) {
+		for(complex_vec_t::iterator i = matrix.begin(); i != matrix.end(); ++ i) {
+			*i = (*i) * scalar;
+		} // for
+		return true;
+	} // mat_mul()
+
+	bool mat_mul_in(complex_t scalar, complex_vec_t& matrix) {
+		for(complex_vec_t::iterator i = matrix.begin(); i != matrix.end(); ++ i) {
+			*i = (*i) * scalar;
+		} // for
+		return true;
+	} // mat_mul()
+
+	bool mat_mul_in(complex_vec_t& matrix, float_t scalar) {
+		return mat_mul_in(scalar, matrix);
+	} // mat_mul()
+
+	bool mat_mul_in(complex_vec_t& matrix, complex_t scalar) {
+		return mat_mul_in(scalar, matrix);
+	} // mat_mul()
+
+
+	/**
+	 * returns element-by-element product of two matrices		WRONG
 	 */
 	std::vector<complex_t>& mat_dot_prod(unsigned int x1_size, unsigned int y1_size, unsigned int z1_size,
 										std::vector<complex_t>& matrix1,
@@ -314,7 +393,52 @@ namespace hig {
 		return result;
 	} // mat_dot_prod()
 
+	/**
+	 * computes element-by-element product of two matrices into result
+	 */
+	bool mat_dot_prod(unsigned int x1_size, unsigned int y1_size, unsigned int z1_size,
+						const complex_vec_t& matrix1,
+						unsigned int x2_size, unsigned int y2_size, unsigned int z2_size,
+						const complex_vec_t& matrix2,
+						complex_vec_t& result) {
+		if(x1_size != x2_size || y1_size != y2_size || z1_size != z2_size
+				|| matrix1.size() != matrix2.size()) {
+			std::cerr << "error: matrix sizes are not the same for dot product operation" << std::endl;
+			return false;
+		} // if
+		result.clear();
+		complex_vec_t::const_iterator i1 = matrix1.begin();
+		complex_vec_t::const_iterator i2 = matrix2.begin();
+		for(; i1 != matrix1.end(); ++ i1, ++ i2) {
+			result.push_back((*i1) * (*i2));
+		} // for
+		return true;
+	} // mat_dot_prod()
 
+	/**
+	 * performs in-place element-by-element product of two matrices
+	 */
+	bool mat_dot_prod_in(unsigned int x1_size, unsigned int y1_size, unsigned int z1_size,
+							std::vector<complex_t>& matrix1,
+							unsigned int x2_size, unsigned int y2_size, unsigned int z2_size,
+							std::vector<complex_t>& matrix2) {
+		if(x1_size != x2_size || y1_size != y2_size || z1_size != z2_size
+				|| matrix1.size() != matrix2.size()) {
+			std::cerr << "error: matrix sizes are not the same for dot product operation" << std::endl;
+			return false;
+		} // if
+		std::vector<complex_t>::iterator i1 = matrix1.begin();
+		std::vector<complex_t>::iterator i2 = matrix2.begin();
+		for(; i1 != matrix1.end(); ++ i1, ++ i2) {
+			*i1 = (*i1) * (*i2);
+		} // for
+		return true;
+	} // mat_dot_prod()
+
+
+	/**
+	 * returns element-by-element division of two matrices (matrix1 / matrix2)	WRONG ...
+	 */
 	std::vector<complex_t>& mat_dot_div(unsigned int nx1, unsigned int ny1, unsigned int nz1,
 										std::vector<complex_t>& matrix1,
 										unsigned int nx2, unsigned int ny2, unsigned int nz2,
@@ -324,15 +448,55 @@ namespace hig {
 						<< std::endl;
 			return matrix1;
 		} // if
-
 		std::vector<complex_t> result;
 		std::vector<complex_t>::iterator i1 = matrix1.begin();
 		std::vector<complex_t>::iterator i2 = matrix2.begin();
 		for(; i1 != matrix1.end(); ++ i1, ++ i2) {
 			result.push_back((*i1) / (*i2));
 		} // for
-
 		return result;
+	} // mat_dot_div()
+
+	/**
+	 * computes element-by-element division of two matrices (matrix1 / matrix2)	into result
+	 */
+	bool mat_dot_div(unsigned int nx1, unsigned int ny1, unsigned int nz1,
+						const complex_vec_t& matrix1,
+						unsigned int nx2, unsigned int ny2, unsigned int nz2,
+						const complex_vec_t& matrix2,
+						complex_vec_t& result) {
+		if(nx1 != nx2 || ny1 != ny2 || nz1 != nz2 || matrix1.size() != matrix2.size()) {
+			std::cerr << "error: matrix sizes are not the same for dot division operation"
+						<< std::endl;
+			return false;
+		} // if
+		result.clear();
+		complex_vec_t::const_iterator i1 = matrix1.begin();
+		complex_vec_t::const_iterator i2 = matrix2.begin();
+		for(; i1 != matrix1.end(); ++ i1, ++ i2) {
+			result.push_back((*i1) / (*i2));
+		} // for
+		return true;
+	} // mat_dot_div()
+
+	/**
+	 * performs in-place element-by-element division of two matrices (matrix1/matrix2) into matrix1
+	 */
+	bool mat_dot_div_in(unsigned int nx1, unsigned int ny1, unsigned int nz1,
+						std::vector<complex_t>& matrix1,
+						unsigned int nx2, unsigned int ny2, unsigned int nz2,
+						std::vector<complex_t>& matrix2) {
+		if(nx1 != nx2 || ny1 != ny2 || nz1 != nz2 || matrix1.size() != matrix2.size()) {
+			std::cerr << "error: matrix sizes are not the same for dot division operation"
+						<< std::endl;
+			return false;
+		} // if
+		std::vector<complex_t>::iterator i1 = matrix1.begin();
+		std::vector<complex_t>::iterator i2 = matrix2.begin();
+		for(; i1 != matrix1.end(); ++ i1, ++ i2) {
+			*i1 = (*i1) / (*i2);
+		} // for
+		return true;
 	} // mat_dot_div()
 
 
@@ -342,8 +506,23 @@ namespace hig {
 		for(std::vector<complex_t>::iterator i = matrix.begin(); i != matrix.end(); ++ i) {
 			result.push_back((*i) * (*i));
 		} // for
-
 		return result;
+	} // mat_sqr()
+
+	bool mat_sqr(const complex_vec_t& matrix, complex_vec_t& result) {
+		result.clear();
+		for(complex_vec_t::const_iterator i = matrix.begin(); i != matrix.end(); ++ i) {
+			result.push_back((*i) * (*i));
+		} // for
+		return true;
+	} // mat_sqr()
+
+	bool mat_sqr_in(//unsigned int nx, unsigned int ny, unsigned int nz,
+						std::vector<complex_t>& matrix) {
+		for(std::vector<complex_t>::iterator i = matrix.begin(); i != matrix.end(); ++ i) {
+			*i = (*i) * (*i);
+		} // for
+		return true;
 	} // mat_sqr()
 
 
@@ -353,25 +532,71 @@ namespace hig {
 		for(std::vector<complex_t>::iterator i = matrix.begin(); i != matrix.end(); ++ i) {
 			result.push_back(sqrt(*i));
 		} // for
-
 		return result;
 	} // mat_sqrt()
+
+	bool mat_sqrt(const complex_vec_t& matrix, complex_vec_t& result) {
+		result.clear();
+		for(complex_vec_t::const_iterator i = matrix.begin(); i != matrix.end(); ++ i) {
+			result.push_back(sqrt(*i));
+		} // for
+		return true;
+	} // mat_sqrt()
+
+	bool mat_sqrt_in(//unsigned int nx, unsigned int ny, unsigned int nz,
+						std::vector<complex_t>& matrix) {
+		for(std::vector<complex_t>::iterator i = matrix.begin(); i != matrix.end(); ++ i) {
+			*i = sqrt(*i);
+		} // for
+		return true;
+	} // mat_sqrt()
+
+
+	bool mat_exp(complex_vec_t& matrix, complex_vec_t& result) {
+		result.clear();
+		for(complex_vec_t::iterator i = matrix.begin(); i != matrix.end(); ++ i)
+			result.push_back(exp(*i));
+	} // mat_exp()
+
+
+	bool mat_exp_in(complex_vec_t& matrix) {
+		for(complex_vec_t::iterator i = matrix.begin(); i != matrix.end(); ++ i) *i = exp(*i);
+	} // mat_exp_in()
 
 
 	std::vector<complex_t>& mat_besselj(int j, unsigned int nx, unsigned int ny, unsigned int nz,
 										std::vector<complex_t>& matrix) {
 		std::vector<complex_t> result;
-		for(std::vector<complex_t>::iterator i = matrix.begin(); i != matrix.end(); ++ i)
+		for(std::vector<complex_t>::iterator i = matrix.begin(); i != matrix.end(); ++ i) {
 			result.push_back(besselj(1, *i));
-
+		} // for
 		return result;
+	} // mat_besselj()
+
+	bool mat_besselj(int j, unsigned int nx, unsigned int ny, unsigned int nz,
+						const complex_vec_t& matrix, complex_vec_t& result) {
+		result.clear();
+		for(complex_vec_t::const_iterator i = matrix.begin(); i != matrix.end(); ++ i) {
+			result.push_back(besselj(1, *i));
+		} // for
+		return true;
+	} // mat_besselj()
+
+	bool mat_besselj_in(int j, unsigned int nx, unsigned int ny, unsigned int nz,
+										std::vector<complex_t>& matrix) {
+		for(std::vector<complex_t>::iterator i = matrix.begin(); i != matrix.end(); ++ i) {
+			//*i = besselj(j, *i);
+			*i = cbessj(*i, j);
+		} // for
+		return true;
 	} // mat_besselj()
 
 
 	// pari
 	complex_t besselj(int j, complex_t m) {
-/*		pari_init(5000000, 100000);
-		GEN inp_m = cgetc(64);	// using double precision
+	/*	pari_init(5000000, 100000);
+		GEN inp_m;
+		inp_m = cgetc(64);	// using double precision
 		gel(inp_m, 1) = dbltor(m.real());
 		gel(inp_m, 2) = dbltor(m.imag());
 		GEN unit = cgetc(64);
@@ -385,6 +610,7 @@ namespace hig {
 		float_t out_imag = rtodbl(gel(out_res, 2));
 
 		pari_close();
+
 		return complex_t(out_real, out_imag); */
 	} // besselj()
 

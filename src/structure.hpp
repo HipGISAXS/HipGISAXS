@@ -5,7 +5,7 @@
   *
   *  File: structure.hpp
   *  Created: Jun 09, 2012
-  *  Modified: Mon 01 Oct 2012 11:18:40 AM PDT
+  *  Modified: Mon 08 Oct 2012 02:09:27 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -136,6 +136,7 @@ namespace hig {
 		private:
 			std::string shape_key_;
 			std::string layer_key_;
+			bool in_layer_;
 			float_t scaling_;
 			vector3_t transvec_;
 			vector3_t repetition_;
@@ -154,7 +155,7 @@ namespace hig {
 			bool lattice_abc_set() { return lattice_.abc_set(); }
 
 			void shape_key(std::string s) { shape_key_ = s; }
-			void layer_key(std::string s) { layer_key_ = s; }
+			void layer_key(std::string s) { layer_key_ = s; in_layer_ = true; }
 
 			void lattice_vec_a(vector3_t v) { lattice_.a(v); }
 			void lattice_vec_b(vector3_t v) { lattice_.b(v); }
@@ -308,6 +309,7 @@ namespace hig {
 			RefractiveIndex grain_refindex() { return grain_.refindex_; }
 			const std::string& grain_shape_key() { return grain_.shape_key_; }
 			const std::string& grain_layer_key() { return grain_.layer_key_; }
+			bool grain_in_layer() { return grain_.in_layer_; }
 			vector3_t grain_transvec() { return grain_.transvec_; }
 
 			vector3_t ensemble_spacing() const { return ensemble_.spacing_; }

@@ -5,7 +5,7 @@
   *
   *  File: ff_ana.hpp
   *  Created: Jul 12, 2012
-  *  Modified: Mon 01 Oct 2012 11:12:45 AM PDT
+  *  Modified: Tue 09 Oct 2012 11:54:15 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -43,6 +43,7 @@ namespace hig {
 			~AnalyticFormFactor() { }
 
 			bool init(vector3_t&, vector3_t&, vector3_t&, std::vector<complex_t> &ff);
+			void clear();
 			bool compute(ShapeName shape, float_t tau, float_t eta, vector3_t transvec,
 						std::vector<complex_t>&,
 						shape_param_list_t& params, float_t single_layer_thickness_,
@@ -70,11 +71,13 @@ namespace hig {
 			bool compute_truncated_cone();
 
 			bool param_distribution(ShapeParam&, std::vector<float_t>&, std::vector<float_t>&);
-			std::vector<complex_t>& mat_fq_inv(unsigned int x_size, unsigned int y_size, unsigned int z_size,
-												std::vector<complex_t>& matrix, float_t y);
-			complex_t fq_inv(complex_t matrix, float_t y);
-			std::vector<complex_t>& mat_sinc(unsigned int x_size, unsigned int y_size, unsigned int z_size,
-												std::vector<complex_t>& matrix);
+			bool mat_fq_inv_in(unsigned int, unsigned int, unsigned int, complex_vec_t&, float_t);
+			bool mat_fq_inv(unsigned int, unsigned int, unsigned int, const complex_vec_t&,
+							float_t, complex_vec_t&);
+			complex_t fq_inv(complex_t, float_t);
+
+			bool mat_sinc(unsigned int, unsigned int, unsigned int,	const complex_vec_t&, complex_vec_t&);
+			bool mat_sinc_in(unsigned int, unsigned int, unsigned int, complex_vec_t&);
 			float_t sinc(complex_t value);
 
 

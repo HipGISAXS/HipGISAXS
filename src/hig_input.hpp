@@ -5,7 +5,7 @@
   *
   *  File: hig_input.hpp
   *  Created: Jun 11, 2012
-  *  Modified: Mon 01 Oct 2012 11:13:42 AM PDT
+  *  Modified: Mon 08 Oct 2012 02:46:34 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -47,6 +47,7 @@ namespace hig {
 			ScatteringParams scattering_;
 			DetectorParams detector_;
 			ComputeParams compute_;
+			bool struct_in_layer_;
 
 			std::vector<float_t> shape_def_;	/* shape definition from a file */
 			// there may be multiple shape files ... do this later ...
@@ -198,6 +199,7 @@ namespace hig {
 			std::string shape_filename(Structure& s) { return shapes_[s.grain_shape_key()].filename(); }
 			shape_param_list_t& shape_params(Structure& s) {
 				return shapes_[s.grain_shape_key()].param_list(); }
+			bool struct_in_layer() { return struct_in_layer_; }
 
 			unsigned int read_shape_file_shape(const char*);
 			unsigned int read_shape_file_hdf5(const char*);

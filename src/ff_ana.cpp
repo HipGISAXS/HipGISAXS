@@ -5,7 +5,7 @@
   *
   *  File: ff_ana.cpp
   *  Created: Jul 12, 2012
-  *  Modified: Mon 01 Oct 2012 11:12:41 AM PDT
+  *  Modified: Tue 09 Oct 2012 11:55:26 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -24,27 +24,29 @@ namespace hig {
 				std::vector<complex_t> &ff) {
 		nqx_ = QGrid::instance().nqx();
 		nqy_ = QGrid::instance().nqy();
-		nqz_ = QGrid::instance().nqz_extended();	// check if this is indeed extended ...
+		nqz_ = QGrid::instance().nqz_extended();
 
+		// first make sure there is no residue from any previous computations
 		ff.clear();
 
+		// construct mesh grid thingy
 		mesh_qx_.clear();
 		mesh_qy_.clear();
 		mesh_qz_.clear();
-
 		// this is very inefficient! improve ...
+		// x and y are swapped for qx, qy, qz 
 		for(unsigned int i = 0; i < nqz_; ++ i) {
 			for(unsigned int j = 0; j < nqy_; ++ j) {
 				for(unsigned int k = 0; k < nqx_; ++ k) {
-					mesh_qx_.push_back(rot1[0] * QGrid::instance().qx(k) +
-										rot1[1] * QGrid::instance().qy(j) +
-										rot1[2] * QGrid::instance().qz(i));
-					mesh_qy_.push_back(rot2[0] * QGrid::instance().qx(k) +
-										rot2[1] * QGrid::instance().qy(j) +
-										rot2[2] * QGrid::instance().qz(i));
-					mesh_qz_.push_back(rot3[0] * QGrid::instance().qx(k) +
-										rot3[1] * QGrid::instance().qy(j) +
-										rot3[2] * QGrid::instance().qz(i));
+					mesh_qx_.push_back(rot1[0] * QGrid::instance().qy(j) +
+										rot1[1] * QGrid::instance().qx(k) +
+										rot1[2] * QGrid::instance().qz_extended(i));
+					mesh_qy_.push_back(rot2[0] * QGrid::instance().qy(j) +
+										rot2[1] * QGrid::instance().qx(k) +
+										rot2[2] * QGrid::instance().qz_extended(i));
+					mesh_qz_.push_back(rot3[0] * QGrid::instance().qy(j) +
+										rot3[1] * QGrid::instance().qx(k) +
+										rot3[2] * QGrid::instance().qz_extended(i));
 				} // for k
 			} // for j
 		} // for i
@@ -53,11 +55,21 @@ namespace hig {
 	} // AnalyticFormFactor::init()
 
 
+	void AnalyticFormFactor::clear() {
+		nqx_ = nqy_ = nqz_ = 0;
+		mesh_qx_.clear();
+		mesh_qy_.clear();
+		mesh_qz_.clear();
+	} // AnalyticFormFactor::clear()
+
+
 	bool AnalyticFormFactor::compute(ShapeName shape, float_t tau, float_t eta, vector3_t transvec,
 									std::vector<complex_t>& ff,
 									shape_param_list_t& params, float_t single_layer_thickness,
 									vector3_t rot1, vector3_t rot2, vector3_t rot3,
 									MPI::Intracomm& world_comm) {
+
+		std::cout << "-- Computing form factor analytically ... " << std::endl;
 		switch(shape) {
 			case shape_box:
 				if(!compute_box(nqx_, nqy_, nqz_, ff, shape, params, tau, eta, transvec, rot1, rot2, rot3)) {
@@ -206,30 +218,38 @@ namespace hig {
 			return false;
 		} // if
 
-		std::vector<complex_t> mesh_qm = mat_mul(tan(tau),
-												mat_add(nqx, nqy, nqz,
-												mat_mul(mesh_qx_, sin(eta)),
-												nqx, nqy, nqz,
-												mat_mul(mesh_qy_, cos(eta))));
+		//std::vector<complex_t> mesh_qm = mat_mul(tan(tau),
+		//										mat_add(nqx, nqy, nqz,
+		//										mat_mul(mesh_qx_, sin(eta)),
+		//										nqx, nqy, nqz,
+		//										mat_mul(mesh_qy_, cos(eta))));
+		complex_vec_t mesh_qm;
+		// temp vars can be resuced here ...
+		complex_vec_t temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9, temp10;
+		mat_mul(mesh_qx_, sin(eta), temp1);
+		mat_mul(mesh_qy_, cos(eta), temp2);
+		mat_add(nqx, nqy, nqz, temp1, nqx, nqy, nqz, temp2, temp3);
+		mat_mul(tan(tau), temp3, mesh_qm);
+
 		// initialize ff
+		ff.clear();
 		ff.reserve(nqz * nqy * nqx);
 		for(unsigned int i = 0; i < nqz * nqy * nqx; ++ i) ff.push_back(complex_t(0, 0));
 		// ff computation for a box
 		for(unsigned int i_z = 0; i_z < z.size(); ++ i_z) {
 			for(unsigned int i_y = 0; i_y < y.size(); ++ i_y) {
 				for(unsigned int i_x = 0; i_x < x.size(); ++ i_x) {
-					std::vector<complex_t> temp1 = mat_add(nqx, nqy, nqz, mesh_qz_, nqx, nqy, nqz, mesh_qm);
-					std::vector<complex_t> temp2 = mat_mul(mesh_qz_, z[i_z]);
-					std::vector<complex_t> temp3 = mat_mul(mesh_qx_, x[i_x]);	// all 0s
-					std::vector<complex_t> temp4 = mat_fq_inv(nqx, nqy, nqz, temp1, y[i_y]);
-					std::vector<complex_t> temp5 = mat_sinc(nqx, nqy, nqz, temp2);
-					std::vector<complex_t> temp6 = mat_sinc(nqx, nqy, nqz, temp3);	// nans
-					std::vector<complex_t> temp7 = mat_dot_prod(nqx, nqy, nqz, temp6, nqx, nqy, nqz, temp5);
-					std::vector<complex_t> temp8 = mat_dot_prod(nqx, nqy, nqz, temp7, nqx, nqy, nqz, temp4);
+					mat_add(nqx, nqy, nqz, mesh_qz_, nqx, nqy, nqz, mesh_qm, temp1);
+					mat_mul(mesh_qy_, z[i_z], temp2);
+					mat_mul(mesh_qx_, x[i_x], temp3);
+					mat_fq_inv(nqx, nqy, nqz, temp1, y[i_y], temp4);
+					mat_sinc(nqx, nqy, nqz, temp2, temp5);
+					mat_sinc(nqx, nqy, nqz, temp3, temp6);
+					mat_dot_prod(nqx, nqy, nqz, temp6, nqx, nqy, nqz, temp5, temp7);
+					mat_dot_prod(nqx, nqy, nqz, temp7, nqx, nqy, nqz, temp4, temp8);
 					complex_t temp9 = distr_x[i_x] * distr_y[i_y] * distr_z[i_z] * 4 * z[i_z] * x[i_x];
-										// 0: all distr_. are 0
-					std::vector<complex_t> temp10 = mat_mul(temp9, temp8);
-					ff = mat_add(nqx, nqy, nqz, ff, nqx, nqy, nqz, temp10);
+					mat_mul(temp9, temp8, temp10);
+					mat_add_in(nqx, nqy, nqz, ff, nqx, nqy, nqz, temp10);
 					/*ff = mat_add(nqx, nqy, nqz, ff, nqx, nqy, nqz,
 							mat_mul(distr_x[i_x] * distr_y[i_y] * distr_z[i_z] * 4 * z[i_z] * x[i_x],
 							mat_dot_prod(nqx, nqy, nqz,
@@ -311,51 +331,54 @@ namespace hig {
 			return false;
 		} // if
 
-		std::vector<complex_t> qpar = mat_sqrt(//nqx_, nqy_, nqz_,
-										mat_add(nqx_, nqy_, nqz_,
-										mat_sqr(/*nqx_, nqy_, nqz_,*/ mesh_qx_),
-										nqx_, nqy_, nqz_,
-										mat_sqr(/*nqx_, nqy_, nqz_,*/ mesh_qy_)));
-		std::vector<complex_t> qm = mat_mul(/*nqx_, nqy_, nqz_,*/ tan(tau),
-										mat_add(nqx_, nqy_, nqz_,
-										mat_mul(/*nqx_, nqy_, nqz_,*/ mesh_qx_, sin(eta)),
-										nqx_, nqy_, nqz_,
-										mat_mul(/*nqx_, nqy_, nqz_,*/ mesh_qy_, cos(eta))));
-		for(unsigned int i_r = 0; i_r < r.size(); ++ i_r) {
-			for(unsigned int i_h = 0; i_h < h.size(); ++ i_h) {
-				ff = mat_add(nqx_, nqy_, nqz_, ff, nqx_, nqy_, nqz_,
-						mat_mul(distr_r[i_r] * distr_h[i_h] * 2.0 * PI_ * pow(r[i_r], 2), //nqx_, nqy_, nqz_,
-						mat_dot_prod(nqx_, nqy_, nqz_,
-						mat_dot_div(nqx_, nqy_, nqz_,
-						mat_besselj(1, nqx_, nqy_, nqz_,
-						mat_mul(/*nqx_, nqy_, nqz_,*/ qpar, r[i_r])), nqx_, nqy_, nqz_,
-						mat_mul(/*nqx_, nqy_, nqz_,*/ qpar, r[i_r])), nqx_, nqy_, nqz_,
-						mat_fq_inv(nqx_, nqy_, nqz_,
-						mat_add(nqx_, nqy_, nqz_, mesh_qz_, nqx_, nqy_, nqz_, qm), h[i_h]))));
-			} // for h
-		} // for r
-
-		//ff_ = mat_dot_prod(nqx_, nqy_, nqz_, ff_, nqx_, nqy_, nqz_,
-		//		mat_exp(nqx_, nqy_, nqz_,
-		//		mat_mul(complex_t(0, 1), nqx_, nqy_, nqz_,
-		//		mat_add(nqx_, nqy_, nqz_,
-		//		mat_mul(nqx_, nqy_, nqz_, mesh_qx_, transvec[0]), nqx_, nqy_, nqz_,
-		//		mat_add(nqx_, nqy_, nqz_,
-		//		mat_mul(nqx_, nqy_, nqz_, mesh_qy_, transvec[1]), nqx_, nqy_, nqz_,
-		//		mat_mul(nqx_, nqy_, nqz_, mesh_qz_, transvec[2]))))));
-		std::vector<complex_t>::iterator i_qx = mesh_qx_.begin();
-		std::vector<complex_t>::iterator i_qy = mesh_qy_.begin();
-		std::vector<complex_t>::iterator i_qz = mesh_qz_.begin();
-		for(int i_z = 0; i_qz != mesh_qz_.end(); ++ i_qz, ++ i_z) {
-			for(int i_y = 0; i_qy != mesh_qy_.end(); ++ i_qy, ++ i_y) {
-				for(int i_x = 0; i_qx != mesh_qx_.end(); ++ i_qx, ++ i_x) {
-					complex_t temp = exp(mesh_qx_[i_x] * transvec[0] +
-										mesh_qy_[i_y] * transvec[1] +
-										mesh_qz_[i_z] * transvec[2]);
-					ff[nqx_ * nqy_ * i_z + nqx_ * i_y + i_x] *= temp;
+		ff.clear();
+		ff.reserve(nqx_ * nqy_ * nqz_);
+		for(int i_z = 0; i_z < nqz_; ++ i_z) {
+			for(int i_y = 0; i_y < nqy_; ++ i_y) {
+				for(int i_x = 0; i_x < nqx_; ++ i_x) {
+					ff.push_back(complex_t(0.0, 0.0));
 				} // for x
 			} // for y
 		} // for z
+
+		std::vector<complex_t> qpar, qm;
+		std::vector<complex_t> temp1, temp2, temp3, temp4, temp5, temp6, temp7;
+
+		mat_sqr(mesh_qx_, temp1);
+		mat_sqr(mesh_qy_, temp2);
+		mat_add(nqx_, nqy_, nqz_, temp1, nqx_, nqy_, nqz_, temp2, qpar);
+		mat_sqrt_in(qpar);
+		mat_mul(mesh_qx_, sin(eta), temp3);
+		mat_mul(mesh_qy_, cos(eta), temp4);
+		mat_add(nqx_, nqy_, nqz_, temp3, nqx_, nqy_, nqz_, temp4, temp5);
+		mat_mul(tan(tau), temp5, qm);
+
+		temp1.clear(); temp2.clear(); temp3.clear(); temp4.clear(); temp5.clear();
+
+		for(unsigned int i_r = 0; i_r < r.size(); ++ i_r) {
+			for(unsigned int i_h = 0; i_h < h.size(); ++ i_h) {
+				mat_add(nqx_, nqy_, nqz_, mesh_qz_, nqx_, nqy_, nqz_, qm, temp1);
+				mat_fq_inv(nqx_, nqy_, nqz_, temp1, h[i_h], temp2);
+				mat_mul(qpar, r[i_r], temp3);
+				mat_besselj(1, nqx_, nqy_, nqz_, temp3, temp4);
+				mat_dot_div(nqx_, nqy_, nqz_, temp4, nqx_, nqy_, nqz_, temp3, temp5);
+				mat_dot_prod(nqx_, nqy_, nqz_, temp5, nqx_, nqy_, nqz_, temp2, temp6);
+				mat_mul(distr_r[i_r] * distr_h[i_h] * 2.0 * PI_ * pow(r[i_r], 2), temp6, temp7);
+				mat_add_in(nqx_, nqy_, nqz_, ff, nqx_, nqy_, nqz_, temp7);
+			} // for h
+		} // for r
+
+		temp1.clear(); temp2.clear(); temp3.clear(); temp4.clear();
+		temp5.clear(); temp6.clear(); temp7.clear();
+
+		mat_mul(mesh_qx_, transvec[0], temp1);
+		mat_mul(mesh_qy_, transvec[1], temp2);
+		mat_mul(mesh_qz_, transvec[2], temp3);
+		mat_add_in(nqx_, nqy_, nqz_, temp2, nqx_, nqy_, nqz_, temp3);
+		mat_add_in(nqx_, nqy_, nqz_, temp1, nqx_, nqy_, nqz_, temp2);
+		mat_mul_in(complex_t(0, 1), temp1);
+		mat_exp_in(temp1);
+		mat_dot_prod_in(nqx_, nqy_, nqz_, ff, nqx_, nqy_, nqz_, temp1);
 
 		return true;
 	} // AnalyticFormFactor::compute_cylinder()
@@ -763,40 +786,53 @@ namespace hig {
 	 * matrix computation helpers
 	 */
 
-	std::vector<complex_t>& AnalyticFormFactor::mat_fq_inv(unsigned int x_size,
-															unsigned int y_size,
-															unsigned int z_size,
-															std::vector<complex_t>& matrix, float_t y) {
-		for(std::vector<complex_t>::iterator iter = matrix.begin(); iter != matrix.end(); ++ iter) {
-			complex_t temp = 2.0 * exp((*iter) * y / (float_t)2.0) *
-							sin((*iter) * y / (float_t)2.0) / (*iter);
-			if(fabs(temp) <= 1e-14) temp = y;
+	bool AnalyticFormFactor::mat_fq_inv_in(unsigned int x_size,
+											unsigned int y_size,
+											unsigned int z_size,
+											complex_vec_t& matrix, float_t y) {
+		for(complex_vec_t::iterator i = matrix.begin(); i != matrix.end(); ++ i) {
+			*i = fq_inv(*i, y);
 		} // for
 		
-		return matrix;
+		return true;
 	} // AnalyticFormFactor::mat_fq_inv()
 
+	bool AnalyticFormFactor::mat_fq_inv(unsigned int x_size, unsigned int y_size, unsigned int z_size,
+										const complex_vec_t& matrix, float_t y, complex_vec_t& result) {
+		result.clear();
+		for(complex_vec_t::const_iterator i = matrix.begin(); i != matrix.end(); ++ i) {
+			result.push_back(fq_inv(*i, y));
+		} // for
+		return true;
+	} // AnalyticFormFactor::mat_fq_inv()
 
 	complex_t AnalyticFormFactor::fq_inv(complex_t value, float_t y) {
-		complex_t temp = 2.0 * exp(value * y / (float_t)2.0) * sin(value * y / (float_t)2.0) / value;
+		complex_t unitc(0, 1.0);
+		complex_t temp = 2.0 * exp(unitc * value * y / (float_t) 2.0) *
+							sin(value * y / (float_t) 2.0) / value;
 		if(fabs(temp) <= 1e-14) temp = y;
 		return temp;
 	} // AnalyticFormFactor::fq_inv()
 
 
-	std::vector<complex_t>& AnalyticFormFactor::mat_sinc(unsigned int x_size,
-															unsigned int y_size,
-															unsigned int z_size,
-															std::vector<complex_t>& matrix) {
-		for(std::vector<complex_t>::iterator iter = matrix.begin(); iter != matrix.end(); ++ iter) {
-			complex_t temp = sin((*iter).real()) / (*iter).real();
-			if(fabs(temp) <= 1e-14) temp = 1.0;
-			(*iter) = temp;
+	bool AnalyticFormFactor::mat_sinc(unsigned int x_size, unsigned int y_size, unsigned int z_size,
+										const complex_vec_t& matrix, complex_vec_t& result) {
+		result.clear();
+		for(std::vector<complex_t>::const_iterator i = matrix.begin(); i != matrix.end(); ++ i) {
+			result.push_back(sinc(*i));
 		} // for
-
-		return matrix;
+		return true;
 	} // AnalyticFormFactor::mat_sinc()
 
+	bool AnalyticFormFactor::mat_sinc_in(unsigned int x_size,
+											unsigned int y_size,
+											unsigned int z_size,
+											std::vector<complex_t>& matrix) {
+		for(std::vector<complex_t>::iterator i = matrix.begin(); i != matrix.end(); ++ i) {
+			*i = sinc(*i);
+		} // for
+		return true;
+	} // AnalyticFormFactor::mat_sinc()
 
 	float_t AnalyticFormFactor::sinc(complex_t value) {
 		float_t temp = sin(value.real()) / value.real();

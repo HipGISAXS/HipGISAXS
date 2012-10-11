@@ -5,7 +5,7 @@
   *
   *  File: hipgisaxs_main.cpp
   *  Created: Jun 14, 2012
-  *  Modified: Thu 04 Oct 2012 11:51:35 AM PDT
+  *  Modified: Wed 10 Oct 2012 09:48:58 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -126,15 +126,15 @@ namespace hig {
 			if(mpi_rank == 0) std::cerr << "error: could not construct domain sizes" << std::endl;
 			return false;
 		} // if
-		std::cout << "++ Domain min point: " << min_vec[0] << ", " << min_vec[1]
-					<< ", " << min_vec[2] << std::endl;
-		std::cout << "++ Domain max point: " << max_vec[0] << ", " << max_vec[1]
-					<< ", " << max_vec[2] << std::endl;
-		std::cout << "++ Domain z max and min: " << z_max_0 << ", " << z_min_0 << std::endl;
-		std::cout << "++ Domain dimensions: " << max_vec[0] - min_vec[0] << " x "
-					<< max_vec[1] - min_vec[1] << " x "
-					<< max_vec[2] - min_vec[2] << " ("
-					<< z_max_0 - z_min_0 << ")" << std::endl;
+//		std::cout << "++ Domain min point: " << min_vec[0] << ", " << min_vec[1]
+//					<< ", " << min_vec[2] << std::endl;
+//		std::cout << "++ Domain max point: " << max_vec[0] << ", " << max_vec[1]
+//					<< ", " << max_vec[2] << std::endl;
+//		std::cout << "++ Domain z max and min: " << z_max_0 << ", " << z_min_0 << std::endl;
+//		std::cout << "++ Domain dimensions: " << max_vec[0] - min_vec[0] << " x "
+//					<< max_vec[1] - min_vec[1] << " x "
+//					<< max_vec[2] - min_vec[2] << " ("
+//					<< z_max_0 - z_min_0 << ")" << std::endl;
 
 		// min_vec and max_vec are the domain
 		cell_[0] = fabs(max_vec[0] - min_vec[0]);
@@ -164,7 +164,8 @@ namespace hig {
 
 		float_t alphai_min, alphai_max, alphai_step;
 		HiGInput::instance().scattering_alphai(alphai_min, alphai_max, alphai_step);
-		if(alphai_step == 0) num_alphai = 1;
+		if(alphai_max < alphai_min) alphai_max = alphai_min;
+		if(alphai_min == alphai_max || alphai_step == 0) num_alphai = 1;
 		else num_alphai = (alphai_max - alphai_min) / alphai_step + 1;
 
 		float_t phi_min, phi_max, phi_step;
@@ -188,6 +189,8 @@ namespace hig {
 				float_t tilt = tilt_min;
 				for(int k = 0; k < num_tilt; k ++, tilt += tilt_step) {
 
+					std::cout << "-- Computing GISAXS with ai = " << alpha_i
+							<< ", phi = " << phi << " and tilt = " << tilt << std::endl;
 					// run one gisaxs simulation
 					float_t* final_data = NULL;
 					if(!run_gisaxs(alpha_i, alphai, phi, tilt, final_data, world_comm)) {
@@ -372,9 +375,12 @@ namespace hig {
 			//Shape *curr_shape = shape(shape_k);
 			//Lattice *curr_lattice = (*s).lattice();
 
+			std::cout << "-- Processing structure " << s_num + 1 << std::endl;
+
 			Structure *curr_struct = &((*s).second);
 			Shape *curr_shape = HiGInput::instance().shape(*curr_struct);
 			Lattice *curr_lattice = (Lattice*) HiGInput::instance().lattice(*curr_struct);
+			bool struct_in_layer = (*s).second.grain_in_layer();
 
 			vector3_t grain_repeats = (*s).second.grain_repetition();
 
@@ -399,6 +405,7 @@ namespace hig {
 				if(mpi_rank == 0) std::cerr << "error: could not allocate memory for 'id'" << std::endl;
 				return false;
 			} // if
+			memset(id, 0 , num_domains * nqx_ * nqy_ * nqz_);	// initialize to 0
 
 			vector3_t curr_transvec = (*s).second.grain_transvec();
 			curr_transvec = curr_transvec - vector3_t(0, 0, single_layer_thickness_);
@@ -412,6 +419,9 @@ namespace hig {
 			/* computing dwba ff for each domain in structure (*s) with
 			 * ensemble containing num_domains grains */
 			for(int j = 0; j < num_domains; j ++) {	// or distributions
+
+				std::cout << "---- Processing domain " << j + 1 << std::endl;
+
 				// define r_norm (domain orientation by tau and eta)
 				// define full domain rotation matrix r_total = r_phi * r_norm
 				// ... i think these tau eta zeta can be computed on the fly to save memory ...
@@ -512,7 +522,8 @@ namespace hig {
 					unsigned int nslices = HiGInput::instance().param_nslices();
 					if(nslices <= 1) {
 						/* without slicing */
-						if(HiGInput::instance().structure_layer_order((*s).second) == 1) {
+						if(struct_in_layer &&
+								HiGInput::instance().structure_layer_order((*s).second) == 1) {
 														// structure is inside a layer, on top of substrate
 							if(single_layer_refindex_.delta() < 0 || single_layer_refindex_.beta() < 0) {
 								// this should never happen
@@ -525,58 +536,6 @@ namespace hig {
 											single_layer_refindex_.delta()),
 											-2.0 * ((*s).second.grain_refindex().beta() -
 											single_layer_refindex_.beta()));
-
-							//std::cout << "DN2 = " << dn2 << std::endl;
-
-							// for testing
-							/*std::ofstream f1("amm.out");
-							for(unsigned int z = 0; z < nqz_; ++ z) {
-								for(unsigned int y = 0; y < nqy_; ++ y) {
-									for(unsigned int x = 0; x < nqx_; ++ x) {
-										unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
-										f1 << amm[index].real() << "\t" << amm[index].imag() << std::endl;
-									} // for
-									f1 << std::endl;
-								} // for
-								f1 << std::endl;
-							} // for
-							f1.close();
-							std::ofstream f2("amp.out");
-							for(unsigned int z = 0; z < nqz_; ++ z) {
-								for(unsigned int y = 0; y < nqy_; ++ y) {
-									for(unsigned int x = 0; x < nqx_; ++ x) {
-										unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
-										f2 << amp[index].real() << "\t" << amp[index].imag() << std::endl;
-									} // for
-									f2 << std::endl;
-								} // for
-								f2 << std::endl;
-							} // for
-							f2.close();
-							std::ofstream f3("apm.out");
-							for(unsigned int z = 0; z < nqz_; ++ z) {
-								for(unsigned int y = 0; y < nqy_; ++ y) {
-									for(unsigned int x = 0; x < nqx_; ++ x) {
-										unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
-										f3 << apm[index].real() << "\t" << apm[index].imag() << std::endl;
-									} // for
-									f3 << std::endl;
-								} // for
-								f3 << std::endl;
-							} // for
-							f3.close();
-							std::ofstream f4("app.out");
-							for(unsigned int z = 0; z < nqz_; ++ z) {
-								for(unsigned int y = 0; y < nqy_; ++ y) {
-									for(unsigned int x = 0; x < nqx_; ++ x) {
-										unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
-										f4 << app[index].real() << "\t" << app[index].imag() << std::endl;
-									} // for
-									f4 << std::endl;
-								} // for
-								f4 << std::endl;
-							} // for
-							f4.close();*/
 
 							// base_id = dn2 * (amm .* sf() .* ff() + amp .* sf() .* ff() +
 							//				apm .* sf() .* ff() + app .* sf() .* ff());
@@ -650,6 +609,9 @@ namespace hig {
 						return false;
 					} // if-else
 				} // if mpi_rank == 0
+
+				ff_.clear();
+				sf_.clear();
 			} // for num_domains
 
 			delete[] nn;
@@ -854,7 +816,7 @@ namespace hig {
 
 	bool HipGISAXS::illuminated_volume(float_t alpha_i, float_t spot_area, int min_layer_order,
 										RefractiveIndex substrate_refindex) {
-		float_t spot_diameter = 2.0 * sqrt(spot_area / PI_) * 1e6;	// in nm
+		float_t spot_diameter = 2.0 * sqrt(spot_area / PI_);//  * 1e6;	// in nm
 		float_t substr_delta = substrate_refindex.delta();
 		float_t substr_beta = substrate_refindex.beta();
 
@@ -914,7 +876,7 @@ namespace hig {
 				return false;
 			} // if
 
-			if(HiGInput::instance().num_layers() == 1) {
+			if(HiGInput::instance().struct_in_layer() && HiGInput::instance().num_layers() == 1) {
 				/* compute fresnel coefficients for a structure
 				 * embedded inside a layer on a substrate */
 				if(!compute_fresnel_coefficients_embedded(alpha_i)) {
@@ -928,7 +890,7 @@ namespace hig {
 				amp = fc_ + 2 * nqx_ * nqy_ * nqz_;
 				app = fc_ + 3 * nqx_ * nqy_ * nqz_;
 				h0 = fc_ + 4 * nqx_ * nqy_ * nqz_;
-			} else if(HiGInput::instance().num_layers() == 0) {
+			} else if(HiGInput::instance().num_layers() == 1 || HiGInput::instance().num_layers() == 0) {
 				/* compute fresnel coefficients for a structure
 				 * on top of or buried inside a substrate */
 				if(!compute_fresnel_coefficients_top_buried(alpha_i)) {
@@ -1195,7 +1157,7 @@ namespace hig {
 			if(dim == 3) {
 				// find max density - number of domains in vol
 				vector3_t max_density = min(floor(vol_ / cell_) + 1, maxgrains);
-				rand_dim_x = max(1, (int)std::floor(max_density[0] * max_density[1] * max_density[2] / 4));
+				rand_dim_x = max(1, (int)std::floor(max_density[0] * max_density[1] * max_density[2] / 4.0));
 				rand_dim_y = 3;
 
 				// construct random matrix
@@ -1218,7 +1180,7 @@ namespace hig {
 							d_rand[rand_dim_x * y + rand_dim_x + x] * mul_val1 * -1.0;
 				} // for x
 				for(int x = 0; x < rand_dim_x; ++ x) {	// d3
-					d[4 * rand_dim_x * y + 3 * rand_dim_x + x] =
+					d[4 * rand_dim_x * y + 2 * rand_dim_x + x] =
 							d_rand[rand_dim_x * y + 2 * rand_dim_x + x] * mul_val1;
 				} // for x
 				for(int x = 0; x < rand_dim_x; ++ x) {	// d4
@@ -1234,7 +1196,7 @@ namespace hig {
 							d_rand[rand_dim_x * y + rand_dim_x + x] * mul_val2;
 				} // for x
 				for(int x = 0; x < rand_dim_x; ++ x) {	// d3
-					d[4 * rand_dim_x * y + 3 * rand_dim_x + x] =
+					d[4 * rand_dim_x * y + 2 * rand_dim_x + x] =
 							d_rand[rand_dim_x * y + 2 * rand_dim_x + x] * mul_val2 * -1.0;
 				} // for x
 				for(int x = 0; x < rand_dim_x; ++ x) {	// d4
@@ -1250,7 +1212,7 @@ namespace hig {
 							d_rand[rand_dim_x * y + rand_dim_x + x] * mul_val3 + tz;
 				} // for x
 				for(int x = 0; x < rand_dim_x; ++ x) {	// d3
-					d[4 * rand_dim_x * y + 3 * rand_dim_x + x] =
+					d[4 * rand_dim_x * y + 2 * rand_dim_x + x] =
 							d_rand[rand_dim_x * y + 2 * rand_dim_x + x] * mul_val3 + tz;
 				} // for x
 				for(int x = 0; x < rand_dim_x; ++ x) {	// d4

@@ -5,7 +5,7 @@
  *
  *  File: ff_num.hpp
  *  Created: Nov 05, 2011
- *  Modified: Mon 01 Oct 2012 11:13:16 AM PDT
+ *  Modified: Tue 09 Oct 2012 11:53:08 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -65,6 +65,7 @@ namespace hig {
 		~NumericFormFactor() { }
 
 		bool init() { return true; } 	// ...
+		void clear() { }
 
 		// old
 		//bool compute(char* filename, complex_t* &ff, float_t* &qx_h, unsigned int nqx,
