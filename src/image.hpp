@@ -5,7 +5,7 @@
   *
   *  File: image.hpp
   *  Created: Jun 18, 2012
-  *  Modified: Wed 10 Oct 2012 09:40:08 PM PDT
+  *  Modified: Fri 12 Oct 2012 10:37:14 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -39,6 +39,7 @@ namespace hig {
 			bool resample_pixels(unsigned int, unsigned int, float_t*, unsigned int, unsigned int,
 							float_t*&, const boost::gil::matrix3x2<float_t>&);
 			bool convert_to_rgb_pixels(unsigned int, unsigned int, float_t*);
+			bool convert_to_rgb_palette(unsigned int, unsigned int, float_t*);
 			bool slice(Image* &img, unsigned int xval = 0);	/* obtain a slice at given x in case of 3D data */
 
 			bool translate_pixels_to_positive(unsigned int nx, unsigned int ny, float* &data);
@@ -61,6 +62,7 @@ namespace hig {
 
 			bool construct_image(const float_t* data, int slice);
 			bool construct_image(float_t* data);
+			bool construct_palette(float_t* data);
 			bool save(std::string filename);			/* save the current image buffer */
 			bool save(char* filename);					/* if buffer has 3D data, it will
 														   save all slices */

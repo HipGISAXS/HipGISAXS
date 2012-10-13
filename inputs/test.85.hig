@@ -31,7 +31,7 @@ hipGisaxsInput = {
 			photon = { value = 10000, unit = "ev" }				# photon energy
 		},
 		detector = {
-			pixelsize = 0.172,	 				# pixel size of the detector
+			pixelsize = 0.3,	 				# pixel size of the detector
 			sdd = 4128.62,						# sample to detector distance
 			directbeam = [ 489.916 843.076 ]	# position of direct beam
 		}
@@ -40,7 +40,7 @@ hipGisaxsInput = {
 		pathprefix = "../hipgisaxs.test",						# path to input files directory
 		runname = "85",						# name for current run and folder name for outputs
 		method = "dwba",						# theorical approach (see list)
-		outputregion = { type = "pixels" , minpoint = [ 350 710 ], maxpoint = [ 550 900 ] },
+		outputregion = { type = "pixels" , minpoint = [ 350 750 ], maxpoint = [ 750 1000 ] },
 		#outputregion = { type = "qspace" , minpoint = [ 350 710 ], maxpoint = [ 550 900 ] },
 		resolution = [ 1 1 ],				# number of q points per pixel
 		nslices = 0								# max number of slices for slicing algorithm

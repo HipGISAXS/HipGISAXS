@@ -1,7 +1,7 @@
 hipGisaxsInput = {
 	shape = {
 		key = "s1",	 		# a unique key to identify this shape in this file
-		name = "Shape_222.hd5"		# name of the file containing the discretized shape data
+		name = "data/Shape_222.hd5"		# name of the file containing the discretized shape data
 		#name = "opv.hd5"	# name of the file containing the discretized shape data
 	},
 	layer = {
@@ -27,11 +27,12 @@ hipGisaxsInput = {
 	instrumentation = {
 		scattering = {
 			expt = "gisaxs",
-			alphai = { min = 0.12, max = 0.12, step = 0.01 },	# incidence angles
+			alphai = { min = 0.1, max = 0.1, step = 0.01 },	# incidence angles
 			photon = { value = 10000, unit = "ev" }				# photon energy
 		},
 		detector = {
-			pixelsize = 0.172,	 				# pixel size of the detector
+			#pixelsize = 0.172,	 				# pixel size of the detector
+			pixelsize = 0.2,	 				# pixel size of the detector
 			sdd = 4128.62,						# sample to detector distance
 			directbeam = [ 489.916 843.076 ]	# position of direct beam
 		}
@@ -40,8 +41,8 @@ hipGisaxsInput = {
 		pathprefix = ".",						# path to input files directory
 		runname = "222",							# name for current run and folder name for outputs
 		method = "dwba",						# theorical approach (see list)
-		outputregion = { type = "pixels" , minpoint = [ 400 700 ], maxpoint = [ 550 800 ] },
-		#outputregion = { type = "pixels" , minpoint = [ 350 710 ], maxpoint = [ 550 900 ] },
+		#outputregion = { type = "pixels" , minpoint = [ 400 700 ], maxpoint = [ 550 800 ] },
+		outputregion = { type = "pixels" , minpoint = [ 350 740 ], maxpoint = [ 750 1000 ] },
 		resolution = [ 1 1 ],					# number of q points per pixel
 		nslices = 0								# max number of slices for slicing algorithm
 	}

@@ -5,7 +5,7 @@
   *
   *  File: hipgisaxs_main.cpp
   *  Created: Jun 14, 2012
-  *  Modified: Wed 10 Oct 2012 09:48:58 AM PDT
+  *  Modified: Fri 12 Oct 2012 01:30:26 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -408,7 +408,7 @@ namespace hig {
 			memset(id, 0 , num_domains * nqx_ * nqy_ * nqz_);	// initialize to 0
 
 			vector3_t curr_transvec = (*s).second.grain_transvec();
-			curr_transvec = curr_transvec - vector3_t(0, 0, single_layer_thickness_);
+// ??????	curr_transvec = curr_transvec - vector3_t(0, 0, single_layer_thickness_);	????????
 			ShapeName shape_name = HiGInput::instance().shape_name((*s).second);
 			float_t shape_tau = HiGInput::instance().shape_tau((*s).second);
 			float_t shape_eta = HiGInput::instance().shape_eta((*s).second);
@@ -416,11 +416,13 @@ namespace hig {
 			std::string shape_file = HiGInput::instance().shape_filename((*s).second);
 			shape_param_list_t shape_params = HiGInput::instance().shape_params((*s).second);
 
+			std::cout << "---- Num Domains: " << num_domains << std::endl;
+
 			/* computing dwba ff for each domain in structure (*s) with
 			 * ensemble containing num_domains grains */
 			for(int j = 0; j < num_domains; j ++) {	// or distributions
 
-				std::cout << "---- Processing domain " << j + 1 << std::endl;
+				std::cout << "- Processing domain " << j + 1 << std::endl;
 
 				// define r_norm (domain orientation by tau and eta)
 				// define full domain rotation matrix r_total = r_phi * r_norm
@@ -816,7 +818,7 @@ namespace hig {
 
 	bool HipGISAXS::illuminated_volume(float_t alpha_i, float_t spot_area, int min_layer_order,
 										RefractiveIndex substrate_refindex) {
-		float_t spot_diameter = 2.0 * sqrt(spot_area / PI_);//  * 1e6;	// in nm
+		float_t spot_diameter = 2.0 * sqrt(spot_area / PI_) * 1e6;	// in nm
 		float_t substr_delta = substrate_refindex.delta();
 		float_t substr_beta = substrate_refindex.beta();
 
@@ -1176,48 +1178,39 @@ namespace hig {
 					d[4 * rand_dim_x * y + x] = d_rand[rand_dim_x * y + x] * mul_val1;
 				} // for x
 				for(int x = 0; x < rand_dim_x; ++ x) {	// d2
-					d[4 * rand_dim_x * y + rand_dim_x + x] =
-							d_rand[rand_dim_x * y + rand_dim_x + x] * mul_val1 * -1.0;
+					d[4 * rand_dim_x * y + rand_dim_x + x] = d_rand[rand_dim_x * y + x] * mul_val1 * -1.0;
 				} // for x
 				for(int x = 0; x < rand_dim_x; ++ x) {	// d3
-					d[4 * rand_dim_x * y + 2 * rand_dim_x + x] =
-							d_rand[rand_dim_x * y + 2 * rand_dim_x + x] * mul_val1;
+					d[4 * rand_dim_x * y + 2 * rand_dim_x + x] = d_rand[rand_dim_x * y + x] * mul_val1;
 				} // for x
 				for(int x = 0; x < rand_dim_x; ++ x) {	// d4
-					d[4 * rand_dim_x * y + 3 * rand_dim_x + x] =
-							d_rand[rand_dim_x * y + 3 * rand_dim_x + x] * mul_val1 * -1.0;
+					d[4 * rand_dim_x * y + 3 * rand_dim_x + x] = d_rand[rand_dim_x * y + x] * mul_val1 * -1.0;
 				} // for x
 				y = 1;
 				for(int x = 0; x < rand_dim_x; ++ x) {	// d1
 					d[4 * rand_dim_x * y + x] = d_rand[rand_dim_x * y + x] * mul_val2;
 				} // for x
 				for(int x = 0; x < rand_dim_x; ++ x) {	// d2
-					d[4 * rand_dim_x * y + rand_dim_x + x] =
-							d_rand[rand_dim_x * y + rand_dim_x + x] * mul_val2;
+					d[4 * rand_dim_x * y + rand_dim_x + x] = d_rand[rand_dim_x * y + x] * mul_val2;
 				} // for x
 				for(int x = 0; x < rand_dim_x; ++ x) {	// d3
-					d[4 * rand_dim_x * y + 2 * rand_dim_x + x] =
-							d_rand[rand_dim_x * y + 2 * rand_dim_x + x] * mul_val2 * -1.0;
+					d[4 * rand_dim_x * y + 2 * rand_dim_x + x] = d_rand[rand_dim_x * y + x] * mul_val2 * -1.0;
 				} // for x
 				for(int x = 0; x < rand_dim_x; ++ x) {	// d4
-					d[4 * rand_dim_x * y + 3 * rand_dim_x + x] =
-							d_rand[rand_dim_x * y + 3 * rand_dim_x + x] * mul_val2 * -1.0;
+					d[4 * rand_dim_x * y + 3 * rand_dim_x + x] = d_rand[rand_dim_x * y + x] * mul_val2 * -1.0;
 				} // for x
 				y = 2;
 				for(int x = 0; x < rand_dim_x; ++ x) {	// d1
 					d[4 * rand_dim_x * y + x] = d_rand[rand_dim_x * y + x] * mul_val3 + tz;
 				} // for x
 				for(int x = 0; x < rand_dim_x; ++ x) {	// d2
-					d[4 * rand_dim_x * y + rand_dim_x + x] =
-							d_rand[rand_dim_x * y + rand_dim_x + x] * mul_val3 + tz;
+					d[4 * rand_dim_x * y + rand_dim_x + x] = d_rand[rand_dim_x * y + x] * mul_val3 + tz;
 				} // for x
 				for(int x = 0; x < rand_dim_x; ++ x) {	// d3
-					d[4 * rand_dim_x * y + 2 * rand_dim_x + x] =
-							d_rand[rand_dim_x * y + 2 * rand_dim_x + x] * mul_val3 + tz;
+					d[4 * rand_dim_x * y + 2 * rand_dim_x + x] = d_rand[rand_dim_x * y + x] * mul_val3 + tz;
 				} // for x
 				for(int x = 0; x < rand_dim_x; ++ x) {	// d4
-					d[4 * rand_dim_x * y + 3 * rand_dim_x + x] =
-							d_rand[rand_dim_x * y + 3 * rand_dim_x + x] * mul_val3 + tz;
+					d[4 * rand_dim_x * y + 3 * rand_dim_x + x] = d_rand[rand_dim_x * y + x] * mul_val3 + tz;
 				} // for x
 			} else if(dim == 2) {
 				std::cerr << "error: dim == 2 case not implemented" << std::endl;

@@ -5,7 +5,7 @@
   *
   *  File: image.cpp
   *  Created: Jun 18, 2012
-  *  Modified: Thu 11 Oct 2012 11:46:20 AM PDT
+  *  Modified: Fri 12 Oct 2012 09:16:09 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -45,7 +45,7 @@ namespace hig {
 
 
 	Image::Image(unsigned int nx, unsigned int ny, unsigned int nz):
-					nx_(nx), ny_(ny), nz_(nz), color_map_() {
+					nx_(nx), ny_(ny), nz_(nz), color_map_(), new_color_map_() {
 		image_buffer_ = NULL;
 	//	image_buffer_ = new (std::nothrow) float_t[nx_ * ny_ * nz_]();
 	} // Image::Image()
@@ -228,10 +228,32 @@ namespace hig {
 	} // Image::construct_image()
 
 
+	bool Image::construct_palette(float_t* data) {						// and here ...
+		if(data == NULL) {
+			std::cerr << "empty data found while constructing image" << std::endl;
+			return false;
+		} // if
+		if(nx_ == 1) {	// a single slice
+			std::cout << "  -- Mapping data to the color palette ..." << std::endl;
+			if(!convert_to_rgb_palette(ny_, nz_, data)) {
+				std::cerr << "error: something went terribly wrong in convert_to_rgb_palette" << std::endl;
+				return false;
+			} // if
+		} else {
+			std::cerr << "uh-oh: the case of constructing 3D palette "
+						<< "has not been implemented yet" << std::endl;
+			return false;
+		} // if-else
+		return true;
+	} // Image::construct_palette()
+
+
 	void Image::remove_nans_infs(unsigned int nx, unsigned int ny, float_t* data) {
+		unsigned int count = 0;
 		for(unsigned int i = 0; i < nx * ny; ++ i) {
-			if(!boost::math::isfinite(data[i])) data[i] = 0;
+			if(!boost::math::isfinite(data[i])) { data[i] = 0; ++ count; }
 		} // for
+		std::cout << " ------ " << count << " / " << nx * ny << " pixels nans or infs" << std::endl;
 	} // Image::remove_nans_infs()
 
 
@@ -272,8 +294,8 @@ namespace hig {
 		} else {
 			for(unsigned int i = 0; i < nx * ny; ++ i) {
 				pixels[i] = (pixels[i] - pixel_minmax[0]) / (pixel_minmax[1] - pixel_minmax[0]);
-				//if(pixels[i] < 0)
-				//	std::cout << "oh oh ... its less than 0 ... something is gravely wrong" << std::endl;
+				if(pixels[i] < 0 || pixels[i] > 1)
+					std::cerr << "oh oh ... its less than 0 ... something is gravely wrong" << std::endl;
 				//if(pixels[i] == 0) {
 				//	std::cout << "oh oh ... its 0" << std::endl;
 					//pixels[i] = 1;
@@ -393,6 +415,36 @@ namespace hig {
 	 * convert the float_t values in image data to mapped color
 	 */
 	bool Image::convert_to_rgb_pixels(unsigned int ny, unsigned int nz, float_t* image) {
+		// assuming: values in image are in [0, 1]
+
+		if(image_buffer_ != NULL) { delete[] image_buffer_; image_buffer_ = NULL; }
+		image_buffer_ = new (std::nothrow) boost::gil::rgb8_pixel_t[ny * nz];
+		if(image_buffer_ == NULL) {
+			std::cerr << "error: could not allocate memory for image buffer. size = "
+					<< ny << "x" << nz << std::endl;
+			return false;
+		} // if
+
+		for(unsigned int i = 0; i < ny * nz; ++ i) {	// assuming 0 <= image[i] <= 1
+			//if(boost::math::isnan(image[i])) image[i] = 0;
+			if(image[i] < 0 || image[i] > 1.0) {
+			//if(!(image[i] >= 0) && !(image[i] <= 1.0)) {
+				std::cerr << "a pixel value not within range: " << image[i] << std::endl;
+				return false;
+			} // if
+			//unsigned int color_i = boost::math::iround(image[i] * (color_map_.palette_size() - 1));
+			//boost::array<unsigned char, 3> color_rgb = color_map_[color_i];
+			boost::array<unsigned char, 3> color_rgb = new_color_map_.color_map(image[i]);
+			boost::gil::rgb8_pixel_t temp =
+							boost::gil::rgb8_pixel_t(color_rgb[0], color_rgb[1], color_rgb[2]);
+			image_buffer_[i] = temp;
+		} // for
+
+		return true;
+	} // Image::convert_to_rgb_pixels()
+
+
+	bool Image::convert_to_rgb_palette(unsigned int ny, unsigned int nz, float_t* image) {
 		// assuming: values in image are in [0, 1]
 
 		if(image_buffer_ != NULL) { delete[] image_buffer_; image_buffer_ = NULL; }

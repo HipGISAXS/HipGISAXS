@@ -5,7 +5,7 @@
   *
   *  File: sf.cpp
   *  Created: Jun 18, 2012
-  *  Modified: Wed 10 Oct 2012 08:57:03 AM PDT
+  *  Modified: Fri 12 Oct 2012 02:34:11 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -136,19 +136,24 @@ namespace hig {
 					if(!((boost::math::isfinite)(sb.real()) && (boost::math::isfinite)(sb.imag()))) {
 						std::cout << "sb sb sb sb sb sb sb: " << x << ", " << y << ", " << z << std::endl; }
 					if(!((boost::math::isfinite)(sc.real()) && (boost::math::isfinite)(sc.imag()))) {
-						std::cout << "sc sc sc sc sc sc sc: " << x << ", " << y << ", " << z << std::endl; }
-*/
+						std::cout << "sc sc sc sc sc sc sc: " << x << ", " << y << ", " << z << std::endl; }*/
+
 					sf_[nx_ * ny_ * z + nx_ * y + x] = exp(unit_ci *
 									(center[0] * qx + center[1] * qy + center[2] * qz)) *
 									sa * sb * sc *
 									(unit_c + exp(unit_ci * (l_t[0] * qx + l_t[1] * qy + l_t[2] * qz)));
 
-/*					if(!((boost::math::isfinite)(sf_[nx_ * ny_ * z + nx_ * y + x].real()) &&
+					/*if(!((boost::math::isfinite)(sf_[nx_ * ny_ * z + nx_ * y + x].real()) &&
 								(boost::math::isfinite)(sf_[nx_ * ny_ * z + nx_ * y + x].imag()))) {
-						std::cout << "sf sf sf sf sf sf sf: " << x << ", " << y << ", " << z << std::endl; }
-*/				} // for x
+						std::cout << "sf sf sf sf sf sf sf: " << x << ", " << y << ", " << z << std::endl; }*/
+				} // for x
 			} // for y
 		} // for z
+
+		if(my_rank == 0) {
+			int naninfs = count_naninfs(nx_, ny_, nz_, sf_);
+			std::cout << " ------- " << naninfs << " / " << nx_ * ny_ * nz_ << " nans or infs" << std::endl;
+		} // if
 
 		return true;
 	} // StructureFactor::compute_structure_factor()

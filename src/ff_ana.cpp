@@ -5,7 +5,7 @@
   *
   *  File: ff_ana.cpp
   *  Created: Jul 12, 2012
-  *  Modified: Tue 09 Oct 2012 11:55:26 AM PDT
+  *  Modified: Fri 12 Oct 2012 12:27:20 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -167,6 +167,13 @@ namespace hig {
 				return false;
 		} // switch
 
+		int rank;
+		MPI_Comm_rank(world_comm, &rank);
+		if(rank == 0) {
+			int naninfs = count_naninfs(nqx_, nqy_, nqz_, ff);
+			std::cout << " ------ " << naninfs << " / " << nqx_ * nqy_ * nqz_ << " nans or infs" << std::endl;
+		} // if
+
 		return true;
 	} // AnalyticFormFactor::compute()
 
@@ -239,7 +246,7 @@ namespace hig {
 		for(unsigned int i_z = 0; i_z < z.size(); ++ i_z) {
 			for(unsigned int i_y = 0; i_y < y.size(); ++ i_y) {
 				for(unsigned int i_x = 0; i_x < x.size(); ++ i_x) {
-					mat_add(nqx, nqy, nqz, mesh_qz_, nqx, nqy, nqz, mesh_qm, temp1);
+					/*mat_add(nqx, nqy, nqz, mesh_qz_, nqx, nqy, nqz, mesh_qm, temp1);
 					mat_mul(mesh_qy_, z[i_z], temp2);
 					mat_mul(mesh_qx_, x[i_x], temp3);
 					mat_fq_inv(nqx, nqy, nqz, temp1, y[i_y], temp4);
@@ -249,7 +256,7 @@ namespace hig {
 					mat_dot_prod(nqx, nqy, nqz, temp7, nqx, nqy, nqz, temp4, temp8);
 					complex_t temp9 = distr_x[i_x] * distr_y[i_y] * distr_z[i_z] * 4 * z[i_z] * x[i_x];
 					mat_mul(temp9, temp8, temp10);
-					mat_add_in(nqx, nqy, nqz, ff, nqx, nqy, nqz, temp10);
+					mat_add_in(nqx, nqy, nqz, ff, nqx, nqy, nqz, temp10); */
 					/*ff = mat_add(nqx, nqy, nqz, ff, nqx, nqy, nqz,
 							mat_mul(distr_x[i_x] * distr_y[i_y] * distr_z[i_z] * 4 * z[i_z] * x[i_x],
 							mat_dot_prod(nqx, nqy, nqz,
@@ -261,32 +268,49 @@ namespace hig {
 							mat_fq_inv(nqx, nqy, nqz,
 							mat_add(nqx, nqy, nqz, mesh_qz_, nqx, nqy, nqz, mesh_qm),
 							y[i_y])))); */
+					for(unsigned int j_z = 0; j_z < nqz; ++ j_z) {
+						for(unsigned int j_y = 0; j_y < nqy; ++ j_y) {
+							for(unsigned int j_x = 0; j_x < nqx; ++ j_x) {
+								unsigned int curr_index = nqx * nqy * j_z + nqx * j_y + j_x;
+								complex_t temp1 = mesh_qz_[curr_index] + mesh_qm[curr_index];
+								complex_t temp2 = mesh_qy_[curr_index] * z[i_z];
+								complex_t temp3 = mesh_qx_[curr_index] * x[i_x];
+								complex_t temp4 = fq_inv(temp1, y[i_y]);
+								complex_t temp5 = sinc(temp2);
+								complex_t temp6 = sinc(temp3);
+								complex_t temp7 = temp6 * temp5;
+								complex_t temp8 = temp7 * temp4;
+								complex_t temp9 = 4 * distr_x[i_x] * distr_y[i_y] * distr_z[i_z] *
+													z[i_z] * x[i_x];
+								complex_t temp10 = temp9 * temp8;
+								if(!(boost::math::isfinite(temp10.real()) &&
+											boost::math::isfinite(temp10.imag()))) {
+									std::cerr << "+++++++++++++++ here it is +++++++ " << j_x << ", "
+												<< j_y << ", " << j_z << std::endl;
+									exit(1);
+								} // if
+								ff[curr_index] += temp10;
+							} // for x
+						} // for y
+					} // for z
 				} // for i_x
 			} // for i_y
 		} // for i_z
 
-		/*std::vector<complex_t>::iterator i_qx = mesh_qx_.begin();
-		std::vector<complex_t>::iterator i_qy = mesh_qy_.begin();
-		std::vector<complex_t>::iterator i_qz = mesh_qz_.begin();
-		for(int i_z = 0; i_qz != mesh_qz_.end(); ++ i_qz, ++ i_z) {
-			for(int i_y = 0; i_qy != mesh_qy_.end(); ++ i_qy, ++ i_y) {
-				for(int i_x = 0; i_qx != mesh_qx_.end(); ++ i_qx, ++ i_x) {
-					complex_t temp = exp(mesh_qx_[i_x] * transvec[0] +
-										mesh_qy_[i_y] * transvec[1] +
-										mesh_qz_[i_z] * transvec[2]);
-					ff[nqx * nqy * i_z + nqx * i_y + i_x] *= temp;
-				} // for x
-			} // for y
-		} // for z
-*/
-		for(int i_z = 0; i_z < nqz; ++ i_z) {
-			for(int i_y = 0; i_y < nqy; ++ i_y) {
-				for(int i_x = 0; i_x < nqx; ++ i_x) {
-					unsigned int index = nqx * nqy * i_z + nqx * i_y + i_x;
-					complex_t temp = exp(mesh_qx_[index] * transvec[0] +
-										mesh_qy_[index] * transvec[1] +
-										mesh_qz_[index] * transvec[2]);
-					ff[index] *= temp;
+		for(unsigned int j_z = 0; j_z < nqz; ++ j_z) {
+			for(unsigned int j_y = 0; j_y < nqy; ++ j_y) {
+				for(unsigned int j_x = 0; j_x < nqx; ++ j_x) {
+					unsigned int curr_index = nqx * nqy * j_z + nqx * j_y + j_x;
+					complex_t temp = exp(mesh_qx_[curr_index] * transvec[0] +
+										mesh_qy_[curr_index] * transvec[1] +
+										mesh_qz_[curr_index] * transvec[2]);
+					if(!(boost::math::isfinite(temp.real()) &&
+								boost::math::isfinite(temp.imag()))) {
+						std::cerr << "---------------- here it is ------ " << j_x << ", "
+									<< j_y << ", " << j_z << std::endl;
+						exit(1);
+					} // if
+					ff[curr_index] *= temp;
 				} // for x
 			} // for y
 		} // for z

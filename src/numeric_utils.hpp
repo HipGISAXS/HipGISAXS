@@ -5,7 +5,7 @@
   *
   *  File: numeric_utils.hpp
   *  Created: Oct 08, 2012
-  *  Modified: Tue 09 Oct 2012 12:17:13 AM PDT
+  *  Modified: Thu 11 Oct 2012 09:14:20 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -47,15 +47,15 @@ namespace hig {
 	complex_t cbessj(complex_t zz, int order) {
 		std::complex<long double> z = zz;
 		std::complex<long double> temp1 = pow(z / (long double) 2.0, order);
-		std::complex<long double> z2 = z * z / (long double) 4.0;
+		std::complex<long double> z2 = - z * z / (long double) 4.0;
 		std::complex<long double> sum(0.0, 0.0);
-		long double factorial_k = 0.0;
+		long double factorial_k = 1.0;
 		std::complex<long double> pow_z2_k = 1.0;
 		for(int k = 0; k <= MAXK; ++ k, pow_z2_k *= z2) {
-			if(k == 1) factorial_k = 1.0;	// base case
-			factorial_k *= k;				// compute k!
+			if(k == 0) factorial_k = 1.0;	// base case
+			else factorial_k *= k;				// compute k!
 			std::complex<long double> temp2 =
-						(pow_z2_k / factorial_k) * (long double) gamma((double) order + k);
+						pow_z2_k / (factorial_k * (long double) gamma((double) order + k));
 			sum += temp2;
 		} // for
 		temp1 *= sum;

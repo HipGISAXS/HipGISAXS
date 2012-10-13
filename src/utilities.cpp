@@ -5,15 +5,16 @@
   *
   *  File: utilities.cpp
   *  Created: Jun 25, 2012
-  *  Modified: Tue 09 Oct 2012 12:23:39 AM PDT
+  *  Modified: Fri 12 Oct 2012 12:33:45 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
 
 #include <iostream>
 #include <cmath>
+#include <boost/math/special_functions/fpclassify.hpp>
 //#include <boost/math/special_functions/bessel.hpp>
-#include <pari/pari.h>	// for bessel functions
+//#include <pari/pari.h>	// for bessel functions
 
 #include "utilities.hpp"
 #include "numeric_utils.hpp"
@@ -54,15 +55,15 @@ namespace hig {
 					//std::cerr << "warning: matrix has a zero value. "
 					//		<< "cannot calculate logarithm. keeping zero."
 					//		<< std::endl;
-					data[i] = 0;
+					data[i] = 0.0;
 					continue;
 				} else {
 					std::cerr << "error: matrix has a negative value. cannot calculate logarithm"
 							<< std::endl;
 					return false;
 				} // if-else
-			} // if
-			data[i] = log10(data[i]);
+			} else
+				data[i] = log10(data[i]);
 		} // for
 		return true;
 	} // mat_log10()
@@ -568,7 +569,7 @@ namespace hig {
 										std::vector<complex_t>& matrix) {
 		std::vector<complex_t> result;
 		for(std::vector<complex_t>::iterator i = matrix.begin(); i != matrix.end(); ++ i) {
-			result.push_back(besselj(1, *i));
+			result.push_back(cbessj(*i, j));
 		} // for
 		return result;
 	} // mat_besselj()
@@ -577,7 +578,7 @@ namespace hig {
 						const complex_vec_t& matrix, complex_vec_t& result) {
 		result.clear();
 		for(complex_vec_t::const_iterator i = matrix.begin(); i != matrix.end(); ++ i) {
-			result.push_back(besselj(1, *i));
+			result.push_back(cbessj(*i, j));
 		} // for
 		return true;
 	} // mat_besselj()
@@ -645,5 +646,32 @@ namespace hig {
 		/* // boost
 		return boost::math::cyl_bessel_j(j, m);
 	}*/
+
+
+	int count_naninfs(int nx, int ny, int nz, const complex_t* arr) {
+		int count = 0;
+		for(unsigned int i = 0; i < nx * ny * nz; ++ i) {
+			if(!(boost::math::isfinite(arr[i].real()) && boost::math::isfinite(arr[i].imag()))) ++ count;
+		} // for
+		return count;
+	} // count_naninfs()
+
+
+	int count_naninfs(int nx, int ny, int nz, const cucomplex_t* arr) {
+		int count = 0;
+		for(unsigned int i = 0; i < nx * ny * nz; ++ i) {
+			if(!(boost::math::isfinite(arr[i].x) && boost::math::isfinite(arr[i].y))) ++ count;
+		} // for
+		return count;
+	} // count_naninfs()
+
+
+	int count_naninfs(int nx, int ny, int nz, const std::vector<complex_t>& arr) {
+		int count = 0;
+		for(std::vector<complex_t>::const_iterator i = arr.begin(); i != arr.end(); ++ i) {
+			if(!(boost::math::isfinite((*i).real()) && boost::math::isfinite((*i).imag()))) ++ count;
+		} // for
+		return count;
+	} // count_naninfs()
 
 } // namespace hig

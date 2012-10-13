@@ -5,7 +5,7 @@
  *
  *  File: ff_num.hpp
  *  Created: Nov 05, 2011
- *  Modified: Tue 09 Oct 2012 11:53:08 AM PDT
+ *  Modified: Fri 12 Oct 2012 12:36:49 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -23,6 +23,7 @@
 
 #include "object2hdf5.h"
 #include "qgrid.hpp"
+#include "utilities.hpp"
 
 namespace hig {
 
@@ -164,7 +165,7 @@ namespace hig {
 		} // if
 	
 		// decompose along y and z directions into blocks
-		int p_y = floor(sqrt((float_t)num_procs));	// some procs may be idle ...
+		int p_y = std::floor(sqrt((float_t)num_procs));	// some procs may be idle ...
 		int p_z = num_procs / p_y;
 		
 		int p_nqx = nqx;
@@ -329,6 +330,13 @@ namespace hig {
 				//std::cout << std::endl << std::flush;
 			} // if
 		} // if
+
+#ifndef FINDBLOCK
+		if(rank == 0) {
+			int naninfs = count_naninfs((int)nqx, (int)nqy, (int)nqz, ff);
+			std::cout << " ------ " << naninfs << " / " << nqx * nqy * nqz << " nans or infs" << std::endl;
+		} // if
+#endif
 	
 		world_comm.Barrier();
 	#ifdef FINDBLOCK

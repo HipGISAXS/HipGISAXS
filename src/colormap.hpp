@@ -3,7 +3,7 @@
   *
   *  File: colormap.hpp
   *  Created: Jul 02, 2012
-  *  Modified: Thu 11 Oct 2012 02:35:51 PM PDT
+  *  Modified: Sat 13 Oct 2012 10:07:49 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   *
@@ -172,23 +172,29 @@ namespace hig {
 	class ColorMap {
 		public:
 			ColorMap() {
-				palette_[0] = 7;
-				palette_[1] = 5;
-				palette_[2] = 15;
+				palette_[0] = 38;
+				palette_[1] = 39;
+				palette_[2] = 40;
+				construct_channel_limits();
 			} // ColorMap()	
+
 			ColorMap(unsigned int red_f, unsigned green_f, unsigned int blue_f) {
-				if(red_f < 0 || red_f > 36 ||
-						green_f < 0 || green_f > 36 ||
-						blue_f < 0 || blue_f > 36) {
+				if(red_f < 0 || red_f > 40 ||
+						green_f < 0 || green_f > 40 ||
+						blue_f < 0 || blue_f > 40) {
 					std::cerr << "error: cannot initialize ColorMap with "
 								<< "specified palette parameters" << std::endl;
 					exit(1);
 				} // if
-
 				palette_[0] = red_f;
 				palette_[1] = green_f;
 				palette_[2] = blue_f;
+				construct_channel_limits();
+			} // ColorMap()
 
+			~ColorMap() { }
+
+			void construct_channel_limits() {
 				//channel_limits_[0][0] = 0.0; channel_limits_[0][1] = 0.0;
 				channel_limits_[0][0] = 0.0; channel_limits_[0][1] = 1.0;
 				//channel_limits_[1][0] = 0.5; channel_limits_[1][1] = 0.5;
@@ -231,8 +237,10 @@ namespace hig {
 				channel_limits_[35][0] = -0.5; channel_limits_[35][1] = 1.5;
 				channel_limits_[36][0] = -1.0; channel_limits_[36][1] = 1.0;
 				channel_limits_[37][0] = -11.5; channel_limits_[37][1] = 1.0;
-			} // ColorMap()
-			~ColorMap() { }
+				channel_limits_[38][0] = 0.0; channel_limits_[38][1] = 1.0;
+				channel_limits_[39][0] = 0.0; channel_limits_[39][1] = 1.0;
+				channel_limits_[40][0] = 0.0; channel_limits_[40][1] = 1.0;
+			} // construct_channel_limits()
 
 			color8_t color_map(double value) {
 				if(value < 0.0 || value > 1.0) {
@@ -248,14 +256,14 @@ namespace hig {
 
 		private:
 			palette_t palette_;
-			double channel_limits_[40][2];
+			double channel_limits_[41][2];
 
 			unsigned int channel_map(unsigned int channel, double value) {
 				unsigned int func_num = palette_[channel];
 				double channel_val = compute_channel(func_num, value);	// channel_val is >= 0 and <= 1
 				double channel_max = compute_channel(func_num, 1.0);	// make a lookup tabke for this
 				double channel_min = compute_channel(func_num, 0.0);
-				unsigned int result = floor(((channel_val - channel_limits_[func_num][0]) /
+				unsigned int result = std::floor(((channel_val - channel_limits_[func_num][0]) /
 								(channel_limits_[func_num][1] - channel_limits_[func_num][0])) * 255.0);
 				if(result > 255) std::cerr << "error: color value more than 255: " << result << std::endl;
 				return result;
@@ -392,6 +400,24 @@ namespace hig {
 					case 37:					// another one for case 32
 						temp = x / 0.08 - 11.5;
 						return temp;// < 0.0 ? 0.0 : temp;
+
+					case 38:
+						//temp = cos(PI_ / 2 * (x - 1));
+						//temp = sin(4 * PI_ * x / 3 - 9 * PI_ / 16);
+						temp = sin(25 * PI_ * x / 24 - 7 * PI_ / 32);
+						return temp < 0.0 ? 0.0 : temp;
+
+					case 39:
+						//temp = - sin(7 * PI_ / 6 * (x - 1));
+						//temp = -sin(3 * PI_ * x / 2 + 5 * PI_ / 8);
+						temp = -sin(4 * PI_ * x / 3 + 13 * PI_ / 16);
+						return temp < 0.0 ? 0.0 : temp;
+
+					case 40:
+						//temp = sin(2 * PI_ * x);
+						//temp = -sin(7 * PI_ * x / 4 - 7 * PI_ / 8);
+						temp = -sin(4 * PI_ * x / 3 - 7 * PI_ / 8);
+						return temp < 0.0 ? 0.0 : temp;
 
 					default:
 						std::cerr << "error: color function out of bounds" << std::endl;

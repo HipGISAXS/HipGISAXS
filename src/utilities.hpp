@@ -5,7 +5,7 @@
   *
   *  File: utilities.hpp
   *  Created: Jun 25, 2012
-  *  Modified: Tue 09 Oct 2012 12:09:54 AM PDT
+  *  Modified: Fri 12 Oct 2012 12:34:34 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -185,6 +185,10 @@ namespace hig {
 	 * use boost libs ...
 	 */
 	extern bool mat_mul_3x1(vector3_t a, vector3_t b, vector3_t c, vector3_t d, vector3_t& x);
+
+	extern int count_naninfs(int, int, int, const complex_t*);
+	extern int count_naninfs(int, int, int, const cucomplex_t*);
+	extern int count_naninfs(int, int, int, const std::vector<complex_t>&);
 
 } // namespace hig
 
