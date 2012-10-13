@@ -5,7 +5,7 @@
   *
   *  File: ff_ana.cpp
   *  Created: Jul 12, 2012
-  *  Modified: Fri 12 Oct 2012 12:27:20 PM PDT
+  *  Modified: Sat 13 Oct 2012 02:30:48 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -17,6 +17,7 @@
 #include "enums.hpp"
 #include "qgrid.hpp"
 #include "utilities.hpp"
+#include "numeric_utils.hpp"
 
 namespace hig {
 
@@ -71,91 +72,91 @@ namespace hig {
 
 		std::cout << "-- Computing form factor analytically ... " << std::endl;
 		switch(shape) {
-			case shape_box:
+			case shape_box:						// cube or box
 				if(!compute_box(nqx_, nqy_, nqz_, ff, shape, params, tau, eta, transvec, rot1, rot2, rot3)) {
 					std::cerr << "error: something went wrong while computing FF for a box"
 								<< std::endl;
 					return false;
 				} // if
 				break;
-			case shape_cylinder:
+			case shape_cylinder:				// standing cylinder
 				if(!compute_cylinder(params, tau, eta, ff, transvec)) {
 					std::cerr << "error: something went wrong while computing FF for a cylinder"
 								<< std::endl;
 					return false;
 				} // if
 				break;
-			case shape_random_cylinders:		// for saxs
+			case shape_random_cylinders:		// randomly oriented cylinders, for saxs
 				if(!compute_random_cylinders()) {
 					std::cerr << "error: something went wrong while computing FF for random cylinders"
 								<< std::endl;
 					return false;
 				} // if
 				break;
-			case shape_horizontal_cylinder:
+			case shape_horizontal_cylinder:		// horizontal cylinder
 				if(!compute_horizontal_cylinder(params, transvec, ff)) {
 					std::cerr << "error: something went wrong while computing FF for a horizontal cylinder"
 								<< std::endl;
 					return false;
 				} // if
 				break;
-			case shape_sphere:
+			case shape_sphere:					// simple sphere
 				if(!compute_sphere(params, ff, transvec)) {
 					std::cerr << "error: something went wrong while computing FF for a sphere"
 								<< std::endl;
 					return false;
 				} // if
 				break;
-			case shape_prism3:
+			case shape_prism3:					// triangular prism (prism with 3 sides)
 				if(!compute_prism(params, ff, tau, eta, transvec)) {
 					std::cerr << "error: something went wrong while computing FF for a prism"
 								<< std::endl;
 					return false;
 				} // if
 				break;
-			case shape_prism6:
+			case shape_prism6:					// hexagonal prism (prism with 6 sides)
 				if(!compute_prism6()) {
 					std::cerr << "error: something went wrong while computing FF for a prism6"
 								<< std::endl;
 					return false;
 				} // if
 				break;
-			case shape_sawtooth_down:
+			case shape_sawtooth_down:			// downwards sawtooth
 				if(!compute_sawtooth_down()) {
 					std::cerr << "error: something went wrong while computing FF for a sawtooth down"
 								<< std::endl;
 					return false;
 				} // if
 				break;
-			case shape_sawtooth_up:
+			case shape_sawtooth_up:				// upwards sawtooth
 				if(!compute_sawtooth_up()) {
 					std::cerr << "error: something went wrong while computing FF for a sawtooth up"
 								<< std::endl;
 					return false;
 				} // if
 				break;
-			case shape_prism3x:
+			case shape_prism3x:					// triangular grating in x direction
 				if(!compute_prism3x()) {
 					std::cerr << "error: something went wrong while computing FF for a prism3x"
 								<< std::endl;
 					return false;
 				} // if
 				break;
-			case shape_pyramid:
+			case shape_pyramid:					// pyramid
 				if(!compute_pyramid()) {
 					std::cerr << "error: something went wrong while computing FF for a pyramid"
 								<< std::endl;
 					return false;
 				} // if
 				break;
-			case shape_trunccone:
+			case shape_trunccone:				// truncated cone
 				if(!compute_truncated_cone()) {
 					std::cerr << "error: something went wrong while computing FF for a truncated cone"
 								<< std::endl;
 					return false;
 				} // if
 				break;
-			case shape_truncpyr:
+			case shape_truncpyr:				// truncated pyramid
 				if(!compute_truncated_pyramid()) {
 					std::cerr << "error: something went wrong while computing FF for a truncated pyramid"
 								<< std::endl;
@@ -368,6 +369,9 @@ namespace hig {
 		std::vector<complex_t> qpar, qm;
 		std::vector<complex_t> temp1, temp2, temp3, temp4, temp5, temp6, temp7;
 
+		// unroll the following into combined loops
+		// ...
+
 		mat_sqr(mesh_qx_, temp1);
 		mat_sqr(mesh_qy_, temp2);
 		mat_add(nqx_, nqy_, nqz_, temp1, nqx_, nqy_, nqz_, temp2, qpar);
@@ -461,31 +465,38 @@ namespace hig {
 		} // for
 
 		if(r.size() < 1 || h.size() < 1) {
-			std::cerr << "error: both radius and height parameters required for horizontal cylinder"
+			std::cerr << "error: both radius and height parameters are required for horizontal cylinder"
 						<< std::endl;
 			return false;
 		} // if
 
-		// why not doing range of r and h ??? ...
+		// in slims code, why not doing range of r and h ???
 
-		complex_t unit(0, 1);
+		complex_t unitc(0, 1);
 
-		for(unsigned int z = 0; z < nqz_; ++ z) {
-			for(unsigned int y = 0; y < nqy_; ++ y) {
-				for(unsigned int x = 0; x < nqx_; ++ x) {
-					unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
-					complex_t temp_qpar = sqrt(mesh_qz_[index] * mesh_qz_[index] +
-												mesh_qy_[index] * mesh_qy_[index]);
-					ff.push_back(2 * PI_ * h[0] * r[0] * r[0] *
-								(besselj(1, temp_qpar * r[0]) / (temp_qpar * r[0])) *
-								exp(unit * mesh_qz_[index] * r[0]) *
-								sinc(mesh_qx_[index] * h[0] / (float_t)2.0) *
-								exp(unit * (mesh_qx_[index] * transvec[0] +
-											mesh_qy_[index] * transvec[1] +
-											mesh_qz_[index] * transvec[2])));
-				} // for x
-			} // for y
-		} // for z
+		ff.clear();
+		for(unsigned int i = 0; i < nqx_ * nqy_ * nqz_; ++ i) ff.push_back(complex_t(0.0, 0.0));
+
+		for(unsigned int i_r = 0; i_r < r.size(); ++ i_r) {
+			for(unsigned int i_h = 0; i_h < h.size(); ++ i_h) {
+				for(unsigned int z = 0; z < nqz_; ++ z) {
+					for(unsigned int y = 0; y < nqy_; ++ y) {
+						for(unsigned int x = 0; x < nqx_; ++ x) {
+							unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
+							complex_t temp_qpar = sqrt(mesh_qz_[index] * mesh_qz_[index] +
+														mesh_qy_[index] * mesh_qy_[index]);
+							ff[index] += 2 * PI_ * h[i_h] * r[i_r] * r[i_r] *
+										(cbessj(temp_qpar * r[i_r], 1) / (temp_qpar * r[i_r])) *
+										exp(unitc * mesh_qz_[index] * r[i_r]) *
+										sinc(mesh_qx_[index] * h[i_h] / (float_t)2.0) *
+										exp(unitc * (mesh_qx_[index] * transvec[0] +
+													mesh_qy_[index] * transvec[1] +
+													mesh_qz_[index] * transvec[2]));
+						} // for x
+					} // for y
+				} // for z
+			} // for h
+		} // for r
 
 		return true;
 	} // AnalyticFormFactor::compute_horizontal_cylinder()

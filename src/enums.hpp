@@ -5,7 +5,7 @@
   *
   *  File: enums.hpp
   *  Created: Jun 11, 2012
-  *  Modified: Mon 01 Oct 2012 11:12:35 AM PDT
+  *  Modified: Sat 13 Oct 2012 02:06:10 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -35,6 +35,10 @@ namespace hig {
 		shape_sawtooth_down,
 		shape_sawtooth_up,
 		shape_pyramid,
+		// adding my own
+		shape_cone,
+		shape_prism5,
+		// custom (numerical)
 		shape_custom			/* a custom shape */
 	}; // enum ShapeName
 

@@ -5,7 +5,7 @@
   *
   *  File: token_mapper.hpp
   *  Created: Jun 05, 2012
-  *  Modified: Mon 01 Oct 2012 11:19:30 AM PDT
+  *  Modified: Sat 13 Oct 2012 02:25:54 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -186,6 +186,7 @@ namespace hig {
 
 				ShapeKeyWords_[std::string("box")]			= shape_box;
 				ShapeKeyWords_[std::string("cylinder")]		= shape_cylinder;
+				ShapeKeyWords_[std::string("hcylinder")]	= shape_horizontal_cylinder;
 				ShapeKeyWords_[std::string("sphere")]		= shape_sphere;
 				ShapeKeyWords_[std::string("truncpyr")]		= shape_truncpyr;
 				ShapeKeyWords_[std::string("trunccone")]	= shape_trunccone;
