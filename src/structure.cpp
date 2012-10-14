@@ -5,7 +5,7 @@
   *
   *  File: structure.cpp
   *  Created: Jun 12, 2012
-  *  Modified: Tue 09 Oct 2012 12:18:11 PM PDT
+  *  Modified: Sat 13 Oct 2012 11:19:54 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -54,7 +54,7 @@ namespace hig {
 		float_t sqrt3 = sqrt(3.0);
 
 		switch(type_) {
-			case lattice_bcc:
+			case lattice_bcc:					// BCC
 				if(hkl_ == "100") {
 					a_[0] = 1; a_[1] = 0; a_[2] = 0;
 					b_[0] = 0; b_[1] = 1; b_[2] = 0;
@@ -71,14 +71,14 @@ namespace hig {
 				} // if-else
 				break;
 
-			case lattice_cubic:
+			case lattice_cubic:					// CUBIC
 				a_[0] = 1; a_[1] = 0; a_[2] = 0;
 				b_[0] = 0; b_[1] = 1; b_[2] = 0;
 				c_[0] = 0; c_[1] = 0; c_[2] = 1;
 				t_[0] = 0; t_[1] = 0; t_[2] = 0;
 				break;
 
-			case lattice_fcc:
+			case lattice_fcc:					// FCC
 				if(hkl_ == "100") {
 					a_[0] = 1; a_[1] = 0; a_[2] = 0;
 					b_[0] = 0.5; b_[1] = 0.5; b_[2] = 0;
@@ -95,28 +95,28 @@ namespace hig {
 				} // if-else
 				break;
 
-			case lattice_fco:
+			case lattice_fco:					// FCO
 				a_[0] = 1; a_[1] = 0; a_[2] = 0;
 				b_[0] = 0.5; b_[1] = tan(gamma_) / 2.0; b_[2] = 0;
 				c_[0] = 0; b_[1] = 0; c_[2] = ca_;
 				t_[0] = 0.5; t_[1] = 0; t_[2] = ca_ / 2;
 				break;
 
-			case lattice_hcp:
+			case lattice_hcp:					// HCP
 				a_[0] = 1; a_[1] = 0; a_[2] = 0;
 				b_[0] = 0.5; b_[1] = 1 / (2.0 * sqrt3); b_[2] = 0;
 				c_[0] = 0; b_[1] = 0; c_[2] = ca_ / sqrt3;
 				t_[0] = sqrt3 / 3.0; t_[1] = 0; t_[2] = ca_ / (2 * sqrt3);
 				break;
 
-			case lattice_hex:
+			case lattice_hex:					// HEX
 				a_[0] = 1; a_[1] = 0; a_[2] = 0;
 				b_[0] = 0.5; b_[1] = 1 / (2.0 * sqrt3); b_[2] = 0;
 				c_[0] = 0; c_[1] = 0; c_[2] = 0;
 				t_[0] = 0; t_[1] = 0; t_[2] = 0;
 				break;
 
-			case lattice_null:		// means custom vectors are defined
+			case lattice_null:					// means custom vectors are defined
 				t_[0] = t_[1] = t_[2] = 0;
 				break;
 

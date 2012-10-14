@@ -5,7 +5,7 @@
   *
   *  File: hig_input.cpp
   *  Created: Jun 11, 2012
-  *  Modified: Mon 08 Oct 2012 02:44:40 PM PDT
+  *  Modified: Sat 13 Oct 2012 08:37:19 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -1292,34 +1292,71 @@ namespace hig {
 				return true;
 
 			case shape_prism3:
-				std::cerr << "uh-oh: this shape has not been implemented yet" << std::endl;
-				return false;
 				while(param != shape.param_end()) {
 					switch((*param).second.type()) {
 						case param_radius:
+							max_dim[0] = max((*param).second.max(), (*param).second.min());
+							min_dim[0] = -max_dim[0];
+							max_dim[1] = max((*param).second.max(), (*param).second.min());
+							min_dim[1] = -max_dim[1];
+							break;
 						case param_xsize:
+							std::cerr << "warning: ignoring the xsize values given for prism3 shape"
+										<< std::endl;
+							break;
 						case param_ysize:
+							std::cerr << "warning: ignoring the ysize values given for prism3 shape"
+										<< std::endl;
+							break;
 						case param_height:
+							max_dim[2] = max((*param).second.max(), (*param).second.min());
+							min_dim[2] = 0.0;
+							break;
 						case param_edge:
+							std::cerr << "warning: ignoring the edge values given for prism3 shape"
+										<< std::endl;
+							break;
 						case param_baseangle:
+							std::cerr << "warning: ignoring the baseangle values given for prism3 shape"
+										<< std::endl;
+							break;
 						default:
 							std::cerr << "error: invalid parameter found in a shape" << std::endl;
 							return false;
 					} // switch
+					++ param;
 				} // while
 				return true;
 
 			case shape_prism6:
-				std::cerr << "uh-oh: this shape has not been implemented yet" << std::endl;
-				return false;
 				while(param != shape.param_end()) {
 					switch((*param).second.type()) {
 						case param_radius:
+							max_dim[0] = max((*param).second.max(), (*param).second.min());
+							min_dim[0] = -max_dim[0];
+							max_dim[1] = max((*param).second.max(), (*param).second.min());
+							min_dim[1] = -max_dim[1];
+							break;
 						case param_xsize:
+							std::cerr << "warning: ignoring the xsize values given for prism3 shape"
+										<< std::endl;
+							break;
 						case param_ysize:
+							std::cerr << "warning: ignoring the ysize values given for prism3 shape"
+										<< std::endl;
+							break;
 						case param_height:
+							max_dim[2] = max((*param).second.max(), (*param).second.min());
+							min_dim[2] = 0.0;
+							break;
 						case param_edge:
+							std::cerr << "warning: ignoring the edge values given for prism3 shape"
+										<< std::endl;
+							break;
 						case param_baseangle:
+							std::cerr << "warning: ignoring the baseangle values given for prism3 shape"
+										<< std::endl;
+							break;
 						default:
 							std::cerr << "error: invalid parameter found in a shape" << std::endl;
 							return false;
@@ -1539,10 +1576,33 @@ namespace hig {
 		// -1 is substrate layer
 		// 0 is vacuum
 		// dont count these two
-		if(has_substrate_layer() && layers_.count(0) != 0) return layers_.size() - 2;
-		if(has_substrate_layer() || layers_.count(0) != 0) return layers_.size() - 1;
+		//if(has_substrate_layer() && layers_.count(0) != 0) return layers_.size() - 2;
+		//if(has_substrate_layer() || layers_.count(0) != 0) return layers_.size() - 1;
+		//return layers_.size();
+		if(has_substrate_layer() && has_vacuum_layer())
+			return layers_.size() - 2;
+		if((!has_substrate_layer()) && has_vacuum_layer() ||
+				has_substrate_layer() && (!has_vacuum_layer())) 
+			return layers_.size() - 1;
 		return layers_.size();
 	} // HiGInput::num_layers()
+
+
+	bool HiGInput::is_single_layer() const {
+		//if(has_substrate_layer() && has_vacuum_layer() && layers_.size() == 3 ||
+		//		(!has_substrate_layer()) && has_vacuum_layer() && layers_.size() == 2 ||
+		//		has_substrate_layer() && (!has_vacuum_layer()) && layers_.size() == 2 ||
+		//		(!has_substrate_layer()) && (!has_vacuum_layer()) && layers_.size == 1)
+		//	return true;
+		//else
+		//	return false;
+		return (num_layers() == 1);
+	} // HiGInput::is_single_layer()
+
+
+	bool HiGInput::has_vacuum_layer() const {
+		return (layers_.count(0) != 0);
+	} // HiGInput::has_vacuum_layer()
 
 
 	bool HiGInput::has_substrate_layer() const {	// substrate is the one with order -1
@@ -1578,10 +1638,18 @@ namespace hig {
 	Layer& HiGInput::single_layer() {	// if there is exactly 1 layer
 										// excluding substrate
 		layer_iterator_t i = layers_.begin();
-		if(has_substrate_layer() && layers_.size() == 2) {
-			if((*i).first == -1) { ++ i; return (*i).second; }
-			else return (*i).second;
-		} else if(!has_substrate_layer() && layers_.size() == 1) {
+		if(has_substrate_layer() && has_vacuum_layer() && layers_.size() == 3 ||
+				(!has_vacuum_layer()) && has_substrate_layer() && layers_.size() == 2 ||
+				(!has_substrate_layer()) && has_vacuum_layer() && layers_.size() == 2 ||
+				(!has_substrate_layer()) && (!has_vacuum_layer()) && layers_.size() == 1) {
+			while(i != layers_.end() && (*i).first != 0) ++ i;
+			if(i != layers_.end()) return (*i).second;
+			else return layers_[0];
+		//} else if(has_substrate_layer() && layers_.size() == 2) {
+		//	if((*i).first == -1) { ++ i; return (*i).second; }
+		//	else return (*i).second;
+		} else {
+			std::cerr << "error: single_layer requested on multiple layers" << std::endl;
 			return (*i).second;
 		} // if-else
 	} // HiGInput::single_layer()
@@ -1602,6 +1670,9 @@ namespace hig {
 	bool HiGInput::construct_layer_profile() {
 		// if there is substrate, its the first one, followed by others
 		// insert layer 0, with refindex 0, 0
+		
+		if(has_vacuum_layer()) return true;
+
 		Layer vacuum;
 		vacuum.key(std::string("vacuum"));
 		vacuum.refindex_delta(0.0);

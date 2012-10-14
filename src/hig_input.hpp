@@ -5,7 +5,7 @@
   *
   *  File: hig_input.hpp
   *  Created: Jun 11, 2012
-  *  Modified: Mon 08 Oct 2012 02:46:34 PM PDT
+  *  Modified: Sat 13 Oct 2012 05:11:42 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -156,7 +156,9 @@ namespace hig {
 			} // photon_energy()
 
 			unsigned int num_layers() const;
+			bool is_single_layer() const;
 			int min_layer_order();
+			bool has_vacuum_layer() const;
 			bool has_substrate_layer() const;
 			Layer& substrate_layer();		// the one with order -1
 			RefractiveIndex substrate_refindex();

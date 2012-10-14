@@ -5,7 +5,7 @@
   *
   *  File: ff_ana.cpp
   *  Created: Jul 12, 2012
-  *  Modified: Sat 13 Oct 2012 02:30:48 PM PDT
+  *  Modified: Sat 13 Oct 2012 08:25:50 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -109,13 +109,13 @@ namespace hig {
 				break;
 			case shape_prism3:					// triangular prism (prism with 3 sides)
 				if(!compute_prism(params, ff, tau, eta, transvec)) {
-					std::cerr << "error: something went wrong while computing FF for a prism"
+					std::cerr << "error: something went wrong while computing FF for a prism3"
 								<< std::endl;
 					return false;
 				} // if
 				break;
 			case shape_prism6:					// hexagonal prism (prism with 6 sides)
-				if(!compute_prism6()) {
+				if(!compute_prism6(params, ff, tau, eta, transvec)) {
 					std::cerr << "error: something went wrong while computing FF for a prism6"
 								<< std::endl;
 					return false;
@@ -531,13 +531,8 @@ namespace hig {
 			return false;
 		} // if
 
-		//std::vector <float_t> q = mat_sqrt(nqx_, nqy_, nqz_,
-		//							mat_add(nqx_, nqy_ nqz_,
-		//							mat_add(nqx_, nqy_, nqz_,
-		//							mat_sqr(mesh_qx_), nqz_, nqy_, nqz_,
-		//							mat_sqr(nqx_, nqy_, nqz_, mesh_qy_)), nqx_, nqy_, nqz_,
-		//							mat_sqr(nqx_, nqy_, nqz_, mesh_qz_)));
 		std::vector <complex_t> q;
+		q.clear();
 		for(unsigned int z = 0; z < nqz_; ++ z) {
 			for(unsigned int y = 0; y < nqy_; ++ y) {
 				for(unsigned int x = 0; x < nqx_; ++ x) {
@@ -550,47 +545,28 @@ namespace hig {
 			} // for
 		} // for
 
+		ff.clear();
 		for(unsigned int i = 0; i < nqx_ * nqy_ * nqz_; ++ i) ff.push_back(complex_t(0, 0));
 
-		//std::vector <float_t> iter_r = r.begin();
-		//std::vector <float_t> iter_d = distr_r.begin();
-		//for(; iter_r != r.end(); ++ iter_r, ++ iter_d) {
-		//	ff_ = mat_add(nqx_, nqy_, nqz_, ff_, nqx_, nqy_, nqz_,
-		//			mat_mul(
-		//			mat_mul(((*iter_d) * 4 * PI_ * pow((*iter_r), 3)), nqx_, nqy_, nqz_, ((
-		//			mat_sub(nqx_, nqy_, nqz_,
-		//			mat_sin(nqx_, nqy_, nqz_,
-		//			mat_mul(nqx_, nqy_, nqz_, q, (*iter_r))), nqx_, nqy_, nqz_,
-		//			mat_dot_prod(nqx_, nqy_, nqz_,
-		//			mat_mul(nqx_, nqy_, nqz_,
-		//			mat_dot_prod(q, (*iter_r)), nqx_, nqy_, nqz_,
-		//			mat_cos(nqx_, nqy_, nqz_,
-		//			mat_mul(nqx_, nqy_, nqz_, q, (*iter_r))))))) /
-		//			mat_pow(nqx_, nqy_, nqz_,
-		//			mat_mul(nqx_, nqy_, nqz_, q, (*iter_r)), 3))), nqx_, nqy_, nqz_,
-		//			mat_exp(nqx_, nqy_, nqz_,
-		//			mat_complex(nqx_, nqy_, nqz_, 0,
-		//			mat_mul(nqx_, nqy_, nqz_, mesh_qz_, (*iter_r))))));
-		//} // for
 		std::vector<float_t>::iterator iter_r = r.begin();
 		std::vector<float_t>::iterator iter_d = distr_r.begin();
-		for(; iter_r != r.end(); ++ iter_r, ++ iter_d) {
+		for(unsigned int i_r = 0; i_r < r.size(); ++ i_r, ++ iter_d) {
 			for(unsigned int z = 0; z < nqz_; ++ z) {
 				for(unsigned int y = 0; y < nqy_; ++ y) {
 					for(unsigned int x = 0; x < nqx_; ++ x) {
 						unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
-						ff[index] += (*iter_d) * 4 * PI_ * pow((*iter_r), 3) *
-										((sin(q[index] * (*iter_r)) -
-										(*iter_r) * q[index] * cos(q[index] * (*iter_r))) /
-										(complex_t)pow(q[index] * (*iter_r), 3)) *
-										exp(complex_t(0, 1) * mesh_qz_[index] * (*iter_r));
+						complex_t temp1 = q[index] * r[i_r];
+						complex_t temp2 = sin(temp1) - temp1 * cos(temp1);
+						complex_t temp3 = temp1 * temp1 * temp1;
+						ff[index] += distr_r[i_r] * 4 * PI_ * pow(r[i_r], 3) * (temp2 / temp3) *
+										exp(complex_t(0, 1) * mesh_qz_[index] * r[i_r]);
 					} // for x
 				} // for y
 			} // for z
-			for(std::vector<complex_t>::iterator iter_f = ff.begin();
-					iter_f != ff.end(); ++ iter_f) {
-				if((*iter_f).real() <= 1e-14) (*iter_f) = complex_t(4 * PI_ * pow((*iter_r), 3), 0);
-			} // for f
+//			for(std::vector<complex_t>::iterator iter_f = ff.begin();
+//					iter_f != ff.end(); ++ iter_f) {
+//				if((*iter_f).real() <= 1e-14) (*iter_f) = 4 * PI_ * pow(r[i_r], 3) / (float_t)3.0;
+//			} // for f
 		} // for r
 
 		std::vector<complex_t>::iterator iter_f = ff.begin();
@@ -640,27 +616,35 @@ namespace hig {
 
 		float_t sqrt3 = sqrt(3.0);
 		complex_t unit(0, 1.0);
-		for(unsigned int z = 0; z < nqz_; ++ z) {
-			for(unsigned int y = 0; y < nqy_; ++ y) {
-				for(unsigned int x = 0; x < nqx_; ++ x) {
-					unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
-					//float_t qm = tan(tau) * (mesh_qx_[index] * sin(eta) +
-					//				mesh_qy_[index] * cos(eta));
-					ff.push_back(2.0 * sqrt3 * exp(unit * mesh_qy_[index] * r[0] / sqrt3) /
-								(mesh_qx_[index] * (mesh_qx_[index] * mesh_qx_[index] -
-												complex_t(3.0, 0.0) * mesh_qy_[index] * mesh_qy_[index])) *
-								(mesh_qx_[index] * exp(unit * mesh_qy_[index] * r[0] * sqrt3) -
-								 mesh_qx_[index] * cos(mesh_qx_[index] * r[0]) -
-								 unit * sqrt3 * mesh_qy_[index] * sin(mesh_qx_[index] * r[0])) *
-								 fq_inv(mesh_qz_[index] + tan(tau) *
-								(mesh_qx_[index] * sin(eta) +
-								 mesh_qy_[index] * cos(eta)), h[0]) *
-								 exp(unit * (mesh_qx_[index] * transvec[0] +
-											 mesh_qy_[index] * transvec[1] +
-											 mesh_qz_[index] * transvec[2])));
-				} // for x
-			} // for y
-		} // for z
+
+		ff.clear();
+		for(unsigned int i = 0; i < nqx_ * nqy_ * nqz_; ++ i) ff.push_back(complex_t(0.0, 0.0));
+
+		for(unsigned int i_r = 0; i_r < r.size(); ++ i_r) {
+			for(unsigned int i_h = 0; i_h < h.size(); ++ i_h) {
+				for(unsigned int z = 0; z < nqz_; ++ z) {
+					for(unsigned int y = 0; y < nqy_; ++ y) {
+						for(unsigned int x = 0; x < nqx_; ++ x) {
+							unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
+							//float_t qm = tan(tau) * (mesh_qx_[index] * sin(eta) +
+							//				mesh_qy_[index] * cos(eta));
+							ff[index] += 2.0 * sqrt3 * exp(unit * mesh_qy_[index] * r[i_r] / sqrt3) /
+										(mesh_qx_[index] * (mesh_qx_[index] * mesh_qx_[index] -
+										 complex_t(3.0, 0.0) * mesh_qy_[index] * mesh_qy_[index])) *
+										(mesh_qx_[index] * exp(unit * mesh_qy_[index] * r[i_r] * sqrt3) -
+										 mesh_qx_[index] * cos(mesh_qx_[index] * r[i_r]) -
+										 unit * sqrt3 * mesh_qy_[index] * sin(mesh_qx_[index] * r[i_r])) *
+										 fq_inv(mesh_qz_[index] + tan(tau) *
+										(mesh_qx_[index] * sin(eta) +
+										 mesh_qy_[index] * cos(eta)), h[i_h]) *
+										 exp(unit * (mesh_qx_[index] * transvec[0] +
+													 mesh_qy_[index] * transvec[1] +
+													 mesh_qz_[index] * transvec[2]));
+						} // for x
+					} // for y
+				} // for z
+			} // for h
+		} // for r
 
 		return true;
 	} // AnalyticFormFactor::compute_prism()
@@ -669,22 +653,68 @@ namespace hig {
 	/**
 	 * six faceted prism
 	 */
-	bool AnalyticFormFactor::compute_prism6() {
-		std::cerr << "uh-oh: you reach an unimplemented part of the code, compute_prism6"
-					<< std::endl;
-		return false;
-		// ...
-		/*for(shape_param_iterator_t i = params.begin(); i != params.end(); ++ i) {
+	bool AnalyticFormFactor::compute_prism6(shape_param_list_t& params, std::vector<complex_t>& ff,
+											float_t tau, float_t eta, vector3_t transvec) {
+		std::vector<float_t> r, distr_r;
+		std::vector<float_t> h, distr_h;
+		for(shape_param_iterator_t i = params.begin(); i != params.end(); ++ i) {
 			switch((*i).second.type()) {
 				case param_edge:
 				case param_xsize:
 				case param_ysize:
-				case param_height:
-				case param_radius:
 				case param_baseangle:
+					std::cerr << "warning: ignoring unwanted parameters in sphere" << std::endl;
+					break;
+				case param_height:
+					param_distribution((*i).second, h, distr_h);
+					break;
+				case param_radius:
+					param_distribution((*i).second, r, distr_r);
+					break;
 				default:
+					std::cerr << "error: invalid parameter given for prism shape" << std::endl;
+					return false;
 			} // switch
-		} // for */
+		} // for
+
+		// 4*sq3./( 3*qy.^2 - qx.^2 ) .* (R^2 * qy.^2 .*  SINC_Matrix(qx*R/sq3) .* SINC_Matrix(qy*R) + cos(2*qx*R/sq3) - cos(qy*R) .* cos(qx*R/sq3) )  .* Fq_Inv_Matrix(qz+qm, H) .* exp(1i* (qx*T(1) + qy*T(2) + qz*T(3)))
+
+		float_t sqrt3 = sqrt(3.0);
+		complex_t unit(0, 1.0);
+
+		ff.clear();
+		for(unsigned int i = 0; i < nqx_ * nqy_ * nqz_; ++ i) ff.push_back(complex_t(0.0, 0.0));
+
+		for(unsigned int i_r = 0; i_r < r.size(); ++ i_r) {
+			for(unsigned int i_h = 0; i_h < h.size(); ++ i_h) {
+				for(unsigned int z = 0; z < nqz_; ++ z) {
+					for(unsigned int y = 0; y < nqy_; ++ y) {
+						for(unsigned int x = 0; x < nqx_; ++ x) {
+							unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
+							complex_t qm = tan(tau) * (mesh_qx_[index] * sin(eta) +
+														mesh_qy_[index] * cos(eta));
+							complex_t temp1 = ((float_t)4.0 * sqrt3) /
+												(3.0 * mesh_qy_[index] * mesh_qy_[index] -
+												 mesh_qx_[index] * mesh_qx_[index]);
+							complex_t temp2 = r[i_r] * r[i_r] * mesh_qy_[index] * mesh_qy_[index] *
+												sinc(mesh_qx_[index] * r[i_r] / sqrt3) *
+												sinc(mesh_qy_[index] * r[i_r]);
+							complex_t temp3 = cos(2.0 * mesh_qx_[index] * r[i_r] / sqrt3);
+							complex_t temp4 = cos(mesh_qy_[index] * r[i_r]) *
+												cos(mesh_qx_[index] * r[i_r] / sqrt3);
+							complex_t temp5 = temp1 * (temp2 + temp3 - temp4);
+							complex_t temp6 = fq_inv(mesh_qz_[index] + qm, h[i_h]);
+							complex_t temp7 = (mesh_qx_[index] * transvec[0] +
+												mesh_qy_[index] * transvec[1] +
+												mesh_qz_[index] * transvec[2]);
+							ff[index] += temp5 * temp6 * exp(unit * temp7);
+						} // for x
+					} // for y
+				} // for z
+			} // for h
+		} // for r
+
+		return true;
 	} // AnalyticFormFactor::compute_prism6()
 
 

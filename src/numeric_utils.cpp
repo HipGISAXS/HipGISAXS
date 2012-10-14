@@ -5,16 +5,13 @@
   *
   *  File: numeric_utils.hpp
   *  Created: Oct 08, 2012
-  *  Modified: Sat 13 Oct 2012 02:32:00 PM PDT
+  *  Modified: Sat 13 Oct 2012 03:55:03 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
 
-#include <complex>
-#include <cmath>
-
-#include "typedefs.hpp"
 #include "numeric_utils.hpp"
+#include "typedefs.hpp"
 
 namespace hig {
 

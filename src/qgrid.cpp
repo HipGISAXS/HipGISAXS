@@ -5,7 +5,7 @@
   *
   *  File: qgrid.cpp
   *  Created: Jun 17, 2012
-  *  Modified: Mon 01 Oct 2012 11:16:23 AM PDT
+  *  Modified: Sat 13 Oct 2012 05:29:32 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -113,6 +113,7 @@ namespace hig {
 
 	bool QGrid::create_qz_extended(float_t k0, float_t kzi_0, complex_t kzi_q, complex_t dnl_q) {
 		cqvec_t qz_temp0, qz_temp1, qz_temp2, qz_temp3;
+		qz_extended_.clear();
 		for(qvec_iter_t q = qz_.begin(); q != qz_.end(); ++ q) {
 			//std::complex<float_t> kz_q_temp = sqrt(pow((*q) + kzi_0, 2) -
 			//									pow(k0, 2) * std::complex<float_t>(dnl_q.x, dnl_q.y)) -
