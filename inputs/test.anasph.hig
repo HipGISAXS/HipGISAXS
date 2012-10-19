@@ -1,0 +1,64 @@
+hipGisaxsInput = {
+	shape = {
+		key = "s1",	 			# a unique key to identify this shape in this file
+		name = "sphere",		# shape name
+		originvec = [0 0 0],
+		param = { type = "radius", min = 70 }
+	},
+	layer = {
+		key = "substr",	 	# special key for case of the substrate layer infinite in lower half space
+		order = -1 ,	 	# special order code for the substrate layer
+		refindex = { delta = 4.88E-06, beta = 7.37E-08 }
+	},
+	layer = {
+		key = "l1",
+		order = 1,
+		thickness = 150,
+		#refindex = { delta = 1.95e-6, beta = 2.15E-9 }
+		refindex = { delta = 4.6e-7, beta = 7.4e-9 }
+	},
+	structure = {
+		key = "st1",
+		grain = {
+			shape:key = "s1",
+			refindex = { delta = 2.4E-06, beta = 3.37E-08 },
+			#refindex = { delta = 4.95E-06, beta = 7.4E-09 },
+			layer:key = "l1"
+#			lattice = { type = "hex" },		# lattice forming grain
+#			scaling = 50,					# scaling factor for lattice vectors
+#			repetition = [ 40 40 1 ]		# shape repetitions in x, y and z
+		},
+		ensemble = {
+#			maxgrains = [ 10 10 1 ],		# maximum number of grains along x, y and z
+#			distribution = "random",		# spatial domain distribution in irrad. volume
+#			orientations = {
+#				stat = "range",				# domain orientation distribution
+#				rot1 = { axis = "z", angles = [ 0 360 ] }	# first rotation to apply to domain
+#			}
+		}
+	},
+	instrumentation = {
+		scattering = {
+			expt = "gisaxs",
+			alphai = { min = 0.14, max = 0.14, step = 0.01 },					# incidence angles
+			photon = { value = 7350, unit = "ev" }		# photon energy
+		},
+		detector = {
+			pixelsize = 0.172,	 				# pixel size of the detector
+			#pixelsize = 0.5,	 				# pixel size of the detector
+			#sdd = 4128.62,						# sample to detector distance
+			#sdd = 550,						# sample to detector distance
+			sdd = 2060,						# sample to detector distance
+			directbeam = [ 489.916 843.076 ]	# position of direct beam
+		}
+	},
+	computation = {
+		pathprefix = "../hipgisaxs.test",	# path to input files directory
+		runname = "sphere",				# name for current run and folder name for outputs
+		method = "dwba",					# theorical approach (see list)
+		#outputregion = { type = "pixels" , minpoint = [ 400 720 ], maxpoint = [ 900 1000 ] },
+		outputregion = { type = "qspace" , minpoint = [ 0 0 ], maxpoint = [ 3.15 3.15 ] },
+		resolution = [ 2 2 ],				# number of q points per pixel
+		nslices = 0							# max number of slices for slicing algorithm
+	}
+}
