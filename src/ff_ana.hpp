@@ -5,7 +5,7 @@
   *
   *  File: ff_ana.hpp
   *  Created: Jul 12, 2012
-  *  Modified: Sat 13 Oct 2012 08:20:35 PM PDT
+  *  Modified: Wed 17 Oct 2012 10:47:24 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -20,6 +20,7 @@
 #include "globals.hpp"
 #include "enums.hpp"
 #include "shape.hpp"
+#include "ff_ana_gpu.cuh"
 
 namespace hig {
 
@@ -34,9 +35,8 @@ namespace hig {
 			std::vector<complex_t> mesh_qx_;
 			std::vector<complex_t> mesh_qy_;
 			std::vector<complex_t> mesh_qz_;
-			/*float_t* mesh_qx_;
-			float_t* mesh_qy_;
-			float_t* mesh_qz_;*/
+
+			AnalyticFormFactorG ff_gpu_;
 
 		public:
 			AnalyticFormFactor() { }
@@ -51,7 +51,7 @@ namespace hig {
 						MPI::Intracomm& world_comm);
 
 		private:
-			/* computing ff for various shapes */
+			/* compute ff for various shapes */
 			bool compute_box(unsigned int nqx, unsigned int nqy, unsigned int nqz,
 							std::vector<complex_t>& ff,
 							ShapeName shape, shape_param_list_t& params,
@@ -70,12 +70,34 @@ namespace hig {
 			bool compute_truncated_pyramid();
 			bool compute_truncated_cone();
 
+			/* compute ff on gpu */
+			/*bool compute_box_gpu(unsigned int nqx, unsigned int nqy, unsigned int nqz,
+							std::vector<complex_t>& ff,
+							ShapeName shape, shape_param_list_t& params,
+							float_t tau, float_t eta, vector3_t &transvec,
+							vector3_t &rot1, vector3_t &rot2, vector3_t &rot3);
+			bool compute_cylinder_gpu(shape_param_list_t&, float_t, float_t,
+									std::vector<complex_t>&, vector3_t);
+			bool compute_horizontal_cylinder_gpu(shape_param_list_t&, vector3_t, std::vector<complex_t>&);
+			bool compute_random_cylinders_gpu();
+			bool compute_sphere_gpu(shape_param_list_t&, std::vector<complex_t>&, vector3_t);
+			bool compute_prism_gpu(shape_param_list_t&, std::vector<complex_t>&,
+								float_t, float_t, vector3_t);
+			bool compute_prism6_gpu(shape_param_list_t&, std::vector<complex_t>&,
+								float_t, float_t, vector3_t);
+			bool compute_prism3x_gpu();
+			bool compute_sawtooth_up_gpu();
+			bool compute_sawtooth_down_gpu();
+			bool compute_pyramid_gpu();
+			bool compute_truncated_pyramid_gpu();
+			bool compute_truncated_cone_gpu(); */
+
+			/* other helpers */ // check if they should be private ...
 			bool param_distribution(ShapeParam&, std::vector<float_t>&, std::vector<float_t>&);
 			bool mat_fq_inv_in(unsigned int, unsigned int, unsigned int, complex_vec_t&, float_t);
 			bool mat_fq_inv(unsigned int, unsigned int, unsigned int, const complex_vec_t&,
 							float_t, complex_vec_t&);
 			complex_t fq_inv(complex_t, float_t);
-
 			bool mat_sinc(unsigned int, unsigned int, unsigned int,	const complex_vec_t&, complex_vec_t&);
 			bool mat_sinc_in(unsigned int, unsigned int, unsigned int, complex_vec_t&);
 			float_t sinc(complex_t value);

@@ -73,7 +73,7 @@ class o2s_converter {
 				std::vector<std::vector<int> > face_list_3v,
 				std::vector<vertex_t> vertices, bool hdf5);
 
-		void get_triangle_params(vertex_t v1, vertex_t v2, vertex_t v3,
+		bool get_triangle_params(vertex_t v1, vertex_t v2, vertex_t v3,
 				float_t &s_area, vertex_t &normal, vertex_t &center);
 		token_t token_hash(std::string const &str);
 		void findall(std::string str, char c, std::vector<int> &pos_list);

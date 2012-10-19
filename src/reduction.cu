@@ -8,7 +8,7 @@
 #include <omp.h>
 #include <cuComplex.h>
 
-#include "reduction.hpp"
+#include "reduction.cuh"
 
 #ifndef GPUR
 

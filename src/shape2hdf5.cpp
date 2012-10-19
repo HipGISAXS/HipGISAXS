@@ -17,7 +17,8 @@ shape2hdf5_converter::shape2hdf5_converter(char* filename, char* outfilename, MP
 
 	std::vector<double> shape_def;
 
-	load_shape(filename, shape_def);
+	int num = load_shape(filename, shape_def);
+	std::cout << "NUM: " << num << std::endl;
 	convert(outfilename, shape_def);
 } // o2s_converter()
 

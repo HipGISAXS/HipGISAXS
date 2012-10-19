@@ -5,7 +5,7 @@
   *
   *  File: hipgisaxs_main.cpp
   *  Created: Jun 14, 2012
-  *  Modified: Sat 13 Oct 2012 11:17:52 PM PDT
+  *  Modified: Fri 19 Oct 2012 01:48:04 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -435,8 +435,8 @@ namespace hig {
 									"/" + HiGInput::instance().runname() +
 									"/sf_ai=" + alphai_s + "_rot=" + phi_s +
 									"_tilt=" + tilt_s + ".out");
-					std::cout << "-- Saving structure factor in " << sf_output << " ..." << std::endl;
-					sf_.save_sf(nqx_, nqy_, nqz_extended_, sf_output.c_str());
+//					std::cout << "-- Saving structure factor in " << sf_output << " ..." << std::endl;
+//					sf_.save_sf(nqx_, nqy_, nqz_extended_, sf_output.c_str());
 				} // if
 
 				//read_form_factor("curr_ff.out");
@@ -455,8 +455,8 @@ namespace hig {
 									"/" + HiGInput::instance().runname() +
 									"/ff_ai=" + alphai_s + "_rot=" + phi_s +
 									"_tilt=" + tilt_s + ".out");
-					std::cout << "-- Saving form factor in " << ff_output << " ..." << std::endl;
-					ff_.save_ff(nqx_, nqy_, nqz_extended_, ff_output.c_str());
+//					std::cout << "-- Saving form factor in " << ff_output << " ..." << std::endl;
+//					ff_.save_ff(nqx_, nqy_, nqz_extended_, ff_output.c_str());
 				} // if
 
 				// processing of sf and ff is being done by just one processor ...
@@ -661,8 +661,13 @@ namespace hig {
 									vector3_t& grain_repeats, vector3_t& r_tot1,
 									vector3_t& r_tot2, vector3_t& r_tot3,
 									MPI::Intracomm& world_comm) {
+#ifndef GPUSF
 		return sf_.compute_structure_factor(expt, center, curr_lattice, grain_repeats,
 											r_tot1, r_tot2, r_tot3, world_comm);
+#else
+		return sf_.compute_structure_factor_gpu(expt, center, curr_lattice, grain_repeats,
+												r_tot1, r_tot2, r_tot3, world_comm);
+#endif
 	} // HipGISAXS::structure_factor()
 
 
@@ -672,9 +677,15 @@ namespace hig {
 								float_t shp_tau, float_t shp_eta,
 								vector3_t &r_tot1, vector3_t &r_tot2, vector3_t &r_tot3,
 								MPI::Intracomm& world_comm) {
+#ifndef GPUSF
 		return ff_.compute_form_factor(shape_name, shape_file, shape_params, single_layer_thickness_,
 										curr_transvec, shp_tau, shp_eta, r_tot1, r_tot2, r_tot3,
 										world_comm);
+#else
+		return ff_.compute_form_factor_gpu(shape_name, shape_file, shape_params, single_layer_thickness_,
+											curr_transvec, shp_tau, shp_eta, r_tot1, r_tot2, r_tot3,
+											world_comm);
+#endif
 	} // HipGISAXS::form_factor()
 
 

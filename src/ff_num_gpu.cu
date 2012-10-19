@@ -16,7 +16,8 @@
 
 #include "typedefs.hpp"
 #include "constants.hpp"
-#include "reduction.hpp"
+#include "parameters.hpp"
+#include "reduction.cuh"
 
 namespace hig {
 
@@ -107,7 +108,9 @@ namespace hig {
 	*/
 
 	/**
-	 * Wrapper for the GFormFactor class function
+	 * Wrapper for the GFormFactor class function.
+	 * This is required because with templates, everything is required to be in the
+	 * same file, and with cuda, the whole .cu file cannot be included in other files!
 	 */
 	template<typename float_t, typename complex_t>
 	unsigned int compute_form_factor_wrap(int rank, std::vector<float_t> &shape_def,

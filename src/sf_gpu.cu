@@ -1,50 +1,33 @@
 /***
-  *  $Id: sf.cpp 42 2012-08-22 05:07:05Z asarje $
+  *  $Id$
   *
   *  Project: HipGISAXS (High-Performance GISAXS)
   *
-  *  File: sf.cpp
-  *  Created: Jun 18, 2012
-  *  Modified: Mon 15 Oct 2012 09:39:47 PM PDT
+  *  File: sf_gpu.cu
+  *  Created: Oct 15, 2012
+  *  Modified: Mon 15 Oct 2012 10:25:59 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
 
 #include <iostream>
-#include <fstream>
-#include <cmath>
-#include <boost/math/special_functions/fpclassify.hpp>
+#include <complex>
+#include <cuComplex.h>
+#include <omp.h>		// see if i need openmp somewhere
 
-#include "sf.hpp"
-#include "qgrid.hpp"
-#include "utilities.hpp"
+#include "typedefs.hpp"
+#include "constants.hpp"
 
 namespace hig {
 
-	StructureFactor::StructureFactor(): sf_(NULL), nx_(0), ny_(0), nz_(0) {
-	} // StructureFactor::StructureFactor()
-
-
-	StructureFactor::~StructureFactor() {
-		if(sf_ != NULL) delete[] sf_;
-		sf_ = NULL;
-	} // StructureFactor::~StructureFactor()
-
-
-	void StructureFactor::clear() {
-		if(sf_ != NULL) delete[] sf_;
-		sf_ = NULL;
-		nx_ = ny_ = nz_ = 0;
-	} // StructureFactor::clear()
-
-
-	/**
-	 * compute structure factor sequentially on cpu
-	 */
-	bool StructureFactor::compute_structure_factor(std::string expt, vector3_t center,
+	bool StructureFactor::compute_structure_factor_gpu(std::string expt, vector3_t center,
 							Lattice* lattice, vector3_t repet,
 							vector3_t rotation_1, vector3_t rotation_2, vector3_t rotation_3,
 							MPI::Intracomm& world_comm) {
+		// ...
+		// need to have a wrapper like in FF ??? ...
+		// since i am using compiler directives for selecting precision, templates are not required!
+		// hence i dont need a wrapper
 		int my_rank = world_comm.Get_rank();
 
 		nx_ = QGrid::instance().nqx();
@@ -53,8 +36,10 @@ namespace hig {
 			nz_ = QGrid::instance().nqz();
 		else if(expt == "gisaxs")
 			nz_ = QGrid::instance().nqz_extended();
-		else
+		else {
+			std::cerr << "error: invalid experiment" << std::endl;
 			return false;
+		} // if-else
 
 		if(repet[0] < 1) repet[0] = 1;
 		if(repet[1] < 1) repet[1] = 1;
@@ -78,13 +63,18 @@ namespace hig {
 		} // if
 
 		if(my_rank == 0) {
-			std::cout << "-- Computing structure factor with ";
+			std::cout << "-- Computing structure factor on GPU with ";
 			std::cout << "nqx x nqy x nqz: " << nx_ << " x "
 						<< ny_ << " x " << nz_ << " ..." << std::endl;
 		} // if
 
 		std::complex<float_t> unit_c(1, 0);
 		std::complex<float_t> unit_ci(0, 1);
+
+		// big data to transer to gpu:
+		// qx, qy, qz
+		// arot, brot, crot
+		// repet
 
 		// good for gpu ...
 		for(unsigned int z = 0; z < nz_; ++ z) {
@@ -158,24 +148,8 @@ namespace hig {
 			std::cout << " ------- " << naninfs << " / " << nx_ * ny_ * nz_ << " nans or infs" << std::endl;
 		} // if
 
+
 		return true;
-	} // StructureFactor::compute_structure_factor()
+	} // StructureFactor::compute_structure_factor_gpu()
 
-
-	void StructureFactor::save_sf(unsigned int nqx, unsigned int nqy, unsigned int nqz,
-								const char* filename) {
-		std::ofstream f(filename);
-		for(unsigned int z = 0; z < nqz; ++ z) {
-			for(unsigned int y = 0; y < nqy; ++ y) {
-				for(unsigned int x = 0; x < nqx; ++ x) {
-					unsigned int index = nqx * nqy * z + nqx * y + x;
-					f << sf_[index].real() << "\t" << sf_[index].imag() << std::endl;
-				} // for
-				f << std::endl;
-			} // for
-			f << std::endl;
-		} // for
-		f.close();
-	} // StructureFactor::save_sf()
-
-} // namespace hig
+} // namespace

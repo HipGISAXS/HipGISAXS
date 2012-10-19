@@ -242,8 +242,8 @@ float_t* o2s_converter::convert(char* outfilename,
 	for(std::vector<std::vector<int> >::iterator i = face_list_3v.begin(); i != face_list_3v.end(); ++ i) {
 		float_t s_area = 0.0;
 		vertex_t norm, center;
-		get_triangle_params(vertices[(*i)[0] - 1], vertices[(*i)[1] - 1], vertices[(*i)[2] - 1],
-							s_area, norm, center);
+		if(!get_triangle_params(vertices[(*i)[0] - 1], vertices[(*i)[1] - 1], vertices[(*i)[2] - 1],
+							s_area, norm, center)) continue;
 		if(!hdf5) {
 			output << std::setiosflags(std::ios::fixed) << std::setprecision(16)
 				<< s_area << "\t" << norm.x << "\t" << norm.y << "\t" << norm.z << "\t"
@@ -278,7 +278,7 @@ float_t* o2s_converter::convert(char* outfilename,
 /**
  * given the vertices of a triangle in order, compute surface area, normal and center
  */
-void o2s_converter::get_triangle_params(vertex_t v1, vertex_t v2, vertex_t v3,
+bool o2s_converter::get_triangle_params(vertex_t v1, vertex_t v2, vertex_t v3,
 		float_t &s_area, vertex_t &normal, vertex_t &center) {
 	center.x = (v1.x + v2.x + v3.x) / 3.0;
 	center.y = (v1.y + v2.y + v3.y) / 3.0;
@@ -295,10 +295,14 @@ void o2s_converter::get_triangle_params(vertex_t v1, vertex_t v2, vertex_t v3,
 	cross.x = a.y * b.z - a.z * b.y; cross.y = a.z * b.x - a.x * b.z; cross.z = a.x * b.y - a.y * b.x;
 
 	float_t norm_cross = sqrt(cross.x * cross.x + cross.y * cross.y + cross.z * cross.z);
+
+	if(norm_cross == 0 || norm_a == 0 || norm_b == 0) return false;
+
 	normal.x = cross.x / norm_cross; normal.y = cross.y / norm_cross; normal.z = cross.z / norm_cross;
 
 	float_t sintheta = sqrt(1 - (dot / (norm_a * norm_b)) * (dot / (norm_a * norm_b)));
 	s_area = norm_a * norm_b * sintheta / 2;
+	return true;
 } // get_triangle_params()
 
 

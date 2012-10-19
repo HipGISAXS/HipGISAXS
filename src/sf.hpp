@@ -5,7 +5,7 @@
   *
   *  File: sf.hpp
   *  Created: Jun 18, 2012
-  *  Modified: Fri 12 Oct 2012 12:01:04 PM PDT
+  *  Modified: Mon 15 Oct 2012 10:51:43 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -33,10 +33,12 @@ namespace hig {
 			~StructureFactor();
 
 			void clear(void);
-
 			bool compute_structure_factor(std::string, vector3_t, Lattice*, vector3_t,
 											vector3_t, vector3_t, vector3_t, MPI::Intracomm&);
+			bool compute_structure_factor_gpu(std::string, vector3_t, Lattice*, vector3_t,
+												vector3_t, vector3_t, vector3_t, MPI::Intracomm&);
 			complex_t operator[](unsigned int i) const { return sf_[i]; }
+			void save_sf(unsigned int nqx, unsigned int nqy, unsigned int nqz, const char* filename);
 
 			// only for testing - remove it ...
 			complex_t* sf() { return sf_; }
@@ -47,7 +49,6 @@ namespace hig {
 				} // for
 				std::cout << std::endl;
 			} // printsf()
-			void save_sf(unsigned int nqx, unsigned int nqy, unsigned int nqz, const char* filename);
 	}; // class StructureFactor
 
 } // namespace hig

@@ -5,12 +5,13 @@
   *
   *  File: ff_ana.cpp
   *  Created: Jul 12, 2012
-  *  Modified: Sat 13 Oct 2012 08:25:50 PM PDT
+  *  Modified: Fri 19 Oct 2012 01:49:20 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
 
 #include <boost/math/special_functions/fpclassify.hpp>
+#include <boost/timer/timer.hpp>
 
 #include "ff_ana.hpp"
 #include "shape.hpp"
@@ -27,6 +28,8 @@ namespace hig {
 		nqy_ = QGrid::instance().nqy();
 		nqz_ = QGrid::instance().nqz_extended();
 
+		ff_gpu_.grid_size(nqx_, nqy_, nqz_);
+
 		// first make sure there is no residue from any previous computations
 		ff.clear();
 
@@ -34,6 +37,9 @@ namespace hig {
 		mesh_qx_.clear();
 		mesh_qy_.clear();
 		mesh_qz_.clear();
+		mesh_qx_.reserve(nqx_ * nqy_ * nqz_);
+		mesh_qy_.reserve(nqx_ * nqy_ * nqz_);
+		mesh_qz_.reserve(nqx_ * nqy_ * nqz_);
 		// this is very inefficient! improve ...
 		// x and y are swapped for qx, qy, qz 
 		for(unsigned int i = 0; i < nqz_; ++ i) {
@@ -531,6 +537,52 @@ namespace hig {
 			return false;
 		} // if
 
+#ifdef FF_ANA_GPU
+		/* on gpu */
+		std::cout << "---- computing sphere on gpu" << std::endl;
+
+		boost::timer::cpu_timer timer;	// timer starts
+
+		std::vector<float_t> transvec_v;
+		transvec_v.push_back(transvec[0]);
+		transvec_v.push_back(transvec[1]);
+		transvec_v.push_back(transvec[2]);
+
+		cucomplex_t *mesh_qx_h = new (std::nothrow) cucomplex_t[mesh_qx_.size()];
+		cucomplex_t *mesh_qy_h = new (std::nothrow) cucomplex_t[mesh_qy_.size()];
+		cucomplex_t *mesh_qz_h = new (std::nothrow) cucomplex_t[mesh_qz_.size()];
+		if(mesh_qx_h == NULL || mesh_qy_h == NULL || mesh_qz_h == NULL) {
+			std::cerr << "error: memory allocation for host mesh grid failed" << std::endl;
+			return false;
+		} // if
+		std::vector<complex_t>::const_iterator iterx = mesh_qx_.begin();
+		for(unsigned int ix = 0; iterx != mesh_qx_.end(); ++ iterx, ++ ix) {
+			mesh_qx_h[ix].x = (*iterx).real();
+			mesh_qx_h[ix].y = (*iterx).imag();
+		} // for qx
+		std::vector<complex_t>::const_iterator itery = mesh_qy_.begin();
+		for(unsigned int iy = 0; itery != mesh_qy_.end(); ++ itery, ++ iy) {
+			mesh_qy_h[iy].x = (*itery).real();
+			mesh_qy_h[iy].y = (*itery).imag();
+		} // for qy
+		std::vector<complex_t>::const_iterator iterz = mesh_qz_.begin();
+		for(unsigned int iz = 0; iterz != mesh_qz_.end(); ++ iterz, ++ iz) {
+			mesh_qz_h[iz].x = (*iterz).real();
+			mesh_qz_h[iz].y = (*iterz).imag();
+		} // for qz
+
+		//ff_gpu_.compute_sphere(r, distr_r, mesh_qx_, mesh_qy_, mesh_qz_, transvec_v, ff);
+		ff_gpu_.compute_sphere(r, distr_r, mesh_qx_h, mesh_qy_h, mesh_qz_h, transvec_v, ff);
+
+		boost::timer::cpu_times const elapsed_time(timer.elapsed());
+		boost::timer::nanosecond_type const elapsed(elapsed_time.system + elapsed_time.user);
+		double gpu_time = elapsed;
+		std::cout << "GPU analytical sphere computation took " << gpu_time / 10e6 << " ms." << std::endl;
+		
+#else
+		/* on cpu */
+		boost::timer::cpu_timer timer;	// timer starts
+
 		std::vector <complex_t> q;
 		q.clear();
 		for(unsigned int z = 0; z < nqz_; ++ z) {
@@ -575,6 +627,13 @@ namespace hig {
 			(*iter_f) *= exp(complex_t(0, 1) * (mesh_qx_[i] * transvec[0] +
 							mesh_qy_[i] * transvec[1] + mesh_qz_[i] * transvec[2]));
 		} // for
+
+		boost::timer::cpu_times const elapsed_time(timer.elapsed());
+		boost::timer::nanosecond_type const elapsed(elapsed_time.system + elapsed_time.user);
+		double cpu_time = elapsed;
+		std::cout << "CPU analytical sphere computation took " << cpu_time / 10e6 << " ms." << std::endl;
+		
+#endif // FF_ANA_GPU
 
 		return true;
 	} // AnalyticFormFactor::compute_sphere()

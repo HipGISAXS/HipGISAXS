@@ -5,7 +5,7 @@
   *
   *  File: globals.hpp
   *  Created: Jun 05, 2012
-  *  Modified: Mon 01 Oct 2012 11:13:23 AM PDT
+  *  Modified: Wed 17 Oct 2012 10:51:29 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -23,12 +23,6 @@
 
 
 namespace hig {
-
-	const unsigned int LIGHT_SPEED_ = 3e+8;		/* speed of light in m/s */
-	const float_t PI_ = 3.141592653589793;		/* PI correct upto 15 decimal places */
-
-	const unsigned int MAX_DEPTH_ = 500;		/* maximum depth allowed */
-
 
 	typedef struct vector2_t {
 		boost::array <float_t, 2> vec_;

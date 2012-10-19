@@ -5,7 +5,7 @@
   *
   *  File: hig_input.hpp
   *  Created: Jun 11, 2012
-  *  Modified: Sat 13 Oct 2012 05:11:42 PM PDT
+  *  Modified: Tue 16 Oct 2012 02:34:26 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -188,6 +188,7 @@ namespace hig {
 			float_t detector_sd_distance() const { return detector_.sd_distance_; }
 			vector2_t param_output_minpoint() { return compute_.output_region_.minpoint_; }
 			vector2_t param_output_maxpoint() { return compute_.output_region_.maxpoint_; }
+			OutputRegionType param_output_type() { return compute_.output_region_.type_; }
 			vector2_t param_resolution() const { return compute_.resolution_; }
 			const std::string& param_pathprefix() const { return compute_.pathprefix_; }
 			unsigned int param_nslices() const { return compute_.nslices_; }

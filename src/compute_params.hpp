@@ -5,7 +5,7 @@
   *
   *  File: compute_params.hpp
   *  Created: Jun 05, 2012
-  *  Modified: Mon 01 Oct 2012 11:12:00 AM PDT
+  *  Modified: Tue 16 Oct 2012 02:30:58 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */

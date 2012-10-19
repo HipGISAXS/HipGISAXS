@@ -3,7 +3,7 @@
   *
   *  File: colormap.hpp
   *  Created: Jul 02, 2012
-  *  Modified: Sat 13 Oct 2012 10:07:49 AM PDT
+  *  Modified: Wed 17 Oct 2012 11:02:52 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   *
@@ -18,6 +18,7 @@
 #include <boost/array.hpp>
 
 #include "globals.hpp"
+#include "constants.hpp"
 
 namespace hig {
 
