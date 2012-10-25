@@ -5,7 +5,7 @@
  *
  * File: parameters.hpp
  * Created: June 5, 2012
- * Modified: Wed 17 Oct 2012 11:00:07 AM PDT
+ * Modified: Thu 25 Oct 2012 03:01:26 PM PDT
  *
  * Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -21,9 +21,9 @@ const int DEVICE_RESERVE_MEM_ = 100 * 1024 * 1024;
 // 4 decomposition hyperblock parameters to auto-tune later.
 // Y and Z are most important for tuning.
 const int BLOCK_X_ = 100;
-const int BLOCK_Y_ = 20;
-const int BLOCK_Z_ = 15;
-const int BLOCK_T_ = 2000;
+const int BLOCK_Y_ = 32;
+const int BLOCK_Z_ = 16;
+const int BLOCK_T_ = 2048;
 
 // CUDA block sizes (kernel 1)
 //const int BLOCK_CUDA_ = 64;

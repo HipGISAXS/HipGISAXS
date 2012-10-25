@@ -5,7 +5,7 @@
   *
   *  File: ff.hpp
   *  Created: Jul 18, 2012
-  *  Modified: Tue 09 Oct 2012 12:02:35 PM PDT
+  *  Modified: Thu 25 Oct 2012 03:00:06 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -31,7 +31,6 @@ namespace hig {
 
 			cucomplex_t* nff_;									/* the cuda version for numeric */
 			NumericFormFactor <float_t, cucomplex_t> numeric_ff_; // same as MFormFactor
-			//NumericFormFactor <float, cuFloatComplex> numeric_ff_; // same as MFormFactor
 
 		public:
 			FormFactor(int a, int b, int c): nff_(NULL), numeric_ff_(a, b, c), is_analytic_(false) { }
@@ -39,7 +38,7 @@ namespace hig {
 #ifdef KERNEL2
 			FormFactor(): nff_(NULL), numeric_ff_(2, 4, 4), is_analytic_(false) { } // default cuda block size
 #else
-			FormFactor(): nff_(NULL), numeric_ff_(4), is_analytic_(false) { } // default cuda block size
+			FormFactor(): nff_(NULL), numeric_ff_(64), is_analytic_(false) { } // default cuda block size
 #endif // KERNEL2
 			~FormFactor() {
 				if(nff_ != NULL) delete[] nff_;

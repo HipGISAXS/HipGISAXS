@@ -33,7 +33,34 @@ namespace hig {
 				block_cuda_t_(block_cuda_t), block_cuda_y_(block_cuda_y), block_cuda_z_(block_cuda_z) { }
 			~GFormFactor() { }
 
+			/* original */
 			unsigned int compute_form_factor(int,
+					std::vector<float_t> &shape_def, std::vector<short int> &axes,
+					complex_t* &ff,
+					float_t* &qx_h, int nqx,
+					float_t* &qy_h, int nqy,
+					complex_t* &qz_h, int nqz,
+					float_t&, float_t&, float_t&
+	#ifdef FINDBLOCK
+					, const int, const int, const int, const int
+	#endif
+					);
+
+			/* with double buffering */
+			unsigned int compute_form_factor_db(int,
+					std::vector<float_t> &shape_def, std::vector<short int> &axes,
+					complex_t* &ff,
+					float_t* &qx_h, int nqx,
+					float_t* &qy_h, int nqy,
+					complex_t* &qz_h, int nqz,
+					float_t&, float_t&, float_t&
+	#ifdef FINDBLOCK
+					, const int, const int, const int, const int
+	#endif
+					);
+
+			/* with double buffering and optimized memory (incomplete ... )*/
+			unsigned int compute_form_factor_db_mem(int,
 					std::vector<float_t> &shape_def, std::vector<short int> &axes,
 					complex_t* &ff,
 					float_t* &qx_h, int nqx,
@@ -49,7 +76,7 @@ namespace hig {
 			// for kernel 1
 			int block_cuda_;
 
-			// for kernel 2
+			// for kernel 2 and up
 			int block_cuda_t_;
 			int block_cuda_y_;
 			int block_cuda_z_;
@@ -74,8 +101,52 @@ namespace hig {
 	/**
 	 * Some forward declarations.
 	 */
+	/* K1: default kernel, with t decompostion, no shared memory */
 	template<typename float_t, typename complex_t>
 	__global__ void form_factor_kernel(float_t*, float_t*, complex_t*, float_t*, short int*,
+										unsigned int, unsigned int, unsigned int, unsigned int,
+										unsigned int, unsigned int, unsigned int, unsigned int,
+										unsigned int, unsigned int, unsigned int, unsigned int,
+										complex_t*);
+	/* K2: kernel with t, y, z decomposition, no shared memory */
+	template<typename float_t, typename complex_t>
+	__global__ void form_factor_kernel_new(float_t*, float_t*, complex_t*, float_t*, short int*,
+										unsigned int, unsigned int, unsigned int, unsigned int,
+										unsigned int, unsigned int, unsigned int, unsigned int,
+										unsigned int, unsigned int, unsigned int, unsigned int,
+										complex_t*);
+	/* K3: kernel with t, y, z decomposition, static shared mem for input */
+	template<typename float_t, typename complex_t>
+	__global__ void form_factor_kernel_new_shared(float_t*, float_t*, complex_t*, float_t*, short int*,
+										unsigned int, unsigned int, unsigned int, unsigned int,
+										unsigned int, unsigned int, unsigned int, unsigned int,
+										unsigned int, unsigned int, unsigned int, unsigned int,
+										complex_t*);
+	/* K4: kernel with t, y, z decomposition, dynamic shared mem for input, static for output */
+	template<typename float_t, typename complex_t>
+	__global__ void form_factor_kernel_new_shared2(float_t*, float_t*, complex_t*, float_t*, short int*,
+										unsigned int, unsigned int, unsigned int, unsigned int,
+										unsigned int, unsigned int, unsigned int, unsigned int,
+										unsigned int, unsigned int, unsigned int, unsigned int,
+										complex_t*);
+	/* K5: kernel with t, y, z decomposition, dynamic shared mem for input, static for output, memopt? ... */
+	template<typename float_t, typename complex_t>
+	__global__ void form_factor_kernel_new_shared2_mem(float_t*, float_t*, complex_t*, float_t*, short int*,
+										unsigned int, unsigned int, unsigned int, unsigned int,
+										unsigned int, unsigned int, unsigned int, unsigned int,
+										unsigned int, unsigned int, unsigned int, unsigned int,
+										complex_t*);
+	/* K6: kernel with K3 and blocked y, z (probably incomplete ...) */
+	template<typename float_t, typename complex_t>
+	__global__ void form_factor_kernel_new_shared_subblock(float_t*, float_t*, complex_t*, float_t*,
+										short int*,
+										unsigned int, unsigned int, unsigned int, unsigned int,
+										unsigned int, unsigned int, unsigned int, unsigned int,
+										unsigned int, unsigned int, unsigned int, unsigned int,
+										complex_t*);
+	/* K7: kernel with K1 (?) and blocked y, z (incomplete ...) */
+	template<typename float_t, typename complex_t>
+	__global__ void form_factor_kernel_new_2(float_t*, float_t*, complex_t*, float_t*, short int*,
 										unsigned int, unsigned int, unsigned int, unsigned int,
 										unsigned int, unsigned int, unsigned int, unsigned int,
 										unsigned int, unsigned int, unsigned int, unsigned int,
@@ -733,66 +804,10 @@ namespace hig {
 
 
 	/**
-	 * the main Form Factor kernel function called from host.
+	 * the main Form Factor kernel functions called from host.
 	 */
-	/*template<typename float_t, typename complex_t>
-	__global__ void form_factor_kernel(float_t* qx_d, float_t* qy_d, float_t* qz_d,
-					float_t* shape_def_d, short int* axes,
-					unsigned int curr_nqx, unsigned int curr_nqy, unsigned int curr_nqz,
-					unsigned int curr_num_triangles,
-					unsigned int b_nqx, unsigned int b_nqy, unsigned int b_nqz, unsigned int b_num_triangles,
-					unsigned int ib_x, unsigned int ib_y, unsigned int ib_z, unsigned int ib_t,
-					complex_t* fq_d) {
-		// each thread is responsible for a different triangle
-		unsigned int i = threadIdx.x + blockDim.x * blockIdx.x;
 
-		if(i < curr_num_triangles) {
-			unsigned int shape_off = (ib_t * b_num_triangles + i) * 7;
-			float_t s = shape_def_d[shape_off];
-			float_t nx = shape_def_d[shape_off + axes[0] + 1];
-			float_t ny = shape_def_d[shape_off + axes[1] + 1];
-			float_t nz = shape_def_d[shape_off + axes[2] + 1];
-			float_t x = shape_def_d[shape_off + axes[0] + 4];
-			float_t y = shape_def_d[shape_off + axes[1] + 4];
-			float_t z = shape_def_d[shape_off + axes[2] + 4];
-
-			unsigned long int xy_size = (unsigned long int) curr_nqx * curr_nqy;
-			unsigned long int matrix_off = xy_size * curr_nqz * i;
-			unsigned int start_z = b_nqz * ib_z;
-			unsigned int start_y = b_nqy * ib_y;
-			unsigned int start_x = b_nqx * ib_x;
-
-			for(unsigned int i_z = 0, global_i_z = start_z; i_z < curr_nqz; ++ i_z, ++ global_i_z) {
-				unsigned long int off_start = matrix_off + xy_size * i_z;
-				float_t temp_z = qz_d[global_i_z];
-				float_t qz2 = temp_z * temp_z;
-				float_t qzn = temp_z * nz;
-				float_t qzt = temp_z * z;
-
-				for(unsigned int i_y = 0, global_i_y = start_y; i_y < curr_nqy; ++ i_y, ++ global_i_y) {
-					unsigned long int xy_off_start = (unsigned long int) curr_nqx * i_y;
-					float_t temp_y = qy_d[global_i_y];
-					float_t qy2 = temp_y * temp_y;
-					float_t qyn = temp_y * ny;
-					float_t qyt = temp_y * y;
-					
-					for(unsigned int i_x = 0, global_i_x = start_x; i_x < curr_nqx; ++ i_x, ++ global_i_x) {
-						unsigned long int off = off_start + xy_off_start + i_x;
-						float_t temp_x = qx_d[global_i_x];
-						float_t q2 = temp_x * temp_x + qy2 + qz2;
-						float_t qn_d = (temp_x * nx + qyn + qzn) / q2;
-						float_t qt_d = temp_x * x + qyt + qzt;
-
-						fq_d[off] = compute_fq(s, qt_d, qn_d);
-					} // for z
-				} // for y
-			} // for x
-		} // if
-	} // GFormFactor::form_factor_kernel()*/
-
-	/**
-	 * the main Form Factor kernel function called from host.
-	 */
+	/* K1: default kernel, with t decompostion, no shared memory */
 	template<typename float_t, typename complex_t>
 	__global__ void form_factor_kernel(float_t* qx_d, float_t* qy_d, complex_t* qz_d,
 					float_t* shape_def_d, short int* axes,
@@ -851,6 +866,56 @@ namespace hig {
 			} // for x
 		} // if
 	} // GFormFactor::form_factor_kernel()
+
+	/* K2: kernel with t, y, z decomposition, no shared memory */
+	template<typename float_t, typename complex_t>
+	__global__ void form_factor_kernel_new(float_t*, float_t*, complex_t*, float_t*, short int*,
+										unsigned int, unsigned int, unsigned int, unsigned int,
+										unsigned int, unsigned int, unsigned int, unsigned int,
+										unsigned int, unsigned int, unsigned int, unsigned int,
+										complex_t*) { }
+
+	/* K3: kernel with t, y, z decomposition, static shared mem for input */
+	template<typename float_t, typename complex_t>
+	__global__ void form_factor_kernel_new_shared(float_t*, float_t*, complex_t*, float_t*, short int*,
+										unsigned int, unsigned int, unsigned int, unsigned int,
+										unsigned int, unsigned int, unsigned int, unsigned int,
+										unsigned int, unsigned int, unsigned int, unsigned int,
+										complex_t*) { }
+
+	/* K4: kernel with t, y, z decomposition, dynamic shared mem for input, static for output */
+	template<typename float_t, typename complex_t>
+	__global__ void form_factor_kernel_new_shared2(float_t*, float_t*, complex_t*, float_t*, short int*,
+										unsigned int, unsigned int, unsigned int, unsigned int,
+										unsigned int, unsigned int, unsigned int, unsigned int,
+										unsigned int, unsigned int, unsigned int, unsigned int,
+										complex_t*) {
+	} // form_factor_kernel_new_shared2()
+
+	/* K5: kernel with t, y, z decomposition, dynamic shared mem for input, static for output, memopt? ... */
+	template<typename float_t, typename complex_t>
+	__global__ void form_factor_kernel_new_shared2_mem(float_t*, float_t*, complex_t*, float_t*, short int*,
+										unsigned int, unsigned int, unsigned int, unsigned int,
+										unsigned int, unsigned int, unsigned int, unsigned int,
+										unsigned int, unsigned int, unsigned int, unsigned int,
+										complex_t*) { }
+
+	/* K6: kernel with K3 and blocked y, z (probably incomplete ...) */
+	template<typename float_t, typename complex_t>
+	__global__ void form_factor_kernel_new_shared_subblock(float_t*, float_t*, complex_t*, float_t*,
+										short int*,
+										unsigned int, unsigned int, unsigned int, unsigned int,
+										unsigned int, unsigned int, unsigned int, unsigned int,
+										unsigned int, unsigned int, unsigned int, unsigned int,
+										complex_t*) { }
+
+	/* K7: kernel with K1 (?) and blocked y, z (incomplete ...) */
+	template<typename float_t, typename complex_t>
+	__global__ void form_factor_kernel_new_2(float_t*, float_t*, complex_t*, float_t*, short int*,
+										unsigned int, unsigned int, unsigned int, unsigned int,
+										unsigned int, unsigned int, unsigned int, unsigned int,
+										unsigned int, unsigned int, unsigned int, unsigned int,
+										complex_t*) { }
 
 	// decompose along y, z and t dimensions
 	/*template<typename float_t, typename complex_t>

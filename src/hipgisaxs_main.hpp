@@ -5,7 +5,7 @@
   *
   *  File: hipgisaxs_main.hpp
   *  Created: Jun 11, 2012
-  *  Modified: Thu 04 Oct 2012 10:43:55 AM PDT
+  *  Modified: Thu 25 Oct 2012 03:07:28 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -114,7 +114,7 @@ namespace hig {
 #ifdef KERNEL2
 						ff_(2, 4, 4)
 #else
-						ff_(4)
+						ff_(64)
 #endif // KERNEL2
 						{
 				single_layer_refindex_.delta(0.0);
