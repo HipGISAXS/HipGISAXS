@@ -5,7 +5,7 @@
   *
   *  File: ff_ana.cpp
   *  Created: Jul 12, 2012
-  *  Modified: Fri 19 Oct 2012 01:49:20 PM PDT
+  *  Modified: Sat 20 Oct 2012 05:08:58 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -34,7 +34,7 @@ namespace hig {
 		ff.clear();
 
 		// construct mesh grid thingy
-		mesh_qx_.clear();
+		/*mesh_qx_.clear();
 		mesh_qy_.clear();
 		mesh_qz_.clear();
 		mesh_qx_.reserve(nqx_ * nqy_ * nqz_);
@@ -56,7 +56,12 @@ namespace hig {
 										rot3[2] * QGrid::instance().qz_extended(i));
 				} // for k
 			} // for j
-		} // for i
+		} // for i */
+
+		rot_ = new (std::nothrow) float_t[9];
+		rot_[0] = rot1[0]; rot_[1] = rot1[1]; rot_[2] = rot1[2];
+		rot_[3] = rot2[0]; rot_[4] = rot2[1]; rot_[5] = rot2[2];
+		rot_[6] = rot3[0]; rot_[7] = rot3[1]; rot_[8] = rot3[2];
 
 		return true;
 	} // AnalyticFormFactor::init()
@@ -64,9 +69,9 @@ namespace hig {
 
 	void AnalyticFormFactor::clear() {
 		nqx_ = nqy_ = nqz_ = 0;
-		mesh_qx_.clear();
+		/*mesh_qx_.clear();
 		mesh_qy_.clear();
-		mesh_qz_.clear();
+		mesh_qz_.clear();*/
 	} // AnalyticFormFactor::clear()
 
 
@@ -548,31 +553,25 @@ namespace hig {
 		transvec_v.push_back(transvec[1]);
 		transvec_v.push_back(transvec[2]);
 
-		cucomplex_t *mesh_qx_h = new (std::nothrow) cucomplex_t[mesh_qx_.size()];
-		cucomplex_t *mesh_qy_h = new (std::nothrow) cucomplex_t[mesh_qy_.size()];
-		cucomplex_t *mesh_qz_h = new (std::nothrow) cucomplex_t[mesh_qz_.size()];
-		if(mesh_qx_h == NULL || mesh_qy_h == NULL || mesh_qz_h == NULL) {
+		float_t *qx_h = new (std::nothrow) float_t[nqx_];
+		float_t *qy_h = new (std::nothrow) float_t[nqy_];
+		cucomplex_t *qz_h = new (std::nothrow) cucomplex_t[nqz_];
+		if(qx_h == NULL || qy_h == NULL || qz_h == NULL) {
 			std::cerr << "error: memory allocation for host mesh grid failed" << std::endl;
 			return false;
 		} // if
-		std::vector<complex_t>::const_iterator iterx = mesh_qx_.begin();
-		for(unsigned int ix = 0; iterx != mesh_qx_.end(); ++ iterx, ++ ix) {
-			mesh_qx_h[ix].x = (*iterx).real();
-			mesh_qx_h[ix].y = (*iterx).imag();
+		for(unsigned int ix = 0; ix < nqx_; ++ ix) {
+			qx_h[ix] = QGrid::instance().qx(ix);
 		} // for qx
-		std::vector<complex_t>::const_iterator itery = mesh_qy_.begin();
-		for(unsigned int iy = 0; itery != mesh_qy_.end(); ++ itery, ++ iy) {
-			mesh_qy_h[iy].x = (*itery).real();
-			mesh_qy_h[iy].y = (*itery).imag();
+		for(unsigned int iy = 0; iy < nqy_; ++ iy) {
+			qy_h[iy] = QGrid::instance().qy(iy);
 		} // for qy
-		std::vector<complex_t>::const_iterator iterz = mesh_qz_.begin();
-		for(unsigned int iz = 0; iterz != mesh_qz_.end(); ++ iterz, ++ iz) {
-			mesh_qz_h[iz].x = (*iterz).real();
-			mesh_qz_h[iz].y = (*iterz).imag();
+		for(unsigned int iz = 0; iz < nqz_; ++ iz) {
+			qz_h[iz].x = QGrid::instance().qz_extended(iz).real();
+			qz_h[iz].y = QGrid::instance().qz_extended(iz).imag();
 		} // for qz
 
-		//ff_gpu_.compute_sphere(r, distr_r, mesh_qx_, mesh_qy_, mesh_qz_, transvec_v, ff);
-		ff_gpu_.compute_sphere(r, distr_r, mesh_qx_h, mesh_qy_h, mesh_qz_h, transvec_v, ff);
+		ff_gpu_.compute_sphere(r, distr_r, qx_h, qy_h, qz_h, rot_, transvec_v, ff);
 
 		boost::timer::cpu_times const elapsed_time(timer.elapsed());
 		boost::timer::nanosecond_type const elapsed(elapsed_time.system + elapsed_time.user);
@@ -589,9 +588,18 @@ namespace hig {
 			for(unsigned int y = 0; y < nqy_; ++ y) {
 				for(unsigned int x = 0; x < nqx_; ++ x) {
 					unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
-					complex_t temp_qx = mesh_qx_[index] * mesh_qx_[index];
-					complex_t temp_qy = mesh_qy_[index] * mesh_qy_[index];
-					complex_t temp_qz = mesh_qz_[index] * mesh_qz_[index];
+					complex_t temp_qx = QGrid::instance().qy(y) * rot_[0] +
+										QGrid::instance().qx(x) * rot_[1] +
+										QGrid::instance().qz_extended(z) * rot_[2];
+					complex_t temp_qy = QGrid::instance().qy(y) * rot_[3] +
+										QGrid::instance().qx(x) * rot_[4] +
+										QGrid::instance().qz_extended(z) * rot_[5];
+					complex_t temp_qz = QGrid::instance().qy(y) * rot_[6] +
+										QGrid::instance().qx(x) * rot_[7] +
+										QGrid::instance().qz_extended(z) * rot_[8];
+					temp_qx *= temp_qx;
+					temp_qy *= temp_qy;
+					temp_qz *= temp_qz;
 					q.push_back(sqrt(temp_qx + temp_qy + temp_qz));
 				} // for
 			} // for
@@ -610,23 +618,34 @@ namespace hig {
 						complex_t temp1 = q[index] * r[i_r];
 						complex_t temp2 = sin(temp1) - temp1 * cos(temp1);
 						complex_t temp3 = temp1 * temp1 * temp1;
+						complex_t temp_mesh_qz = QGrid::instance().qy(y) * rot_[6] +
+													QGrid::instance().qx(x) * rot_[7] +
+													QGrid::instance().qz_extended(z) * rot_[8];
 						ff[index] += distr_r[i_r] * 4 * PI_ * pow(r[i_r], 3) * (temp2 / temp3) *
-										exp(complex_t(0, 1) * mesh_qz_[index] * r[i_r]);
+										exp(complex_t(0, 1) * temp_mesh_qz * r[i_r]);
 					} // for x
 				} // for y
 			} // for z
-//			for(std::vector<complex_t>::iterator iter_f = ff.begin();
-//					iter_f != ff.end(); ++ iter_f) {
-//				if((*iter_f).real() <= 1e-14) (*iter_f) = 4 * PI_ * pow(r[i_r], 3) / (float_t)3.0;
-//			} // for f
 		} // for r
 
-		std::vector<complex_t>::iterator iter_f = ff.begin();
-		unsigned int i = 0;
-		for(; iter_f != ff.end(); ++ iter_f, ++ i) {
-			(*iter_f) *= exp(complex_t(0, 1) * (mesh_qx_[i] * transvec[0] +
-							mesh_qy_[i] * transvec[1] + mesh_qz_[i] * transvec[2]));
-		} // for
+		for(unsigned int z = 0; z < nqz_; ++ z) {
+			for(unsigned int y = 0; y < nqy_; ++ y) {
+				for(unsigned int x = 0; x < nqx_; ++ x) {
+					unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
+					complex_t temp_mqx = QGrid::instance().qy(y) * rot_[0] +
+											QGrid::instance().qx(x) * rot_[1] +
+											QGrid::instance().qz_extended(z) * rot_[2];
+					complex_t temp_mqy = QGrid::instance().qy(y) * rot_[3] +
+											QGrid::instance().qx(x) * rot_[4] +
+											QGrid::instance().qz_extended(z) * rot_[5];
+					complex_t temp_mqz = QGrid::instance().qy(y) * rot_[6] +
+											QGrid::instance().qx(x) * rot_[7] +
+											QGrid::instance().qz_extended(z) * rot_[8];
+					ff[index] *= exp(complex_t(0, 1) * (temp_mqx * transvec[0] +
+									temp_mqy * transvec[1] + temp_mqz * transvec[2]));
+				} // for x
+			} // for y
+		} // for z
 
 		boost::timer::cpu_times const elapsed_time(timer.elapsed());
 		boost::timer::nanosecond_type const elapsed(elapsed_time.system + elapsed_time.user);

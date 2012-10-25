@@ -5,7 +5,7 @@
   *
   *  File: ff_ana_gpu.cuh
   *  Created: Oct 16, 2012
-  *  Modified: Thu 18 Oct 2012 04:28:46 PM PDT
+  *  Modified: Sat 20 Oct 2012 01:34:19 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -51,9 +51,13 @@ namespace hig {
 								std::vector<complex_t>& ff);*/
             bool compute_sphere(const std::vector<float_t>& r,
 								const std::vector<float_t>& distr_r,
-								const cucomplex_t* mesh_qx,
-								const cucomplex_t* mesh_qy,
-								const cucomplex_t* mesh_qz,
+								//const cucomplex_t* mesh_qx,
+								//const cucomplex_t* mesh_qy,
+								//const cucomplex_t* mesh_qz,
+								const float_t* qx,
+								const float_t* qy,
+								const cucomplex_t* qz,
+								const float_t* rot,
 								const std::vector<float_t>& transvec,
 								std::vector<complex_t>& ff);
             bool compute_prism(/*shape_param_list_t&, std::vector<complex_t>&,

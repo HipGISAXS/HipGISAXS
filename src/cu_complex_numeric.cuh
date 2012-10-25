@@ -5,7 +5,7 @@
   *
   *  File: cu_complex_numeric.cuh
   *  Created: Oct 17, 2012
-  *  Modified: Fri 19 Oct 2012 12:16:54 PM PDT
+  *  Modified: Sat 20 Oct 2012 01:28:42 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -98,6 +98,12 @@ namespace hig {
 		//cuDoubleComplex n = cuCsqrt(cuCadd(cuCadd(a2, b2), c2));
 		cuDoubleComplex n = cuCsqrt(make_cuC(a2.x + b2.x + c2.x, a2.y + b2.y + c2.y));
 		return n;
+	} // cuCnorm3()
+	__device__ static __inline__ cuFloatComplex cuCnorm3(float a, float b, cuFloatComplex c) {
+		return cuCnorm3(make_cuFloatComplex(a, 0), make_cuFloatComplex(b, 0), c);
+	} // cuCnorm3()
+	__device__ static __inline__ cuDoubleComplex cuCnorm3(double a, double b, cuDoubleComplex c) {
+		return cuCnorm3(make_cuDoubleComplex(a, 0), make_cuDoubleComplex(b, 0), c);
 	} // cuCnorm3()
 
 	// e^z = e^z.x (cos(z.y) + isin(z.y))

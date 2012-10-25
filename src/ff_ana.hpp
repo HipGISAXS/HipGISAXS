@@ -5,7 +5,7 @@
   *
   *  File: ff_ana.hpp
   *  Created: Jul 12, 2012
-  *  Modified: Wed 17 Oct 2012 10:47:24 AM PDT
+  *  Modified: Sat 20 Oct 2012 05:02:03 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -36,11 +36,17 @@ namespace hig {
 			std::vector<complex_t> mesh_qy_;
 			std::vector<complex_t> mesh_qz_;
 
+			float_t *rot_;
+
 			AnalyticFormFactorG ff_gpu_;
 
 		public:
-			AnalyticFormFactor() { }
-			~AnalyticFormFactor() { }
+			AnalyticFormFactor()/*: mqx_(NULL), mqy_(NULL), mqz_(NULL)*/ { }
+			~AnalyticFormFactor() {
+				/*if(mqx_ != NULL) delete[] mqx_;
+				if(mqy_ != NULL) delete[] mqy_;
+				if(mqz_ != NULL) delete[] mqz_;*/
+			} // ~AnalyticFormFactor()
 
 			bool init(vector3_t&, vector3_t&, vector3_t&, std::vector<complex_t> &ff);
 			void clear();

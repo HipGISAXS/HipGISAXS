@@ -5,7 +5,7 @@
   *
   *  File: ff_ana_gpu.cu
   *  Created: Oct 16, 2012
-  *  Modified: Fri 19 Oct 2012 02:14:32 PM PDT
+  *  Modified: Sun 21 Oct 2012 01:22:03 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -24,7 +24,8 @@ namespace hig {
 
 	// forward declarations of gpu kernels
 	__global__ void form_factor_sphere_kernel(unsigned int nqx, unsigned int nqy, unsigned int nqz,
-					cucomplex_t* mesh_qx, cucomplex_t* mesh_qy, cucomplex_t* mesh_qz,
+					//cucomplex_t* mesh_qx, cucomplex_t* mesh_qy, cucomplex_t* mesh_qz,
+					float_t* qx, float_t* qy, cucomplex_t* mesh_qz, float_t* rot,
 					unsigned int n_r, float_t* r, unsigned int n_distr_r, float_t* distr_r,
 					unsigned int n_transvec, float_t* transvec, cucomplex_t* ff);
 	__device__ void ff_sphere_kernel_compute_tff(float r, float distr_r,
@@ -40,12 +41,14 @@ namespace hig {
 
 
 	AnalyticFormFactorG::AnalyticFormFactorG(unsigned int nx, unsigned int ny, unsigned int nz) {
-				nqx_ = nx; nqy_ = ny;  nqz_ = nz;  }
+		nqx_ = nx; nqy_ = ny;  nqz_ = nz;
+	} // AnalyticFormFactorG::AnalyticFormFactorG();
 	AnalyticFormFactorG::AnalyticFormFactorG() { }
 	AnalyticFormFactorG::~AnalyticFormFactorG() { }
 
 	void AnalyticFormFactorG::grid_size(unsigned int nx, unsigned int ny, unsigned int nz) {
-				nqx_ = nx; nqy_ = ny;  nqz_ = nz;  }
+		nqx_ = nx; nqy_ = ny;  nqz_ = nz;
+	} // AnalyticFormFactorG::grid_size()
 
 //	/**
 //	 * box on gpu
@@ -373,18 +376,12 @@ namespace hig {
 	/**
 	 * sphere host function
 	 */
-/*	bool AnalyticFormFactorG::compute_sphere(const std::vector<float_t>& r,
-											const std::vector<float_t>& distr_r,
-											const std::vector<complex_t>& mesh_qx,
-											const std::vector<complex_t>& mesh_qy,
-											const std::vector<complex_t>& mesh_qz,
-											const std::vector<float_t>& transvec,
-											std::vector<complex_t>& ff) { */
 	bool AnalyticFormFactorG::compute_sphere(const std::vector<float_t>& r,
 											const std::vector<float_t>& distr_r,
-											const cucomplex_t* mesh_qx_h,
-											const cucomplex_t* mesh_qy_h,
-											const cucomplex_t* mesh_qz_h,
+											const float_t* qx_h,
+											const float_t* qy_h,
+											const cucomplex_t* qz_h,
+											const float_t* rot_h,
 											const std::vector<float_t>& transvec,
 											std::vector<complex_t>& ff) {
 		unsigned int n_r = r.size();
@@ -404,79 +401,47 @@ namespace hig {
 
 		cudaEventRecord(mem_begin_e, 0);
 
-/*		std::cout << "nqx = " << grid_size << "/" << mesh_qx.size() << " ";
-		std::cout << "nqy = " << grid_size << "/" << mesh_qy.size() << " ";
-		std::cout << "nqz = " << grid_size << "/" << mesh_qz.size() << std::endl;
-		if(grid_size != mesh_qx.size() || grid_size != mesh_qy.size() ||
-				grid_size != mesh_qz.size() || n_transvec != 3) {
-			std::cerr << "error: Q mesh dimension sizes are not correct" << std::endl;
-			return false;
-		} // if
-
-		// construct host buffers (see if this can be improved/eliminated ...)
-		cucomplex_t *mesh_qx_h = new (std::nothrow) cucomplex_t[mesh_qx.size()];
-		cucomplex_t *mesh_qy_h = new (std::nothrow) cucomplex_t[mesh_qy.size()];
-		cucomplex_t *mesh_qz_h = new (std::nothrow) cucomplex_t[mesh_qz.size()];
-		if(mesh_qx_h == NULL || mesh_qy_h == NULL || mesh_qz_h == NULL) {
-			std::cerr << "error: memory allocation for host mesh grid failed" << std::endl;
-			return false;
-		} // if
-		std::vector<complex_t>::const_iterator iterx = mesh_qx.begin();
-		for(unsigned int ix = 0; iterx != mesh_qx.end(); ++ iterx, ++ ix) {
-			mesh_qx_h[ix].x = (*iterx).real();
-			mesh_qx_h[ix].y = (*iterx).imag();
-		} // for qx
-		std::vector<complex_t>::const_iterator itery = mesh_qy.begin();
-		for(unsigned int iy = 0; itery != mesh_qy.end(); ++ itery, ++ iy) {
-			mesh_qx_h[iy].x = (*itery).real();
-			mesh_qx_h[iy].y = (*itery).imag();
-		} // for qy
-		std::vector<complex_t>::const_iterator iterz = mesh_qz.begin();
-		for(unsigned int iz = 0; iterz != mesh_qz.end(); ++ iterz, ++ iz) {
-			mesh_qx_h[iz].x = (*iterz).real();
-			mesh_qx_h[iz].y = (*iterz).imag();
-		} // for qz
-*/
 		// construct device buffers
-		cucomplex_t *mesh_qx_d, *mesh_qy_d, *mesh_qz_d, *ff_d;
+		float_t *qx_d, *qy_d; cucomplex_t *qz_d, *ff_d;
 		float_t *r_d, *distr_r_d, *transvec_d;
-		if(cudaMalloc((void **) &mesh_qx_d, grid_size * sizeof(cucomplex_t)) != cudaSuccess) {
+		float_t *rot_d;
+		if(cudaMalloc((void **) &qx_d, nqx_ * sizeof(float_t)) != cudaSuccess) {
 			std::cerr << "error: device memory allocation failed for mesh_qx_d" << std::endl;
 			return false;
 		} // if
-		if(cudaMalloc((void **) &mesh_qy_d, grid_size * sizeof(cucomplex_t)) != cudaSuccess) {
+		if(cudaMalloc((void **) &qy_d, nqy_ * sizeof(float_t)) != cudaSuccess) {
 			std::cerr << "error: device memory allocation failed for mesh_qy_d" << std::endl;
-			cudaFree(mesh_qx_d);
+			cudaFree(qx_d);
 			return false;
 		} // if
-		if(cudaMalloc((void **) &mesh_qz_d, grid_size * sizeof(cucomplex_t)) != cudaSuccess) {
+		if(cudaMalloc((void **) &qz_d, nqz_ * sizeof(cucomplex_t)) != cudaSuccess) {
 			std::cerr << "error: device memory allocation failed for mesh_qz_d" << std::endl;
-			cudaFree(mesh_qy_d);
-			cudaFree(mesh_qx_d);
+			cudaFree(qy_d);
+			cudaFree(qx_d);
 			return false;
 		} // if
 		if(cudaMalloc((void **) &ff_d, grid_size * sizeof(cucomplex_t)) != cudaSuccess) {
 			std::cerr << "error: device memory allocation failed for mesh_qz_d" << std::endl;
-			cudaFree(mesh_qz_d);
-			cudaFree(mesh_qy_d);
-			cudaFree(mesh_qx_d);
+			cudaFree(qz_d);
+			cudaFree(qy_d);
+			cudaFree(qx_d);
 			return false;
 		} // if
 		if(cudaMalloc((void **) &r_d, n_r * sizeof(float_t)) != cudaSuccess) {
 			std::cerr << "error: device memory allocation failed for r_d" << std::endl;
 			cudaFree(ff_d);
-			cudaFree(mesh_qz_d);
-			cudaFree(mesh_qy_d);
-			cudaFree(mesh_qx_d);
+			cudaFree(qz_d);
+			cudaFree(qy_d);
+			cudaFree(qx_d);
 			return false;
 		} // if
 		if(cudaMalloc((void **) &distr_r_d, n_distr_r * sizeof(float_t)) != cudaSuccess) {
 			std::cerr << "error: device memory allocation failed for n_distr_r_d" << std::endl;
 			cudaFree(r_d);
 			cudaFree(ff_d);
-			cudaFree(mesh_qz_d);
-			cudaFree(mesh_qy_d);
-			cudaFree(mesh_qx_d);
+			cudaFree(qz_d);
+			cudaFree(qy_d);
+			cudaFree(qx_d);
 			return false;
 		} // if
 		if(cudaMalloc((void **) &transvec_d, n_transvec * sizeof(float_t)) != cudaSuccess) {
@@ -484,19 +449,31 @@ namespace hig {
 			cudaFree(distr_r_d);
 			cudaFree(r_d);
 			cudaFree(ff_d);
-			cudaFree(mesh_qz_d);
-			cudaFree(mesh_qy_d);
-			cudaFree(mesh_qx_d);
+			cudaFree(qz_d);
+			cudaFree(qy_d);
+			cudaFree(qx_d);
+			return false;
+		} // if
+		if(cudaMalloc((void **) &rot_d, 9 * sizeof(float_t)) != cudaSuccess) {
+			std::cerr << "error: device memory allocation failed for rot_d" << std::endl;
+			cudaFree(transvec_d);
+			cudaFree(distr_r_d);
+			cudaFree(r_d);
+			cudaFree(ff_d);
+			cudaFree(qz_d);
+			cudaFree(qy_d);
+			cudaFree(qx_d);
 			return false;
 		} // if
 
 		// copy data to device buffers
-		cudaMemcpy(mesh_qx_d, mesh_qx_h, grid_size * sizeof(cucomplex_t), cudaMemcpyHostToDevice);
-		cudaMemcpy(mesh_qy_d, mesh_qy_h, grid_size * sizeof(cucomplex_t), cudaMemcpyHostToDevice);
-		cudaMemcpy(mesh_qz_d, mesh_qz_h, grid_size * sizeof(cucomplex_t), cudaMemcpyHostToDevice);
+		cudaMemcpy(qx_d, qx_h, nqx_ * sizeof(float_t), cudaMemcpyHostToDevice);
+		cudaMemcpy(qy_d, qy_h, nqy_ * sizeof(float_t), cudaMemcpyHostToDevice);
+		cudaMemcpy(qz_d, qz_h, nqz_ * sizeof(cucomplex_t), cudaMemcpyHostToDevice);
 		cudaMemcpy(r_d, r_h, n_r * sizeof(float_t), cudaMemcpyHostToDevice);
 		cudaMemcpy(distr_r_d, distr_r_h, n_distr_r * sizeof(float_t), cudaMemcpyHostToDevice);
 		cudaMemcpy(transvec_d, transvec_h, n_transvec * sizeof(float_t), cudaMemcpyHostToDevice);
+		cudaMemcpy(rot_d, rot_h, 9 * sizeof(float_t), cudaMemcpyHostToDevice);
 
 		cudaEventRecord(mem_end_e, 0);
 		cudaEventSynchronize(mem_end_e);
@@ -528,9 +505,16 @@ namespace hig {
 		dim3 ff_grid_size(cuda_num_blocks_y, cuda_num_blocks_z, 1);
 		dim3 ff_block_size(cuda_block_y, cuda_block_z, 1);
 
+		size_t shared_mem_size = (nqx_ + cuda_block_y) * sizeof(float_t) +
+									cuda_block_z * sizeof(cucomplex_t);
+		if(shared_mem_size / 1024 > 32) {
+			std::cerr << "Too much shared memory requested!" << std::endl;
+			return false;
+		} // if
+
 		// the kernel
-		form_factor_sphere_kernel <<< ff_grid_size, ff_block_size >>> (
-				nqx_, nqy_, nqz_, mesh_qx_d, mesh_qy_d, mesh_qz_d,
+		form_factor_sphere_kernel <<< ff_grid_size, ff_block_size, shared_mem_size >>> (
+				nqx_, nqy_, nqz_, qx_d, qy_d, qz_d, rot_d,
 				n_r, r_d, n_distr_r, distr_r_d, n_transvec, transvec_d,
 				ff_d);
 
@@ -567,24 +551,22 @@ namespace hig {
 		//} // for cbz
 		//} // for cby
 
+		cudaFree(rot_d);
 		cudaFree(transvec_d);
 		cudaFree(distr_r_d);
 		cudaFree(r_d);
 		cudaFree(ff_d);
-		cudaFree(mesh_qz_d);
-		cudaFree(mesh_qy_d);
-		cudaFree(mesh_qx_d);
-//		delete[] mesh_qz_h;
-//		delete[] mesh_qy_h;
-//		delete[] mesh_qx_h;
+		cudaFree(qz_d);
+		cudaFree(qy_d);
+		cudaFree(qx_d);
 
 		return true;
 	} // AnalyticFormFactorG::compute_sphere()
 
 
 	// sphere gpu kernel
-	__global__ void form_factor_sphere_kernel(unsigned int nqx, unsigned int nqy, unsigned int nqz,
-					cucomplex_t* mesh_qx, cucomplex_t* mesh_qy, cucomplex_t* mesh_qz,
+	/*__global__ void form_factor_sphere_kernel(unsigned int nqx, unsigned int nqy, unsigned int nqz,
+					float_t* qx, float_t* qy, cucomplex_t* qz, float_t* rot,
 					unsigned int n_r, float_t* r, unsigned int n_distr_r, float_t* distr_r,
 					unsigned int n_transvec, float_t* transvec, cucomplex_t* ff) {
 		// decomposition is along y and z
@@ -595,18 +577,84 @@ namespace hig {
 		if(i_y < nqy && i_z < nqz) {
 			for(unsigned int i_x = 0; i_x < nqx; ++ i_x) {
 				unsigned int index = base_index + i_x;
-				cucomplex_t temp_mqx = mesh_qx[index];
-				cucomplex_t temp_mqy = mesh_qy[index];
-				cucomplex_t temp_mqz = mesh_qz[index];
+				// computing mesh values on the fly instead of storing them
+				cucomplex_t temp_mqx = make_cuC(qy[i_y] * rot[0] + qx[i_x] * rot[1] + qz[i_z].x * rot[2],
+												qz[i_z].y * rot[2]);
+				cucomplex_t temp_mqy = make_cuC(qy[i_y] * rot[3] + qx[i_x] * rot[4] + qz[i_z].x * rot[5],
+												qz[i_z].y * rot[5]);
+				cucomplex_t temp_mqz = make_cuC(qy[i_y] * rot[6] + qx[i_x] * rot[7] + qz[i_z].x * rot[8],
+												qz[i_z].y * rot[8]);
 				cucomplex_t q = cuCnorm3(temp_mqx, temp_mqy, temp_mqz);
-
 				cucomplex_t temp_f = make_cuC((float_t)0.0, (float_t)0.0);
 				for(unsigned int i_r = 0; i_r < n_r; ++ i_r) {
 					float_t temp_r = r[i_r];
 					ff_sphere_kernel_compute_tff(temp_r, distr_r[i_r], q, temp_mqz, temp_f);
 
 				} // for i_r
-				ff[index] = ff_sphere_kernel_compute_ff(temp_f, temp_mqx, temp_mqy, temp_mqz,
+				ff[index] = ff_sphere_kernel_compute_ff(temp_f,	temp_mqx, temp_mqy, temp_mqz,
+													transvec[0], transvec[1], transvec[2]);
+			} // for x
+		} // if
+	} // form_factor_sphere_kernel() */
+
+	extern __shared__ float_t dynamic_shared[];
+
+	// sphere gpu kernel
+	__global__ void form_factor_sphere_kernel(unsigned int nqx, unsigned int nqy, unsigned int nqz,
+					float_t* qx, float_t* qy, cucomplex_t* qz, float_t* rot,
+					unsigned int n_r, float_t* r, unsigned int n_distr_r, float_t* distr_r,
+					unsigned int n_transvec, float_t* transvec, cucomplex_t* ff) {
+		// decomposition is along y and z
+		unsigned int i_y = blockDim.x * blockIdx.x + threadIdx.x;
+		unsigned int i_z = blockDim.y * blockIdx.y + threadIdx.y;
+		unsigned int base_index = nqx * nqy * i_z + nqx * i_y;
+
+		// shared buffers
+		float_t* qx_s = (float_t*) dynamic_shared;
+		float_t* qy_s = (float_t*) &qx_s[nqx];
+		cucomplex_t* qz_s = (cucomplex_t*) &qy_s[blockDim.x];
+
+		unsigned int load_index = blockDim.x * threadIdx.y + threadIdx.x;
+		unsigned int load_max = blockDim.x * blockDim.y;
+
+		for(int i = 0; i < ceil((float_t)nqx / load_max); ++ i) {
+			if(i * load_max + load_index < nqx)
+				qx_s[i * load_max + load_index] = qx[i * load_max + load_index];
+			else ;	// nop
+		} // for
+		if(i_y < nqy && threadIdx.y == 0)	// first row of threads
+			qy_s[threadIdx.x] = qy[i_y];
+		else ;	// nop
+		if(i_z < nqz && threadIdx.x == 0)	// first column of threads
+			qz_s[threadIdx.y] = qz[i_z];
+		else ; // nop
+
+		__syncthreads();
+
+		// compute
+		if(i_y < nqy && i_z < nqz) {
+			for(unsigned int i_x = 0; i_x < nqx; ++ i_x) {
+				unsigned int index = base_index + i_x;
+				// computing mesh values on the fly instead of storing them
+				/*cucomplex_t temp_mqx = make_cuC(qy_s[threadIdx.x] * rot[0] + qx_s[i_x] * rot[1] +
+											qz_s[threadIdx.y].x * rot[2], qz_s[threadIdx.y].y * rot[2]);
+				cucomplex_t temp_mqy = make_cuC(qy_s[threadIdx.x] * rot[3] + qx_s[i_x] * rot[4] +
+											qz_s[threadIdx.y].x * rot[5], qz_s[threadIdx.y].y * rot[5]);
+				cucomplex_t temp_mqz = make_cuC(qy_s[threadIdx.x] * rot[6] + qx_s[i_x] * rot[7] +
+											qz_s[threadIdx.y].x * rot[8], qz_s[threadIdx.y].y * rot[8]);*/
+				cucomplex_t temp_mqx = make_cuC(qy_s[threadIdx.x] * rot[0] + qx_s[i_x] * rot[1] +
+											qz_s[threadIdx.y].x * rot[2], qz_s[threadIdx.y].y * rot[2]);
+				cucomplex_t temp_mqy = make_cuC(qy_s[threadIdx.x] * rot[3] + qx_s[i_x] * rot[4] +
+											qz_s[threadIdx.y].x * rot[5], qz_s[threadIdx.y].y * rot[5]);
+				cucomplex_t temp_mqz = make_cuC(qy_s[threadIdx.x] * rot[6] + qx_s[i_x] * rot[7] +
+											qz_s[threadIdx.y].x * rot[8], qz_s[threadIdx.y].y * rot[8]);
+				cucomplex_t q = cuCnorm3(temp_mqx, temp_mqy, temp_mqz);
+				cucomplex_t temp_f = make_cuC((float_t)0.0, (float_t)0.0);
+				for(unsigned int i_r = 0; i_r < n_r; ++ i_r) {
+					float_t temp_r = r[i_r];
+					ff_sphere_kernel_compute_tff(temp_r, distr_r[i_r], q, temp_mqz, temp_f);
+				} // for i_r
+				ff[index] = ff_sphere_kernel_compute_ff(temp_f,	temp_mqx, temp_mqy, temp_mqz,
 													transvec[0], transvec[1], transvec[2]);
 			} // for x
 		} // if
@@ -614,19 +662,14 @@ namespace hig {
 
 	__device__ void ff_sphere_kernel_compute_tff(float r, float distr_r,
 										cuFloatComplex q, cuFloatComplex mqz, cuFloatComplex &f) {
-		//cuFloatComplex temp1 = cuCmulf(q, make_cuFloatComplex(r, 0.0f));
 		cuFloatComplex temp1 = make_cuFloatComplex(q.x * r, q.y * r);
 		cuFloatComplex temp2 = cuCsubf(cuCsin(temp1), cuCmulf(temp1, cuCcos(temp1)));
 		cuFloatComplex temp3 = cuCmulf(temp1, cuCmulf(temp1, temp1));
-//		if(temp3.x == 0 && temp3.y == 0) {
-//			// do nothing
-//		} else {
-			float temp4 = distr_r * 4 * PI_ * r * r * r;
-			cuFloatComplex temp5 = cuCmulf(cuCdivf(temp2, temp3),
+		float temp4 = distr_r * 4 * PI_ * r * r * r;
+		cuFloatComplex temp5 = cuCmulf(cuCdivf(temp2, temp3),
 									cuCexp(make_cuFloatComplex(-r * mqz.y, r * mqz.x)));
-			cuFloatComplex tempff = make_cuFloatComplex(temp4 * temp5.x, temp4 * temp5.y);
-			f = cuCaddf(f, tempff);
-//		} // if-else
+		cuFloatComplex tempff = make_cuFloatComplex(temp4 * temp5.x, temp4 * temp5.y);
+		f = cuCaddf(f, tempff);
 	} // ff_sphere_kernel_compute_tff()
 
 	__device__ void ff_sphere_kernel_compute_tff(double r, double distr_r,
@@ -634,26 +677,16 @@ namespace hig {
 		cuDoubleComplex temp1 = cuCmul(q, make_cuDoubleComplex(r, 0.0));
 		cuDoubleComplex temp2 = cuCsub(cuCsin(temp1), cuCmul(temp1, cuCcos(temp1)));
 		cuDoubleComplex temp3 = cuCmul(temp1, cuCmul(temp1, temp1));
-		if(temp3.x == 0 && temp3.y == 0) {
-			// do nothing
-		} else {
-			double temp4 = distr_r * 4 * PI_ * r * r * r;
-			cuDoubleComplex temp5 = cuCmul(cuCdiv(temp2, temp3),
+		double temp4 = distr_r * 4 * PI_ * r * r * r;
+		cuDoubleComplex temp5 = cuCmul(cuCdiv(temp2, temp3),
 									cuCexp(make_cuDoubleComplex(-r * mqz.y, r * mqz.x)));
-			cuDoubleComplex tempff = make_cuDoubleComplex(temp4 * temp5.x, temp4 * temp5.y);
-			f = cuCadd(f, tempff);
-			//cuDoubleComplex tempff = cuCmul(make_cuDoubleComplex(distr_r * 4 * PI_ * pow(r, 3), 0.0),
-			//			cuCmul(cuCdiv(temp2, temp3), cuCexpi(cuCmul(mqz, make_cuDoubleComplex(r, 0.0)))));
-			//f = cuCadd(f, tempff);
-		} // if-else
+		cuDoubleComplex tempff = make_cuDoubleComplex(temp4 * temp5.x, temp4 * temp5.y);
+		f = cuCadd(f, tempff);
 	} // ff_sphere_kernel_compute_tff()
 
 	__device__ cuFloatComplex ff_sphere_kernel_compute_ff(cuFloatComplex temp_f,
 								cuFloatComplex mqx, cuFloatComplex mqy, cuFloatComplex mqz,
 								float tx, float ty, float tz) {
-			//cuFloatComplex temp1 = cuCaddf(cuCaddf(cuCmulf(mqx, make_cuFloatComplex(tx, 0.0f)),
-			//										cuCmulf(mqy, make_cuFloatComplex(ty, 0.0f))),
-			//										cuCmulf(mqz, make_cuFloatComplex(tz, 0.0f)));
 			float rl = tx * mqx.x + ty * mqy.x + tz * mqz.x;
 			float im = tx * mqx.y + ty * mqy.y + tz * mqz.y;
 			cuFloatComplex temp1 = cuCexp(make_cuFloatComplex(-im, rl));
@@ -663,10 +696,6 @@ namespace hig {
 	__device__ cuDoubleComplex ff_sphere_kernel_compute_ff(cuDoubleComplex temp_f,
 								cuDoubleComplex mqx, cuDoubleComplex mqy, cuDoubleComplex mqz,
 								double tx, double ty, double tz) {
-			//cuDoubleComplex temp1 = cuCadd(cuCadd(cuCmul(mqx, make_cuDoubleComplex(tx, 0.0)),
-			//										cuCmul(mqy, make_cuDoubleComplex(ty, 0.0))),
-			//										cuCmul(mqz, make_cuDoubleComplex(tz, 0.0)));
-			//return cuCmul(temp_f, cuCexpi(temp1));
 			double rl = tx * mqx.x + ty * mqy.x + tz * mqz.x;
 			double im = tx * mqx.y + ty * mqy.y + tz * mqz.y;
 			cuDoubleComplex temp1 = cuCexp(make_cuDoubleComplex(-im, rl));
