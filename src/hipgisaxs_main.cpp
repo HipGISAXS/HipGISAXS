@@ -5,7 +5,7 @@
   *
   *  File: hipgisaxs_main.cpp
   *  Created: Jun 14, 2012
-  *  Modified: Fri 19 Oct 2012 01:48:04 PM PDT
+  *  Modified: Thu 25 Oct 2012 12:14:56 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -435,8 +435,8 @@ namespace hig {
 									"/" + HiGInput::instance().runname() +
 									"/sf_ai=" + alphai_s + "_rot=" + phi_s +
 									"_tilt=" + tilt_s + ".out");
-//					std::cout << "-- Saving structure factor in " << sf_output << " ..." << std::endl;
-//					sf_.save_sf(nqx_, nqy_, nqz_extended_, sf_output.c_str());
+					std::cout << "-- Saving structure factor in " << sf_output << " ..." << std::endl;
+					sf_.save_sf(nqx_, nqy_, nqz_extended_, sf_output.c_str());
 				} // if
 
 				//read_form_factor("curr_ff.out");
@@ -455,8 +455,8 @@ namespace hig {
 									"/" + HiGInput::instance().runname() +
 									"/ff_ai=" + alphai_s + "_rot=" + phi_s +
 									"_tilt=" + tilt_s + ".out");
-//					std::cout << "-- Saving form factor in " << ff_output << " ..." << std::endl;
-//					ff_.save_ff(nqx_, nqy_, nqz_extended_, ff_output.c_str());
+					std::cout << "-- Saving form factor in " << ff_output << " ..." << std::endl;
+					ff_.save_ff(nqx_, nqy_, nqz_extended_, ff_output.c_str());
 				} // if
 
 				// processing of sf and ff is being done by just one processor ...
