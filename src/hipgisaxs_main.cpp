@@ -5,7 +5,7 @@
   *
   *  File: hipgisaxs_main.cpp
   *  Created: Jun 14, 2012
-  *  Modified: Thu 25 Oct 2012 12:14:56 PM PDT
+  *  Modified: Sat 27 Oct 2012 11:41:25 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -390,7 +390,7 @@ namespace hig {
 			 * ensemble containing num_domains grains */
 			for(int j = 0; j < num_domains; j ++) {	// or distributions
 
-				std::cout << "- Processing grain " << j + 1 << std::endl;
+				std::cout << "- Processing grain " << j + 1 << "/" << num_domains << std::endl;
 
 				// define r_norm (domain orientation by tau and eta)
 				// define full domain rotation matrix r_total = r_phi * r_norm

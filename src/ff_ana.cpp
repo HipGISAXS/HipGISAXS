@@ -5,7 +5,7 @@
   *
   *  File: ff_ana.cpp
   *  Created: Jul 12, 2012
-  *  Modified: Sat 20 Oct 2012 05:08:58 PM PDT
+  *  Modified: Mon 29 Oct 2012 12:09:31 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -237,56 +237,36 @@ namespace hig {
 			return false;
 		} // if
 
-		//std::vector<complex_t> mesh_qm = mat_mul(tan(tau),
-		//										mat_add(nqx, nqy, nqz,
-		//										mat_mul(mesh_qx_, sin(eta)),
-		//										nqx, nqy, nqz,
-		//										mat_mul(mesh_qy_, cos(eta))));
-		complex_vec_t mesh_qm;
-		// temp vars can be resuced here ...
-		complex_vec_t temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9, temp10;
-		mat_mul(mesh_qx_, sin(eta), temp1);
-		mat_mul(mesh_qy_, cos(eta), temp2);
-		mat_add(nqx, nqy, nqz, temp1, nqx, nqy, nqz, temp2, temp3);
-		mat_mul(tan(tau), temp3, mesh_qm);
-
 		// initialize ff
 		ff.clear();
 		ff.reserve(nqz * nqy * nqx);
 		for(unsigned int i = 0; i < nqz * nqy * nqx; ++ i) ff.push_back(complex_t(0, 0));
+
 		// ff computation for a box
-		for(unsigned int i_z = 0; i_z < z.size(); ++ i_z) {
-			for(unsigned int i_y = 0; i_y < y.size(); ++ i_y) {
-				for(unsigned int i_x = 0; i_x < x.size(); ++ i_x) {
-					/*mat_add(nqx, nqy, nqz, mesh_qz_, nqx, nqy, nqz, mesh_qm, temp1);
-					mat_mul(mesh_qy_, z[i_z], temp2);
-					mat_mul(mesh_qx_, x[i_x], temp3);
-					mat_fq_inv(nqx, nqy, nqz, temp1, y[i_y], temp4);
-					mat_sinc(nqx, nqy, nqz, temp2, temp5);
-					mat_sinc(nqx, nqy, nqz, temp3, temp6);
-					mat_dot_prod(nqx, nqy, nqz, temp6, nqx, nqy, nqz, temp5, temp7);
-					mat_dot_prod(nqx, nqy, nqz, temp7, nqx, nqy, nqz, temp4, temp8);
-					complex_t temp9 = distr_x[i_x] * distr_y[i_y] * distr_z[i_z] * 4 * z[i_z] * x[i_x];
-					mat_mul(temp9, temp8, temp10);
-					mat_add_in(nqx, nqy, nqz, ff, nqx, nqy, nqz, temp10); */
-					/*ff = mat_add(nqx, nqy, nqz, ff, nqx, nqy, nqz,
-							mat_mul(distr_x[i_x] * distr_y[i_y] * distr_z[i_z] * 4 * z[i_z] * x[i_x],
-							mat_dot_prod(nqx, nqy, nqz,
-							mat_dot_prod(nqx, nqy, nqz,
-							mat_sinc(nqx, nqy, nqz, mat_mul(mesh_qx_, x[i_x])),
-							nqx, nqy, nqz, mat_sinc(nqx, nqy, nqz,
-							mat_mul(mesh_qz_, z[i_z]))),
-							nqx, nqy, nqz,
-							mat_fq_inv(nqx, nqy, nqz,
-							mat_add(nqx, nqy, nqz, mesh_qz_, nqx, nqy, nqz, mesh_qm),
-							y[i_y])))); */
-					for(unsigned int j_z = 0; j_z < nqz; ++ j_z) {
-						for(unsigned int j_y = 0; j_y < nqy; ++ j_y) {
-							for(unsigned int j_x = 0; j_x < nqx; ++ j_x) {
-								unsigned int curr_index = nqx * nqy * j_z + nqx * j_y + j_x;
-								complex_t temp1 = mesh_qz_[curr_index] + mesh_qm[curr_index];
-								complex_t temp2 = mesh_qy_[curr_index] * z[i_z];
-								complex_t temp3 = mesh_qx_[curr_index] * x[i_x];
+		for(unsigned int j_z = 0; j_z < nqz; ++ j_z) {
+			for(unsigned int j_y = 0; j_y < nqy; ++ j_y) {
+				for(unsigned int j_x = 0; j_x < nqx; ++ j_x) {
+					complex_t mqx = QGrid::instance().qy(j_y) * rot_[0] +
+									QGrid::instance().qx(j_x) * rot_[1] +
+									QGrid::instance().qz_extended(j_z) * rot_[2];
+					complex_t mqy = QGrid::instance().qy(j_y) * rot_[3] +
+									QGrid::instance().qx(j_x) * rot_[4] +
+									QGrid::instance().qz_extended(j_z) * rot_[5];
+					complex_t mqz = QGrid::instance().qy(j_y) * rot_[6] +
+									QGrid::instance().qx(j_x) * rot_[7] +
+									QGrid::instance().qz_extended(j_z) * rot_[8];
+					complex_t temp1 = sin(eta) * mqx;
+					complex_t temp2 = cos(eta) * mqy;
+					complex_t temp3 = temp1 + temp2;
+					complex_t temp_qm = tan(tau) * temp3;
+					unsigned int curr_index = nqx * nqy * j_z + nqx * j_y + j_x;
+					complex_t temp_ff(0.0, 0.0);
+					for(unsigned int i_z = 0; i_z < z.size(); ++ i_z) {
+						for(unsigned int i_y = 0; i_y < y.size(); ++ i_y) {
+							for(unsigned int i_x = 0; i_x < x.size(); ++ i_x) {
+								complex_t temp1 = mqz + temp_qm;
+								complex_t temp2 = mqy * z[i_z];
+								complex_t temp3 = mqx * x[i_x];
 								complex_t temp4 = fq_inv(temp1, y[i_y]);
 								complex_t temp5 = sinc(temp2);
 								complex_t temp6 = sinc(temp3);
@@ -295,34 +275,23 @@ namespace hig {
 								complex_t temp9 = 4 * distr_x[i_x] * distr_y[i_y] * distr_z[i_z] *
 													z[i_z] * x[i_x];
 								complex_t temp10 = temp9 * temp8;
+								temp_ff += temp10;
 								if(!(boost::math::isfinite(temp10.real()) &&
 											boost::math::isfinite(temp10.imag()))) {
 									std::cerr << "+++++++++++++++ here it is +++++++ " << j_x << ", "
 												<< j_y << ", " << j_z << std::endl;
 									exit(1);
 								} // if
-								ff[curr_index] += temp10;
-							} // for x
-						} // for y
-					} // for z
-				} // for i_x
-			} // for i_y
-		} // for i_z
-
-		for(unsigned int j_z = 0; j_z < nqz; ++ j_z) {
-			for(unsigned int j_y = 0; j_y < nqy; ++ j_y) {
-				for(unsigned int j_x = 0; j_x < nqx; ++ j_x) {
-					unsigned int curr_index = nqx * nqy * j_z + nqx * j_y + j_x;
-					complex_t temp = exp(mesh_qx_[curr_index] * transvec[0] +
-										mesh_qy_[curr_index] * transvec[1] +
-										mesh_qz_[curr_index] * transvec[2]);
-					if(!(boost::math::isfinite(temp.real()) &&
-								boost::math::isfinite(temp.imag()))) {
+							} // for i_x
+						} // for i_y
+					} // for i_z
+					complex_t temp_e = exp(mqx * transvec[0] + mqy * transvec[1] + mqz * transvec[2]);
+					if(!(boost::math::isfinite(temp_e.real()) && boost::math::isfinite(temp_e.imag()))) {
 						std::cerr << "---------------- here it is ------ " << j_x << ", "
 									<< j_y << ", " << j_z << std::endl;
 						exit(1);
 					} // if
-					ff[curr_index] *= temp;
+					ff[curr_index] = temp_ff * temp_e;
 				} // for x
 			} // for y
 		} // for z
@@ -377,47 +346,42 @@ namespace hig {
 			} // for y
 		} // for z
 
-		std::vector<complex_t> qpar, qm;
-		std::vector<complex_t> temp1, temp2, temp3, temp4, temp5, temp6, temp7;
-
-		// unroll the following into combined loops
-		// ...
-
-		mat_sqr(mesh_qx_, temp1);
-		mat_sqr(mesh_qy_, temp2);
-		mat_add(nqx_, nqy_, nqz_, temp1, nqx_, nqy_, nqz_, temp2, qpar);
-		mat_sqrt_in(qpar);
-		mat_mul(mesh_qx_, sin(eta), temp3);
-		mat_mul(mesh_qy_, cos(eta), temp4);
-		mat_add(nqx_, nqy_, nqz_, temp3, nqx_, nqy_, nqz_, temp4, temp5);
-		mat_mul(tan(tau), temp5, qm);
-
-		temp1.clear(); temp2.clear(); temp3.clear(); temp4.clear(); temp5.clear();
-
-		for(unsigned int i_r = 0; i_r < r.size(); ++ i_r) {
-			for(unsigned int i_h = 0; i_h < h.size(); ++ i_h) {
-				mat_add(nqx_, nqy_, nqz_, mesh_qz_, nqx_, nqy_, nqz_, qm, temp1);
-				mat_fq_inv(nqx_, nqy_, nqz_, temp1, h[i_h], temp2);
-				mat_mul(qpar, r[i_r], temp3);
-				mat_besselj(1, nqx_, nqy_, nqz_, temp3, temp4);
-				mat_dot_div(nqx_, nqy_, nqz_, temp4, nqx_, nqy_, nqz_, temp3, temp5);
-				mat_dot_prod(nqx_, nqy_, nqz_, temp5, nqx_, nqy_, nqz_, temp2, temp6);
-				mat_mul(distr_r[i_r] * distr_h[i_h] * 2.0 * PI_ * pow(r[i_r], 2), temp6, temp7);
-				mat_add_in(nqx_, nqy_, nqz_, ff, nqx_, nqy_, nqz_, temp7);
-			} // for h
-		} // for r
-
-		temp1.clear(); temp2.clear(); temp3.clear(); temp4.clear();
-		temp5.clear(); temp6.clear(); temp7.clear();
-
-		mat_mul(mesh_qx_, transvec[0], temp1);
-		mat_mul(mesh_qy_, transvec[1], temp2);
-		mat_mul(mesh_qz_, transvec[2], temp3);
-		mat_add_in(nqx_, nqy_, nqz_, temp2, nqx_, nqy_, nqz_, temp3);
-		mat_add_in(nqx_, nqy_, nqz_, temp1, nqx_, nqy_, nqz_, temp2);
-		mat_mul_in(complex_t(0, 1), temp1);
-		mat_exp_in(temp1);
-		mat_dot_prod_in(nqx_, nqy_, nqz_, ff, nqx_, nqy_, nqz_, temp1);
+		for(unsigned z = 0; z < nqz_; ++ z) {
+			for(unsigned y = 0; y < nqy_; ++ y) {
+				for(unsigned x = 0; x < nqx_; ++ x) {
+					complex_t mqx = QGrid::instance().qy(y) * rot_[0] +
+									QGrid::instance().qx(x) * rot_[1] +
+									QGrid::instance().qz_extended(z) * rot_[2];
+					complex_t mqy = QGrid::instance().qy(y) * rot_[3] +
+									QGrid::instance().qx(x) * rot_[4] +
+									QGrid::instance().qz_extended(z) * rot_[5];
+					complex_t mqz = QGrid::instance().qy(y) * rot_[6] +
+									QGrid::instance().qx(x) * rot_[7] +
+									QGrid::instance().qz_extended(z) * rot_[8];
+					complex_t temp1 = mqx * mqx;
+					complex_t temp2 = mqy * mqy;
+					complex_t qpar = sqrt(temp1 + temp2);
+					temp1 = mqx * sin(eta);
+					temp2 = mqy * cos(eta);
+					complex_t qm = (temp1 + temp2) * tan(tau);
+					complex_t temp_fq = mqz + qm;
+					complex_t temp_ff(0.0, 0.0);
+					for(unsigned int i_r = 0; i_r < r.size(); ++ i_r) {
+						for(unsigned int i_h = 0; i_h < h.size(); ++ i_h) {
+							complex_t temp1 = fq_inv(temp_fq, h[i_h]);
+							complex_t temp2 = qpar * r[i_r];
+							complex_t temp3 = cbessj(temp2, 1);
+							complex_t temp4 = (temp3 / temp2) * temp1;
+							temp_ff += distr_r[i_r] * distr_h[i_h] * 2 * PI_ * r[i_r] * r[i_r] * temp4;
+						} // for h
+					} // for r
+					temp1 = mqx * transvec[0] + mqy * transvec[1] + mqz * transvec[2];
+					temp2 = exp(complex_t(-temp1.imag(), temp1.real()));
+					unsigned int curr_index = nqx_ * nqy_ * z + nqx_ * y + x;
+					ff[curr_index] = temp_ff * temp2;
+				} // for x
+			} // for y
+		} // for z
 
 		return true;
 	} // AnalyticFormFactor::compute_cylinder()
@@ -486,28 +450,37 @@ namespace hig {
 		complex_t unitc(0, 1);
 
 		ff.clear();
+		ff.reserve(nqx_ * nqy_ * nqy_);
 		for(unsigned int i = 0; i < nqx_ * nqy_ * nqz_; ++ i) ff.push_back(complex_t(0.0, 0.0));
 
-		for(unsigned int i_r = 0; i_r < r.size(); ++ i_r) {
-			for(unsigned int i_h = 0; i_h < h.size(); ++ i_h) {
-				for(unsigned int z = 0; z < nqz_; ++ z) {
-					for(unsigned int y = 0; y < nqy_; ++ y) {
-						for(unsigned int x = 0; x < nqx_; ++ x) {
-							unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
-							complex_t temp_qpar = sqrt(mesh_qz_[index] * mesh_qz_[index] +
-														mesh_qy_[index] * mesh_qy_[index]);
-							ff[index] += 2 * PI_ * h[i_h] * r[i_r] * r[i_r] *
-										(cbessj(temp_qpar * r[i_r], 1) / (temp_qpar * r[i_r])) *
-										exp(unitc * mesh_qz_[index] * r[i_r]) *
-										sinc(mesh_qx_[index] * h[i_h] / (float_t)2.0) *
-										exp(unitc * (mesh_qx_[index] * transvec[0] +
-													mesh_qy_[index] * transvec[1] +
-													mesh_qz_[index] * transvec[2]));
-						} // for x
-					} // for y
-				} // for z
-			} // for h
-		} // for r
+		for(unsigned int z = 0; z < nqz_; ++ z) {
+			for(unsigned int y = 0; y < nqy_; ++ y) {
+				for(unsigned int x = 0; x < nqx_; ++ x) {
+					unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
+					complex_t mqx = QGrid::instance().qy(y) * rot_[0] +
+									QGrid::instance().qx(x) * rot_[1] +
+									QGrid::instance().qz_extended(z) * rot_[2];
+					complex_t mqy = QGrid::instance().qy(y) * rot_[3] +
+									QGrid::instance().qx(x) * rot_[4] +
+									QGrid::instance().qz_extended(z) * rot_[5];
+					complex_t mqz = QGrid::instance().qy(y) * rot_[6] +
+									QGrid::instance().qx(x) * rot_[7] +
+									QGrid::instance().qz_extended(z) * rot_[8];
+					complex_t temp_qpar = sqrt(mqz * mqz + mqy * mqy);
+					complex_t temp_ff(0.0, 0.0);
+					for(unsigned int i_r = 0; i_r < r.size(); ++ i_r) {
+						for(unsigned int i_h = 0; i_h < h.size(); ++ i_h) {
+								temp_ff += 2 * PI_ * h[i_h] * r[i_r] * r[i_r] *
+											(cbessj(temp_qpar * r[i_r], 1) / (temp_qpar * r[i_r])) *
+											exp(complex_t(-(mqz * r[i_r]).imag(), (mqz * r[i_r]).real())) *
+											sinc(mqx * h[i_h] / (float_t)2.0);
+						} // for h
+					} // for r
+					complex_t temp1 = mqx * transvec[0] + mqy * transvec[1] + mqz * transvec[2];
+					ff[index] = temp_ff * exp(complex_t(-temp1.imag(), temp1.real()));
+				} // for x
+			} // for y
+		} // for z
 
 		return true;
 	} // AnalyticFormFactor::compute_horizontal_cylinder()
@@ -632,17 +605,17 @@ namespace hig {
 			for(unsigned int y = 0; y < nqy_; ++ y) {
 				for(unsigned int x = 0; x < nqx_; ++ x) {
 					unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
-					complex_t temp_mqx = QGrid::instance().qy(y) * rot_[0] +
-											QGrid::instance().qx(x) * rot_[1] +
-											QGrid::instance().qz_extended(z) * rot_[2];
-					complex_t temp_mqy = QGrid::instance().qy(y) * rot_[3] +
-											QGrid::instance().qx(x) * rot_[4] +
-											QGrid::instance().qz_extended(z) * rot_[5];
-					complex_t temp_mqz = QGrid::instance().qy(y) * rot_[6] +
-											QGrid::instance().qx(x) * rot_[7] +
-											QGrid::instance().qz_extended(z) * rot_[8];
-					ff[index] *= exp(complex_t(0, 1) * (temp_mqx * transvec[0] +
-									temp_mqy * transvec[1] + temp_mqz * transvec[2]));
+					complex_t mqx = QGrid::instance().qy(y) * rot_[0] +
+									QGrid::instance().qx(x) * rot_[1] +
+									QGrid::instance().qz_extended(z) * rot_[2];
+					complex_t mqy = QGrid::instance().qy(y) * rot_[3] +
+									QGrid::instance().qx(x) * rot_[4] +
+									QGrid::instance().qz_extended(z) * rot_[5];
+					complex_t mqz = QGrid::instance().qy(y) * rot_[6] +
+									QGrid::instance().qx(x) * rot_[7] +
+									QGrid::instance().qz_extended(z) * rot_[8];
+					ff[index] *= exp(complex_t(0, 1) * (mqx * transvec[0] +
+									mqy * transvec[1] + mqz * transvec[2]));
 				} // for x
 			} // for y
 		} // for z
@@ -696,33 +669,42 @@ namespace hig {
 		complex_t unit(0, 1.0);
 
 		ff.clear();
+		ff.reserve(nqx_ * nqy_ * nqz_);
 		for(unsigned int i = 0; i < nqx_ * nqy_ * nqz_; ++ i) ff.push_back(complex_t(0.0, 0.0));
 
-		for(unsigned int i_r = 0; i_r < r.size(); ++ i_r) {
-			for(unsigned int i_h = 0; i_h < h.size(); ++ i_h) {
-				for(unsigned int z = 0; z < nqz_; ++ z) {
-					for(unsigned int y = 0; y < nqy_; ++ y) {
-						for(unsigned int x = 0; x < nqx_; ++ x) {
-							unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
-							//float_t qm = tan(tau) * (mesh_qx_[index] * sin(eta) +
-							//				mesh_qy_[index] * cos(eta));
-							ff[index] += 2.0 * sqrt3 * exp(unit * mesh_qy_[index] * r[i_r] / sqrt3) /
-										(mesh_qx_[index] * (mesh_qx_[index] * mesh_qx_[index] -
-										 complex_t(3.0, 0.0) * mesh_qy_[index] * mesh_qy_[index])) *
-										(mesh_qx_[index] * exp(unit * mesh_qy_[index] * r[i_r] * sqrt3) -
-										 mesh_qx_[index] * cos(mesh_qx_[index] * r[i_r]) -
-										 unit * sqrt3 * mesh_qy_[index] * sin(mesh_qx_[index] * r[i_r])) *
-										 fq_inv(mesh_qz_[index] + tan(tau) *
-										(mesh_qx_[index] * sin(eta) +
-										 mesh_qy_[index] * cos(eta)), h[i_h]) *
-										 exp(unit * (mesh_qx_[index] * transvec[0] +
-													 mesh_qy_[index] * transvec[1] +
-													 mesh_qz_[index] * transvec[2]));
-						} // for x
-					} // for y
-				} // for z
-			} // for h
-		} // for r
+		for(unsigned int z = 0; z < nqz_; ++ z) {
+			for(unsigned int y = 0; y < nqy_; ++ y) {
+				for(unsigned int x = 0; x < nqx_; ++ x) {
+					unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
+					complex_t mqx = QGrid::instance().qy(y) * rot_[0] +
+									QGrid::instance().qx(x) * rot_[1] +
+									QGrid::instance().qz_extended(z) * rot_[2];
+					complex_t mqy = QGrid::instance().qy(y) * rot_[3] +
+									QGrid::instance().qx(x) * rot_[4] +
+									QGrid::instance().qz_extended(z) * rot_[5];
+					complex_t mqz = QGrid::instance().qy(y) * rot_[6] +
+									QGrid::instance().qx(x) * rot_[7] +
+									QGrid::instance().qz_extended(z) * rot_[8];
+					complex_t temp1 = mqx * (mqx * mqx - 3.0 * mqy * mqy);
+					complex_t temp2 = mqz + tan(tau) * (mqx * sin(eta) + mqy * cos(eta));
+					complex_t temp_ff(0, 0);
+					for(unsigned int i_r = 0; i_r < r.size(); ++ i_r) {
+						for(unsigned int i_h = 0; i_h < h.size(); ++ i_h) {
+							complex_t temp3 = mqy * r[i_r] / sqrt3;
+							complex_t temp4 = mqx * exp(unit * mqy * r[i_r] * sqrt3);
+							complex_t temp5 = mqx * cos(mqx * r[i_r]);
+							complex_t temp6 = unit * sqrt3 * mqy * sin(mqx * r[i_r]);
+							complex_t temp7 = fq_inv(temp2, h[i_h]);
+							complex_t temp8 = (temp4 - temp5 - temp6) * temp7;
+							complex_t temp9 = 2.0 * sqrt3 * exp(complex_t(-temp3.imag(), temp3.real()));
+							temp_ff += temp9 / temp1 * temp8;
+						} // for h
+					} // for r
+					complex_t temp10 = mqx * transvec[0] + mqy * transvec[1] + mqz * transvec[2];
+					ff[index] = temp_ff * exp(complex_t(-temp10.imag(), temp10.real()));
+				} // for x
+			} // for y
+		} // for z
 
 		return true;
 	} // AnalyticFormFactor::compute_prism()
@@ -755,42 +737,45 @@ namespace hig {
 			} // switch
 		} // for
 
-		// 4*sq3./( 3*qy.^2 - qx.^2 ) .* (R^2 * qy.^2 .*  SINC_Matrix(qx*R/sq3) .* SINC_Matrix(qy*R) + cos(2*qx*R/sq3) - cos(qy*R) .* cos(qx*R/sq3) )  .* Fq_Inv_Matrix(qz+qm, H) .* exp(1i* (qx*T(1) + qy*T(2) + qz*T(3)))
-
 		float_t sqrt3 = sqrt(3.0);
-		complex_t unit(0, 1.0);
 
 		ff.clear();
+		ff.reserve(nqx_ * nqy_ * nqz_);
 		for(unsigned int i = 0; i < nqx_ * nqy_ * nqz_; ++ i) ff.push_back(complex_t(0.0, 0.0));
 
-		for(unsigned int i_r = 0; i_r < r.size(); ++ i_r) {
-			for(unsigned int i_h = 0; i_h < h.size(); ++ i_h) {
-				for(unsigned int z = 0; z < nqz_; ++ z) {
-					for(unsigned int y = 0; y < nqy_; ++ y) {
-						for(unsigned int x = 0; x < nqx_; ++ x) {
-							unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
-							complex_t qm = tan(tau) * (mesh_qx_[index] * sin(eta) +
-														mesh_qy_[index] * cos(eta));
-							complex_t temp1 = ((float_t)4.0 * sqrt3) /
-												(3.0 * mesh_qy_[index] * mesh_qy_[index] -
-												 mesh_qx_[index] * mesh_qx_[index]);
-							complex_t temp2 = r[i_r] * r[i_r] * mesh_qy_[index] * mesh_qy_[index] *
-												sinc(mesh_qx_[index] * r[i_r] / sqrt3) *
-												sinc(mesh_qy_[index] * r[i_r]);
-							complex_t temp3 = cos(2.0 * mesh_qx_[index] * r[i_r] / sqrt3);
-							complex_t temp4 = cos(mesh_qy_[index] * r[i_r]) *
-												cos(mesh_qx_[index] * r[i_r] / sqrt3);
+		for(unsigned int z = 0; z < nqz_; ++ z) {
+			for(unsigned int y = 0; y < nqy_; ++ y) {
+				for(unsigned int x = 0; x < nqx_; ++ x) {
+					unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
+					complex_t mqx = QGrid::instance().qy(y) * rot_[0] +
+									QGrid::instance().qx(x) * rot_[1] +
+									QGrid::instance().qz_extended(z) * rot_[2];
+					complex_t mqy = QGrid::instance().qy(y) * rot_[3] +
+									QGrid::instance().qx(x) * rot_[4] +
+									QGrid::instance().qz_extended(z) * rot_[5];
+					complex_t mqz = QGrid::instance().qy(y) * rot_[6] +
+									QGrid::instance().qx(x) * rot_[7] +
+									QGrid::instance().qz_extended(z) * rot_[8];
+					complex_t qm = tan(tau) * (mqx * sin(eta) + mqy * cos(eta));
+					complex_t temp1 = ((float_t)4.0 * sqrt3) / (3.0 * mqy * mqy - mqx * mqx);
+					complex_t temp_ff(0, 0);
+					for(unsigned int i_r = 0; i_r < r.size(); ++ i_r) {
+						for(unsigned int i_h = 0; i_h < h.size(); ++ i_h) {
+							complex_t rmqx = r[i_r] * mqx / sqrt3;
+							complex_t rmqy = r[i_r] * mqy;
+							complex_t temp2 = rmqy * rmqy *	sinc(rmqx) * sinc(rmqy);
+							complex_t temp3 = cos(2.0 * rmqx);
+							complex_t temp4 = cos(rmqy) * cos(rmqx);
 							complex_t temp5 = temp1 * (temp2 + temp3 - temp4);
-							complex_t temp6 = fq_inv(mesh_qz_[index] + qm, h[i_h]);
-							complex_t temp7 = (mesh_qx_[index] * transvec[0] +
-												mesh_qy_[index] * transvec[1] +
-												mesh_qz_[index] * transvec[2]);
-							ff[index] += temp5 * temp6 * exp(unit * temp7);
-						} // for x
-					} // for y
-				} // for z
-			} // for h
-		} // for r
+							complex_t temp6 = fq_inv(mqz + qm, h[i_h]);
+							temp_ff += temp5 * temp6;
+						} // for h
+					} // for r
+					complex_t temp7 = (mqx * transvec[0] + mqy * transvec[1] + mqz * transvec[2]);
+					ff[index] = temp_ff * exp(complex_t(-temp7.imag(), temp7.real()));
+				} // for x
+			} // for y
+		} // for z
 
 		return true;
 	} // AnalyticFormFactor::compute_prism6()
@@ -977,9 +962,10 @@ namespace hig {
 		return true;
 	} // AnalyticFormFactor::mat_sinc()
 
-	float_t AnalyticFormFactor::sinc(complex_t value) {
-		float_t temp = sin(value.real()) / value.real();
-		if(fabs(temp) <= 1e-14) temp = 1.0;
+	complex_t AnalyticFormFactor::sinc(complex_t value) {
+		complex_t temp;
+		if(fabs(value.real()) <= 1e-14 && fabs(value.imag()) <= 1e-14) temp = complex_t(1.0, 0.0);
+		else temp = sin(value) / value;
 		return temp;
 	} // AnalyticFormFactor::sinc()
 

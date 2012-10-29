@@ -5,7 +5,7 @@
   *
   *  File: ff_ana.hpp
   *  Created: Jul 12, 2012
-  *  Modified: Sat 20 Oct 2012 05:02:03 PM PDT
+  *  Modified: Sun 28 Oct 2012 09:04:29 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -106,7 +106,7 @@ namespace hig {
 			complex_t fq_inv(complex_t, float_t);
 			bool mat_sinc(unsigned int, unsigned int, unsigned int,	const complex_vec_t&, complex_vec_t&);
 			bool mat_sinc_in(unsigned int, unsigned int, unsigned int, complex_vec_t&);
-			float_t sinc(complex_t value);
+			complex_t sinc(complex_t value);
 
 
 	}; // class AnalyticFormFactor

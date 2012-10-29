@@ -27,22 +27,23 @@ hipGisaxsInput = {
 	instrumentation = {
 		scattering = {
 			expt = "gisaxs",
-			alphai = { min = 0.12, max = 0.12, step = 0.01 },	# incidence angles
+			alphai = { min = 0.14, max = 0.14, step = 0.01 },	# incidence angles
 			photon = { value = 10000, unit = "ev" }				# photon energy
 		},
 		detector = {
 			pixelsize = 0.172,	 				# pixel size of the detector
-			sdd = 4128.62,						# sample to detector distance
+			#sdd = 4128.62,						# sample to detector distance
+			sdd = 550,
 			directbeam = [ 489.916 843.076 ]	# position of direct beam
 		}
 	},
 	computation = {
-		pathprefix = ".",						# path to input files directory
-		runname = "27",						# name for current run and folder name for outputs
+		pathprefix = "../hipgisaxs.test/",		# path to input files directory
+		runname = "27",							# name for current run and folder name for outputs
 		method = "dwba",						# theorical approach (see list)
-		outputregion = { type = "pixels" , minpoint = [ 250 750 ], maxpoint = [ 750 1000 ] },
-		#outputregion = { type = "qspace" , minpoint = [ 350 710 ], maxpoint = [ 550 900 ] },
-		resolution = [ 1 1 ],				# number of q points per pixel
+		#outputregion = { type = "pixels" , minpoint = [ 250 750 ], maxpoint = [ 750 1000 ] },
+		outputregion = { type = "qspace" , minpoint = [ 0.0 0.0 ], maxpoint = [ 3.15 3.15 ] },
+		resolution = [ 1 1 ],					# number of q points per pixel
 		nslices = 0								# max number of slices for slicing algorithm
 	}
 }

@@ -5,7 +5,7 @@
   *
   *  File: ff_ana_gpu.cu
   *  Created: Oct 16, 2012
-  *  Modified: Sun 21 Oct 2012 01:22:03 PM PDT
+  *  Modified: Sat 27 Oct 2012 02:16:38 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -565,7 +565,7 @@ namespace hig {
 
 
 	// sphere gpu kernel
-	/*__global__ void form_factor_sphere_kernel(unsigned int nqx, unsigned int nqy, unsigned int nqz,
+/*	__global__ void form_factor_sphere_kernel(unsigned int nqx, unsigned int nqy, unsigned int nqz,
 					float_t* qx, float_t* qy, cucomplex_t* qz, float_t* rot,
 					unsigned int n_r, float_t* r, unsigned int n_distr_r, float_t* distr_r,
 					unsigned int n_transvec, float_t* transvec, cucomplex_t* ff) {
@@ -595,8 +595,8 @@ namespace hig {
 													transvec[0], transvec[1], transvec[2]);
 			} // for x
 		} // if
-	} // form_factor_sphere_kernel() */
-
+	} // form_factor_sphere_kernel() 
+*/
 	extern __shared__ float_t dynamic_shared[];
 
 	// sphere gpu kernel
@@ -614,20 +614,22 @@ namespace hig {
 		float_t* qy_s = (float_t*) &qx_s[nqx];
 		cucomplex_t* qz_s = (cucomplex_t*) &qy_s[blockDim.x];
 
+		// load qx
 		unsigned int load_index = blockDim.x * threadIdx.y + threadIdx.x;
 		unsigned int load_max = blockDim.x * blockDim.y;
-
 		for(int i = 0; i < ceil((float_t)nqx / load_max); ++ i) {
 			if(i * load_max + load_index < nqx)
 				qx_s[i * load_max + load_index] = qx[i * load_max + load_index];
 			else ;	// nop
 		} // for
+		// load part of qy
 		if(i_y < nqy && threadIdx.y == 0)	// first row of threads
 			qy_s[threadIdx.x] = qy[i_y];
-		else ;	// nop
+		//else ;	// nop
+		// load part of qz
 		if(i_z < nqz && threadIdx.x == 0)	// first column of threads
 			qz_s[threadIdx.y] = qz[i_z];
-		else ; // nop
+		//else ; // nop
 
 		__syncthreads();
 
@@ -636,12 +638,6 @@ namespace hig {
 			for(unsigned int i_x = 0; i_x < nqx; ++ i_x) {
 				unsigned int index = base_index + i_x;
 				// computing mesh values on the fly instead of storing them
-				/*cucomplex_t temp_mqx = make_cuC(qy_s[threadIdx.x] * rot[0] + qx_s[i_x] * rot[1] +
-											qz_s[threadIdx.y].x * rot[2], qz_s[threadIdx.y].y * rot[2]);
-				cucomplex_t temp_mqy = make_cuC(qy_s[threadIdx.x] * rot[3] + qx_s[i_x] * rot[4] +
-											qz_s[threadIdx.y].x * rot[5], qz_s[threadIdx.y].y * rot[5]);
-				cucomplex_t temp_mqz = make_cuC(qy_s[threadIdx.x] * rot[6] + qx_s[i_x] * rot[7] +
-											qz_s[threadIdx.y].x * rot[8], qz_s[threadIdx.y].y * rot[8]);*/
 				cucomplex_t temp_mqx = make_cuC(qy_s[threadIdx.x] * rot[0] + qx_s[i_x] * rot[1] +
 											qz_s[threadIdx.y].x * rot[2], qz_s[threadIdx.y].y * rot[2]);
 				cucomplex_t temp_mqy = make_cuC(qy_s[threadIdx.x] * rot[3] + qx_s[i_x] * rot[4] +
@@ -652,7 +648,8 @@ namespace hig {
 				cucomplex_t temp_f = make_cuC((float_t)0.0, (float_t)0.0);
 				for(unsigned int i_r = 0; i_r < n_r; ++ i_r) {
 					float_t temp_r = r[i_r];
-					ff_sphere_kernel_compute_tff(temp_r, distr_r[i_r], q, temp_mqz, temp_f);
+					float_t temp_distr_r = distr_r[i_r];
+					ff_sphere_kernel_compute_tff(temp_r, temp_distr_r, q, temp_mqz, temp_f);
 				} // for i_r
 				ff[index] = ff_sphere_kernel_compute_ff(temp_f,	temp_mqx, temp_mqy, temp_mqz,
 													transvec[0], transvec[1], transvec[2]);

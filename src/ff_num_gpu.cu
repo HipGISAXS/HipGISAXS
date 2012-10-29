@@ -124,10 +124,10 @@ namespace hig {
 										complex_t*);
 	/* K4: kernel with t, y, z decomposition, dynamic shared mem for input, static for output */
 	template<typename float_t, typename complex_t>
-	__global__ void form_factor_kernel_new_shared2(float_t*, float_t*, complex_t*, float_t*, short int*,
-										unsigned int, unsigned int, unsigned int, unsigned int,
-										unsigned int, unsigned int, unsigned int, unsigned int,
-										unsigned int, unsigned int, unsigned int, unsigned int,
+	__global__ void form_factor_kernel_new_shared2(const float_t*, const float_t*, const complex_t*, const float_t*, const short int*,
+										const unsigned int, const unsigned int, const unsigned int, const unsigned int,
+										const unsigned int, const unsigned int, const unsigned int, const unsigned int,
+										const unsigned int, const unsigned int, const unsigned int, const unsigned int,
 										complex_t*);
 	/* K5: kernel with t, y, z decomposition, dynamic shared mem for input, static for output, memopt? ... */
 	template<typename float_t, typename complex_t>
@@ -502,56 +502,36 @@ namespace hig {
 
 	#ifndef KERNEL2
 									// Kernel 1: decompose along triangles
-									unsigned int cuda_block_size = block_cuda_; //BLOCK_CUDA_;
+									unsigned int cuda_block_size = block_cuda_;
 									unsigned int cuda_num_blocks =
-											(unsigned int) ceil((float) curr_b_num_triangles / cuda_block_size);
+										(unsigned int) ceil((float) curr_b_num_triangles / cuda_block_size);
 
-									form_factor_kernel<float_t> <<< cuda_num_blocks, cuda_block_size >>> (
-										qx_d, qy_d, qz_d, shape_def_d, axes_d,
-										curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles,
-										b_nqx, b_nqy, b_nqz, b_num_triangles,
-										ib_x, ib_y, ib_z, ib_t,
-										fq_d);
+									form_factor_kernel<float_t>
+										<<< cuda_num_blocks, cuda_block_size >>> (
+											qx_d, qy_d, qz_d, shape_def_d, axes_d,
+											curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles,
+											b_nqx, b_nqy, b_nqz, b_num_triangles,
+											ib_x, ib_y, ib_z, ib_t,
+											fq_d);
 	#else
-									// Kernel 2: decompose along triangles, y and z
-	/*								unsigned int ff_x_blocks = (unsigned int)
-															ceil((float) curr_b_num_triangles / block_cuda_t_);
-															//ceil((float) curr_b_num_triangles / BLOCK_FF_T_);
+									// Kernel 4
+									unsigned int ff_t_blocks = (unsigned int)
+														ceil((float) curr_b_num_triangles / block_cuda_t_);
 									unsigned int ff_y_blocks = (unsigned int)
-															ceil((float) curr_b_nqy / block_cuda_y_);
-															//ceil((float) curr_b_nqy / BLOCK_FF_Y_);
+														ceil((float) curr_b_nqy / block_cuda_y_);
 									unsigned int ff_z_blocks = (unsigned int)
-															ceil((float) curr_b_nqz / block_cuda_z_);
-															//ceil((float) curr_b_nqz / BLOCK_FF_Z_);
-									dim3 ff_grid_size(ff_x_blocks, ff_y_blocks, ff_z_blocks);
+														ceil((float) curr_b_nqz / block_cuda_z_);
+									dim3 ff_grid_size(ff_t_blocks, ff_y_blocks, ff_z_blocks);
 									dim3 ff_block_size(block_cuda_t_, block_cuda_y_, block_cuda_z_);
-									//dim3 ff_block_size(BLOCK_FF_T_, BLOCK_FF_Y_, BLOCK_FF_Z_);
 
-									form_factor_kernel_new<float_t> <<< ff_grid_size, ff_block_size>>> (
-										qx_d, qy_d, qz_d, shape_def_d, axes_d,
-										curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles,
-										b_nqx, b_nqy, b_nqz, b_num_triangles,
-										ib_x, ib_y, ib_z, ib_t,
-										fq_d); */
+									form_factor_kernel_new_shared2<float_t>
+										<<< ff_grid_size, ff_block_size >>> (
+											qx_d, qy_d, qz_d, shape_def_d, axes_d,
+											curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles,
+											b_nqx, b_nqy, b_nqz, b_num_triangles,
+											ib_x, ib_y, ib_z, ib_t,
+											fq_d);
 	#endif
-									// kernel 3: decompose along triangles, and blocked y and z
-									/*unsigned int ff_x_blocks = (unsigned int)
-															ceil((float) curr_b_num_triangles / BLOCK_FF_T_);
-									unsigned int ff_y_blocks = (unsigned int)
-															ceil((float) curr_b_nqy / (BLOCK_FF_Y_ * A_Y_));
-									unsigned int ff_z_blocks = (unsigned int)
-															ceil((float) curr_b_nqz / (BLOCK_FF_Z_ * A_Z_));
-									dim3 ff_grid_size(ff_x_blocks, ff_y_blocks, ff_z_blocks);
-									dim3 ff_block_size(BLOCK_FF_T_, BLOCK_FF_Y_, BLOCK_FF_Z_);
-
-									form_factor_kernel_new_2<float_t> <<< ff_grid_size, ff_block_size>>> (
-										qx_d, qy_d, qz_d, shape_def_d,
-										curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles,
-										b_nqx, b_nqy, b_nqz, b_num_triangles,
-										ib_x, ib_y, ib_z, ib_t,
-										A_Y_, A_Z_,
-										fq_d);*/
-
 									cudaThreadSynchronize();
 									cudaEventRecord(end_event, 0);
 									cudaEventSynchronize(end_event);
@@ -883,13 +863,124 @@ namespace hig {
 										unsigned int, unsigned int, unsigned int, unsigned int,
 										complex_t*) { }
 
+	extern __shared__ float_t dynamic_shared[];
+
 	/* K4: kernel with t, y, z decomposition, dynamic shared mem for input, static for output */
 	template<typename float_t, typename complex_t>
-	__global__ void form_factor_kernel_new_shared2(float_t*, float_t*, complex_t*, float_t*, short int*,
-										unsigned int, unsigned int, unsigned int, unsigned int,
-										unsigned int, unsigned int, unsigned int, unsigned int,
-										unsigned int, unsigned int, unsigned int, unsigned int,
-										complex_t*) {
+	__global__ void form_factor_kernel_new_shared2(const float_t* qx, const float_t* qy, const complex_t* qz,
+										const float_t* shape_def, const short int* axes,
+										const unsigned int curr_nqx, const unsigned int curr_nqy,
+										const unsigned int curr_nqz, const unsigned int curr_num_triangles,
+										const unsigned int b_nqx, const unsigned int b_nqy,
+										const unsigned int b_nqz, const unsigned int b_num_triangles,
+										const unsigned int ib_x, const unsigned int ib_y,
+										const unsigned int ib_z, const unsigned int ib_t,
+										complex_t* fq) {
+/*		unsigned int i_t = blockDim.x * blockIdx.x + threadIdx.x;
+		unsigned int i_y = blockDim.y * blockIdx.y + threadIdx.y;
+		unsigned int i_z = blockDim.z * blockIdx.z + threadIdx.z;
+		unsigned int i_thread = blockDim.x * blockDim.y * threadIdx.z +
+								blockDim.x * threadIdx.y + threadIdx.x;
+		unsigned int num_threads = blockDim.x * blockDim.y * blockDim.z;
+
+		// shared buffers TODO ... change at the construction place too!!
+		// sizes are:	shared_shape_def = T_PROP_SIZE_ * blockDim.x
+		// 				shared_qx = curr_nqx	// the whole qx
+		// 				shared_qy = blockDim.y
+		// 				shared_qz = blockDim.z
+		// make these read only ... ?
+		float_t *shared_shape_def = (float_t*) dynamic_shared;
+		float_t *shared_qx = (float_t*) &shared_shape_def[T_PROP_SIZE_ * blockDim.x];
+		float_t *shared_qy = (float_t*) &shared_qx[curr_nqx];
+		complex_t *shared_qz = (complex_t*) &shared_qy[blockDim.y];
+		// shared output buffer (static)
+		__shared__ complex_t shared_fq[(FQ_COPY_SIZE_ + BANK_OFF_) * MAX_NUM_THREADS_];
+
+		unsigned int i_shared, base_offset, num_loads;
+
+		// load triangles
+		unsigned int shape_def_size = T_PROP_SIZE_ * blockDim.x;
+		num_loads = __float2int_ru(__fdividef(__int2float_ru(shape_def_size), num_threads));
+		base_offset = T_PROP_SIZE_ * (b_num_triangles * ib_t + blockDim.x * blockIdx.x);
+		for(int l = 0; l < num_loads; ++ l) {
+			i_shared = num_threads * l + i_thread;
+			if(i_shared < shape_def_size) shared_shape_def[i_shared] = shape_def[base_offset + i_shared];
+		} // for
+
+		// load qx
+		num_loads = __float2uint_ru(__fdividef(__uint2float_ru(curr_nqx), num_threads));
+		base_offset = b_nqx * ib_x;             // all qx of this hyperblock need to be loaded
+		for(int l = 0; l < num_loads; ++ l) {
+			i_shared = num_threads * l + i_thread;
+			if(i_shared < curr_nqx)
+				shared_qx[i_shared] = qx[base_offset + i_shared];
+		} // for
+
+		// load qy
+		unsigned int i_qy = b_nqy * ib_y + i_y;
+		if(threadIdx.x == 0 && threadIdx.z == 0)
+			shared_qy[threadIdx.y] = qy[i_qy];	// M: spread about access ...
+
+		// load qz
+		unsigned int i_qz = b_nqz * ib_z + i_z;
+		if(threadIdx.x == 0 && threadIdx.y == 0)
+			shared_qz[threadIdx.z] = qz[i_qz];	// M: spread about access ...
+
+		__syncthreads();
+
+		if(i_t < curr_num_triangles && i_y < curr_nqy && i_z < curr_nqz) {
+			unsigned int shape_off = T_PROP_SIZE_ * threadIdx.x;
+			// this may be improved by making all accesses contiguous by reorganizing shared mem data ...
+			float_t s = shared_shape_def[shape_off];
+			float_t nx = shared_shape_def[shape_off + 1];
+			float_t ny = shared_shape_def[shape_off + 2];
+			float_t nz = shared_shape_def[shape_off + 3];
+			float_t x = shared_shape_def[shape_off + 4];
+			float_t y = shared_shape_def[shape_off + 5];
+			float_t z = shared_shape_def[shape_off + 6];
+
+			float_t temp_y = shared_qy[threadIdx.y];
+			float_t temp_z = shared_qz[threadIdx.z];
+			float_t qy2 = temp_y * temp_y;
+			float_t qyn = temp_y * ny;
+			float_t qyt = temp_y * y;
+			complex_t qz2 = temp_z * temp_z;
+			complex_t qzn = temp_z * nz;
+			complex_t qzt = temp_z * z;
+
+			int num_iter = __float2int_ru(__fdividef(__uint2float_ru(curr_nqx), FQ_COPY_SIZE_F_));
+			unsigned int shared_base = (FQ_COPY_SIZE_ + BANK_OFF_) * 
+										(blockDim.y * (blockDim.z * threadIdx.x + threadIdx.z) +
+										threadIdx.y);
+			unsigned int block_base = curr_nqx * (curr_nqy * (curr_nqz * i_t + i_z) + i_y) + thread_idx;
+			int thread_odd = thread_idx & 1;
+
+			for(unsigned int i_x = 0, qx_i_x = 0; i_x < num_iter; ++ i_x) {
+				unsigned int block_base_2 = block_base + i_x * FQ_COPY_SIZE_;
+				for(int i_xx = 0; i_xx < FQ_COPY_SIZE_ && qx_i_x < curr_nqx; ++ i_xx) {
+					float_t temp_x = shared_qx[qx_i_x ++];
+					complex_t q2 = fma(temp_x, temp_x, qy2 + qz2);
+					complex_t qt_d = fma(temp_x, x, qyt + qzt);
+					complex_t qn_d = fma(temp_x, nx, qyn + qzn) / q2;
+					complex_t fq_temp = compute_fq(s, qt_d, qn_d);
+
+					// to remove shared conflicts
+					if(thread_odd == 0) shared_fq[shared_base + i_xx] = fq_temp;
+					if(thread_odd != 0) shared_fq[shared_base + i_xx] = fq_temp;
+				} // for
+
+				__syncthreads();
+
+				if(i_threadx < FQ_COPY_SIZE_) {
+					for(int i_ww = 0; i_ww < num_threads; ++ i_ww) {    // FIXIT: this is not entirely correct
+																		// when num_threads < FQ_COPY_SIZE_
+						fq[block_base_2 + i_ww * curr_nqx] =
+							shared_fq[i_ww * (FQ_COPY_SIZE_ + BANK_OFF_) + i_thread];
+					} // for
+				} // if
+			} // for x
+		} // if
+*/
 	} // form_factor_kernel_new_shared2()
 
 	/* K5: kernel with t, y, z decomposition, dynamic shared mem for input, static for output, memopt? ... */
