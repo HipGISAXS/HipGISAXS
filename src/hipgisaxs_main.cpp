@@ -5,7 +5,7 @@
   *
   *  File: hipgisaxs_main.cpp
   *  Created: Jun 14, 2012
-  *  Modified: Sat 27 Oct 2012 11:41:25 AM PDT
+  *  Modified: Fri 23 Nov 2012 11:53:53 AM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -19,6 +19,8 @@
 #include <ctime>
 #include <cmath>
 #include <mpi.h>
+
+#include "woo/timer/woo_boostchronotimers.hpp"
 
 #include "hipgisaxs_main.hpp"
 #include "typedefs.hpp"
@@ -180,8 +182,9 @@ namespace hig {
 		if(tilt_step == 0) num_tilt = 1;
 		else num_tilt = (tilt_max - tilt_min) / tilt_step + 1;
 
-		//std::cout << "num alphai: " << num_alphai << ", num phi: " << num_phi
-		//			<< ", num tilt: " << num_tilt << std::endl;
+		std::cout << "**                    Num alphai: " << num_alphai << std::endl
+					<< "**                       Num phi: " << num_phi << std::endl
+					<< "**                      Num tilt: " << num_tilt << std::endl;
 
 		float_t alpha_i = alphai_min;
 		// high level of parallelism here (alphai, phi, tilt) for dynamicity ...
@@ -192,8 +195,11 @@ namespace hig {
 				float_t tilt = tilt_min;
 				for(int k = 0; k < num_tilt; k ++, tilt += tilt_step) {
 
-					std::cout << "-- Computing GISAXS with ai = " << alpha_i
-							<< ", phi = " << phi << " and tilt = " << tilt << std::endl;
+					std::cout << "-- Computing GISAXS "
+								<< i * num_phi * num_tilt + j * num_tilt + k + 1 << " / "
+								<< num_alphai * num_phi * num_tilt
+								<< " [alphai = " << alpha_i << ", phi = " << phi
+								<< ", tilt = " << tilt << "] ..." << std::endl;
 
 					/* run a gisaxs simulation */
 
@@ -210,9 +216,10 @@ namespace hig {
 					if(mpi_rank == 0) {
 						// note that final_data stores 3d info
 						// for 2d, just take a slice of the data
-						std::cout << "-- Constructing GISAXS image ..." << std::endl;
+						std::cout << "-- Constructing GISAXS image ... " << std::flush;
 						Image img(nqx_, nqy_, nqz_);
 						img.construct_image(final_data, 0); // merge this into the contructor ...
+						std::cout << "done." << std::endl;
 
 						if(x_max < x_min) x_max = x_min;
 						// define output filename
@@ -222,22 +229,25 @@ namespace hig {
 						phi_b << phi; phi_s = phi_b.str();
 						tilt_b << tilt; tilt_s = tilt_b.str();
 						std::string output(HiGInput::instance().param_pathprefix() +
-										"/" + HiGInput::instance().runname() +
-										"/img_ai=" + alphai_s + "_rot=" + phi_s +
-										"_tilt=" + tilt_s + ".tif");
+											"/" + HiGInput::instance().runname() +
+											"/img_ai=" + alphai_s + "_rot=" + phi_s +
+											"_tilt=" + tilt_s + ".tif");
 
 						//img.save(output, x_min, x_max);
-						std::cout << "-- Saving GISAXS image in " << output << " ..." << std::endl;
+						std::cout << "**                    Image size: " << nqy_  << " x " << nqz_ << std::endl;
+						std::cout << "-- Saving image in " << output << " ... " << std::flush;
 						img.save(output);
+						std::cout << "done." << std::endl;
 
 						// save the actual data into a file also
 						std::string data_file(HiGInput::instance().param_pathprefix() +
 										"/" + HiGInput::instance().runname() +
 										"/gisaxs_ai=" + alphai_s + "_rot=" + phi_s +
 										"_tilt=" + tilt_s + ".out");
-						std::cout << "-- Saving raw GISAXS image data in " << data_file << " ..."
-								<< std::endl;
+						std::cout << "-- Saving raw data in " << data_file << " ... "
+								<< std::flush;
 						save_gisaxs(final_data, data_file);
+						std::cout << "done." << std::endl;
 
 						// for future ...
 						/*for(int x = x_min; x <= x_max; x += x_step) {
@@ -273,7 +283,7 @@ namespace hig {
 	
 	void HipGISAXS::save_gisaxs(float_t *final_data, std::string output) {
 		std::ofstream f(output);
-		std::cout << "NQY x NQZ: " << nqy_ << " x " << nqz_ << std::endl;
+		//std::cout << "NQY x NQZ: " << nqy_ << " x " << nqz_ << std::endl;
 		for(unsigned int z = 0; z < nqz_; ++ z) {
 			for(unsigned int y = 0; y < nqy_; ++ y) {
 				unsigned int index = nqy_ * z + y;
@@ -346,7 +356,7 @@ namespace hig {
 			// get the shape
 			// compute t, lattice, ndoms, dd, nn, id etc.
 
-			std::cout << "-- Processing structure " << s_num + 1 << std::endl;
+			std::cout << "-- Processing structure " << s_num + 1 << " ..." << std::endl;
 
 			Structure *curr_struct = &((*s).second);
 			Shape *curr_shape = HiGInput::instance().shape(*curr_struct);
@@ -384,13 +394,11 @@ namespace hig {
 			std::string shape_file = HiGInput::instance().shape_filename((*s).second);
 			shape_param_list_t shape_params = HiGInput::instance().shape_params((*s).second);
 
-			std::cout << "---- number of grains: " << num_domains << std::endl;
-
 			/* computing dwba ff for each grain in structure (*s) with
 			 * ensemble containing num_domains grains */
 			for(int j = 0; j < num_domains; j ++) {	// or distributions
 
-				std::cout << "- Processing grain " << j + 1 << "/" << num_domains << std::endl;
+				std::cout << "-- Processing grain " << j + 1 << " / " << num_domains << " ..." << std::endl;
 
 				// define r_norm (domain orientation by tau and eta)
 				// define full domain rotation matrix r_total = r_phi * r_norm
@@ -435,8 +443,9 @@ namespace hig {
 									"/" + HiGInput::instance().runname() +
 									"/sf_ai=" + alphai_s + "_rot=" + phi_s +
 									"_tilt=" + tilt_s + ".out");
-					std::cout << "-- Saving structure factor in " << sf_output << " ..." << std::endl;
+					std::cout << "-- Saving structure factor in " << sf_output << " ... " << std::flush;
 					sf_.save_sf(nqx_, nqy_, nqz_extended_, sf_output.c_str());
+					std::cout << "done." << std::endl;
 				} // if
 
 				//read_form_factor("curr_ff.out");
@@ -455,11 +464,12 @@ namespace hig {
 									"/" + HiGInput::instance().runname() +
 									"/ff_ai=" + alphai_s + "_rot=" + phi_s +
 									"_tilt=" + tilt_s + ".out");
-					std::cout << "-- Saving form factor in " << ff_output << " ..." << std::endl;
+					std::cout << "-- Saving form factor in " << ff_output << " ... " << std::flush;
 					ff_.save_ff(nqx_, nqy_, nqz_extended_, ff_output.c_str());
+					std::cout << "done." << std::endl;
 				} // if
 
-				// processing of sf and ff is being done by just one processor ...
+				// processing of sf and ff is being done by just one processor ... parallelize ...
 				if(mpi_rank == 0) {
 					complex_t* base_id = id + j * nqx_ * nqy_ * nqz_;
 
@@ -534,9 +544,9 @@ namespace hig {
 								} // for y
 							} // for z
 						} else {
-								std::cerr << "error: unable to determine sample structure. "
-											<< "make sure the layer order is correct" << std::endl;
-								return false;
+							std::cerr << "error: unable to determine sample structure. "
+										<< "make sure the layer order is correct" << std::endl;
+							return false;
 						} // if-else
 					} else {
 						/* perform slicing */
@@ -820,7 +830,7 @@ namespace hig {
 		} else {
 			/* computing using the sample slicing scheme */
 			// not yet implemented ...
-			std::cout << "uh-oh: you hit a slicing part that has not been implemented yet" << std::endl;
+			std::cerr << "uh-oh: you hit a slicing part that has not been implemented yet" << std::endl;
 			return false;
 		} // if
 
@@ -1277,21 +1287,42 @@ int main(int narg, char** args) {
 	int mpi_rank = MPI::COMM_WORLD.Get_rank();
 	int mpi_num_procs = MPI::COMM_WORLD.Get_size();
 
+	if(mpi_rank == 0) {
+		std::cout << std::endl
+					<< "********************************************************************************"
+					<< std::endl
+					<< "***************************** HipGISAXS v0.01-alpha ****************************"
+					<< std::endl
+					<< "********************************************************************************"
+					<< std::endl << std::endl;
+	} // if
+
+	woo::BoostChronoTimer maintimer, readtimer, computetimer;
+	maintimer.start();
+	readtimer.start();
 	/* read input file and construct input structures */
 	hig::HipGISAXS my_gisaxs;
+	if(mpi_rank == 0) std::cout << "**                HiG input file: " << args[1] << std::endl;
 	if(!my_gisaxs.construct_input(args[1])) {
 		if(mpi_rank == 0) std::cerr << "error: failed to construct input containers" << std::endl;
 		MPI::Finalize();
 		return 1;
 	} // if
 	//hig::HiGInput::instance().print_all();	// for testing
+	readtimer.stop();
+	std::cout << "**       Input construction time: " << readtimer.elapsed_msec() << " ms." << std::endl;
 
+	computetimer.start();
 	/* run the simulation */
 	if(!my_gisaxs.run_all_gisaxs(MPI::COMM_WORLD)) {
 		std::cerr << "error: could not run the simulation - some error occured" << std::endl;
 		MPI::Finalize();
 		return 1;
 	} // if
+	computetimer.stop();
+	maintimer.stop();
+	std::cout << "**         Total simulation time: " << computetimer.elapsed_msec() << " ms." << std::endl;
+	std::cout << "**                    Total time: " << maintimer.elapsed_msec() << " ms." << std::endl;
 
 	MPI::Finalize();
 	return 0;

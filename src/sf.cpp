@@ -5,7 +5,7 @@
   *
   *  File: sf.cpp
   *  Created: Jun 18, 2012
-  *  Modified: Mon 15 Oct 2012 09:39:47 PM PDT
+  *  Modified: Fri 23 Nov 2012 12:16:35 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -14,6 +14,8 @@
 #include <fstream>
 #include <cmath>
 #include <boost/math/special_functions/fpclassify.hpp>
+
+#include "woo/timer/woo_boostchronotimers.hpp"
 
 #include "sf.hpp"
 #include "qgrid.hpp"
@@ -47,6 +49,10 @@ namespace hig {
 							MPI::Intracomm& world_comm) {
 		int my_rank = world_comm.Get_rank();
 
+		woo::BoostChronoTimer maintimer, computetimer;
+
+		maintimer.start();
+
 		nx_ = QGrid::instance().nqx();
 		ny_ = QGrid::instance().nqy();
 		if(expt == "saxs")
@@ -77,14 +83,12 @@ namespace hig {
 			return false;
 		} // if
 
-		if(my_rank == 0) {
-			std::cout << "-- Computing structure factor with ";
-			std::cout << "nqx x nqy x nqz: " << nx_ << " x "
-						<< ny_ << " x " << nz_ << " ..." << std::endl;
-		} // if
+		if(my_rank == 0) std::cout << "-- Computing structure factor ... " << std::flush;
 
 		std::complex<float_t> unit_c(1, 0);
 		std::complex<float_t> unit_ci(0, 1);
+
+		computetimer.start();
 
 		// good for gpu ...
 		for(unsigned int z = 0; z < nz_; ++ z) {
@@ -96,10 +100,8 @@ namespace hig {
 					float_t qx = QGrid::instance().qx(x);
 					float_t qy = QGrid::instance().qy(y);
 					complex_t qz;
-					if(expt == "saxs")
-						qz = QGrid::instance().qz(z);
-					else if(expt == "gisaxs")
-						qz = QGrid::instance().qz_extended(z);
+					if(expt == "saxs") qz = QGrid::instance().qz(z);
+					else if(expt == "gisaxs") qz = QGrid::instance().qz_extended(z);
 
 					temp1 = exp(unit_ci * (arot[0] * qx + arot[1] * qy + arot[2] * qz));
 					temp_x2 = unit_c - pow(temp1, repet[0]);
@@ -153,9 +155,17 @@ namespace hig {
 			} // for y
 		} // for z
 
+		computetimer.stop();
+		maintimer.stop();
+
 		if(my_rank == 0) {
-			int naninfs = count_naninfs(nx_, ny_, nz_, sf_);
-			std::cout << " ------- " << naninfs << " / " << nx_ * ny_ * nz_ << " nans or infs" << std::endl;
+			std::cout << "done. " << std::endl;
+			std::cout << "**               SF compute time: " << computetimer.elapsed_msec()  << " ms."
+						<< std::endl
+						<< "**                 Total SF time: " << maintimer.elapsed_msec() << " ms."
+						<< std::endl;
+			//int naninfs = count_naninfs(nx_, ny_, nz_, sf_);
+			//std::cout << " ------- " << naninfs << " / " << nx_ * ny_ * nz_ << " nans or infs" << std::endl;
 		} // if
 
 		return true;

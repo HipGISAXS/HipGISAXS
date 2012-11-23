@@ -5,7 +5,7 @@
   *
   *  File: hig_input.cpp
   *  Created: Jun 11, 2012
-  *  Modified: Sat 13 Oct 2012 08:37:19 PM PDT
+  *  Modified: Fri 23 Nov 2012 11:56:22 AM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -1421,15 +1421,15 @@ namespace hig {
 			max_c = (max_c < shape_def_[i + 6]) ? shape_def_[i + 6] : max_c ;
 		} // for
 
-		std::cout << "------ min = " << min_a << ", " << min_b << ", " << min_c << std::endl;
-		std::cout << "------ max = " << max_a << ", " << max_b << ", " << max_c << std::endl;
+		//std::cout << "------ min = " << min_a << ", " << min_b << ", " << min_c << std::endl;
+		//std::cout << "------ max = " << max_a << ", " << max_b << ", " << max_c << std::endl;
 
 		float_t diff_a = max_a - min_a;
         float_t diff_b = max_b - min_b;
         float_t diff_c = max_c - min_c;
 
-        std::cout << "++ diff_a = " << diff_a << ", diff_b = " << diff_b
-                    << ", diff_c = " << diff_c << std::endl;
+		//std::cout << "++ diff_a = " << diff_a << ", diff_b = " << diff_b
+		//			<< ", diff_c = " << diff_c << std::endl;
 
 		vector3_t axes;
         // axes[i] = j
@@ -1468,14 +1468,17 @@ namespace hig {
             } // if-else
         } // if-else
 #endif
-        std::cout << "++ Final shape min point: " << min_dim[0] << ", "
+        std::cout << "**              Shape size range: ("
+					<< min_dim[0] << ", " << min_dim[1] << ", " << min_dim[2] << ") x ("
+					<< max_dim[0] << ", " << max_dim[1] << ", "	<< max_dim[2] << ")" << std::endl;
+        /*std::cout << "++ Final shape min point: " << min_dim[0] << ", "
                     << min_dim[1] << ", " << min_dim[2] << std::endl;
         std::cout << "++ Final shape max point: " << max_dim[0] << ", "
                     << max_dim[1] << ", " << max_dim[2] << std::endl;
         std::cout << "++ Final shape dimensions: "
                     << fabs(max_dim[0] - min_dim[0]) << " x "
                     << fabs(max_dim[1] - min_dim[1]) << " x "
-                    << fabs(max_dim[2] - min_dim[2]) << std::endl;
+                    << fabs(max_dim[2] - min_dim[2]) << std::endl;*/
 
 		return true;
 	} // HiGInput::compute_shapedef_minmax()
@@ -1727,13 +1730,13 @@ namespace hig {
 			vector3_t shape_min(0.0, 0.0, 0.0), shape_max(0.0, 0.0, 0.0);
 			compute_shape_domain(curr_shape, shape_min, shape_max);
 
-			std::cout << "++ Shape min point: " << shape_min[0] << ", " << shape_min[1]
+			/*std::cout << "++ Shape min point: " << shape_min[0] << ", " << shape_min[1]
 						<< ", " << shape_min[2] << std::endl;
 			std::cout << "++ Shape max point: " << shape_max[0] << ", " << shape_max[1]
 						<< ", " << shape_max[2] << std::endl;
 			std::cout << "++ Shape dimensions: " << shape_max[0] - shape_min[0] << " x "
 						<< shape_max[1] - shape_min[1] << " x "
-						<< shape_max[2] - shape_min[2] << std::endl;
+						<< shape_max[2] - shape_min[2] << std::endl;*/
 
 			/* determine the structure's position in the sample configuration */
 			float_t zc_l = layer_origin_z((*s).second);

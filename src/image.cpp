@@ -5,7 +5,7 @@
   *
   *  File: image.cpp
   *  Created: Jun 18, 2012
-  *  Modified: Fri 12 Oct 2012 09:16:09 PM PDT
+  *  Modified: Fri 23 Nov 2012 11:26:30 AM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -154,7 +154,7 @@ namespace hig {
 //			std::cout << "convoluted: " << std::endl;
 //			print_arr_2d(new_data, new_ny, new_nz);
 */
-			std::cout << "  -- Translating ..." << std::endl;
+			//std::cout << "  -- Translating ..." << std::endl;
 //			if(!translate_pixels_to_positive(new_ny, new_nz, new_data)) {
 //			if(!translate_pixels_to_positive(ny_, nz_, data_transp)) {
 			if(!translate_pixels_to_positive(ny_, nz_, data)) {
@@ -163,7 +163,7 @@ namespace hig {
 			} // if
 
 			// apply log(10) on the resulting data
-			std::cout << "  -- Applying log10() ..." << std::endl;
+			//std::cout << "  -- Applying log10() ..." << std::endl;
 //			if(!mat_log10_2d(new_ny, new_nz, new_data)) {
 //			if(!mat_log10_2d(ny_, nz_, data_transp)) {
 			if(!mat_log10_2d(ny_, nz_, data)) {
@@ -185,7 +185,7 @@ namespace hig {
 //			std::cout << "scaled: " << std::endl;
 //			print_arr_2d(scaled_data, ny_, nz_);
 
-			std::cout << "  -- Normalizing ..." << std::endl;
+			//std::cout << "  -- Normalizing ..." << std::endl;
 //			if(!normalize_pixels(ny_, nz_, scaled_data)) {
 //			if(!normalize_pixels(ny_, nz_, new_data)) {
 //			if(!normalize_pixels(ny_, nz_, data_transp)) {
@@ -198,7 +198,7 @@ namespace hig {
 			//print_arr_2d(data_transp, ny_, nz_);
 
 			// construct image_buffer_ with rgb values for each point in data
-			std::cout << "  -- Mapping data to the color palette ..." << std::endl;
+			//std::cout << "  -- Mapping data to the color palette ..." << std::endl;
 //			if(!convert_to_rgb_pixels(ny_, nz_, scaled_data)) {
 //			if(!convert_to_rgb_pixels(ny_, nz_, new_data)) {
 //			if(!convert_to_rgb_pixels(ny_, nz_, data_transp)) {
@@ -253,7 +253,7 @@ namespace hig {
 		for(unsigned int i = 0; i < nx * ny; ++ i) {
 			if(!boost::math::isfinite(data[i])) { data[i] = 0; ++ count; }
 		} // for
-		std::cout << " ------ " << count << " / " << nx * ny << " pixels nans or infs" << std::endl;
+		//std::cout << " ------ " << count << " / " << nx * ny << " pixels nans or infs" << std::endl;
 	} // Image::remove_nans_infs()
 
 

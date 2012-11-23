@@ -5,7 +5,7 @@
  *
  *  File: ff_num.hpp
  *  Created: Nov 05, 2011
- *  Modified: Fri 12 Oct 2012 12:36:49 PM PDT
+ *  Modified: Fri 23 Nov 2012 12:46:58 PM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -20,6 +20,8 @@
 #include <cmath>
 #include <complex>
 #include <cstring>
+
+#include "woo/timer/woo_boostchronotimers.hpp"
 
 #include "object2hdf5.h"
 #include "qgrid.hpp"
@@ -118,6 +120,10 @@ namespace hig {
 		float_t comp_time = 0.0, comm_time = 0.0, mem_time = 0.0, kernel_time = 0.0, red_time = 0.0;
 		float_t total_start = 0.0, total_end = 0.0, total_time = 0.0;
 
+		woo::BoostChronoTimer maintimer, computetimer;
+
+		maintimer.start();
+
 		unsigned int nqx = QGrid::instance().nqx();
 		unsigned int nqy = QGrid::instance().nqy();
 		unsigned int nqz = QGrid::instance().nqz_extended();
@@ -151,12 +157,13 @@ namespace hig {
 #endif
 
 		if(rank == 0) {
-			std::cout << std::endl
-				<< "**        Using input shape file: " << filename << std::endl
-				<< "**     Number of input triangles: " << num_triangles << std::endl
-				<< "**  Q-grid resolution (q-points): " << nqx * nqy * nqz << std::endl
-	            << "**               NQX x NQY x NQZ: " << nqx << " x " << nqy << " x " << nqz << std::endl
-				<< "** Number of processes requested: " << num_procs << std::endl << std::flush;
+			std::cout << "-- Form factor computation ..." << std::endl
+						<< "**        Using input shape file: " << filename << std::endl
+						<< "**     Number of input triangles: " << num_triangles << std::endl
+						<< "**  Q-grid resolution (q-points): " << nqx * nqy * nqz << std::endl
+			            << "**               NQX x NQY x NQZ: "
+						<< nqx << " x " << nqy << " x " << nqz << std::endl
+						<< "** Number of processes requested: " << num_procs << std::endl << std::flush;
 		} // if
 		if(num_triangles < 1) {
 			//MPI::Finalize();
@@ -263,6 +270,8 @@ namespace hig {
 			complex_t *p_ff = NULL;
 			float_t temp_mem_time = 0.0, temp_comm_time = 0.0;
 	
+			computetimer.start();
+
 			unsigned int ret_nt = 0;
 			ret_nt = compute_form_factor_wrap(rank, shape_def, num_triangles, axes,
 						qx_h, p_nqx, p_qy_h, p_nqy,	p_qz_h, p_nqz, p_ff,
@@ -276,6 +285,9 @@ namespace hig {
 							, block_cuda_
 	#endif
 						);
+
+			computetimer.stop();
+
 			//p_ff = new (std::nothrow) complex_t[p_nqx * p_nqy * p_nqz];
 			//ret_nt = 1;
 			mem_time += (temp_mem_time / 1000);
@@ -312,6 +324,8 @@ namespace hig {
 			delete[] qz_h;
 			delete[] qy_h;
 			delete[] qx_h;
+
+			maintimer.stop();
 	
 			total_end = MPI::Wtime();
 			total_time = total_end - total_start;
@@ -319,22 +333,22 @@ namespace hig {
 			mem_time += mem_end - mem_start;
 	
 			if(rank == 0) {
-				std::cout << "**                FF kernel time: " << kernel_time / 1000 << "s." << std::endl;
-				std::cout << "**             FF reduction time: " << red_time / 1000 << "s." << std::endl;
-				std::cout << "**         FF memory and IO time: " << mem_time << "s." << std::endl;
-				std::cout << "**            Communication time: " << comm_time << "s." << std::endl;
-				//std::cout << "**                    Total time: " << ((kernel_time + red_time) / 1000 +
-				//												mem_time + comm_time) << "s." << std::endl;
-				std::cout << "**                  Total FF time: " << total_time << "s." << std::endl;
-				std::cout << std::flush;
-				//std::cout << std::endl << std::flush;
+				std::cout << "**               FF compute time: " << computetimer.elapsed_msec() << " ms."
+							<< std::endl
+							<< "**                FF kernel time: " << kernel_time << " ms." << std::endl
+							<< "**             FF reduction time: " << red_time << " ms." << std::endl
+							<< "**         FF memory and IO time: " << mem_time * 1000 << " ms." << std::endl
+							<< "**            Communication time: " << comm_time * 1000 << " ms." << std::endl
+							<< "**                 Total FF time: " << total_time * 1000 << " ms."
+							<< " (" << total_end << " - " << total_start << ")" << std::endl
+							<< "**                  Main FF time: " << maintimer.elapsed_msec() << " ms." << std::endl << std::flush;
 			} // if
 		} // if
 
 #ifndef FINDBLOCK
 		if(rank == 0) {
-			int naninfs = count_naninfs((int)nqx, (int)nqy, (int)nqz, ff);
-			std::cout << " ------ " << naninfs << " / " << nqx * nqy * nqz << " nans or infs" << std::endl;
+			//int naninfs = count_naninfs((int)nqx, (int)nqy, (int)nqz, ff);
+			//std::cout << " ------ " << naninfs << " / " << nqx * nqy * nqz << " nans or infs" << std::endl;
 		} // if
 #endif
 	

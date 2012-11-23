@@ -5,7 +5,7 @@
   *
   *  File: qgrid.cpp
   *  Created: Jun 17, 2012
-  *  Modified: Wed 17 Oct 2012 11:03:54 AM PDT
+  *  Modified: Fri 23 Nov 2012 11:54:54 AM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -56,8 +56,8 @@ namespace hig {
 			qmin[1] = - qmax[1];
 			qmin[2] = min(temp_qmax[2], temp_qmin[2]);
 	
-			std::cout << "min q-point: " << qmin[0] << ", " << qmin[1] << ", " << qmin[2] << std::endl;
-			std::cout << "max q-point: " << qmax[0] << ", " << qmax[1] << ", " << qmax[2] << std::endl;
+			//std::cout << "min q-point: " << qmin[0] << ", " << qmin[1] << ", " << qmin[2] << std::endl;
+			//std::cout << "max q-point: " << qmax[0] << ", " << qmax[1] << ", " << qmax[2] << std::endl;
 	
 			/* one-pixel range in k-space
 			 * in order to resolve a pixel, dq must be <= qpixel and lower to resolve subpixels */
@@ -121,8 +121,8 @@ namespace hig {
 			qmin[1] = - qmax[1];
 			qmin[2] = min(max_pixel[1], min_pixel[1]);
 	
-			std::cout << "min q-point: " << qmin[0] << ", " << qmin[1] << ", " << qmin[2] << std::endl;
-			std::cout << "max q-point: " << qmax[0] << ", " << qmax[1] << ", " << qmax[2] << std::endl;
+			//std::cout << "min q-point: " << qmin[0] << ", " << qmin[1] << ", " << qmin[2] << std::endl;
+			//std::cout << "max q-point: " << qmax[0] << ", " << qmax[1] << ", " << qmax[2] << std::endl;
 	
 			vector3_t q0, q1;
 			pixel_to_kspace(vector2_t(0, 0), k0, alpha_i, pixel_size, sd_distance, beam, q0);
@@ -135,9 +135,12 @@ namespace hig {
 			return false;
 		} // if-else
 
-		std::cout << "new min q-point: " << qmin[0] << ", " << qmin[1] << ", " << qmin[2] << std::endl;
-		std::cout << "new max q-point: " << qmax[0] << ", " << qmax[1] << ", " << qmax[2] << std::endl;
-		std::cout << "step: " << step[0] << ", " << step[1] << ", " << step[2] << std::endl;
+		//std::cout << "new min q-point: " << qmin[0] << ", " << qmin[1] << ", " << qmin[2] << std::endl;
+		//std::cout << "new max q-point: " << qmax[0] << ", " << qmax[1] << ", " << qmax[2] << std::endl;
+		//std::cout << "step: " << step[0] << ", " << step[1] << ", " << step[2] << std::endl;
+		std::cout << "**                  Q-grid range: ("
+					<< qmin[0] << ", " << qmin[1] << ", " << qmin[2] << ") x ("
+					<< qmax[0] << ", " << qmax[1] << ", " << qmax[2] << ")" << std::endl;
 
 		qx_.push_back(qmin[0]);
 		qy_.push_back(qmin[1]);

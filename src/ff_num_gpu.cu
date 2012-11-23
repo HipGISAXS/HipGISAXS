@@ -124,11 +124,12 @@ namespace hig {
 										complex_t*);
 	/* K4: kernel with t, y, z decomposition, dynamic shared mem for input, static for output */
 	template<typename float_t, typename complex_t>
-	__global__ void form_factor_kernel_new_shared2(const float_t*, const float_t*, const complex_t*, const float_t*, const short int*,
-										const unsigned int, const unsigned int, const unsigned int, const unsigned int,
-										const unsigned int, const unsigned int, const unsigned int, const unsigned int,
-										const unsigned int, const unsigned int, const unsigned int, const unsigned int,
-										complex_t*);
+	__global__ void form_factor_kernel_new_shared2(const float_t*, const float_t*, const complex_t*,
+							const float_t*, const short int*,
+							const unsigned int, const unsigned int, const unsigned int, const unsigned int,
+							const unsigned int, const unsigned int, const unsigned int, const unsigned int,
+							const unsigned int, const unsigned int, const unsigned int, const unsigned int,
+							complex_t*);
 	/* K5: kernel with t, y, z decomposition, dynamic shared mem for input, static for output, memopt? ... */
 	template<typename float_t, typename complex_t>
 	__global__ void form_factor_kernel_new_shared2_mem(float_t*, float_t*, complex_t*, float_t*, short int*,
@@ -863,6 +864,7 @@ namespace hig {
 										unsigned int, unsigned int, unsigned int, unsigned int,
 										complex_t*) { }
 
+
 	extern __shared__ float_t dynamic_shared[];
 
 	/* K4: kernel with t, y, z decomposition, dynamic shared mem for input, static for output */
@@ -876,7 +878,7 @@ namespace hig {
 										const unsigned int ib_x, const unsigned int ib_y,
 										const unsigned int ib_z, const unsigned int ib_t,
 										complex_t* fq) {
-/*		unsigned int i_t = blockDim.x * blockIdx.x + threadIdx.x;
+		unsigned int i_t = blockDim.x * blockIdx.x + threadIdx.x;
 		unsigned int i_y = blockDim.y * blockIdx.y + threadIdx.y;
 		unsigned int i_z = blockDim.z * blockIdx.z + threadIdx.z;
 		unsigned int i_thread = blockDim.x * blockDim.y * threadIdx.z +
@@ -889,7 +891,7 @@ namespace hig {
 		// 				shared_qy = blockDim.y
 		// 				shared_qz = blockDim.z
 		// make these read only ... ?
-		float_t *shared_shape_def = (float_t*) dynamic_shared;
+/*		float_t *shared_shape_def = (float_t*) dynamic_shared;
 		float_t *shared_qx = (float_t*) &shared_shape_def[T_PROP_SIZE_ * blockDim.x];
 		float_t *shared_qy = (float_t*) &shared_qx[curr_nqx];
 		complex_t *shared_qz = (complex_t*) &shared_qy[blockDim.y];
@@ -972,6 +974,7 @@ namespace hig {
 				__syncthreads();
 
 				if(i_threadx < FQ_COPY_SIZE_) {
+			// this is likely wrong ... should it be ceil(fq_copy_size / num_threads) ... ???
 					for(int i_ww = 0; i_ww < num_threads; ++ i_ww) {    // FIXIT: this is not entirely correct
 																		// when num_threads < FQ_COPY_SIZE_
 						fq[block_base_2 + i_ww * curr_nqx] =
