@@ -95,12 +95,12 @@ void reduction_kernel(unsigned int curr_b_nqx, unsigned int curr_b_nqy, unsigned
 /**
  * GPU: For single precision
  */
-__global__ void reduction_kernel(cuComplex* fq_d,
+__global__ void reduction_kernel(cuFloatComplex* fq_d,
 									unsigned int curr_nqx, unsigned int curr_nqy, unsigned int curr_nqz,
 									unsigned int curr_num_triangles,
 									unsigned int b_nqx, unsigned int b_nqy, unsigned int b_nqz,
 									unsigned int b_num_triangles,
-									cuComplex* ff_d) {
+									cuFloatComplex* ff_d) {
 	// 3D block, where each thread is responsible for one point in the x, y, z grid
 	unsigned int x = threadIdx.x + blockDim.x * blockIdx.x;
 	unsigned int y = threadIdx.y + blockDim.y * blockIdx.y;
@@ -109,7 +109,7 @@ __global__ void reduction_kernel(cuComplex* fq_d,
 	unsigned int temp = curr_nqx * curr_nqy * curr_nqz;
 
 	if(x < curr_nqx && y < curr_nqy && z < curr_nqz) {
-		cuComplex total = make_cuFloatComplex(0.0, 0.0);
+		cuFloatComplex total = make_cuFloatComplex(0.0, 0.0);
 		for(unsigned int i_t = 0; i_t < curr_num_triangles; ++ i_t) {
 			unsigned int i_fq = temp * i_t + i_ff;
 			total = cuCaddf(total, fq_d[i_fq]);

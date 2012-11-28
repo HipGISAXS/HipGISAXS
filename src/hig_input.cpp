@@ -5,7 +5,7 @@
   *
   *  File: hig_input.cpp
   *  Created: Jun 11, 2012
-  *  Modified: Fri 23 Nov 2012 11:56:22 AM PST
+  *  Modified: Mon 26 Nov 2012 02:26:05 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -14,6 +14,7 @@
 
 #include "hig_input.hpp"
 #include "utilities.hpp"
+#include "parameters.hpp"
 #include "hig_file_reader.hpp"
 //#include "object2hdf5.h"
 
@@ -1545,7 +1546,16 @@ namespace hig {
 			float_t z = (float_t)temp_shape_def[i + 6];
 			shape_def_.push_back(z * scale_factor);
 		} // for */
-		for(unsigned int i = 0; i < 7 * num_triangles; ++ i) shape_def_.push_back((float_t)temp_shape_def[i]);
+#ifndef KERNEL2
+		for(unsigned int i = 0; i < 7 * num_triangles; ++ i) {
+			shape_def_.push_back((float_t)temp_shape_def[i]);
+		} // for
+#else	// KERNEL2
+		for(unsigned int i = 0; i < T_PROP_SIZE_ * num_triangles; ++ i) {
+			if((i + 1) % T_PROP_SIZE_ == 0) shape_def_.push_back((float_t)0.0); // for padding
+			else shape_def_.push_back((float_t)temp_shape_def[i]);
+		} // for
+#endif // KERNEL2
 		return num_triangles;
 	} // HiGInput::read_shape_file_shape()
 

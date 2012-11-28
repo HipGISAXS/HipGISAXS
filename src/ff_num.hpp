@@ -5,7 +5,7 @@
  *
  *  File: ff_num.hpp
  *  Created: Nov 05, 2011
- *  Modified: Fri 23 Nov 2012 12:46:58 PM PST
+ *  Modified: Mon 26 Nov 2012 10:31:49 PM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -23,6 +23,7 @@
 
 #include "woo/timer/woo_boostchronotimers.hpp"
 
+#include "parameters.hpp"
 #include "object2hdf5.h"
 #include "qgrid.hpp"
 #include "utilities.hpp"
@@ -576,8 +577,15 @@ namespace hig {
 		double* temp_shape_def = NULL;
 	
 		h5_shape_reader(filename, &temp_shape_def, &num_triangles/*, comm*/);
+#ifndef KERNEL2
 		for(unsigned int i = 0; i < num_triangles * 7; ++ i)
 			shape_def.push_back((float_t)temp_shape_def[i]);
+#else // KERNEL2
+		for(unsigned int i = 0, j = 0; i < num_triangles * T_PROP_SIZE_; ++ i) {
+			if((i + 1) % T_PROP_SIZE_ == 0) shape_def.push_back((float_t) 0.0);	// padding
+			else { shape_def.push_back((float_t)temp_shape_def[j]); ++ j; }
+		} // for
+#endif // KERNEL2
 
 		return num_triangles;
 	} // NumericFormFactor::read_shapes_hdf5()
