@@ -5,7 +5,7 @@
  *
  * File: parameters.hpp
  * Created: June 5, 2012
- * Modified: Mon 26 Nov 2012 11:53:42 AM PST
+ * Modified: Thu 29 Nov 2012 05:03:23 PM PST
  *
  * Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -30,7 +30,7 @@ namespace hig {
 	const int BLOCK_X_ = 100;
 	const int BLOCK_Y_ = 32;
 	const int BLOCK_Z_ = 16;
-	const int BLOCK_T_ = 2048;
+	const int BLOCK_T_ = 512;
 
 	// CUDA block sizes (kernel 1)
 	//const int BLOCK_CUDA_ = 64;
@@ -41,7 +41,16 @@ namespace hig {
 	//const int BLOCK_FF_Z_ = 2;
 
 	// CUDA block size (reduction kernel)
-	const int BLOCK_REDUCTION_ = 8;
+	const int BLOCK_REDUCTION_T_ = BLOCK_T_;	// this is important!
+#ifndef REDUCTION2
+	const int BLOCK_REDUCTION_X_ = 8;
+	const int BLOCK_REDUCTION_Y_ = 8;
+	const int BLOCK_REDUCTION_Z_ = 8;
+#else // REDUCTION2
+	const int BLOCK_REDUCTION_X_ = 2;
+	const int BLOCK_REDUCTION_Y_ = 2;
+	const int BLOCK_REDUCTION_Z_ = 2;
+#endif // REDUCTION2
 
 	// at most these many entries are possible for each of t, y, z in a bock
 	const int MAX_SHARED_SIZE_ = 64;   // not used in shared2
@@ -50,6 +59,7 @@ namespace hig {
 	// the number of entries to copy from shared to device at a time
 	const int FQ_COPY_SIZE_ = 32;
 	const float FQ_COPY_SIZE_F_ = FQ_COPY_SIZE_ * 1.0f;
+
 	// offset to avoid bank conflicts when FQ_COPY_SIZE_ is multiple of # banks (32)
 	const int BANK_OFF_ = 1;
 

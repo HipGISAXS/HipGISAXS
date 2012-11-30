@@ -1,40 +1,52 @@
 /**
- * $Id: reduction.hpp 38 2012-08-09 23:01:20Z asarje $
+ * $Id: reduction.cuh 38 2012-08-09 23:01:20Z asarje $
  *
  * Project: HipGISAXS (High-Performance GISAXS)
  */
 
-#ifndef _MISC_H_
-#define _MISC_H_
+#ifndef _REDUCTION_CUH_
+#define _REDUCTION_CUH_
 
-#ifndef GPUR
-void reduction_kernel(unsigned int, unsigned int, unsigned int,
-						unsigned int, unsigned long int,
-						unsigned int, unsigned int, unsigned int,
-						unsigned int,
-						unsigned int, unsigned int, unsigned int,
+namespace hig {
+
+	#ifdef GPUR		// GPU reductions
+
+	__global__ void reduction_kernel(cuFloatComplex*,
 						unsigned int, unsigned int, unsigned int, unsigned int,
-						cuComplex*, cuComplex*);
+						unsigned int, unsigned int, unsigned int, unsigned int,
+						cuFloatComplex*);
 
-void reduction_kernel(unsigned int, unsigned int, unsigned int,
-						unsigned int, unsigned long int,
-						unsigned int, unsigned int, unsigned int,
-						unsigned int,
-						unsigned int, unsigned int, unsigned int,
+	__global__ void reduction_kernel_parallel(cuFloatComplex*,
+						unsigned int, unsigned int, unsigned int, unsigned int,
+						unsigned int, unsigned int, unsigned int, unsigned int,
+						cuFloatComplex*);
+
+	__global__ void reduction_kernel(cuDoubleComplex*,
+						unsigned int, unsigned int, unsigned int, unsigned int,
+						unsigned int, unsigned int, unsigned int, unsigned int,
+						cuDoubleComplex*);
+
+	__global__ void reduction_kernel_parallel(cuDoubleComplex*,
+						unsigned int, unsigned int, unsigned int, unsigned int,
+						unsigned int, unsigned int, unsigned int, unsigned int,
+						cuDoubleComplex*);
+
+	#else			// CPU reductions (OpenMP)
+
+	void reduction_kernel(unsigned int, unsigned int, unsigned int, unsigned int,
+						unsigned long int, unsigned int, unsigned int, unsigned int,
+						unsigned int, unsigned int, unsigned int, unsigned int,
+						unsigned int, unsigned int, unsigned int, unsigned int,
+						cuFloatComplex*, cuFloatComplex*);
+
+	void reduction_kernel(unsigned int, unsigned int, unsigned int, unsigned int,
+						unsigned long int, unsigned int, unsigned int, unsigned int,
+						unsigned int, unsigned int, unsigned int, unsigned int,
 						unsigned int, unsigned int, unsigned int, unsigned int,
 						cuDoubleComplex*, cuDoubleComplex*);
-#else
-__global__ void reduction_kernel(cuComplex*,
-									unsigned int, unsigned int, unsigned int,
-									unsigned int,
-									unsigned int, unsigned int, unsigned int, unsigned int,
-									cuComplex*);
 
-__global__ void reduction_kernel(cuDoubleComplex*,
-									unsigned int, unsigned int, unsigned int,
-									unsigned int,
-									unsigned int, unsigned int, unsigned int, unsigned int,
-									cuDoubleComplex*);
-#endif // GPUR
+	#endif // GPUR
 
-#endif // _MISC_H_
+} // namespace hig
+
+#endif // _REDUCTION_CUH_

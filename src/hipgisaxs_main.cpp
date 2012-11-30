@@ -5,7 +5,7 @@
   *
   *  File: hipgisaxs_main.cpp
   *  Created: Jun 14, 2012
-  *  Modified: Fri 23 Nov 2012 11:53:53 AM PST
+  *  Modified: Thu 29 Nov 2012 03:59:16 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -1316,6 +1316,8 @@ int main(int narg, char** args) {
 	/* run the simulation */
 	if(!my_gisaxs.run_all_gisaxs(MPI::COMM_WORLD)) {
 		std::cerr << "error: could not run the simulation - some error occured" << std::endl;
+		computetimer.stop();
+		maintimer.stop();
 		MPI::Finalize();
 		return 1;
 	} // if
@@ -1323,6 +1325,7 @@ int main(int narg, char** args) {
 	maintimer.stop();
 	std::cout << "**         Total simulation time: " << computetimer.elapsed_msec() << " ms." << std::endl;
 	std::cout << "**                    Total time: " << maintimer.elapsed_msec() << " ms." << std::endl;
+	std::cout << std::endl;
 
 	MPI::Finalize();
 	return 0;

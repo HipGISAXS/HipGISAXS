@@ -5,7 +5,7 @@
   *
   *  File: cu_complex_numeric.cuh
   *  Created: Oct 17, 2012
-  *  Modified: Sat 24 Nov 2012 10:53:22 AM PST
+  *  Modified: Thu 29 Nov 2012 03:21:39 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -168,6 +168,23 @@ namespace hig {
 		double y = z.y;
 		return make_cuC(cos(x) * cosh(y), -sin(x) * sinh(y));
 	} // cuCsin()
+
+	/**
+	 * Atomics
+	 */
+
+	// atomic add for double precision
+	__device__ double atomicAdd(double* address, double val) {
+		unsigned long long int* ull_address = (unsigned long long int*) address;
+		unsigned long long int old = *ull_address;
+		unsigned long long int assumed;
+		do {
+			assumed = old;
+			old = atomicCAS(ull_address, assumed, __double_as_longlong(val + __longlong_as_double(assumed)));
+		} while (assumed != old);
+		return __longlong_as_double(old);
+	} // atomicAdd()
+
 
 } // namespace
 
