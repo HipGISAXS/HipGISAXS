@@ -4,6 +4,8 @@
  * Project: HipGISAXS (High-Performance GISAXS)
  */
 
+#include <string.h>
+
 #include "object2hdf5.h"
 
 /**
@@ -76,6 +78,8 @@ void h5_shape_reader(const char* hdf5_filename, double** shape_def, unsigned int
 	order = H5Tget_order(datatype);
 	int size = H5Tget_size(datatype);
 
+	// check for datatype size ...
+
 	int num_dim = H5Sget_simple_extent_ndims(dataspace);
 	hsize_t* dims = (hsize_t*) malloc(sizeof(hsize_t) * num_dim);
 	hsize_t* max_dims = (hsize_t*) malloc(sizeof(hsize_t) * num_dim);
@@ -87,21 +91,17 @@ void h5_shape_reader(const char* hdf5_filename, double** shape_def, unsigned int
 	(*num_triangles) = dims[0];
 
 	(*shape_def) = (double *) malloc(dims[0] * dims[1] * size);
-//	double temp[dims[0]][dims[1]];		// this is a crappy temporary fix	// stack overflow !!!!
-
-	status = H5Dread(dataset, datatype, H5S_ALL, H5S_ALL, H5P_DEFAULT, *shape_def);
-
-//	int i = 0, j = 0;
-//	for(i = 0; i < dims[0]; ++ i)
-//		for(j = 0; j < dims[1]; ++ j)
-//			(*shape_def)[i * dims[1] + j] = temp[i][j];
-
-	/*int i = 0, j = 0;
-	for(i = 0; i < dims[0]; ++ i) {
-		for(j = 0; j < dims[1]; ++ j)
-			printf("%f\t", (*shape_def)[i * dims[1] + j]);
-		printf("\n");
-	} // for */
+	if((*shape_def) == NULL) {
+		fprintf(stderr, "error: cannot allocate memory to read shape definition data\n");
+		*num_triangles = 0;
+	} else {
+		memset(&(**shape_def), 0, dims[0] * dims[1] * size);
+		status = H5Dread(dataset, datatype, H5S_ALL, H5S_ALL, H5P_DEFAULT, *shape_def);
+		if(status < 0) {
+			fprintf(stderr, "error: shape definition data reading failed\n");
+			*num_triangles = 0;
+		} // if
+	} // if-else
 
 	free(max_dims);
 	free(dims);

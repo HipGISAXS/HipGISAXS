@@ -5,7 +5,7 @@
   *
   *  File: image.cpp
   *  Created: Jun 18, 2012
-  *  Modified: Fri 23 Nov 2012 11:26:30 AM PST
+  *  Modified: Fri 30 Nov 2012 02:18:48 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -26,42 +26,36 @@ namespace hig {
 	Image::Image(unsigned int ny, unsigned int nz):
 					nx_(1), ny_(ny), nz_(nz), color_map_() {
 		image_buffer_ = NULL;
-	//	image_buffer_ = new (std::nothrow) float_t[ny_ * nz_]();
 	} // Image::Image()
 
 
 	Image::Image(unsigned int ny, unsigned int nz, char* palette):
 					nx_(1), ny_(ny), nz_(nz), color_map_(palette) {
 		image_buffer_ = NULL;
-	//	image_buffer_ = new (std::nothrow) float_t[ny_ * nz_]();
 	} // Image::Image()
 
 
 	Image::Image(unsigned int ny, unsigned int nz, std::string palette):
 					nx_(1), ny_(ny), nz_(nz), color_map_(palette) {
 		image_buffer_ = NULL;
-	//	image_buffer_ = new (std::nothrow) float_t[ny_ * nz_]();
 	} // Image::Image()
 
 
 	Image::Image(unsigned int nx, unsigned int ny, unsigned int nz):
 					nx_(nx), ny_(ny), nz_(nz), color_map_(), new_color_map_() {
 		image_buffer_ = NULL;
-	//	image_buffer_ = new (std::nothrow) float_t[nx_ * ny_ * nz_]();
 	} // Image::Image()
 
 
 	Image::Image(unsigned int nx, unsigned int ny, unsigned int nz, char* palette):
 					nx_(nx), ny_(ny), nz_(nz), color_map_(palette) {
 		image_buffer_ = NULL;
-	//	image_buffer_ = new (std::nothrow) float_t[nx_ * ny_ * nz_]();
 	} // Image::Image()
 
 
 	Image::Image(unsigned int nx, unsigned int ny, unsigned int nz, std::string palette):
 					nx_(nx), ny_(ny), nz_(nz), color_map_(palette) {
 		image_buffer_ = NULL;
-	//	image_buffer_ = new (std::nothrow) float_t[nx_ * ny_ * nz_]();
 	} // Image::Image()
 
 
@@ -69,7 +63,6 @@ namespace hig {
 			unsigned int r, unsigned int g, unsigned int b):
 					nx_(nx), ny_(ny), nz_(nz), new_color_map_(r, g, b) {
 		image_buffer_ = NULL;
-	//	image_buffer_ = new (std::nothrow) float_t[nx_ * ny_ * nz_]();
 	} // Image::Image()
 
 
@@ -140,7 +133,7 @@ namespace hig {
 
 			// temporary workaround ... find and fix the nan/inf generating bug ...
 //			remove_nans_infs(ny_, nz_, data_transp);
-			remove_nans_infs(ny_, nz_, data);
+	//		remove_nans_infs(ny_, nz_, data);
 
 			// construct a gaussian matrix of size 5
 	/*		float_t* gaussian = NULL;

@@ -756,7 +756,7 @@ namespace hig {
 						, const int block_x, const int block_y, const int block_z, const int block_t
 	#endif
 						) {
-		cudaSetDevice(2);		////////////////////////////////////////////////////////////////////////////
+		//cudaSetDevice(2);		////////////////////////////////////////////////////////////////////////////
 		cudaDeviceSetCacheConfig(cudaFuncCachePreferShared);
 	
 		float kernel_time = 0.0, reduce_time = 0.0;
@@ -1035,7 +1035,7 @@ namespace hig {
 													<< (float) total_shmem_size
 													<< " B" << std::endl;
 									} // if
-									if((float) total_shmem_size > 49152) {
+									if(total_shmem_size > 49152) {
 										std::cerr << "error: too much shared memory requested!" << std::endl;
 										exit(1);
 									} // if
@@ -1070,7 +1070,7 @@ namespace hig {
 													<< (float) total_shmem_size
 													<< " B" << std::endl;
 									} // if
-									if((float) total_shmem_size > 49152) {
+									if(total_shmem_size > 49152) {
 										std::cerr << "error: too much shared memory requested!" << std::endl;
 										exit(1);
 									} // if
@@ -1099,7 +1099,7 @@ namespace hig {
 										kernel_time += temp_kernel;
 										
 										// call the reduction kernel
-#ifndef REDUCTION2
+	#ifndef REDUCTION2
 										// original reduction kernel
 										// perform decomposition along x, y, z
 										// each thread adds all t's
@@ -1125,7 +1125,7 @@ namespace hig {
 														<< (float) total_shmem_size
 														<< " B" << std::endl;
 										} // if
-										if((float) total_shmem_size > 49152) {
+										if(total_shmem_size > 49152) {
 											std::cerr << "error: too much shared memory requested!"
 														<< std::endl;
 											exit(1);
@@ -1141,7 +1141,7 @@ namespace hig {
 											curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles,
 											b_nqx, b_nqy, b_nqz, b_num_triangles,
 											ff_double_d[active]);
-#else // REDUCTION2
+	#else // REDUCTION2
 										// the parallel reduction kernel
 										// perform decomposition along t, y, z
 										// threads cooperate to do reduction in parallel
@@ -1166,7 +1166,7 @@ namespace hig {
 														<< (float) total_shmem_size
 														<< " B" << std::endl;
 										} // if
-										if((float) total_shmem_size > 49152) {
+										if(total_shmem_size > 49152) {
 											std::cerr << "error: too much shared memory requested!"
 														<< std::endl;
 											exit(1);
@@ -1182,7 +1182,7 @@ namespace hig {
 											curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles,
 											b_nqx, b_nqy, b_nqz, b_num_triangles,
 											ff_double_d[active]);
-#endif // REDUCTION2
+	#endif // REDUCTION2
 										if(err != cudaSuccess) {
 											std::cerr << "CUDA error before reduction kernel ["
 														<< __FILE__ << ":" << __LINE__ << "]: "

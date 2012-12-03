@@ -65,7 +65,7 @@ namespace hig {
 		unsigned int i_fq_base = temp * i_tt + i_ff_base;
 		unsigned int stempyz = blockDim.y * blockDim.z;
 		unsigned int stemp = curr_nqx * stempyz;
-		unsigned int i_sbase = stemp * threadIdx.x + curr_nqx * (blockDim.y * threadIdx.z + threadIdx.y);
+		//unsigned int i_sbase = stemp * threadIdx.x + curr_nqx * (blockDim.y * threadIdx.z + threadIdx.y);
 
 		// blockDim.x == BLOCK_REDUCTION_T_ / 2 == b_num_triangles / 2
 		// blockDim.y == BLOCK_REDUCTION_Y_
@@ -74,8 +74,8 @@ namespace hig {
 
 		unsigned int red_steps = __ffs(b_num_triangles) - 1;
 		unsigned int i_sfq = stempyz * threadIdx.x + blockDim.y * threadIdx.z + threadIdx.y;
-		if(i_tt < curr_num_triangles && i_yy < curr_nqy && i_zz < curr_nqz) {
-			for(unsigned int i_xx = 0; i_xx < curr_nqx; ++ i_xx) {
+		for(unsigned int i_xx = 0; i_xx < curr_nqx; ++ i_xx) {
+			if(i_tt < curr_num_triangles && i_yy < curr_nqy && i_zz < curr_nqz) {
 				/* // without shared memory
 				unsigned int curr_num_threads = blockDim.x; // == b_num_triangles >> 1
 				unsigned int i_fq = i_fq_base + i_xx;
@@ -98,24 +98,31 @@ namespace hig {
 				unsigned int fq_index_pair = fq_index + temp * blockDim.x;
 				unsigned int i_sfq_pair = i_sfq + stemp * blockDim.x;
 				if(blockDim.x + i_tt < curr_num_triangles) shared_fq[i_sfq_pair] = fq_d[fq_index_pair];
-				__syncthreads();
+			} // if
 
-				unsigned int curr_num_threads = blockDim.x;
-				for(unsigned int step = 0; step < red_steps; ++ step) {
-					unsigned int i_tt_pair = curr_num_threads + threadIdx.x;
-					i_sfq_pair = stempyz * curr_num_threads + i_sfq;
+			__syncthreads();
+
+			unsigned int curr_num_threads = blockDim.x;
+			for(unsigned int step = 0; step < red_steps; ++ step) {
+				unsigned int i_tt_pair = curr_num_threads + threadIdx.x;
+				unsigned int i_sfq_pair = stempyz * curr_num_threads + i_sfq;
+				if(i_tt < curr_num_triangles && i_yy < curr_nqy && i_zz < curr_nqz) {
 					if(curr_num_threads < curr_num_triangles &&
 							threadIdx.x < curr_num_threads && i_tt_pair < curr_num_triangles) {
 						shared_fq[i_sfq] = cuCaddf(shared_fq[i_sfq], shared_fq[i_sfq_pair]);
-						__syncthreads();
 					} // if
-					curr_num_threads = curr_num_threads >> 1;
-				} // for
+				} // if
+
+				__syncthreads();
+
+				curr_num_threads = curr_num_threads >> 1;
+			} // for
+			if(i_tt < curr_num_triangles && i_yy < curr_nqy && i_zz < curr_nqz) {
 				// now just copy the first part of fq_d to ff_d
 				unsigned int i_ff = i_ff_base + i_xx;
 				if(i_sfq < stempyz) ff_d[i_ff] = cuCmulf(shared_fq[i_sfq], make_cuFloatComplex(0.0, -1.0));
-			} // for
-		} // if
+			} // if
+		} // for
 	} // reduction_kernel_parallel()
 
 	/**

@@ -5,7 +5,7 @@
   *
   *  File: hig_input.cpp
   *  Created: Jun 11, 2012
-  *  Modified: Mon 26 Nov 2012 02:26:05 PM PST
+  *  Modified: Fri 30 Nov 2012 01:55:42 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -1528,32 +1528,28 @@ namespace hig {
 		// ASSUMING THERE ARE 7 ENTRIES FOR EACH TRIANGLE ... IMPROVE/GENERALIZE ...
 		HiGFileReader::instance().hdf5_shape_reader(filename, temp_shape_def, num_triangles);
 		shape_def_.clear();
-		// temporary scaling ....
-		/*float_t scale_factor = 1;
-		for(unsigned int i = 0; i < 7 * num_triangles; i += 7) {
-			float_t s = (float_t)temp_shape_def[i];
-			shape_def_.push_back(s * scale_factor * scale_factor);
-			float_t nx = (float_t)temp_shape_def[i + 1];
-			shape_def_.push_back(nx);
-			float_t ny = (float_t)temp_shape_def[i + 2];
-			shape_def_.push_back(ny);
-			float_t nz = (float_t)temp_shape_def[i + 3];
-			shape_def_.push_back(nz);
-			float_t x = (float_t)temp_shape_def[i + 4];
-			shape_def_.push_back(x * scale_factor);
-			float_t y = (float_t)temp_shape_def[i + 5];
-			shape_def_.push_back(y * scale_factor);
-			float_t z = (float_t)temp_shape_def[i + 6];
-			shape_def_.push_back(z * scale_factor);
-		} // for */
 #ifndef KERNEL2
+		shape_def_.reserve(7 * num_triangles);
+		unsigned int max_size = shape_def_.max_size();
+		if(7 * num_triangles > max_size) {
+			std::cerr << "error: number of triangles more than what can be handled currently ["
+						<< max_size / 7 << "]" << std::endl;
+			return 0;
+		} // if
 		for(unsigned int i = 0; i < 7 * num_triangles; ++ i) {
 			shape_def_.push_back((float_t)temp_shape_def[i]);
 		} // for
 #else	// KERNEL2
-		for(unsigned int i = 0; i < T_PROP_SIZE_ * num_triangles; ++ i) {
+		shape_def_.reserve(T_PROP_SIZE_ * num_triangles);
+		unsigned int max_size = shape_def_.max_size();
+		if(T_PROP_SIZE_ * num_triangles > max_size) {
+			std::cerr << "error: number of triangles more than what can be handled currently ["
+						<< max_size / T_PROP_SIZE_ << "]" << std::endl;
+			return 0;
+		} // if
+		for(unsigned int i = 0, count = 0; i < T_PROP_SIZE_ * num_triangles; ++ i) {
 			if((i + 1) % T_PROP_SIZE_ == 0) shape_def_.push_back((float_t)0.0); // for padding
-			else shape_def_.push_back((float_t)temp_shape_def[i]);
+			else shape_def_.push_back((float_t)temp_shape_def[count ++]);
 		} // for
 #endif // KERNEL2
 		return num_triangles;
