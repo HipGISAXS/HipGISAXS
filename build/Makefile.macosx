@@ -13,7 +13,7 @@
 ## base directories
 BOOST_DIR = /usr/local
 MPI_DIR = /usr/local
-CUDA_DIR = /usr/local/cuda
+CUDA_DIR = /Developer/NVIDIA/CUDA-5.0
 HDF5_DIR = /usr/local/hdf5-1.8.9
 Z_DIR = /usr/local
 SZ_DIR = /Users/asarje/temp/szip-2.1/szip
@@ -31,7 +31,7 @@ CXX_FLAGS = -std=c++0x -v -Wall -Wextra
 
 ## boost
 BOOST_INCL = -I $(BOOST_DIR)
-BOOST_LIBS = -L $(BOOST_DIR)/lib -lboost_system -lboost_filesystem
+BOOST_LIBS = -L $(BOOST_DIR)/lib -lboost_system -lboost_filesystem -lboost_timer -lboost_chrono
 
 ## parallel hdf5
 HDF5_INCL = -I$(HDF5_DIR)/include -I$(SZ_DIR)/include -I$(Z_DIR)/include
@@ -47,9 +47,13 @@ MPI_LIBS = -L $(MPI_DIR)/lib -lmpi_cxx -lmpi
 CUDA_INCL = -I$(CUDA_DIR)/include
 CUDA_LIBS = -L$(CUDA_DIR)/lib -lcudart -lcufft
 NVCC_FLAGS = -Xcompiler -fPIC -Xcompiler -fopenmp -m 64
-NVCC_FLAGS += -gencode arch=compute_20,code=sm_20 -gencode arch=compute_30,code=sm_30
-NVCC_FLAGS += -Xptxas -v -Xcompiler -v -Xlinker -v
-NVCC_FLAGS += -DGPUR #-DKERNEL2 #-DFINDBLOCK
+NVCC_FLAGS += -gencode arch=compute_20,code=sm_20
+NVCC_FLAGS += -gencode=arch=compute_20,code=compute_20
+NVCC_FLAGS += -gencode arch=compute_20,code=sm_21
+NVCC_FLAGS += -gencode arch=compute_30,code=sm_30
+NVCC_FLAGS += -gencode arch=compute_35,code=sm_35
+NVCC_FLAGS += -Xptxas -v -Xcompiler -v -Xlinker -v --ptxas-options="-v"
+NVCC_FLAGS += -DGPUR -DFF_ANA_GPU #-G #-DFINDBLOCK #-DAXIS_ROT
 NVLIB_FLAGS = -Xlinker -lgomp
 NVLIB_FLAGS += -Wl,-rpath -Wl,$(CUDA_DIR)/lib
 
@@ -58,10 +62,10 @@ TIFF_LIBS = -L $(TIFF_LIB_DIR) -ltiff
 
 ## miscellaneous
 MISC_INCL =
-MISC_FLAGS =
+MISC_FLAGS = -DFF_ANA_GPU -DKERNEL2 -DREDUCTION2 #-DAXIS_ROT
 
 ## choose optimization levels, debug flags, gprof flag, etc
-#OPT_FLAGS = -g2 -DDEBUG #-v #-G #-pg
+#OPT_FLAGS = -g -DDEBUG #-v #-G #-pg
 OPT_FLAGS = -O3 -DNDEBUG #-v
 
 ## choose single or double precision here
@@ -83,9 +87,9 @@ OBJ_DIR = $(PREFIX)/obj
 SRC_DIR = $(PREFIX)/src
 
 ## all objects
-OBJECTS = reduction.o ff_num_gpu.o utilities.o compute_params.o hig_input.o \
+OBJECTS = reduction.o ff_num_gpu.o utilities.o numeric_utils.o compute_params.o hig_input.o \
 		  image.o inst_detector.o inst_scattering.o layer.o qgrid.o read_oo_input.o sf.o \
-		  ff_ana.o ff_num.o ff.o shape.o structure.o object2hdf5.o hipgisaxs_main.o
+		  ff_ana.o ff_num.o ff.o shape.o structure.o object2hdf5.o hipgisaxs_main.o ff_ana_gpu.o
 
 ## the main binary
 OBJ_BIN = $(patsubst %,$(OBJ_DIR)/%,$(OBJECTS))
@@ -99,6 +103,9 @@ DEPS_NV = $(patsubst %,$(SRC_DIR)/%,$(_DEPS_NV))
 
 #### dont know why is this happenning ...
 $(OBJ_DIR)/ff_num_gpu.o: $(SRC_DIR)/ff_num_gpu.cu
+	$(NVCC) -c $< -o $@ $(OPT_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS) $(NVCC_FLAGS)
+
+$(OBJ_DIR)/ff_ana_gpu.o: $(SRC_DIR)/ff_ana_gpu.cu
 	$(NVCC) -c $< -o $@ $(OPT_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS) $(NVCC_FLAGS)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cu $(DEPS_NV)
