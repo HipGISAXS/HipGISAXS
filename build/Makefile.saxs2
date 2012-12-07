@@ -26,13 +26,13 @@ H5CC = $(HDF5_DIR)/bin/h5pcc
 NVCC = $(CUDA_DIR)/bin/nvcc #-ccbin /usr/local/gcc-4.6.3/bin
 
 ## compiler flags
-CXX_FLAGS = -std=c++0x -v -Wall -Wextra
+CXX_FLAGS = -std=c++0x -Wall -Wextra #-v
 ## gnu c++ compilers >= 4.3 support -std=c++0x [requirement for hipgisaxs 4.3.x <= g++ <= 4.6.x]
 ## gnu c++ compilers >= 4.7 also support -std=c++11, but they are not supported by cuda
 
 ## boost
 BOOST_INCL = -I $(BOOST_DIR)
-BOOST_LIBS = -L $(BOOST_DIR)/lib -lboost_system -lboost_filesystem -lboost_timer
+BOOST_LIBS = -L $(BOOST_DIR)/lib -lboost_system -lboost_filesystem -lboost_timer -lboost_chrono
 
 ## parallel hdf5
 HDF5_INCL = -I$(HDF5_DIR)/include -I$(SZ_DIR)/include -I$(Z_DIR)/include
@@ -48,9 +48,13 @@ MPI_LIBS = -L $(MPI_DIR)/lib -lmpi_cxx -lmpi
 CUDA_INCL = -I$(CUDA_DIR)/include
 CUDA_LIBS = -L$(CUDA_DIR)/lib64 -lcudart -lcufft
 NVCC_FLAGS = -Xcompiler -fPIC -Xcompiler -fopenmp -m 64
-NVCC_FLAGS += -gencode arch=compute_20,code=sm_20 -gencode arch=compute_30,code=sm_30
+NVCC_FLAGS += -gencode arch=compute_20,code=sm_20
+NVCC_FLAGS += -gencode=arch=compute_20,code=compute_20
+NVCC_FLAGS += -gencode arch=compute_20,code=sm_21
+NVCC_FLAGS += -gencode arch=compute_30,code=sm_30
+NVCC_FLAGS += -gencode arch=compute_35,code=sm_35
 NVCC_FLAGS += -Xptxas -v -Xcompiler -v -Xlinker -v --ptxas-options="-v"
-NVCC_FLAGS += -DGPUR -DFF_ANA_GPU -G #-DAXIS_ROT #-DKERNEL2 #-DFINDBLOCK
+NVCC_FLAGS += -DGPUR -DFF_ANA_GPU #-G #-DFINDBLOCK #-DAXIS_ROT
 NVLIB_FLAGS = -Xlinker -lgomp
 NVLIB_FLAGS += -Wl,-rpath -Wl,$(CUDA_DIR)/lib64
 
@@ -64,11 +68,11 @@ TIFF_LIBS = -L $(TIFF_LIB_DIR) -ltiff
 
 ## miscellaneous
 MISC_INCL =
-MISC_FLAGS = -DFF_ANA_GPU #-DAXIS_ROT
+MISC_FLAGS = -DFF_ANA_GPU -DKERNEL2 -DREDUCTION2 #-DAXIS_ROT
 
 ## choose optimization levels, debug flags, gprof flag, etc
-OPT_FLAGS = -g -DDEBUG -v #-pg
-#OPT_FLAGS = -O3 -DNDEBUG #-v
+#OPT_FLAGS = -g -DDEBUG #-v #-pg
+OPT_FLAGS = -O3 -DNDEBUG #-v
 
 ## choose single or double precision here
 PREC_FLAG =			# leave empty for single precision
@@ -84,20 +88,31 @@ ALL_LIBS = $(BOOST_LIBS) $(MPI_LIBS) $(NVLIB_FLAGS) $(CUDA_LIBS) $(HDF5_LIBS) $(
 
 
 PREFIX = $(PWD)
-BINARY = hipgisaxs
+BINARY_SIM = hipgisaxs
+BINARY_FIT = hipgisaxs-fit
 BIN_DIR = $(PREFIX)/bin
 OBJ_DIR = $(PREFIX)/obj
 SRC_DIR = $(PREFIX)/src
 
 ## all objects
-OBJECTS = reduction.o ff_num_gpu.o utilities.o numeric_utils.o compute_params.o hig_input.o \
+OBJECTS_MAIN = reduction.o ff_num_gpu.o utilities.o numeric_utils.o compute_params.o hig_input.o \
 		  image.o inst_detector.o inst_scattering.o layer.o qgrid.o read_oo_input.o sf.o \
-		  ff_ana.o ff_num.o ff.o shape.o structure.o object2hdf5.o hipgisaxs_main.o ff_ana_gpu.o
+		  ff_ana.o ff_num.o ff.o shape.o structure.o object2hdf5.o hipgisaxs_main.o ff_ana_gpu.o \
+		  fitting_steepest_descent.o
+
+OBJECTS_SIM = $(OBJECTS_MAIN) hipgisaxs_sim.o
+
+OBJECTS_FIT = $(OBJECTS_MAIN) hipgisaxs_fit.o
 
 ## the main binary
-OBJ_BIN = $(patsubst %,$(OBJ_DIR)/%,$(OBJECTS))
+OBJ_BIN_SIM = $(patsubst %,$(OBJ_DIR)/%,$(OBJECTS_SIM))
 
-$(BINARY): $(OBJ_BIN)
+OBJ_BIN_FIT = $(patsubst %,$(OBJ_DIR)/%,$(OBJECTS_FIT))
+
+$(BINARY_SIM): $(OBJ_BIN_SIM)
+	$(CXX) -o $(BIN_DIR)/$@ $^ $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(MISC_FLAGS) $(ALL_LIBS)
+
+$(BINARY_FIT): $(OBJ_BIN_FIT)
 	$(CXX) -o $(BIN_DIR)/$@ $^ $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(MISC_FLAGS) $(ALL_LIBS)
 
 ## cuda compilation
@@ -126,6 +141,16 @@ _DEPS_CXX = %.hpp
 DEPS_CXX = $(patsubst %,$(SRC_DIR)/%,$(_DEPS_CXX))
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp $(DEPS_CXX)
+	$(CXX) -c $< -o $@ $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS)
+
+############### dont know why this is happenning ...
+$(OBJ_DIR)/hipgisaxs_sim.o: $(SRC_DIR)/hipgisaxs_sim.cpp $(SRC_DIR)/hipgisaxs_main.hpp
+	$(CXX) -c $< -o $@ $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS)
+
+$(OBJ_DIR)/hipgisaxs_fit.o: $(SRC_DIR)/hipgisaxs_fit.cpp $(SRC_DIR)/hipgisaxs_main.hpp
+	$(CXX) -c $< -o $@ $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS)
+
+$(OBJ_DIR)/fitting_steepest_descent.o: $(SRC_DIR)/fitting_steepest_descent.cpp $(SRC_DIR)/hipgisaxs_main.hpp
 	$(CXX) -c $< -o $@ $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS)
 
 
@@ -209,4 +234,4 @@ all: hipgisaxs test_conv test_read test_ff test_image object2shape shape2hdf5
 .PHONY: clean
 
 clean:
-	rm -f $(OBJ_BIN) $(BIN_DIR)/$(BINARY) $(BIN_DIR)/test_conv $(OBJ_DIR)/test_conv.o $(BIN_DIR)/test_read $(OBJ_DIR)/test_read.o $(BIN_DIR)/test_ff $(OBJ_DIR)/test_ff.o $(BIN_DIR)/test_image $(OBJ_DIR)/test_image.o $(OBJ_DIR)/qgrid_test_create.o $(OBJ_DIR)/plot_gisaxs.o $(OBJ_DIR)/plot_ff.o $(OBJ_DIR)/generate_palette.o
+	rm -f $(OBJ_BIN_SIM) $(OBJ_BIN_FIT) $(BIN_DIR)/$(BINARY_SIM) $(BIN_DIR)/$(BINARY_FIT) $(BIN_DIR)/test_conv $(OBJ_DIR)/test_conv.o $(BIN_DIR)/test_read $(OBJ_DIR)/test_read.o $(BIN_DIR)/test_ff $(OBJ_DIR)/test_ff.o $(BIN_DIR)/test_image $(OBJ_DIR)/test_image.o $(OBJ_DIR)/qgrid_test_create.o $(OBJ_DIR)/plot_gisaxs.o $(OBJ_DIR)/plot_ff.o $(OBJ_DIR)/generate_palette.o

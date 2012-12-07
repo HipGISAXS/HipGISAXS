@@ -5,7 +5,7 @@
   *
   *  File: hipgisaxs_main.cpp
   *  Created: Jun 14, 2012
-  *  Modified: Thu 29 Nov 2012 03:59:16 PM PST
+  *  Modified: Thu 06 Dec 2012 03:31:17 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -159,7 +159,8 @@ namespace hig {
 
 
 	bool HipGISAXS::run_all_gisaxs(MPI::Intracomm& world_comm,
-									int x_min = 0, int x_max = 0, int x_step = 0) {
+									//int x_min = 0, int x_max = 0, int x_step = 0) {
+									int x_min, int x_max, int x_step) {
 		int mpi_rank = world_comm.Get_rank();
 
 		if(!init(world_comm)) return false;
@@ -1275,15 +1276,15 @@ namespace hig {
 
 /* The main for HipGISAXS
  */
-int main(int narg, char** args) {
+/*int main(int narg, char** args) {
 
 	if(narg != 2) {
 		std::cout << "usage: hipgisaxs <input_config>" << std::endl;
 		return 1;
 	} // if
 
-	/* initialize MPI */
-	MPI::Init(narg, args);
+*/	/* initialize MPI */
+/*	MPI::Init(narg, args);
 	int mpi_rank = MPI::COMM_WORLD.Get_rank();
 	int mpi_num_procs = MPI::COMM_WORLD.Get_size();
 
@@ -1300,8 +1301,8 @@ int main(int narg, char** args) {
 	woo::BoostChronoTimer maintimer, readtimer, computetimer;
 	maintimer.start();
 	readtimer.start();
-	/* read input file and construct input structures */
-	hig::HipGISAXS my_gisaxs;
+*/	/* read input file and construct input structures */
+/*	hig::HipGISAXS my_gisaxs;
 	if(mpi_rank == 0) std::cout << "**                HiG input file: " << args[1] << std::endl;
 	if(!my_gisaxs.construct_input(args[1])) {
 		if(mpi_rank == 0) std::cerr << "error: failed to construct input containers" << std::endl;
@@ -1313,8 +1314,8 @@ int main(int narg, char** args) {
 	std::cout << "**       Input construction time: " << readtimer.elapsed_msec() << " ms." << std::endl;
 
 	computetimer.start();
-	/* run the simulation */
-	if(!my_gisaxs.run_all_gisaxs(MPI::COMM_WORLD)) {
+*/	/* run the simulation */
+/*	if(!my_gisaxs.run_all_gisaxs(MPI::COMM_WORLD)) {
 		std::cerr << "error: could not run the simulation - some error occured" << std::endl;
 		computetimer.stop();
 		maintimer.stop();
@@ -1329,4 +1330,4 @@ int main(int narg, char** args) {
 
 	MPI::Finalize();
 	return 0;
-} // main()
+} // main()*/

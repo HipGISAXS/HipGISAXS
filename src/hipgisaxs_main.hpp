@@ -5,13 +5,13 @@
   *
   *  File: hipgisaxs_main.hpp
   *  Created: Jun 11, 2012
-  *  Modified: Thu 25 Oct 2012 03:07:28 PM PDT
+  *  Modified: Thu 06 Dec 2012 09:53:07 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
 
-#ifndef _HIPGISAXS_HPP_
-#define _HIPGISAXS_HPP_
+#ifndef _HIPGISAXS_MAIN_HPP_
+#define _HIPGISAXS_MAIN_HPP_
 
 #include <complex>
 #include <mpi.h>
@@ -135,11 +135,16 @@ namespace hig {
 				return HiGInput::instance().construct_input_config(filename);
 			} // construct_input()
 
-			bool run_all_gisaxs(MPI::Intracomm&, int, int, int);
-								/* loops over all configs and computes GISAXS for each */
+			/* loops over all configs and computes GISAXS for each */
+			bool run_all_gisaxs(MPI::Intracomm&, int = 0, int = 0, int = 0);
+
+			/* does the initial 1D fitting */
+			bool fit_steepest_descent(float_t, float_t, float_t, float_t,
+										float_t, float_t, float_t, unsigned int,
+										MPI::Intracomm&, int = 0, int = 0, int = 0);
 
 	}; // class HipGISAXS
 
 } // namespace hig
 
-#endif /* _HIPGISAXS_HPP_ */
+#endif /* _HIPGISAXS_MAIN_HPP_ */

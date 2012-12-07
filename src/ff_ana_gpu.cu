@@ -5,7 +5,7 @@
   *
   *  File: ff_ana_gpu.cu
   *  Created: Oct 16, 2012
-  *  Modified: Sat 27 Oct 2012 02:16:38 PM PDT
+  *  Modified: Thu 06 Dec 2012 04:44:09 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -392,7 +392,7 @@ namespace hig {
 		const float_t *transvec_h = transvec.empty() ? NULL : &*transvec.begin();
 
 		unsigned int grid_size = nqx_ * nqy_ * nqz_;
-		std::cout << "nqx x nqy x nqz = " << nqx_ << " x " << nqy_ << " x " << nqz_ << std::endl;
+		//std::cout << "nqx x nqy x nqz = " << nqx_ << " x " << nqy_ << " x " << nqz_ << std::endl;
 
 		cudaEvent_t mem_begin_e, mem_end_e;
 		cudaEventCreate(&mem_begin_e);
@@ -507,7 +507,7 @@ namespace hig {
 
 		size_t shared_mem_size = (nqx_ + cuda_block_y) * sizeof(float_t) +
 									cuda_block_z * sizeof(cucomplex_t);
-		if(shared_mem_size / 1024 > 32) {
+		if(shared_mem_size > 49152) {
 			std::cerr << "Too much shared memory requested!" << std::endl;
 			return false;
 		} // if
@@ -610,33 +610,34 @@ namespace hig {
 		unsigned int base_index = nqx * nqy * i_z + nqx * i_y;
 
 		// shared buffers
-		float_t* qx_s = (float_t*) dynamic_shared;
+		//float_t* qx_s = (float_t*) dynamic_shared;
+		//float_t* qy_s = (float_t*) &qx_s[nqx];
+		//cucomplex_t* qz_s = (cucomplex_t*) &qy_s[blockDim.x];
+		cucomplex_t* qz_s = (cucomplex_t*) dynamic_shared;
+		float_t* qx_s = (float_t*) &qz_s[blockDim.y];
 		float_t* qy_s = (float_t*) &qx_s[nqx];
-		cucomplex_t* qz_s = (cucomplex_t*) &qy_s[blockDim.x];
 
-		// load qx
-		unsigned int load_index = blockDim.x * threadIdx.y + threadIdx.x;
-		unsigned int load_max = blockDim.x * blockDim.y;
-		for(int i = 0; i < ceil((float_t)nqx / load_max); ++ i) {
-			if(i * load_max + load_index < nqx)
-				qx_s[i * load_max + load_index] = qx[i * load_max + load_index];
+		// load all qx
+		unsigned int i_thread = blockDim.x * threadIdx.y + threadIdx.x;
+		unsigned int num_threads = blockDim.x * blockDim.y;
+		unsigned int num_loads = ceil((float_t) nqx / num_threads);
+		for(int i = 0; i < num_loads; ++ i) {
+			unsigned int index = i * num_threads + i_thread;
+			if(index < nqx) qx_s[index] = qx[index];
 			else ;	// nop
 		} // for
 		// load part of qy
 		if(i_y < nqy && threadIdx.y == 0)	// first row of threads
 			qy_s[threadIdx.x] = qy[i_y];
-		//else ;	// nop
 		// load part of qz
 		if(i_z < nqz && threadIdx.x == 0)	// first column of threads
 			qz_s[threadIdx.y] = qz[i_z];
-		//else ; // nop
 
 		__syncthreads();
 
 		// compute
 		if(i_y < nqy && i_z < nqz) {
 			for(unsigned int i_x = 0; i_x < nqx; ++ i_x) {
-				unsigned int index = base_index + i_x;
 				// computing mesh values on the fly instead of storing them
 				cucomplex_t temp_mqx = make_cuC(qy_s[threadIdx.x] * rot[0] + qx_s[i_x] * rot[1] +
 											qz_s[threadIdx.y].x * rot[2], qz_s[threadIdx.y].y * rot[2]);
@@ -651,7 +652,7 @@ namespace hig {
 					float_t temp_distr_r = distr_r[i_r];
 					ff_sphere_kernel_compute_tff(temp_r, temp_distr_r, q, temp_mqz, temp_f);
 				} // for i_r
-				ff[index] = ff_sphere_kernel_compute_ff(temp_f,	temp_mqx, temp_mqy, temp_mqz,
+				ff[base_index + i_x] = ff_sphere_kernel_compute_ff(temp_f,	temp_mqx, temp_mqy, temp_mqz,
 													transvec[0], transvec[1], transvec[2]);
 			} // for x
 		} // if
