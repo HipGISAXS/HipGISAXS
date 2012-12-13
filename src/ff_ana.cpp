@@ -1009,7 +1009,7 @@ namespace hig {
 				mean = (dim[0] + dim[dim.size() - 1]) / 2;
 			} // if
 			for(unsigned int i = 0; i < dim.size(); ++ i) {
-				dim_vals.push_back(exp(-1.0 * pow((dim[i] - mean), 2) / 2 * pow(param.deviation(), 2))
+				dim_vals.push_back(exp(-1.0 * pow((dim[i] - mean), 2) / (2 * pow(param.deviation(), 2)))
 									/ (sqrt(2 * PI_) * param.deviation()));
 			} // for
 		} else if(param.stat() == stat_random) {
