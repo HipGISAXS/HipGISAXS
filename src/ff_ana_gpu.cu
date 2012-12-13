@@ -640,11 +640,14 @@ namespace hig {
 			for(unsigned int i_x = 0; i_x < nqx; ++ i_x) {
 				// computing mesh values on the fly instead of storing them
 				cucomplex_t temp_mqx = make_cuC(qy_s[threadIdx.x] * rot[0] + qx_s[i_x] * rot[1] +
-											qz_s[threadIdx.y].x * rot[2], qz_s[threadIdx.y].y * rot[2]);
+												qz_s[threadIdx.y].x * rot[2],
+												qz_s[threadIdx.y].y * rot[2]);
 				cucomplex_t temp_mqy = make_cuC(qy_s[threadIdx.x] * rot[3] + qx_s[i_x] * rot[4] +
-											qz_s[threadIdx.y].x * rot[5], qz_s[threadIdx.y].y * rot[5]);
+												qz_s[threadIdx.y].x * rot[5],
+												qz_s[threadIdx.y].y * rot[5]);
 				cucomplex_t temp_mqz = make_cuC(qy_s[threadIdx.x] * rot[6] + qx_s[i_x] * rot[7] +
-											qz_s[threadIdx.y].x * rot[8], qz_s[threadIdx.y].y * rot[8]);
+												qz_s[threadIdx.y].x * rot[8],
+												qz_s[threadIdx.y].y * rot[8]);
 				cucomplex_t q = cuCnorm3(temp_mqx, temp_mqy, temp_mqz);
 				cucomplex_t temp_f = make_cuC((float_t)0.0, (float_t)0.0);
 				for(unsigned int i_r = 0; i_r < n_r; ++ i_r) {

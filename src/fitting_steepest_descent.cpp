@@ -8,7 +8,7 @@
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
 
-#include <gsl/gsl_linalg.h>
+//#include <gsl/gsl_linalg.h>
 
 #include "hipgisaxs_main.hpp"
 
@@ -184,6 +184,7 @@ namespace hig {
 					Shape* shape = HiGInput::instance().shape(*structure);
 					shape_param_iterator_t shape_param = (*shape).param_begin();
 					float_t* data = NULL;
+					std::vector<float_t> param_error_data;
 					for(unsigned int iter = 0; iter < max_iter; ++ iter) {
 						param1_list.clear();
 						param1_list.push_back(param_vals[0] - 2 * param_deltas[0]);	// p1mm
@@ -399,6 +400,11 @@ namespace hig {
 						float_t derr1 = (err32 - err12) / (2 * param_deltas[0]);
 						float_t derr2 = (err23 - err21) / (2 * param_deltas[1]);
 						err = sqrt(derr1 * derr1 + derr2 * derr2);
+						std::cout << "++ Iteration: " << iter << ", Error: " << err << std::endl;
+						param_error_data.push_back(iter);
+						param_error_data.push_back(param_vals[0]);
+						param_error_data.push_back(param_vals[1]);
+						param_error_data.push_back(err);
 						if(err < err_threshold) break;
 
 						float_t herr11 = (err42 - err02 - 2 * err22) /
@@ -429,6 +435,45 @@ namespace hig {
 					(*shape_param).second.mean(22.0);
 					(*shape_param).second.deviation(7.0);
 
+					// write data to files
+					// define output filename
+					std::stringstream alphai_b, phi_b, tilt_b;
+					std::string alphai_s, phi_s, tilt_s;
+					alphai_b << alpha_i; alphai_s = alphai_b.str();
+					phi_b << phi; phi_s = phi_b.str();
+					tilt_b << tilt; tilt_s = tilt_b.str();
+					std::string param_error_file(HiGInput::instance().param_pathprefix() +
+												"/" + HiGInput::instance().runname() +
+												"/param_error_ai=" + alphai_s + "_rot=" + phi_s +
+												"_tilt=" + tilt_s + ".tif");
+					std::string z_cut_file(HiGInput::instance().param_pathprefix() +
+												"/" + HiGInput::instance().runname() +
+												"/z_cut_ai=" + alphai_s + "_rot=" + phi_s +
+												"_tilt=" + tilt_s + ".tif");
+					// write param_error_data
+					std::ofstream param_error_f(param_error_file);
+					for(std::vector<float_t>::iterator pei = param_error_data.begin();
+							pei != param_error_data.end(); pei += 4) {
+						param_error_f << *pei << "\t" << *(pei + 1) << "\t" << *(pei + 2) << "\t"
+										<< *(pei + 3) << std::endl;
+					} // for
+					param_error_f.close();
+					// write ref_z_cut and z_cuts
+					std::ofstream zcut_f(z_cut_file);
+					for(unsigned int yy = 0; yy < nqy_; ++ yy) {
+						zcut_f << ref_z_cut[yy] << "\t";
+					} // for
+					zcut_f << std::endl;
+					for(unsigned int i = 0; i < max_iter; ++ i) {
+						for(unsigned int yy = 0; yy < nqy_; ++ yy) {
+							zcut_f << z_cuts[i * nqy_ + yy] << "\t";
+						} // for
+						zcut_f << std::endl;
+					} // for
+					zcut_f.close();
+
+
+					param_error_data.clear();
 					delete[] z_cuts;
 					delete[] ref_z_cut;
 
