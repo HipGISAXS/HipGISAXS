@@ -5,7 +5,7 @@
   *
   *  File: structure.cpp
   *  Created: Jun 12, 2012
-  *  Modified: Sat 13 Oct 2012 11:19:54 PM PDT
+  *  Modified: Fri 07 Dec 2012 01:34:09 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -111,8 +111,8 @@ namespace hig {
 
 			case lattice_hex:					// HEX
 				a_[0] = 1; a_[1] = 0; a_[2] = 0;
-				b_[0] = 0.5; b_[1] = 1 / (2.0 * sqrt3); b_[2] = 0;
-				c_[0] = 0; c_[1] = 0; c_[2] = 0;
+				b_[0] = 0.5; b_[1] = 1 / (2.0 * sqrt3); b_[2] = 0;		// check ...
+				c_[0] = 0; c_[1] = 0; c_[2] = 1;
 				t_[0] = 0; t_[1] = 0; t_[2] = 0;
 				break;
 

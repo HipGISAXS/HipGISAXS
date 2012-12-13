@@ -5,7 +5,7 @@
   *
   *  File: hipgisaxs_main.cpp
   *  Created: Jun 14, 2012
-  *  Modified: Thu 06 Dec 2012 03:31:17 PM PST
+  *  Modified: Fri 07 Dec 2012 01:58:44 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -434,7 +434,7 @@ namespace hig {
 									grain_repeats, r_tot1, r_tot2, r_tot3, world_comm);
 				//sf_.printsf();
 
-				if(mpi_rank == 0) {
+/*				if(mpi_rank == 0) {
 					std::stringstream alphai_b, phi_b, tilt_b;
 					std::string alphai_s, phi_s, tilt_s;
 					alphai_b << alpha_i; alphai_s = alphai_b.str();
@@ -448,13 +448,13 @@ namespace hig {
 					sf_.save_sf(nqx_, nqy_, nqz_extended_, sf_output.c_str());
 					std::cout << "done." << std::endl;
 				} // if
-
+*/
 				//read_form_factor("curr_ff.out");
 				form_factor(shape_name, shape_file, shape_params, curr_transvec,
 							shape_tau, shape_eta, r_tot1, r_tot2, r_tot3, world_comm);
 				//ff_.print_ff(nqx_, nqy_, nqz_extended_);
 				//ff_.printff(nqx_, nqy_, nqz_extended_);
-
+/*
 				if(mpi_rank == 0) {
 					std::stringstream alphai_b, phi_b, tilt_b;
 					std::string alphai_s, phi_s, tilt_s;
@@ -469,7 +469,7 @@ namespace hig {
 					ff_.save_ff(nqx_, nqy_, nqz_extended_, ff_output.c_str());
 					std::cout << "done." << std::endl;
 				} // if
-
+*/
 				// processing of sf and ff is being done by just one processor ... parallelize ...
 				if(mpi_rank == 0) {
 					complex_t* base_id = id + j * nqx_ * nqy_ * nqz_;

@@ -5,7 +5,7 @@
   *
   *  File: token_mapper.hpp
   *  Created: Jun 05, 2012
-  *  Modified: Sat 13 Oct 2012 02:25:54 PM PDT
+  *  Modified: Fri 07 Dec 2012 01:25:20 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -146,8 +146,8 @@ namespace hig {
 				KeyWords_[std::string("origin")]			= instrument_detector_origin_token;
 				KeyWords_[std::string("originvec")]			= shape_originvec_token;
 				KeyWords_[std::string("outputregion")]		= compute_outregion_token;
-				KeyWords_[std::string("p1")]				= shape_param_p1_token;
-				KeyWords_[std::string("p2")]				= shape_param_p2_token;
+				KeyWords_[std::string("p1")]				= shape_param_p1_token;		// mean
+				KeyWords_[std::string("p2")]				= shape_param_p2_token;		// std dev
 				KeyWords_[std::string("param")]				= shape_param_token;
 				KeyWords_[std::string("pathprefix")]		= compute_path_token;
 				KeyWords_[std::string("photon")]			= instrument_scatter_photon_token;

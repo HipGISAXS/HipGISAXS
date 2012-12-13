@@ -5,7 +5,7 @@
   *
   *  File: hipgisaxs_main.hpp
   *  Created: Jun 11, 2012
-  *  Modified: Thu 06 Dec 2012 09:53:07 PM PST
+  *  Modified: Fri 07 Dec 2012 07:46:51 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -139,9 +139,10 @@ namespace hig {
 			bool run_all_gisaxs(MPI::Intracomm&, int = 0, int = 0, int = 0);
 
 			/* does the initial 1D fitting */
-			bool fit_steepest_descent(float_t, float_t, float_t, float_t,
+			bool fit_steepest_descent(unsigned int, float_t, float_t, float_t,
 										float_t, float_t, float_t, unsigned int,
 										MPI::Intracomm&, int = 0, int = 0, int = 0);
+			float_t compute_cut_fit_error(float_t*, float_t*, float_t);
 
 	}; // class HipGISAXS
 
