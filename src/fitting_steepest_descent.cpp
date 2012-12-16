@@ -91,17 +91,14 @@ namespace hig {
 
 		std::vector<std::vector<float_t> > params;
 		int num_params = 2;
-		//for(int i = 0; i < num_params; ++ i) {
-		//	std::vector<float_t> temp;
-		//} // for
 		std::vector<float_t> temp;
-		float_t deltay = 0.0;
+		float_t deltap = 0.0;
 		if(radius_num <= 1)
 			temp.push_back(radius_min);
 		else {
-			deltay = fabs(radius_max - radius_min) / (radius_num - 1);
+			deltap = fabs(radius_max - radius_min) / (radius_num - 1);
 			for(int i = 0; i < radius_num; ++ i) {
-				temp.push_back(radius_min + i * deltay);
+				temp.push_back(radius_min + i * deltap);
 			} // for
 		} // if-else
 		params.push_back(temp);
@@ -109,9 +106,9 @@ namespace hig {
 		if(sd_num <= 1)
 			temp.push_back(sd_min);
 		else {
-			float_t delta = fabs(sd_max - sd_min) / (sd_num - 1);
+			deltap = fabs(sd_max - sd_min) / (sd_num - 1);
 			for(int i = 0; i < sd_num; ++ i) {
-				temp.push_back(sd_min + i * delta);
+				temp.push_back(sd_min + i * deltap);
 			} // for
 		} // if-else
 		params.push_back(temp);
@@ -119,8 +116,8 @@ namespace hig {
 
 		// this will work only on one shape and one structure
 
-		const float_t err_threshold = 1e-3;
-		const unsigned int max_iter = 200;
+		const float_t err_threshold = 1e-4;
+		const unsigned int max_iter = 20;
 
 		std::vector<float_t> param_vals;
 		param_vals.push_back(23.0);
@@ -129,6 +126,9 @@ namespace hig {
 		param_deltas.push_back(0.05);
 		param_deltas.push_back(0.05);
 		float_t gamma_const = 0.05;
+
+		float_t qdeltay = QGrid::instance().delta_y();
+		std::cout << "QDELTAY = " << qdeltay << std::endl;
 
 		float_t alpha_i = alphai_min;
 		// high level of parallelism here (alphai, phi, tilt) for dynamicity ...
@@ -189,13 +189,13 @@ namespace hig {
 						param1_list.clear();
 						param1_list.push_back(param_vals[0] - 2 * param_deltas[0]);	// p1mm
 						param1_list.push_back(param_vals[0] - param_deltas[0]);		// p1m
-						param1_list.push_back(param_vals[0]);							// p1
+						param1_list.push_back(param_vals[0]);						// p1
 						param1_list.push_back(param_vals[0] + param_deltas[0]);		// p1p
 						param1_list.push_back(param_vals[0] + 2 * param_deltas[0]);	// p1pp
 						param2_list.clear();
 						param2_list.push_back(param_vals[1] - 2 * param_deltas[1]);	// p2mm
 						param2_list.push_back(param_vals[1] - param_deltas[1]);		// p2m
-						param2_list.push_back(param_vals[1]);							// p2
+						param2_list.push_back(param_vals[1]);						// p2
 						param2_list.push_back(param_vals[1] + param_deltas[1]);		// p2p
 						param2_list.push_back(param_vals[1] + 2 * param_deltas[1]);	// p2pp
 
@@ -212,9 +212,10 @@ namespace hig {
 													data[nqx_ * nqy_ * zcut + nqx_ * iy + 0];
 						delete[] data; data = NULL;
 						float_t err22 = compute_cut_fit_error(z_cuts + 13 * iter * nqy_ + 0 * nqy_,
-																ref_z_cut, deltay);
+																ref_z_cut, qdeltay);
 
 						// 12 neighbors
+
 						(*shape_param).second.mean(param1_list[0]);
 						(*shape_param).second.deviation(param2_list[2]);
 						if(!run_gisaxs(alpha_i, alphai, phi, tilt, data, world_comm)) {
@@ -227,7 +228,7 @@ namespace hig {
 													data[nqx_ * nqy_ * zcut + nqx_ * iy + 0];
 						delete[] data; data = NULL;
 						float_t err02 = compute_cut_fit_error(z_cuts + 13 * iter * nqy_ + 1 * nqy_,
-																ref_z_cut, deltay);
+																ref_z_cut, qdeltay);
 
 						(*shape_param).second.mean(param1_list[1]);
 						(*shape_param).second.deviation(param2_list[1]);
@@ -241,7 +242,7 @@ namespace hig {
 													data[nqx_ * nqy_ * zcut + nqx_ * iy + 0];
 						delete[] data; data = NULL;
 						float_t err11 = compute_cut_fit_error(z_cuts + 13 * iter * nqy_ + 2 * nqy_,
-																ref_z_cut, deltay);
+																ref_z_cut, qdeltay);
 
 						(*shape_param).second.mean(param1_list[1]);
 						(*shape_param).second.deviation(param2_list[2]);
@@ -255,7 +256,7 @@ namespace hig {
 													data[nqx_ * nqy_ * zcut + nqx_ * iy + 0];
 						delete[] data; data = NULL;
 						float_t err12 = compute_cut_fit_error(z_cuts + 13 * iter * nqy_ + 3 * nqy_,
-																ref_z_cut, deltay);
+																ref_z_cut, qdeltay);
 
 						(*shape_param).second.mean(param1_list[1]);
 						(*shape_param).second.deviation(param2_list[3]);
@@ -269,7 +270,7 @@ namespace hig {
 													data[nqx_ * nqy_ * zcut + nqx_ * iy + 0];
 						delete[] data; data = NULL;
 						float_t err13 = compute_cut_fit_error(z_cuts + 13 * iter * nqy_ + 4 * nqy_,
-																ref_z_cut, deltay);
+																ref_z_cut, qdeltay);
 
 						(*shape_param).second.mean(param1_list[2]);
 						(*shape_param).second.deviation(param2_list[0]);
@@ -283,7 +284,7 @@ namespace hig {
 													data[nqx_ * nqy_ * zcut + nqx_ * iy + 0];
 						delete[] data; data = NULL;
 						float_t err20 = compute_cut_fit_error(z_cuts + 13 * iter * nqy_ + 5 * nqy_,
-																ref_z_cut, deltay);
+																ref_z_cut, qdeltay);
 
 						(*shape_param).second.mean(param1_list[2]);
 						(*shape_param).second.deviation(param2_list[1]);
@@ -297,7 +298,7 @@ namespace hig {
 													data[nqx_ * nqy_ * zcut + nqx_ * iy + 0];
 						delete[] data; data = NULL;
 						float_t err21 = compute_cut_fit_error(z_cuts + 13 * iter * nqy_ + 6 * nqy_,
-																ref_z_cut, deltay);
+																ref_z_cut, qdeltay);
 
 						(*shape_param).second.mean(param1_list[2]);
 						(*shape_param).second.deviation(param2_list[3]);
@@ -311,7 +312,7 @@ namespace hig {
 													data[nqx_ * nqy_ * zcut + nqx_ * iy + 0];
 						delete[] data; data = NULL;
 						float_t err23 = compute_cut_fit_error(z_cuts + 13 * iter * nqy_ + 7 * nqy_,
-																ref_z_cut, deltay);
+																ref_z_cut, qdeltay);
 
 						(*shape_param).second.mean(param1_list[2]);
 						(*shape_param).second.deviation(param2_list[4]);
@@ -325,7 +326,7 @@ namespace hig {
 													data[nqx_ * nqy_ * zcut + nqx_ * iy + 0];
 						delete[] data; data = NULL;
 						float_t err24 = compute_cut_fit_error(z_cuts + 13 * iter * nqy_ + 8 * nqy_,
-																ref_z_cut, deltay);
+																ref_z_cut, qdeltay);
 
 						(*shape_param).second.mean(param1_list[3]);
 						(*shape_param).second.deviation(param2_list[1]);
@@ -339,7 +340,7 @@ namespace hig {
 													data[nqx_ * nqy_ * zcut + nqx_ * iy + 0];
 						delete[] data; data = NULL;
 						float_t err31 = compute_cut_fit_error(z_cuts + 13 * iter * nqy_ + 9 * nqy_,
-																ref_z_cut, deltay);
+																ref_z_cut, qdeltay);
 
 						(*shape_param).second.mean(param1_list[3]);
 						(*shape_param).second.deviation(param2_list[2]);
@@ -353,7 +354,7 @@ namespace hig {
 													data[nqx_ * nqy_ * zcut + nqx_ * iy + 0];
 						delete[] data; data = NULL;
 						float_t err32 = compute_cut_fit_error(z_cuts + 13 * iter * nqy_ + 10 * nqy_,
-																ref_z_cut, deltay);
+																ref_z_cut, qdeltay);
 
 						(*shape_param).second.mean(param1_list[3]);
 						(*shape_param).second.deviation(param2_list[3]);
@@ -367,7 +368,7 @@ namespace hig {
 													data[nqx_ * nqy_ * zcut + nqx_ * iy + 0];
 						delete[] data; data = NULL;
 						float_t err33 = compute_cut_fit_error(z_cuts + 13 * iter * nqy_ + 11 * nqy_,
-																ref_z_cut, deltay);
+																ref_z_cut, qdeltay);
 
 						(*shape_param).second.mean(param1_list[4]);
 						(*shape_param).second.deviation(param2_list[2]);
@@ -381,7 +382,7 @@ namespace hig {
 													data[nqx_ * nqy_ * zcut + nqx_ * iy + 0];
 						delete[] data; data = NULL;
 						float_t err42 = compute_cut_fit_error(z_cuts + 13 * iter * nqy_ + 12 * nqy_,
-																ref_z_cut, deltay);
+																ref_z_cut, qdeltay);
 
 						// 22	0
 						// 02	1mm
@@ -401,19 +402,21 @@ namespace hig {
 						float_t derr2 = (err23 - err21) / (2 * param_deltas[1]);
 						err = sqrt(derr1 * derr1 + derr2 * derr2);
 						std::cout << "++ Iteration: " << iter << ", Error: " << err << std::endl;
+						std::cout << "++ Parameter 1: " << param_vals[0]
+									<< ", Parameter 2: " << param_vals[1] << std::endl;
 						param_error_data.push_back(iter);
 						param_error_data.push_back(param_vals[0]);
 						param_error_data.push_back(param_vals[1]);
 						param_error_data.push_back(err);
 						if(err < err_threshold) break;
 
-						float_t herr11 = (err42 - err02 - 2 * err22) /
+						float_t herr11 = (err42 + err02 - 2 * err22) /
 											(4 * param_deltas[0] * param_deltas[0]);
 						float_t herr12 = (err33 - err13 - (err31 - err11)) /
 											(4 * param_deltas[0] * param_deltas[1]);
 						float_t herr21 = (err33 - err13 - (err31 - err11)) /
 											(4 * param_deltas[0] * param_deltas[1]);
-						float_t herr22 = (err24 - err20 - 2 * err22) /
+						float_t herr22 = (err24 + err20 - 2 * err22) /
 											(4 * param_deltas[1] * param_deltas[1]);
 						float_t* herr = new (std::nothrow) float_t[2 * 2];
 						herr[0] = herr11;
@@ -445,11 +448,11 @@ namespace hig {
 					std::string param_error_file(HiGInput::instance().param_pathprefix() +
 												"/" + HiGInput::instance().runname() +
 												"/param_error_ai=" + alphai_s + "_rot=" + phi_s +
-												"_tilt=" + tilt_s + ".tif");
+												"_tilt=" + tilt_s + ".dat");
 					std::string z_cut_file(HiGInput::instance().param_pathprefix() +
 												"/" + HiGInput::instance().runname() +
 												"/z_cut_ai=" + alphai_s + "_rot=" + phi_s +
-												"_tilt=" + tilt_s + ".tif");
+												"_tilt=" + tilt_s + ".dat");
 					// write param_error_data
 					std::ofstream param_error_f(param_error_file);
 					for(std::vector<float_t>::iterator pei = param_error_data.begin();

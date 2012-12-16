@@ -11,7 +11,9 @@
   */
 
 #include <boost/math/special_functions/fpclassify.hpp>
-#include <boost/timer/timer.hpp>
+//#include <boost/timer/timer.hpp>
+
+#include "woo/timer/woo_boostchronotimers.hpp"
 
 #include "ff_ana.hpp"
 #include "shape.hpp"
@@ -179,13 +181,13 @@ namespace hig {
 				return false;
 		} // switch
 
-		int rank;
+		/*int rank;
 		MPI_Comm_rank(world_comm, &rank);
 		if(rank == 0) {
 			int naninfs = count_naninfs(nqx_, nqy_, nqz_, ff);
 			std::cout << " ------ " << naninfs << " / " << nqx_ * nqy_ * nqz_ << " nans or infs" << std::endl;
 		} // if
-
+*/
 		return true;
 	} // AnalyticFormFactor::compute()
 
@@ -515,12 +517,14 @@ namespace hig {
 			return false;
 		} // if
 
+		woo::BoostChronoTimer maintimer;
+		maintimer.start();
+
 #ifdef FF_ANA_GPU
 		/* on gpu */
-		std::cout << "---- computing sphere on gpu" << std::endl;
+		std::cout << "-- Computing sphere FF on GPU ..." << std::endl;
 
-		boost::timer::cpu_timer timer;	// timer starts
-
+		//boost::timer::cpu_timer timer;	// timer starts
 		std::vector<float_t> transvec_v;
 		transvec_v.push_back(transvec[0]);
 		transvec_v.push_back(transvec[1]);
@@ -546,15 +550,15 @@ namespace hig {
 
 		ff_gpu_.compute_sphere(r, distr_r, qx_h, qy_h, qz_h, rot_, transvec_v, ff);
 
-		boost::timer::cpu_times const elapsed_time(timer.elapsed());
-		boost::timer::nanosecond_type const elapsed(elapsed_time.system + elapsed_time.user);
-		double gpu_time = elapsed;
-		std::cout << "GPU analytical sphere computation took " << gpu_time / 10e6 << " ms." << std::endl;
-		
+		//boost::timer::cpu_times const elapsed_time(timer.elapsed());
+		//boost::timer::nanosecond_type const elapsed(elapsed_time.system + elapsed_time.user);
+		//double gpu_time = elapsed;
+		//std::cout << "** GPU analytic sphere computation time: " << gpu_time / 10e6 << " ms." << std::endl;
 #else
 		/* on cpu */
-		boost::timer::cpu_timer timer;	// timer starts
+		std::cout << "-- Computing sphere FF on CPU ..." << std::endl;
 
+		//boost::timer::cpu_timer timer;	// timer starts
 		std::vector <complex_t> q;
 		q.clear();
 		for(unsigned int z = 0; z < nqz_; ++ z) {
@@ -620,13 +624,16 @@ namespace hig {
 			} // for y
 		} // for z
 
-		boost::timer::cpu_times const elapsed_time(timer.elapsed());
-		boost::timer::nanosecond_type const elapsed(elapsed_time.system + elapsed_time.user);
-		double cpu_time = elapsed;
-		std::cout << "CPU analytical sphere computation took " << cpu_time / 10e6 << " ms." << std::endl;
+		//boost::timer::cpu_times const elapsed_time(timer.elapsed());
+		//boost::timer::nanosecond_type const elapsed(elapsed_time.system + elapsed_time.user);
+		//double cpu_time = elapsed;
+		//std::cout << "** CPU analytic sphere computation time: " << cpu_time / 10e6 << " ms." << std::endl;
 		
 #endif // FF_ANA_GPU
 
+		maintimer.stop();
+		std::cout << "**      Analytic FF compute time: " << maintimer.elapsed_msec() << " ms." << std::endl;
+		
 		return true;
 	} // AnalyticFormFactor::compute_sphere()
 

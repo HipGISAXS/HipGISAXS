@@ -59,6 +59,11 @@ namespace hig {
 			int nqz() const { return qz_.size(); }
 			int nqz_extended() const { return qz_extended_.size(); }
 
+			/* deltas */
+			float_t delta_x() const { return (qx_[qx_.size() - 1] - qx_[0]) / (qx_.size() - 1); }
+			float_t delta_y() const { return (qy_[qy_.size() - 1] - qy_[0]) / (qy_.size() - 1); }
+			complex_t delta_z() const { return (qz_[qz_.size() - 1] - qz_[0]) / (qz_.size() - 1); }
+
 			/* value accessors */
 			float_t qx(int i) const { return qx_[i]; }	// do some error checking also ...
 			float_t qy(int i) const { return qy_[i]; }

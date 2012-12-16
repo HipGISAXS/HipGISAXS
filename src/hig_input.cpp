@@ -131,7 +131,7 @@ namespace hig {
 
 					case shape_param_token:
 						curr_shape_param_.set();
-						curr_shape_param_.print();
+						//curr_shape_param_.print();
 						curr_shape_.insert_param(curr_shape_param_.type_name(), curr_shape_param_);
 						curr_shape_param_.clear();
 						break;
