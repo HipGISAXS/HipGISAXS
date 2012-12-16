@@ -70,6 +70,7 @@ namespace hig {
 			StructureFactor sf_;		/* structure factor object */
 
 			bool init(MPI::Intracomm&);	/* global initialization for all runs */
+			bool init_steepest_fit(MPI::Intracomm&, float_t);	/* init for steepest descent fitting ... */
 			bool run_init(float_t, float_t, float_t, MPI::Intracomm&); 	/* initialization for a single run */
 			bool run_gisaxs(float_t, float_t, float_t, float_t, float_t*&, MPI::Intracomm&, int c = 0);
 										/* a single GISAXS run */
@@ -139,7 +140,7 @@ namespace hig {
 			bool run_all_gisaxs(MPI::Intracomm&, int = 0, int = 0, int = 0);
 
 			/* does the initial 1D fitting */
-			bool fit_steepest_descent(unsigned int, float_t, float_t, float_t,
+			bool fit_steepest_descent(float_t, float_t, float_t, float_t,
 										float_t, float_t, float_t, unsigned int,
 										MPI::Intracomm&, int = 0, int = 0, int = 0);
 			float_t compute_cut_fit_error(float_t*, float_t*, float_t);

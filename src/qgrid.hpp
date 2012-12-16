@@ -53,6 +53,9 @@ namespace hig {
 			bool create_qz_extended(float_t, float_t, complex_t, complex_t);
 			bool create_test();
 
+			/* temporary for steepest descent fitting */
+			bool create_z_cut(float_t, float_t, float_t, float_t);
+
 			/* sizes */
 			int nqx() const { return qx_.size(); }
 			int nqy() const { return qy_.size(); }

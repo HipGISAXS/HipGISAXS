@@ -56,14 +56,14 @@ namespace hig {
 	} // mldivide()
 
 	// currently only hacked for spheres, with radius and sd as two parameters
-	bool HipGISAXS::fit_steepest_descent(unsigned int zcut,
+	bool HipGISAXS::fit_steepest_descent(float_t zcut,
 					float_t radius_min, float_t radius_max, float_t radius_num,
 					float_t sd_min, float_t sd_max, float_t sd_num,
 					unsigned int dim, MPI::Intracomm& world_comm,
 					int x_min, int x_max, int x_step) {
 		int mpi_rank = world_comm.Get_rank();
 
-		if(!init(world_comm)) return false;
+		if(!init_steepest_fit(world_comm, zcut)) return false;
 
 		int num_alphai = 0, num_phi = 0, num_tilt = 0;;
 
@@ -117,7 +117,7 @@ namespace hig {
 		// this will work only on one shape and one structure
 
 		const float_t err_threshold = 1e-4;
-		const unsigned int max_iter = 20;
+		const unsigned int max_iter = 200;
 
 		std::vector<float_t> param_vals;
 		param_vals.push_back(23.0);
@@ -159,7 +159,8 @@ namespace hig {
 
 					float_t* ref_z_cut = new (std::nothrow) float_t[nqy_];
 					for(unsigned int iy = 0; iy < nqy_; ++ iy) {
-						ref_z_cut[iy] = ref_data[nqx_ * nqy_ * zcut + nqx_ * iy + 0];
+						// assuming nqz_ == 1 ...
+						ref_z_cut[iy] = ref_data[nqx_ * iy + 0];
 					} // for
 
 					delete[] ref_data;
@@ -207,9 +208,10 @@ namespace hig {
 								std::cerr << "error: could not finish successfully" << std::endl;
 							return false;
 						} // if
-						for(unsigned int iy = 0; iy < nqy_; ++ iy)
-							z_cuts[13 * iter * nqy_ + 0 * nqy_ + iy] =
-													data[nqx_ * nqy_ * zcut + nqx_ * iy + 0];
+						for(unsigned int iy = 0; iy < nqy_; ++ iy) {
+							// assuming nqz_ == 1 ...
+							z_cuts[13 * iter * nqy_ + 0 * nqy_ + iy] = data[nqx_ * iy + 0];
+						} // for
 						delete[] data; data = NULL;
 						float_t err22 = compute_cut_fit_error(z_cuts + 13 * iter * nqy_ + 0 * nqy_,
 																ref_z_cut, qdeltay);
@@ -223,9 +225,10 @@ namespace hig {
 								std::cerr << "error: could not finish successfully" << std::endl;
 							return false;
 						} // if
-						for(unsigned int iy = 0; iy < nqy_; ++ iy)
-							z_cuts[13 * iter * nqy_ + 1 * nqy_ + iy] =
-													data[nqx_ * nqy_ * zcut + nqx_ * iy + 0];
+						for(unsigned int iy = 0; iy < nqy_; ++ iy) {
+							// assuming nqz_ == 1 ...
+							z_cuts[13 * iter * nqy_ + 1 * nqy_ + iy] = data[nqx_ * iy + 0];
+						} // for
 						delete[] data; data = NULL;
 						float_t err02 = compute_cut_fit_error(z_cuts + 13 * iter * nqy_ + 1 * nqy_,
 																ref_z_cut, qdeltay);
@@ -237,9 +240,10 @@ namespace hig {
 								std::cerr << "error: could not finish successfully" << std::endl;
 							return false;
 						} // if
-						for(unsigned int iy = 0; iy < nqy_; ++ iy)
-							z_cuts[13 * iter * nqy_ + 2 * nqy_ + iy] =
-													data[nqx_ * nqy_ * zcut + nqx_ * iy + 0];
+						for(unsigned int iy = 0; iy < nqy_; ++ iy) {
+							// assuming nqz_ == 1 ...
+							z_cuts[13 * iter * nqy_ + 2 * nqy_ + iy] = data[nqx_ * iy + 0];
+						} // for
 						delete[] data; data = NULL;
 						float_t err11 = compute_cut_fit_error(z_cuts + 13 * iter * nqy_ + 2 * nqy_,
 																ref_z_cut, qdeltay);
@@ -251,9 +255,10 @@ namespace hig {
 								std::cerr << "error: could not finish successfully" << std::endl;
 							return false;
 						} // if
-						for(unsigned int iy = 0; iy < nqy_; ++ iy)
-							z_cuts[13 * iter * nqy_ + 3 * nqy_ + iy] =
-													data[nqx_ * nqy_ * zcut + nqx_ * iy + 0];
+						for(unsigned int iy = 0; iy < nqy_; ++ iy) {
+							// assuming nqz_ == 1 ...
+							z_cuts[13 * iter * nqy_ + 3 * nqy_ + iy] = data[nqx_ * iy + 0];
+						} // for
 						delete[] data; data = NULL;
 						float_t err12 = compute_cut_fit_error(z_cuts + 13 * iter * nqy_ + 3 * nqy_,
 																ref_z_cut, qdeltay);
@@ -265,9 +270,10 @@ namespace hig {
 								std::cerr << "error: could not finish successfully" << std::endl;
 							return false;
 						} // if
-						for(unsigned int iy = 0; iy < nqy_; ++ iy)
-							z_cuts[13 * iter * nqy_ + 4 * nqy_ + iy] =
-													data[nqx_ * nqy_ * zcut + nqx_ * iy + 0];
+						for(unsigned int iy = 0; iy < nqy_; ++ iy) {
+							// assuming nqz_ == 1 ...
+							z_cuts[13 * iter * nqy_ + 4 * nqy_ + iy] = data[nqx_ * iy + 0];
+						} // for
 						delete[] data; data = NULL;
 						float_t err13 = compute_cut_fit_error(z_cuts + 13 * iter * nqy_ + 4 * nqy_,
 																ref_z_cut, qdeltay);
@@ -279,9 +285,10 @@ namespace hig {
 								std::cerr << "error: could not finish successfully" << std::endl;
 							return false;
 						} // if
-						for(unsigned int iy = 0; iy < nqy_; ++ iy)
-							z_cuts[13 * iter * nqy_ + 5 * nqy_ + iy] =
-													data[nqx_ * nqy_ * zcut + nqx_ * iy + 0];
+						for(unsigned int iy = 0; iy < nqy_; ++ iy) {
+							// assuming nqz_ == 1 ...
+							z_cuts[13 * iter * nqy_ + 5 * nqy_ + iy] = data[nqx_ * iy + 0];
+						} // for
 						delete[] data; data = NULL;
 						float_t err20 = compute_cut_fit_error(z_cuts + 13 * iter * nqy_ + 5 * nqy_,
 																ref_z_cut, qdeltay);
@@ -293,9 +300,10 @@ namespace hig {
 								std::cerr << "error: could not finish successfully" << std::endl;
 							return false;
 						} // if
-						for(unsigned int iy = 0; iy < nqy_; ++ iy)
-							z_cuts[13 * iter * nqy_ + 6 * nqy_ + iy] =
-													data[nqx_ * nqy_ * zcut + nqx_ * iy + 0];
+						for(unsigned int iy = 0; iy < nqy_; ++ iy) {
+							// assuming nqz_ == 1 ...
+							z_cuts[13 * iter * nqy_ + 6 * nqy_ + iy] = data[nqx_ * iy + 0];
+						} // for
 						delete[] data; data = NULL;
 						float_t err21 = compute_cut_fit_error(z_cuts + 13 * iter * nqy_ + 6 * nqy_,
 																ref_z_cut, qdeltay);
@@ -307,9 +315,10 @@ namespace hig {
 								std::cerr << "error: could not finish successfully" << std::endl;
 							return false;
 						} // if
-						for(unsigned int iy = 0; iy < nqy_; ++ iy)
-							z_cuts[13 * iter * nqy_ + 7 * nqy_ + iy] =
-													data[nqx_ * nqy_ * zcut + nqx_ * iy + 0];
+						for(unsigned int iy = 0; iy < nqy_; ++ iy) {
+							// assuming nqz_ == 1 ...
+							z_cuts[13 * iter * nqy_ + 7 * nqy_ + iy] = data[nqx_ * iy + 0];
+						} // for
 						delete[] data; data = NULL;
 						float_t err23 = compute_cut_fit_error(z_cuts + 13 * iter * nqy_ + 7 * nqy_,
 																ref_z_cut, qdeltay);
@@ -321,9 +330,10 @@ namespace hig {
 								std::cerr << "error: could not finish successfully" << std::endl;
 							return false;
 						} // if
-						for(unsigned int iy = 0; iy < nqy_; ++ iy)
-							z_cuts[13 * iter * nqy_ + 8 * nqy_ + iy] =
-													data[nqx_ * nqy_ * zcut + nqx_ * iy + 0];
+						for(unsigned int iy = 0; iy < nqy_; ++ iy) {
+							// assuming nqz_ == 1 ...
+							z_cuts[13 * iter * nqy_ + 8 * nqy_ + iy] = data[nqx_ * iy + 0];
+						} // for
 						delete[] data; data = NULL;
 						float_t err24 = compute_cut_fit_error(z_cuts + 13 * iter * nqy_ + 8 * nqy_,
 																ref_z_cut, qdeltay);
@@ -335,9 +345,10 @@ namespace hig {
 								std::cerr << "error: could not finish successfully" << std::endl;
 							return false;
 						} // if
-						for(unsigned int iy = 0; iy < nqy_; ++ iy)
-							z_cuts[13 * iter * nqy_ + 9 * nqy_ + iy] =
-													data[nqx_ * nqy_ * zcut + nqx_ * iy + 0];
+						for(unsigned int iy = 0; iy < nqy_; ++ iy) {
+							// assuming nqz_ == 1 ...
+							z_cuts[13 * iter * nqy_ + 9 * nqy_ + iy] = data[nqx_ * iy + 0];
+						} // for
 						delete[] data; data = NULL;
 						float_t err31 = compute_cut_fit_error(z_cuts + 13 * iter * nqy_ + 9 * nqy_,
 																ref_z_cut, qdeltay);
@@ -349,9 +360,10 @@ namespace hig {
 								std::cerr << "error: could not finish successfully" << std::endl;
 							return false;
 						} // if
-						for(unsigned int iy = 0; iy < nqy_; ++ iy)
-							z_cuts[13 * iter * nqy_ + 10 * nqy_ + iy] =
-													data[nqx_ * nqy_ * zcut + nqx_ * iy + 0];
+						for(unsigned int iy = 0; iy < nqy_; ++ iy) {
+							// assuming nqz_ == 1 ...
+							z_cuts[13 * iter * nqy_ + 10 * nqy_ + iy] = data[nqx_ * iy + 0];
+						} // for
 						delete[] data; data = NULL;
 						float_t err32 = compute_cut_fit_error(z_cuts + 13 * iter * nqy_ + 10 * nqy_,
 																ref_z_cut, qdeltay);
@@ -363,9 +375,10 @@ namespace hig {
 								std::cerr << "error: could not finish successfully" << std::endl;
 							return false;
 						} // if
-						for(unsigned int iy = 0; iy < nqy_; ++ iy)
-							z_cuts[13 * iter * nqy_ + 11 * nqy_ + iy] =
-													data[nqx_ * nqy_ * zcut + nqx_ * iy + 0];
+						for(unsigned int iy = 0; iy < nqy_; ++ iy) {
+							// assuming nqz_ == 1 ...
+							z_cuts[13 * iter * nqy_ + 11 * nqy_ + iy] = data[nqx_ * iy + 0];
+						} // for
 						delete[] data; data = NULL;
 						float_t err33 = compute_cut_fit_error(z_cuts + 13 * iter * nqy_ + 11 * nqy_,
 																ref_z_cut, qdeltay);
@@ -377,9 +390,10 @@ namespace hig {
 								std::cerr << "error: could not finish successfully" << std::endl;
 							return false;
 						} // if
-						for(unsigned int iy = 0; iy < nqy_; ++ iy)
-							z_cuts[13 * iter * nqy_ + 12 * nqy_ + iy] =
-													data[nqx_ * nqy_ * zcut + nqx_ * iy + 0];
+						for(unsigned int iy = 0; iy < nqy_; ++ iy) {
+							// assuming nqz_ == 1 ...
+							z_cuts[13 * iter * nqy_ + 12 * nqy_ + iy] = data[nqx_ * iy + 0];
+						} // for
 						delete[] data; data = NULL;
 						float_t err42 = compute_cut_fit_error(z_cuts + 13 * iter * nqy_ + 12 * nqy_,
 																ref_z_cut, qdeltay);
