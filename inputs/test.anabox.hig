@@ -21,10 +21,9 @@ hipGisaxsInput = {
 		grain = {
 			shape:key = "s1",
 			refindex = { delta = 7.4E-06, beta = 3.37E-08 },
-#			layer:key = "l1"
 			layer:key = "l1",
 			repetition = [ 40 40 1 ],
-			lattice = { type = "bcc" },
+			lattice = { type = "hex" },
 			scaling = 50
 		},
 		ensemble = { }
@@ -32,12 +31,11 @@ hipGisaxsInput = {
 	instrumentation = {
 		scattering = {
 			expt = "gisaxs",
-			alphai = { min = 0.175 },	# incidence angles
+			alphai = { min = 0.14 },	# incidence angles
 			photon = { value = 7350, unit = "ev" }			# photon energy
 		},
 		detector = {
 			pixelsize = 0.172,	 				# pixel size of the detector
-			#pixelsize = 0.1,	 				# pixel size of the detector
 			sdd = 4128.62,						# sample to detector distance
 			directbeam = [ 489.916 843.076 ]	# position of direct beam
 		}

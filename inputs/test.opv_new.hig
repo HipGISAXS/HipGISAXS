@@ -1,8 +1,9 @@
 hipGisaxsInput = {
 	shape = {
 		key = "s1",	 		# a unique key to identify this shape in this file
-		name = "data/opv_zyplane.hd5"	# name of the file containing the discretized shape data
-		#name = "data/hehehe.hd5"	# name of the file containing the discretized shape data
+		#name = "data/opv_zyplane.hd5"	# name of the file containing the discretized shape data
+		name = "data/opv_zyplane_high.hd5"
+		#name = "data/Test_struc.hd5"	# name of the file containing the discretized shape data
 	},
 	layer = {
 		key = "substr",	 	# special key for case of the substrate layer infinite in lower half space
@@ -12,7 +13,7 @@ hipGisaxsInput = {
 	layer = {
 		key = "l1",
 		order = 1,
-		thickness = 0.150,
+		thickness = 150,
 		refindex = { delta = 1.95e-6, beta = 2.15E-9 }
 	},
 	structure = {
@@ -31,20 +32,21 @@ hipGisaxsInput = {
 			photon = { value = 10000, unit = "ev" }				# photon energy
 		},
 		detector = {
-			#pixelsize = 0.172,	 				# pixel size of the detector
-			pixelsize = 2,	 				# pixel size of the detector
-			sdd = 4128.62,						# sample to detector distance
+			pixelsize = 0.172,	 				# pixel size of the detector in mm (172 microns)
+			#sdd = 4128.62,						# sample to detector distance
+			sdd = 550,							# sample to detector distance
+			#sdd = 2060,							# sample to detector distance in mm
 			directbeam = [ 489.916 843.076 ]	# position of direct beam
 		}
 	},
 	computation = {
 		pathprefix = "../hipgisaxs.test",	# path to input files directory
-		runname = "opv_zyplane_new",		# name for current run and folder name for outputs
+		runname = "test_struc",		# name for current run and folder name for outputs
 		method = "dwba",					# theorical approach (see list)
-		#outputregion = { type = "pixels" , minpoint = [ 200 300 ], maxpoint = [ 900 1000 ] },
         #outputregion = { type = "pixels" , minpoint = [ 400 550 ], maxpoint = [ 550 750 ] },	# full ff
-		outputregion = { type = "pixels" , minpoint = [ 400 750 ], maxpoint = [ 550 1000 ] },	# half
-		resolution = [ 0.15 0.15 ],			# number of q points per pixel
+		#outputregion = { type = "pixels" , minpoint = [ 233 740 ], maxpoint = [ 745 971 ] },	# half
+		outputregion = { type = "qspace" , minpoint = [ 0.15 0.15 ], maxpoint = [ 2 2 ] },
+		resolution = [ 0.2 0.2 ],			# number of q points per pixel
 		nslices = 0							# max number of slices for slicing algorithm
 	}
 }

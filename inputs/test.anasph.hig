@@ -3,8 +3,8 @@ hipGisaxsInput = {
 		key = "s1",	 			# a unique key to identify this shape in this file
 		name = "sphere",		# shape name
 		originvec = [0 0 0],
-		param = { type = "radius", min = 10, max = 25, p1 = 22, p2 = 2, stat = "gaussian", nvalues = 10 }
-		#param = { type = "radius", min = 10 }
+		#param = { type = "radius", min = 10, max = 25, p1 = 22, p2 = 7, stat = "gaussian", nvalues = 10 }
+		param = { type = "radius", min = 10 }
 	},
 	layer = {
 		key = "substr",	 	# special key for case of the substrate layer infinite in lower half space

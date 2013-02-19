@@ -5,7 +5,7 @@
   *
   *  File: qgrid.cpp
   *  Created: Jun 17, 2012
-  *  Modified: Fri 23 Nov 2012 11:54:54 AM PST
+  *  Modified: Fri 08 Feb 2013 10:53:00 AM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -103,8 +103,8 @@ namespace hig {
 			qmax[0] = g3[0]; qmax[1] = g3[1]; qmax[2] = g3[2];
 	
 			// temporary, for hard-coded q values
-			/*qmin[0] = 0.0; qmax[0] = 0.0;
-			qmin[1] = -PI_; qmax[1] = PI_;
+			qmin[0] = 0.0; qmax[0] = 0.0;
+			/*qmin[1] = -PI_; qmax[1] = PI_;
 			qmin[2] = 0.0122718; qmax[2] = PI_;
 			step[0] = 0; step[1] = q_pixel[1]; step[2] = q_pixel[2]; */
 

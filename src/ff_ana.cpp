@@ -5,7 +5,7 @@
   *
   *  File: ff_ana.cpp
   *  Created: Jul 12, 2012
-  *  Modified: Fri 23 Nov 2012 01:22:10 PM PST
+  *  Modified: Tue 19 Feb 2013 11:25:34 AM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -195,7 +195,7 @@ namespace hig {
 	/**
 	 * box
 	 */
-	bool AnalyticFormFactor::compute_box(unsigned int nqx, unsigned int nqy, unsigned int nqz,
+/*	bool AnalyticFormFactor::compute_box(unsigned int nqx, unsigned int nqy, unsigned int nqz,
 										std::vector<complex_t>& ff,
 										ShapeName shape, shape_param_list_t& params,
 										float_t tau, float_t eta, vector3_t &transvec,
@@ -300,12 +300,12 @@ namespace hig {
 
 		return true;
 	} // AnalyticFormFactor::compute_box()
-
+*/
 
 	/**
 	 * cylinder
 	 */
-	bool AnalyticFormFactor::compute_cylinder(shape_param_list_t& params, float_t tau, float_t eta,
+/*	bool AnalyticFormFactor::compute_cylinder(shape_param_list_t& params, float_t tau, float_t eta,
 			std::vector<complex_t>& ff, vector3_t transvec) {
 		std::vector <float_t> h, distr_h;	// for h dimension: param_height
 		std::vector <float_t> r, distr_r;	// for r dimension: param_radius
@@ -387,16 +387,16 @@ namespace hig {
 
 		return true;
 	} // AnalyticFormFactor::compute_cylinder()
-
+*/
 
 	/**
 	 * random cylinders
 	 */
-	bool AnalyticFormFactor::compute_random_cylinders() { // for saxs
+/*	bool AnalyticFormFactor::compute_random_cylinders() { // for saxs
 		std::cerr << "uh-oh: you reach an unimplemented part of the code, compute_random_cylinders"
 					<< std::endl;
 		return false;
-		// ...
+*/		// ...
 		/*for(shape_param_iterator_t i = params.begin(); i != params.end(); ++ i) {
 			switch((*i).second.type()) {
 				case param_edge:
@@ -408,13 +408,13 @@ namespace hig {
 				default:
 			} // switch
 		} // for */
-	} // AnalyticFormFactor::compute_random_cylinders()
-
+/*	} // AnalyticFormFactor::compute_random_cylinders()
+*/
 
 	/**
 	 * horizontal cylinder
 	 */
-	bool AnalyticFormFactor::compute_horizontal_cylinder(shape_param_list_t& params,
+/*	bool AnalyticFormFactor::compute_horizontal_cylinder(shape_param_list_t& params,
 														vector3_t transvec,
 														std::vector<complex_t>& ff) {
 		std::vector<float_t> r, distr_r;
@@ -486,162 +486,12 @@ namespace hig {
 
 		return true;
 	} // AnalyticFormFactor::compute_horizontal_cylinder()
-
-
-	/**
-	 * sphere
-	 */
-	bool AnalyticFormFactor::compute_sphere(shape_param_list_t& params, std::vector<complex_t> &ff,
-											vector3_t transvec) {
-		std::vector<float_t> r, distr_r;
-		for(shape_param_iterator_t i = params.begin(); i != params.end(); ++ i) {
-			switch((*i).second.type()) {
-				case param_edge:
-				case param_xsize:
-				case param_ysize:
-				case param_height:
-				case param_baseangle:
-					std::cerr << "warning: ignoring unwanted parameters in sphere" << std::endl;
-					break;
-				case param_radius:
-					param_distribution((*i).second, r, distr_r);
-					break;
-				default:
-					std::cerr << "error: unknown or invalid parameter given for sphere" << std::endl;
-					return false;
-			} // switch
-		} // for
-
-		if(r.size() < 1) {
-			std::cerr << "error: radius parameter required for sphere" << std::endl;
-			return false;
-		} // if
-
-		woo::BoostChronoTimer maintimer;
-		maintimer.start();
-
-#ifdef FF_ANA_GPU
-		/* on gpu */
-		std::cout << "-- Computing sphere FF on GPU ..." << std::endl;
-
-		//boost::timer::cpu_timer timer;	// timer starts
-		std::vector<float_t> transvec_v;
-		transvec_v.push_back(transvec[0]);
-		transvec_v.push_back(transvec[1]);
-		transvec_v.push_back(transvec[2]);
-
-		float_t *qx_h = new (std::nothrow) float_t[nqx_];
-		float_t *qy_h = new (std::nothrow) float_t[nqy_];
-		cucomplex_t *qz_h = new (std::nothrow) cucomplex_t[nqz_];
-		if(qx_h == NULL || qy_h == NULL || qz_h == NULL) {
-			std::cerr << "error: memory allocation for host mesh grid failed" << std::endl;
-			return false;
-		} // if
-		for(unsigned int ix = 0; ix < nqx_; ++ ix) {
-			qx_h[ix] = QGrid::instance().qx(ix);
-		} // for qx
-		for(unsigned int iy = 0; iy < nqy_; ++ iy) {
-			qy_h[iy] = QGrid::instance().qy(iy);
-		} // for qy
-		for(unsigned int iz = 0; iz < nqz_; ++ iz) {
-			qz_h[iz].x = QGrid::instance().qz_extended(iz).real();
-			qz_h[iz].y = QGrid::instance().qz_extended(iz).imag();
-		} // for qz
-
-		ff_gpu_.compute_sphere(r, distr_r, qx_h, qy_h, qz_h, rot_, transvec_v, ff);
-
-		//boost::timer::cpu_times const elapsed_time(timer.elapsed());
-		//boost::timer::nanosecond_type const elapsed(elapsed_time.system + elapsed_time.user);
-		//double gpu_time = elapsed;
-		//std::cout << "** GPU analytic sphere computation time: " << gpu_time / 10e6 << " ms." << std::endl;
-#else
-		/* on cpu */
-		std::cout << "-- Computing sphere FF on CPU ..." << std::endl;
-
-		//boost::timer::cpu_timer timer;	// timer starts
-		std::vector <complex_t> q;
-		q.clear();
-		for(unsigned int z = 0; z < nqz_; ++ z) {
-			for(unsigned int y = 0; y < nqy_; ++ y) {
-				for(unsigned int x = 0; x < nqx_; ++ x) {
-					unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
-					complex_t temp_qx = QGrid::instance().qy(y) * rot_[0] +
-										QGrid::instance().qx(x) * rot_[1] +
-										QGrid::instance().qz_extended(z) * rot_[2];
-					complex_t temp_qy = QGrid::instance().qy(y) * rot_[3] +
-										QGrid::instance().qx(x) * rot_[4] +
-										QGrid::instance().qz_extended(z) * rot_[5];
-					complex_t temp_qz = QGrid::instance().qy(y) * rot_[6] +
-										QGrid::instance().qx(x) * rot_[7] +
-										QGrid::instance().qz_extended(z) * rot_[8];
-					temp_qx *= temp_qx;
-					temp_qy *= temp_qy;
-					temp_qz *= temp_qz;
-					q.push_back(sqrt(temp_qx + temp_qy + temp_qz));
-				} // for
-			} // for
-		} // for
-
-		ff.clear();
-		for(unsigned int i = 0; i < nqx_ * nqy_ * nqz_; ++ i) ff.push_back(complex_t(0, 0));
-
-		std::vector<float_t>::iterator iter_r = r.begin();
-		std::vector<float_t>::iterator iter_d = distr_r.begin();
-		for(unsigned int i_r = 0; i_r < r.size(); ++ i_r, ++ iter_d) {
-			for(unsigned int z = 0; z < nqz_; ++ z) {
-				for(unsigned int y = 0; y < nqy_; ++ y) {
-					for(unsigned int x = 0; x < nqx_; ++ x) {
-						unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
-						complex_t temp1 = q[index] * r[i_r];
-						complex_t temp2 = sin(temp1) - temp1 * cos(temp1);
-						complex_t temp3 = temp1 * temp1 * temp1;
-						complex_t temp_mesh_qz = QGrid::instance().qy(y) * rot_[6] +
-													QGrid::instance().qx(x) * rot_[7] +
-													QGrid::instance().qz_extended(z) * rot_[8];
-						ff[index] += distr_r[i_r] * 4 * PI_ * pow(r[i_r], 3) * (temp2 / temp3) *
-										exp(complex_t(0, 1) * temp_mesh_qz * r[i_r]);
-					} // for x
-				} // for y
-			} // for z
-		} // for r
-
-		for(unsigned int z = 0; z < nqz_; ++ z) {
-			for(unsigned int y = 0; y < nqy_; ++ y) {
-				for(unsigned int x = 0; x < nqx_; ++ x) {
-					unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
-					complex_t mqx = QGrid::instance().qy(y) * rot_[0] +
-									QGrid::instance().qx(x) * rot_[1] +
-									QGrid::instance().qz_extended(z) * rot_[2];
-					complex_t mqy = QGrid::instance().qy(y) * rot_[3] +
-									QGrid::instance().qx(x) * rot_[4] +
-									QGrid::instance().qz_extended(z) * rot_[5];
-					complex_t mqz = QGrid::instance().qy(y) * rot_[6] +
-									QGrid::instance().qx(x) * rot_[7] +
-									QGrid::instance().qz_extended(z) * rot_[8];
-					ff[index] *= exp(complex_t(0, 1) * (mqx * transvec[0] +
-									mqy * transvec[1] + mqz * transvec[2]));
-				} // for x
-			} // for y
-		} // for z
-
-		//boost::timer::cpu_times const elapsed_time(timer.elapsed());
-		//boost::timer::nanosecond_type const elapsed(elapsed_time.system + elapsed_time.user);
-		//double cpu_time = elapsed;
-		//std::cout << "** CPU analytic sphere computation time: " << cpu_time / 10e6 << " ms." << std::endl;
-		
-#endif // FF_ANA_GPU
-
-		maintimer.stop();
-		std::cout << "**      Analytic FF compute time: " << maintimer.elapsed_msec() << " ms." << std::endl;
-		
-		return true;
-	} // AnalyticFormFactor::compute_sphere()
-
+*/
 
 	/**
 	 * prism - 3 face
 	 */
-	bool AnalyticFormFactor::compute_prism(shape_param_list_t& params, std::vector<complex_t>& ff,
+/*	bool AnalyticFormFactor::compute_prism(shape_param_list_t& params, std::vector<complex_t>& ff,
 											float_t tau, float_t eta, vector3_t transvec) {
 		std::vector<float_t> r, distr_r;
 		std::vector<float_t> h, distr_h;
@@ -715,12 +565,12 @@ namespace hig {
 
 		return true;
 	} // AnalyticFormFactor::compute_prism()
-
+*/
 
 	/**
 	 * six faceted prism
 	 */
-	bool AnalyticFormFactor::compute_prism6(shape_param_list_t& params, std::vector<complex_t>& ff,
+/*	bool AnalyticFormFactor::compute_prism6(shape_param_list_t& params, std::vector<complex_t>& ff,
 											float_t tau, float_t eta, vector3_t transvec) {
 		std::vector<float_t> r, distr_r;
 		std::vector<float_t> h, distr_h;
@@ -786,16 +636,16 @@ namespace hig {
 
 		return true;
 	} // AnalyticFormFactor::compute_prism6()
-
+*/
 
 	/**
 	 * triangular grating in the x-direction
 	 */
-	bool AnalyticFormFactor::compute_prism3x() {
+/*	bool AnalyticFormFactor::compute_prism3x() {
 		std::cerr << "uh-oh: you reach an unimplemented part of the code, compute_prism3x"
 					<< std::endl;
 		return false;
-		// ...
+*/		// ...
 		/*for(shape_param_iterator_t i = params.begin(); i != params.end(); ++ i) {
 			switch((*i).second.type()) {
 				case param_edge:
@@ -807,17 +657,17 @@ namespace hig {
 				default:
 			} // switch
 		} // for */
-	} // AnalyticFormFactor::compute_prism3x()
-
+/*	} // AnalyticFormFactor::compute_prism3x()
+*/
 
 	/**
 	 * upwards sawtooth
 	 */
-	bool AnalyticFormFactor::compute_sawtooth_up() {
+/*	bool AnalyticFormFactor::compute_sawtooth_up() {
 		std::cerr << "uh-oh: you reach an unimplemented part of the code, compute_sawtooth_up"
 					<< std::endl;
 		return false;
-		/*for(shape_param_iterator_t i = params.begin(); i != params.end(); ++ i) {
+*/		/*for(shape_param_iterator_t i = params.begin(); i != params.end(); ++ i) {
 			switch((*i).second.type()) {
 				case param_edge:
 				case param_xsize:
@@ -828,17 +678,17 @@ namespace hig {
 				default:
 			} // switch
 		} // for */
-	} // AnalyticFormFactor::compute_sawtooth_up()
-
+/*	} // AnalyticFormFactor::compute_sawtooth_up()
+*/
 
 	/**
 	 * downwards sawtooth
 	 */
-	bool AnalyticFormFactor::compute_sawtooth_down() {
+/*	bool AnalyticFormFactor::compute_sawtooth_down() {
 		std::cerr << "uh-oh: you reach an unimplemented part of the code, compute_sawtooth_down"
 					<< std::endl;
 		return false;
-		/*for(shape_param_iterator_t i = params.begin(); i != params.end(); ++ i) {
+*/		/*for(shape_param_iterator_t i = params.begin(); i != params.end(); ++ i) {
 			switch((*i).second.type()) {
 				case param_edge:
 				case param_xsize:
@@ -849,17 +699,17 @@ namespace hig {
 				default:
 			} // switch
 		} // for */
-	} // AnalyticFormFactor::compute_sawtooth_down()
-
+/*	} // AnalyticFormFactor::compute_sawtooth_down()
+*/
 
 	/**
 	 * pyramid
 	 */
-	bool AnalyticFormFactor::compute_pyramid() {
+/*	bool AnalyticFormFactor::compute_pyramid() {
 		std::cerr << "uh-oh: you reach an unimplemented part of the code, compute_pyramid"
 					<< std::endl;
 		return false;
-		/*for(shape_param_iterator_t i = params.begin(); i != params.end(); ++ i) {
+*/		/*for(shape_param_iterator_t i = params.begin(); i != params.end(); ++ i) {
 			switch((*i).second.type()) {
 				case param_edge:
 				case param_xsize:
@@ -870,17 +720,17 @@ namespace hig {
 				default:
 			} // switch
 		} // for */
-	} // AnalyticFormFactor::compute_pyramid()
-
+/*	} // AnalyticFormFactor::compute_pyramid()
+*/
 
 	/**
 	 * truncated cone
 	 */
-	bool AnalyticFormFactor::compute_truncated_cone() {
+/*	bool AnalyticFormFactor::compute_truncated_cone() {
 		std::cerr << "uh-oh: you reach an unimplemented part of the code, compute_truncated_cone"
 					<< std::endl;
 		return false;
-		// ...
+*/		// ...
 		/*for(shape_param_iterator_t i = params.begin(); i != params.end(); ++ i) {
 			switch((*i).second.type()) {
 				case param_edge:
@@ -892,18 +742,18 @@ namespace hig {
 				default:
 			} // switch
 		} // for */
-	} // AnalyticFormFactor::compute_pyramid()
-
+/*	} // AnalyticFormFactor::compute_pyramid()
+*/
 
 	/**
 	 * truncated pyramid
 	 */
-	bool AnalyticFormFactor::compute_truncated_pyramid() {
+/*	bool AnalyticFormFactor::compute_truncated_pyramid() {
 		std::cerr << "uh-oh: you reach an unimplemented part of the code, compute_truncated_pyramid"
 					<< std::endl;
 		return false;
 		// ...
-		/*for(shape_param_iterator_t i = params.begin(); i != params.end(); ++ i) {
+*/		/*for(shape_param_iterator_t i = params.begin(); i != params.end(); ++ i) {
 			switch((*i).second.type()) {
 				case param_edge:
 				case param_xsize:
@@ -914,8 +764,8 @@ namespace hig {
 				default:
 			} // switch
 		} // for */
-	} // AnalyticFormFactor::compute_truncated_pyramid()
-
+/*	} // AnalyticFormFactor::compute_truncated_pyramid()
+*/
 
 	/**
 	 * matrix computation helpers
