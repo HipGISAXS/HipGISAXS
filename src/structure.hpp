@@ -5,7 +5,7 @@
   *
   *  File: structure.hpp
   *  Created: Jun 09, 2012
-  *  Modified: Mon 08 Oct 2012 02:09:27 PM PDT
+  *  Modified: Wed 20 Feb 2013 01:15:31 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -14,6 +14,7 @@
 #define _STRUCTURE_HPP_
 
 #include <string>
+#include <unordered_map>
 
 #include "globals.hpp"
 #include "enums.hpp"
