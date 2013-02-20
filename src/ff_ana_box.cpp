@@ -3,13 +3,12 @@
   *
   *  File: ff_ana_box.cpp
   *  Created: Jul 12, 2012
-  *  Modified: Tue 19 Feb 2013 11:41:24 AM PST
+  *  Modified: Tue 19 Feb 2013 04:02:30 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
 
 #include <boost/math/special_functions/fpclassify.hpp>
-//#include <boost/timer/timer.hpp>
 
 #include "woo/timer/woo_boostchronotimers.hpp"
 
@@ -69,6 +68,38 @@ namespace hig {
 			return false;
 		} // if
 
+#ifdef FF_ANA_GPU
+		// on gpu
+		std::cout << "-- Computing box FF on GPU ..." << std::endl;
+
+		std::vector<float_t> transvec_v;
+		transvec_v.push_back(transvec[0]);
+		transvec_v.push_back(transvec[1]);
+		transvec_v.push_back(transvec[2]);
+		// copy to gpu mem
+		float_t *qx_h = new (std::nothrow) float_t[nqx_];
+		float_t *qy_h = new (std::nothrow) float_t[nqy_];
+		cucomplex_t *qz_h = new (std::nothrow) cucomplex_t[nqz_];
+		if(qx_h == NULL || qy_h == NULL || qz_h == NULL) {
+			std::cerr << "error: memory allocation for host mesh grid failed" << std::endl;
+			return false;
+		} // if
+		for(unsigned int ix = 0; ix < nqx_; ++ ix) {
+			qx_h[ix] = QGrid::instance().qx(ix);
+		} // for qx
+		for(unsigned int iy = 0; iy < nqy_; ++ iy) {
+			qy_h[iy] = QGrid::instance().qy(iy);
+		} // for qy
+		for(unsigned int iz = 0; iz < nqz_; ++ iz) {
+			qz_h[iz].x = QGrid::instance().qz_extended(iz).real();
+			qz_h[iz].y = QGrid::instance().qz_extended(iz).imag();
+		} // for qz
+
+		ff_gpu_.compute_box(tau, eta, x, distr_x, y, distr_y, z, distr_z,
+							qx_h, qy_h, qz_h, rot_, transvec_v, ff);
+#else
+		// on cpu
+		std::cout << "-- Computing box FF on CPU ..." << std::endl;
 		// initialize ff
 		ff.clear();
 		ff.reserve(nqz * nqy * nqx);
@@ -127,6 +158,7 @@ namespace hig {
 				} // for x
 			} // for y
 		} // for z
+#endif // FF_ANA_GPU
 
 		return true;
 	} // AnalyticFormFactor::compute_box()

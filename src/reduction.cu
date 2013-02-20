@@ -44,6 +44,7 @@ namespace hig {
 		} // if
 	} // reduction_kernel()
 
+	#ifdef REDUCTION2
 	/* GPU parallel reduction:
 	 * perform 3D decomposition along t, y, z, and reduce along t in parallel
 	 */
@@ -124,6 +125,7 @@ namespace hig {
 			} // if
 		} // for
 	} // reduction_kernel_parallel()
+	#endif // REDUCTION2
 
 	/**
 	 * GPU: For double precision
@@ -154,6 +156,7 @@ namespace hig {
 		} // if
 	} // reduction_kernel()
 
+	#ifdef REDUCTION2
 	/* GPU parallel reduction:
 	 * perform 3D decomposition along t, y, z, and reduce along t in parallel
 	 */
@@ -175,7 +178,7 @@ namespace hig {
 		unsigned int stempyz = blockDim.y * blockDim.z;
 		unsigned int stemp = curr_nqx * stempyz;
 		unsigned int i_fq_base = temp * i_tt + i_ff_base;
-		unsigned int i_sbase = stemp * threadIdx.x + curr_nqx * (blockDim.y * threadIdx.z + threadIdx.y);
+		//unsigned int i_sbase = stemp * threadIdx.x + curr_nqx * (blockDim.y * threadIdx.z + threadIdx.y);
 
 		// blockDim.x == BLOCK_REDUCTION_X_ / 2 == b_num_triangles / 2
 		// blockDim.y == BLOCK_REDUCTION_Y_
@@ -227,6 +230,7 @@ namespace hig {
 			} // for
 		} // if
 	} // reduction_kernel_parallel()
+	#endif // REDUCTION2
 
 	#else // GPUR
 

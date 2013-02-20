@@ -5,7 +5,7 @@
   *
   *  File: ff_ana_gpu.cuh
   *  Created: Oct 16, 2012
-  *  Modified: Sat 20 Oct 2012 01:34:19 PM PDT
+  *  Modified: Tue 19 Feb 2013 04:32:10 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -33,13 +33,17 @@ namespace hig {
 
 			void grid_size(unsigned int, unsigned int, unsigned int);
 
-			bool compute_box(/*unsigned int nqx, unsigned int nqy, unsigned int nqz,
-                            std::vector<complex_t>& ff,
-                            ShapeName shape, shape_param_list_t& params,
-                            float_t tau, float_t eta, vector3_t &transvec,
-                            vector3_t &rot1, vector3_t &rot2, vector3_t &rot3*/);
-            bool compute_cylinder(/*shape_param_list_t&, float_t, float_t,
-                                    std::vector<complex_t>&, vector3_t*/);
+			bool compute_box(const float_t, const float_t,
+							const std::vector<float_t>&, const std::vector<float_t>&,
+							const std::vector<float_t>&, const std::vector<float_t>&,
+							const std::vector<float_t>&, const std::vector<float_t>&,
+							const float_t*, const float_t*, const cucomplex_t*,
+							const float_t*, const std::vector<float_t>&, std::vector<complex_t>&);
+            bool compute_cylinder(const float_t, const float_t, const std::vector<float_t>&,
+									const std::vector<float_t>&, const std::vector<float_t>&,
+									const std::vector<float_t>&,
+									const float_t*, const float_t*, const cucomplex_t*,
+									const float_t*, const std::vector<float_t>&, std::vector<complex_t>&);
             bool compute_horizontal_cylinder(/*shape_param_list_t&, vector3_t, std::vector<complex_t>&*/);
             bool compute_random_cylinders();
             /*bool compute_sphere(const std::vector<float_t>& r,

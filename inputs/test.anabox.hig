@@ -3,7 +3,8 @@ hipGisaxsInput = {
 		key = "s1",	 		# a unique key to identify this shape in this file
 		name = "box",		# shape name
 		originvec = [0 0 0],
-		param = { type = "edge", min = 100, stat = "gaussian", p1 = 100, p2 = 10, nvalues = 10 }
+		#param = { type = "edge", min = 100, stat = "gaussian", p1 = 100, p2 = 10, nvalues = 10 }
+		param = { type = "edge", min = 100 }
 	},
 	layer = {
 		key = "substr",	 	# special key for case of the substrate layer infinite in lower half space
@@ -13,7 +14,7 @@ hipGisaxsInput = {
 	layer = {
 		key = "l1",
 		order = 1,
-		thickness = 250,
+		thickness = 150,
 		refindex = { delta = 2.0e-6, beta = 2.15E-9 }
 	},
 	structure = {
@@ -21,10 +22,10 @@ hipGisaxsInput = {
 		grain = {
 			shape:key = "s1",
 			refindex = { delta = 7.4E-06, beta = 3.37E-08 },
-			layer:key = "l1",
-			repetition = [ 40 40 1 ],
-			lattice = { type = "hex" },
-			scaling = 50
+			layer:key = "l1"
+#			repetition = [ 40 40 1 ],
+#			lattice = { type = "hex" },
+#			scaling = 50
 		},
 		ensemble = { }
 	},

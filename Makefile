@@ -56,7 +56,7 @@ NVCC_FLAGS += -gencode arch=compute_20,code=sm_21
 NVCC_FLAGS += -gencode arch=compute_30,code=sm_30
 NVCC_FLAGS += -gencode arch=compute_35,code=sm_35
 #NVCC_FLAGS += -Xptxas -v -Xcompiler -v -Xlinker -v --ptxas-options="-v"
-NVCC_FLAGS += #-G #-DFINDBLOCK #-DAXIS_ROT
+NVCC_FLAGS += -G #-DFINDBLOCK #-DAXIS_ROT
 NVLIB_FLAGS = -Xlinker -lgomp
 NVLIB_FLAGS += -Wl,-rpath -Wl,$(CUDA_DIR)/lib64
 
@@ -107,7 +107,7 @@ OBJECTS_MAIN = reduction.o ff_num_gpu.o utilities.o numeric_utils.o compute_para
 		  ff_ana_sphere.o ff_ana_box.o ff_ana_cylinder.o ff_ana_hcylinder.o ff_ana_prism3x.o \
 		  ff_ana_prism6.o ff_ana_prism.o ff_ana_pyramid.o ff_ana_rand_cylinder.o \
 		  ff_ana_sawtooth_down.o ff_ana_sawtooth_up.o ff_ana_trunc_cone.o ff_ana_trunc_pyramid.o \
-		  ff_ana_sphere_gpu.o \
+		  ff_ana_sphere_gpu.o ff_ana_box_gpu.o ff_ana_cylinder_gpu.o \
 		  fitting_steepest_descent.o
 
 OBJECTS_SIM = $(OBJECTS_MAIN) hipgisaxs_sim.o
@@ -134,6 +134,12 @@ $(OBJ_DIR)/ff_num_gpu.o: $(SRC_DIR)/ff_num_gpu.cu
 	$(NVCC) -c $< -o $@ $(OPT_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS) $(NVCC_FLAGS)
 
 $(OBJ_DIR)/ff_ana_gpu.o: $(SRC_DIR)/ff_ana_gpu.cu
+	$(NVCC) -c $< -o $@ $(OPT_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS) $(NVCC_FLAGS)
+
+$(OBJ_DIR)/ff_ana_box_gpu.o: $(SRC_DIR)/ff_ana_box_gpu.cu
+	$(NVCC) -c $< -o $@ $(OPT_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS) $(NVCC_FLAGS)
+
+$(OBJ_DIR)/ff_ana_cylinder_gpu.o: $(SRC_DIR)/ff_ana_cylinder_gpu.cu
 	$(NVCC) -c $< -o $@ $(OPT_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS) $(NVCC_FLAGS)
 
 $(OBJ_DIR)/ff_ana_sphere_gpu.o: $(SRC_DIR)/ff_ana_sphere_gpu.cu

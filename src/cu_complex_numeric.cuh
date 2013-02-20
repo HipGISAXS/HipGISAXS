@@ -5,7 +5,7 @@
   *
   *  File: cu_complex_numeric.cuh
   *  Created: Oct 17, 2012
-  *  Modified: Thu 29 Nov 2012 03:21:39 PM PST
+  *  Modified: Tue 19 Feb 2013 07:59:19 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -28,6 +28,88 @@ namespace hig {
 	__device__ static __inline__ cuDoubleComplex make_cuC(double r, double i) {
 		return make_cuDoubleComplex(r, i);
 	} // make_cuC()
+
+
+	// addition
+
+	__device__ static __inline__ cuFloatComplex operator+(cuFloatComplex a, cuFloatComplex b) {
+		return make_cuFloatComplex(a.x + b.x, a.y + b.y);
+	} // operator+()
+
+	__device__ static __inline__ cuFloatComplex operator+(cuFloatComplex a, float b) {
+		return make_cuFloatComplex(a.x + b, a.y);
+	} // operator+()
+
+	__device__ static __inline__ cuFloatComplex operator+(float a, cuFloatComplex b) {
+		return make_cuFloatComplex(a + b.x, b.y);
+	} // operator+()
+
+	__device__ static __inline__ cuDoubleComplex operator+(cuDoubleComplex a, cuDoubleComplex b) {
+		return make_cuDoubleComplex(a.x + b.x, a.y + b.y);
+	} // operator+()
+
+	__device__ static __inline__ cuDoubleComplex operator+(cuDoubleComplex a, double b) {
+		return make_cuDoubleComplex(a.x + b, a.y);
+	} // operator+()
+
+	__device__ static __inline__ cuDoubleComplex operator+(double a, cuDoubleComplex b) {
+		return make_cuDoubleComplex(a + b.x, b.y);
+	} // operator+()
+
+
+	// multiplication
+
+	__device__ static __inline__ cuFloatComplex operator*(cuFloatComplex a, cuFloatComplex b) {
+		return make_cuFloatComplex(a.x * b.x - a.y * b.y, a.x * b.y + a.y * b.x);
+	} // operator+()
+
+	__device__ static __inline__ cuFloatComplex operator*(cuFloatComplex a, float b) {
+		return make_cuFloatComplex(a.x * b, a.y);
+	} // operator+()
+
+	__device__ static __inline__ cuFloatComplex operator*(float a, cuFloatComplex b) {
+		return make_cuFloatComplex(a * b.x, b.y);
+	} // operator+()
+
+	__device__ static __inline__ cuDoubleComplex operator*(cuDoubleComplex a, cuDoubleComplex b) {
+		return make_cuDoubleComplex(a.x * b.x - a.y * b.y, a.x * b.y + a.y * b.x);
+	} // operator+()
+
+	__device__ static __inline__ cuDoubleComplex operator*(cuDoubleComplex a, double b) {
+		return make_cuDoubleComplex(a.x * b, a.y);
+	} // operator+()
+
+	__device__ static __inline__ cuDoubleComplex operator*(double a, cuDoubleComplex b) {
+		return make_cuDoubleComplex(a * b.x, b.y);
+	} // operator+()
+
+
+	// division
+
+	__device__ static __inline__ cuFloatComplex operator/(cuFloatComplex a, cuFloatComplex b) {
+		return cuCdivf(a, b);
+	} // operator+()
+
+	__device__ static __inline__ cuDoubleComplex operator/(cuDoubleComplex a, cuDoubleComplex b) {
+		return cuCdiv(a, b);
+	} // operator+()
+
+	__device__ static __inline__ cuFloatComplex operator/(cuFloatComplex a, float b) {
+		return make_cuFloatComplex(a.x / b, a.y / b);
+	} // operator+()
+
+	__device__ static __inline__ cuDoubleComplex operator/(cuDoubleComplex a, double b) {
+		return make_cuDoubleComplex(a.x / b, a.y / b);
+	} // operator+()
+
+	__device__ static __inline__ cuFloatComplex operator/(float a, cuFloatComplex b) {
+		return cuCdivf(make_cuFloatComplex(a, 0.0f), b);
+	} // operator+()
+
+	__device__ static __inline__ cuDoubleComplex operator/(double a, cuDoubleComplex b) {
+		return cuCdiv(make_cuDoubleComplex(a, 0.0), b);
+	} // operator+()
+
 
 /*	__device__ static __inline__ float cuCabs(cuFloatComplex z) {
 		float x = z.x;
@@ -169,12 +251,28 @@ namespace hig {
 		return make_cuC(cos(x) * cosh(y), -sin(x) * sinh(y));
 	} // cuCsin()
 
+
+	__device__ static __inline__ cuFloatComplex sinc(cuFloatComplex value) {
+		cuFloatComplex temp;
+		if(fabsf(value.x) < 1e-14 && fabsf(value.y) < 1e-14) temp = make_cuFloatComplex(1.0, 0.0);
+		else temp = cuCsin(value) / value;
+		return temp;
+	} // AnalyticFormFactor::sinc()
+
+	__device__ static __inline__ cuDoubleComplex sinc(cuDoubleComplex value) {
+		cuDoubleComplex temp;
+		if(fabs(value.x) < 1e-14 && fabs(value.y) < 1e-14) temp = make_cuDoubleComplex(1.0, 0.0);
+		else temp = cuCsin(value) / value;
+		return temp;
+	} // AnalyticFormFactor::sinc()
+
+
 	/**
 	 * Atomics
 	 */
 
 	// atomic add for double precision
-	__device__ double atomicAdd(double* address, double val) {
+	__device__ static __inline__ double atomicAdd(double* address, double val) {
 		unsigned long long int* ull_address = (unsigned long long int*) address;
 		unsigned long long int old = *ull_address;
 		unsigned long long int assumed;
@@ -186,6 +284,56 @@ namespace hig {
 	} // atomicAdd()
 
 
+	/**
+	 * Others
+	 */
+
+	__device__ static __inline__ double cugamma(double x) {
+		double coef[6];
+		coef[0] = 76.18009173;
+		coef[1] = -86.50532033;
+		coef[2] = 24.01409822;
+		coef[3] = -1.231739516;
+		coef[4] = 0.120858003e-2;
+		coef[5] = -0.536382e-5;
+		double stp = 2.50662827465;
+		double temp = x + 5.5;
+		temp = (x + 0.5) * log(temp) - temp;
+		double ser = 1.0;
+		for(int j = 0; j < 6; ++ j) {
+			x += 1.0;
+			ser += coef[j] / x;
+		} // for
+		return exp(temp + log(stp * ser));
+	} // cugamma()
+
+	const int MAXK = 20;
+
+	// bessel
+	__device__ static __inline__ cuDoubleComplex cuCcbessj(cuDoubleComplex zz, int order) {
+		cuDoubleComplex z = zz;
+		cuDoubleComplex temp_z = z / 2.0;
+		cuDoubleComplex temp1 = cuCpow(temp_z, order);
+		cuDoubleComplex z2 = -1.0 * temp_z * temp_z;
+		cuDoubleComplex sum = make_cuDoubleComplex(0.0, 0.0);
+		double factorial_k = 1.0;
+		cuDoubleComplex pow_z2_k = make_cuDoubleComplex(1.0, 0.0);
+		for(unsigned int k = 0; k <= MAXK; ++ k) {
+			if(k == 0) factorial_k = 1.0;
+			else factorial_k *= k;
+			cuDoubleComplex temp2 = pow_z2_k / (factorial_k * cugamma((double) order + k));
+			sum = sum + temp2;
+			pow_z2_k = pow_z2_k * z2;
+		} // for
+		temp1 = temp1 * sum;
+		return temp1;
+	} // cuCcbessj()
+
+	__device__ static __inline__ cuFloatComplex cuCcbessj(cuFloatComplex zz, int order) {
+		cuDoubleComplex temp = cuCcbessj(make_cuDoubleComplex((double) zz.x, (double) zz.y), order);
+		return make_cuFloatComplex((float) temp.x, (float) temp.y);
+	} // cuCcbessj()
+	
 } // namespace
 
 #endif // _CU_COMPLEX_NUMERIC_CUH_

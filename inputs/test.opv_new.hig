@@ -33,8 +33,8 @@ hipGisaxsInput = {
 		},
 		detector = {
 			pixelsize = 0.172,	 				# pixel size of the detector in mm (172 microns)
-			#sdd = 4128.62,						# sample to detector distance
-			sdd = 550,							# sample to detector distance
+			sdd = 4128.62,						# sample to detector distance
+			#sdd = 550,							# sample to detector distance
 			#sdd = 2060,							# sample to detector distance in mm
 			directbeam = [ 489.916 843.076 ]	# position of direct beam
 		}
@@ -45,8 +45,8 @@ hipGisaxsInput = {
 		method = "dwba",					# theorical approach (see list)
         #outputregion = { type = "pixels" , minpoint = [ 400 550 ], maxpoint = [ 550 750 ] },	# full ff
 		#outputregion = { type = "pixels" , minpoint = [ 233 740 ], maxpoint = [ 745 971 ] },	# half
-		outputregion = { type = "qspace" , minpoint = [ 0.15 0.15 ], maxpoint = [ 2 2 ] },
-		resolution = [ 0.2 0.2 ],			# number of q points per pixel
+		outputregion = { type = "qspace" , minpoint = [ 0.15 0.15 ], maxpoint = [ 2.5 2.5 ] },
+		resolution = [ 0.1 0.1 ],			# number of q points per pixel
 		nslices = 0							# max number of slices for slicing algorithm
 	}
 }
