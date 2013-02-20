@@ -5,7 +5,7 @@
   *
   *  File: cu_complex_numeric.cuh
   *  Created: Oct 17, 2012
-  *  Modified: Tue 19 Feb 2013 07:59:19 PM PST
+  *  Modified: Wed 20 Feb 2013 02:24:22 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -252,14 +252,14 @@ namespace hig {
 	} // cuCsin()
 
 
-	__device__ static __inline__ cuFloatComplex sinc(cuFloatComplex value) {
+	__device__ static __inline__ cuFloatComplex cuCsinc(cuFloatComplex value) {
 		cuFloatComplex temp;
 		if(fabsf(value.x) < 1e-14 && fabsf(value.y) < 1e-14) temp = make_cuFloatComplex(1.0, 0.0);
 		else temp = cuCsin(value) / value;
 		return temp;
 	} // AnalyticFormFactor::sinc()
 
-	__device__ static __inline__ cuDoubleComplex sinc(cuDoubleComplex value) {
+	__device__ static __inline__ cuDoubleComplex cuCsinc(cuDoubleComplex value) {
 		cuDoubleComplex temp;
 		if(fabs(value.x) < 1e-14 && fabs(value.y) < 1e-14) temp = make_cuDoubleComplex(1.0, 0.0);
 		else temp = cuCsin(value) / value;

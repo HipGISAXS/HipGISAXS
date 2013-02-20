@@ -5,7 +5,7 @@
   *
   *  File: ff_ana.cpp
   *  Created: Jul 12, 2012
-  *  Modified: Wed 20 Feb 2013 12:50:59 PM PST
+  *  Modified: Wed 20 Feb 2013 02:20:34 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -114,7 +114,7 @@ namespace hig {
 				} // if
 				break;
 			case shape_horizontal_cylinder:		// horizontal cylinder
-				if(!compute_horizontal_cylinder(params, transvec, ff)) {
+				if(!compute_horizontal_cylinder(tau, eta, params, transvec, ff)) {
 					std::cerr << "error: something went wrong while computing FF for a horizontal cylinder"
 								<< std::endl;
 					return false;

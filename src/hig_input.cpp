@@ -5,7 +5,7 @@
   *
   *  File: hig_input.cpp
   *  Created: Jun 11, 2012
-  *  Modified: Fri 30 Nov 2012 01:55:42 PM PST
+  *  Modified: Wed 20 Feb 2013 01:41:02 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -1167,6 +1167,42 @@ namespace hig {
 							break;
 						case param_edge:
 							std::cerr << "warning: ignoring the edge values given for cylinder shape"
+										<< std::endl;
+							break;
+						case param_baseangle:
+							// do nothing
+							break;
+						default:
+							std::cerr << "error: invalid parameter found in a shape" << std::endl;
+							return false;
+					} // switch
+					++ param;
+				} // while
+				return true;
+
+			case shape_horizontal_cylinder:
+				while(param != shape.param_end()) {
+					switch((*param).second.type()) {
+						case param_radius:
+							max_dim[0] = max((*param).second.max(), (*param).second.min());
+							min_dim[0] = -max_dim[0];
+							max_dim[1] = max((*param).second.max(), (*param).second.min());
+							min_dim[1] = -max_dim[1];
+							break;
+						case param_xsize:
+							std::cerr << "warning: ignoring the xsize values given for hcylinder shape"
+										<< std::endl;
+							break;
+						case param_ysize:
+							std::cerr << "warning: ignoring the ysize values given for hcylinder shape"
+										<< std::endl;
+							break;
+						case param_height:
+							max_dim[2] = 2.0 * max((*param).second.max(), (*param).second.min());
+							min_dim[2] = 0.0;
+							break;
+						case param_edge:
+							std::cerr << "warning: ignoring the edge values given for hcylinder shape"
 										<< std::endl;
 							break;
 						case param_baseangle:

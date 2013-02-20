@@ -3,7 +3,7 @@
   *
   *  File: ff_ana_hcylinder.cpp
   *  Created: Jul 12, 2012
-  *  Modified: Tue 19 Feb 2013 11:41:51 AM PST
+  *  Modified: Wed 20 Feb 2013 02:21:02 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -25,7 +25,7 @@ namespace hig {
 	/**
 	 * horizontal cylinder
 	 */
-	bool AnalyticFormFactor::compute_horizontal_cylinder(shape_param_list_t& params,
+	bool AnalyticFormFactor::compute_horizontal_cylinder(float_t tau, float_t eta, shape_param_list_t& params,
 														vector3_t transvec,
 														std::vector<complex_t>& ff) {
 		std::vector<float_t> r, distr_r;
@@ -59,6 +59,20 @@ namespace hig {
 		} // if
 
 		// in slims code, why not doing range of r and h ???
+
+#ifdef FF_ANA_GPU
+		// on gpu
+		std::cout << "-- Computing hcylinder FF on GPU ..." << std::endl;
+
+		std::vector<float_t> transvec_v;
+		transvec_v.push_back(transvec[0]);
+		transvec_v.push_back(transvec[1]);
+		transvec_v.push_back(transvec[2]);
+
+		gff_.compute_horizontal_cylinder(tau, eta, h, distr_h, r, distr_r, rot_, transvec_v, ff);
+#else
+		// on cpu
+		std::cout << "-- Computing hcylinder FF on CPU ..." << std::endl;
 
 		complex_t unitc(0, 1);
 
@@ -94,7 +108,7 @@ namespace hig {
 				} // for x
 			} // for y
 		} // for z
-
+#endif // FF_ANA_GPU
 		return true;
 	} // AnalyticFormFactor::compute_horizontal_cylinder()
 
