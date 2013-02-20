@@ -5,7 +5,7 @@
   *
   *  File: ff_ana_gpu.cuh
   *  Created: Oct 16, 2012
-  *  Modified: Tue 19 Feb 2013 04:32:10 PM PST
+  *  Modified: Wed 20 Feb 2013 12:59:23 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -26,10 +26,26 @@ namespace hig {
 			unsigned int nqy_;
 			unsigned int nqz_;
 
+			// device buffers
+
+			float_t* qx_;
+			float_t* qy_;
+			cucomplex_t* qz_;
+			cucomplex_t* ff_;
+
+			float_t* transvec_;
+			float_t* rot_;
+
+			bool construct_output_ff(std::vector<complex_t>&);
+
 		public:
 			AnalyticFormFactorG(unsigned int, unsigned int, unsigned int);
 			AnalyticFormFactorG();
 			~AnalyticFormFactorG();
+
+			bool init(unsigned int, unsigned int, unsigned int);
+			bool run_init(const float_t*, const std::vector<float_t>&);
+			bool destroy();
 
 			void grid_size(unsigned int, unsigned int, unsigned int);
 
@@ -37,30 +53,20 @@ namespace hig {
 							const std::vector<float_t>&, const std::vector<float_t>&,
 							const std::vector<float_t>&, const std::vector<float_t>&,
 							const std::vector<float_t>&, const std::vector<float_t>&,
-							const float_t*, const float_t*, const cucomplex_t*,
+							//const float_t*, const float_t*, const cucomplex_t*,
 							const float_t*, const std::vector<float_t>&, std::vector<complex_t>&);
             bool compute_cylinder(const float_t, const float_t, const std::vector<float_t>&,
 									const std::vector<float_t>&, const std::vector<float_t>&,
 									const std::vector<float_t>&,
-									const float_t*, const float_t*, const cucomplex_t*,
+									//const float_t*, const float_t*, const cucomplex_t*,
 									const float_t*, const std::vector<float_t>&, std::vector<complex_t>&);
             bool compute_horizontal_cylinder(/*shape_param_list_t&, vector3_t, std::vector<complex_t>&*/);
             bool compute_random_cylinders();
-            /*bool compute_sphere(const std::vector<float_t>& r,
-								const std::vector<float_t>& distr_r,
-								const std::vector<complex_t>& mesh_qx,
-								const std::vector<complex_t>& mesh_qy,
-								const std::vector<complex_t>& mesh_qz,
-								const std::vector<float_t>& transvec,
-								std::vector<complex_t>& ff);*/
             bool compute_sphere(const std::vector<float_t>& r,
 								const std::vector<float_t>& distr_r,
-								//const cucomplex_t* mesh_qx,
-								//const cucomplex_t* mesh_qy,
-								//const cucomplex_t* mesh_qz,
-								const float_t* qx,
-								const float_t* qy,
-								const cucomplex_t* qz,
+								//const float_t* qx,
+								//const float_t* qy,
+								//const cucomplex_t* qz,
 								const float_t* rot,
 								const std::vector<float_t>& transvec,
 								std::vector<complex_t>& ff);

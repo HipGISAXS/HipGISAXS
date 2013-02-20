@@ -5,7 +5,7 @@
   *
   *  File: ff_ana.cpp
   *  Created: Jul 12, 2012
-  *  Modified: Tue 19 Feb 2013 11:25:34 AM PST
+  *  Modified: Wed 20 Feb 2013 12:50:59 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -24,18 +24,19 @@
 
 namespace hig {
 
+	// TODO: decompose into two init functions:
+	// 	one for overall (sets qgrid in gff_),
+	// 	other for each run/invocation (sets rotation matrices)
 	bool AnalyticFormFactor::init(vector3_t &rot1, vector3_t &rot2, vector3_t &rot3,
 				std::vector<complex_t> &ff) {
 		nqx_ = QGrid::instance().nqx();
 		nqy_ = QGrid::instance().nqy();
 		nqz_ = QGrid::instance().nqz_extended();
 
-		ff_gpu_.grid_size(nqx_, nqy_, nqz_);
-
 		// first make sure there is no residue from any previous computations
 		ff.clear();
 
-		// construct mesh grid thingy
+		// construct the stupid matlab mesh grid thingy
 		/*mesh_qx_.clear();
 		mesh_qy_.clear();
 		mesh_qz_.clear();
@@ -60,6 +61,12 @@ namespace hig {
 			} // for j
 		} // for i */
 
+#ifdef FF_ANA_GPU
+		//gff_.grid_size(nqx_, nqy_, nqz_);
+		gff_.init(nqx_, nqy_, nqz_);
+#endif // FF_ANA_GPU
+
+		// rotation matrices are new for each ff calculation
 		rot_ = new (std::nothrow) float_t[9];
 		rot_[0] = rot1[0]; rot_[1] = rot1[1]; rot_[2] = rot1[2];
 		rot_[3] = rot2[0]; rot_[4] = rot2[1]; rot_[5] = rot2[2];

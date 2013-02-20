@@ -3,7 +3,7 @@
   *
   *  File: ff_ana_box.cpp
   *  Created: Jul 12, 2012
-  *  Modified: Tue 19 Feb 2013 04:02:30 PM PST
+  *  Modified: Wed 20 Feb 2013 12:52:23 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -77,7 +77,7 @@ namespace hig {
 		transvec_v.push_back(transvec[1]);
 		transvec_v.push_back(transvec[2]);
 		// copy to gpu mem
-		float_t *qx_h = new (std::nothrow) float_t[nqx_];
+		/*float_t *qx_h = new (std::nothrow) float_t[nqx_];
 		float_t *qy_h = new (std::nothrow) float_t[nqy_];
 		cucomplex_t *qz_h = new (std::nothrow) cucomplex_t[nqz_];
 		if(qx_h == NULL || qy_h == NULL || qz_h == NULL) {
@@ -93,10 +93,10 @@ namespace hig {
 		for(unsigned int iz = 0; iz < nqz_; ++ iz) {
 			qz_h[iz].x = QGrid::instance().qz_extended(iz).real();
 			qz_h[iz].y = QGrid::instance().qz_extended(iz).imag();
-		} // for qz
+		} // for qz*/
 
-		ff_gpu_.compute_box(tau, eta, x, distr_x, y, distr_y, z, distr_z,
-							qx_h, qy_h, qz_h, rot_, transvec_v, ff);
+		gff_.compute_box(tau, eta, x, distr_x, y, distr_y, z, distr_z,
+							/*qx_h, qy_h, qz_h,*/ rot_, transvec_v, ff);
 #else
 		// on cpu
 		std::cout << "-- Computing box FF on CPU ..." << std::endl;

@@ -3,7 +3,7 @@
   *
   *  File: ff_ana_cylinder.cpp
   *  Created: Jul 12, 2012
-  *  Modified: Tue 19 Feb 2013 04:07:33 PM PST
+  *  Modified: Wed 20 Feb 2013 12:56:50 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -66,7 +66,7 @@ namespace hig {
 		transvec_v.push_back(transvec[1]);
 		transvec_v.push_back(transvec[2]);
 		// copy to gpu memory
-		float_t *qx_h = new (std::nothrow) float_t[nqx_];
+		/*float_t *qx_h = new (std::nothrow) float_t[nqx_];
 		float_t *qy_h = new (std::nothrow) float_t[nqy_];
 		cucomplex_t *qz_h = new (std::nothrow) cucomplex_t[nqz_];
 		if(qx_h == NULL || qy_h == NULL || qz_h == NULL) {
@@ -78,9 +78,9 @@ namespace hig {
 		for(unsigned int iz = 0; iz < nqz_; ++ iz) {
 			qz_h[iz].x = QGrid::instance().qz_extended(iz).real();
 			qz_h[iz].y = QGrid::instance().qz_extended(iz).imag();
-		} // for qz
+		} // for qz*/
 
-		ff_gpu_.compute_cylinder(tau, eta, h, distr_h, r, distr_r, qx_h, qy_h, qz_h, rot_, transvec_v, ff);
+		gff_.compute_cylinder(tau, eta, h, distr_h, r, distr_r, /*qx_h, qy_h, qz_h,*/ rot_, transvec_v, ff);
 #else
 		// on cpu
 		std::cout << "-- Computing cylinder FF on CPU ..." << std::endl;

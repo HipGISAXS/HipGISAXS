@@ -121,5 +121,10 @@ hipGisaxsInput = {
 		outputregion = { type = "pixels", minpoint = [350 710], maxpoint = [650 900] },
 		resolution = [2 2],  				# number of q points per pixel
 		nslices = 20		    			# max number of slices for slicing algorithm
+
+		# add more stuff:
+		# saverawgisaxs = yes
+		# savesf = no
+		# saveff = no
 	}
 }

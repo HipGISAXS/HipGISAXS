@@ -5,7 +5,7 @@
   *
   *  File: ff_ana.hpp
   *  Created: Jul 12, 2012
-  *  Modified: Fri 23 Nov 2012 01:22:29 PM PST
+  *  Modified: Wed 20 Feb 2013 09:35:19 AM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -32,21 +32,19 @@ namespace hig {
 			unsigned int nqy_;
 			unsigned int nqz_;
 
-			std::vector<complex_t> mesh_qx_;
-			std::vector<complex_t> mesh_qy_;
-			std::vector<complex_t> mesh_qz_;
+			//std::vector<complex_t> mesh_qx_;
+			//std::vector<complex_t> mesh_qy_;
+			//std::vector<complex_t> mesh_qz_;
 
 			float_t *rot_;
 
-			AnalyticFormFactorG ff_gpu_;
+#ifdef FF_ANA_GPU
+			AnalyticFormFactorG gff_;
+#endif // FF_ANA_GPU
 
 		public:
-			AnalyticFormFactor()/*: mqx_(NULL), mqy_(NULL), mqz_(NULL)*/ { }
-			~AnalyticFormFactor() {
-				/*if(mqx_ != NULL) delete[] mqx_;
-				if(mqy_ != NULL) delete[] mqy_;
-				if(mqz_ != NULL) delete[] mqz_;*/
-			} // ~AnalyticFormFactor()
+			AnalyticFormFactor() { }
+			~AnalyticFormFactor() { }
 
 			bool init(vector3_t&, vector3_t&, vector3_t&, std::vector<complex_t> &ff);
 			void clear();
@@ -75,28 +73,6 @@ namespace hig {
 			bool compute_pyramid();
 			bool compute_truncated_pyramid();
 			bool compute_truncated_cone();
-
-			/* compute ff on gpu */
-			/*bool compute_box_gpu(unsigned int nqx, unsigned int nqy, unsigned int nqz,
-							std::vector<complex_t>& ff,
-							ShapeName shape, shape_param_list_t& params,
-							float_t tau, float_t eta, vector3_t &transvec,
-							vector3_t &rot1, vector3_t &rot2, vector3_t &rot3);
-			bool compute_cylinder_gpu(shape_param_list_t&, float_t, float_t,
-									std::vector<complex_t>&, vector3_t);
-			bool compute_horizontal_cylinder_gpu(shape_param_list_t&, vector3_t, std::vector<complex_t>&);
-			bool compute_random_cylinders_gpu();
-			bool compute_sphere_gpu(shape_param_list_t&, std::vector<complex_t>&, vector3_t);
-			bool compute_prism_gpu(shape_param_list_t&, std::vector<complex_t>&,
-								float_t, float_t, vector3_t);
-			bool compute_prism6_gpu(shape_param_list_t&, std::vector<complex_t>&,
-								float_t, float_t, vector3_t);
-			bool compute_prism3x_gpu();
-			bool compute_sawtooth_up_gpu();
-			bool compute_sawtooth_down_gpu();
-			bool compute_pyramid_gpu();
-			bool compute_truncated_pyramid_gpu();
-			bool compute_truncated_cone_gpu(); */
 
 			/* other helpers */ // check if they should be private ...
 			bool param_distribution(ShapeParam&, std::vector<float_t>&, std::vector<float_t>&);

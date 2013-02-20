@@ -3,7 +3,7 @@
   *
   *  File: ff_ana_sphere.cpp
   *  Created: Jul 12, 2012
-  *  Modified: Tue 19 Feb 2013 11:43:46 AM PST
+  *  Modified: Wed 20 Feb 2013 12:53:04 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -58,13 +58,12 @@ namespace hig {
 		/* on gpu */
 		std::cout << "-- Computing sphere FF on GPU ..." << std::endl;
 
-		//boost::timer::cpu_timer timer;	// timer starts
 		std::vector<float_t> transvec_v;
 		transvec_v.push_back(transvec[0]);
 		transvec_v.push_back(transvec[1]);
 		transvec_v.push_back(transvec[2]);
 
-		float_t *qx_h = new (std::nothrow) float_t[nqx_];
+		/*float_t *qx_h = new (std::nothrow) float_t[nqx_];
 		float_t *qy_h = new (std::nothrow) float_t[nqy_];
 		cucomplex_t *qz_h = new (std::nothrow) cucomplex_t[nqz_];
 		if(qx_h == NULL || qy_h == NULL || qz_h == NULL) {
@@ -80,19 +79,15 @@ namespace hig {
 		for(unsigned int iz = 0; iz < nqz_; ++ iz) {
 			qz_h[iz].x = QGrid::instance().qz_extended(iz).real();
 			qz_h[iz].y = QGrid::instance().qz_extended(iz).imag();
-		} // for qz
+		} // for qz*/
 
-		ff_gpu_.compute_sphere(r, distr_r, qx_h, qy_h, qz_h, rot_, transvec_v, ff);
+		gff_.compute_sphere(r, distr_r, /*qx_h, qy_h, qz_h,*/ rot_, transvec_v, ff);
 
-		//boost::timer::cpu_times const elapsed_time(timer.elapsed());
-		//boost::timer::nanosecond_type const elapsed(elapsed_time.system + elapsed_time.user);
-		//double gpu_time = elapsed;
 		//std::cout << "** GPU analytic sphere computation time: " << gpu_time / 10e6 << " ms." << std::endl;
 #else
 		/* on cpu */
 		std::cout << "-- Computing sphere FF on CPU ..." << std::endl;
 
-		//boost::timer::cpu_timer timer;	// timer starts
 		std::vector <complex_t> q;
 		q.clear();
 		for(unsigned int z = 0; z < nqz_; ++ z) {

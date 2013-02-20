@@ -5,7 +5,7 @@
   *
   *  File: ff.hpp
   *  Created: Jul 18, 2012
-  *  Modified: Fri 23 Nov 2012 01:24:37 PM PST
+  *  Modified: Wed 20 Feb 2013 09:09:00 AM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -22,7 +22,7 @@
 
 namespace hig {
 
-	// fix the numeric and non-numeric version ... unify them somehow ...
+	// fix the numeric and non-numeric version ... unify them ...
 	class FormFactor {
 		private:
 			bool is_analytic_;

@@ -3,7 +3,7 @@
   *
   *  File: ff_ana_gpu.cu
   *  Created: Oct 16, 2012
-  *  Modified: Tue 19 Feb 2013 08:02:44 PM PST
+  *  Modified: Wed 20 Feb 2013 01:06:30 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -29,8 +29,7 @@ namespace hig {
 									unsigned int, float_t*, unsigned int, float_t*,
 									unsigned int, float_t*, unsigned int, float_t*,
 									unsigned int, float_t*, unsigned int, float_t*,
-									unsigned int, float_t*, cucomplex_t*);
-//	__device__ cucomplex_t fq_inv(cucomplex_t, float_t);
+									/*unsigned int,*/ float_t*, cucomplex_t*);
 
 
 	bool AnalyticFormFactorG::compute_box(const float_t tau, const float_t eta,
@@ -40,67 +39,59 @@ namespace hig {
 										const std::vector<float_t>& distr_y,
 										const std::vector<float_t>& z,
 										const std::vector<float_t>& distr_z,
-										const float_t* qx_h, const float_t* qy_h,
-										const cucomplex_t* qz_h,
+										/*const float_t* qx_h, const float_t* qy_h,
+										const cucomplex_t* qz_h,*/
 										const float_t* rot_h, const std::vector<float_t>& transvec,
 										std::vector<complex_t>& ff) {
 		unsigned int n_x = x.size(), n_distr_x = distr_x.size();
 		unsigned int n_y = y.size(), n_distr_y = distr_y.size();
 		unsigned int n_z = z.size(), n_distr_z = distr_z.size();
-		unsigned int n_transvec = transvec.size();
+		//unsigned int n_transvec = transvec.size();
 		const float_t *x_h = x.empty() ? NULL : &*x.begin();
 		const float_t *distr_x_h = distr_x.empty() ? NULL : &*distr_x.begin();
 		const float_t *y_h = y.empty() ? NULL : &*y.begin();
 		const float_t *distr_y_h = distr_y.empty() ? NULL : &*distr_y.begin();
 		const float_t *z_h = z.empty() ? NULL : &*z.begin();
 		const float_t *distr_z_h = distr_z.empty() ? NULL : &*distr_z.begin();
-		const float_t *transvec_h = transvec.empty() ? NULL : &*transvec.begin();
+		//const float_t *transvec_h = transvec.empty() ? NULL : &*transvec.begin();
 
 		unsigned int grid_size = nqx_ * nqy_ * nqz_;
 
 		// construct device buffers
-		float_t *qx_d, *qy_d;
-		cucomplex_t *qz_d, *ff_d;
+		//float_t *qx_d, *qy_d;
+		//cucomplex_t *qz_d, *ff_d;
 		float_t *x_d, *distr_x_d;
 		float_t *y_d, *distr_y_d;
 		float_t *z_d, *distr_z_d;
-		float_t *transvec_d, *rot_d;
+		//float_t *transvec_d, *rot_d;
 
-		cudaMalloc((void**) &qx_d, nqx_ * sizeof(float_t));
-		cudaMalloc((void**) &qy_d, nqy_ * sizeof(float_t));
-		cudaMalloc((void**) &qz_d, nqz_ * sizeof(cucomplex_t));
-		cudaMalloc((void**) &ff_d, grid_size * sizeof(cucomplex_t));
+		//cudaMalloc((void**) &qx_d, nqx_ * sizeof(float_t));
+		//cudaMalloc((void**) &qy_d, nqy_ * sizeof(float_t));
+		//cudaMalloc((void**) &qz_d, nqz_ * sizeof(cucomplex_t));
+		//cudaMalloc((void**) &ff_d, grid_size * sizeof(cucomplex_t));
 		cudaMalloc((void**) &x_d, n_x * sizeof(float_t));
 		cudaMalloc((void**) &distr_x_d, n_distr_x * sizeof(float_t));
 		cudaMalloc((void**) &y_d, n_y * sizeof(float_t));
 		cudaMalloc((void**) &distr_y_d, n_distr_y * sizeof(float_t));
 		cudaMalloc((void**) &z_d, n_z * sizeof(float_t));
 		cudaMalloc((void**) &distr_z_d, n_distr_z * sizeof(float_t));
-		cudaMalloc((void **) &transvec_d, n_transvec * sizeof(float_t));
-		cudaMalloc((void **) &rot_d, 9 * sizeof(float_t));
+		//cudaMalloc((void **) &transvec_d, n_transvec * sizeof(float_t));
+		//cudaMalloc((void **) &rot_d, 9 * sizeof(float_t));
 
 		// copy data to device buffers
-		cudaMemcpy(qx_d, qx_h, nqx_ * sizeof(float_t), cudaMemcpyHostToDevice);
-		cudaMemcpy(qy_d, qy_h, nqy_ * sizeof(float_t), cudaMemcpyHostToDevice);
-		cudaMemcpy(qz_d, qz_h, nqz_ * sizeof(cucomplex_t), cudaMemcpyHostToDevice);
+		//cudaMemcpy(qx_d, qx_h, nqx_ * sizeof(float_t), cudaMemcpyHostToDevice);
+		//cudaMemcpy(qy_d, qy_h, nqy_ * sizeof(float_t), cudaMemcpyHostToDevice);
+		//cudaMemcpy(qz_d, qz_h, nqz_ * sizeof(cucomplex_t), cudaMemcpyHostToDevice);
 		cudaMemcpy(x_d, x_h, n_x * sizeof(float_t), cudaMemcpyHostToDevice);
 		cudaMemcpy(y_d, y_h, n_y * sizeof(float_t), cudaMemcpyHostToDevice);
 		cudaMemcpy(z_d, z_h, n_z * sizeof(float_t), cudaMemcpyHostToDevice);
 		cudaMemcpy(distr_x_d, distr_x_h, n_distr_x * sizeof(float_t), cudaMemcpyHostToDevice);
 		cudaMemcpy(distr_y_d, distr_y_h, n_distr_y * sizeof(float_t), cudaMemcpyHostToDevice);
 		cudaMemcpy(distr_z_d, distr_z_h, n_distr_z * sizeof(float_t), cudaMemcpyHostToDevice);
-		cudaMemcpy(transvec_d, transvec_h, n_transvec * sizeof(float_t), cudaMemcpyHostToDevice);
-		cudaMemcpy(rot_d, rot_h, 9 * sizeof(float_t), cudaMemcpyHostToDevice);
+		//cudaMemcpy(transvec_d, transvec_h, n_transvec * sizeof(float_t), cudaMemcpyHostToDevice);
+		//cudaMemcpy(rot_d, rot_h, 9 * sizeof(float_t), cudaMemcpyHostToDevice);
 
-		size_t device_mem_avail, device_mem_total, device_mem_used;
-		cudaMemGetInfo(&device_mem_avail, &device_mem_total);
-		device_mem_used = device_mem_total - device_mem_avail;
-//		if(rank == 0) {
-			std::cout << "++       Used device memory: " << (float) device_mem_used / 1024 / 1024
-						<< " MB" << std::endl;
-			std::cout << "++       Free device memory: " << (float) device_mem_avail / 1024 / 1024
-						<< " MB" << std::endl;
-//		}
+		run_init(rot_h, transvec);
 
 		unsigned int cuda_block_y = 16, cuda_block_z = 8;
 		unsigned int cuda_num_blocks_y = (unsigned int) ceil((float_t) nqy_ / cuda_block_y);
@@ -108,21 +99,14 @@ namespace hig {
 		dim3 ff_grid_size(cuda_num_blocks_y, cuda_num_blocks_z, 1);
 		dim3 ff_block_size(cuda_block_y, cuda_block_z, 1);
 
-		/*size_t shared_mem_size = (nqx_ + cuda_block_y) * sizeof(float_t) +
-									cuda_block_z * sizeof(cucomplex_t);
-		if(shared_mem_size > 49152) {
-			std::cerr << "Too much shared memory requested!" << std::endl;
-			return false;
-		} // if*/
-
 		// the kernel
 		form_factor_box_kernel <<< ff_grid_size, ff_block_size >>> (
-				nqx_, nqy_, nqz_, qx_d, qy_d, qz_d, tau, eta, rot_d,
+				nqx_, nqy_, nqz_, qx_, qy_, qz_, tau, eta, rot_,
 				n_x, x_d, n_distr_x, distr_x_d,
 				n_y, y_d, n_distr_y, distr_y_d,
 				n_z, z_d, n_distr_z, distr_z_d,
-				n_transvec, transvec_d,
-				ff_d);
+				/*n_transvec,*/ transvec_,
+				ff_);
 
 		cudaThreadSynchronize();
 		cudaError_t err = cudaGetLastError();
@@ -132,29 +116,30 @@ namespace hig {
 			return false;
 		} else {
 			//std::cout << "block size: " << cby << " x " << cbz << ". ";
-			cucomplex_t* ff_h = new (std::nothrow) cucomplex_t[grid_size];
+			/*cucomplex_t* ff_h = new (std::nothrow) cucomplex_t[grid_size];
 			// copy result to host
-			cudaMemcpy(ff_h, ff_d, grid_size * sizeof(cucomplex_t), cudaMemcpyDeviceToHost);
+			cudaMemcpy(ff_h, ff_, grid_size * sizeof(cucomplex_t), cudaMemcpyDeviceToHost);
 			ff.clear();
 			ff.reserve(grid_size);
 			for(unsigned int i = 0; i < grid_size; ++ i) {
 				ff.push_back(complex_t(ff_h[i].x, ff_h[i].y));
 			} // for
-			delete[] ff_h;
+			delete[] ff_h;*/
+			construct_output_ff(ff);
 		} // if-else
 
-		cudaFree(rot_d);
-		cudaFree(transvec_d);
+		//cudaFree(rot_d);
+		//cudaFree(transvec_d);
 		cudaFree(distr_z_d);
 		cudaFree(z_d);
 		cudaFree(distr_y_d);
 		cudaFree(y_d);
 		cudaFree(distr_x_d);
 		cudaFree(x_d);
-		cudaFree(ff_d);
-		cudaFree(qz_d);
-		cudaFree(qy_d);
-		cudaFree(qx_d);
+		//cudaFree(ff_d);
+		//cudaFree(qz_d);
+		//cudaFree(qy_d);
+		//cudaFree(qx_d);
 
 		return true;
 	} // AnalyticFormFactorG::compute_box()
@@ -166,7 +151,7 @@ namespace hig {
 									unsigned int n_x, float_t *x, unsigned int n_distr_x, float_t *distr_x,
 									unsigned int n_y, float_t *y, unsigned int n_distr_y, float_t *distr_y,
 									unsigned int n_z, float_t *z, unsigned int n_distr_z, float_t *distr_z,
-									unsigned int n_transvec, float_t *transvec, cucomplex_t *ff) {
+									/*unsigned int n_transvec,*/ float_t *transvec, cucomplex_t *ff) {
 		unsigned int i_y = blockDim.x * blockIdx.x + threadIdx.x;
 		unsigned int i_z = blockDim.y * blockIdx.y + threadIdx.y;
 		unsigned int base_index = nqx * nqy * i_z + nqx * i_y;
@@ -200,14 +185,6 @@ namespace hig {
 		} // if
 	} // form_factor_box_kernel()
 
-
-/*	__device__ cucomplex_t fq_inv(cucomplex_t value, float_t y) {
-		cucomplex_t temp1 = value * y / (float_t) 2.0;
-		cucomplex_t temp = 2.0 * cuCexpi(temp1) * cuCsin(temp1) / value;
-		if(cuCabsf(temp) < 1e-14) temp = make_cuC(y, (float_t) 0.0);
-		return temp;
-	} // fq_inv()
-*/
 
 } // namespace hig
 

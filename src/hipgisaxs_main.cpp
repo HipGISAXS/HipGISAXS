@@ -5,7 +5,7 @@
   *
   *  File: hipgisaxs_main.cpp
   *  Created: Jun 14, 2012
-  *  Modified: Fri 07 Dec 2012 01:58:44 PM PST
+  *  Modified: Wed 20 Feb 2013 09:31:23 AM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -30,6 +30,12 @@ namespace hig {
 
 	bool HipGISAXS::init(MPI::Intracomm& world_comm) {
 						// is called at the beginning of the runs (after input is read)
+						// it does the following:
+						// 	+ set detector/system stuff
+						// 	+ initialize output dir
+						// 	+ create q-grid
+						// 	+ construct layer profile
+
 		// first check if the input has been constructed ...
 
 		int mpi_rank = world_comm.Get_rank();
@@ -82,6 +88,7 @@ namespace hig {
 	} // HipGISAXS::init()
 
 
+	// this is temporary, for newton's fit method
 	bool HipGISAXS::init_steepest_fit(MPI::Intracomm& world_comm, float_t qzcut) {
 						// is called at the beginning of the runs (after input is read)
 		// first check if the input has been constructed ...
@@ -138,6 +145,13 @@ namespace hig {
 
 	bool HipGISAXS::run_init(float_t alphai, float_t phi, float_t tilt, MPI::Intracomm& world_comm) {
 					// this is called for each config-run during the main run
+					// it does the following:
+					// 	+ get layer profile data
+					// 	+ get structure info
+					// 	+ construct lattice vectors
+					// 	+ construct the illuminated volume
+					// 	+ compute domain size
+					//	+ construct rotation matrices
 
 		int mpi_rank = world_comm.Get_rank();
 		// get all the variable values from the input structures	(can't we do some of this in init()?)
@@ -243,6 +257,7 @@ namespace hig {
 
 		float_t alpha_i = alphai_min;
 		// high level of parallelism here (alphai, phi, tilt) for dynamicity ...
+		// loop over all alphai, phi, and tilt
 		for(int i = 0; i < num_alphai; i ++, alpha_i += alphai_step) {
 			float_t alphai = alpha_i * PI_ / 180;
 			float_t phi = phi_min;
@@ -395,9 +410,12 @@ namespace hig {
 		//printfc("h0", h0, nqx_ * nqy_ * nqz_);
 
 		// initialize memory for struct_intensity, ff and sf
+		// TODO: eliminate struct_intensity for each struct ...
+		// can be reduced into just one ... come back ...
 		float_t* struct_intensity = new (std::nothrow) float_t[num_structures_ * nqx_ * nqy_ * nqz_];
 
 		/* loop over all structures and domains/grains */
+		// these are also a level of parallelism for dynamicity ...
 		int s_num = 0;
 		for(structure_iterator_t s = HiGInput::instance().structure_begin();
 				s != HiGInput::instance().structure_end(); ++ s, ++ s_num) {
@@ -433,8 +451,9 @@ namespace hig {
 			num_nn = ndx;
 			num_domains = num_nn;
 
-			complex_t *id = NULL;		// come back and improve ...
-										// this may be reduced on the fly to reduce mem usage ...
+			complex_t *id = NULL;		// TODO: come back and improve ...
+										// eliminate id for each domain ...
+										// this can be reduced on the fly to reduce mem usage ...
 			id = new (std::nothrow) complex_t[num_domains * nqx_ * nqy_ * nqz_];
 			if(id == NULL) {
 				if(mpi_rank == 0) std::cerr << "error: could not allocate memory for 'id'" << std::endl;
@@ -524,6 +543,7 @@ namespace hig {
 					std::cout << "done." << std::endl;
 				} // if
 */
+				/* compute intensities using sf and ff */
 				// processing of sf and ff is being done by just one processor ... parallelize ...
 				if(mpi_rank == 0) {
 					complex_t* base_id = id + j * nqx_ * nqy_ * nqz_;

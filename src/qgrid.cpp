@@ -5,13 +5,14 @@
   *
   *  File: qgrid.cpp
   *  Created: Jun 17, 2012
-  *  Modified: Fri 08 Feb 2013 10:53:00 AM PST
+  *  Modified: Wed 20 Feb 2013 12:24:59 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
 
 #include "constants.hpp"
 #include "qgrid.hpp"
+#include "hig_input.hpp"
 #include "utilities.hpp"
 
 namespace hig {

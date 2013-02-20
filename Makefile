@@ -28,7 +28,8 @@ H5CC = $(HDF5_DIR)/bin/h5pcc
 NVCC = $(CUDA_DIR)/bin/nvcc #-ccbin /usr/local/gcc-4.6.3/bin
 
 ## compiler flags
-CXX_FLAGS = -std=c++0x -Wall -Wextra -lgsl -lgslcblas -lm#-v
+CXX_FLAGS = -std=c++0x #-Wall -Wextra
+CXX_FLAGS += -lgsl -lgslcblas -lm #-v
 ## gnu c++ compilers >= 4.3 support -std=c++0x [requirement for hipgisaxs 4.3.x <= g++ <= 4.6.x]
 ## gnu c++ compilers >= 4.7 also support -std=c++11, but they are not supported by cuda
 
@@ -55,7 +56,8 @@ NVCC_FLAGS += -gencode=arch=compute_20,code=compute_20
 NVCC_FLAGS += -gencode arch=compute_20,code=sm_21
 NVCC_FLAGS += -gencode arch=compute_30,code=sm_30
 NVCC_FLAGS += -gencode arch=compute_35,code=sm_35
-#NVCC_FLAGS += -Xptxas -v -Xcompiler -v -Xlinker -v --ptxas-options="-v"
+#NVCC_FLAGS += -Xptxas -v -Xcompiler -v -Xlinker -v
+NVCC_FLAGS += --ptxas-options="-v"
 NVCC_FLAGS += -G #-DFINDBLOCK #-DAXIS_ROT
 NVLIB_FLAGS = -Xlinker -lgomp
 NVLIB_FLAGS += -Wl,-rpath -Wl,$(CUDA_DIR)/lib64
