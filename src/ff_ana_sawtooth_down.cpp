@@ -3,7 +3,7 @@
   *
   *  File: ff_ana_sawtooth_down.cpp
   *  Created: Jul 12, 2012
-  *  Modified: Tue 19 Feb 2013 11:43:23 AM PST
+  *  Modified: Wed 20 Feb 2013 05:10:23 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -40,6 +40,14 @@ namespace hig {
 				default:
 			} // switch
 		} // for */
+
+/*          Lx = 2 * dims(1);
+            H = dims(2);
+            L = 2 * dims(3);
+            d =0.75;
+            gamma =0.0;
+            FF = Sawtooth_Finf_Matrix(QX,QY,QZ,H,L,d,gamma,Lx) .* exp(1i* (qx*T(1) + qy*T(2) + qz*T(3))) ; */
+
 	} // AnalyticFormFactor::compute_sawtooth_down()
 
 } // namespace hig

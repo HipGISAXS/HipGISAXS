@@ -3,7 +3,7 @@
   *
   *  File: ff_ana_sawtooth_up.cpp
   *  Created: Jul 12, 2012
-  *  Modified: Tue 19 Feb 2013 11:43:35 AM PST
+  *  Modified: Wed 20 Feb 2013 05:09:27 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -40,6 +40,19 @@ namespace hig {
 				default:
 			} // switch
 		} // for */
+
+/*      RD = Dimension_Distr( dims(1,:) );[rows, NRR] = size(RD); RR = RD(1,:); RRD = RD(2,:);
+        HD = Dimension_Distr( dims(2,:) );[rows, NHH] = size(HD); HH = HD(1,:); HHD = HD(2,:);
+        WD = Dimension_Distr( dims(3,:) );[rows, NWW] = size(WD); WW = WD(1,:); WWD = WD(2,:);
+        AD = Dimension_Distr( dims(4,:) );[rows, AWW] = size(AD); AA = AD(1,:); AAD = AD(2,:);
+        Lx = 2* RR(1);
+        H = HH(1);
+        L = 2* WW(1);
+        d =AA(1);
+
+            gamma =0.0;
+            FF = Sawtooth_Fsup_Matrix(QX,QY,QZ,H,L,d,gamma,Lx) .* exp(1i* (qx*T(1) + qy*T(2) + qz*T(3))) ; */
+
 	} // AnalyticFormFactor::compute_sawtooth_up()
 
 } // namespace hig

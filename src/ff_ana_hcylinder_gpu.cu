@@ -3,7 +3,7 @@
   *
   *  File: ff_ana_cylinder_gpu.cu
   *  Created: Oct 16, 2012
-  *  Modified: Wed 20 Feb 2013 02:23:44 PM PST
+  *  Modified: Wed 20 Feb 2013 05:39:48 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -108,12 +108,8 @@ namespace hig {
 		unsigned int base_index = nqx * nqy * i_z + nqx * i_y;
 		if(i_y < nqy && i_z < nqz) {
 			for(unsigned int i_x = 0; i_x < nqx; ++ i_x) {
-				cucomplex_t mqx = make_cuC(qy[i_y] * rot[0] + qx[i_x] * rot[1] + qz[i_z].x * rot[2],
-											qz[i_z].y * rot[2]);
-				cucomplex_t mqy = make_cuC(qy[i_y] * rot[3] + qx[i_x] * rot[4] + qz[i_z].x * rot[5],
-											qz[i_z].y * rot[5]);
-				cucomplex_t mqz = make_cuC(qy[i_y] * rot[6] + qx[i_x] * rot[7] + qz[i_z].x * rot[8],
-											qz[i_z].y * rot[8]);
+				cucomplex_t mqx, mqy, mqz;
+				compute_meshpoints(qx[i_x], qy[i_y], qz[i_z], rot, mqx, mqy, mqz);
 				cucomplex_t qpar = cuCsqrt(mqz * mqz + mqy * mqy);
 				cucomplex_t temp_ff = make_cuC((float_t) 0.0, (float_t) 0.0);
 				// why does this not depend on eta? ... and distr_r and distr_h ... ???

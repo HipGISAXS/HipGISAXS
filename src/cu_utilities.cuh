@@ -3,7 +3,7 @@
   *
   *  File: cu_utilities.cuh
   *  Created: Feb 19, 2013
-  *  Modified: Tue 19 Feb 2013 08:05:09 PM PST
+  *  Modified: Wed 20 Feb 2013 05:27:47 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -22,6 +22,15 @@ namespace hig {
 		if(cuCabsf(temp) < 1e-14) temp = make_cuC(y, (float_t) 0.0);
 		return temp;
 	} // fq_inv()
+
+
+	__device__ static __inline__ void compute_meshpoints(const float_t qx, const float_t qy,
+										const cucomplex_t qz, const float_t* rot,
+										cucomplex_t& mqx, cucomplex_t& mqy, cucomplex_t& mqz) {
+		mqx = make_cuC(qy * rot[0] + qx * rot[1] + qz.x * rot[2], qz.y * rot[2]);
+		mqy = make_cuC(qy * rot[3] + qx * rot[4] + qz.x * rot[5], qz.y * rot[5]);
+		mqz = make_cuC(qy * rot[6] + qx * rot[7] + qz.x * rot[8], qz.y * rot[8]);
+	} // compute_meshpoints()
 
 } // namespace hig
 

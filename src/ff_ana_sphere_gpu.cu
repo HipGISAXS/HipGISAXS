@@ -1,11 +1,9 @@
 /***
-  *  $Id: ff_ana_gpu.cu 37 2012-08-09 22:59:59Z asarje $
-  *
   *  Project: HipGISAXS (High-Performance GISAXS)
   *
-  *  File: ff_ana_gpu.cu
+  *  File: ff_ana_sphere_gpu.cu
   *  Created: Oct 16, 2012
-  *  Modified: Wed 20 Feb 2013 01:02:45 PM PST
+  *  Modified: Wed 20 Feb 2013 05:41:46 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -17,6 +15,7 @@
 #include "ff_ana_gpu.cuh"
 #include "enums.hpp"
 #include "cu_complex_numeric.cuh"
+#include "cu_utilities.cuh"
 
 namespace hig {
 
@@ -26,11 +25,11 @@ namespace hig {
 	__global__ void form_factor_sphere_kernel(unsigned int nqx, unsigned int nqy, unsigned int nqz,
 					float_t* qx, float_t* qy, cucomplex_t* mesh_qz, float_t* rot,
 					unsigned int n_r, float_t* r, unsigned int n_distr_r, float_t* distr_r,
-					/*unsigned int n_transvec,*/ float_t* transvec, cucomplex_t* ff);
+					float_t* transvec, cucomplex_t* ff);
 	__device__ void ff_sphere_kernel_compute_tff(float r, float distr_r,
-										cuFloatComplex q, cuFloatComplex mqz, cuFloatComplex& f);
+								cuFloatComplex q, cuFloatComplex mqz, cuFloatComplex& f);
 	__device__ void ff_sphere_kernel_compute_tff(double r, double distr_r,
-										cuDoubleComplex q, cuDoubleComplex mqz, cuDoubleComplex& f);
+								cuDoubleComplex q, cuDoubleComplex mqz, cuDoubleComplex& f);
 	__device__ cuFloatComplex ff_sphere_kernel_compute_ff(cuFloatComplex temp_f,
 								cuFloatComplex mqx, cuFloatComplex mqy, cuFloatComplex mqz,
 								float tx, float ty, float tz);
@@ -44,116 +43,37 @@ namespace hig {
 	 */
 	bool AnalyticFormFactorG::compute_sphere(const std::vector<float_t>& r,
 											const std::vector<float_t>& distr_r,
-											/*const float_t* qx_h,
-											const float_t* qy_h,
-											const cucomplex_t* qz_h,*/
 											const float_t* rot_h,
 											const std::vector<float_t>& transvec,
 											std::vector<complex_t>& ff) {
 		unsigned int n_r = r.size();
 		unsigned int n_distr_r = distr_r.size();
-		//unsigned int n_transvec = transvec.size();		// this should be = 3
 		const float_t *r_h = r.empty() ? NULL : &*r.begin();
 		const float_t *distr_r_h = distr_r.empty() ? NULL : &*distr_r.begin();
-		//const float_t *transvec_h = transvec.empty() ? NULL : &*transvec.begin();
 
 		unsigned int grid_size = nqx_ * nqy_ * nqz_;
 		//std::cout << "nqx x nqy x nqz = " << nqx_ << " x " << nqy_ << " x " << nqz_ << std::endl;
 
-		cudaEvent_t mem_begin_e, mem_end_e;
-		cudaEventCreate(&mem_begin_e);
-		cudaEventCreate(&mem_end_e);
-		float mem_time = 0.0, temp_time = 0.0;
-
-		cudaEventRecord(mem_begin_e, 0);
-
 		// construct device buffers
-		//float_t *qx_d, *qy_d; cucomplex_t *qz_d, *ff_d;
-		float_t *r_d, *distr_r_d; //, *transvec_d;
-		//float_t *rot_d;
-		/*if(cudaMalloc((void **) &qx_d, nqx_ * sizeof(float_t)) != cudaSuccess) {
-			std::cerr << "error: device memory allocation failed for mesh_qx_d" << std::endl;
-			return false;
-		} // if
-		if(cudaMalloc((void **) &qy_d, nqy_ * sizeof(float_t)) != cudaSuccess) {
-			std::cerr << "error: device memory allocation failed for mesh_qy_d" << std::endl;
-			cudaFree(qx_d);
-			return false;
-		} // if
-		if(cudaMalloc((void **) &qz_d, nqz_ * sizeof(cucomplex_t)) != cudaSuccess) {
-			std::cerr << "error: device memory allocation failed for mesh_qz_d" << std::endl;
-			cudaFree(qy_d);
-			cudaFree(qx_d);
-			return false;
-		} // if
-		if(cudaMalloc((void **) &ff_d, grid_size * sizeof(cucomplex_t)) != cudaSuccess) {
-			std::cerr << "error: device memory allocation failed for mesh_qz_d" << std::endl;
-			cudaFree(qz_d);
-			cudaFree(qy_d);
-			cudaFree(qx_d);
-			return false;
-		} // if*/
+		float_t *r_d, *distr_r_d;
 		if(cudaMalloc((void **) &r_d, n_r * sizeof(float_t)) != cudaSuccess) {
 			std::cerr << "error: device memory allocation failed for r_d" << std::endl;
-			//cudaFree(ff_d);
-			//cudaFree(qz_d);
-			//cudaFree(qy_d);
-			//cudaFree(qx_d);
 			return false;
 		} // if
 		if(cudaMalloc((void **) &distr_r_d, n_distr_r * sizeof(float_t)) != cudaSuccess) {
 			std::cerr << "error: device memory allocation failed for n_distr_r_d" << std::endl;
 			cudaFree(r_d);
-			//cudaFree(ff_d);
-			//cudaFree(qz_d);
-			//cudaFree(qy_d);
-			//cudaFree(qx_d);
 			return false;
 		} // if
-		/*if(cudaMalloc((void **) &transvec_d, n_transvec * sizeof(float_t)) != cudaSuccess) {
-			std::cerr << "error: device memory allocation failed for transvec_d" << std::endl;
-			cudaFree(distr_r_d);
-			cudaFree(r_d);
-			cudaFree(ff_d);
-			cudaFree(qz_d);
-			cudaFree(qy_d);
-			cudaFree(qx_d);
-			return false;
-		} // if
-		if(cudaMalloc((void **) &rot_d, 9 * sizeof(float_t)) != cudaSuccess) {
-			std::cerr << "error: device memory allocation failed for rot_d" << std::endl;
-			cudaFree(transvec_d);
-			cudaFree(distr_r_d);
-			cudaFree(r_d);
-			cudaFree(ff_d);
-			cudaFree(qz_d);
-			cudaFree(qy_d);
-			cudaFree(qx_d);
-			return false;
-		} // if*/
 
 		// copy data to device buffers
-		//cudaMemcpy(qx_d, qx_h, nqx_ * sizeof(float_t), cudaMemcpyHostToDevice);
-		//cudaMemcpy(qy_d, qy_h, nqy_ * sizeof(float_t), cudaMemcpyHostToDevice);
-		//cudaMemcpy(qz_d, qz_h, nqz_ * sizeof(cucomplex_t), cudaMemcpyHostToDevice);
 		cudaMemcpy(r_d, r_h, n_r * sizeof(float_t), cudaMemcpyHostToDevice);
 		cudaMemcpy(distr_r_d, distr_r_h, n_distr_r * sizeof(float_t), cudaMemcpyHostToDevice);
-		//cudaMemcpy(transvec_d, transvec_h, n_transvec * sizeof(float_t), cudaMemcpyHostToDevice);
-		//cudaMemcpy(rot_d, rot_h, 9 * sizeof(float_t), cudaMemcpyHostToDevice);
 
 		run_init(rot_h, transvec);
 
-		cudaEventRecord(mem_end_e, 0);
-		cudaEventSynchronize(mem_end_e);
-		cudaEventElapsedTime(&temp_time, mem_begin_e, mem_end_e);
-		mem_time += temp_time;
-
 		//for(int cby = 2; cby < 129; cby += 2) {
 		//for(int cbz = 2; cbz < 129; cbz += 2) {
-		cudaEvent_t begin_e, end_e;
-		cudaEventCreate(&begin_e);
-		cudaEventCreate(&end_e);
-		cudaEventRecord(begin_e, 0);
 		// decompose computations and construct and call the kernel
 		// decomposing along y and z
 		// note that (cuda x y z != dim x y z)
@@ -182,43 +102,17 @@ namespace hig {
 			std::cerr << "error: form factor kernel failed [" << __FILE__ << ":" << __LINE__ << "]: "
 						<< cudaGetErrorString(err) << std::endl;
 		} else {
-			float kernel_time;
-			cudaEventRecord(end_e, 0);
-			cudaEventSynchronize(end_e);
-			cudaEventElapsedTime(&kernel_time, begin_e, end_e);
 			//std::cout << "block size: " << cby << " x " << cbz << ". ";
-			std::cout << "Analytical Sphere Kernel completed in " << kernel_time << " ms." << std::endl;
-
-			cudaEventRecord(mem_begin_e, 0);
-
+			//std::cout << "Analytical Sphere Kernel completed in " << kernel_time << " ms." << std::endl;
 			construct_output_ff(ff);
-
-			/*cucomplex_t* ff_h = new (std::nothrow) cucomplex_t[nqx_ * nqy_ * nqz_];
-			// copy result to host
-			cudaMemcpy(ff_h, ff_, nqx_ * nqy_ * nqz_ * sizeof(cucomplex_t), cudaMemcpyDeviceToHost);
-			for(unsigned int i = 0; i < nqx_ * nqy_ * nqz_; ++ i) {
-				ff.push_back(complex_t(ff_h[i].x, ff_h[i].y));
-			} // for
-			delete[] ff_h;*/
-
-			cudaEventRecord(mem_end_e, 0);
-			cudaEventSynchronize(mem_end_e);
-			cudaEventElapsedTime(&temp_time, mem_begin_e, mem_end_e);
-			mem_time += temp_time;
 		} // if-else
 
-		std::cout << "GPU memory time: " << mem_time << " ms." << std::endl;
+		//std::cout << "GPU memory time: " << mem_time << " ms." << std::endl;
 		//} // for cbz
 		//} // for cby
 
-		//cudaFree(rot_d);
-		//cudaFree(transvec_d);
 		cudaFree(distr_r_d);
 		cudaFree(r_d);
-		//cudaFree(ff_d);
-		//cudaFree(qz_d);
-		//cudaFree(qy_d);
-		//cudaFree(qx_d);
 
 		return true;
 	} // AnalyticFormFactorG::compute_sphere()
@@ -299,23 +193,16 @@ namespace hig {
 		if(i_y < nqy && i_z < nqz) {
 			for(unsigned int i_x = 0; i_x < nqx; ++ i_x) {
 				// computing mesh values on the fly instead of storing them
-				cucomplex_t temp_mqx = make_cuC(qy_s[threadIdx.x] * rot[0] + qx_s[i_x] * rot[1] +
-												qz_s[threadIdx.y].x * rot[2],
-												qz_s[threadIdx.y].y * rot[2]);
-				cucomplex_t temp_mqy = make_cuC(qy_s[threadIdx.x] * rot[3] + qx_s[i_x] * rot[4] +
-												qz_s[threadIdx.y].x * rot[5],
-												qz_s[threadIdx.y].y * rot[5]);
-				cucomplex_t temp_mqz = make_cuC(qy_s[threadIdx.x] * rot[6] + qx_s[i_x] * rot[7] +
-												qz_s[threadIdx.y].x * rot[8],
-												qz_s[threadIdx.y].y * rot[8]);
-				cucomplex_t q = cuCnorm3(temp_mqx, temp_mqy, temp_mqz);
+				cucomplex_t mqx, mqy, mqz;
+				compute_meshpoints(qx_s[i_x], qy_s[threadIdx.x], qz_s[threadIdx.y], rot, mqx, mqy, mqz);
+				cucomplex_t q = cuCnorm3(mqx, mqy, mqz);
 				cucomplex_t temp_f = make_cuC((float_t)0.0, (float_t)0.0);
 				for(unsigned int i_r = 0; i_r < n_r; ++ i_r) {
 					float_t temp_r = r[i_r];
 					float_t temp_distr_r = distr_r[i_r];
-					ff_sphere_kernel_compute_tff(temp_r, temp_distr_r, q, temp_mqz, temp_f);
+					ff_sphere_kernel_compute_tff(temp_r, temp_distr_r, q, mqz, temp_f);
 				} // for i_r
-				ff[base_index + i_x] = ff_sphere_kernel_compute_ff(temp_f,	temp_mqx, temp_mqy, temp_mqz,
+				ff[base_index + i_x] = ff_sphere_kernel_compute_ff(temp_f,	mqx, mqy, mqz,
 													transvec[0], transvec[1], transvec[2]);
 			} // for x
 		} // if

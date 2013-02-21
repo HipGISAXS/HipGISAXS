@@ -3,7 +3,7 @@
   *
   *  File: ff_ana_prism6.cpp
   *  Created: Jul 12, 2012
-  *  Modified: Tue 19 Feb 2013 11:42:22 AM PST
+  *  Modified: Wed 20 Feb 2013 05:11:14 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -48,6 +48,12 @@ namespace hig {
 					return false;
 			} // switch
 		} // for
+
+/*            R = dims(1);
+            H = dims(2);
+            sq3 = sqrt(3);
+            qm = tan(tau) *( qx *sin(eta) + qy *cos(eta));
+            FF = 4*sq3./( 3*qy.^2 - qx.^2 ) .* (R^2 * qy.^2 .*  SINC_Matrix(qx*R/sq3) .* SINC_Matrix(qy*R) + cos(2*qx*R/sq3) - cos(qy*R) .* cos(qx*R/sq3) )  .* Fq_Inv_Matrix(qz+qm, H) .* exp(1i* (qx*T(1) + qy*T(2) + qz*T(3)))  ; */
 
 		float_t sqrt3 = sqrt(3.0);
 

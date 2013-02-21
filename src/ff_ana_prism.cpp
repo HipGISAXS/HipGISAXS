@@ -3,7 +3,7 @@
   *
   *  File: ff_ana_prism.cpp
   *  Created: Jul 12, 2012
-  *  Modified: Tue 19 Feb 2013 11:42:33 AM PST
+  *  Modified: Wed 20 Feb 2013 05:11:43 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -55,6 +55,12 @@ namespace hig {
 		} // if
 
 		// why not doing for a range of r, h for this? ... ???
+
+/*            R = dims(1);
+            H = dims(2);
+            sq3 = sqrt(3);
+            qm = tan(tau) *( qx *sin(eta) + qy *cos(eta));
+            FF= 2*sq3 * exp(-1i* qy * R/sq3 ) ./ (qx .* (qx.^2 - 3*qy.^2 ) ) .* ( qx .* exp(1i*qy*R*sq3) - qx .* cos(qx*R) - 1i * sq3 *qy .* sin(qx*R)  )  .*  Fq_Inv_Matrix(qz+qm, H) .* exp(1i* (qx*T(1) + qy*T(2) + qz*T(3)))  ; */
 
 		float_t sqrt3 = sqrt(3.0);
 		complex_t unit(0, 1.0);

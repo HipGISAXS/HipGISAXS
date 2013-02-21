@@ -3,7 +3,7 @@
   *
   *  File: ff_ana_prism3x.cpp
   *  Created: Jul 12, 2012
-  *  Modified: Tue 19 Feb 2013 11:42:05 AM PST
+  *  Modified: Wed 20 Feb 2013 05:08:50 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -41,6 +41,14 @@ namespace hig {
 				default:
 			} // switch
 		} // for */
+
+/*            Lx = 2* dims(1);
+            H = dims(2);
+            L = 2* dims(3);
+            d =0.85; %;  0.9512;
+            gamma =0.0 * pi/180;
+            FF = Triangular_Grating_FF_Matrix(QX,QY,QZ,H,L,d,gamma,Lx) .* exp(1i* (qx*T(1) + qy*T(2) + qz*T(3))) ; */
+
 	} // AnalyticFormFactor::compute_prism3x()
 
 } // namespace hig
