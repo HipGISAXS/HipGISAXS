@@ -3,7 +3,7 @@
   *
   *  File: ff_ana_box.cpp
   *  Created: Jul 12, 2012
-  *  Modified: Wed 20 Feb 2013 01:55:41 PM PST
+  *  Modified: Thu 21 Feb 2013 10:17:26 AM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -76,33 +76,12 @@ namespace hig {
 		transvec_v.push_back(transvec[0]);
 		transvec_v.push_back(transvec[1]);
 		transvec_v.push_back(transvec[2]);
-		// copy to gpu mem
-		/*float_t *qx_h = new (std::nothrow) float_t[nqx_];
-		float_t *qy_h = new (std::nothrow) float_t[nqy_];
-		cucomplex_t *qz_h = new (std::nothrow) cucomplex_t[nqz_];
-		if(qx_h == NULL || qy_h == NULL || qz_h == NULL) {
-			std::cerr << "error: memory allocation for host mesh grid failed" << std::endl;
-			return false;
-		} // if
-		for(unsigned int ix = 0; ix < nqx_; ++ ix) {
-			qx_h[ix] = QGrid::instance().qx(ix);
-		} // for qx
-		for(unsigned int iy = 0; iy < nqy_; ++ iy) {
-			qy_h[iy] = QGrid::instance().qy(iy);
-		} // for qy
-		for(unsigned int iz = 0; iz < nqz_; ++ iz) {
-			qz_h[iz].x = QGrid::instance().qz_extended(iz).real();
-			qz_h[iz].y = QGrid::instance().qz_extended(iz).imag();
-		} // for qz*/
-
-		gff_.compute_box(tau, eta, x, distr_x, y, distr_y, z, distr_z,
-							/*qx_h, qy_h, qz_h,*/ rot_, transvec_v, ff);
+		gff_.compute_box(tau, eta, x, distr_x, y, distr_y, z, distr_z, rot_, transvec_v, ff);
 #else
 		// on cpu
 		std::cout << "-- Computing box FF on CPU ..." << std::endl;
 		// initialize ff
-		ff.clear();
-		ff.reserve(nqz * nqy * nqx);
+		ff.clear();  ff.reserve(nqz * nqy * nqx);
 		for(unsigned int i = 0; i < nqz * nqy * nqx; ++ i) ff.push_back(complex_t(0, 0));
 
 		// ff computation for a box
@@ -148,18 +127,17 @@ namespace hig {
 							} // for i_x
 						} // for i_y
 					} // for i_z
-					complex_t temp_e = exp(mqx * transvec[0] + mqy * transvec[1] + mqz * transvec[2]);
-					if(!(boost::math::isfinite(temp_e.real()) && boost::math::isfinite(temp_e.imag()))) {
+					complex_t temp7 = (mqx * transvec[0] + mqy * transvec[1] + mqz * transvec[2]);
+					if(!(boost::math::isfinite(temp7.real()) && boost::math::isfinite(temp7.imag()))) {
 						std::cerr << "---------------- here it is ------ " << j_x << ", "
 									<< j_y << ", " << j_z << std::endl;
 						exit(1);
 					} // if
-					ff[curr_index] = temp_ff * temp_e;
+					ff[curr_index] = temp_ff * exp(complex_t(-temp7.imag(), temp7.real()));
 				} // for x
 			} // for y
 		} // for z
 #endif // FF_ANA_GPU
-
 		return true;
 	} // AnalyticFormFactor::compute_box()
 

@@ -3,7 +3,7 @@
   *
   *  File: ff_ana_gpu.cu
   *  Created: Oct 16, 2012
-  *  Modified: Wed 20 Feb 2013 05:39:05 PM PST
+  *  Modified: Wed 20 Feb 2013 08:27:56 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -141,7 +141,7 @@ namespace hig {
 						} // for x
 					} // for y
 				} // for z
-				cucomplex_t temp_e = cuCexp(mqx * transvec[0] + mqy * transvec[1] + mqz * transvec[2]);
+				cucomplex_t temp_e = cuCexpi(mqx * transvec[0] + mqy * transvec[1] + mqz * transvec[2]);
 				unsigned int curr_index = base_index + i_x;
 				ff[curr_index] = temp_ff * temp_e;
 			} // for x

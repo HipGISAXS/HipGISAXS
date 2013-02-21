@@ -5,7 +5,7 @@
   *
   *  File: ff_ana.hpp
   *  Created: Jul 12, 2012
-  *  Modified: Wed 20 Feb 2013 02:16:15 PM PST
+  *  Modified: Thu 21 Feb 2013 10:18:22 AM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -68,7 +68,7 @@ namespace hig {
 			bool compute_sphere(shape_param_list_t&, std::vector<complex_t>&, vector3_t);
 			bool compute_prism(shape_param_list_t&, std::vector<complex_t>&, float_t, float_t, vector3_t);
 			bool compute_prism6(shape_param_list_t&, std::vector<complex_t>&, float_t, float_t, vector3_t);
-			bool compute_prism3x();
+			bool compute_prism3x(shape_param_list_t&, std::vector<complex_t>&, float_t, float_t, vector3_t);
 			bool compute_sawtooth_up();
 			bool compute_sawtooth_down();
 			bool compute_pyramid();
@@ -84,6 +84,8 @@ namespace hig {
 			bool mat_sinc(unsigned int, unsigned int, unsigned int,	const complex_vec_t&, complex_vec_t&);
 			bool mat_sinc_in(unsigned int, unsigned int, unsigned int, complex_vec_t&);
 			complex_t sinc(complex_t value);
+			void compute_meshpoints(const float_t, const float_t, const complex_t, const float_t*,
+									complex_t&, complex_t&, complex_t&);
 
 
 	}; // class AnalyticFormFactor

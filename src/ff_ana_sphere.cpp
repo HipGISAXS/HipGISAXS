@@ -3,13 +3,12 @@
   *
   *  File: ff_ana_sphere.cpp
   *  Created: Jul 12, 2012
-  *  Modified: Wed 20 Feb 2013 12:53:04 PM PST
+  *  Modified: Thu 21 Feb 2013 10:42:23 AM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
 
 #include <boost/math/special_functions/fpclassify.hpp>
-//#include <boost/timer/timer.hpp>
 
 #include "woo/timer/woo_boostchronotimers.hpp"
 
@@ -51,9 +50,10 @@ namespace hig {
 			return false;
 		} // if
 
+#ifdef TIME_DETAIL_2
 		woo::BoostChronoTimer maintimer;
 		maintimer.start();
-
+#endif // TIME_DETAIL_2
 #ifdef FF_ANA_GPU
 		/* on gpu */
 		std::cout << "-- Computing sphere FF on GPU ..." << std::endl;
@@ -159,9 +159,10 @@ namespace hig {
 		//std::cout << "** CPU analytic sphere computation time: " << cpu_time / 10e6 << " ms." << std::endl;
 		
 #endif // FF_ANA_GPU
-
+#ifdef TIME_DETAIL_2
 		maintimer.stop();
-		std::cout << "**      Analytic FF compute time: " << maintimer.elapsed_msec() << " ms." << std::endl;
+		std::cout << "**        Sphere FF compute time: " << maintimer.elapsed_msec() << " ms." << std::endl;
+#endif // TIME_DETAIL_2
 		
 		return true;
 	} // AnalyticFormFactor::compute_sphere()

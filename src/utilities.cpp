@@ -5,7 +5,7 @@
   *
   *  File: utilities.cpp
   *  Created: Jun 25, 2012
-  *  Modified: Fri 19 Oct 2012 11:21:25 AM PDT
+  *  Modified: Wed 20 Feb 2013 07:15:06 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -673,5 +673,10 @@ namespace hig {
 		} // for
 		return count;
 	} // count_naninfs()
+
+
+	/*void compute_meshpoints(const float_t qx, const float_t qy, const complex_t qz, const float_t* rot,
+							complex_t& mqx, complex_t& mqy, complex_t& mqz) {
+	} // compute_meshpoints()*/
 
 } // namespace hig

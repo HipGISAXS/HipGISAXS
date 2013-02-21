@@ -3,7 +3,7 @@
   *
   *  File: ff_ana_gpu.cu
   *  Created: Oct 16, 2012
-  *  Modified: Wed 20 Feb 2013 01:06:18 PM PST
+  *  Modified: Thu 21 Feb 2013 10:37:17 AM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -81,9 +81,9 @@ namespace hig {
 		size_t device_mem_avail, device_mem_total, device_mem_used;
 		cudaMemGetInfo(&device_mem_avail, &device_mem_total);
 		device_mem_used = device_mem_total - device_mem_avail;
-		std::cout << "++       Used device memory: " << (float) device_mem_used / 1024 / 1024
+		std::cout << "++            Used device memory: " << (float) device_mem_used / 1024 / 1024
 					<< " MB" << std::endl;
-		std::cout << "++       Free device memory: " << (float) device_mem_avail / 1024 / 1024
+		std::cout << "++            Free device memory: " << (float) device_mem_avail / 1024 / 1024
 					<< " MB" << std::endl;
 
 		return true;

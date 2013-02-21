@@ -5,7 +5,7 @@
   *
   *  File: cu_complex_numeric.cuh
   *  Created: Oct 17, 2012
-  *  Modified: Wed 20 Feb 2013 02:24:22 PM PST
+  *  Modified: Wed 20 Feb 2013 08:40:22 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -55,6 +55,33 @@ namespace hig {
 	__device__ static __inline__ cuDoubleComplex operator+(double a, cuDoubleComplex b) {
 		return make_cuDoubleComplex(a + b.x, b.y);
 	} // operator+()
+
+
+	// subtraction
+
+	__device__ static __inline__ cuFloatComplex operator-(cuFloatComplex a, cuFloatComplex b) {
+		return make_cuFloatComplex(a.x - b.x, a.y - b.y);
+	} // operator-()
+
+	__device__ static __inline__ cuFloatComplex operator-(cuFloatComplex a, float b) {
+		return make_cuFloatComplex(a.x - b, a.y);
+	} // operator-()
+
+	__device__ static __inline__ cuFloatComplex operator-(float a, cuFloatComplex b) {
+		return make_cuFloatComplex(a - b.x, - b.y);
+	} // operator-()
+
+	__device__ static __inline__ cuDoubleComplex operator-(cuDoubleComplex a, cuDoubleComplex b) {
+		return make_cuDoubleComplex(a.x - b.x, a.y - b.y);
+	} // operator-()
+
+	__device__ static __inline__ cuDoubleComplex operator-(cuDoubleComplex a, double b) {
+		return make_cuDoubleComplex(a.x - b, a.y);
+	} // operator-()
+
+	__device__ static __inline__ cuDoubleComplex operator-(double a, cuDoubleComplex b) {
+		return make_cuDoubleComplex(a - b.x, - b.y);
+	} // operator-()
 
 
 	// multiplication

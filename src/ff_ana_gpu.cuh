@@ -5,7 +5,7 @@
   *
   *  File: ff_ana_gpu.cuh
   *  Created: Oct 16, 2012
-  *  Modified: Wed 20 Feb 2013 02:22:48 PM PST
+  *  Modified: Thu 21 Feb 2013 11:19:15 AM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -50,33 +50,29 @@ namespace hig {
 			void grid_size(unsigned int, unsigned int, unsigned int);
 
 			bool compute_box(const float_t, const float_t,
-							const std::vector<float_t>&, const std::vector<float_t>&,
-							const std::vector<float_t>&, const std::vector<float_t>&,
-							const std::vector<float_t>&, const std::vector<float_t>&,
-							//const float_t*, const float_t*, const cucomplex_t*,
-							const float_t*, const std::vector<float_t>&, std::vector<complex_t>&);
-            bool compute_cylinder(const float_t, const float_t, const std::vector<float_t>&,
-									const std::vector<float_t>&, const std::vector<float_t>&,
-									const std::vector<float_t>&,
-									//const float_t*, const float_t*, const cucomplex_t*,
-									const float_t*, const std::vector<float_t>&, std::vector<complex_t>&);
+								const std::vector<float_t>&, const std::vector<float_t>&,
+								const std::vector<float_t>&, const std::vector<float_t>&,
+								const std::vector<float_t>&, const std::vector<float_t>&,
+								const float_t*, const std::vector<float_t>&, std::vector<complex_t>&);
+            bool compute_cylinder(const float_t, const float_t,
+								const std::vector<float_t>&, const std::vector<float_t>&,
+								const std::vector<float_t>&, const std::vector<float_t>&,
+								const float_t*, const std::vector<float_t>&, std::vector<complex_t>&);
             bool compute_horizontal_cylinder(const float_t, const float_t,
-									const std::vector<float_t>&, const std::vector<float_t>&,
-									const std::vector<float_t>&, const std::vector<float_t>&,
-									const float_t*, const std::vector<float_t>&, std::vector<complex_t>&);
+								const std::vector<float_t>&, const std::vector<float_t>&,
+								const std::vector<float_t>&, const std::vector<float_t>&,
+								const float_t*, const std::vector<float_t>&, std::vector<complex_t>&);
             bool compute_random_cylinders();
-            bool compute_sphere(const std::vector<float_t>& r,
-								const std::vector<float_t>& distr_r,
-								//const float_t* qx,
-								//const float_t* qy,
-								//const cucomplex_t* qz,
-								const float_t* rot,
-								const std::vector<float_t>& transvec,
-								std::vector<complex_t>& ff);
-            bool compute_prism(/*shape_param_list_t&, std::vector<complex_t>&,
-                                float_t, float_t, vector3_t*/);
-            bool compute_prism6(/*shape_param_list_t&, std::vector<complex_t>&,
-                                float_t, float_t, vector3_t*/);
+            bool compute_sphere(const std::vector<float_t>&, const std::vector<float_t>&,
+								const float_t*, const std::vector<float_t>&, std::vector<complex_t>&);
+            bool compute_prism3(const float_t, const float_t,
+								const std::vector<float_t>&, const std::vector<float_t>&,
+								const std::vector<float_t>&, const std::vector<float_t>&,
+								const float_t*, const std::vector<float_t>&, std::vector<complex_t>&);
+            bool compute_prism6(const float_t, const float_t,
+								const std::vector<float_t>&, const std::vector<float_t>&,
+								const std::vector<float_t>&, const std::vector<float_t>&,
+								const float_t*, const std::vector<float_t>&, std::vector<complex_t>&);
             bool compute_prism3x();
             bool compute_sawtooth_up();
             bool compute_sawtooth_down();

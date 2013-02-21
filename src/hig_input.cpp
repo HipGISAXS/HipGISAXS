@@ -5,7 +5,7 @@
   *
   *  File: hig_input.cpp
   *  Created: Jun 11, 2012
-  *  Modified: Wed 20 Feb 2013 01:41:02 PM PST
+  *  Modified: Thu 21 Feb 2013 11:35:05 AM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -1332,10 +1332,8 @@ namespace hig {
 				while(param != shape.param_end()) {
 					switch((*param).second.type()) {
 						case param_radius:
-							max_dim[0] = max((*param).second.max(), (*param).second.min());
-							min_dim[0] = -max_dim[0];
-							max_dim[1] = max((*param).second.max(), (*param).second.min());
-							min_dim[1] = -max_dim[1];
+							std::cerr << "warning: ignoring the radius values given for prism3 shape"
+										<< std::endl;
 							break;
 						case param_xsize:
 							std::cerr << "warning: ignoring the xsize values given for prism3 shape"
@@ -1350,8 +1348,8 @@ namespace hig {
 							min_dim[2] = 0.0;
 							break;
 						case param_edge:
-							std::cerr << "warning: ignoring the edge values given for prism3 shape"
-										<< std::endl;
+							max_dim[0] = max_dim[1] = max_dim[2] = max((*param).second.max(), (*param).second.min());
+							min_dim[0] = min_dim[1] = min_dim[2] = -max_dim[0];
 							break;
 						case param_baseangle:
 							std::cerr << "warning: ignoring the baseangle values given for prism3 shape"
@@ -1369,17 +1367,15 @@ namespace hig {
 				while(param != shape.param_end()) {
 					switch((*param).second.type()) {
 						case param_radius:
-							max_dim[0] = max((*param).second.max(), (*param).second.min());
-							min_dim[0] = -max_dim[0];
-							max_dim[1] = max((*param).second.max(), (*param).second.min());
-							min_dim[1] = -max_dim[1];
+							std::cerr << "warning: ignoring the radius values given for prism6 shape"
+										<< std::endl;
 							break;
 						case param_xsize:
-							std::cerr << "warning: ignoring the xsize values given for prism3 shape"
+							std::cerr << "warning: ignoring the xsize values given for prism6 shape"
 										<< std::endl;
 							break;
 						case param_ysize:
-							std::cerr << "warning: ignoring the ysize values given for prism3 shape"
+							std::cerr << "warning: ignoring the ysize values given for prism6 shape"
 										<< std::endl;
 							break;
 						case param_height:
@@ -1387,8 +1383,8 @@ namespace hig {
 							min_dim[2] = 0.0;
 							break;
 						case param_edge:
-							std::cerr << "warning: ignoring the edge values given for prism3 shape"
-										<< std::endl;
+							max_dim[0] = max_dim[1] = max_dim[2] = max((*param).second.max(), (*param).second.min());
+							min_dim[0] = min_dim[1] = min_dim[2] = -max_dim[0];
 							break;
 						case param_baseangle:
 							std::cerr << "warning: ignoring the baseangle values given for prism3 shape"
