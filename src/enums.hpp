@@ -5,7 +5,7 @@
   *
   *  File: enums.hpp
   *  Created: Jun 11, 2012
-  *  Modified: Sat 13 Oct 2012 02:06:10 PM PDT
+  *  Modified: Thu 21 Feb 2013 11:49:55 AM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -28,10 +28,10 @@ namespace hig {
 		shape_prism3,			/* 3-fold prism */
 		shape_prism6,			/* 6-fold prism */
 		shape_sawtooth,			/* sawtooth (prism along x) */
-		// the following have not yet been defined or implemented ... :
-		shape_prism3x,
 		shape_random_cylinders,
 		shape_horizontal_cylinder,
+		// the following have not yet been defined or implemented ... :
+		shape_prism3x,
 		shape_sawtooth_down,
 		shape_sawtooth_up,
 		shape_pyramid,

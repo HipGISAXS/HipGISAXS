@@ -5,7 +5,7 @@
   *
   *  File: ff_ana.cpp
   *  Created: Jul 12, 2012
-  *  Modified: Thu 21 Feb 2013 10:56:03 AM PST
+  *  Modified: Thu 21 Feb 2013 12:46:25 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -83,7 +83,7 @@ namespace hig {
 				} // if
 				break;
 			case shape_random_cylinders:		// randomly oriented cylinders, for saxs
-				if(!compute_random_cylinders()) {
+				if(!compute_random_cylinders(params, ff, tau, eta, transvec)) {
 					std::cerr << "error: something went wrong while computing FF for random cylinders"
 								<< std::endl;
 					return false;

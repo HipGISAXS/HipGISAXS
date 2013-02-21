@@ -5,7 +5,7 @@
   *
   *  File: ff_ana_gpu.cuh
   *  Created: Oct 16, 2012
-  *  Modified: Thu 21 Feb 2013 11:19:15 AM PST
+  *  Modified: Thu 21 Feb 2013 01:03:43 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -62,7 +62,10 @@ namespace hig {
 								const std::vector<float_t>&, const std::vector<float_t>&,
 								const std::vector<float_t>&, const std::vector<float_t>&,
 								const float_t*, const std::vector<float_t>&, std::vector<complex_t>&);
-            bool compute_random_cylinders();
+            bool compute_random_cylinders(const float_t, const float_t,
+								const std::vector<float_t>&, const std::vector<float_t>&,
+								const std::vector<float_t>&, const std::vector<float_t>&,
+								const float_t*, const std::vector<float_t>&, std::vector<complex_t>&);
             bool compute_sphere(const std::vector<float_t>&, const std::vector<float_t>&,
 								const float_t*, const std::vector<float_t>&, std::vector<complex_t>&);
             bool compute_prism3(const float_t, const float_t,

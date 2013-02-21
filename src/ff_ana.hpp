@@ -5,7 +5,7 @@
   *
   *  File: ff_ana.hpp
   *  Created: Jul 12, 2012
-  *  Modified: Thu 21 Feb 2013 10:18:22 AM PST
+  *  Modified: Thu 21 Feb 2013 12:43:36 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -64,7 +64,8 @@ namespace hig {
 			bool compute_cylinder(shape_param_list_t&, float_t, float_t, std::vector<complex_t>&, vector3_t);
 			bool compute_horizontal_cylinder(float_t, float_t, shape_param_list_t&, vector3_t,
 							std::vector<complex_t>&);
-			bool compute_random_cylinders();
+			bool compute_random_cylinders(shape_param_list_t&, std::vector<complex_t>&,
+							float_t, float_t, vector3_t);
 			bool compute_sphere(shape_param_list_t&, std::vector<complex_t>&, vector3_t);
 			bool compute_prism(shape_param_list_t&, std::vector<complex_t>&, float_t, float_t, vector3_t);
 			bool compute_prism6(shape_param_list_t&, std::vector<complex_t>&, float_t, float_t, vector3_t);

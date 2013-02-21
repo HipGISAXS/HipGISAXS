@@ -3,7 +3,7 @@
   *
   *  File: ff_ana_pyramid.cpp
   *  Created: Jul 12, 2012
-  *  Modified: Wed 20 Feb 2013 05:07:33 PM PST
+  *  Modified: Thu 21 Feb 2013 11:44:27 AM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -41,6 +41,7 @@ namespace hig {
 			} // switch
 		} // for */
 
+		// what are AD/AA and AAD ... ???
 /*            RD = Dimension_Distr( dims(1,:) );[rows, NRR] = size(RD); RR = RD(1,:); RRD = RD(2,:);
             HD = Dimension_Distr( dims(2,:) );[rows, NHH] = size(HD); HH = HD(1,:); HHD = HD(2,:);
             WD = Dimension_Distr( dims(3,:) );[rows, NWW] = size(WD); WW = WD(1,:); WWD = WD(2,:);
