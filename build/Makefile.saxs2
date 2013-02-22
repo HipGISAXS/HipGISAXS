@@ -10,6 +10,8 @@
 # Author: Abhinav Sarje <asarje@lbl.gov>
 ##
 
+USE_ANA_GPU = y
+
 ## base directories
 BOOST_DIR = /usr/local/boost_1_49_0
 MPI_DIR = /usr/local/openmpi-1.6
@@ -26,7 +28,9 @@ H5CC = $(HDF5_DIR)/bin/h5pcc
 NVCC = $(CUDA_DIR)/bin/nvcc #-ccbin /usr/local/gcc-4.6.3/bin
 
 ## compiler flags
-CXX_FLAGS = -std=c++0x -Wall -Wextra #-v
+CXX_FLAGS = -std=c++0x #-Wall -Wextra
+CXX_FLAGS += -fopenmp
+CXX_FLAGS += -lgsl -lgslcblas -lm #-v
 ## gnu c++ compilers >= 4.3 support -std=c++0x [requirement for hipgisaxs 4.3.x <= g++ <= 4.6.x]
 ## gnu c++ compilers >= 4.7 also support -std=c++11, but they are not supported by cuda
 
@@ -53,8 +57,9 @@ NVCC_FLAGS += -gencode=arch=compute_20,code=compute_20
 NVCC_FLAGS += -gencode arch=compute_20,code=sm_21
 NVCC_FLAGS += -gencode arch=compute_30,code=sm_30
 NVCC_FLAGS += -gencode arch=compute_35,code=sm_35
-NVCC_FLAGS += -Xptxas -v -Xcompiler -v -Xlinker -v --ptxas-options="-v"
-NVCC_FLAGS += -DGPUR -DFF_ANA_GPU #-G #-DFINDBLOCK #-DAXIS_ROT
+#NVCC_FLAGS += -Xptxas -v -Xcompiler -v -Xlinker -v
+NVCC_FLAGS += --ptxas-options="-v"
+NVCC_FLAGS += #-G #-DFINDBLOCK #-DAXIS_ROT
 NVLIB_FLAGS = -Xlinker -lgomp
 NVLIB_FLAGS += -Wl,-rpath -Wl,$(CUDA_DIR)/lib64
 
@@ -68,7 +73,12 @@ TIFF_LIBS = -L $(TIFF_LIB_DIR) -ltiff
 
 ## miscellaneous
 MISC_INCL =
-MISC_FLAGS = -DFF_ANA_GPU -DKERNEL2 -DREDUCTION2 #-DAXIS_ROT
+MISC_FLAGS = -DGPUR -DKERNEL2
+MISC_FLAGS += #-DREDUCTION2 #-DAXIS_ROT
+ifeq ($(USE_ANA_GPU), y)
+MISC_FLAGS += -DFF_ANA_GPU
+endif
+MISC_FLAGS += -DTIME_DETAIL_1 -DTIME_DETAIL_2
 
 ## choose optimization levels, debug flags, gprof flag, etc
 #OPT_FLAGS = -g -DDEBUG #-v #-pg
@@ -98,6 +108,11 @@ SRC_DIR = $(PREFIX)/src
 OBJECTS_MAIN = reduction.o ff_num_gpu.o utilities.o numeric_utils.o compute_params.o hig_input.o \
 		  image.o inst_detector.o inst_scattering.o layer.o qgrid.o read_oo_input.o sf.o \
 		  ff_ana.o ff_num.o ff.o shape.o structure.o object2hdf5.o hipgisaxs_main.o ff_ana_gpu.o \
+		  ff_ana_sphere.o ff_ana_box.o ff_ana_cylinder.o ff_ana_hcylinder.o ff_ana_prism3x.o \
+		  ff_ana_prism6.o ff_ana_prism.o ff_ana_pyramid.o ff_ana_rand_cylinder.o \
+		  ff_ana_sawtooth_down.o ff_ana_sawtooth_up.o ff_ana_trunc_cone.o ff_ana_trunc_pyramid.o \
+		  ff_ana_sphere_gpu.o ff_ana_box_gpu.o ff_ana_cylinder_gpu.o ff_ana_hcylinder_gpu.o \
+		  ff_ana_prism6_gpu.o ff_ana_prism_gpu.o ff_ana_rand_cylinder_gpu.o \
 		  fitting_steepest_descent.o
 
 OBJECTS_SIM = $(OBJECTS_MAIN) hipgisaxs_sim.o
@@ -119,11 +134,32 @@ $(BINARY_FIT): $(OBJ_BIN_FIT)
 _DEPS_NV = %.cuh
 DEPS_NV = $(patsubst %,$(SRC_DIR)/%,$(_DEPS_NV))
 
-#### dont know why is this happenning ...
+#### FIXME: fix all this ...
 $(OBJ_DIR)/ff_num_gpu.o: $(SRC_DIR)/ff_num_gpu.cu
 	$(NVCC) -c $< -o $@ $(OPT_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS) $(NVCC_FLAGS)
 
 $(OBJ_DIR)/ff_ana_gpu.o: $(SRC_DIR)/ff_ana_gpu.cu
+	$(NVCC) -c $< -o $@ $(OPT_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS) $(NVCC_FLAGS)
+
+$(OBJ_DIR)/ff_ana_box_gpu.o: $(SRC_DIR)/ff_ana_box_gpu.cu
+	$(NVCC) -c $< -o $@ $(OPT_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS) $(NVCC_FLAGS)
+
+$(OBJ_DIR)/ff_ana_cylinder_gpu.o: $(SRC_DIR)/ff_ana_cylinder_gpu.cu
+	$(NVCC) -c $< -o $@ $(OPT_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS) $(NVCC_FLAGS)
+
+$(OBJ_DIR)/ff_ana_hcylinder_gpu.o: $(SRC_DIR)/ff_ana_hcylinder_gpu.cu
+	$(NVCC) -c $< -o $@ $(OPT_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS) $(NVCC_FLAGS)
+
+$(OBJ_DIR)/ff_ana_prism_gpu.o: $(SRC_DIR)/ff_ana_prism_gpu.cu
+	$(NVCC) -c $< -o $@ $(OPT_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS) $(NVCC_FLAGS)
+
+$(OBJ_DIR)/ff_ana_prism6_gpu.o: $(SRC_DIR)/ff_ana_prism6_gpu.cu
+	$(NVCC) -c $< -o $@ $(OPT_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS) $(NVCC_FLAGS)
+
+$(OBJ_DIR)/ff_ana_sphere_gpu.o: $(SRC_DIR)/ff_ana_sphere_gpu.cu
+	$(NVCC) -c $< -o $@ $(OPT_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS) $(NVCC_FLAGS)
+
+$(OBJ_DIR)/ff_ana_rand_cylinder_gpu.o: $(SRC_DIR)/ff_ana_rand_cylinder_gpu.cu
 	$(NVCC) -c $< -o $@ $(OPT_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS) $(NVCC_FLAGS)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cu $(DEPS_NV)
@@ -143,7 +179,46 @@ DEPS_CXX = $(patsubst %,$(SRC_DIR)/%,$(_DEPS_CXX))
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp $(DEPS_CXX)
 	$(CXX) -c $< -o $@ $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS)
 
-############### dont know why this is happenning ...
+############### FIXME: fix all this ...
+$(OBJ_DIR)/ff_ana_box.o: $(SRC_DIR)/ff_ana_box.cpp $(SRC_DIR)/ff_ana.hpp
+	$(CXX) -c $< -o $@ $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS)
+
+$(OBJ_DIR)/ff_ana_cylinder.o: $(SRC_DIR)/ff_ana_cylinder.cpp $(SRC_DIR)/ff_ana.hpp
+	$(CXX) -c $< -o $@ $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS)
+
+$(OBJ_DIR)/ff_ana_hcylinder.o: $(SRC_DIR)/ff_ana_hcylinder.cpp $(SRC_DIR)/ff_ana.hpp
+	$(CXX) -c $< -o $@ $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS)
+
+$(OBJ_DIR)/ff_ana_prism3x.o: $(SRC_DIR)/ff_ana_prism3x.cpp $(SRC_DIR)/ff_ana.hpp
+	$(CXX) -c $< -o $@ $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS)
+
+$(OBJ_DIR)/ff_ana_prism6.o: $(SRC_DIR)/ff_ana_prism6.cpp $(SRC_DIR)/ff_ana.hpp
+	$(CXX) -c $< -o $@ $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS)
+
+$(OBJ_DIR)/ff_ana_prism.o: $(SRC_DIR)/ff_ana_prism.cpp $(SRC_DIR)/ff_ana.hpp
+	$(CXX) -c $< -o $@ $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS)
+
+$(OBJ_DIR)/ff_ana_pyramid.o: $(SRC_DIR)/ff_ana_pyramid.cpp $(SRC_DIR)/ff_ana.hpp
+	$(CXX) -c $< -o $@ $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS)
+
+$(OBJ_DIR)/ff_ana_rand_cylinder.o: $(SRC_DIR)/ff_ana_rand_cylinder.cpp $(SRC_DIR)/ff_ana.hpp
+	$(CXX) -c $< -o $@ $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS)
+
+$(OBJ_DIR)/ff_ana_sawtooth_down.o: $(SRC_DIR)/ff_ana_sawtooth_down.cpp $(SRC_DIR)/ff_ana.hpp
+	$(CXX) -c $< -o $@ $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS)
+
+$(OBJ_DIR)/ff_ana_sawtooth_up.o: $(SRC_DIR)/ff_ana_sawtooth_up.cpp $(SRC_DIR)/ff_ana.hpp
+	$(CXX) -c $< -o $@ $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS)
+
+$(OBJ_DIR)/ff_ana_sphere.o: $(SRC_DIR)/ff_ana_sphere.cpp $(SRC_DIR)/ff_ana.hpp
+	$(CXX) -c $< -o $@ $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS)
+
+$(OBJ_DIR)/ff_ana_trunc_cone.o: $(SRC_DIR)/ff_ana_trunc_cone.cpp $(SRC_DIR)/ff_ana.hpp
+	$(CXX) -c $< -o $@ $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS)
+
+$(OBJ_DIR)/ff_ana_trunc_pyramid.o: $(SRC_DIR)/ff_ana_trunc_pyramid.cpp $(SRC_DIR)/ff_ana.hpp
+	$(CXX) -c $< -o $@ $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS)
+
 $(OBJ_DIR)/hipgisaxs_sim.o: $(SRC_DIR)/hipgisaxs_sim.cpp $(SRC_DIR)/hipgisaxs_main.hpp
 	$(CXX) -c $< -o $@ $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS)
 
