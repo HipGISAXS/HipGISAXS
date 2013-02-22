@@ -3,7 +3,7 @@
   *
   *  File: hipgisaxs_sim.cpp
   *  Created: Dec 06, 2012
-  *  Modified: Thu 06 Dec 2012 11:44:14 AM PST
+  *  Modified: Fri 22 Feb 2013 01:29:58 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -48,7 +48,7 @@ int main(int narg, char** args) {
 					<< std::endl << std::endl;
 	} // if
 
-	woo::BoostChronoTimer maintimer, readtimer, computetimer;
+	woo::BoostChronoTimer maintimer, readtimer; //, computetimer;
 	maintimer.start();
 	readtimer.start();
 	/* read input file and construct input structures */
@@ -63,18 +63,18 @@ int main(int narg, char** args) {
 	readtimer.stop();
 	std::cout << "**       Input construction time: " << readtimer.elapsed_msec() << " ms." << std::endl;
 
-	computetimer.start();
+	//computetimer.start();
 	/* run the simulation */
 	if(!my_gisaxs.run_all_gisaxs(MPI::COMM_WORLD)) {
 		std::cerr << "error: could not run the simulation - some error occured" << std::endl;
-		computetimer.stop();
+		//computetimer.stop();
 		maintimer.stop();
 		MPI::Finalize();
 		return 1;
 	} // if
-	computetimer.stop();
+	//computetimer.stop();
 	maintimer.stop();
-	std::cout << "**         Total simulation time: " << computetimer.elapsed_msec() << " ms." << std::endl;
+	//std::cout << "**         Total simulation time: " << computetimer.elapsed_msec() << " ms." << std::endl;
 	std::cout << "**                    Total time: " << maintimer.elapsed_msec() << " ms." << std::endl;
 	std::cout << std::endl;
 

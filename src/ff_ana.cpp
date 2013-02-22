@@ -5,13 +5,12 @@
   *
   *  File: ff_ana.cpp
   *  Created: Jul 12, 2012
-  *  Modified: Thu 21 Feb 2013 04:48:35 PM PST
+  *  Modified: Fri 22 Feb 2013 01:17:10 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
 
 #include <boost/math/special_functions/fpclassify.hpp>
-//#include <boost/timer/timer.hpp>
 
 #include "woo/timer/woo_boostchronotimers.hpp"
 
@@ -52,6 +51,9 @@ namespace hig {
 
 	void AnalyticFormFactor::clear() {
 		nqx_ = nqy_ = nqz_ = 0;
+#ifdef FF_ANA_GPU
+		gff_.clear();
+#endif // FF_ANA_GPU
 	} // AnalyticFormFactor::clear()
 
 

@@ -5,7 +5,7 @@
   *
   *  File: ff.cpp
   *  Created: Jul 17, 2012
-  *  Modified: Fri 23 Nov 2012 01:23:54 PM PST
+  *  Modified: Fri 22 Feb 2013 12:23:58 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -23,10 +23,10 @@ namespace hig {
 		if(nff_ != NULL) delete[] nff_;
 		nff_ = NULL;
 		numeric_ff_.clear();
+		is_analytic_ = false;
 	} // FormFactor::clear()
 
-	//template<typename float_t, typename complex_t>
-	//bool FormFactor<float_t, complex_t>::compute_form_factor(ShapeName shape, std::string shape_filename,
+
 	bool FormFactor::compute_form_factor(ShapeName shape, std::string shape_filename,
 										shape_param_list_t& params, float_t single_thickness,
 										vector3_t& transvec, float_t shp_tau, float_t shp_eta,
@@ -46,7 +46,7 @@ namespace hig {
 		} // if-else
 
 		return true;
-	} // FormFactor::compute_form_factpr()
+	} // FormFactor::compute_form_factor()
 
 
 	/* temporaries */
@@ -82,6 +82,7 @@ namespace hig {
 			std::cout << std::endl;
 		} // for
 	} // FormFactor::print_ff()
+
 
 	void FormFactor::save_ff(unsigned int nqx, unsigned int nqy, unsigned int nqz, const char* filename) {
 		std::ofstream f(filename);

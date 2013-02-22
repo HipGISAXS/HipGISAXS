@@ -5,7 +5,7 @@
   *
   *  File: ff_ana_gpu.cuh
   *  Created: Oct 16, 2012
-  *  Modified: Thu 21 Feb 2013 01:03:43 PM PST
+  *  Modified: Fri 22 Feb 2013 12:24:51 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -45,6 +45,7 @@ namespace hig {
 
 			bool init(unsigned int, unsigned int, unsigned int);
 			bool run_init(const float_t*, const std::vector<float_t>&);
+			bool clear();
 			bool destroy();
 
 			void grid_size(unsigned int, unsigned int, unsigned int);

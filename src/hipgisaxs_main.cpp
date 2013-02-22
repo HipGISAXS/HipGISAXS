@@ -5,7 +5,7 @@
   *
   *  File: hipgisaxs_main.cpp
   *  Created: Jun 14, 2012
-  *  Modified: Wed 20 Feb 2013 09:31:23 AM PST
+  *  Modified: Fri 22 Feb 2013 01:27:11 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -25,6 +25,7 @@
 #include "hipgisaxs_main.hpp"
 #include "typedefs.hpp"
 #include "utilities.hpp"
+#include "init_gpu.cuh"
 
 namespace hig {
 
@@ -83,6 +84,8 @@ namespace hig {
 			if(mpi_rank == 0) std::cerr << "error: could not construct layer profile" << std::endl;
 			return false;
 		} // if
+
+		init_gpu();
 
 		return true;
 	} // HipGISAXS::init()
@@ -155,6 +158,7 @@ namespace hig {
 
 		int mpi_rank = world_comm.Get_rank();
 		// get all the variable values from the input structures	(can't we do some of this in init()?)
+		// TODO: see what can be moved to init() ...
 
 		/* get initialization data from layers */
 
@@ -232,6 +236,9 @@ namespace hig {
 		int mpi_rank = world_comm.Get_rank();
 
 		if(!init(world_comm)) return false;
+
+		woo::BoostChronoTimer sim_timer;
+		sim_timer.start();
 
 		int num_alphai = 0, num_phi = 0, num_tilt = 0;;
 
@@ -346,6 +353,9 @@ namespace hig {
 				} // for tilt
 			} // for phi
 		} // for alphai
+
+		sim_timer.stop();
+		std::cout << "**         Total simulation time: " << sim_timer.elapsed_msec() << " ms." << std::endl;
 
 		return true;
 	} // HipGISAXS::run_all_gisaxs()
