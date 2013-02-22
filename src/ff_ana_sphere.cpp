@@ -3,7 +3,7 @@
   *
   *  File: ff_ana_sphere.cpp
   *  Created: Jul 12, 2012
-  *  Modified: Thu 21 Feb 2013 04:17:04 PM PST
+  *  Modified: Thu 21 Feb 2013 04:39:07 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -87,9 +87,10 @@ namespace hig {
 						temp_ff += distr_r[i_r] * 4 * PI_ * pow(r[i_r], 3) * (temp2 / temp3) *
 										exp(complex_t(0, 1) * mqz * r[i_r]);
 					} // for r
-					unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
-					ff[index] = temp_ff * exp(complex_t(0, 1) * (mqx * transvec[0] +
-																	mqy * transvec[1] + mqz * transvec[2]));
+					complex_t temp1 = mqx * transvec[0] + mqy * transvec[1] + mqz * transvec[2];
+					complex_t temp2 = exp(complex_t(-temp1.imag(), temp1.real()));
+					unsigned int curr_index = nqx_ * nqy_ * z + nqx_ * y + x;
+					ff[curr_index] = temp_ff * temp2;
 				} // for z
 			} // for y
 		} // for z

@@ -5,7 +5,7 @@
   *
   *  File: sf.cpp
   *  Created: Jun 18, 2012
-  *  Modified: Fri 23 Nov 2012 12:16:35 PM PST
+  *  Modified: Thu 21 Feb 2013 04:29:52 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -91,6 +91,7 @@ namespace hig {
 		computetimer.start();
 
 		// good for gpu ...
+		#pragma omp parallel for collapse(3)
 		for(unsigned int z = 0; z < nz_; ++ z) {
 			for(unsigned int y = 0; y < ny_; ++ y) {
 				for(unsigned int x = 0; x < nx_; ++ x) {

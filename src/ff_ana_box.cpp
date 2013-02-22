@@ -3,7 +3,7 @@
   *
   *  File: ff_ana_box.cpp
   *  Created: Jul 12, 2012
-  *  Modified: Thu 21 Feb 2013 10:17:26 AM PST
+  *  Modified: Thu 21 Feb 2013 04:30:49 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -68,6 +68,10 @@ namespace hig {
 			return false;
 		} // if
 
+#ifdef TIME_DETAIL_2
+		woo::BoostChronoTimer maintimer;
+		maintimer.start();
+#endif // TIME_DETAIL_2
 #ifdef FF_ANA_GPU
 		// on gpu
 		std::cout << "-- Computing box FF on GPU ..." << std::endl;
@@ -84,19 +88,13 @@ namespace hig {
 		ff.clear();  ff.reserve(nqz * nqy * nqx);
 		for(unsigned int i = 0; i < nqz * nqy * nqx; ++ i) ff.push_back(complex_t(0, 0));
 
-		// ff computation for a box
+		#pragma omp parallel for collapse(3)
 		for(unsigned int j_z = 0; j_z < nqz; ++ j_z) {
 			for(unsigned int j_y = 0; j_y < nqy; ++ j_y) {
 				for(unsigned int j_x = 0; j_x < nqx; ++ j_x) {
-					complex_t mqx = QGrid::instance().qy(j_y) * rot_[0] +
-									QGrid::instance().qx(j_x) * rot_[1] +
-									QGrid::instance().qz_extended(j_z) * rot_[2];
-					complex_t mqy = QGrid::instance().qy(j_y) * rot_[3] +
-									QGrid::instance().qx(j_x) * rot_[4] +
-									QGrid::instance().qz_extended(j_z) * rot_[5];
-					complex_t mqz = QGrid::instance().qy(j_y) * rot_[6] +
-									QGrid::instance().qx(j_x) * rot_[7] +
-									QGrid::instance().qz_extended(j_z) * rot_[8];
+					complex_t mqx, mqy, mqz;
+					compute_meshpoints(QGrid::instance().qx(j_x), QGrid::instance().qy(j_y),
+										QGrid::instance().qz_extended(j_z), rot_, mqx, mqy, mqz);
 					complex_t temp1 = sin(eta) * mqx;
 					complex_t temp2 = cos(eta) * mqy;
 					complex_t temp3 = temp1 + temp2;
@@ -118,26 +116,30 @@ namespace hig {
 													z[i_z] * x[i_x];
 								complex_t temp10 = temp9 * temp8;
 								temp_ff += temp10;
-								if(!(boost::math::isfinite(temp10.real()) &&
+								/*if(!(boost::math::isfinite(temp10.real()) &&
 											boost::math::isfinite(temp10.imag()))) {
 									std::cerr << "+++++++++++++++ here it is +++++++ " << j_x << ", "
 												<< j_y << ", " << j_z << std::endl;
 									exit(1);
-								} // if
+								} // if*/
 							} // for i_x
 						} // for i_y
 					} // for i_z
 					complex_t temp7 = (mqx * transvec[0] + mqy * transvec[1] + mqz * transvec[2]);
-					if(!(boost::math::isfinite(temp7.real()) && boost::math::isfinite(temp7.imag()))) {
+					/*if(!(boost::math::isfinite(temp7.real()) && boost::math::isfinite(temp7.imag()))) {
 						std::cerr << "---------------- here it is ------ " << j_x << ", "
 									<< j_y << ", " << j_z << std::endl;
 						exit(1);
-					} // if
+					} // if*/
 					ff[curr_index] = temp_ff * exp(complex_t(-temp7.imag(), temp7.real()));
 				} // for x
 			} // for y
 		} // for z
 #endif // FF_ANA_GPU
+#ifdef TIME_DETAIL_2
+		maintimer.stop();
+		std::cout << "**           Box FF compute time: " << maintimer.elapsed_msec() << " ms." << std::endl;
+#endif // TIME_DETAIL_2
 		return true;
 	} // AnalyticFormFactor::compute_box()
 

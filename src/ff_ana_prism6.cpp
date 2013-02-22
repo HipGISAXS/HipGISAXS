@@ -3,13 +3,12 @@
   *
   *  File: ff_ana_prism6.cpp
   *  Created: Jul 12, 2012
-  *  Modified: Thu 21 Feb 2013 11:12:43 AM PST
+  *  Modified: Thu 21 Feb 2013 04:54:06 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
 
 #include <boost/math/special_functions/fpclassify.hpp>
-//#include <boost/timer/timer.hpp>
 
 #include "woo/timer/woo_boostchronotimers.hpp"
 
@@ -49,6 +48,10 @@ namespace hig {
 			} // switch
 		} // for
 
+#ifdef TIME_DETAIL_2
+		woo::BoostChronoTimer maintimer;
+		maintimer.start();
+#endif // TIME_DETAIL_2
 #ifdef FF_ANA_GPU
 		// on gpu
 		std::cout << "-- Computing prism6 FF on GPU ..." << std::endl;
@@ -66,6 +69,8 @@ namespace hig {
 		for(unsigned int i = 0; i < nqx_ * nqy_ * nqz_; ++ i) ff.push_back(complex_t(0.0, 0.0));
 
 		float_t sqrt3 = sqrt(3.0);
+
+		#pragma omp parallel for collapse(3)
 		for(unsigned int z = 0; z < nqz_; ++ z) {
 			for(unsigned int y = 0; y < nqy_; ++ y) {
 				for(unsigned int x = 0; x < nqx_; ++ x) {
@@ -94,6 +99,10 @@ namespace hig {
 			} // for y
 		} // for z
 #endif // FF_ANA_GPU
+#ifdef TIME_DETAIL_2
+		maintimer.stop();
+		std::cout << "**        Prism6 FF compute time: " << maintimer.elapsed_msec() << " ms." << std::endl;
+#endif // TIME_DETAIL_2
 		return true;
 	} // AnalyticFormFactor::compute_prism6()
 

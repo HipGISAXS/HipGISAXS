@@ -3,7 +3,7 @@
   *
   *  File: ff_ana_rand_cylinder.cpp
   *  Created: Jul 12, 2012
-  *  Modified: Thu 21 Feb 2013 01:02:52 PM PST
+  *  Modified: Thu 21 Feb 2013 05:03:17 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -57,6 +57,10 @@ namespace hig {
 			return false;
 		} // if
 
+#ifdef TIME_DETAIL_2
+		woo::BoostChronoTimer maintimer;
+		maintimer.start();
+#endif // TIME_DETAIL_2
 #ifdef FF_ANA_GPU
 		// on gpu
 		std::cout << "-- Computing random cylinders FF on GPU ..." << std::endl;
@@ -79,6 +83,7 @@ namespace hig {
 		float_t dx = 0.001;		// FIXME: hard-coded ???
 		unsigned int nx = (1.0 - dx) / dx + 1;
 
+		#pragma omp parallel for
 		for(unsigned int z = 0; z < nqz_; ++ z) {
 			complex_t qz = QGrid::instance().qz_extended(z);
 			complex_t temp_ff(0.0, 0.0);
@@ -102,6 +107,10 @@ namespace hig {
 			} // for y
 		} // for z
 #endif // FF_ANA_GPU
+#ifdef TIME_DETAIL_2
+		maintimer.stop();
+		std::cout << "** Rand Cylinder FF compute time: " << maintimer.elapsed_msec() << " ms." << std::endl;
+#endif // TIME_DETAIL_2
 		return true;
 
 	} // AnalyticFormFactor::compute_random_cylinders()

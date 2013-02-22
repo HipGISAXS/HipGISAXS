@@ -3,13 +3,12 @@
   *
   *  File: ff_ana_prism.cpp
   *  Created: Jul 12, 2012
-  *  Modified: Thu 21 Feb 2013 11:19:39 AM PST
+  *  Modified: Thu 21 Feb 2013 04:58:42 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
 
 #include <boost/math/special_functions/fpclassify.hpp>
-//#include <boost/timer/timer.hpp>
 
 #include "woo/timer/woo_boostchronotimers.hpp"
 
@@ -56,9 +55,13 @@ namespace hig {
 
 		// why not doing for a range of r, h for this? ... ???
 
+#ifdef TIME_DETAIL_2
+		woo::BoostChronoTimer maintimer;
+		maintimer.start();
+#endif // TIME_DETAIL_2
 #ifdef FF_ANA_GPU
 		// on gpu
-		std::cout << "-- Computing prism FF on GPU ..." << std::endl;
+		std::cout << "-- Computing prism3 FF on GPU ..." << std::endl;
 
 		std::vector<float_t> transvec_v;
 		transvec_v.push_back(transvec[0]);
@@ -67,7 +70,7 @@ namespace hig {
 		gff_.compute_prism3(tau, eta, l, distr_l, h, distr_h, rot_, transvec_v, ff);
 #else
 		// on cpu
-		std::cout << "-- Computing prism FF on CPU ..." << std::endl;
+		std::cout << "-- Computing prism3 FF on CPU ..." << std::endl;
 
 		float_t sqrt3 = sqrt(3.0);
 		complex_t unitc(0, 1.0);
@@ -76,6 +79,7 @@ namespace hig {
 		ff.reserve(nqx_ * nqy_ * nqz_);
 		for(unsigned int i = 0; i < nqx_ * nqy_ * nqz_; ++ i) ff.push_back(complex_t(0.0, 0.0));
 
+		#pragma omp parallel for collapse(3)
 		for(unsigned int z = 0; z < nqz_; ++ z) {
 			for(unsigned int y = 0; y < nqy_; ++ y) {
 				for(unsigned int x = 0; x < nqx_; ++ x) {
@@ -104,6 +108,10 @@ namespace hig {
 			} // for y
 		} // for z
 #endif // FF_ANA_GPU
+#ifdef TIME_DETAIL_2
+		maintimer.stop();
+		std::cout << "**        Prism3 FF compute time: " << maintimer.elapsed_msec() << " ms." << std::endl;
+#endif // TIME_DETAIL_2
 
 		return true;
 	} // AnalyticFormFactor::compute_prism()

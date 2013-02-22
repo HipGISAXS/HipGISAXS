@@ -5,7 +5,7 @@
   *
   *  File: ff_ana.cpp
   *  Created: Jul 12, 2012
-  *  Modified: Thu 21 Feb 2013 02:26:19 PM PST
+  *  Modified: Thu 21 Feb 2013 04:48:35 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -304,6 +304,10 @@ namespace hig {
 	void AnalyticFormFactor::compute_meshpoints(const float_t qx, const float_t qy, const complex_t qz,
 												const float_t* rot,
 	    		                                complex_t& mqx, complex_t& mqy, complex_t& mqz) {
+		// FIXME: check which one is correct ...
+		/*mqx = qx * rot[0] + qy * rot[1] + qz * rot[2];
+		mqy = qx * rot[3] + qy * rot[4] + qz * rot[5];
+		mqz = qx * rot[6] + qy * rot[7] + qz * rot[8];*/
 		mqx = qy * rot[0] + qx * rot[1] + qz * rot[2];
 		mqy = qy * rot[3] + qx * rot[4] + qz * rot[5];
 		mqz = qy * rot[6] + qx * rot[7] + qz * rot[8];
