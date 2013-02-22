@@ -1,0 +1,61 @@
+hipGisaxsInput = {
+	shape = {
+		key = "s1",	 		# a unique key to identify this shape in this file
+		name = "prism3",	# shape name
+		originvec = [0 0 0],
+		param = { type = "edge", min = 50 },
+		param = { type = "height", min = 100 }
+	},
+	layer = {
+		key = "substr",	 	# special key for case of the substrate layer infinite in lower half space
+		order = -1 ,	 	# special order code for the substrate layer
+		refindex = { delta = 4.88E-06, beta = 7.37E-08 }
+	},
+	layer = {
+		key = "l1",
+		order = 1,
+		thickness = 150,
+		refindex = { delta = 2.0e-6, beta = 2.15E-9 }
+	},
+	structure = {
+		key = "st1",
+		grain = {
+			shape:key = "s1",
+			refindex = { delta = 7.4E-06, beta = 3.37E-08 },
+			layer:key = "l1"
+	#		layer:key = "l1",
+	#		repetition = [ 40 40 1 ],
+	#		lattice = { type = "cubic" },
+	#		scaling = 50
+		},
+		ensemble = {
+#           maxgrains = [ 10 10 1 ],        # maximum number of grains along x, y and z
+#           distribution = "random",        # spatial domain distribution in irrad. volume
+#           orientations = {
+#               stat = "range",             # domain orientation distribution
+#               rot1 = { axis = "z", angles = [ 0 360 ] }   # first rotation to apply to domain
+#           }
+		}
+	},
+	instrumentation = {
+		scattering = {
+			expt = "gisaxs",
+			alphai = { min = 0.17 },				# incidence angles
+			photon = { value = 10000, unit = "ev" }	# photon energy
+		},
+		detector = {
+			pixelsize = 0.172,	 				# pixel size of the detector
+			sdd = 4128.62,						# sample to detector distance
+			directbeam = [ 489.916 843.076 ]	# position of direct beam
+		}
+	},
+	computation = {
+		pathprefix = "../hipgisaxs.test",	# path to input files directory
+		runname = "anaprism",				# name for current run and folder name for outputs
+		method = "dwba",					# theorical approach (see list)
+		#outputregion = { type = "pixels" , minpoint = [ 350 700 ], maxpoint = [ 850 1500 ] },
+		outputregion = { type = "qspace" , minpoint = [ 0.1 0.1 ], maxpoint = [ 3.14 3.14 ] },
+		resolution = [ 0.15 0.15 ],			# number of q points per pixel
+		nslices = 0							# max number of slices for slicing algorithm
+	}
+}

@@ -29,6 +29,7 @@ NVCC = $(CUDA_DIR)/bin/nvcc #-ccbin /usr/local/gcc-4.6.3/bin
 
 ## compiler flags
 CXX_FLAGS = -std=c++0x #-Wall -Wextra
+CXX_FLAGS += -fopenmp
 CXX_FLAGS += -lgsl -lgslcblas -lm #-v
 ## gnu c++ compilers >= 4.3 support -std=c++0x [requirement for hipgisaxs 4.3.x <= g++ <= 4.6.x]
 ## gnu c++ compilers >= 4.7 also support -std=c++11, but they are not supported by cuda
@@ -58,7 +59,7 @@ NVCC_FLAGS += -gencode arch=compute_30,code=sm_30
 NVCC_FLAGS += -gencode arch=compute_35,code=sm_35
 #NVCC_FLAGS += -Xptxas -v -Xcompiler -v -Xlinker -v
 NVCC_FLAGS += --ptxas-options="-v"
-NVCC_FLAGS += -G #-DFINDBLOCK #-DAXIS_ROT
+NVCC_FLAGS += #-G #-DFINDBLOCK #-DAXIS_ROT
 NVLIB_FLAGS = -Xlinker -lgomp
 NVLIB_FLAGS += -Wl,-rpath -Wl,$(CUDA_DIR)/lib64
 
@@ -77,6 +78,7 @@ MISC_FLAGS += #-DREDUCTION2 #-DAXIS_ROT
 ifeq ($(USE_ANA_GPU), y)
 MISC_FLAGS += -DFF_ANA_GPU
 endif
+MISC_FLAGS += -DTIME_DETAIL_1 -DTIME_DETAIL_2
 
 ## choose optimization levels, debug flags, gprof flag, etc
 #OPT_FLAGS = -g -DDEBUG #-v #-pg
@@ -109,7 +111,8 @@ OBJECTS_MAIN = reduction.o ff_num_gpu.o utilities.o numeric_utils.o compute_para
 		  ff_ana_sphere.o ff_ana_box.o ff_ana_cylinder.o ff_ana_hcylinder.o ff_ana_prism3x.o \
 		  ff_ana_prism6.o ff_ana_prism.o ff_ana_pyramid.o ff_ana_rand_cylinder.o \
 		  ff_ana_sawtooth_down.o ff_ana_sawtooth_up.o ff_ana_trunc_cone.o ff_ana_trunc_pyramid.o \
-		  ff_ana_sphere_gpu.o ff_ana_box_gpu.o ff_ana_cylinder_gpu.o \
+		  ff_ana_sphere_gpu.o ff_ana_box_gpu.o ff_ana_cylinder_gpu.o ff_ana_hcylinder_gpu.o \
+		  ff_ana_prism6_gpu.o ff_ana_prism_gpu.o ff_ana_rand_cylinder_gpu.o \
 		  fitting_steepest_descent.o
 
 OBJECTS_SIM = $(OBJECTS_MAIN) hipgisaxs_sim.o
@@ -144,7 +147,19 @@ $(OBJ_DIR)/ff_ana_box_gpu.o: $(SRC_DIR)/ff_ana_box_gpu.cu
 $(OBJ_DIR)/ff_ana_cylinder_gpu.o: $(SRC_DIR)/ff_ana_cylinder_gpu.cu
 	$(NVCC) -c $< -o $@ $(OPT_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS) $(NVCC_FLAGS)
 
+$(OBJ_DIR)/ff_ana_hcylinder_gpu.o: $(SRC_DIR)/ff_ana_hcylinder_gpu.cu
+	$(NVCC) -c $< -o $@ $(OPT_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS) $(NVCC_FLAGS)
+
+$(OBJ_DIR)/ff_ana_prism_gpu.o: $(SRC_DIR)/ff_ana_prism_gpu.cu
+	$(NVCC) -c $< -o $@ $(OPT_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS) $(NVCC_FLAGS)
+
+$(OBJ_DIR)/ff_ana_prism6_gpu.o: $(SRC_DIR)/ff_ana_prism6_gpu.cu
+	$(NVCC) -c $< -o $@ $(OPT_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS) $(NVCC_FLAGS)
+
 $(OBJ_DIR)/ff_ana_sphere_gpu.o: $(SRC_DIR)/ff_ana_sphere_gpu.cu
+	$(NVCC) -c $< -o $@ $(OPT_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS) $(NVCC_FLAGS)
+
+$(OBJ_DIR)/ff_ana_rand_cylinder_gpu.o: $(SRC_DIR)/ff_ana_rand_cylinder_gpu.cu
 	$(NVCC) -c $< -o $@ $(OPT_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS) $(NVCC_FLAGS)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cu $(DEPS_NV)
