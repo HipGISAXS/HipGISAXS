@@ -3,13 +3,12 @@
   *
   *  File: ff_ana_pyramid.cpp
   *  Created: Jul 12, 2012
-  *  Modified: Thu 21 Feb 2013 11:44:27 AM PST
+  *  Modified: Thu 21 Feb 2013 03:51:48 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
 
 #include <boost/math/special_functions/fpclassify.hpp>
-//#include <boost/timer/timer.hpp>
 
 #include "woo/timer/woo_boostchronotimers.hpp"
 

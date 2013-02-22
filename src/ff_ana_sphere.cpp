@@ -3,7 +3,7 @@
   *
   *  File: ff_ana_sphere.cpp
   *  Created: Jul 12, 2012
-  *  Modified: Thu 21 Feb 2013 10:42:23 AM PST
+  *  Modified: Thu 21 Feb 2013 04:17:04 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -55,7 +55,7 @@ namespace hig {
 		maintimer.start();
 #endif // TIME_DETAIL_2
 #ifdef FF_ANA_GPU
-		/* on gpu */
+		// on gpu
 		std::cout << "-- Computing sphere FF on GPU ..." << std::endl;
 
 		std::vector<float_t> transvec_v;
@@ -63,101 +63,36 @@ namespace hig {
 		transvec_v.push_back(transvec[1]);
 		transvec_v.push_back(transvec[2]);
 
-		/*float_t *qx_h = new (std::nothrow) float_t[nqx_];
-		float_t *qy_h = new (std::nothrow) float_t[nqy_];
-		cucomplex_t *qz_h = new (std::nothrow) cucomplex_t[nqz_];
-		if(qx_h == NULL || qy_h == NULL || qz_h == NULL) {
-			std::cerr << "error: memory allocation for host mesh grid failed" << std::endl;
-			return false;
-		} // if
-		for(unsigned int ix = 0; ix < nqx_; ++ ix) {
-			qx_h[ix] = QGrid::instance().qx(ix);
-		} // for qx
-		for(unsigned int iy = 0; iy < nqy_; ++ iy) {
-			qy_h[iy] = QGrid::instance().qy(iy);
-		} // for qy
-		for(unsigned int iz = 0; iz < nqz_; ++ iz) {
-			qz_h[iz].x = QGrid::instance().qz_extended(iz).real();
-			qz_h[iz].y = QGrid::instance().qz_extended(iz).imag();
-		} // for qz*/
-
-		gff_.compute_sphere(r, distr_r, /*qx_h, qy_h, qz_h,*/ rot_, transvec_v, ff);
-
-		//std::cout << "** GPU analytic sphere computation time: " << gpu_time / 10e6 << " ms." << std::endl;
+		gff_.compute_sphere(r, distr_r, rot_, transvec_v, ff);
 #else
-		/* on cpu */
+		// on cpu
 		std::cout << "-- Computing sphere FF on CPU ..." << std::endl;
 
-		std::vector <complex_t> q;
-		q.clear();
-		for(unsigned int z = 0; z < nqz_; ++ z) {
-			for(unsigned int y = 0; y < nqy_; ++ y) {
-				for(unsigned int x = 0; x < nqx_; ++ x) {
-					unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
-					complex_t temp_qx = QGrid::instance().qy(y) * rot_[0] +
-										QGrid::instance().qx(x) * rot_[1] +
-										QGrid::instance().qz_extended(z) * rot_[2];
-					complex_t temp_qy = QGrid::instance().qy(y) * rot_[3] +
-										QGrid::instance().qx(x) * rot_[4] +
-										QGrid::instance().qz_extended(z) * rot_[5];
-					complex_t temp_qz = QGrid::instance().qy(y) * rot_[6] +
-										QGrid::instance().qx(x) * rot_[7] +
-										QGrid::instance().qz_extended(z) * rot_[8];
-					temp_qx *= temp_qx;
-					temp_qy *= temp_qy;
-					temp_qz *= temp_qz;
-					q.push_back(sqrt(temp_qx + temp_qy + temp_qz));
-				} // for
-			} // for
-		} // for
-
-		ff.clear();
+		ff.clear(); ff.reserve(nqx_ * nqy_ * nqz_);
 		for(unsigned int i = 0; i < nqx_ * nqy_ * nqz_; ++ i) ff.push_back(complex_t(0, 0));
 
-		std::vector<float_t>::iterator iter_r = r.begin();
-		std::vector<float_t>::iterator iter_d = distr_r.begin();
-		for(unsigned int i_r = 0; i_r < r.size(); ++ i_r, ++ iter_d) {
-			for(unsigned int z = 0; z < nqz_; ++ z) {
-				for(unsigned int y = 0; y < nqy_; ++ y) {
-					for(unsigned int x = 0; x < nqx_; ++ x) {
-						unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
-						complex_t temp1 = q[index] * r[i_r];
-						complex_t temp2 = sin(temp1) - temp1 * cos(temp1);
-						complex_t temp3 = temp1 * temp1 * temp1;
-						complex_t temp_mesh_qz = QGrid::instance().qy(y) * rot_[6] +
-													QGrid::instance().qx(x) * rot_[7] +
-													QGrid::instance().qz_extended(z) * rot_[8];
-						ff[index] += distr_r[i_r] * 4 * PI_ * pow(r[i_r], 3) * (temp2 / temp3) *
-										exp(complex_t(0, 1) * temp_mesh_qz * r[i_r]);
-					} // for x
-				} // for y
-			} // for z
-		} // for r
-
+		#pragma omp parallel for collapse(3)
 		for(unsigned int z = 0; z < nqz_; ++ z) {
 			for(unsigned int y = 0; y < nqy_; ++ y) {
 				for(unsigned int x = 0; x < nqx_; ++ x) {
+					complex_t mqx, mqy, mqz;
+					compute_meshpoints(QGrid::instance().qx(x), QGrid::instance().qy(y),
+										QGrid::instance().qz_extended(z), rot_, mqx, mqy, mqz);
+					complex_t temp_q = sqrt(mqx * mqx + mqy * mqy + mqz * mqz);
+					complex_t temp_ff(0.0, 0.0);
+					for(unsigned int i_r = 0; i_r < r.size(); ++ i_r) {
+						complex_t temp1 = temp_q * r[i_r];
+						complex_t temp2 = sin(temp1) - temp1 * cos(temp1);
+						complex_t temp3 = temp1 * temp1 * temp1;
+						temp_ff += distr_r[i_r] * 4 * PI_ * pow(r[i_r], 3) * (temp2 / temp3) *
+										exp(complex_t(0, 1) * mqz * r[i_r]);
+					} // for r
 					unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
-					complex_t mqx = QGrid::instance().qy(y) * rot_[0] +
-									QGrid::instance().qx(x) * rot_[1] +
-									QGrid::instance().qz_extended(z) * rot_[2];
-					complex_t mqy = QGrid::instance().qy(y) * rot_[3] +
-									QGrid::instance().qx(x) * rot_[4] +
-									QGrid::instance().qz_extended(z) * rot_[5];
-					complex_t mqz = QGrid::instance().qy(y) * rot_[6] +
-									QGrid::instance().qx(x) * rot_[7] +
-									QGrid::instance().qz_extended(z) * rot_[8];
-					ff[index] *= exp(complex_t(0, 1) * (mqx * transvec[0] +
-									mqy * transvec[1] + mqz * transvec[2]));
-				} // for x
+					ff[index] = temp_ff * exp(complex_t(0, 1) * (mqx * transvec[0] +
+																	mqy * transvec[1] + mqz * transvec[2]));
+				} // for z
 			} // for y
 		} // for z
-
-		//boost::timer::cpu_times const elapsed_time(timer.elapsed());
-		//boost::timer::nanosecond_type const elapsed(elapsed_time.system + elapsed_time.user);
-		//double cpu_time = elapsed;
-		//std::cout << "** CPU analytic sphere computation time: " << cpu_time / 10e6 << " ms." << std::endl;
-		
 #endif // FF_ANA_GPU
 #ifdef TIME_DETAIL_2
 		maintimer.stop();

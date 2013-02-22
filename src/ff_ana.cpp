@@ -5,7 +5,7 @@
   *
   *  File: ff_ana.cpp
   *  Created: Jul 12, 2012
-  *  Modified: Thu 21 Feb 2013 12:46:25 PM PST
+  *  Modified: Thu 21 Feb 2013 02:26:19 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -146,7 +146,7 @@ namespace hig {
 				} // if
 				break;
 			case shape_trunccone:				// truncated cone
-				if(!compute_truncated_cone()) {
+				if(!compute_truncated_cone(params, tau, eta, ff, transvec)) {
 					std::cerr << "error: something went wrong while computing FF for a truncated cone"
 								<< std::endl;
 					return false;
