@@ -10,7 +10,7 @@
 # Author: Abhinav Sarje <asarje@lbl.gov>
 ##
 
-USE_ANA_GPU = y
+USE_ANA_GPU = n
 
 ## base directories
 BOOST_DIR = /usr/local
@@ -19,7 +19,8 @@ CUDA_DIR = /Developer/NVIDIA/CUDA-5.0
 HDF5_DIR = /usr/local/hdf5-1.8.9
 Z_DIR = /usr/local
 SZ_DIR = /Users/asarje/temp/szip-2.1/szip
-TIFF_LIB_DIR = /usr/local
+TIFF_DIR = /usr/local
+GSL_DIR = /usr/local/Cellar/gsl/1.15
 
 ## compilers
 CXX = $(MPI_DIR)/bin/mpicxx	#g++
@@ -63,7 +64,11 @@ NVLIB_FLAGS = -Xlinker -lgomp
 NVLIB_FLAGS += -Wl,-rpath -Wl,$(CUDA_DIR)/lib
 
 ## libtiff
-TIFF_LIBS = -L $(TIFF_LIB_DIR) -ltiff
+TIFF_INCL = -I $(TIFF_DIR)/include
+TIFF_LIBS = -L $(TIFF_DIR)/lib -ltiff
+
+## gsl
+GSL_LIBS = -L $(GSL_DIR)/lib -lgsl -lgslcblas
 
 ## miscellaneous
 MISC_INCL =
@@ -84,10 +89,10 @@ PREC_FLAG =			# leave empty for single precision
 
 
 ## all includes
-ALL_INCL = $(MPI_INCL) $(CUDA_INCL) $(BOOST_INCL) $(HDF5_INCL) $(MISC_INCL)
+ALL_INCL = $(MPI_INCL) $(CUDA_INCL) $(BOOST_INCL) $(HDF5_INCL) $(MISC_INCL) $(TIFF_INCL)
 
 ## all libraries
-ALL_LIBS = $(BOOST_LIBS) $(MPI_LIBS) $(NVLIB_FLAGS) $(CUDA_LIBS) $(HDF5_LIBS) $(TIFF_LIBS)
+ALL_LIBS = $(BOOST_LIBS) $(MPI_LIBS) $(NVLIB_FLAGS) $(CUDA_LIBS) $(HDF5_LIBS) $(TIFF_LIBS) $(GSL_LIBS)
 
 
 PREFIX = $(PWD)
