@@ -3,7 +3,7 @@
   *
   *  File: ff_ana_gpu.cu
   *  Created: Oct 16, 2012
-  *  Modified: Fri 22 Feb 2013 09:45:21 AM PST
+  *  Modified: Sat 23 Feb 2013 12:28:28 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -208,10 +208,10 @@ namespace hig {
 				for(unsigned int p_z = 0; p_z < n_z; ++ p_z) {
 					for(unsigned int p_y = 0; p_y < n_y; ++ p_y) {
 						for(unsigned int p_x = 0; p_x < n_x; ++ p_x) {
-							cucomplex_t temp4 = fq_inv(mqz + temp_qm, y[p_y]);
-							cucomplex_t temp8 = temp4 * cuCsinc(mqy * z[p_z]) * cuCsinc(mqx * x[p_x]);
+							cucomplex_t temp4 = fq_inv(mqz + temp_qm, z[p_z]);
+							cucomplex_t temp8 = temp4 * cuCsinc(mqy * y[p_y]) * cuCsinc(mqx * x[p_x]);
 							float_t temp9 = 4.0 * distr_x[p_x] * distr_y[p_y] * distr_z[p_z] *
-											z[p_z] * x[p_x];
+											y[p_y] * x[p_x];
 							temp_ff = temp_ff + temp9 * temp8;
 						} // for x
 					} // for y

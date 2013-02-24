@@ -3,7 +3,7 @@
   *
   *  File: ff_ana_prism.cpp
   *  Created: Jul 12, 2012
-  *  Modified: Thu 21 Feb 2013 04:58:42 PM PST
+  *  Modified: Sat 23 Feb 2013 05:25:57 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -75,8 +75,7 @@ namespace hig {
 		float_t sqrt3 = sqrt(3.0);
 		complex_t unitc(0, 1.0);
 
-		ff.clear();
-		ff.reserve(nqx_ * nqy_ * nqz_);
+		ff.clear(); ff.reserve(nqx_ * nqy_ * nqz_);
 		for(unsigned int i = 0; i < nqx_ * nqy_ * nqz_; ++ i) ff.push_back(complex_t(0.0, 0.0));
 
 		#pragma omp parallel for collapse(3)

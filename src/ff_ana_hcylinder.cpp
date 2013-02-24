@@ -3,7 +3,7 @@
   *
   *  File: ff_ana_hcylinder.cpp
   *  Created: Jul 12, 2012
-  *  Modified: Thu 21 Feb 2013 04:49:30 PM PST
+  *  Modified: Sat 23 Feb 2013 01:36:32 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -58,8 +58,6 @@ namespace hig {
 			return false;
 		} // if
 
-		// in slims code, why not doing range of r and h ???
-
 #ifdef TIME_DETAIL_2
 		woo::BoostChronoTimer maintimer;
 		maintimer.start();
@@ -90,14 +88,13 @@ namespace hig {
 					complex_t mqx, mqy, mqz;
 					compute_meshpoints(QGrid::instance().qx(x), QGrid::instance().qy(y),
 										QGrid::instance().qz_extended(z), rot_, mqx, mqy, mqz);
-					complex_t temp_qpar = sqrt(mqz * mqz + mqy * mqy);
+					complex_t qpar = sqrt(mqz * mqz + mqy * mqy);
 					complex_t temp_ff(0.0, 0.0);
 					for(unsigned int i_r = 0; i_r < r.size(); ++ i_r) {
 						for(unsigned int i_h = 0; i_h < h.size(); ++ i_h) {
-							temp_ff += 2 * PI_ * h[i_h] * r[i_r] * r[i_r] *
-										(cbessj(temp_qpar * r[i_r], 1) / (temp_qpar * r[i_r])) *
-										exp(complex_t(-(mqz * r[i_r]).imag(), (mqz * r[i_r]).real())) *
-										sinc(mqx * h[i_h] / (float_t)2.0);
+							temp_ff += distr_r[i_r] * distr_h[i_h] * 2 * PI_ * r[i_r] * r[i_r] *
+										(cbessj(qpar * r[i_r], 1) / (qpar * r[i_r])) *
+										fq_inv(mqx, h[i_h]);
 						} // for h
 					} // for r
 					complex_t temp1 = mqx * transvec[0] + mqy * transvec[1] + mqz * transvec[2];

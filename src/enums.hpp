@@ -5,7 +5,7 @@
   *
   *  File: enums.hpp
   *  Created: Jun 11, 2012
-  *  Modified: Thu 21 Feb 2013 11:49:55 AM PST
+  *  Modified: Sat 23 Feb 2013 07:33:33 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -27,11 +27,11 @@ namespace hig {
 		shape_trunccone,		/* truncated cone */
 		shape_prism3,			/* 3-fold prism */
 		shape_prism6,			/* 6-fold prism */
-		shape_sawtooth,			/* sawtooth (prism along x) */
+		shape_prism3x,			/* triangular grating in x direction */
+		shape_sawtooth,			/* sawtooth (prism along x) (same as above) */
 		shape_random_cylinders,
 		shape_horizontal_cylinder,
 		// the following have not yet been defined or implemented ... :
-		shape_prism3x,
 		shape_sawtooth_down,
 		shape_sawtooth_up,
 		shape_pyramid,

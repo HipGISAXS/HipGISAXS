@@ -3,7 +3,7 @@
   *
   *  File: ff_ana_cylinder_gpu.cu
   *  Created: Oct 16, 2012
-  *  Modified: Wed 20 Feb 2013 05:39:18 PM PST
+  *  Modified: Sat 23 Feb 2013 01:10:57 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -119,8 +119,10 @@ namespace hig {
 					for(unsigned int p_h = 0; p_h < n_h; ++ p_h) {
 						cucomplex_t temp3 = fq_inv(mqz + temp_qm, h[p_h]);
 						cucomplex_t temp4 = qpar * r[p_r];
-						cucomplex_t temp5 = cuCcbessj(temp4, 1);
-						cucomplex_t temp6 = (temp5 / temp4) * temp3;
+						cucomplex_t temp5;
+						if(cuCiszero(qpar)) temp5 = make_cuC((float_t) 0.5, (float_t) 0.0);
+						else cucomplex_t temp5 = cuCcbessj(temp4, 1) / temp4;
+						cucomplex_t temp6 = temp5 * temp3;
 						temp_ff = temp_ff + distr_r[p_r] * distr_h[p_h] * 2 * PI_ * r[p_r] * r[p_r] * temp6;
 					} // for h
 				} // for r

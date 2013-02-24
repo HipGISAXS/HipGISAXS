@@ -5,7 +5,7 @@
   *
   *  File: token_mapper.hpp
   *  Created: Jun 05, 2012
-  *  Modified: Thu 21 Feb 2013 12:55:30 PM PST
+  *  Modified: Sat 23 Feb 2013 07:29:51 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -193,6 +193,7 @@ namespace hig {
 				ShapeKeyWords_[std::string("trunccone")]	= shape_trunccone;
 				ShapeKeyWords_[std::string("prism3")]		= shape_prism3;
 				ShapeKeyWords_[std::string("prism6")]		= shape_prism6;
+				ShapeKeyWords_[std::string("prism3x")]		= shape_prism3x;
 				ShapeKeyWords_[std::string("sawtooth")]		= shape_sawtooth;
 				ShapeKeyWords_[std::string("custom")]		= shape_custom;
 			

@@ -3,7 +3,7 @@
   *
   *  File: ff_ana_box.cpp
   *  Created: Jul 12, 2012
-  *  Modified: Thu 21 Feb 2013 04:30:49 PM PST
+  *  Modified: Sat 23 Feb 2013 12:23:26 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -99,21 +99,20 @@ namespace hig {
 					complex_t temp2 = cos(eta) * mqy;
 					complex_t temp3 = temp1 + temp2;
 					complex_t temp_qm = tan(tau) * temp3;
-					unsigned int curr_index = nqx * nqy * j_z + nqx * j_y + j_x;
 					complex_t temp_ff(0.0, 0.0);
 					for(unsigned int i_z = 0; i_z < z.size(); ++ i_z) {
 						for(unsigned int i_y = 0; i_y < y.size(); ++ i_y) {
 							for(unsigned int i_x = 0; i_x < x.size(); ++ i_x) {
 								complex_t temp1 = mqz + temp_qm;
-								complex_t temp2 = mqy * z[i_z];
+								complex_t temp2 = mqy * y[i_y];
 								complex_t temp3 = mqx * x[i_x];
-								complex_t temp4 = fq_inv(temp1, y[i_y]);
+								complex_t temp4 = fq_inv(temp1, z[i_z]);
 								complex_t temp5 = sinc(temp2);
 								complex_t temp6 = sinc(temp3);
 								complex_t temp7 = temp6 * temp5;
 								complex_t temp8 = temp7 * temp4;
 								complex_t temp9 = 4 * distr_x[i_x] * distr_y[i_y] * distr_z[i_z] *
-													z[i_z] * x[i_x];
+													x[i_x] * y[i_y];
 								complex_t temp10 = temp9 * temp8;
 								temp_ff += temp10;
 								/*if(!(boost::math::isfinite(temp10.real()) &&
@@ -131,7 +130,14 @@ namespace hig {
 									<< j_y << ", " << j_z << std::endl;
 						exit(1);
 					} // if*/
+					unsigned int curr_index = nqx * nqy * j_z + nqx * j_y + j_x;
 					ff[curr_index] = temp_ff * exp(complex_t(-temp7.imag(), temp7.real()));
+					/*if(!(boost::math::isfinite(ff[curr_index].real()) &&
+								boost::math::isfinite(ff[curr_index].imag()))) {
+						std::cerr << "******************* here it is ********* " << j_x << ", "
+									<< j_y << ", " << j_z << std::endl;
+						exit(1);
+					} // if*/
 				} // for x
 			} // for y
 		} // for z

@@ -5,7 +5,7 @@
   *
   *  File: ff_ana.cpp
   *  Created: Jul 12, 2012
-  *  Modified: Fri 22 Feb 2013 01:17:10 PM PST
+  *  Modified: Sat 23 Feb 2013 07:38:33 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -307,12 +307,18 @@ namespace hig {
 												const float_t* rot,
 	    		                                complex_t& mqx, complex_t& mqy, complex_t& mqz) {
 		// FIXME: check which one is correct ...
+		// x and y swapped
 		/*mqx = qx * rot[0] + qy * rot[1] + qz * rot[2];
 		mqy = qx * rot[3] + qy * rot[4] + qz * rot[5];
 		mqz = qx * rot[6] + qy * rot[7] + qz * rot[8];*/
+		// original
 		mqx = qy * rot[0] + qx * rot[1] + qz * rot[2];
 		mqy = qy * rot[3] + qx * rot[4] + qz * rot[5];
 		mqz = qy * rot[6] + qx * rot[7] + qz * rot[8];
+		// rotation transposed
+		/*mqx = qy * rot[0] + qx * rot[3] + qz * rot[6];
+		mqy = qy * rot[1] + qx * rot[4] + qz * rot[7];
+		mqz = qy * rot[2] + qx * rot[5] + qz * rot[8];*/
 	} // AnalyticFormFactor::compute_meshpoints()
 
 } // namespace hig

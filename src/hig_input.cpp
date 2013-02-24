@@ -5,7 +5,7 @@
   *
   *  File: hig_input.cpp
   *  Created: Jun 11, 2012
-  *  Modified: Thu 21 Feb 2013 12:55:02 PM PST
+  *  Modified: Sat 23 Feb 2013 07:37:39 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -1424,6 +1424,41 @@ namespace hig {
 							break;
 						case param_baseangle:
 							std::cerr << "warning: ignoring the baseangle values given for prism3 shape"
+										<< std::endl;
+							break;
+						default:
+							std::cerr << "error: invalid parameter found in a shape" << std::endl;
+							return false;
+					} // switch
+					++ param;
+				} // while
+				return true;
+
+			case shape_prism3x:
+				while(param != shape.param_end()) {
+					switch((*param).second.type()) {
+						case param_radius:
+							std::cerr << "warning: ignoring the radius values given for prism3x shape"
+										<< std::endl;
+							break;
+						case param_xsize:
+							max_dim[0] = max((*param).second.max(), (*param).second.min());
+							min_dim[0] = -max_dim[0];
+							break;
+						case param_ysize:
+							max_dim[1] = max((*param).second.max(), (*param).second.min());
+							min_dim[1] = -max_dim[1];
+							break;
+						case param_height:
+							max_dim[2] = max((*param).second.max(), (*param).second.min());
+							min_dim[2] = 0.0;
+							break;
+						case param_edge:
+							std::cerr << "warning: ignoring the edge values given for prism3x shape"
+										<< std::endl;
+							break;
+						case param_baseangle:
+							std::cerr << "warning: ignoring the baseangle values given for prism3x shape"
 										<< std::endl;
 							break;
 						default:

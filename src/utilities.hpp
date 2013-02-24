@@ -5,7 +5,7 @@
   *
   *  File: utilities.hpp
   *  Created: Jun 25, 2012
-  *  Modified: Fri 12 Oct 2012 12:34:34 PM PDT
+  *  Modified: Sat 23 Feb 2013 07:18:56 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -189,6 +189,9 @@ namespace hig {
 	extern int count_naninfs(int, int, int, const complex_t*);
 	extern int count_naninfs(int, int, int, const cucomplex_t*);
 	extern int count_naninfs(int, int, int, const std::vector<complex_t>&);
+
+	extern complex_t integral_e(float_t, float_t, complex_t);
+	extern complex_t integral_xe(float_t, float_t, float_t, float_t, complex_t);
 
 } // namespace hig
 

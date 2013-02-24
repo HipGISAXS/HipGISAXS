@@ -3,7 +3,7 @@
   *
   *  File: ff_ana_sphere_gpu.cu
   *  Created: Oct 16, 2012
-  *  Modified: Wed 20 Feb 2013 05:41:46 PM PST
+  *  Modified: Sat 23 Feb 2013 02:27:43 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -198,9 +198,15 @@ namespace hig {
 				cucomplex_t q = cuCnorm3(mqx, mqy, mqz);
 				cucomplex_t temp_f = make_cuC((float_t)0.0, (float_t)0.0);
 				for(unsigned int i_r = 0; i_r < n_r; ++ i_r) {
-					float_t temp_r = r[i_r];
-					float_t temp_distr_r = distr_r[i_r];
-					ff_sphere_kernel_compute_tff(temp_r, temp_distr_r, q, mqz, temp_f);
+					float_t temp4 = distr_r[i_r] * 4 * PI_ * pow(r[i_r], 3);
+					if(cuCiszero(q)) {
+						temp_f = temp_f + temp4 / (float_t) 3.0;
+					} else {
+						cucomplex_t temp1 = q * r[i_r];
+						cucomplex_t temp2 = cuCsin(temp1) - temp1 * cuCcos(temp1);
+						cucomplex_t temp3 = temp1 * temp1 * temp1;
+						temp_f = temp_f + temp4 * (temp2 / temp3) * cuCexpi(mqz * r[i_r]);
+					} // if-else
 				} // for i_r
 				ff[base_index + i_x] = ff_sphere_kernel_compute_ff(temp_f,	mqx, mqy, mqz,
 													transvec[0], transvec[1], transvec[2]);

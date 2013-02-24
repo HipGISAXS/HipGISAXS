@@ -3,7 +3,7 @@
   *
   *  File: ff_ana_cylinder_gpu.cu
   *  Created: Oct 16, 2012
-  *  Modified: Wed 20 Feb 2013 05:39:48 PM PST
+  *  Modified: Sat 23 Feb 2013 01:41:42 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -112,15 +112,14 @@ namespace hig {
 				compute_meshpoints(qx[i_x], qy[i_y], qz[i_z], rot, mqx, mqy, mqz);
 				cucomplex_t qpar = cuCsqrt(mqz * mqz + mqy * mqy);
 				cucomplex_t temp_ff = make_cuC((float_t) 0.0, (float_t) 0.0);
-				// why does this not depend on eta? ... and distr_r and distr_h ... ???
+				// why does this not depend on eta? ...
 				for(unsigned int p_r = 0; p_r < n_r; ++ p_r) {
 					for(unsigned int p_h = 0; p_h < n_h; ++ p_h) {
-						float_t temp1 = 2 * PI_ * h[p_h] * r[p_r] * r[p_r];
+						float_t temp1 = distr_r[p_r] * distr_h[p_h] * 2 * PI_ * r[p_r] * r[p_r];
 						cucomplex_t temp2 = qpar * r[p_r];
 						cucomplex_t temp3 = cuCcbessj(temp2, 1) / temp2;
-						cucomplex_t temp4 = cuCexpi(mqz * r[p_r]);
-						cucomplex_t temp5 = cuCsinc(mqx * h[p_h] / 2.0);
-						temp_ff = temp_ff + temp1 * temp3 * temp4 * temp5;
+						cucomplex_t temp4 = fq_inv(mqx, h[p_h]);
+						temp_ff = temp_ff + temp1 * temp3 * temp4;
 					} // for h
 				} // for r
 				cucomplex_t temp_e = cuCexpi(mqx * transvec[0] + mqy * transvec[1] + mqz * transvec[2]);

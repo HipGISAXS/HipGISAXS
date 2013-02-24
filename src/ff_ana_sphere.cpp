@@ -3,7 +3,7 @@
   *
   *  File: ff_ana_sphere.cpp
   *  Created: Jul 12, 2012
-  *  Modified: Thu 21 Feb 2013 04:39:07 PM PST
+  *  Modified: Sat 23 Feb 2013 02:15:55 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -81,11 +81,16 @@ namespace hig {
 					complex_t temp_q = sqrt(mqx * mqx + mqy * mqy + mqz * mqz);
 					complex_t temp_ff(0.0, 0.0);
 					for(unsigned int i_r = 0; i_r < r.size(); ++ i_r) {
-						complex_t temp1 = temp_q * r[i_r];
-						complex_t temp2 = sin(temp1) - temp1 * cos(temp1);
-						complex_t temp3 = temp1 * temp1 * temp1;
-						temp_ff += distr_r[i_r] * 4 * PI_ * pow(r[i_r], 3) * (temp2 / temp3) *
-										exp(complex_t(0, 1) * mqz * r[i_r]);
+						complex_t temp4 = distr_r[i_r] * 4 * PI_ * pow(r[i_r], 3);
+						if(boost::math::fpclassify(temp_q.real()) == FP_ZERO &&
+								boost::math::fpclassify(temp_q.imag()) == FP_ZERO) {
+							temp_ff += temp4 / (float_t) 3.0;
+						} else {
+							complex_t temp1 = temp_q * r[i_r];
+							complex_t temp2 = sin(temp1) - temp1 * cos(temp1);
+							complex_t temp3 = temp1 * temp1 * temp1;
+							temp_ff += temp4 * (temp2 / temp3) * exp(complex_t(0, 1) * mqz * r[i_r]);
+						} // if-else
 					} // for r
 					complex_t temp1 = mqx * transvec[0] + mqy * transvec[1] + mqz * transvec[2];
 					complex_t temp2 = exp(complex_t(-temp1.imag(), temp1.real()));

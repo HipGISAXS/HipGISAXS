@@ -3,13 +3,12 @@
   *
   *  File: ff_ana_rand_cylinder.cpp
   *  Created: Jul 12, 2012
-  *  Modified: Thu 21 Feb 2013 05:03:17 PM PST
+  *  Modified: Sat 23 Feb 2013 01:23:08 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
 
 #include <boost/math/special_functions/fpclassify.hpp>
-//#include <boost/timer/timer.hpp>
 
 #include "woo/timer/woo_boostchronotimers.hpp"
 
@@ -23,7 +22,7 @@
 namespace hig {
 
 	/**
-	 * random cylinders - for SAXS
+	 * random cylinders along z - for SAXS
 	 */
 	bool AnalyticFormFactor::compute_random_cylinders(shape_param_list_t& params,
 			std::vector<complex_t>& ff,	float_t tau, float_t eta, vector3_t transvec) {
@@ -69,7 +68,6 @@ namespace hig {
 		transvec_v.push_back(transvec[0]);
 		transvec_v.push_back(transvec[1]);
 		transvec_v.push_back(transvec[2]);
-
 		gff_.compute_random_cylinders(tau, eta, h, distr_h, r, distr_r, rot_, transvec_v, ff);
 #else
 		// on cpu

@@ -5,7 +5,7 @@
   *
   *  File: utilities.cpp
   *  Created: Jun 25, 2012
-  *  Modified: Wed 20 Feb 2013 07:15:06 PM PST
+  *  Modified: Sat 23 Feb 2013 10:01:14 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -675,8 +675,27 @@ namespace hig {
 	} // count_naninfs()
 
 
-	/*void compute_meshpoints(const float_t qx, const float_t qy, const complex_t qz, const float_t* rot,
-							complex_t& mqx, complex_t& mqy, complex_t& mqz) {
-	} // compute_meshpoints()*/
+	// compute integral of e^(ikx) between x1 and x2
+	complex_t integral_e(float_t x1, float_t x2, complex_t k) {
+		if(boost::math::fpclassify(k.real()) == FP_ZERO &&
+				boost::math::fpclassify(k.imag()) == FP_ZERO) {
+			return complex_t(x2 - x1, 0);
+		} else {
+			complex_t ik = complex_t(0.0, 1.0) * k;
+			return (((float_t) 1.0 / ik) * (exp(ik * x2) - exp(ik * x1)));
+		} // if-else
+	} // integral_e
+
+	// compute integral of (ax + b) e^(ikx) between x1 and x2
+	complex_t integral_xe(float_t x1, float_t x2, float_t a, float_t b, complex_t k) {
+		if(boost::math::fpclassify(k.real()) == FP_ZERO &&
+				boost::math::fpclassify(k.imag()) == FP_ZERO) {
+			return complex_t(a * (x2 * x2 - x1 * x1) / 2 + b * (x2 - x1), 0.0);
+		} else {
+			complex_t ik = complex_t(0.0, 1.0) * k;
+			return (((float_t) 1.0 / ik) * ((a * x2 + b - a / ik) * exp(ik * x2) -
+											(a * x1 + b - a / ik) * exp(ik * x1)));
+		} // if-else
+	} // integral_xe()
 
 } // namespace hig

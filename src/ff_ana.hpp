@@ -5,7 +5,7 @@
   *
   *  File: ff_ana.hpp
   *  Created: Jul 12, 2012
-  *  Modified: Fri 22 Feb 2013 12:04:08 PM PST
+  *  Modified: Sat 23 Feb 2013 07:13:06 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -88,7 +88,6 @@ namespace hig {
 			complex_t sinc(complex_t value);
 			void compute_meshpoints(const float_t, const float_t, const complex_t, const float_t*,
 									complex_t&, complex_t&, complex_t&);
-
 
 	}; // class AnalyticFormFactor
 

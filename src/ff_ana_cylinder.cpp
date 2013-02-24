@@ -3,7 +3,7 @@
   *
   *  File: ff_ana_cylinder.cpp
   *  Created: Jul 12, 2012
-  *  Modified: Thu 21 Feb 2013 04:39:43 PM PST
+  *  Modified: Sat 23 Feb 2013 01:13:13 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -91,8 +91,15 @@ namespace hig {
 						for(unsigned int i_h = 0; i_h < h.size(); ++ i_h) {
 							complex_t temp1 = fq_inv(qm, h[i_h]);
 							complex_t temp2 = qpar * r[i_r];
-							complex_t temp4 = (cbessj(temp2, 1) / temp2) * temp1;
-							temp_ff += distr_r[i_r] * distr_h[i_h] * 2 * PI_ * r[i_r] * r[i_r] * temp4;
+							complex_t temp4;
+							if(boost::math::fpclassify(qpar.real()) == FP_ZERO &&
+									boost::math::fpclassify(qpar.imag()) == FP_ZERO) {
+								temp4 = complex_t(0.5, 0.0);	// J1(x)/x -> 1/2 as x -> 0
+							} else {
+								temp4 = (cbessj(temp2, 1) / temp2);
+							} // if-else
+							temp_ff += distr_r[i_r] * distr_h[i_h] * 2 * PI_ * r[i_r] * r[i_r] *
+										temp4 * temp1;
 						} // for h
 					} // for r
 					complex_t temp1 = mqx * transvec[0] + mqy * transvec[1] + mqz * transvec[2];
