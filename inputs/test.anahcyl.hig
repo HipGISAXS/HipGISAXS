@@ -55,8 +55,8 @@ hipGisaxsInput = {
 		runname = "anahcyl",				# name for current run and folder name for outputs
 		method = "dwba",					# theorical approach (see list)
 #		outputregion = { type = "pixels" , minpoint = [ 400 720 ], maxpoint = [ 900 1000 ] },
-		outputregion = { type = "qspace" , minpoint = [ 0 0 ], maxpoint = [ 3.15 3.15 ] },
-		resolution = [ 0.15 0.15 ],				# number of q points per pixel
+		outputregion = { type = "qspace" , minpoint = [ 0 0 ], maxpoint = [ 2 2 ] },
+		resolution = [ 1 1 ],				# number of q points per pixel
 		nslices = 0							# max number of slices for slicing algorithm
 	}
 }

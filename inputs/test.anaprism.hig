@@ -22,11 +22,10 @@ hipGisaxsInput = {
 		grain = {
 			shape:key = "s1",
 			refindex = { delta = 7.4E-06, beta = 3.37E-08 },
-			layer:key = "l1"
-	#		layer:key = "l1",
-	#		repetition = [ 40 40 1 ],
-	#		lattice = { type = "cubic" },
-	#		scaling = 50
+			layer:key = "l1",
+			repetition = [ 40 40 1 ],
+			lattice = { type = "cubic" },
+			scaling = 50
 		},
 		ensemble = {
 #           maxgrains = [ 10 10 1 ],        # maximum number of grains along x, y and z
@@ -54,8 +53,8 @@ hipGisaxsInput = {
 		runname = "anaprism",				# name for current run and folder name for outputs
 		method = "dwba",					# theorical approach (see list)
 		#outputregion = { type = "pixels" , minpoint = [ 350 700 ], maxpoint = [ 850 1500 ] },
-		outputregion = { type = "qspace" , minpoint = [ 0.1 0.1 ], maxpoint = [ 3.14 3.14 ] },
-		resolution = [ 0.15 0.15 ],			# number of q points per pixel
+		outputregion = { type = "qspace" , minpoint = [ 0 0.00005 ], maxpoint = [ 2 2 ] },
+		resolution = [ 0.5 0.5 ],			# number of q points per pixel
 		nslices = 0							# max number of slices for slicing algorithm
 	}
 }

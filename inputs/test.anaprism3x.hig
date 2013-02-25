@@ -1,10 +1,11 @@
 hipGisaxsInput = {
 	shape = {
 		key = "s1",	 		# a unique key to identify this shape in this file
-		name = "box",		# shape name
+		name = "prism3x",	# shape name
 		originvec = [0 0 0],
-		#param = { type = "edge", min = 100, stat = "gaussian", p1 = 100, p2 = 10, nvalues = 10 }
-		param = { type = "edge", min = 100 }
+		param = { type = "xsize", min = 50 },
+		param = { type = "ysize", min = 50 },
+		param = { type = "height", min = 100 }
 	},
 	layer = {
 		key = "substr",	 	# special key for case of the substrate layer infinite in lower half space
@@ -28,20 +29,19 @@ hipGisaxsInput = {
 			scaling = 50
 		},
 		ensemble = {
-#			maxgrains = [ 10 10 1 ],		# maximum number of grains along x, y and z
-#			distribution = "random",		# spatial domain distribution in irrad. volume
-#			orientations = {
-#				stat = "range",				# domain orientation distribution
-#				rot1 = { axis = "z", angles = [ 0 360 ] }	# first rotation to apply to domain
-#			}
+#           maxgrains = [ 10 10 1 ],        # maximum number of grains along x, y and z
+#           distribution = "random",        # spatial domain distribution in irrad. volume
+#           orientations = {
+#               stat = "range",             # domain orientation distribution
+#               rot1 = { axis = "z", angles = [ 0 360 ] }   # first rotation to apply to domain
+#           }
 		}
 	},
 	instrumentation = {
 		scattering = {
 			expt = "gisaxs",
-			alphai = { min = 0.14 },	# incidence angles
-#inplanerot = { min = 0, max = 360, step = 5 },
-			photon = { value = 7350, unit = "ev" }			# photon energy
+			alphai = { min = 0.17 },				# incidence angles
+			photon = { value = 10000, unit = "ev" }	# photon energy
 		},
 		detector = {
 			pixelsize = 0.172,	 				# pixel size of the detector
@@ -50,12 +50,12 @@ hipGisaxsInput = {
 		}
 	},
 	computation = {
-		pathprefix = "../hipgisaxs.test",						# path to input files directory
-		runname = "anabox",					# name for current run and folder name for outputs
+		pathprefix = "../hipgisaxs.test",	# path to input files directory
+		runname = "anaprism3x",				# name for current run and folder name for outputs
 		method = "dwba",					# theorical approach (see list)
-#		outputregion = { type = "pixels" , minpoint = [ 350 740 ], maxpoint = [ 850 1500 ] },
-		outputregion = { type = "qspace" , minpoint = [ 0 0.0000005 ], maxpoint = [ 2 2 ] },
-		resolution = [ 0.5 0.5 ],				# number of q points per pixel
+		#outputregion = { type = "pixels" , minpoint = [ 350 700 ], maxpoint = [ 850 1500 ] },
+		outputregion = { type = "qspace" , minpoint = [ 0 0 ], maxpoint = [ 2 2 ] },
+		resolution = [ 0.5 0.5 ],			# number of q points per pixel
 		nslices = 0							# max number of slices for slicing algorithm
 	}
 }
