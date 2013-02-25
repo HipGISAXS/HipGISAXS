@@ -5,7 +5,7 @@
   *
   *  File: hipgisaxs_main.cpp
   *  Created: Jun 14, 2012
-  *  Modified: Fri 22 Feb 2013 01:27:11 PM PST
+  *  Modified: Mon 25 Feb 2013 10:45:58 AM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -13,12 +13,14 @@
 #include <boost/filesystem.hpp>
 #include <fstream>
 #include <string>
-//#include <sstream>
 #include <cmath>
 #include <cstdlib>
 #include <ctime>
 #include <cmath>
 #include <mpi.h>
+#ifdef _OPENMP
+#include <omp.h>
+#endif // _OPENMP
 
 #include "woo/timer/woo_boostchronotimers.hpp"
 
@@ -85,7 +87,16 @@ namespace hig {
 			return false;
 		} // if
 
+#ifdef _OPENMP
+		#pragma omp parallel
+		{
+			if(omp_get_thread_num() == 0)
+				std::cout << "**         Number of CPU threads: " << omp_get_num_threads() << std::endl;
+		}
+#endif // _OPENMP
+#ifdef USE_GPU
 		init_gpu();
+#endif // USE_GPU
 
 		return true;
 	} // HipGISAXS::init()

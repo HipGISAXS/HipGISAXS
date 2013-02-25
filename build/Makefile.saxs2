@@ -10,6 +10,7 @@
 # Author: Abhinav Sarje <asarje@lbl.gov>
 ##
 
+USE_GPU = y
 USE_ANA_GPU = y
 
 ## base directories
@@ -66,17 +67,15 @@ NVLIB_FLAGS += -Wl,-rpath -Wl,$(CUDA_DIR)/lib64
 ## libtiff
 TIFF_LIBS = -L $(TIFF_LIB_DIR) -ltiff
 
-## pari
-#PARI_INCL = -I $(PARI_DIR)/include
-#PARI_LIBS = -L $(PARI_DIR)/lib
-#PARI_LIB_FLAGS = -Wl,-rpath -Wl,$(PARI_DIR)/lib -lpari
-
 ## miscellaneous
 MISC_INCL =
 MISC_FLAGS = -DGPUR -DKERNEL2
 MISC_FLAGS += #-DREDUCTION2 #-DAXIS_ROT
 ifeq ($(USE_ANA_GPU), y)
 MISC_FLAGS += -DFF_ANA_GPU
+endif
+ifeq ($(USE_GPU), y)
+MISC_FLAGS += -DUSE_GPU
 endif
 MISC_FLAGS += -DTIME_DETAIL_1 -DTIME_DETAIL_2
 
@@ -90,12 +89,10 @@ PREC_FLAG =			# leave empty for single precision
 
 
 ## all includes
-ALL_INCL = $(MPI_INCL) $(CUDA_INCL) $(BOOST_INCL) $(HDF5_INCL) $(MISC_INCL) #$(PARI_INCL)
+ALL_INCL = $(MPI_INCL) $(CUDA_INCL) $(BOOST_INCL) $(HDF5_INCL) $(MISC_INCL)
 
 ## all libraries
-ALL_LIBS = $(BOOST_LIBS) $(MPI_LIBS) $(NVLIB_FLAGS) $(CUDA_LIBS) $(HDF5_LIBS) $(TIFF_LIBS) #\
-		   $(PARI_LIBS) $(PARI_LIB_FLAGS)
-
+ALL_LIBS = $(BOOST_LIBS) $(MPI_LIBS) $(NVLIB_FLAGS) $(CUDA_LIBS) $(HDF5_LIBS) $(TIFF_LIBS)
 
 PREFIX = $(PWD)
 BINARY_SIM = hipgisaxs
