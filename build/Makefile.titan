@@ -8,6 +8,7 @@
 # Author: Abhinav Sarje <asarje@lbl.gov>
 ##
 
+USE_GPU = y
 USE_ANA_GPU = n
 
 ## base directories
@@ -75,6 +76,9 @@ MISC_FLAGS = -DGPUR -DKERNEL2
 MISC_FLAGS += #-DREDUCTION2 #-DAXIS_ROT
 ifeq ($(USE_ANA_GPU), y)
 MISC_FLAGS += -DFF_ANA_GPU
+endif
+ifeq ($(USE_GPU), y)
+MISC_FLAGS += -DUSE_GPU
 endif
 MISC_FLAGS += -DTIME_DETAIL_1 -DTIME_DETAIL_2
 
