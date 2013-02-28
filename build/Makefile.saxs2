@@ -12,16 +12,23 @@
 
 USE_GPU = y
 USE_ANA_GPU = y
+USE_INTEL = n
 
 ## base directories
 BOOST_DIR = /usr/local/boost_1_49_0
-MPI_DIR = /usr/local/openmpi-1.6
 CUDA_DIR = /usr/local/cuda-5.0
 HDF5_DIR = /usr/local/hdf5-1.8.9
 Z_DIR = /usr/local/zlib-1.2.7
 SZ_DIR = /usr/local/szip-2.1
 TIFF_LIB_DIR = /usr/local/lib
-#PARI_DIR = /usr/local/pari-2.5.2
+ifeq ($(USE_INTEL), y)
+## intel
+MPI_DIR = /usr/local/openmpi-1.6.4-intel
+else
+## gnu
+MPI_DIR = /usr/local/openmpi-1.6
+endif
+export PATH:=$(MPI_DIR)/bin:$(PATH)
 
 ## compilers
 CXX = $(MPI_DIR)/bin/mpicxx	#g++
@@ -29,11 +36,18 @@ H5CC = $(HDF5_DIR)/bin/h5pcc
 NVCC = $(CUDA_DIR)/bin/nvcc #-ccbin /usr/local/gcc-4.6.3/bin
 
 ## compiler flags
-CXX_FLAGS = -std=c++0x #-Wall -Wextra
-CXX_FLAGS += -fopenmp
-CXX_FLAGS += -lgsl -lgslcblas -lm #-v
 ## gnu c++ compilers >= 4.3 support -std=c++0x [requirement for hipgisaxs 4.3.x <= g++ <= 4.6.x]
 ## gnu c++ compilers >= 4.7 also support -std=c++11, but they are not supported by cuda
+CXX_FLAGS = -lgsl -lgslcblas -lm #-v
+ifeq ($(USE_INTEL), y)
+## intel
+CXX_FLAGS += -gxx-name=g++-4.5 -std=c++0x #-Wall -Wextra
+CXX_FLAGS += -openmp
+else
+## gnu
+CXX_FLAGS += -std=c++0x #-Wall -Wextra
+CXX_FLAGS += -fopenmp
+endif
 
 ## boost
 BOOST_INCL = -I $(BOOST_DIR)
