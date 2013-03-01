@@ -5,7 +5,7 @@
   *
   *  File: utilities.hpp
   *  Created: Jun 25, 2012
-  *  Modified: Sat 23 Feb 2013 07:18:56 PM PST
+  *  Modified: Thu 28 Feb 2013 12:20:12 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -91,6 +91,8 @@ namespace hig {
 	 * complex operators
 	 */
 
+	extern complex_t operator*(float2 c, float2 s);
+	extern complex_t operator*(complex_t c, complex_t s);
 	extern complex_t operator*(complex_t c, float_t s);
 	extern complex_t operator*(float_t s, complex_t c);
 	extern complex_t operator*(float_t s, cucomplex_t c);

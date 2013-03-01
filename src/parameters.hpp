@@ -1,20 +1,21 @@
 /**
- * $Id: constants.hpp 38 2012-08-09 23:01:20Z asarje $
- *
  * Project: HipGISAXS (High-Performance GISAXS)
  *
  * File: parameters.hpp
  * Created: June 5, 2012
- * Modified: Fri 30 Nov 2012 12:06:48 PM PST
+ * Modified: Thu 28 Feb 2013 11:23:11 AM PST
  *
  * Author: Abhinav Sarje <asarje@lbl.gov>
  */
 
-#ifndef _PARAMETERS_H_
-#define _PARAMETERS_H_
+#ifndef _PARAMETERS_HPP_
+#define _PARAMETERS_HPP_
 
-// put these into namespace too ...
 namespace hig {
+
+	/***
+	 * parameters for gpu
+	 */
 
 	// some extra buffer when estimating device memory need
 	const int DEVICE_RESERVE_MEM_ = 100 * 1024 * 1024;

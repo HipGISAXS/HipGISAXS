@@ -5,7 +5,7 @@
   *
   *  File: ff.cpp
   *  Created: Jul 17, 2012
-  *  Modified: Fri 22 Feb 2013 12:23:58 PM PST
+  *  Modified: Fri 01 Mar 2013 10:30:13 AM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -20,8 +20,6 @@ namespace hig {
 	void FormFactor::clear() {
 		ff_.clear();
 		analytic_ff_.clear();
-		if(nff_ != NULL) delete[] nff_;
-		nff_ = NULL;
 		numeric_ff_.clear();
 		is_analytic_ = false;
 	} // FormFactor::clear()
@@ -36,7 +34,7 @@ namespace hig {
 			/* compute numerically */
 			is_analytic_ = false;
 			numeric_ff_.init();
-			numeric_ff_.compute(shape_filename.c_str(), nff_, world_comm);
+			numeric_ff_.compute(shape_filename.c_str(), ff_, world_comm);
 		} else {
 			/* compute analytically */
 			is_analytic_ = true;
@@ -44,7 +42,6 @@ namespace hig {
 			analytic_ff_.compute(shape, shp_tau, shp_eta, transvec,
 								ff_, params, single_thickness, rot1, rot2, rot3, world_comm);
 		} // if-else
-
 		return true;
 	} // FormFactor::compute_form_factor()
 
@@ -54,13 +51,14 @@ namespace hig {
 	bool FormFactor::read_form_factor(const char* filename,
 									unsigned int nqx, unsigned int nqy, unsigned int nqz) {
 		std::ifstream f(filename);
-		nff_ = new (std::nothrow) cucomplex_t[nqx * nqy * nqz];
+		ff_.clear();
 		for(unsigned int z = 0; z < nqz; ++ z) {
 			for(unsigned int y = 0; y < nqy; ++ y) {
 				for(unsigned int x = 0; x < nqx; ++ x) {
-					unsigned int index = nqx * nqy * z + nqx * y + x;
-					f >> nff_[index].x;
-					f >> nff_[index].y;
+					//unsigned int index = nqx * nqy * z + nqx * y + x;
+					float_t tempr, tempi;
+					f >> tempr; f >> tempi;
+					ff_.push_back(complex_t(tempr, tempi));
 				} // for
 			} // for
 		} // for
@@ -75,7 +73,7 @@ namespace hig {
 			for(unsigned int y = 0; y < nqy; ++ y) {
 				for(unsigned int x = 0; x < nqx; ++ x) {
 					unsigned int index = nqx * nqy * z + nqx * y + x;
-					std::cout << nff_[index].x << "," << nff_[index].y << "\t";
+					std::cout << ff_[index].real() << "," << ff_[index].imag() << "\t";
 				} // for
 				std::cout << std::endl;
 			} // for
@@ -90,11 +88,7 @@ namespace hig {
 			for(unsigned int y = 0; y < nqy; ++ y) {
 				for(unsigned int x = 0; x < nqx; ++ x) {
 					unsigned int index = nqx * nqy * z + nqx * y + x;
-					if(is_analytic_) {
-						f << ff_[index].real() << "\t" << ff_[index].imag() << std::endl;
-					} else {
-						f << nff_[index].x << "\t" << nff_[index].y << std::endl;
-					}
+					f << ff_[index].real() << "\t" << ff_[index].imag() << std::endl;
 				} // for
 				f << std::endl;
 			} // for

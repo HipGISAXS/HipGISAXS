@@ -1,11 +1,9 @@
 /**
- *  $Id: ff_num.hpp 47 2012-08-23 21:05:16Z asarje $
- *
  *  Project: HipGISAXS (High-Performance GISAXS)
  *
  *  File: ff_num.hpp
  *  Created: Nov 05, 2011
- *  Modified: Mon 26 Nov 2012 10:31:49 PM PST
+ *  Modified: Fri 01 Mar 2013 11:29:56 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -27,20 +25,26 @@
 #include "object2hdf5.h"
 #include "qgrid.hpp"
 #include "utilities.hpp"
+#ifdef FF_NUM_GPU
+#include "ff_num_gpu.cuh"	// for gpu version
+#else
+#include "ff_num_cpu.hpp"	// for cpu version
+#endif // FF_NUM_GPU
 
 namespace hig {
 
 	/**
 	 * Some declarations.
 	 */
-	template<typename float_t, typename complex_t>
-	extern unsigned int compute_form_factor_wrap(int rank,
+	// for gpu version
+	//template<typename float_t, typename complex_t>
+/*	extern unsigned int compute_form_factor_gpu(int rank,
 							std::vector<float_t> &shape_def, unsigned int num_triangles,
 							std::vector<short int> &axes,
 							float_t* &qx_h, int nqx,
 							float_t* &qy_h, int nqy,
-							complex_t* &qz_h, int nqz,
-							complex_t* &ff,
+							cucomplex_t* &qz_h, int nqz,
+							cucomplex_t* &ff,
 							float_t& kernel_time, float_t& red_time, float_t& mem_time
 	#ifdef FINDBLOCK
 							, const int block_x, const int block_y, const int block_z, const int block_t
@@ -51,71 +55,83 @@ namespace hig {
 							, unsigned int cuda_t
 	#endif
 							);
-	
-	template<typename complex_t>
-	void write_slice_to_file(complex_t *ff, int nqx, int nqy, int nqz, char* filename, int axis, int slice);
+*/	
+	//template<typename complex_t>
+	void write_slice_to_file(cucomplex_t *ff, int nqx, int nqy, int nqz, char* filename, int axis, int slice);
 	
 	
 	/**
-	 * Templatized class for computing Form Factor across multiple nodes using MPI.
+	 * Class for computing Form Factor across multiple nodes using MPI.
 	 */
-	template<typename float_t, typename complex_t>
+	//template<typename float_t, typename complex_t, typename cucomplex_t>
 	class NumericFormFactor {
-
+				// TODO: make the cpu and cpu version classes children of this class ...
 		public:
-		NumericFormFactor(int block_cuda): block_cuda_(block_cuda) { }
-		NumericFormFactor(int block_cuda_t, int block_cuda_y, int block_cuda_z):
-			block_cuda_t_(block_cuda_t), block_cuda_y_(block_cuda_y), block_cuda_z_(block_cuda_z) { }
-		~NumericFormFactor() { }
+			#ifdef KERNEL2
+				NumericFormFactor(int block_cuda_t, int block_cuda_y, int block_cuda_z):
+									block_cuda_t_(block_cuda_t), block_cuda_y_(block_cuda_y),
+									block_cuda_z_(block_cuda_z),
+									gff_(block_cuda_t, block_cuda_y, block_cuda_z) {
+				} // NumericFormFactor()
+			#else
+				NumericFormFactor(int block_cuda): block_cuda_(block_cuda), gff_(block_cuda) {
+				} // NumericFormFactor()
+			#endif // KERNEL2
 
-		bool init() { return true; } 	// ...
-		void clear() { }
+			~NumericFormFactor() { }
 
-		// old
-		//bool compute(char* filename, complex_t* &ff, float_t* &qx_h, unsigned int nqx,
-		//			float_t* &qy_h, unsigned int nqy, complex_t* qz_h, unsigned int nqz,
-		//			MPI::Intracomm& world_comm);
-		// new
-		bool compute(const char* filename, complex_t* &ff, MPI::Intracomm& world_comm);
+			bool init() { return true; } 	// TODO ...
+			void clear() { }				// TODO ...
+
+			bool compute(const char* filename, std::vector<complex_t>& ff, MPI::Intracomm& world_comm);
 	
 		private:
-		unsigned int block_cuda_;
+
+			// TODO: make these for gpu only ...
+			unsigned int block_cuda_;
+			/* cuda block size for main kernel */
+			unsigned int block_cuda_t_;
+			unsigned int block_cuda_y_;
+			unsigned int block_cuda_z_;
+
+#ifdef FF_NUM_GPU
+			NumericFormFactorG gff_;		// for computation on the GPU
+#else
+			NumericFormFactorC cff_;		// for computation on CPU - same as LFormFactor
+#endif // FF_NUM_GPU
 	
-		/* cuda block size for main kernel */
-		unsigned int block_cuda_t_;
-		unsigned int block_cuda_y_;
-		unsigned int block_cuda_z_;
-	
-		unsigned int read_shape_surface_file(const char* filename, std::vector<float_t>& shape_def);
-		unsigned int read_shapes_hdf5(const char* filename, std::vector<float_t>& shape_def,
-										MPI::Intracomm& comm);
-		void find_axes_orientation(std::vector<float_t> &shape_def, std::vector<short int> &axes);
-		void construct_ff(int rank, int num_procs, MPI::Comm &comm,
-							MPI::Comm &col_comm, MPI::Comm &row_comm,
-							int p_nqx, int p_nqy, int p_nqz,
-							int nqx, int nqy, int nqz,
-							int p_y, int p_z,
-							complex_t* p_ff, complex_t* &ff,
-							float_t&, float_t&);
-		void gather_all(std::complex<float> *cast_p_ff, unsigned long int local_qpoints,
-							std::complex<float> *cast_ff,
-							int *recv_counts, int *displacements, MPI::Comm &comm);
-		void gather_all(std::complex<double> *cast_p_ff, unsigned long int local_qpoints,
-							std::complex<double> *cast_ff,
-							int *recv_counts, int *displacements, MPI::Comm &comm);
+			unsigned int read_shape_surface_file(const char* filename, std::vector<float_t>& shape_def);
+			unsigned int read_shapes_hdf5(const char* filename, std::vector<float_t>& shape_def,
+											MPI::Intracomm& comm);
+			void find_axes_orientation(std::vector<float_t> &shape_def, std::vector<short int> &axes);
+			void construct_ff(int rank, int num_procs, MPI::Comm &comm,
+								MPI::Comm &col_comm, MPI::Comm &row_comm,
+								int p_nqx, int p_nqy, int p_nqz,
+								int nqx, int nqy, int nqz,
+								int p_y, int p_z,
+								cucomplex_t* p_ff, std::vector<complex_t>& ff,
+								float_t&, float_t&);
+			void gather_all(std::complex<float> *cast_p_ff, unsigned long int local_qpoints,
+								std::complex<float> *cast_ff,
+								int *recv_counts, int *displacements, MPI::Comm &comm);
+			void gather_all(std::complex<double> *cast_p_ff, unsigned long int local_qpoints,
+								std::complex<double> *cast_ff,
+								int *recv_counts, int *displacements, MPI::Comm &comm);
+
 	}; // class NumericFormFactor
 	
 	
 	/**
 	 * main host function
 	 */
-	template<typename float_t, typename complex_t>
-	bool NumericFormFactor<float_t, complex_t>::compute(
-			const char* filename, complex_t* &ff,
-			/*float_t* &qx_h, unsigned int nqx,
+	//template<typename float_t, typename complex_t, typename cucomplex_t>
+	//bool NumericFormFactor<float_t, complex_t, cucomplex_t>::compute(
+/*	bool NumericFormFactor::compute(
+			const char* filename, cucomplex_t* &ff,
+*/			/*float_t* &qx_h, unsigned int nqx,
 			float_t* &qy_h, unsigned int nqy,
 			complex_t* qz_h, unsigned int nqz,*/
-			MPI::Intracomm& world_comm) {
+/*			MPI::Intracomm& world_comm) {
 		float_t comp_start = 0.0, comp_end = 0.0, comm_start = 0.0, comm_end = 0.0;
 		float_t mem_start = 0.0, mem_end = 0.0;
 		float_t comp_time = 0.0, comm_time = 0.0, mem_time = 0.0, kernel_time = 0.0, red_time = 0.0;
@@ -141,12 +157,12 @@ namespace hig {
 		mem_start = MPI::Wtime();
 	
 		// all procs read the shape file
-		// improve to parallel IO, or one proc reading and sending to all ...
+		// TODO: improve to parallel IO, or one proc reading and sending to all ...
 		std::vector<float_t> shape_def;
 		// use the new file reader instead ...
 //		unsigned int num_triangles = read_shape_surface_file(filename, shape_def);
 		unsigned int num_triangles = read_shapes_hdf5(filename, shape_def, world_comm);
-						// ... <--- all procs read this? IMPROVE!!!
+						// TODO ... <--- all procs read this? IMPROVE!!!
 	
 		std::vector<short int> axes(4);			// axes[i] = j
 												// i: x=0 y=1 z=2
@@ -237,55 +253,64 @@ namespace hig {
 			y_offset -= p_nqy;
 			z_offset -= p_nqz;
 
-			// this is a temporary fix ... fix properly ...
-			float_t* qx_h = new (std::nothrow) float_t[nqx]();
-			float_t* qy_h = new (std::nothrow) float_t[nqy]();
-			complex_t* qz_h = new (std::nothrow) complex_t[nqz]();
-			// create qy_h and qz_h using qgrid instance
+			// FIXME: this is a temporary fix ... fix properly ...
+			float_t* qx = new (std::nothrow) float_t[nqx]();
+			float_t* qy = new (std::nothrow) float_t[nqy]();
+			cucomplex_t* qz = new (std::nothrow) cucomplex_t[nqz]();
+			// create qy_and qz using qgrid instance
 			for(unsigned int i = 0; i < nqx; ++ i) {
-				qx_h[i] = QGrid::instance().qx(i);
+				qx[i] = QGrid::instance().qx(i);
 			} // for
 			for(unsigned int i = 0; i < nqy; ++ i) {
-				qy_h[i] = QGrid::instance().qy(i);
+				qy[i] = QGrid::instance().qy(i);
 			} // for
 			for(unsigned int i = 0; i < nqz; ++ i) {
-				qz_h[i].x = QGrid::instance().qz_extended(i).real();
-				qz_h[i].y = QGrid::instance().qz_extended(i).imag();
+				qz[i].x = QGrid::instance().qz_extended(i).real();
+				qz[i].y = QGrid::instance().qz_extended(i).imag();
 			} // for
 			
-			// create p_ff buffers	<----- IMPROVE for all procs!!!
-			float_t *p_qy_h = NULL;
-			p_qy_h = new (std::nothrow) float_t[p_nqy]();
-			if(p_qy_h == NULL) { return 0; }
-			memcpy(p_qy_h, (void*) (qy_h + y_offset), p_nqy * sizeof(float_t));
-			complex_t *p_qz_h = NULL;
-			p_qz_h = new (std::nothrow) complex_t[p_nqz]();
-			if(p_qz_h == NULL) { delete[] p_qy_h; return 0; }
-			memcpy(p_qz_h, (void*) (qz_h + z_offset), p_nqz * sizeof(complex_t));
+			// create p_ff buffers	<----- TODO: IMPROVE for all procs!!!
+			float_t *p_qy = NULL;
+			p_qy = new (std::nothrow) float_t[p_nqy]();
+			if(p_qy == NULL) { return 0; }
+			memcpy(p_qy, (void*) (qy + y_offset), p_nqy * sizeof(float_t));
+			cucomplex_t *p_qz = NULL;
+			p_qz = new (std::nothrow) cucomplex_t[p_nqz]();
+			if(p_qz == NULL) { delete[] p_qy; return 0; }
+			memcpy(p_qz, (void*) (qz + z_offset), p_nqz * sizeof(cucomplex_t));
 	
 			mem_end = MPI::Wtime();
 			mem_time += mem_end - mem_start;
 		
 			// compute local
 			comp_start = MPI::Wtime();
-			complex_t *p_ff = NULL;
+			cucomplex_t *p_ff = NULL;
 			float_t temp_mem_time = 0.0, temp_comm_time = 0.0;
 	
 			computetimer.start();
 
 			unsigned int ret_nt = 0;
-			ret_nt = compute_form_factor_wrap(rank, shape_def, num_triangles, axes,
-						qx_h, p_nqx, p_qy_h, p_nqy,	p_qz_h, p_nqz, p_ff,
-						kernel_time, red_time, temp_mem_time
+#ifdef FF_NUM_GPU	// use GPU
+			ret_nt = compute_form_factor_gpu(rank, shape_def, num_triangles, axes,
+												qx, p_nqx, p_qy, p_nqy, p_qz, p_nqz, p_ff,
+												kernel_time, red_time, temp_mem_time
 	#ifdef FINDBLOCK
-						, block_x, block_y, block_z, block_t
+												, block_x, block_y, block_z, block_t
 	#endif
 	#ifdef KERNEL2
-							, block_cuda_t_, block_cuda_y_, block_cuda_z_
-	#else // default kernel
-							, block_cuda_
+												, block_cuda_t_, block_cuda_y_, block_cuda_z_
+	#else // default 1D kernel
+												, block_cuda_
 	#endif
-						);
+												);
+#else	// use CPU
+			ret_nt = cff_.compute_form_factor(rank, shape_def, p_ff, qx, p_nqx, p_qy, p_nqy, p_qz, p_nqz,
+												kernel_time, red_time, temp_mem_time
+	#ifdef FINDBLOCK
+												, block_x, block_y, block_z, block_t
+	#endif
+												);
+#endif // FF_NUM_GPU
 
 			computetimer.stop();
 
@@ -305,11 +330,11 @@ namespace hig {
 				comm_time += temp_comm_time;
 			} // if
 	
-			/*if(rank == 0) {
+*/			/*if(rank == 0) {
 				write_slice_to_file(ff, nqx, nqy, nqz, filename, 0, 0);	// x = 0, y = 1, z = 2
 														// only slice along x implemented for now
 			} // if*/
-	
+/*	
 			comm_start = MPI::Wtime();
 			main_comm.Barrier();
 			comm_end = MPI::Wtime();
@@ -320,11 +345,11 @@ namespace hig {
 			if(ff != NULL) delete[] ff;
 	#endif
 			if(p_ff != NULL) delete[] p_ff;
-			delete[] p_qz_h;
-			delete[] p_qy_h;
-			delete[] qz_h;
-			delete[] qy_h;
-			delete[] qx_h;
+			delete[] p_qz;
+			delete[] p_qy;
+			delete[] qz;
+			delete[] qy;
+			delete[] qx;
 
 			maintimer.stop();
 	
@@ -342,7 +367,8 @@ namespace hig {
 							<< "**            Communication time: " << comm_time * 1000 << " ms." << std::endl
 							<< "**                 Total FF time: " << total_time * 1000 << " ms."
 							<< " (" << total_end << " - " << total_start << ")" << std::endl
-							<< "**                  Main FF time: " << maintimer.elapsed_msec() << " ms." << std::endl << std::flush;
+							<< "**                  Main FF time: " << maintimer.elapsed_msec() << " ms."
+							<< std::endl << std::flush;
 			} // if
 		} // if
 
@@ -361,20 +387,21 @@ namespace hig {
 	#endif
 		//MPI::Finalize();	
 		return true;
-	} // NumericFormFactor::compute_form_factor()
+	} // NumericFormFactor::compute()
 	
 
-	/**
+*/	/**
 	 * Function to gather partial FF arrays from all processes to construct the final FF.
 	 * This is a bottleneck for large num procs ...
 	 */
-	template<typename float_t, typename complex_t>
-	void NumericFormFactor<float_t, complex_t>::construct_ff(int rank, int num_procs,
+	//template<typename float_t, typename complex_t, typename cucomplex_t>
+	//void NumericFormFactor<float_t, complex_t, cucomplex_t>::construct_ff(int rank, int num_procs,
+/*	void NumericFormFactor::construct_ff(int rank, int num_procs,
 			MPI::Comm &comm, MPI::Comm &col_comm, MPI::Comm &row_comm,
 			int p_nqx, int p_nqy, int p_nqz,
 			int nqx, int nqy, int nqz,
 			int p_y, int p_z,
-			complex_t* p_ff, complex_t* &ff,
+			cucomplex_t* p_ff, cucomplex_t* &ff,
 			float_t& mem_time, float_t& comm_time) {
 		float_t mem_start = 0, mem_end = 0, comm_start = 0, comm_end = 0;
 		mem_time = 0; comm_time = 0;
@@ -385,7 +412,7 @@ namespace hig {
 		unsigned long int total_qpoints = nqx * nqy * nqz;
 	
 		// process 0 creates the main ff, and collects computed p_ff from all others (just use gather)
-		if(rank == 0) ff = new (std::nothrow) complex_t[total_qpoints];
+		if(rank == 0) ff = new (std::nothrow) cucomplex_t[total_qpoints];
 	
 		// construct stuff for gatherv
 		int *recv_counts = new (std::nothrow) int[num_procs]();
@@ -402,7 +429,7 @@ namespace hig {
 		for(int i = 1; i < num_procs; ++ i) {
 			displacements[i] = displacements[i - 1] + recv_counts[i - 1];
 		} // for
-		complex_t *ff_buffer = new (std::nothrow) complex_t[total_qpoints];
+		cucomplex_t *ff_buffer = new (std::nothrow) cucomplex_t[total_qpoints];
 		if(ff_buffer == NULL) {
 			std::cerr << "Error allocating memory for ff buffer" << std::endl;
 			return;
@@ -434,7 +461,7 @@ namespace hig {
 			for(int i_nqz = 0; i_nqz < nqz; ++ i_nqz) {
 				for(int i_py = 0; i_py < p_y; ++ i_py) {
 					unsigned long int ffb_index = nqx * (i_nqz * recv_p_nqy[i_py] + nqz * off_p_nqy[i_py]);
-					memcpy(&ff[ff_index], &ff_buffer[ffb_index], nqx * recv_p_nqy[i_py] * sizeof(complex_t));
+					memcpy(&ff[ff_index], &ff_buffer[ffb_index], nqx * recv_p_nqy[i_py] * sizeof(cucomplex_t));
 					ff_index += nqx * recv_p_nqy[i_py];
 				} // for i_py
 			} // for i_nqz
@@ -450,8 +477,9 @@ namespace hig {
 	} // NumericFormFactor::construct_ff()
 	
 	
-	template<typename float_t, typename complex_t>
-	void NumericFormFactor<float_t, complex_t>::gather_all(std::complex<float> *cast_p_ff,
+	//template<typename float_t, typename complex_t, typename cucomplex_t>
+	//void NumericFormFactor<float_t, complex_t, cucomplex_t>::gather_all(std::complex<float> *cast_p_ff,
+	void NumericFormFactor::gather_all(std::complex<float> *cast_p_ff,
 			unsigned long int local_qpoints,
 			std::complex<float> *cast_ff, int *recv_counts, int *displacements, MPI::Comm &comm) {
 		comm.Gatherv(cast_p_ff, local_qpoints, MPI::COMPLEX, cast_ff, recv_counts,
@@ -459,8 +487,9 @@ namespace hig {
 	} // NumericFormFactor::gather_all()
 	
 	
-	template<typename float_t, typename complex_t>
-	void NumericFormFactor<float_t, complex_t>::gather_all(std::complex<double> *cast_p_ff,
+	//template<typename float_t, typename complex_t, typename cucomplex_t>
+	//void NumericFormFactor<float_t, complex_t, cucomplex_t>::gather_all(std::complex<double> *cast_p_ff,
+	void NumericFormFactor::gather_all(std::complex<double> *cast_p_ff,
 			unsigned long int local_qpoints,
 			std::complex<double> *cast_ff, int *recv_counts, int *displacements, MPI::Comm &comm) {
 		comm.Gatherv(cast_p_ff, local_qpoints, MPI::DOUBLE_COMPLEX, cast_ff, recv_counts,
@@ -468,11 +497,12 @@ namespace hig {
 	} // NumericFormFactor::gather_all()
 	
 	
-	/**
+*/	/**
 	 * Function to read the input shape file.
 	 */
-	template<typename float_t, typename complex_t>
-	unsigned int NumericFormFactor<float_t, complex_t>::read_shape_surface_file(const char* filename,
+	//template<typename float_t, typename complex_t, typename cucomplex_t>
+	//unsigned int NumericFormFactor<float_t, complex_t, cucomplex_t>::read_shape_surface_file(const char* filename,
+/*	unsigned int NumericFormFactor::read_shape_surface_file(const char* filename,
 			std::vector<float_t> &shape_def) {
 		std::ifstream f(filename);
 		if(!f.is_open()) {
@@ -500,8 +530,9 @@ namespace hig {
 	} // NumericFormFactor::read_shape_surface_file()
 	
 	
-	template<typename float_t, typename complex_t>
-	void NumericFormFactor<float_t, complex_t>::find_axes_orientation(
+	//template<typename float_t, typename complex_t, typename cucomplex_t>
+	//void NumericFormFactor<float_t, complex_t, cucomplex_t>::find_axes_orientation(
+	void NumericFormFactor::find_axes_orientation(
 			std::vector<float_t> &shape_def, std::vector<short int> &axes) {
 		float_t min_a = shape_def[4], max_a = shape_def[4];
 		float_t min_b = shape_def[5], max_b = shape_def[5];
@@ -567,16 +598,17 @@ namespace hig {
 	} // NumericFormFactor::find_axes_orientation()
 	
 	
-	/**
+*/	/**
 	 * Function to read the shape definition input file in HDF5 format.
 	 */
-	template<typename float_t, typename complex_t>
-	unsigned int NumericFormFactor<float_t, complex_t>::read_shapes_hdf5(const char* filename,
+	//template<typename float_t, typename complex_t, typename cucomplex_t>
+	//unsigned int NumericFormFactor<float_t, complex_t, cucomplex_t>::read_shapes_hdf5(const char* filename,
+/*	unsigned int NumericFormFactor::read_shapes_hdf5(const char* filename,
 			std::vector<float_t> &shape_def, MPI::Intracomm& comm) {
 		unsigned int num_triangles = 0;
 		double* temp_shape_def = NULL;
 	
-		h5_shape_reader(filename, &temp_shape_def, &num_triangles/*, comm*/);
+		h5_shape_reader(filename, &temp_shape_def, &num_triangles);
 #ifndef KERNEL2
 		for(unsigned int i = 0; i < num_triangles * 7; ++ i)
 			shape_def.push_back((float_t)temp_shape_def[i]);
@@ -590,11 +622,11 @@ namespace hig {
 		return num_triangles;
 	} // NumericFormFactor::read_shapes_hdf5()
 	
-	
+*/	
 	/**
 	 * Write a slice to output file
 	 */
-	/*template<typename complex_t>
+	/*//template<typename complex_t>
 	void write_slice_to_file(complex_t *ff, int nqx, int nqy, int nqz, char* filename, int axis, int slice) {
 		if(ff == NULL) return;
 	

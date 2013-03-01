@@ -5,7 +5,7 @@
   *
   *  File: sf_gpu.cu
   *  Created: Oct 15, 2012
-  *  Modified: Mon 15 Oct 2012 10:25:59 PM PDT
+  *  Modified: Fri 01 Mar 2013 08:35:10 AM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -24,7 +24,7 @@ namespace hig {
 							Lattice* lattice, vector3_t repet,
 							vector3_t rotation_1, vector3_t rotation_2, vector3_t rotation_3,
 							MPI::Intracomm& world_comm) {
-		// ...
+		// TODO ...
 		// need to have a wrapper like in FF ??? ...
 		// since i am using compiler directives for selecting precision, templates are not required!
 		// hence i dont need a wrapper
@@ -76,7 +76,7 @@ namespace hig {
 		// arot, brot, crot
 		// repet
 
-		// good for gpu ...
+		// good for gpu ... TODO
 		for(unsigned int z = 0; z < nz_; ++ z) {
 			for(unsigned int y = 0; y < ny_; ++ y) {
 				for(unsigned int x = 0; x < nx_; ++ x) {

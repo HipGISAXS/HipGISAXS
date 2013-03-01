@@ -5,7 +5,7 @@
   *
   *  File: test_ff.cpp
   *  Created: Aug 01, 2012
-  *  Modified: Mon 01 Oct 2012 11:18:55 AM PDT
+  *  Modified: Fri 01 Mar 2013 08:45:36 AM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -25,7 +25,8 @@ int main(int narg, char** args) {
 
 	const char* filename = args[1];
 	QGrid::instance().create_test();
-	NumericFormFactor<float, cuFloatComplex> nff(4);
+	//NumericFormFactor<float, cuFloatComplex> nff(4);
+	NumericFormFactor nff(4);
 	nff.init();
 	cuFloatComplex *ff = NULL;
 	nff.compute(filename, ff, MPI::COMM_WORLD);

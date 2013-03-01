@@ -4,80 +4,158 @@
  * Project: HipGISAXS (High-Performance GISAXS)
  */
 
+#ifndef __FF_NUM_GPU_CUH__
+#define __FF_NUM_GPU_CUH__
+
 #include <iostream>
 #include <fstream>
 #include <vector>
 #include <complex>
 #include <cuComplex.h>
+#ifdef _OPENMP
 #include <omp.h>
+#endif // _OPENMP
 
 #include "typedefs.hpp"
 #include "constants.hpp"
 #include "parameters.hpp"
-#include "reduction.cuh"
-
-#include "ff_num_gpu.cuh"
 
 namespace hig {
 
 	/**
+	 * Class for computing Form Factor in either single or double precision on a single GPU.
+	 */
+	//template<typename float_t, typename complex_t>
+	class NumericFormFactorG {
+		public:
+			NumericFormFactorG(int block_cuda):
+				block_cuda_(block_cuda), block_cuda_t_(0), block_cuda_y_(0), block_cuda_z_(0) { }
+			NumericFormFactorG(int block_cuda_t, int block_cuda_y, int block_cuda_z): block_cuda_(0),
+				block_cuda_t_(block_cuda_t), block_cuda_y_(block_cuda_y), block_cuda_z_(block_cuda_z) { }
+			~NumericFormFactorG() { }
+
+			/* original */
+			unsigned int compute_form_factor(int,
+					std::vector<float_t> &shape_def, std::vector<short int> &axes,
+					cucomplex_t* &ff,
+					float_t* &qx_h, int nqx,
+					float_t* &qy_h, int nqy,
+					cucomplex_t* &qz_h, int nqz,
+					float_t&, float_t&, float_t&
+	#ifdef FINDBLOCK
+					, const int, const int, const int, const int
+	#endif
+					);
+
+			/* with double buffering */
+			unsigned int compute_form_factor_db(int,
+					std::vector<float_t> &shape_def, std::vector<short int> &axes,
+					cucomplex_t* &ff,
+					float_t* &qx_h, int nqx,
+					float_t* &qy_h, int nqy,
+					cucomplex_t* &qz_h, int nqz,
+					float_t&, float_t&, float_t&
+	#ifdef FINDBLOCK
+					, const int, const int, const int, const int
+	#endif
+					);
+
+			/* with double buffering and optimized memory (incomplete ... )*/
+			unsigned int compute_form_factor_db_mem(int,
+					std::vector<float_t> &shape_def, std::vector<short int> &axes,
+					cucomplex_t* &ff,
+					float_t* &qx_h, int nqx,
+					float_t* &qy_h, int nqy,
+					cucomplex_t* &qz_h, int nqz,
+					float_t&, float_t&, float_t&
+	#ifdef FINDBLOCK
+					, const int, const int, const int, const int
+	#endif
+					);
+
+		private:
+			// for kernel 1
+			int block_cuda_;
+
+			// for kernel 2 and up
+			int block_cuda_t_;
+			int block_cuda_y_;
+			int block_cuda_z_;
+
+//			unsigned int read_shape_surface_file(char* filename, std::vector<float_t>& shape_def);
+			void compute_hyperblock_size(int nqx, int nqy, int nqz, int num_triangles,
+					unsigned long int estimated_device_mem_need, unsigned long int device_mem_avail,
+					unsigned int& b_nqx, unsigned int& b_nqy, unsigned int& b_nqz,
+					unsigned int& b_num_triangles
+	#ifdef FINDBLOCK
+					, const int, const int, const int, const int
+	#endif
+					);
+			void move_to_main_ff(cucomplex_t* fq_buffer,
+					unsigned int curr_b_nqx, unsigned int curr_b_nqy, unsigned int curr_b_nqz,
+					unsigned int b_nqx, unsigned int b_nqy, unsigned int b_nqz,
+					unsigned int nqx, unsigned int nqy, unsigned int nqz,
+					unsigned int ib_x, unsigned int ib_y, unsigned int ib_z,
+					cucomplex_t* ff);
+	}; // class NumericFormFactorG
+
+	/**
 	 * Some forward declarations.
 	 */
-
 	/* K1: default kernel, with t decompostion, no shared memory */
 	//template<typename float_t, typename complex_t>
-	__global__ void form_factor_kernel(float_t*, float_t*, cucomplex_t*, float_t*, short int*,
+/*	__global__ void form_factor_kernel(float_t*, float_t*, cucomplex_t*, float_t*, short int*,
 										unsigned int, unsigned int, unsigned int, unsigned int,
 										unsigned int, unsigned int, unsigned int, unsigned int,
 										unsigned int, unsigned int, unsigned int, unsigned int,
 										cucomplex_t*);
-	/* K2: kernel with t, y, z decomposition, no shared memory */
+*/	/* K2: kernel with t, y, z decomposition, no shared memory */
 	//template<typename float_t, typename complex_t>
-	__global__ void form_factor_kernel_new(float_t*, float_t*, cucomplex_t*, float_t*, short int*,
+/*	__global__ void form_factor_kernel_new(float_t*, float_t*, cucomplex_t*, float_t*, short int*,
 										unsigned int, unsigned int, unsigned int, unsigned int,
 										unsigned int, unsigned int, unsigned int, unsigned int,
 										unsigned int, unsigned int, unsigned int, unsigned int,
 										cucomplex_t*);
-	/* K3: kernel with t, y, z decomposition, static shared mem for input */
+*/	/* K3: kernel with t, y, z decomposition, static shared mem for input */
 	//template<typename float_t, typename complex_t>
-	__global__ void form_factor_kernel_new_shared(float_t*, float_t*, cucomplex_t*, float_t*, short int*,
+/*	__global__ void form_factor_kernel_new_shared(float_t*, float_t*, cucomplex_t*, float_t*, short int*,
 										unsigned int, unsigned int, unsigned int, unsigned int,
 										unsigned int, unsigned int, unsigned int, unsigned int,
 										unsigned int, unsigned int, unsigned int, unsigned int,
 										cucomplex_t*);
-	/* K4: kernel with t, y, z decomposition, dynamic shared mem for input, static for output */
+*/	/* K4: kernel with t, y, z decomposition, dynamic shared mem for input, static for output */
 	//template<typename float_t, typename complex_t>
-	__global__ void form_factor_kernel_new_shared2(const float_t*, const float_t*, const cucomplex_t*,
+/*	__global__ void form_factor_kernel_new_shared2(const float_t*, const float_t*, const cucomplex_t*,
 							const float_t*, const short int*,
 							const unsigned int, const unsigned int, const unsigned int, const unsigned int,
 							const unsigned int, const unsigned int, const unsigned int, const unsigned int,
 							const unsigned int, const unsigned int, const unsigned int, const unsigned int,
 							cucomplex_t*);
-	/* K5: kernel with t, y, z decomposition, dynamic shared mem for input, static for output, memopt? ... */
+*/	/* K5: kernel with t, y, z decomposition, dynamic shared mem for input, static for output, memopt? ... */
 	//template<typename float_t, typename complex_t>
-	__global__ void form_factor_kernel_new_shared2_mem(float_t*, float_t*, cucomplex_t*, float_t*, short int*,
+/*	__global__ void form_factor_kernel_new_shared2_mem(float_t*, float_t*, cucomplex_t*, float_t*, short int*,
 										unsigned int, unsigned int, unsigned int, unsigned int,
 										unsigned int, unsigned int, unsigned int, unsigned int,
 										unsigned int, unsigned int, unsigned int, unsigned int,
 										cucomplex_t*);
-	/* K6: kernel with K3 and blocked y, z (probably incomplete ...) */
+*/	/* K6: kernel with K3 and blocked y, z (probably incomplete ...) */
 	//template<typename float_t, typename complex_t>
-	__global__ void form_factor_kernel_new_shared_subblock(float_t*, float_t*, cucomplex_t*, float_t*,
+/*	__global__ void form_factor_kernel_new_shared_subblock(float_t*, float_t*, cucomplex_t*, float_t*,
 										short int*,
 										unsigned int, unsigned int, unsigned int, unsigned int,
 										unsigned int, unsigned int, unsigned int, unsigned int,
 										unsigned int, unsigned int, unsigned int, unsigned int,
 										cucomplex_t*);
-	/* K7: kernel with K1 (?) and blocked y, z (incomplete ...) */
+*/	/* K7: kernel with K1 (?) and blocked y, z (incomplete ...) */
 	//template<typename float_t, typename complex_t>
-	__global__ void form_factor_kernel_new_2(float_t*, float_t*, cucomplex_t*, float_t*, short int*,
+/*	__global__ void form_factor_kernel_new_2(float_t*, float_t*, cucomplex_t*, float_t*, short int*,
 										unsigned int, unsigned int, unsigned int, unsigned int,
 										unsigned int, unsigned int, unsigned int, unsigned int,
 										unsigned int, unsigned int, unsigned int, unsigned int,
 										cucomplex_t*);
-	/* K8: K4 with reduction combined in it */
+*/	/* K8: K4 with reduction combined in it */
 	//template<typename float_t, typename complex_t>
-	__global__ void form_factor_kernel_new_shared2_red(const float_t*, const float_t*, const cucomplex_t*,
+/*	__global__ void form_factor_kernel_new_shared2_red(const float_t*, const float_t*, const cucomplex_t*,
 							const float_t*, const short int*,
 							const unsigned int, const unsigned int, const unsigned int, const unsigned int,
 							const unsigned int, const unsigned int, const unsigned int, const unsigned int,
@@ -96,6 +174,19 @@ namespace hig {
 				cuDoubleComplex qzn, double x, double qyt, cuDoubleComplex qzt,
 				cuDoubleComplex& qn_d, cuDoubleComplex& qt_d);
 
+*/	/*template<typename float_t, typename complex_t>
+	__global__ void form_factor_kernel_new(float_t*, float_t*, float_t*, float_t*, short int*,
+					unsigned int, unsigned int, unsigned int, unsigned int,
+					unsigned int, unsigned int, unsigned int, unsigned int,
+					unsigned int, unsigned int, unsigned int, unsigned int,
+					complex_t*);
+	template<typename float_t, typename complex_t>
+	__global__ void form_factor_kernel_new_2(float_t*, float_t*, float_t*, float_t*,
+					unsigned int, unsigned int, unsigned int, unsigned int,
+					unsigned int, unsigned int, unsigned int, unsigned int,
+					unsigned int, unsigned int, unsigned int, unsigned int,
+					const int, const int, complex_t*);
+	*/
 
 	/**
 	 * Wrapper for the NumericFormFactorG class function.
@@ -137,9 +228,9 @@ namespace hig {
 	#endif
 					);
 	} // compute_form_factor_gpu()
-
+*/
 	// Instantiations for float and double
-	template unsigned int compute_form_factor_gpu<float, cuFloatComplex>(
+/*	template unsigned int compute_form_factor_gpu<float, cuFloatComplex>(
 							int, std::vector<float>&, unsigned int, std::vector<short int>&,
 							float*&, int,
 							float*&, int,
@@ -170,8 +261,8 @@ namespace hig {
 	#else // default kernel
 							, unsigned int cuda_t
 	#endif
-							);
-	template unsigned int compute_form_factor_wrap<double, std::complex<double> >(
+							);*/
+/*	template unsigned int compute_form_factor_wrap<double, std::complex<double> >(
 							int, std::vector<double>&, unsigned int, std::vector<short int>&,
 							double*&, int,
 							double*&, int,
@@ -186,14 +277,14 @@ namespace hig {
 	#else // default kernel
 							, unsigned int cuda_t
 	#endif
-							);
-*/
+							); */
+
 	/**
 	 * The main host function called from outside, as part of the API for a single node.
 	 */
 	//template<typename float_t, typename complex_t>
 	//unsigned int NumericFormFactorG<float_t, complex_t>::compute_form_factor(int rank,
-	unsigned int NumericFormFactorG::compute_form_factor(int rank,
+/*	unsigned int NumericFormFactorG::compute_form_factor(int rank,
 						std::vector<float_t> &shape_def, std::vector<short int>& axes,
 						cucomplex_t* &ff,
 						float_t* &qx_h, int nqx,
@@ -654,14 +745,14 @@ namespace hig {
 
 		return num_triangles;
 	} // NumericFormFactorG::compute_form_factor()
-
+*/
 
 	/**
 	 * The main host function called from outside, This one uses double buffering
 	 */
 	//template<typename float_t, typename complex_t>
 	//unsigned int NumericFormFactorG<float_t, complex_t>::compute_form_factor_db(int rank,
-	unsigned int NumericFormFactorG::compute_form_factor_db(int rank,
+/*	unsigned int NumericFormFactorG::compute_form_factor_db(int rank,
 						std::vector<float_t> &shape_def, std::vector<short int> &axes,
 						cucomplex_t* &ff,
 						float_t* &qx_h, int nqx,
@@ -1177,14 +1268,14 @@ namespace hig {
 	
 		return num_triangles;
 	} // NumericFormFactorG::compute_form_factor_db()
-
+*/
 	/**
 	 * Function to compute the decomposition block size
 	 * TODO Improve it later ...
 	 */
 	//template<typename float_t, typename complex_t>
 	//void NumericFormFactorG<float_t, complex_t>::compute_hyperblock_size(int nqx, int nqy, int nqz, int num_triangles,
-	void NumericFormFactorG::compute_hyperblock_size(int nqx, int nqy, int nqz, int num_triangles,
+/*	void NumericFormFactorG::compute_hyperblock_size(int nqx, int nqy, int nqz, int num_triangles,
 			unsigned long int estimated_device_mem_need, unsigned long int device_mem_avail,
 			unsigned int& b_nqx, unsigned int& b_nqy, unsigned int& b_nqz, unsigned int& b_num_triangles
 	#ifdef FINDBLOCK
@@ -1215,7 +1306,7 @@ namespace hig {
 			++ i;
 		} // if
 	} // NumericFormFactorG::compute_hyperblock_size()
-
+*/
 
 	/**
 	 * Function to read the input shape file.
@@ -1254,7 +1345,7 @@ namespace hig {
 	 */
 	//template<typename float_t, typename complex_t>
 	//void NumericFormFactorG<float_t, complex_t>::move_to_main_ff(complex_t* ff_buffer,
-	void NumericFormFactorG::move_to_main_ff(cucomplex_t* ff_buffer,
+/*	void NumericFormFactorG::move_to_main_ff(cucomplex_t* ff_buffer,
 				unsigned int curr_b_nqx, unsigned int curr_b_nqy, unsigned int curr_b_nqz,
 				unsigned int b_nqx, unsigned int b_nqy, unsigned int b_nqz,
 				unsigned int nqx, unsigned int nqy, unsigned int nqz,
@@ -1278,7 +1369,7 @@ namespace hig {
 			} // for i_y
 		} // for i_z
 	} // move_to_main_ff()
-
+*/
 
 	/**
 	 * the main Form Factor kernel functions called from host.
@@ -1288,7 +1379,7 @@ namespace hig {
 	 * original kernel, with 1D decompostion along t; no shared memory
 	 */
 	//template<typename float_t, typename complex_t>
-	__global__ void form_factor_kernel(
+/*	__global__ void form_factor_kernel(
 					float_t* qx_d, float_t* qy_d, cucomplex_t* qz_d,
 					float_t* shape_def_d, short int* axes,
 					unsigned int curr_nqx, unsigned int curr_nqy,
@@ -1342,12 +1433,12 @@ namespace hig {
 			} // for x
 		} // if
 	} // NumericFormFactorG::form_factor_kernel()
-
+*/
 	/* K2:
 	 * kernel with 3D decomposition along t, y, z; no shared memory
 	 */
 	//template<typename float_t, typename cucomplex_t>
-	__global__ void form_factor_kernel_new(
+/*	__global__ void form_factor_kernel_new(
 						float_t*, float_t*, cucomplex_t*, float_t*, short int*,
 						unsigned int, unsigned int, unsigned int, unsigned int,
 						unsigned int, unsigned int, unsigned int, unsigned int,
@@ -1355,12 +1446,12 @@ namespace hig {
 						cucomplex_t*) {
 		// TODO ...
 	} // form_factor_kernel_new()
-
+*/
 	/* K3:
 	 * kernel with 3D decomposition along t, y, z; static shared mem for input
 	 */
 	//template<typename float_t, typename cucomplex_t>
-	__global__ void form_factor_kernel_new_shared(
+/*	__global__ void form_factor_kernel_new_shared(
 						float_t*, float_t*, cucomplex_t*, float_t*, short int*,
 						unsigned int, unsigned int, unsigned int, unsigned int,
 						unsigned int, unsigned int, unsigned int, unsigned int,
@@ -1368,15 +1459,15 @@ namespace hig {
 						cucomplex_t*) {
 		// TODO ...
 	} // form_factor_kernel_new_shared()
+*/
 
-
-	extern __shared__ float_t dynamic_shared[];
-
+/*	extern __shared__ float_t dynamic_shared[];
+*/
 	/* K4: default kernel
 	 * kernel with 3D decomposition along t, y, z; dynamic shared mem for input, none/static for output
 	 */
 	//template<typename float_t, typename cucomplex_t>
-	__global__ void form_factor_kernel_new_shared2(
+/*	__global__ void form_factor_kernel_new_shared2(
 						const float_t* qx, const float_t* qy, const cucomplex_t* qz,
 						const float_t* shape_def, const short int* axes,
 						const unsigned int curr_nqx, const unsigned int curr_nqy,
@@ -1520,16 +1611,16 @@ namespace hig {
 					} // for z
 				} // for t
 			} // for x */
-		} // if
+/*		} // if
 	} // form_factor_kernel_new_shared2()
-
+*/
 	/* K8:
 	 * kernel with 3D decomposition along t, y, z; dynamic shared mem for input, none for output (K4)
 	 * and includes reduction
 	 * INCOMPLETE CANNOT DO IT YET !!!!
 	 */
 	//template<typename float_t, typename complex_t>
-	__global__ void form_factor_kernel_new_shared2_red(
+/*	__global__ void form_factor_kernel_new_shared2_red(
 						const float_t* qx, const float_t* qy, const cucomplex_t* qz,
 						const float_t* shape_def, const short int* axes,
 						const unsigned int curr_nqx, const unsigned int curr_nqy,
@@ -1620,41 +1711,41 @@ namespace hig {
 			} // for
 		} // if
 	} // form_factor_kernel_new_shared2_red()
-
+*/
 	/* K5:
 	 * kernel with 3D decomposition along t, y, z; dynamic shared mem for input, static for output
 	 * and some memopt? ...
 	 */
 	//template<typename float_t, typename cucomplex_t>
-	__global__ void form_factor_kernel_new_shared2_mem(float_t*, float_t*, cucomplex_t*, float_t*, short int*,
+/*	__global__ void form_factor_kernel_new_shared2_mem(float_t*, float_t*, cucomplex_t*, float_t*, short int*,
 										unsigned int, unsigned int, unsigned int, unsigned int,
 										unsigned int, unsigned int, unsigned int, unsigned int,
 										unsigned int, unsigned int, unsigned int, unsigned int,
 										cucomplex_t*) { }
-
+*/
 	/* K6:
 	 * kernel with K3 and blocked along y, z
 	 * INCOMPLETE ...
 	 */
 	//template<typename float_t, typename cucomplex_t>
-	__global__ void form_factor_kernel_new_shared_subblock(float_t*, float_t*, cucomplex_t*, float_t*,
+/*	__global__ void form_factor_kernel_new_shared_subblock(float_t*, float_t*, cucomplex_t*, float_t*,
 										short int*,
 										unsigned int, unsigned int, unsigned int, unsigned int,
 										unsigned int, unsigned int, unsigned int, unsigned int,
 										unsigned int, unsigned int, unsigned int, unsigned int,
 										cucomplex_t*) { }
-
+*/
 	/* K7:
 	 * kernel with K1 (?) and blocked along y, z
 	 * INCOMPLETE ...
 	 */
 	//template<typename float_t, typename complex_t>
-	__global__ void form_factor_kernel_new_2(float_t*, float_t*, cucomplex_t*, float_t*, short int*,
+/*	__global__ void form_factor_kernel_new_2(float_t*, float_t*, cucomplex_t*, float_t*, short int*,
 										unsigned int, unsigned int, unsigned int, unsigned int,
 										unsigned int, unsigned int, unsigned int, unsigned int,
 										unsigned int, unsigned int, unsigned int, unsigned int,
 										cucomplex_t*) { }
-
+*/
 	// decompose along y, z and t dimensions
 	/*template<typename float_t, typename complex_t>
 	__global__ void form_factor_kernel_new(float_t* qx_d, float_t* qy_d, float_t* qz_d,
@@ -1781,7 +1872,7 @@ namespace hig {
 	/**
 	 * For single precision
 	 */
-
+/*
 	__device__ cuFloatComplex compute_fq(float s, cuFloatComplex qt_d, cuFloatComplex qn_d) {
 		cuFloatComplex v1 = cuCmulf(qn_d, make_cuFloatComplex(cosf(qt_d.x), sinf(qt_d.x)));
 		float v2 = s * expf(qt_d.y);
@@ -1803,11 +1894,11 @@ namespace hig {
 								cuCaddf(make_cuFloatComplex(qyn, 0.0f), qzn)), q2);
 		qt_d = cuCaddf(make_cuFloatComplex(fmaf(temp_x, x, qyt), 0.0f), qzt);
 	} // compute_x()
-
+*/
 	/**
 	 * For double precision
 	 */
-
+/*
 	__device__ cuDoubleComplex compute_fq(double s, cuDoubleComplex qt_d, cuDoubleComplex qn_d) {
 		cuDoubleComplex v1 = cuCmul(qn_d, make_cuDoubleComplex(cos(qt_d.x), sin(qt_d.x)));
 		double v2 = s * exp(qt_d.y);
@@ -1829,5 +1920,7 @@ namespace hig {
 								cuCadd(make_cuDoubleComplex(qyn, 0.0), qzn)), q2);
 		qt_d = cuCadd(make_cuDoubleComplex(fma(temp_x, x, qyt), 0.0), qzt);
 	} // compute_x()
-
+*/
 } // namespace hig
+
+#endif // __FF_NUM_GPU_CUH__
