@@ -3,7 +3,7 @@
   *
   *  File: ff_ana_sphere_gpu.cu
   *  Created: Oct 16, 2012
-  *  Modified: Sat 23 Feb 2013 02:27:43 PM PST
+  *  Modified: Sat 02 Mar 2013 11:40:34 AM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -50,9 +50,6 @@ namespace hig {
 		unsigned int n_distr_r = distr_r.size();
 		const float_t *r_h = r.empty() ? NULL : &*r.begin();
 		const float_t *distr_r_h = distr_r.empty() ? NULL : &*distr_r.begin();
-
-		unsigned int grid_size = nqx_ * nqy_ * nqz_;
-		//std::cout << "nqx x nqy x nqz = " << nqx_ << " x " << nqy_ << " x " << nqz_ << std::endl;
 
 		// construct device buffers
 		float_t *r_d, *distr_r_d;

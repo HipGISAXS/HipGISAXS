@@ -5,7 +5,7 @@
   *
   *  File: hipgisaxs_main.hpp
   *  Created: Jun 11, 2012
-  *  Modified: Fri 07 Dec 2012 07:46:51 PM PST
+  *  Modified: Sat 02 Mar 2013 11:38:05 AM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -109,15 +109,20 @@ namespace hig {
 			void printfr(const char*, float_t*, unsigned int);
 
 		public:
+			// TODO: improve and clean the constructors - for gpu/cpu etc. unify ...
 			HipGISAXS(): freq_(0.0), k0_(0.0),
 						num_layers_(0), num_structures_(0),
 						nqx_(0), nqy_(0), nqz_(0), nqz_extended_(0), 
-#ifdef KERNEL2
-						ff_(2, 4, 4)
-#else
-						ff_(64)
-#endif // KERNEL2
-						{
+						#ifdef FF_NUM_GPU	// use GPU
+							#ifdef KERNEL2
+								ff_(2, 4, 4)
+							#else
+								ff_(64)
+							#endif // KERNEL2
+						#else	// use CPU
+							ff_()
+						#endif
+							{
 				single_layer_refindex_.delta(0.0);
 				single_layer_refindex_.beta(0.0);
 				single_layer_thickness_ = 0.0;

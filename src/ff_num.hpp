@@ -3,7 +3,7 @@
  *
  *  File: ff_num.hpp
  *  Created: Nov 05, 2011
- *  Modified: Fri 01 Mar 2013 11:29:56 AM PST
+ *  Modified: Sat 02 Mar 2013 11:30:50 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -67,16 +67,19 @@ namespace hig {
 	class NumericFormFactor {
 				// TODO: make the cpu and cpu version classes children of this class ...
 		public:
-			#ifdef KERNEL2
-				NumericFormFactor(int block_cuda_t, int block_cuda_y, int block_cuda_z):
+
+			#ifdef FF_NUM_GPU	// use GPUs for numerical
+				#ifdef KERNEL2
+					NumericFormFactor(int block_cuda_t, int block_cuda_y, int block_cuda_z):
 									block_cuda_t_(block_cuda_t), block_cuda_y_(block_cuda_y),
 									block_cuda_z_(block_cuda_z),
-									gff_(block_cuda_t, block_cuda_y, block_cuda_z) {
-				} // NumericFormFactor()
-			#else
-				NumericFormFactor(int block_cuda): block_cuda_(block_cuda), gff_(block_cuda) {
-				} // NumericFormFactor()
-			#endif // KERNEL2
+									gff_(block_cuda_t, block_cuda_y, block_cuda_z) { }
+				#else
+					NumericFormFactor(int block_cuda): block_cuda_(block_cuda), gff_(block_cuda) { }
+				#endif // KERNEL2
+			#else				// use CPUs for numerical
+				NumericFormFactor(): cff_() { }
+			#endif	// FF_NUM_GPU
 
 			~NumericFormFactor() { }
 
@@ -109,7 +112,12 @@ namespace hig {
 								int p_nqx, int p_nqy, int p_nqz,
 								int nqx, int nqy, int nqz,
 								int p_y, int p_z,
-								cucomplex_t* p_ff, std::vector<complex_t>& ff,
+								#ifdef FF_NUM_GPU
+									cucomplex_t* p_ff,
+								#else
+									complex_t* p_ff,
+								#endif
+								std::vector<complex_t>& ff,
 								float_t&, float_t&);
 			void gather_all(std::complex<float> *cast_p_ff, unsigned long int local_qpoints,
 								std::complex<float> *cast_ff,

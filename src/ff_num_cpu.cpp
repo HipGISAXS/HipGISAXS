@@ -3,15 +3,13 @@
  *
  *  File: ff_num_cpu.hpp
  *  Created: Nov 05, 2011
- *  Modified: Fri 01 Mar 2013 09:59:02 AM PST
+ *  Modified: Sat 02 Mar 2013 11:47:26 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
 	
 #include <iostream>
-#include <vector>
 #include <cmath>
-#include <complex>
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -23,38 +21,175 @@
 	
 namespace hig {
 	
+	NumericFormFactorC::NumericFormFactorC() { }
+
+	NumericFormFactorC::~NumericFormFactorC() { }
+
+	// TODO: ...
+	bool NumericFormFactorC::init() { }
+
 	/**
-	 * Function to compute the decomposition block size
-	 * TODO: Improve it later ...
+	 * The main host function called from outside, as part of the API for a single node.
 	 */
-	void NumericFormFactorC::compute_block_size(int nqx, int nqy, int nqz, int num_triangles,
-			unsigned int& b_nqx, unsigned int& b_nqy, unsigned int& b_nqz, unsigned int& b_num_triangles
-	#ifdef FINDBLOCK
-			, const int block_x, const int block_y, const int block_z, const int block_t
-	#endif
-			) {
-		b_nqx = (unsigned int) nqx; b_nqy = (unsigned int) nqy; b_nqz = (unsigned int) nqz;
-		b_num_triangles = (unsigned int) num_triangles;
+	unsigned int NumericFormFactorC::compute_form_factor(int rank,
+						float_vec_t &shape_def, complex_t* &ff,
+						float_t* &qx, int nqx, float_t* &qy, int nqy, complex_t* &qz, int nqz,
+						float_t& pass_kernel_time, float_t& red_time, float_t& mem_time
+						#ifdef FINDBLOCK
+							, const int block_x, const int block_y, const int block_z, const int block_t
+						#endif
+						) {
+		double kernel_time = 0.0, reduce_time = 0.0, total_kernel_time = 0.0, total_reduce_time = 0.0,
+				temp_mem_time = 0.0, total_mem_time = 0.0;
+		#ifdef _OPENMP
+			if(rank == 0)
+				std::cout << "++      Number of OpenMP threads: " << omp_get_max_threads() << std::endl;
+		#endif
 	
-	#ifdef FINDBLOCK
-		b_nqx = (b_nqx > block_x) ? block_x : b_nqx;
-		b_nqy = (b_nqy > block_y) ? block_y : b_nqy;
-		b_nqz = (b_nqz > block_z) ? block_z : b_nqz;
-		b_num_triangles = (b_num_triangles > block_t) ? block_t : b_num_triangles;
-	#else
-		b_nqx = (b_nqx > CPU_BLOCK_X_) ? CPU_BLOCK_X_ : b_nqx;
-		b_nqy = (b_nqy > CPU_BLOCK_Y_) ? CPU_BLOCK_Y_ : b_nqy;
-		b_nqz = (b_nqz > CPU_BLOCK_Z_) ? CPU_BLOCK_Z_ : b_nqz;
-		b_num_triangles = (b_num_triangles > CPU_BLOCK_T_) ? CPU_BLOCK_T_ : b_num_triangles;
-	#endif
-	} // NumericFormFactorC::compute_block_size()
+		unsigned int num_triangles = shape_def.size() / 7;
+		if(num_triangles < 1) return 0;
 	
+		unsigned long int total_qpoints = nqx * nqy * nqz;
+		unsigned long int host_mem_usage = ((unsigned long int) nqx + nqy + nqz) * sizeof(float_t);
 	
+		// allocate memory for the final FF 3D matrix
+		ff = new (std::nothrow) complex_t[total_qpoints]();	// allocate and initialize to 0
+		if(ff == NULL) {
+			std::cerr << "Memory allocation failed for ff. Size = "
+						<< total_qpoints * sizeof(complex_t) << " b" << std::endl;
+			return 0;
+		} // if
+		host_mem_usage += total_qpoints * sizeof(complex_t);
+	
+		unsigned long int matrix_size = (unsigned long int) nqx * nqy * nqz * num_triangles;
+		
+		// do hyperblocking to use less memory
+		unsigned int b_nqx = 0, b_nqy = 0, b_nqz = 0, b_num_triangles = 0;
+		compute_block_size(nqx, nqy, nqz, num_triangles,
+							b_nqx, b_nqy, b_nqz, b_num_triangles
+							#ifdef FINDBLOCK
+								, block_x, block_y, block_z, block_t
+							#endif
+							);
+	
+		unsigned long int blocked_3d_matrix_size = (unsigned long int) b_nqx * b_nqy * b_nqz;
+		unsigned long int blocked_matrix_size = (unsigned long int) blocked_3d_matrix_size * b_num_triangles;
+		
+		size_t estimated_host_mem_need = host_mem_usage + blocked_matrix_size * sizeof(complex_t);
+		if(rank == 0) {
+			std::cout << "++    Estimated host memory need: " << (float) estimated_host_mem_need / 1024 / 1024
+						<< " MB" << std::endl;
+		} // if
+		host_mem_usage += blocked_matrix_size * sizeof(complex_t);
+		complex_t *fq_buffer = new (std::nothrow) complex_t[blocked_matrix_size]();
+		if(fq_buffer == NULL) {
+			std::cerr << "Memory allocation failed for fq_buffer. blocked_matrix_size = "
+						<< blocked_matrix_size << std::endl
+						<< "Host memory usage = " << (float) host_mem_usage / 1024 / 1024 << " MB"
+						<< std::endl;
+			delete[] ff;
+			return 0;
+		} else {
+			if(rank == 0) {
+				std::cout << "++              Host memory used: " << (float) host_mem_usage / 1024 / 1024
+							<< " MB" << std::endl << std::flush;
+			} // if
+	
+			// compute the number of sub-blocks, along each of the 4 dimensions
+			// formulate loops over each dimension, to go over each sub block
+			unsigned int nb_x = (unsigned int) ceil((float) nqx / b_nqx);
+			unsigned int nb_y = (unsigned int) ceil((float) nqy / b_nqy);
+			unsigned int nb_z = (unsigned int) ceil((float) nqz / b_nqz);
+			unsigned int nb_t = (unsigned int) ceil((float) num_triangles / b_num_triangles);
+	
+			unsigned int curr_b_nqx = b_nqx, curr_b_nqy = b_nqy, curr_b_nqz = b_nqz;
+			unsigned int curr_b_num_triangles = b_num_triangles;
+			unsigned int num_blocks = nb_x * nb_y * nb_z * nb_t;
+	
+			if(rank == 0) {
+				std::cout << "++               Hyperblock size: " << b_nqx << " x " << b_nqy
+							<< " x " << b_nqz << " x " << b_num_triangles << std::endl;
+				std::cout << "++  Number of decomposed Hblocks: " << num_blocks
+							<< " [" << nb_x << " x " << nb_y << " x " << nb_z << " x " << nb_t << "]"
+							<< std::endl;
+			} // if
+	
+			unsigned int block_num = 0;
+
+			if(rank == 0) std::cout << "-- Computing form factor on CPU ... " << std::flush;
+
+			// compute for each hyperblock
+			curr_b_nqx = b_nqx;
+			for(unsigned int ib_x = 0; ib_x < nb_x; ++ ib_x) {
+				if(ib_x == nb_x - 1) curr_b_nqx = nqx - b_nqx * ib_x;
+				curr_b_nqy = b_nqy;
+				for(unsigned int ib_y = 0; ib_y < nb_y; ++ ib_y) {
+					if(ib_y == nb_y - 1) curr_b_nqy = nqy - b_nqy * ib_y;
+					curr_b_nqz = b_nqz;
+					for(unsigned int ib_z = 0; ib_z < nb_z; ++ ib_z) {
+						if(ib_z == nb_z - 1) curr_b_nqz = nqz - b_nqz * ib_z;
+						curr_b_num_triangles = b_num_triangles;
+						for(unsigned int ib_t = 0; ib_t < nb_t; ++ ib_t) {
+							if(ib_t == nb_t - 1)
+								curr_b_num_triangles = num_triangles - b_num_triangles * ib_t;
+
+							#ifdef VERBOSITY_3
+								if(rank == 0) {
+									std::cout << "-- Processing hyperblock " << ++ block_num << " of "
+											<< num_blocks << ": Kernel... " << std::flush;
+								} // if
+							#endif
+
+							// call the main kernel
+							form_factor_kernel(qx, qy, qz, shape_def,
+									curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles,
+									b_nqx, b_nqy, b_nqz, b_num_triangles,
+									ib_x, ib_y, ib_z, ib_t,
+									fq_buffer);
+
+							#ifdef VERBOSITY_3
+								if(rank == 0) {
+									std::cout << "done [" << temp_kernel_time << "s]. Reduction... "
+											<< std::flush;
+								} // if
+							#endif
+
+							// call the reduction kernel
+							reduction_kernel(curr_b_nqx, curr_b_nqy, curr_b_nqz,
+									curr_b_num_triangles, blocked_matrix_size,
+									b_nqx, b_nqy, b_nqz, num_triangles,
+									nqx, nqy, nqz,
+									ib_x, ib_y, ib_z, ib_t,
+									fq_buffer, ff);
+
+							#ifdef VERBOSITY_3
+								if(rank == 0) {
+									std::cout << "done [" << temp_reduce_time << "s]." << std::endl;
+								} // if
+							#endif
+						} // for ib_t
+					} // for ib_z
+				} // for ib_y
+			} // for ib_x
+	
+			delete[] fq_buffer;
+
+			if(rank == 0) std::cout << "done." << std::endl;
+		} // if-else
+	
+		pass_kernel_time = total_kernel_time;
+		red_time = total_reduce_time;
+		mem_time = total_mem_time;
+	
+		return num_triangles;
+	} // NumericFormFactorC::compute_form_factor()
+		
+
 	/**
 	 * the main Form Factor kernel function - for one hyperblock.
 	 */
-	void NumericFormFactorC::form_factor_kernel(
-					float_t* qx, float_t* qy, complex_t* qz, std::vector<float_t>& shape_def,
+	void NumericFormFactorC::form_factor_kernel(float_t* qx, float_t* qy, complex_t* qz,
+					float_vec_t& shape_def,
 					unsigned int curr_nqx, unsigned int curr_nqy, unsigned int curr_nqz,
 					unsigned int curr_num_triangles,
 					unsigned int b_nqx, unsigned int b_nqy, unsigned int b_nqz, unsigned int b_num_triangles,
@@ -81,21 +216,24 @@ namespace hig {
 				unsigned int start_y = b_nqy * ib_y;
 				unsigned int start_x = b_nqx * ib_x;
 	
-				for(unsigned int i_z = 0, global_i_z = start_z; i_z < curr_nqz; ++ i_z, ++ global_i_z) {
+				for(unsigned int i_z = 0, global_i_z = start_z; i_z < curr_nqz;
+						++ i_z, ++ global_i_z) {
 					unsigned long int off_start = matrix_off + xy_size * i_z;
 					complex_t temp_z = qz[global_i_z];
 					complex_t qz2 = temp_z * temp_z;
 					complex_t qzn = temp_z * nz;
 					complex_t qzt = temp_z * z;
 	
-					for(unsigned int i_y = 0, global_i_y = start_y; i_y < curr_nqy; ++ i_y, ++ global_i_y) {
+					for(unsigned int i_y = 0, global_i_y = start_y; i_y < curr_nqy;
+							++ i_y, ++ global_i_y) {
 						unsigned long int xy_off_start = (unsigned long int) curr_nqx * i_y;
 						float_t temp_y = qy[global_i_y];
 						float_t qy2 = temp_y * temp_y;
 						float_t qyn = temp_y * ny;
 						float_t qyt = temp_y * y;
 	
-						for(unsigned int i_x = 0, global_i_x = start_x; i_x < curr_nqx; ++ i_x, ++ global_i_x) {
+						for(unsigned int i_x = 0, global_i_x = start_x; i_x < curr_nqx;
+								++ i_x, ++ global_i_x) {
 							unsigned long int off = off_start + xy_off_start + i_x;
 							float_t temp_x = qx[global_i_x];
 							complex_t q2 = temp_x * temp_x + qy2 + qz2;
@@ -172,155 +310,30 @@ namespace hig {
 	
 	
 	/**
-	 * The main host function called from outside, as part of the API for a single node.
+	 * Function to compute the decomposition block size
+	 * TODO: Improve it later ...
 	 */
-	unsigned int NumericFormFactorC::compute_form_factor(int rank,
-						std::vector<float_t> &shape_def, complex_t* &ff,
-						float_t* &qx, int nqx, float_t* &qy, int nqy, complex_t* &qz, int nqz,
-						float_t& pass_kernel_time, float_t& red_time, float_t& mem_time
-	#ifdef FINDBLOCK
-						, const int block_x, const int block_y, const int block_z, const int block_t
-	#endif
-						) {
-		double kernel_time = 0.0, reduce_time = 0.0, total_kernel_time = 0.0, total_reduce_time = 0.0,
-				temp_mem_time = 0.0, total_mem_time = 0.0;
-	#ifdef _OPENMP
-		if(rank == 0)
-			std::cout << "++      Number of OpenMP threads: " << omp_get_max_threads() << std::endl;
-	#endif
+	void NumericFormFactorC::compute_block_size(int nqx, int nqy, int nqz, int num_triangles,
+			unsigned int& b_nqx, unsigned int& b_nqy, unsigned int& b_nqz, unsigned int& b_num_triangles
+			#ifdef FINDBLOCK
+				, const int block_x, const int block_y, const int block_z, const int block_t
+			#endif
+			) {
+		b_nqx = (unsigned int) nqx; b_nqy = (unsigned int) nqy; b_nqz = (unsigned int) nqz;
+		b_num_triangles = (unsigned int) num_triangles;
 	
-		unsigned int num_triangles = shape_def.size() / 7;
-		if(num_triangles < 1) return 0;
+		#ifdef FINDBLOCK
+			b_nqx = (b_nqx > block_x) ? block_x : b_nqx;
+			b_nqy = (b_nqy > block_y) ? block_y : b_nqy;
+			b_nqz = (b_nqz > block_z) ? block_z : b_nqz;
+			b_num_triangles = (b_num_triangles > block_t) ? block_t : b_num_triangles;
+		#else
+			b_nqx = (b_nqx > CPU_BLOCK_X_) ? CPU_BLOCK_X_ : b_nqx;
+			b_nqy = (b_nqy > CPU_BLOCK_Y_) ? CPU_BLOCK_Y_ : b_nqy;
+			b_nqz = (b_nqz > CPU_BLOCK_Z_) ? CPU_BLOCK_Z_ : b_nqz;
+			b_num_triangles = (b_num_triangles > CPU_BLOCK_T_) ? CPU_BLOCK_T_ : b_num_triangles;
+		#endif
+	} // NumericFormFactorC::compute_block_size()
 	
-		unsigned long int total_qpoints = nqx * nqy * nqz;
-		unsigned long int host_mem_usage = ((unsigned long int) nqx + nqy + nqz) * sizeof(float_t);
 	
-		// allocate memory for the final FF 3D matrix
-		ff = new (std::nothrow) complex_t[total_qpoints]();	// allocate and initialize to 0
-		if(ff == NULL) {
-			std::cerr << "Memory allocation failed for ff. Size = "
-						<< total_qpoints * sizeof(complex_t) << " b" << std::endl;
-			return 0;
-		} // if
-		host_mem_usage += total_qpoints * sizeof(complex_t);
-	
-		unsigned long int matrix_size = (unsigned long int) nqx * nqy * nqz * num_triangles;
-		
-		// do hyperblocking to use less memory
-		unsigned int b_nqx = 0, b_nqy = 0, b_nqz = 0, b_num_triangles = 0;
-		compute_block_size(nqx, nqy, nqz, num_triangles,
-							b_nqx, b_nqy, b_nqz, b_num_triangles
-	#ifdef FINDBLOCK
-							, block_x, block_y, block_z, block_t
-	#endif
-							);
-	
-		unsigned long int blocked_3d_matrix_size = (unsigned long int) b_nqx * b_nqy * b_nqz;
-		unsigned long int blocked_matrix_size = (unsigned long int) blocked_3d_matrix_size * b_num_triangles;
-		
-		size_t estimated_host_mem_need = host_mem_usage + blocked_matrix_size * sizeof(complex_t);
-		if(rank == 0) {
-			std::cout << "++    Estimated host memory need: " << (float) estimated_host_mem_need / 1024 / 1024
-						<< " MB" << std::endl;
-		} // if
-		host_mem_usage += blocked_matrix_size * sizeof(complex_t);
-		complex_t *fq_buffer = new (std::nothrow) complex_t[blocked_matrix_size]();
-		if(fq_buffer == NULL) {
-			std::cerr << "Memory allocation failed for fq_buffer. blocked_matrix_size = "
-						<< blocked_matrix_size << std::endl
-						<< "Host memory usage = " << (float) host_mem_usage / 1024 / 1024 << " MB"
-						<< std::endl;
-			delete[] ff;
-			return 0;
-		} else {
-			if(rank == 0) {
-				std::cout << "++              Host memory used: " << (float) host_mem_usage / 1024 / 1024
-							<< " MB" << std::endl << std::flush;
-			} // if
-	
-			// compute the number of sub-blocks, along each of the 4 dimensions
-			// formulate loops over each dimension, to go over each sub block
-			unsigned int nb_x = (unsigned int) ceil((float) nqx / b_nqx);
-			unsigned int nb_y = (unsigned int) ceil((float) nqy / b_nqy);
-			unsigned int nb_z = (unsigned int) ceil((float) nqz / b_nqz);
-			unsigned int nb_t = (unsigned int) ceil((float) num_triangles / b_num_triangles);
-	
-			unsigned int curr_b_nqx = b_nqx, curr_b_nqy = b_nqy, curr_b_nqz = b_nqz;
-			unsigned int curr_b_num_triangles = b_num_triangles;
-			unsigned int num_blocks = nb_x * nb_y * nb_z * nb_t;
-	
-			if(rank == 0) {
-				std::cout << "++                    Block size: " << b_nqx << " x " << b_nqy
-							<< " x " << b_nqz << " x " << b_num_triangles << std::endl;
-				std::cout << "++   Number of decomposed blocks: " << num_blocks
-							<< " [" << nb_x << " x " << nb_y << " x " << nb_z << " x " << nb_t << "]"
-							<< std::endl;
-			} // if
-	
-			unsigned int block_num = 0;
-	#ifndef VERBOSE
-			if(rank == 0) std::cout << "-- Computing form factor... " << std::flush;
-	#endif
-			// compute for each block
-			curr_b_nqx = b_nqx;
-			for(unsigned int ib_x = 0; ib_x < nb_x; ++ ib_x) {
-				if(ib_x == nb_x - 1) curr_b_nqx = nqx - b_nqx * ib_x;
-				curr_b_nqy = b_nqy;
-				for(unsigned int ib_y = 0; ib_y < nb_y; ++ ib_y) {
-					if(ib_y == nb_y - 1) curr_b_nqy = nqy - b_nqy * ib_y;
-					curr_b_nqz = b_nqz;
-					for(unsigned int ib_z = 0; ib_z < nb_z; ++ ib_z) {
-						if(ib_z == nb_z - 1) curr_b_nqz = nqz - b_nqz * ib_z;
-						curr_b_num_triangles = b_num_triangles;
-						for(unsigned int ib_t = 0; ib_t < nb_t; ++ ib_t) {
-							if(ib_t == nb_t - 1)
-								curr_b_num_triangles = num_triangles - b_num_triangles * ib_t;
-	#ifdef VERBOSE
-							if(rank == 0) {
-								std::cout << "-- Processing block " << ++ block_num << " of "
-										<< num_blocks << ": Kernel... " << std::flush;
-							} // if
-	#endif
-							// call the main kernel
-							form_factor_kernel(qx, qy, qz, shape_def,
-									curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles,
-									b_nqx, b_nqy, b_nqz, b_num_triangles,
-									ib_x, ib_y, ib_z, ib_t,
-									fq_buffer);
-	#ifdef VERBOSE
-							if(rank == 0) {
-								std::cout << "done [" << temp_kernel_time << "s]. Reduction... "
-										<< std::flush;
-							} // if
-	#endif
-							// call the reduction kernel
-							reduction_kernel(curr_b_nqx, curr_b_nqy, curr_b_nqz,
-									curr_b_num_triangles, blocked_matrix_size,
-									b_nqx, b_nqy, b_nqz, num_triangles,
-									nqx, nqy, nqz,
-									ib_x, ib_y, ib_z, ib_t,
-									fq_buffer, ff);
-	#ifdef VERBOSE
-							if(rank == 0) {
-								std::cout << "done [" << temp_reduce_time << "s]." << std::endl;
-							} // if
-	#endif
-						} // for ib_t
-					} // for ib_z
-				} // for ib_y
-			} // for ib_x
-	
-			delete[] fq_buffer;
-	#ifndef VERBOSE
-			if(rank == 0) std::cout << "done." << std::endl;
-	#endif
-		} // if-else
-	
-		pass_kernel_time = total_kernel_time;
-		red_time = total_reduce_time;
-		mem_time = total_mem_time;
-	
-		return num_triangles;
-	} // NumericFormFactorC::compute_form_factor()
-		
 } // namespace hig

@@ -3,7 +3,7 @@
   *
   *  File: ff_ana_prism6_gpu.cu
   *  Created: Oct 16, 2012
-  *  Modified: Wed 20 Feb 2013 08:37:24 PM PST
+  *  Modified: Sat 02 Mar 2013 11:40:09 AM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -44,8 +44,6 @@ namespace hig {
 		const float_t *distr_l_h = distr_l.empty() ? NULL : &*distr_l.begin();
 		const float_t *h_h = h.empty() ? NULL : &*h.begin();
 		const float_t *distr_h_h = distr_h.empty() ? NULL : &*distr_h.begin();
-
-		unsigned int grid_size = nqx_ * nqy_ * nqz_;
 
 		// construct device buffers
 		float_t *l_d, *distr_l_d;

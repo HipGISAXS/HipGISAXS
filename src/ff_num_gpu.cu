@@ -9,7 +9,9 @@
 #include <vector>
 #include <complex>
 #include <cuComplex.h>
+#ifdef _OPENMP
 #include <omp.h>
+#endif
 
 #include "typedefs.hpp"
 #include "constants.hpp"
@@ -428,7 +430,7 @@ namespace hig {
 	#ifdef VERBOSE
 					unsigned int block_num = 0;
 	#else
-					if(rank == 0) std::cout << "-- Computing form factor ... " << std::flush;
+					if(rank == 0) std::cout << "-- Computing form factor on GPU ... " << std::flush;
 	#endif
 					cudaEventCreate(&begin_event);
 					cudaEventCreate(&end_event);

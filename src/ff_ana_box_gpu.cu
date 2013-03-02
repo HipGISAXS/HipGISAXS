@@ -3,7 +3,7 @@
   *
   *  File: ff_ana_gpu.cu
   *  Created: Oct 16, 2012
-  *  Modified: Sat 23 Feb 2013 12:28:28 PM PST
+  *  Modified: Sat 02 Mar 2013 11:39:46 AM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -50,8 +50,6 @@ namespace hig {
 		const float_t *distr_y_h = distr_y.empty() ? NULL : &*distr_y.begin();
 		const float_t *z_h = z.empty() ? NULL : &*z.begin();
 		const float_t *distr_z_h = distr_z.empty() ? NULL : &*distr_z.begin();
-
-		unsigned int grid_size = nqx_ * nqy_ * nqz_;
 
 		// construct device buffers
 		float_t *x_d, *distr_x_d;

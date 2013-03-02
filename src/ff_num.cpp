@@ -5,17 +5,15 @@
   *
   *  File: ff_num.cpp
   *  Created: Jul 18, 2012
-  *  Modified: Fri 01 Mar 2013 11:31:10 AM PST
+  *  Modified: Sat 02 Mar 2013 11:48:21 AM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
 
 #include <iostream>
 #include <fstream>
-#include <vector>
 #include <mpi.h>
 #include <cmath>
-#include <complex>
 #include <cstring>
 
 #include "woo/timer/woo_boostchronotimers.hpp"
@@ -29,57 +27,12 @@
 
 namespace hig {
 
-	// something good may come here ...
-
-    /**
-     * Write a slice to output file
-     */
-    //template<typename complex_t>
-    void write_slice_to_file(cucomplex_t *ff, int nqx, int nqy, int nqz, char* filename, int axis, int slice) {
-        if(ff == NULL) return;
-
-        std::cout << "** Writing slice to file ...";
-        switch(axis) {
-            case 0:
-                break;
-            default:
-                std::cout << "Given axis slice writing not implemented yet!" << std::endl;
-        } // switch
-
-        if(slice >= nqx || slice < 0) {
-            std::cout << "Given slice does not exist!" << std::endl;
-            return;
-        } // if
-
-        std::ofstream slice_file;
-        //char* outfilename = "output_ff.dat";
-        char outfilename[50];
-        sprintf(outfilename, "ff_p%d.dat", MPI::COMM_WORLD.Get_size());
-        std::cout << " " << outfilename << " ";
-        slice_file.open(outfilename);
-        if(!slice_file.is_open()) {
-            std::cerr << "Error opening slice file for writing." << std::endl;
-            return;
-        } // if
-
-        for(int y = 0; y < nqy; ++ y) {
-            for(int z = 0; z < nqz; ++ z) {
-                unsigned long int index = nqx * nqy * z + nqx * y + slice;
-                slice_file << ff[index].x << "," << ff[index].y << "\t";
-            } // for z
-            slice_file << std::endl;
-        } // for y
-        slice_file.close();
-        std::cout << " done." << std::endl;
-    } // write_slice_to_file()
-
-
 	/**
 	 * main host function
 	 */
 	//template<typename float_t, typename complex_t, typename cucomplex_t>
 	//bool NumericFormFactor<float_t, complex_t, cucomplex_t>::compute(
-	bool NumericFormFactor::compute(const char* filename, std::vector<complex_t>& ff,
+	bool NumericFormFactor::compute(const char* filename, complex_vec_t& ff,
 									MPI::Intracomm& world_comm) {
 		float_t comp_start = 0.0, comp_end = 0.0, comm_start = 0.0, comm_end = 0.0;
 		float_t mem_start = 0.0, mem_end = 0.0;
@@ -107,23 +60,23 @@ namespace hig {
 	
 		// all procs read the shape file
 		// TODO: improve to parallel IO, or one proc reading and sending to all ...
-		std::vector<float_t> shape_def;
+		float_vec_t shape_def;
 		// use the new file reader instead ...
-//		unsigned int num_triangles = read_shape_surface_file(filename, shape_def);
 		unsigned int num_triangles = read_shapes_hdf5(filename, shape_def, world_comm);
 						// TODO ... <--- all procs read this? IMPROVE!!!
 	
+		// TODO: temporary ... remove ...
 		std::vector<short int> axes(4);			// axes[i] = j
 												// i: x=0 y=1 z=2
 												// j: 0=a 1=b 2=c
-#ifndef AXIS_ROT
-		axes[0] = 0; axes[1] = 1; axes[2] = 2;	// default values
-#else
-		find_axes_orientation(shape_def, axes);
-#endif
+		#ifndef AXIS_ROT
+			axes[0] = 0; axes[1] = 1; axes[2] = 2;	// default values
+		#else
+			find_axes_orientation(shape_def, axes);
+		#endif
 
 		if(rank == 0) {
-			std::cout << "-- Form factor computation ..." << std::endl
+			std::cout << "-- Numerical form factor computation ..." << std::endl
 						<< "**        Using input shape file: " << filename << std::endl
 						<< "**     Number of input triangles: " << num_triangles << std::endl
 						<< "**  Q-grid resolution (q-points): " << nqx * nqy * nqz << std::endl
@@ -132,13 +85,12 @@ namespace hig {
 						<< "** Number of processes requested: " << num_procs << std::endl << std::flush;
 		} // if
 		if(num_triangles < 1) {
-			//MPI::Finalize();
 			std::cerr << "error: no triangles found in specified definition file" << std::endl;
 			return false;
 		} // if
 	
 		// decompose along y and z directions into blocks
-		int p_y = std::floor(sqrt((float_t)num_procs));	// some procs may be idle ...
+		int p_y = std::floor(sqrt((float_t) num_procs));	// some procs may be idle ...
 		int p_z = num_procs / p_y;
 		
 		int p_nqx = nqx;
@@ -164,18 +116,18 @@ namespace hig {
 		comm_end = MPI::Wtime();
 		comm_time += comm_end - comm_start;
 	
-	#ifdef FINDBLOCK
-		int block_x = 0, block_y = 0, block_z = 0, block_t = 0;
-		int block_x_max = 0, block_y_max = 0, block_z_max = 0, block_t_max = 0;
-		block_x_max = (nqx < 100) ? nqx : 100;
-		block_y_max = (nqy < 100) ? nqy : 100;
-		block_z_max = (nqz < 100) ? nqz : 100;
-		block_t_max = (num_triangles < 2000) ? num_triangles : 2000;
-		block_t = block_t_max;
-		for(block_x = block_x_max; block_x > 0; block_x -= 5) {
-		for(block_y = 5; block_y < block_y_max; block_y += 5) {
-		for(block_z = 5; block_z < block_z_max; block_z += 5) {
-	#endif
+		#ifdef FINDBLOCK
+			int block_x = 0, block_y = 0, block_z = 0, block_t = 0;
+			int block_x_max = 0, block_y_max = 0, block_z_max = 0, block_t_max = 0;
+			block_x_max = (nqx < 100) ? nqx : 100;
+			block_y_max = (nqy < 100) ? nqy : 100;
+			block_z_max = (nqz < 100) ? nqz : 100;
+			block_t_max = (num_triangles < 2000) ? num_triangles : 2000;
+			block_t = block_t_max;
+			for(block_x = block_x_max; block_x > 0; block_x -= 5) {
+			for(block_y = 5; block_y < block_y_max; block_y += 5) {
+			for(block_z = 5; block_z < block_z_max; block_z += 5) {
+		#endif
 		
 		if(rank < p_y * p_z) {
 			total_start = MPI::Wtime();
@@ -223,29 +175,42 @@ namespace hig {
 			p_qy = new (std::nothrow) float_t[p_nqy]();
 			if(p_qy == NULL) { return 0; }
 			memcpy(p_qy, (void*) (qy + y_offset), p_nqy * sizeof(float_t));
-			cucomplex_t *p_qz = NULL;
-			p_qz = new (std::nothrow) cucomplex_t[p_nqz]();
-			if(p_qz == NULL) { delete[] p_qy; return 0; }
-			memcpy(p_qz, (void*) (qz + z_offset), p_nqz * sizeof(cucomplex_t));
+			#ifdef FF_NUM_GPU
+				cucomplex_t *p_qz = NULL;
+				p_qz = new (std::nothrow) cucomplex_t[p_nqz]();
+				if(p_qz == NULL) { delete[] p_qy; return 0; }
+				memcpy(p_qz, (void*) (qz + z_offset), p_nqz * sizeof(cucomplex_t));
+			#else // TODO: avoid the following ...
+				complex_t *p_qz = NULL;
+				p_qz = new (std::nothrow) complex_t[p_nqz]();
+				if(p_qz == NULL) { delete[] p_qy; return 0; }
+				memcpy(p_qz, (void*) (qz + z_offset), p_nqz * sizeof(complex_t));
+			#endif
 	
 			mem_end = MPI::Wtime();
 			mem_time += mem_end - mem_start;
 		
 			// compute local
 			comp_start = MPI::Wtime();
-			cucomplex_t *p_ff = NULL;
 			float_t temp_mem_time = 0.0, temp_comm_time = 0.0;
+
+			#ifdef FF_NUM_GPU
+				cucomplex_t *p_ff = NULL;
+			#else
+				complex_t *p_ff = NULL;
+			#endif
 	
 			computetimer.start();
 
 			unsigned int ret_nt = 0;
-#ifdef FF_NUM_GPU	// use GPU
-			ret_nt = gff_.compute_form_factor_db(rank, shape_def, axes, p_ff,
+
+			#ifdef FF_NUM_GPU	// use GPU
+				ret_nt = gff_.compute_form_factor_db(rank, shape_def, axes, p_ff,
 												qx, p_nqx, p_qy, p_nqy, p_qz, p_nqz,
 												kernel_time, red_time, temp_mem_time
-	#ifdef FINDBLOCK
-												, block_x, block_y, block_z, block_t
-	#endif
+												#ifdef FINDBLOCK
+													, block_x, block_y, block_z, block_t
+												#endif
 												);
 			// the original, with wrapper:
 //			ret_nt = compute_form_factor_gpu(rank, shape_def, num_triangles, axes,
@@ -260,19 +225,18 @@ namespace hig {
 //												, block_cuda_
 //	#endif
 //												);
-#else	// use CPU
-/*			ret_nt = cff_.compute_form_factor(rank, shape_def, p_ff, qx, p_nqx, p_qy, p_nqy, p_qz, p_nqz,
+				#else	// use CPU
+					ret_nt = cff_.compute_form_factor(rank, shape_def,
+ 												p_ff, qx, p_nqx, p_qy, p_nqy, p_qz, p_nqz,
 												kernel_time, red_time, temp_mem_time
-	#ifdef FINDBLOCK
-												, block_x, block_y, block_z, block_t
-	#endif
-												);*/
-#endif // FF_NUM_GPU
+												#ifdef FINDBLOCK
+													, block_x, block_y, block_z, block_t
+												#endif
+												);
+				#endif // FF_NUM_GPU
 
 			computetimer.stop();
 
-			//p_ff = new (std::nothrow) complex_t[p_nqx * p_nqy * p_nqz];
-			//ret_nt = 1;
 			mem_time += (temp_mem_time / 1000);
 			comp_end = MPI::Wtime();
 			comp_time += comp_end - comp_start;
@@ -298,9 +262,9 @@ namespace hig {
 			comm_time += comm_end - comm_start;
 	
 			mem_start = MPI::Wtime();
-	#ifdef FINDBLOCK
-			if(ff != NULL) delete[] ff;
-	#endif
+			#ifdef FINDBLOCK
+				if(ff != NULL) delete[] ff;
+			#endif
 			if(p_ff != NULL) delete[] p_ff;
 			delete[] p_qz;
 			delete[] p_qy;
@@ -329,20 +293,22 @@ namespace hig {
 			} // if
 		} // if
 
-#ifndef FINDBLOCK
-		if(rank == 0) {
-			//int naninfs = count_naninfs((int)nqx, (int)nqy, (int)nqz, ff);
-			//std::cout << " ------ " << naninfs << " / " << nqx * nqy * nqz << " nans or infs" << std::endl;
-		} // if
-#endif
+		#ifndef FINDBLOCK
+			if(rank == 0) {
+				//int naninfs = count_naninfs((int)nqx, (int)nqy, (int)nqz, ff);
+				//std::cout << " ------ " << naninfs << " / " << nqx * nqy * nqz
+				//			<< " nans or infs" << std::endl;
+			} // if
+		#endif
 	
 		world_comm.Barrier();
-	#ifdef FINDBLOCK
-		} // block_z
-		} // block_y
-		} // block_x
-	#endif
-		//MPI::Finalize();	
+
+		#ifdef FINDBLOCK
+			} // block_z
+			} // block_y
+			} // block_x
+		#endif
+
 		return true;
 	} // NumericFormFactor::compute()
 	
@@ -358,13 +324,13 @@ namespace hig {
 											int p_nqx, int p_nqy, int p_nqz,
 											int nqx, int nqy, int nqz,
 											int p_y, int p_z,
-#ifdef FF_NUM_GPU
-											cucomplex_t* p_ff,
-#else
-											complex_t* p_ff,
-#endif // FF_NUM_GPU
+											#ifdef FF_NUM_GPU
+												cucomplex_t* p_ff,
+											#else
+												complex_t* p_ff,
+											#endif
 											//complex_t* &ff,
-											std::vector<complex_t>& ff,
+											complex_vec_t& ff,
 											float_t& mem_time, float_t& comm_time) {
 		float_t mem_start = 0, mem_end = 0, comm_start = 0, comm_end = 0;
 		mem_time = 0; comm_time = 0;
@@ -377,11 +343,19 @@ namespace hig {
 		// process 0 creates the main ff, and collects computed p_ff from all others (just use gather)
 //		if(rank == 0) ff = new (std::nothrow) cucomplex_t[total_qpoints];
 		ff.clear();
-		cucomplex_t* all_ff = NULL;		// TODO: improve this ...
+		#ifdef FF_NUM_GPU
+			cucomplex_t* all_ff = NULL;		// TODO: improve this ...
+		#else
+			complex_t* all_ff = NULL;
+		#endif
 		if(rank == 0) {
 			ff.reserve(total_qpoints);
 			ff.assign(total_qpoints, complex_t(0.0, 0.0));
-			all_ff = new (std::nothrow) cucomplex_t[total_qpoints];
+			#ifdef FF_NUM_GPU
+				all_ff = new (std::nothrow) cucomplex_t[total_qpoints];
+			#else
+				all_ff = new (std::nothrow) complex_t[total_qpoints];
+			#endif
 		} // if
 	
 		// construct stuff for gatherv
@@ -399,14 +373,23 @@ namespace hig {
 		for(int i = 1; i < num_procs; ++ i) {
 			displacements[i] = displacements[i - 1] + recv_counts[i - 1];
 		} // for
-		cucomplex_t *ff_buffer = new (std::nothrow) cucomplex_t[total_qpoints];
+		#ifdef FF_NUM_GPU
+			cucomplex_t *ff_buffer = new (std::nothrow) cucomplex_t[total_qpoints];
+		#else
+			complex_t *ff_buffer = new (std::nothrow) complex_t[total_qpoints];
+		#endif
 		if(ff_buffer == NULL) {
 			std::cerr << "Error allocating memory for ff buffer" << std::endl;
 			return;
 		} // if
-		std::complex<float_t> *cast_p_ff, *cast_ff;
-		cast_p_ff = reinterpret_cast<std::complex<float_t>*>(p_ff);
-		cast_ff = reinterpret_cast<std::complex<float_t>*>(ff_buffer);
+		complex_t *cast_p_ff, *cast_ff;
+		#ifdef FF_NUM_GPU
+			cast_p_ff = reinterpret_cast<complex_t*>(p_ff);
+			cast_ff = reinterpret_cast<complex_t*>(ff_buffer);
+		#else
+			cast_p_ff = p_ff;
+			cast_ff = ff_buffer;
+		#endif
 		mem_end = MPI::Wtime();
 		mem_time += mem_end - mem_start;
 	
@@ -431,14 +414,23 @@ namespace hig {
 			for(int i_nqz = 0; i_nqz < nqz; ++ i_nqz) {
 				for(int i_py = 0; i_py < p_y; ++ i_py) {
 					unsigned long int ffb_index = nqx * (i_nqz * recv_p_nqy[i_py] + nqz * off_p_nqy[i_py]);
-					memcpy(&all_ff[ff_index], &ff_buffer[ffb_index],
-							nqx * recv_p_nqy[i_py] * sizeof(cucomplex_t));
+					#ifdef FF_NUM_GPU
+						memcpy(&all_ff[ff_index], &ff_buffer[ffb_index],
+								nqx * recv_p_nqy[i_py] * sizeof(cucomplex_t));
+					#else
+						memcpy(&all_ff[ff_index], &ff_buffer[ffb_index],
+								nqx * recv_p_nqy[i_py] * sizeof(complex_t));
+					#endif
 					ff_index += nqx * recv_p_nqy[i_py];
 				} // for i_py
 			} // for i_nqz
 			// put into the final ff buffer
-			ff.assign(reinterpret_cast<complex_t*>(all_ff),
-						reinterpret_cast<complex_t*>(all_ff + total_qpoints));
+			#ifdef FF_NUM_GPU
+				ff.assign(reinterpret_cast<complex_t*>(all_ff),
+							reinterpret_cast<complex_t*>(all_ff + total_qpoints));
+			#else
+				ff.assign(all_ff, all_ff + total_qpoints);
+			#endif
 		} // if
 	
 		delete[] off_p_nqy;
@@ -477,8 +469,7 @@ namespace hig {
 	 */
 	//template<typename float_t, typename complex_t, typename cucomplex_t>
 	//unsigned int NumericFormFactor<float_t, complex_t, cucomplex_t>::read_shape_surface_file(const char* filename,
-	unsigned int NumericFormFactor::read_shape_surface_file(const char* filename,
-			std::vector<float_t> &shape_def) {
+	unsigned int NumericFormFactor::read_shape_surface_file(const char* filename, float_vec_t &shape_def) {
 		std::ifstream f(filename);
 		if(!f.is_open()) {
 			std::cout << "Cannot open file " << filename << std::endl;
@@ -507,8 +498,7 @@ namespace hig {
 	
 	//template<typename float_t, typename complex_t, typename cucomplex_t>
 	//void NumericFormFactor<float_t, complex_t, cucomplex_t>::find_axes_orientation(
-	void NumericFormFactor::find_axes_orientation(
-			std::vector<float_t> &shape_def, std::vector<short int> &axes) {
+	void NumericFormFactor::find_axes_orientation(float_vec_t &shape_def, std::vector<short int> &axes) {
 		float_t min_a = shape_def[4], max_a = shape_def[4];
 		float_t min_b = shape_def[5], max_b = shape_def[5];
 		float_t min_c = shape_def[6], max_c = shape_def[6];
@@ -533,7 +523,7 @@ namespace hig {
 		//std::cout << "++ diff_a = " << diff_a << ", diff_b = " << diff_b
 		//			<< ", diff_c = " << diff_c << std::endl;
 
-		std::vector<float_t> min_point, max_point;
+		float_vec_t min_point, max_point;
 	
 		// the smallest one is x, other two are y and z
 		if(diff_a < diff_b) {
@@ -579,23 +569,66 @@ namespace hig {
 	//template<typename float_t, typename complex_t, typename cucomplex_t>
 	//unsigned int NumericFormFactor<float_t, complex_t, cucomplex_t>::read_shapes_hdf5(const char* filename,
 	unsigned int NumericFormFactor::read_shapes_hdf5(const char* filename,
-			std::vector<float_t> &shape_def, MPI::Intracomm& comm) {
+														float_vec_t &shape_def, MPI::Intracomm& comm) {
 		unsigned int num_triangles = 0;
 		double* temp_shape_def = NULL;
 	
 		h5_shape_reader(filename, &temp_shape_def, &num_triangles/*, comm*/);
-#ifndef KERNEL2
-		for(unsigned int i = 0; i < num_triangles * 7; ++ i)
-			shape_def.push_back((float_t)temp_shape_def[i]);
-#else // KERNEL2
-		for(unsigned int i = 0, j = 0; i < num_triangles * T_PROP_SIZE_; ++ i) {
-			if((i + 1) % T_PROP_SIZE_ == 0) shape_def.push_back((float_t) 0.0);	// padding
-			else { shape_def.push_back((float_t)temp_shape_def[j]); ++ j; }
-		} // for
-#endif // KERNEL2
+		#ifndef KERNEL2
+			for(unsigned int i = 0; i < num_triangles * 7; ++ i)
+				shape_def.push_back((float_t)temp_shape_def[i]);
+		#else // KERNEL2
+			for(unsigned int i = 0, j = 0; i < num_triangles * T_PROP_SIZE_; ++ i) {
+				if((i + 1) % T_PROP_SIZE_ == 0) shape_def.push_back((float_t) 0.0);	// padding
+				else { shape_def.push_back((float_t)temp_shape_def[j]); ++ j; }
+			} // for
+		#endif // KERNEL2
 
 		return num_triangles;
 	} // NumericFormFactor::read_shapes_hdf5()
 	
+
+    /**
+     * Write a slice to output file
+     */
+    //template<typename complex_t>
+    void write_slice_to_file(cucomplex_t *ff, int nqx, int nqy, int nqz, char* filename, int axis, int slice) {
+        if(ff == NULL) return;
+
+        std::cout << "** Writing slice to file ...";
+        switch(axis) {
+            case 0:
+                break;
+            default:
+                std::cout << "Given axis slice writing not implemented yet!" << std::endl;
+        } // switch
+
+        if(slice >= nqx || slice < 0) {
+            std::cout << "Given slice does not exist!" << std::endl;
+            return;
+        } // if
+
+        std::ofstream slice_file;
+        //char* outfilename = "output_ff.dat";
+        char outfilename[50];
+        sprintf(outfilename, "ff_p%d.dat", MPI::COMM_WORLD.Get_size());
+        std::cout << " " << outfilename << " ";
+        slice_file.open(outfilename);
+        if(!slice_file.is_open()) {
+            std::cerr << "Error opening slice file for writing." << std::endl;
+            return;
+        } // if
+
+        for(int y = 0; y < nqy; ++ y) {
+            for(int z = 0; z < nqz; ++ z) {
+                unsigned long int index = nqx * nqy * z + nqx * y + slice;
+                slice_file << ff[index].x << "," << ff[index].y << "\t";
+            } // for z
+            slice_file << std::endl;
+        } // for y
+        slice_file.close();
+        std::cout << " done." << std::endl;
+    } // write_slice_to_file()
+
 
 } // namespace hig

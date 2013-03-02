@@ -5,7 +5,7 @@
   *
   *  File: ff.hpp
   *  Created: Jul 18, 2012
-  *  Modified: Fri 01 Mar 2013 11:33:01 AM PST
+  *  Modified: Sat 02 Mar 2013 11:36:20 AM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -34,13 +34,18 @@ namespace hig {
 			std::vector <complex_t> ff_;						/* the form factor data */
 
 		public:
-			#ifdef KERNEL2
-			FormFactor(): numeric_ff_(2, 4, 4), is_analytic_(false) { } // default cuda block size
-			FormFactor(int a, int b, int c): numeric_ff_(a, b, c), is_analytic_(false) { }
-			#else
-			FormFactor(): numeric_ff_(64), is_analytic_(false) { } // default cuda block size
-			FormFactor(int s): numeric_ff_(s), is_analytic_(false) { }
-			#endif // KERNEL2
+			// TODO: clean/unify and improve constructors for gpu/cpu ana/num etc ...
+			#ifdef FF_NUM_GPU
+				#ifdef KERNEL2
+					FormFactor(): numeric_ff_(2, 4, 4), is_analytic_(false) { } // default cuda block size
+					FormFactor(int a, int b, int c): numeric_ff_(a, b, c), is_analytic_(false) { }
+				#else
+					FormFactor(): numeric_ff_(64), is_analytic_(false) { } // default cuda block size
+					FormFactor(int s): numeric_ff_(s), is_analytic_(false) { }
+				#endif // KERNEL2
+			#else	// use CPU
+				FormFactor(): numeric_ff_(), is_analytic_(false) { } // default cuda block size
+			#endif
 
 			~FormFactor() { }
 

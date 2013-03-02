@@ -3,7 +3,7 @@
   *
   *  File: ff_ana_rand_cylinder_gpu.cu
   *  Created: Oct 16, 2012
-  *  Modified: Thu 21 Feb 2013 01:24:36 PM PST
+  *  Modified: Sat 02 Mar 2013 11:40:19 AM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -43,8 +43,6 @@ namespace hig {
 		const float_t *distr_h_h = distr_h.empty() ? NULL : &*distr_h.begin();
 		const float_t *r_h = r.empty() ? NULL : &*r.begin();
 		const float_t *distr_r_h = distr_r.empty() ? NULL : &*distr_r.begin();
-
-		unsigned int grid_size = nqx_ * nqy_ * nqz_;
 
 		run_init(rot, transvec);
 
