@@ -995,7 +995,6 @@ namespace hig {
 
 									err = cudaGetLastError();
 
-									//form_factor_kernel_new_shared2<float_t>
 									form_factor_kernel_new_shared2
 									<<< ff_grid_size, ff_block_size, dyna_shmem_size, stream[active]>>> (
 											qx_d, qy_d, qz_d, shape_def_d, axes_d,

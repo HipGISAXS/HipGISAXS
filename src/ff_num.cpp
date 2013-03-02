@@ -5,7 +5,7 @@
   *
   *  File: ff_num.cpp
   *  Created: Jul 18, 2012
-  *  Modified: Sat 02 Mar 2013 11:48:21 AM PST
+  *  Modified: Sat 02 Mar 2013 12:46:39 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -63,7 +63,7 @@ namespace hig {
 		float_vec_t shape_def;
 		// use the new file reader instead ...
 		unsigned int num_triangles = read_shapes_hdf5(filename, shape_def, world_comm);
-						// TODO ... <--- all procs read this? IMPROVE!!!
+						// TODO ... <--- sadly all procs read this! IMPROVE!!!
 	
 		// TODO: temporary ... remove ...
 		std::vector<short int> axes(4);			// axes[i] = j
@@ -154,10 +154,14 @@ namespace hig {
 			y_offset -= p_nqy;
 			z_offset -= p_nqz;
 
-			// FIXME: this is a temporary fix ... fix properly ...
+			// FIXME: this is a yucky temporary fix ... fix properly ...
 			float_t* qx = new (std::nothrow) float_t[nqx]();
 			float_t* qy = new (std::nothrow) float_t[nqy]();
-			cucomplex_t* qz = new (std::nothrow) cucomplex_t[nqz]();
+			#ifdef FF_NUM_GPU
+				cucomplex_t* qz = new (std::nothrow) cucomplex_t[nqz]();
+			#else
+				complex_t* qz = new (std::nothrow) complex_t[nqz]();
+			#endif
 			// create qy_and qz using qgrid instance
 			for(unsigned int i = 0; i < nqx; ++ i) {
 				qx[i] = QGrid::instance().qx(i);
@@ -166,8 +170,12 @@ namespace hig {
 				qy[i] = QGrid::instance().qy(i);
 			} // for
 			for(unsigned int i = 0; i < nqz; ++ i) {
-				qz[i].x = QGrid::instance().qz_extended(i).real();
-				qz[i].y = QGrid::instance().qz_extended(i).imag();
+				#ifdef FF_NUM_GPU
+					qz[i].x = QGrid::instance().qz_extended(i).real();
+					qz[i].y = QGrid::instance().qz_extended(i).imag();
+				#else
+					qz[i] = QGrid::instance().qz_extended(i);
+				#endif
 			} // for
 			
 			// create p_ff buffers	<----- TODO: IMPROVE for all procs!!!
@@ -212,19 +220,6 @@ namespace hig {
 													, block_x, block_y, block_z, block_t
 												#endif
 												);
-			// the original, with wrapper:
-//			ret_nt = compute_form_factor_gpu(rank, shape_def, num_triangles, axes,
-//												qx, p_nqx, p_qy, p_nqy, p_qz, p_nqz, p_ff,
-//												kernel_time, red_time, temp_mem_time
-//	#ifdef FINDBLOCK
-//												, block_x, block_y, block_z, block_t
-//	#endif
-//	#ifdef KERNEL2
-//												, block_cuda_t_, block_cuda_y_, block_cuda_z_
-//	#else // default 1D kernel
-//												, block_cuda_
-//	#endif
-//												);
 				#else	// use CPU
 					ret_nt = cff_.compute_form_factor(rank, shape_def,
  												p_ff, qx, p_nqx, p_qy, p_nqy, p_qz, p_nqz,
