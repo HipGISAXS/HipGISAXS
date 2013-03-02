@@ -895,7 +895,7 @@ namespace hig {
 	
 					cudaEventCreate(&start); cudaEventCreate(&stop);
 	
-					if(rank == 0) std::cout << "-- Computing form factor ... " << std::flush;
+					if(rank == 0) std::cout << "-- Computing form factor on GPU ... " << std::flush;
 	
 					// compute for each block with double buffering
 	
