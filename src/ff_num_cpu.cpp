@@ -3,7 +3,7 @@
  *
  *  File: ff_num_cpu.hpp
  *  Created: Nov 05, 2011
- *  Modified: Sat 02 Mar 2013 12:35:12 PM PST
+ *  Modified: Sat 02 Mar 2013 01:01:57 PM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -199,9 +199,9 @@ namespace hig {
 					complex_t* fq_buffer) {
 		if(fq_buffer == NULL || qx == NULL || qy == NULL || qz == NULL) return;
 	
-//		#pragma omp parallel
-//		{
-//			#pragma omp for nowait schedule(auto)
+		#pragma omp parallel
+		{
+			#pragma omp for nowait schedule(auto)
 			for(unsigned int i_t = 0; i_t < curr_num_triangles; ++ i_t) {
 				unsigned int shape_off = (ib_t * b_num_triangles + i_t) * 7;
 				float_t s = shape_def[shape_off];
@@ -247,7 +247,7 @@ namespace hig {
 					} // for y
 				} // for x
 			} // for t
-//		} // pragma omp parallel
+		} // pragma omp parallel
 	} // NumericFormFactorC::form_factor_kernel()
 	
 	
@@ -288,9 +288,9 @@ namespace hig {
 		// reduction over all triangles
 		for(unsigned int i_x = 0; i_x < curr_b_nqx; ++ i_x) {
 			unsigned long int temp_3 = ib_x * b_nqx + i_x;
-//			#pragma omp parallel
-//			{
-//				#pragma omp for nowait schedule(auto)
+			#pragma omp parallel
+			{
+				#pragma omp for nowait schedule(auto)
 				for(unsigned int i_y = 0; i_y < curr_b_nqy; ++ i_y) {
 					unsigned long int temp_nqxiyix = curr_b_nqx * i_y + i_x;
 					unsigned long int temp_2 = nqx * i_y;
@@ -309,7 +309,7 @@ namespace hig {
 						ff[super_i] += total * temp_complex;
 					} // for i_z
 				} // for i_y
-//			} // omp parallel
+			} // omp parallel
 		} // for i_x
 	} // NumericFormFactorC::reduction_kernel()
 	

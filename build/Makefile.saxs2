@@ -12,6 +12,7 @@
 
 USE_GPU = y
 USE_ANA_GPU = y
+USE_NUM_GPU = n
 USE_INTEL = n
 
 ## base directories
@@ -88,6 +89,9 @@ MISC_FLAGS += #-DREDUCTION2 #-DAXIS_ROT
 ifeq ($(USE_ANA_GPU), y)
 MISC_FLAGS += -DFF_ANA_GPU
 endif
+ifeq ($(USE_NUM_GPU), y)
+MISC_FLAGS += -DFF_NUM_GPU
+endif
 ifeq ($(USE_GPU), y)
 MISC_FLAGS += -DUSE_GPU
 endif
@@ -124,6 +128,7 @@ OBJECTS_MAIN = reduction.o ff_num_gpu.o utilities.o numeric_utils.o compute_para
 		  ff_ana_sawtooth_down.o ff_ana_sawtooth_up.o ff_ana_trunc_cone.o ff_ana_trunc_pyramid.o \
 		  ff_ana_sphere_gpu.o ff_ana_box_gpu.o ff_ana_cylinder_gpu.o ff_ana_hcylinder_gpu.o \
 		  ff_ana_prism6_gpu.o ff_ana_prism_gpu.o ff_ana_rand_cylinder_gpu.o \
+		  ff_num_cpu.o ff_num_gpu.o \
 		  fitting_steepest_descent.o
 
 OBJECTS_SIM = $(OBJECTS_MAIN) hipgisaxs_sim.o

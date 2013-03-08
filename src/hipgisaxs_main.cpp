@@ -5,7 +5,7 @@
   *
   *  File: hipgisaxs_main.cpp
   *  Created: Jun 14, 2012
-  *  Modified: Mon 25 Feb 2013 10:45:58 AM PST
+  *  Modified: Thu 07 Mar 2013 04:15:10 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -292,7 +292,7 @@ namespace hig {
 					/* run a gisaxs simulation */
 
 					float_t* final_data = NULL;
-					if(!run_gisaxs(alpha_i, alphai, phi, tilt, final_data, world_comm)) {
+					if(!run_gisaxs(alpha_i, alphai, phi, tilt, final_data, world_comm, 0)) {
 						if(mpi_rank == 0) std::cerr << "error: could not finish successfully" << std::endl;
 						return false;
 					} // if
@@ -305,7 +305,9 @@ namespace hig {
 						// note that final_data stores 3d info
 						// for 2d, just take a slice of the data
 						std::cout << "-- Constructing GISAXS image ... " << std::flush;
-						Image img(nqx_, nqy_, nqz_);
+						//Image img(nqx_, nqy_, nqz_);
+						// testing ...
+						Image img(nqx_, nqy_, nqz_, 37, 36, 27);
 						img.construct_image(final_data, 0); // merge this into the contructor ...
 						std::cout << "done." << std::endl;
 
@@ -1302,13 +1304,13 @@ namespace hig {
 												// i believe constructing nn may not be needed ...
 		if(distribution == "single") {			// single
 			for(int x = 0; x < ndx; ++ x) {
-				nn[x] = tau[0];
+				nn[x] = tau[0] * PI_ / 180;
 			} // for x
 			for(int x = 0; x < ndx; ++ x) {
-				nn[ndx + x] = eta[0];
+				nn[ndx + x] = eta[0] * PI_ / 180;
 			} // for x
 			for(int x = 0; x < ndx; ++ x) {
-				nn[2 * ndx + x] = zeta[0];
+				nn[2 * ndx + x] = zeta[0] * PI_ / 180;
 			} // for x
 		} else if(distribution == "random") {	// random
 			for(int x = 0; x < 3 * ndx; ++ x) {
@@ -1319,14 +1321,19 @@ namespace hig {
 			float_t deta = fabs(eta[1] - eta[0]);
 			float_t dzeta = fabs(zeta[1] - zeta[0]);
 			for(int x = 0; x < ndx; ++ x) {
-				nn[x] = tau[0] + (float_t(rand()) / RAND_MAX) * dtau;
+				nn[x] = (tau[0] + (float_t(rand()) / RAND_MAX) * dtau) * PI_ / 180;
 			} // for x
 			for(int x = 0; x < ndx; ++ x) {
-				nn[ndx + x] = eta[0] + (float_t(rand()) / RAND_MAX) * deta;
+				nn[ndx + x] = (eta[0] + (float_t(rand()) / RAND_MAX) * deta) * PI_ / 180;
 			} // for x
 			for(int x = 0; x < ndx; ++ x) {
-				nn[2 * ndx + x] = zeta[0] + (float_t(rand()) / RAND_MAX) * dzeta;
+				nn[2 * ndx + x] = (zeta[0] + (float_t(rand()) / RAND_MAX) * dzeta) * PI_ / 180;
 			} // for x
+			/*float_t da = PI_ / (2 * (ndx - 1));
+			for(int x = 0; x < ndx; ++ x) {
+				nn[x] = x * da;
+			} // for x
+			for(int x = 0; x < 2 * ndx; ++ x) nn[ndx + x] = 0;*/
 		} else {
 			// read .ori file ...
 			std::cerr << "uh-oh: I guess you wanted to read orientations from a file" << std::endl;
