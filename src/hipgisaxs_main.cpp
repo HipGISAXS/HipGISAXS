@@ -5,7 +5,7 @@
   *
   *  File: hipgisaxs_main.cpp
   *  Created: Jun 14, 2012
-  *  Modified: Thu 07 Mar 2013 04:15:10 PM PST
+  *  Modified: Mon 11 Mar 2013 04:00:22 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -307,7 +307,8 @@ namespace hig {
 						std::cout << "-- Constructing GISAXS image ... " << std::flush;
 						//Image img(nqx_, nqy_, nqz_);
 						// testing ...
-						Image img(nqx_, nqy_, nqz_, 37, 36, 27);
+						//Image img(nqx_, nqy_, nqz_, 37, 36, 27);
+						Image img(nqx_, nqy_, nqz_);
 						img.construct_image(final_data, 0); // merge this into the contructor ...
 						std::cout << "done." << std::endl;
 
@@ -474,6 +475,11 @@ namespace hig {
 			num_nn = ndx;
 			num_domains = num_nn;
 
+			/*std::cout << "DD: " << std::endl;
+			for(unsigned int d = 0; d < num_domains; ++ d) {
+				std::cout << dd[3 * d] << "\t" << dd[3 * d + 1] << "\t" << dd[3 * d + 2] << std::endl;
+			} // for*/
+
 			complex_t *id = NULL;		// TODO: come back and improve ...
 										// eliminate id for each domain ...
 										// this can be reduced on the fly to reduce mem usage ...
@@ -482,7 +488,7 @@ namespace hig {
 				if(mpi_rank == 0) std::cerr << "error: could not allocate memory for 'id'" << std::endl;
 				return false;
 			} // if
-			memset(id, 0 , num_domains * nqx_ * nqy_ * nqz_);	// initialize to 0
+			memset(id, 0 , num_domains * nqx_ * nqy_ * nqz_ * sizeof(complex_t));	// initialize to 0
 
 			vector3_t curr_transvec = (*s).second.grain_transvec();
 			ShapeName shape_name = HiGInput::instance().shape_name((*s).second);
@@ -499,7 +505,7 @@ namespace hig {
 
 				// define r_norm (domain orientation by tau and eta)
 				// define full domain rotation matrix r_total = r_phi * r_norm
-				// ... i think these tau eta zeta can be computed on the fly to save memory ...
+				// TODO: ... i think these tau eta zeta can be computed on the fly to save memory ...
 				float_t tau = nn[0 * num_nn + j];
 				float_t eta = nn[1 * num_nn + j];
 				float_t zeta = nn[2 * num_nn + j];
@@ -523,6 +529,13 @@ namespace hig {
 				mat_mul_3x1(rotation_matrix_.r1_, rotation_matrix_.r2_, rotation_matrix_.r3_,
 							curr_dd_vec, result);
 				vector3_t center = result + curr_transvec;
+
+				/*std::cout << "ROT MAT: " << std::endl;
+				std::cout << r_tot1[0] << "\t" << r_tot1[1] << "\t" << r_tot1[2] << std::endl;
+				std::cout << r_tot2[0] << "\t" << r_tot2[1] << "\t" << r_tot2[2] << std::endl;
+				std::cout << r_tot3[0] << "\t" << r_tot3[1] << "\t" << r_tot3[2] << std::endl;
+				std::cout << "CENTER: " << std::endl;
+				std::cout << center[0] << "\t" << center[1] << "\t" << center[2] << std::endl;*/
 
 				/* compute structure factor and form factor */
 
@@ -737,7 +750,7 @@ namespace hig {
 		} // for
 		fs.close();*/
 
-		// arrays struct_intensity and id etc can be eliminated/reduced in size to nqx*nqy*nqz only
+		// TODO: arrays struct_intensity and id etc can be eliminated/reduced in size to nqx*nqy*nqz only
 		// ...
 
 		if(mpi_rank == 0) {
@@ -1168,7 +1181,7 @@ namespace hig {
 				float_t mul_val1 = vol_[0] / 2;
 				float_t mul_val2 = vol_[1] / 2;
 				float_t mul_val3 = vol_[2];
-				int y = 0;
+				/*int y = 0;
 				for(int x = 0; x < rand_dim_x; ++ x) {	// d1
 					d[4 * rand_dim_x * y + x] = d_rand[rand_dim_x * y + x] * mul_val1;
 				} // for x
@@ -1206,7 +1219,48 @@ namespace hig {
 				} // for x
 				for(int x = 0; x < rand_dim_x; ++ x) {	// d4
 					d[4 * rand_dim_x * y + 3 * rand_dim_x + x] = d_rand[rand_dim_x * y + x] * mul_val3 + tz;
-				} // for x
+				} // for x*/
+
+				// D0
+				if(maxgrains[0] == 1) {
+					for(int x = 0; x < rand_dim_x; ++ x) d[rand_dim_y * x] = 0;
+				} else {
+					for(int x = 0; x < rand_dim_x; ++ x)
+						d[rand_dim_y * x] = d_rand[rand_dim_y * x] * mul_val1;
+				} // if-else
+				if(maxgrains[1] == 1) {
+					for(int x = 0; x < rand_dim_x; ++ x) d[rand_dim_y * x + 1] = 0;
+				} else {
+					for(int x = 0; x < rand_dim_x; ++ x)
+						d[rand_dim_y * x + 1] = d_rand[rand_dim_y * x + 1] * mul_val2;
+				} // if-else
+				if(maxgrains[2] == 1) {
+					for(int x = 0; x < rand_dim_x; ++ x) d[rand_dim_y * x + 2] = tz;
+				} else {
+					for(int x = 0; x < rand_dim_x; ++ x)
+						d[rand_dim_y * x + 2] = d_rand[rand_dim_y * x + 2] * mul_val3 + tz;
+				} // if-else
+				// D1
+				for(int x = 0; x < rand_dim_x; ++ x)
+					d[rand_dim_x * rand_dim_y + rand_dim_y * x] = - d[rand_dim_y * x];
+				for(int x = 0; x < rand_dim_x; ++ x)
+					d[rand_dim_x * rand_dim_y + rand_dim_y * x + 1] = d[rand_dim_y * x + 1];
+				for(int x = 0; x < rand_dim_x; ++ x)
+					d[rand_dim_x * rand_dim_y + rand_dim_y * x + 2] = d[rand_dim_y * x + 2];
+				// D2
+				for(int x = 0; x < rand_dim_x; ++ x)
+					d[2 * rand_dim_x * rand_dim_y + rand_dim_y * x] = d[rand_dim_y * x];
+				for(int x = 0; x < rand_dim_x; ++ x)
+					d[2 * rand_dim_x * rand_dim_y + rand_dim_y * x + 1] = - d[rand_dim_y * x + 1];
+				for(int x = 0; x < rand_dim_x; ++ x)
+					d[2 * rand_dim_x * rand_dim_y + rand_dim_y * x + 2] = d[rand_dim_y * x + 2];
+				// D3
+				for(int x = 0; x < rand_dim_x; ++ x)
+					d[3 * rand_dim_x * rand_dim_y + rand_dim_y * x] = - d[rand_dim_y * x];
+				for(int x = 0; x < rand_dim_x; ++ x)
+					d[3 * rand_dim_x * rand_dim_y + rand_dim_y * x + 1] = - d[rand_dim_y * x + 1];
+				for(int x = 0; x < rand_dim_x; ++ x)
+					d[3 * rand_dim_x * rand_dim_y + rand_dim_y * x + 2] = d[rand_dim_y * x + 2];
 			} else if(dim == 2) {
 				std::cerr << "error: dim == 2 case not implemented" << std::endl;
 				// ...
