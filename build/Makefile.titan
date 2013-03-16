@@ -9,7 +9,8 @@
 ##
 
 USE_GPU = y
-USE_ANA_GPU = n
+USE_ANA_GPU = y
+USE_NUM_GPU = y
 
 ## base directories
 #BOOST_DIR = $(BOOST_DIR)
@@ -114,6 +115,7 @@ OBJECTS_MAIN = reduction.o ff_num_gpu.o utilities.o numeric_utils.o compute_para
 		  ff_ana_sawtooth_down.o ff_ana_sawtooth_up.o ff_ana_trunc_cone.o ff_ana_trunc_pyramid.o \
 		  ff_ana_sphere_gpu.o ff_ana_box_gpu.o ff_ana_cylinder_gpu.o ff_ana_hcylinder_gpu.o \
 		  ff_ana_prism6_gpu.o ff_ana_prism_gpu.o ff_ana_rand_cylinder_gpu.o \
+		  ff_num_cpu.o ff_num_gpu.o \
 		  fitting_steepest_descent.o
 
 OBJECTS_SIM = $(OBJECTS_MAIN) hipgisaxs_sim.o
