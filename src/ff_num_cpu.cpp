@@ -3,7 +3,7 @@
  *
  *  File: ff_num_cpu.hpp
  *  Created: Nov 05, 2011
- *  Modified: Sat 02 Mar 2013 01:01:57 PM PST
+ *  Modified: Fri 22 Mar 2013 11:37:43 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -16,6 +16,7 @@
 #endif
 
 #include "constants.hpp"
+#include "parameters.hpp"
 #include "parameters_cpu.hpp"
 
 #include "ff_num_cpu.hpp"

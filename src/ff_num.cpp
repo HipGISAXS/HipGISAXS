@@ -5,7 +5,7 @@
   *
   *  File: ff_num.cpp
   *  Created: Jul 18, 2012
-  *  Modified: Sat 02 Mar 2013 12:49:33 PM PST
+  *  Modified: Fri 22 Mar 2013 11:35:32 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -569,15 +569,20 @@ namespace hig {
 		double* temp_shape_def = NULL;
 	
 		h5_shape_reader(filename, &temp_shape_def, &num_triangles/*, comm*/);
-		#ifndef KERNEL2
+		#ifdef FF_NUM_GPU
+			#ifndef KERNEL2
+				for(unsigned int i = 0; i < num_triangles * 7; ++ i)
+					shape_def.push_back((float_t)temp_shape_def[i]);
+			#else // KERNEL2
+				for(unsigned int i = 0, j = 0; i < num_triangles * T_PROP_SIZE_; ++ i) {
+					if((i + 1) % T_PROP_SIZE_ == 0) shape_def.push_back((float_t) 0.0);	// padding
+					else { shape_def.push_back((float_t)temp_shape_def[j]); ++ j; }
+				} // for
+			#endif // KERNEL2
+		#else	// using CPU
 			for(unsigned int i = 0; i < num_triangles * 7; ++ i)
 				shape_def.push_back((float_t)temp_shape_def[i]);
-		#else // KERNEL2
-			for(unsigned int i = 0, j = 0; i < num_triangles * T_PROP_SIZE_; ++ i) {
-				if((i + 1) % T_PROP_SIZE_ == 0) shape_def.push_back((float_t) 0.0);	// padding
-				else { shape_def.push_back((float_t)temp_shape_def[j]); ++ j; }
-			} // for
-		#endif // KERNEL2
+		#endif // FF_NUM_GPU
 
 		return num_triangles;
 	} // NumericFormFactor::read_shapes_hdf5()
