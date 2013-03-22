@@ -78,6 +78,9 @@ MISC_FLAGS += #-DREDUCTION2 #-DAXIS_ROT
 ifeq ($(USE_ANA_GPU), y)
 MISC_FLAGS += -DFF_ANA_GPU
 endif
+ifeq ($(USE_NUM_GPU), y)
+MISC_FLAGS += -DFF_NUM_GPU
+endif
 ifeq ($(USE_GPU), y)
 MISC_FLAGS += -DUSE_GPU
 endif
