@@ -5,7 +5,7 @@
   *
   *  File: structure.hpp
   *  Created: Jun 09, 2012
-  *  Modified: Wed 20 Feb 2013 01:15:31 PM PST
+  *  Modified: Thu 28 Mar 2013 02:26:56 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -84,7 +84,7 @@ namespace hig {
 				vector2_t angles_;
 
 			public:
-				Rotation() { axis_ = 'n'; }
+				Rotation() : axis_('n') { }
 				~Rotation() { }
 
 				void init();
@@ -100,9 +100,9 @@ namespace hig {
 
 		private:
 			std::string stat_;		// "single", "range", "random", "filename.ori" - change to enum?
-			Rotation rot1_;			// tau
-			Rotation rot2_;			// eta
-			Rotation rot3_;			// zeta
+			Rotation rot1_;			// rotation 1
+			Rotation rot2_;			// rotation 2
+			Rotation rot3_;			// rotation 3
 
 		public:
 			GrainOrientations();
@@ -320,6 +320,28 @@ namespace hig {
 			vector2_t rotation_tau() { return ensemble_.orientations_.rot1().angles(); }
 			vector2_t rotation_eta() { return ensemble_.orientations_.rot2().angles(); }
 			vector2_t rotation_zeta() { return ensemble_.orientations_.rot3().angles(); }
+
+			vector3_t rotation_rot1() {
+				char axis = ensemble_.orientations_.rot1().axis();
+				if(axis == 'n') return vector3_t(0, 0, 0);
+				vector2_t angs = ensemble_.orientations_.rot1().angles();
+				return vector3_t((float_t) ((char)axis - 'x'), angs[0], angs[1]);
+				//return vector3_t((float_t) axis, angs[0], angs[1]);
+			} // rotation_rot1()
+			vector3_t rotation_rot2() {
+				char axis = ensemble_.orientations_.rot2().axis();
+				if(axis == 'n') return vector3_t(0, 0, 0);
+				vector2_t angs = ensemble_.orientations_.rot2().angles();
+				return vector3_t((float_t) ((char)axis - 'x'), angs[0], angs[1]);
+				//return vector3_t((float_t) axis, angs[0], angs[1]);
+			} // rotation_rot2()
+			vector3_t rotation_rot3() {
+				char axis = ensemble_.orientations_.rot3().axis();
+				if(axis == 'n') return vector3_t(0, 0, 0);
+				vector2_t angs = ensemble_.orientations_.rot3().angles();
+				return vector3_t((float_t) ((char)axis - 'x'), angs[0], angs[1]);
+				//return vector3_t((float_t) axis, angs[0], angs[1]);
+			} // rotation_rot3()
 
 			/* testers */
 

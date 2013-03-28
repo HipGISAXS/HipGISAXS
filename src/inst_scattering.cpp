@@ -5,7 +5,7 @@
   *
   *  File: inst_scattering.cpp
   *  Created: Jun 12, 2012
-  *  Modified: Fri 12 Oct 2012 01:44:43 PM PDT
+  *  Modified: Tue 26 Mar 2013 03:54:56 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -25,7 +25,7 @@ namespace hig {
 		photon_.value_ = 10000; photon_.unit_ = "ev";
 		polarization_ = "s";
 		coherence_ = 300;
-		spot_area_ = 0.001;
+		spot_area_ = 0.01; //0.001;
 		smearing_[0] = smearing_[1] = smearing_[2] = 1;
 	} // ScatteringParams::init()
 

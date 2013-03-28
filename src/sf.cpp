@@ -5,7 +5,7 @@
   *
   *  File: sf.cpp
   *  Created: Jun 18, 2012
-  *  Modified: Thu 21 Feb 2013 04:29:52 PM PST
+  *  Modified: Thu 28 Mar 2013 02:38:30 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -90,7 +90,7 @@ namespace hig {
 
 		computetimer.start();
 
-		// good for gpu ...
+		// good for acceleration ...
 		#pragma omp parallel for collapse(3)
 		for(unsigned int z = 0; z < nz_; ++ z) {
 			for(unsigned int y = 0; y < ny_; ++ y) {
@@ -104,37 +104,114 @@ namespace hig {
 					if(expt == "saxs") qz = QGrid::instance().qz(z);
 					else if(expt == "gisaxs") qz = QGrid::instance().qz_extended(z);
 
+		//			std::cerr << "------ qx[" << x << "]: " << qx
+		//						<< ", qy[" << y << "]: " << qy
+		//						<< ", qz[" << z << "]: " << qz.real() << "+ i" << qz.imag()
+		//						<< std::endl;
+		//			std::cerr << arot[0] << " " << arot[1] << " " << arot[2] << std::endl;
+		//			std::cerr << brot[0] << " " << brot[1] << " " << brot[2] << std::endl;
+		//			std::cerr << crot[0] << " " << crot[1] << " " << crot[2] << std::endl;
+
 					temp1 = exp(unit_ci * (arot[0] * qx + arot[1] * qy + arot[2] * qz));
 					temp_x2 = unit_c - pow(temp1, repet[0]);
-					temp_y3 = unit_c / (unit_c - temp1);
-					temp_f = (float_t)(!((boost::math::isfinite)(temp_y3.real()) &&
-											(boost::math::isfinite)(temp_y3.imag())));
-					temp_y4 = unit_c / (unit_c / temp_y3 + temp_f);
-					temp_f = (float_t)(!((boost::math::isfinite)((unit_c / temp_x2).real()) &&
-											(boost::math::isfinite)((unit_c / temp_x2).imag())));
-					temp_x5 = temp_x2 + repet[0] * temp_f;
-					sa = pow(temp1, ((float_t)1.0 - repet[0]) / (float_t)2.0) * temp_y4 * temp_x5;
+					if(!((boost::math::isfinite)(temp_x2.real()) ||
+								(boost::math::isfinite)(temp_x2.imag()))) {
+						std::cerr << "error: here it is not finite (1) " << x << ", " << y << ", " << z
+									<<std::endl;
+					} // if
+					if(unit_c != temp1) {
+						temp_y3 = unit_c / (unit_c - temp1);
+						temp_f = 0;
+						temp_y4 = temp_y3;
+					} else {
+						temp_f = 1;
+						temp_y4 = unit_c;
+					} // if-else
+					//temp_f = (float_t)(!((boost::math::isfinite)(temp_y3.real()) &&
+					//						(boost::math::isfinite)(temp_y3.imag())));
+					//temp_y4 = unit_c / (unit_c / temp_y3 + temp_f);
+					if(temp_x2.real() != 0 || temp_x2.imag() != 0) {
+						temp_f = 0;
+						temp_x5 = temp_x2;
+					} else {
+						temp_f = 1;
+						temp_x5 = temp_x2 + repet[0];
+					} // if-else
+					//temp_f = (float_t)(!((boost::math::isfinite)((unit_c / temp_x2).real()) &&
+					//						(boost::math::isfinite)((unit_c / temp_x2).imag())));
+					//temp_x5 = temp_x2 + repet[0] * temp_f;
+					sa = pow(temp1, ((float_t) 1.0 - repet[0]) / (float_t) 2.0) * temp_y4 * temp_x5;
+					if(!((boost::math::isfinite)(sa.real()) ||
+								(boost::math::isfinite)(sa.imag()))) {
+						std::cerr << "error: here it is not finite (2) " << x << ", " << y << ", " << z
+									<<std::endl;
+					} // if
 
 					temp1 = exp(unit_ci * (brot[0] * qx + brot[1] * qy + brot[2] * qz));
 					temp_x2 = unit_c - pow(temp1, repet[1]);
-					temp_y3 = unit_c / (unit_c - temp1);
-					temp_f = (float_t)(!((boost::math::isfinite)(temp_y3.real()) &&
-											(boost::math::isfinite)(temp_y3.imag())));
-					temp_y4 = unit_c / (unit_c / temp_y3 + temp_f);
-					temp_f = (float_t)(!((boost::math::isfinite)((unit_c / temp_x2).real()) &&
-											(boost::math::isfinite)((unit_c / temp_x2).imag())));
-					temp_x5 = temp_x2 + repet[1] * temp_f;
-					sb = pow(temp1, ((float_t)1.0 - repet[1]) / (float_t)2.0) * temp_y4 * temp_x5;
+					if(!((boost::math::isfinite)(temp_x2.real()) ||
+								(boost::math::isfinite)(temp_x2.imag()))) {
+						std::cerr << "error: here it is not finite (3) " << x << ", " << y << ", " << z
+									<<std::endl;
+					} // if
+					if(unit_c != temp1) {
+						temp_y3 = unit_c / (unit_c - temp1);
+						temp_f = 0;
+						temp_y4 = temp_y3;
+					} else {
+						temp_f = 1;
+						temp_y4 = unit_c;
+					} // if-else
+					//temp_y3 = unit_c / (unit_c - temp1);
+					//temp_f = (float_t)(!((boost::math::isfinite)(temp_y3.real()) &&
+					//						(boost::math::isfinite)(temp_y3.imag())));
+					//temp_y4 = unit_c / (unit_c / temp_y3 + temp_f);
+					if(temp_x2.real() != 0 || temp_x2.imag() != 0) {
+						temp_f = 0;
+						temp_x5 = temp_x2;
+					} else {
+						temp_f = 1;
+						temp_x5 = temp_x2 + repet[1];
+					} // if-else
+					//temp_f = (float_t)(!((boost::math::isfinite)((unit_c / temp_x2).real()) &&
+					//						(boost::math::isfinite)((unit_c / temp_x2).imag())));
+					//temp_x5 = temp_x2 + repet[1] * temp_f;
+					sb = pow(temp1, ((float_t) 1.0 - repet[1]) / (float_t) 2.0) * temp_y4 * temp_x5;
+					if(!((boost::math::isfinite)(sb.real()) ||
+								(boost::math::isfinite)(sb.imag()))) {
+						std::cerr << "error: here it is not finite (4) " << x << ", " << y << ", " << z
+									<<std::endl;
+					} // if
 
 					temp1 = exp(unit_ci * (crot[0] * qx + crot[1] * qy + crot[2] * qz));
 					temp_x2 = unit_c - pow(temp1, repet[2]);
-					temp_y3 = unit_c / (unit_c - temp1);
-					temp_f = (float_t)(!((boost::math::isfinite)(temp_y3.real()) &&
-											(boost::math::isfinite)(temp_y3.imag())));
-					temp_y4 = unit_c / (unit_c / temp_y3 + temp_f);
-					temp_f = (float_t)(!((boost::math::isfinite)((unit_c / temp_x2).real()) &&
-											(boost::math::isfinite)((unit_c / temp_x2).imag())));
-					temp_x5 = temp_x2 + repet[2] * temp_f;
+					if(!((boost::math::isfinite)(temp_x2.real()) ||
+								(boost::math::isfinite)(temp_x2.imag()))) {
+						std::cerr << "error: here it is not finite (5) " << x << ", " << y << ", " << z
+									<<std::endl;
+					} // if
+					if(unit_c != temp1) {
+						temp_y3 = unit_c / (unit_c - temp1);
+						temp_f = 0;
+						temp_y4 = temp_y3;
+					} else {
+						temp_f = 1;
+						temp_y4 = unit_c;
+					} // if-else
+					//temp_y3 = unit_c / (unit_c - temp1);
+					//temp_f = (float_t)(!((boost::math::isfinite)(temp_y3.real()) &&
+					//						(boost::math::isfinite)(temp_y3.imag())));
+					//temp_y4 = unit_c / (unit_c / temp_y3 + temp_f);
+					if(temp_x2.real() != 0 || temp_x2.imag() != 0) {
+						temp_f = 0;
+						temp_x5 = temp_x2;
+					} else {
+						temp_f = 1;
+						temp_x5 = temp_x2 + repet[1];
+					} // if-else
+					//temp_f = (float_t)(!((boost::math::isfinite)((unit_c / temp_x2).real()) &&
+					//						(boost::math::isfinite)((unit_c / temp_x2).imag())));
+					//temp_x5 = temp_x2 + repet[2] * temp_f;
 					sc = temp_y4 * temp_x5;
 
 					/*if(!((boost::math::isfinite)(sa.real()) && (boost::math::isfinite)(sa.imag()))) {
@@ -148,6 +225,11 @@ namespace hig {
 									(center[0] * qx + center[1] * qy + center[2] * qz)) *
 									sa * sb * sc *
 									(unit_c + exp(unit_ci * (l_t[0] * qx + l_t[1] * qy + l_t[2] * qz)));
+					if(!((boost::math::isfinite)(sf_[nx_ * ny_ * z + nx_ * y + x].real()) ||
+								(boost::math::isfinite)(sf_[nx_ * ny_ * z + nx_ * y + x].imag()))) {
+						std::cerr << "error: here it is not finite (666) " << x << ", " << y << ", " << z
+									<<std::endl;
+					} // if
 
 					/*if(!((boost::math::isfinite)(sf_[nx_ * ny_ * z + nx_ * y + x].real()) &&
 								(boost::math::isfinite)(sf_[nx_ * ny_ * z + nx_ * y + x].imag()))) {

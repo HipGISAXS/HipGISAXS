@@ -5,7 +5,7 @@
   *
   *  File: hig_input.cpp
   *  Created: Jun 11, 2012
-  *  Modified: Sat 02 Mar 2013 04:30:39 PM PST
+  *  Modified: Sun 24 Mar 2013 12:09:14 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -1748,13 +1748,14 @@ namespace hig {
 
 
 	Layer& HiGInput::single_layer() {	// if there is exactly 1 layer
-										// excluding substrate
+										// excluding substrate and vacuum
 		layer_iterator_t i = layers_.begin();
 		if(has_substrate_layer() && has_vacuum_layer() && layers_.size() == 3 ||
 				(!has_vacuum_layer()) && has_substrate_layer() && layers_.size() == 2 ||
 				(!has_substrate_layer()) && has_vacuum_layer() && layers_.size() == 2 ||
 				(!has_substrate_layer()) && (!has_vacuum_layer()) && layers_.size() == 1) {
 			while(i != layers_.end() && (*i).first != 0) ++ i;
+			if((*i).first == 0) ++i;
 			if(i != layers_.end()) return (*i).second;
 			else return layers_[0];
 		//} else if(has_substrate_layer() && layers_.size() == 2) {

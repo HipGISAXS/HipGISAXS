@@ -5,7 +5,7 @@
   *
   *  File: hipgisaxs_main.cpp
   *  Created: Jun 14, 2012
-  *  Modified: Mon 11 Mar 2013 04:00:22 PM PDT
+  *  Modified: Thu 28 Mar 2013 02:37:42 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -88,11 +88,12 @@ namespace hig {
 		} // if
 
 #ifdef _OPENMP
-		#pragma omp parallel
-		{
-			if(omp_get_thread_num() == 0)
-				std::cout << "**         Number of CPU threads: " << omp_get_num_threads() << std::endl;
-		}
+		//#pragma omp parallel
+		//{
+			std::cout << "++  Max number of OpenMP threads: " << omp_get_max_threads() << std::endl;
+			//if(omp_get_thread_num() == 0)
+				//std::cout << "**         Number of CPU threads: " << omp_get_num_threads() << std::endl;
+		//}
 #endif // _OPENMP
 #ifdef USE_GPU
 		init_gpu();
@@ -475,10 +476,17 @@ namespace hig {
 			num_nn = ndx;
 			num_domains = num_nn;
 
-			/*std::cout << "DD: " << std::endl;
-			for(unsigned int d = 0; d < num_domains; ++ d) {
-				std::cout << dd[3 * d] << "\t" << dd[3 * d + 1] << "\t" << dd[3 * d + 2] << std::endl;
-			} // for*/
+			int r1axis = (int) (*s).second.rotation_rot1()[0];
+			int r2axis = (int) (*s).second.rotation_rot2()[0];
+			int r3axis = (int) (*s).second.rotation_rot3()[0];
+
+			std::cout << "-- Grains: " << num_domains << std::endl;
+
+			//std::cout << "DD: " << std::endl;
+			//for(unsigned int d = 0; d < num_domains; ++ d) {
+			//	std::cout << dd[d] << "\t" << dd[num_domains + d] << "\t" << dd[num_domains * 2 + d]
+			//				<< std::endl;
+			//} // for*/
 
 			complex_t *id = NULL;		// TODO: come back and improve ...
 										// eliminate id for each domain ...
@@ -491,6 +499,11 @@ namespace hig {
 			memset(id, 0 , num_domains * nqx_ * nqy_ * nqz_ * sizeof(complex_t));	// initialize to 0
 
 			vector3_t curr_transvec = (*s).second.grain_transvec();
+			if(HiGInput::instance().param_nslices() <= 1) {
+				curr_transvec[2] = curr_transvec[2] - single_layer_thickness_;
+			} else {
+				curr_transvec[2] = curr_transvec[2]; // TODO/FIXME... for more than 1 layers ... incomplete
+			} // if-else
 			ShapeName shape_name = HiGInput::instance().shape_name((*s).second);
 			float_t shape_tau = HiGInput::instance().shape_tau((*s).second);
 			float_t shape_eta = HiGInput::instance().shape_eta((*s).second);
@@ -506,13 +519,59 @@ namespace hig {
 				// define r_norm (domain orientation by tau and eta)
 				// define full domain rotation matrix r_total = r_phi * r_norm
 				// TODO: ... i think these tau eta zeta can be computed on the fly to save memory ...
-				float_t tau = nn[0 * num_nn + j];
-				float_t eta = nn[1 * num_nn + j];
-				float_t zeta = nn[2 * num_nn + j];
+				//float_t tau = nn[0 * num_nn + j];
+				//float_t eta = nn[1 * num_nn + j];
+				//float_t zeta = nn[2 * num_nn + j];
+				//vector3_t z1, z2, z3, e1, e2, e3, t1, t2, t3;
+				//compute_rotation_matrix_z(zeta, z1, z2, z3);
+				//compute_rotation_matrix_y(eta, e1, e2, e3);
+				//compute_rotation_matrix_x(tau, t1, t2, t3);
+				float_t rot1 = nn[0 * num_nn + j];
+				float_t rot2 = nn[1 * num_nn + j];
+				float_t rot3 = nn[2 * num_nn + j];
 				vector3_t z1, z2, z3, e1, e2, e3, t1, t2, t3;
-				compute_rotation_matrix_z(zeta, z1, z2, z3);
-				compute_rotation_matrix_y(eta, e1, e2, e3);
-				compute_rotation_matrix_x(tau, t1, t2, t3);
+				switch(r1axis) {
+					case 0:
+						compute_rotation_matrix_x(rot1, z1, z2, z3);
+						break;
+					case 1:
+						compute_rotation_matrix_y(rot1, z1, z2, z3);
+						break;
+					case 2:
+						compute_rotation_matrix_z(rot1, z1, z2, z3);
+						break;
+					default:
+						std::cerr << "error: unknown axis: " << r1axis << std::endl;
+						return false;
+				} // switch
+				switch(r2axis) {
+					case 0:
+						compute_rotation_matrix_x(rot2, e1, e2, e3);
+						break;
+					case 1:
+						compute_rotation_matrix_y(rot2, e1, e2, e3);
+						break;
+					case 2:
+						compute_rotation_matrix_z(rot2, e1, e2, e3);
+						break;
+					default:
+						std::cerr << "error: unknown axis: " << r2axis << std::endl;
+						return false;
+				} // switch
+				switch(r3axis) {
+					case 0:
+						compute_rotation_matrix_x(rot3, t1, t2, t3);
+						break;
+					case 1:
+						compute_rotation_matrix_y(rot3, t1, t2, t3);
+						break;
+					case 2:
+						compute_rotation_matrix_z(rot3, t1, t2, t3);
+						break;
+					default:
+						std::cerr << "error: unknown axis: " << r3axis << std::endl;
+						return false;
+				} // switch
 
 				vector3_t temp1, temp2, temp3;
 				vector3_t r_norm1, r_norm2, r_norm3;
@@ -524,7 +583,8 @@ namespace hig {
 							r_norm1, r_norm2, r_norm3, r_tot1, r_tot2, r_tot3);
 
 				/* center of unit cell replica */
-				vector3_t curr_dd_vec(dd[3 * j + 0], dd[3 * j + 1], dd[3 * j + 2]);
+				//vector3_t curr_dd_vec(dd[3 * j + 0], dd[3 * j + 1], dd[3 * j + 2]);
+				vector3_t curr_dd_vec(dd[j + 0], dd[j + num_domains], dd[j + 2 * num_domains]);
 				vector3_t result(0.0, 0.0, 0.0);
 				mat_mul_3x1(rotation_matrix_.r1_, rotation_matrix_.r2_, rotation_matrix_.r3_,
 							curr_dd_vec, result);
@@ -878,8 +938,10 @@ namespace hig {
 				return false;
 			} // if-else
 			vol_[0] = vol_[1] = spot_diameter;
-			vol_[2] = std::real((penetration_depth_layer < c_max_depth) ?
-								penetration_depth_layer : c_max_depth);
+			//vol_[2] = std::real((penetration_depth_layer < c_max_depth) ?
+			//					penetration_depth_layer : c_max_depth);
+			vol_[2] = (penetration_depth_layer.real() < c_max_depth.real()) ?
+								penetration_depth_layer.real() : c_max_depth.real();
 		} else {
 			std::cerr << "error: experiment type '" << HiGInput::instance().experiment()
 						<< "' is either unknown or has not been implemented." << std::endl;
@@ -1350,38 +1412,50 @@ namespace hig {
 	bool HipGISAXS::orientation_distribution(structure_iterator_t s, float_t* dd,
 												int ndx, int ndy, float_t* &nn) {
 		std::string distribution = (*s).second.grain_orientation();
-		vector2_t tau = (*s).second.rotation_tau();
-		vector2_t eta = (*s).second.rotation_eta();
-		vector2_t zeta = (*s).second.rotation_zeta();
+		//vector2_t tau = (*s).second.rotation_tau();
+		//vector2_t eta = (*s).second.rotation_eta();
+		//vector2_t zeta = (*s).second.rotation_zeta();
+		vector3_t rot1 = (*s).second.rotation_rot1();
+		vector3_t rot2 = (*s).second.rotation_rot2();
+		vector3_t rot3 = (*s).second.rotation_rot3();
 
 		nn = new (std::nothrow) float_t[ndx * ndy];
 												// i believe constructing nn may not be needed ...
 		if(distribution == "single") {			// single
 			for(int x = 0; x < ndx; ++ x) {
-				nn[x] = tau[0] * PI_ / 180;
+				//nn[x] = tau[0] * PI_ / 180;
+				nn[x] = rot1[1] * PI_ / 180;
 			} // for x
 			for(int x = 0; x < ndx; ++ x) {
-				nn[ndx + x] = eta[0] * PI_ / 180;
+				//nn[ndx + x] = eta[0] * PI_ / 180;
+				nn[ndx + x] = rot2[1] * PI_ / 180;
 			} // for x
 			for(int x = 0; x < ndx; ++ x) {
-				nn[2 * ndx + x] = zeta[0] * PI_ / 180;
+				//nn[2 * ndx + x] = zeta[0] * PI_ / 180;
+				nn[2 * ndx + x] = rot3[1] * PI_ / 180;
 			} // for x
 		} else if(distribution == "random") {	// random
 			for(int x = 0; x < 3 * ndx; ++ x) {
 				nn[x] = (float_t(rand()) / RAND_MAX) * 2 * PI_;
 			} // for x
 		} else if(distribution == "range") {	// range
-			float_t dtau = fabs(tau[1] - tau[0]);
-			float_t deta = fabs(eta[1] - eta[0]);
-			float_t dzeta = fabs(zeta[1] - zeta[0]);
+			//float_t dtau = fabs(tau[1] - tau[0]);
+			//float_t deta = fabs(eta[1] - eta[0]);
+			//float_t dzeta = fabs(zeta[1] - zeta[0]);
+			float_t drot1 = fabs(rot1[2] - rot1[1]);
+			float_t drot2 = fabs(rot2[2] - rot2[1]);
+			float_t drot3 = fabs(rot3[2] - rot3[1]);
 			for(int x = 0; x < ndx; ++ x) {
-				nn[x] = (tau[0] + (float_t(rand()) / RAND_MAX) * dtau) * PI_ / 180;
+				//nn[x] = (tau[0] + (float_t(rand()) / RAND_MAX) * dtau) * PI_ / 180;
+				nn[x] = (rot1[1] + (float_t(rand()) / RAND_MAX) * drot1) * PI_ / 180;
 			} // for x
 			for(int x = 0; x < ndx; ++ x) {
-				nn[ndx + x] = (eta[0] + (float_t(rand()) / RAND_MAX) * deta) * PI_ / 180;
+				//nn[ndx + x] = (eta[0] + (float_t(rand()) / RAND_MAX) * deta) * PI_ / 180;
+				nn[ndx + x] = (rot2[1] + (float_t(rand()) / RAND_MAX) * drot2) * PI_ / 180;
 			} // for x
 			for(int x = 0; x < ndx; ++ x) {
-				nn[2 * ndx + x] = (zeta[0] + (float_t(rand()) / RAND_MAX) * dzeta) * PI_ / 180;
+				//nn[2 * ndx + x] = (zeta[0] + (float_t(rand()) / RAND_MAX) * dzeta) * PI_ / 180;
+				nn[2 * ndx + x] = (rot3[1] + (float_t(rand()) / RAND_MAX) * drot3) * PI_ / 180;
 			} // for x
 			/*float_t da = PI_ / (2 * (ndx - 1));
 			for(int x = 0; x < ndx; ++ x) {

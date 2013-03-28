@@ -5,7 +5,7 @@
   *
   *  File: utilities.cpp
   *  Created: Jun 25, 2012
-  *  Modified: Thu 28 Feb 2013 12:21:09 PM PST
+  *  Modified: Thu 28 Mar 2013 02:40:40 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -124,6 +124,16 @@ namespace hig {
 		y[0] = C[3]; y[1] = C[4]; y[2] = C[5];
 		z[0] = C[6]; z[1] = C[7]; z[2] = C[8];
 
+		/*x[0] = a[0] * d[0] + a[1] * e[0] + a[2] * f[0];
+		x[1] = a[0] * d[1] + a[1] * e[1] + a[2] * f[1];
+		x[2] = a[0] * d[2] + a[1] * e[2] + a[2] * f[2];
+		y[0] = b[0] * d[0] + b[1] * e[0] + b[2] * f[0];
+		y[1] = b[0] * d[1] + b[1] * e[1] + b[2] * f[1];
+		y[2] = b[0] * d[2] + b[1] * e[2] + b[2] * f[2];
+		z[0] = c[0] * d[0] + c[1] * e[0] + c[2] * f[0];
+		z[1] = c[0] * d[1] + c[1] * e[1] + c[2] * f[1];
+		z[2] = c[0] * d[2] + c[1] * e[2] + c[2] * f[2];
+*/
 		delete[] C;
 		delete[] B;
 		delete[] A;
@@ -177,11 +187,11 @@ namespace hig {
 		return complex_t(c.x * s.x - c.y * s.y, c.x * s.y + c.y * s.x);
 	} // operator*()
 
-	complex_t operator*(complex_t c, complex_t s) {
+/*	complex_t operator*(complex_t c, complex_t s) {
 		return complex_t(c.real() * s.real() - c.imag() * s.imag(),
 						 c.real() * s.imag() + c.imag() * s.real());
 	} // operator*()
-
+*/
 	complex_t operator*(complex_t c, float_t s) {
 		return complex_t(c.real() * s, c.imag() * s);
 	} // operator*()

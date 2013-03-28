@@ -3,7 +3,7 @@
  *
  *  File: ff_num_cpu.hpp
  *  Created: Nov 05, 2011
- *  Modified: Fri 22 Mar 2013 11:37:43 AM PDT
+ *  Modified: Sat 23 Mar 2013 11:00:32 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -202,7 +202,7 @@ namespace hig {
 	
 		#pragma omp parallel
 		{
-			#pragma omp for nowait schedule(auto)
+			#pragma omp for nowait //schedule(auto)
 			for(unsigned int i_t = 0; i_t < curr_num_triangles; ++ i_t) {
 				unsigned int shape_off = (ib_t * b_num_triangles + i_t) * 7;
 				float_t s = shape_def[shape_off];
@@ -291,7 +291,7 @@ namespace hig {
 			unsigned long int temp_3 = ib_x * b_nqx + i_x;
 			#pragma omp parallel
 			{
-				#pragma omp for nowait schedule(auto)
+				#pragma omp for nowait //schedule(auto)
 				for(unsigned int i_y = 0; i_y < curr_b_nqy; ++ i_y) {
 					unsigned long int temp_nqxiyix = curr_b_nqx * i_y + i_x;
 					unsigned long int temp_2 = nqx * i_y;
