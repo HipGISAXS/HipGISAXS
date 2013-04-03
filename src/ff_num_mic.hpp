@@ -3,7 +3,7 @@
  *
  *  File: ff_num_mic.hpp
  *  Created: Apr 02, 2013
- *  Modified: Wed 03 Apr 2013 09:47:05 AM PDT
+ *  Modified: Wed 03 Apr 2013 03:10:05 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -33,14 +33,25 @@ namespace hig {
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									scomplex_t*);
+			__attribute__((target(mic:0)))
+			void form_factor_kernel_db(float_t*, float_t*, scomplex_t*, float_t*,
+									unsigned int, unsigned int, unsigned int, unsigned int,
+									unsigned int, unsigned int, unsigned int, unsigned int,
+									unsigned int, unsigned int, unsigned int, unsigned int,
+									scomplex_t*);
 
 			__attribute__((target(mic:0)))
 			float2_t compute_fq(float, float2_t, float2_t);
-
 			__attribute__((target(mic:0)))
 			double2_t compute_fq(double, double2_t, double2_t);
 
 			void reduction_kernel(unsigned int, unsigned int, unsigned int,	unsigned int,
+									unsigned int, unsigned int, unsigned int, unsigned int,
+									unsigned int, unsigned int, unsigned int, unsigned int,
+									unsigned int, unsigned int, unsigned int, unsigned int,
+									scomplex_t*, scomplex_t*);
+			__attribute__((target(mic:0)))
+			void reduction_kernel_db(unsigned int, unsigned int, unsigned int,	unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
@@ -62,6 +73,13 @@ namespace hig {
 		public:
 
 			unsigned int compute_form_factor(int, float_vec_t&, complex_t*&,
+									float_t*, int, float_t*, int, complex_t* qz, int,
+									float_t&, float_t&, float_t&
+									#ifdef FINDBLOCK
+										, const int, const int, const int, const int
+									#endif
+									);
+			unsigned int compute_form_factor_db(int, float_vec_t&, complex_t*&,
 									float_t*, int, float_t*, int, complex_t* qz, int,
 									float_t&, float_t&, float_t&
 									#ifdef FINDBLOCK

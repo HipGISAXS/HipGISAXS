@@ -5,7 +5,7 @@
   *
   *  File: ff_num.cpp
   *  Created: Jul 18, 2012
-  *  Modified: Tue 02 Apr 2013 01:25:00 PM PDT
+  *  Modified: Wed 03 Apr 2013 03:42:51 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -221,7 +221,7 @@ namespace hig {
 												#endif
 												);
 			#elif defined USE_MIC	// use MIC
-				ret_nt = mff_.compute_form_factor(rank, shape_def, p_ff,
+				ret_nt = mff_.compute_form_factor_db(rank, shape_def, p_ff,
 												qx, p_nqx, p_qy, p_nqy, p_qz, p_nqz,
 												kernel_time, red_time, temp_mem_time
 												#ifdef FINDBLOCK
