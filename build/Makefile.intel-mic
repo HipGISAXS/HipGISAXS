@@ -13,6 +13,7 @@
 USE_GPU = n
 USE_ANA_GPU = n
 USE_NUM_GPU = n
+USE_MIC = y
 
 ## base directories
 BOOST_DIR = $(HOME)/opt/boost_1_53_0-intel
@@ -34,8 +35,11 @@ NVCC = $(CUDA_DIR)/bin/nvcc
 ## gnu c++ compilers >= 4.3 support -std=c++0x [requirement for hipgisaxs 4.3.x <= g++ <= 4.6.x]
 ## gnu c++ compilers >= 4.7 also support -std=c++11, but they are not supported by cuda
 CXX_FLAGS = -lm #-lgsl -lgslcblas #-v
-CXX_FLAGS += -gxx-name=$(HOME)/opt/gcc-4.6.3/bin/g++ -std=c++0x #-Wall -Wextra
-CXX_FLAGS += -openmp
+#CXX_FLAGS += -gxx-name=$(HOME)/opt/gcc-4.6.3/bin/g++ -std=c++0x #-Wall -Wextra
+CXX_FLAGS += -std=c++0x #-Wall -Wextra
+CXX_FLAGS += -m64 -openmp #-ww2568
+CXX_FLAGS += -offload-option,mic,compiler,"-vec-report2" -opt-report-phase=offload
+CXX_FLAGS += -offload-option,mic,ld,"-z defs"
 
 ## boost
 BOOST_INCL = -I $(BOOST_DIR)/include
@@ -60,8 +64,8 @@ NVCC_FLAGS += -gencode arch=compute_20,code=compute_20
 NVCC_FLAGS += -gencode arch=compute_20,code=sm_21
 NVCC_FLAGS += -gencode arch=compute_30,code=sm_30
 NVCC_FLAGS += -gencode arch=compute_35,code=sm_35
-NVCC_FLAGS += -Xptxas -v -Xcompiler -v -Xlinker -v
-NVCC_FLAGS += --ptxas-options="-v"
+#NVCC_FLAGS += -Xptxas -v -Xcompiler -v -Xlinker -v
+#NVCC_FLAGS += --ptxas-options="-v"
 NVCC_FLAGS += #-G #-DFINDBLOCK #-DAXIS_ROT
 NVCC_FLAGS += -ccbin /opt/intel/composer_xe_2013.2.146/bin/intel64/icpc
 NVLIB_FLAGS = -Xlinker -lgomp
@@ -75,6 +79,7 @@ TIFF_LIBS = -L $(TIFF_DIR)/lib -ltiff
 MISC_INCL =
 MISC_FLAGS = -DGPUR -DKERNEL2
 MISC_FLAGS += #-DREDUCTION2 #-DAXIS_ROT
+
 ifeq ($(USE_ANA_GPU), y)
 MISC_FLAGS += -DFF_ANA_GPU
 endif
@@ -84,12 +89,16 @@ endif
 ifeq ($(USE_GPU), y)
 MISC_FLAGS += -DUSE_GPU
 endif
+ifeq ($(USE_MIC), y)
+MISC_FLAGS += -DUSE_MIC
+endif
+
 MISC_FLAGS += -DTIME_DETAIL_1 -DTIME_DETAIL_2
 
 ## choose optimization levels, debug flags, gprof flag, etc
-OPT_FLAGS = -g -DDEBUG #-pg
-#OPT_FLAGS = -O3 -DNDEBUG #-v
-INTEL_DEBUG = -debug all
+#OPT_FLAGS = -g -DDEBUG #-pg
+#INTEL_DEBUG = -debug all
+OPT_FLAGS = -O3 -DNDEBUG #-v
 
 ## choose single or double precision here
 PREC_FLAG =			# leave empty for single precision
@@ -120,6 +129,10 @@ OBJECTS_MAIN = reduction.o ff_num_gpu.o utilities.o numeric_utils.o compute_para
 		  ff_ana_prism6_gpu.o ff_ana_prism_gpu.o ff_ana_rand_cylinder_gpu.o \
 		  ff_num_cpu.o ff_num_gpu.o \
 		  fitting_steepest_descent.o
+
+ifeq ($(USE_MIC), y)
+OBJECTS_MAIN += ff_num_mic.o
+endif
 
 OBJECTS_SIM = $(OBJECTS_MAIN) hipgisaxs_sim.o
 
@@ -274,7 +287,7 @@ generate_palette: $(patsubst %,$(OBJ_DIR)/%,$(OBJECTS_GEN_PALETTE))
 $(OBJ_DIR)/generate_palette.o: $(SRC_DIR)/generate_palette.cpp
 	$(CXX) -c $< -o $@ $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS)
 
-OBJECTS_PLOT_FF = plot_ff.o image.o utilities.o
+OBJECTS_PLOT_FF = plot_ff.o image.o utilities.o numeric_utils.o
 plot_ff: $(patsubst %,$(OBJ_DIR)/%,$(OBJECTS_PLOT_FF))
 	$(CXX) -o $(BIN_DIR)/$@ $^ $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(MISC_FLAGS) $(ALL_LIBS)
 $(OBJ_DIR)/plot_ff.o: $(SRC_DIR)/plot_ff.cpp
@@ -315,4 +328,4 @@ all: hipgisaxs test_conv test_read test_ff test_image object2shape shape2hdf5
 .PHONY: clean
 
 clean:
-	rm -f $(OBJ_BIN_SIM) $(OBJ_BIN_FIT) $(BIN_DIR)/$(BINARY_SIM) $(BIN_DIR)/$(BINARY_FIT) $(BIN_DIR)/test_conv $(OBJ_DIR)/test_conv.o $(BIN_DIR)/test_read $(OBJ_DIR)/test_read.o $(BIN_DIR)/test_ff $(OBJ_DIR)/test_ff.o $(BIN_DIR)/test_image $(OBJ_DIR)/test_image.o $(OBJ_DIR)/qgrid_test_create.o $(OBJ_DIR)/plot_gisaxs.o $(OBJ_DIR)/plot_ff.o $(OBJ_DIR)/generate_palette.o
+	rm -f $(OBJ_BIN_SIM) $(OBJ_BIN_FIT) $(BIN_DIR)/$(BINARY_SIM) $(BIN_DIR)/$(BINARY_FIT) $(BIN_DIR)/test_conv $(OBJ_DIR)/test_conv.o $(BIN_DIR)/test_read $(OBJ_DIR)/test_read.o $(BIN_DIR)/test_ff $(OBJ_DIR)/test_ff.o $(BIN_DIR)/test_image $(OBJ_DIR)/test_image.o $(OBJ_DIR)/qgrid_test_create.o $(OBJ_DIR)/plot_gisaxs.o $(OBJ_DIR)/plot_ff.o $(OBJ_DIR)/generate_palette.o $(OBJ_DIR)/*MIC.o
