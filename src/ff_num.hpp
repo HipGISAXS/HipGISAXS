@@ -3,7 +3,7 @@
  *
  *  File: ff_num.hpp
  *  Created: Nov 05, 2011
- *  Modified: Sat 02 Mar 2013 11:30:50 AM PST
+ *  Modified: Tue 02 Apr 2013 01:24:45 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -26,9 +26,11 @@
 #include "qgrid.hpp"
 #include "utilities.hpp"
 #ifdef FF_NUM_GPU
-#include "ff_num_gpu.cuh"	// for gpu version
+	#include "ff_num_gpu.cuh"	// for gpu version
+#elif defined USE_MIC
+	#include "ff_num_mic.hpp"	// for mic version -- TODO: merge it with cpu version ...
 #else
-#include "ff_num_cpu.hpp"	// for cpu version
+	#include "ff_num_cpu.hpp"	// for cpu version
 #endif // FF_NUM_GPU
 
 namespace hig {
@@ -77,6 +79,8 @@ namespace hig {
 				#else
 					NumericFormFactor(int block_cuda): block_cuda_(block_cuda), gff_(block_cuda) { }
 				#endif // KERNEL2
+			#elif defined USE_MIC
+				NumericFormFactor(): mff_() { }
 			#else				// use CPUs for numerical
 				NumericFormFactor(): cff_() { }
 			#endif	// FF_NUM_GPU
@@ -97,11 +101,13 @@ namespace hig {
 			unsigned int block_cuda_y_;
 			unsigned int block_cuda_z_;
 
-#ifdef FF_NUM_GPU
-			NumericFormFactorG gff_;		// for computation on the GPU
-#else
-			NumericFormFactorC cff_;		// for computation on CPU - same as LFormFactor
-#endif // FF_NUM_GPU
+			#ifdef FF_NUM_GPU
+				NumericFormFactorG gff_;		// for computation on the GPU
+			#elif defined USE_MIC
+				NumericFormFactorM mff_;		// for computation on the MIC and/or intel CPU
+			#else
+				NumericFormFactorC cff_;		// for computation only on CPU
+			#endif
 	
 			unsigned int read_shape_surface_file(const char* filename, std::vector<float_t>& shape_def);
 			unsigned int read_shapes_hdf5(const char* filename, std::vector<float_t>& shape_def,

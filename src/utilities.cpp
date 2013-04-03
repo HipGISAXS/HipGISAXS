@@ -5,7 +5,7 @@
   *
   *  File: utilities.cpp
   *  Created: Jun 25, 2012
-  *  Modified: Thu 28 Mar 2013 02:40:40 PM PDT
+  *  Modified: Tue 02 Apr 2013 06:32:35 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -244,7 +244,7 @@ namespace hig {
 	/**
 	 * returns element-by-element sum of two matrices	WRONG ...
 	 */
-	std::vector<complex_t>& mat_add(unsigned int x1_size, unsigned int y1_size, unsigned int z1_size,
+	/*std::vector<complex_t>& mat_add(unsigned int x1_size, unsigned int y1_size, unsigned int z1_size,
 									std::vector<complex_t>& matrix1,
 									unsigned int x2_size, unsigned int y2_size, unsigned int z2_size,
 									std::vector<complex_t>& matrix2) {
@@ -261,7 +261,7 @@ namespace hig {
 		} // for
 
 		return result;
-	} // mat_add()
+	} // mat_add()*/
 
 	/**
 	 * constructs element-by-element sum of two matrices into result
@@ -309,7 +309,7 @@ namespace hig {
 	/**
 	 * scalar-matrix multiplication		WRONG ...
 	 */
-	std::vector<complex_t>& mat_mul(float_t scalar,
+	/*std::vector<complex_t>& mat_mul(float_t scalar,
 									//unsigned int x_size, unsigned int y_size, unsigned int z_size,
 									std::vector<complex_t>& matrix) {
 		std::vector<complex_t> result;
@@ -327,15 +327,15 @@ namespace hig {
 			result.push_back((*i) * scalar);
 		} // for
 		return result;
-	} // mat_mul()
+	} // mat_mul()*/
 
-	std::vector<complex_t>& mat_mul(std::vector<complex_t>& matrix, float_t scalar) {
+	/*std::vector<complex_t>& mat_mul(std::vector<complex_t>& matrix, float_t scalar) {
 		return mat_mul(scalar, matrix);
 	} // mat_mul()
 
 	std::vector<complex_t>& mat_mul(std::vector<complex_t>& matrix, complex_t scalar) {
 		return mat_mul(scalar, matrix);
-	} // mat_mul()
+	} // mat_mul()*/
 
 	/**
 	 * scalar-matrix multiplication into result
@@ -393,7 +393,7 @@ namespace hig {
 	/**
 	 * returns element-by-element product of two matrices		WRONG
 	 */
-	std::vector<complex_t>& mat_dot_prod(unsigned int x1_size, unsigned int y1_size, unsigned int z1_size,
+	/*std::vector<complex_t>& mat_dot_prod(unsigned int x1_size, unsigned int y1_size, unsigned int z1_size,
 										std::vector<complex_t>& matrix1,
 										unsigned int x2_size, unsigned int y2_size, unsigned int z2_size,
 										std::vector<complex_t>& matrix2) {
@@ -411,7 +411,7 @@ namespace hig {
 		} // for
 
 		return result;
-	} // mat_dot_prod()
+	} // mat_dot_prod()*/
 
 	/**
 	 * computes element-by-element product of two matrices into result
@@ -459,7 +459,7 @@ namespace hig {
 	/**
 	 * returns element-by-element division of two matrices (matrix1 / matrix2)	WRONG ...
 	 */
-	std::vector<complex_t>& mat_dot_div(unsigned int nx1, unsigned int ny1, unsigned int nz1,
+	/*std::vector<complex_t>& mat_dot_div(unsigned int nx1, unsigned int ny1, unsigned int nz1,
 										std::vector<complex_t>& matrix1,
 										unsigned int nx2, unsigned int ny2, unsigned int nz2,
 										std::vector<complex_t>& matrix2) {
@@ -475,7 +475,7 @@ namespace hig {
 			result.push_back((*i1) / (*i2));
 		} // for
 		return result;
-	} // mat_dot_div()
+	} // mat_dot_div()*/
 
 	/**
 	 * computes element-by-element division of two matrices (matrix1 / matrix2)	into result
@@ -520,14 +520,14 @@ namespace hig {
 	} // mat_dot_div()
 
 
-	std::vector<complex_t>& mat_sqr(//unsigned int nx, unsigned int ny, unsigned int nz,
+	/*std::vector<complex_t>& mat_sqr(//unsigned int nx, unsigned int ny, unsigned int nz,
 									std::vector<complex_t>& matrix) {
 		std::vector<complex_t> result;
 		for(std::vector<complex_t>::iterator i = matrix.begin(); i != matrix.end(); ++ i) {
 			result.push_back((*i) * (*i));
 		} // for
 		return result;
-	} // mat_sqr()
+	} // mat_sqr()*/
 
 	bool mat_sqr(const complex_vec_t& matrix, complex_vec_t& result) {
 		result.clear();
@@ -546,14 +546,14 @@ namespace hig {
 	} // mat_sqr()
 
 
-	std::vector<complex_t>& mat_sqrt(//unsigned int nx, unsigned int ny, unsigned int nz,
+	/*std::vector<complex_t>& mat_sqrt(//unsigned int nx, unsigned int ny, unsigned int nz,
 									std::vector<complex_t>& matrix) {
 		std::vector<complex_t> result;
 		for(std::vector<complex_t>::iterator i = matrix.begin(); i != matrix.end(); ++ i) {
 			result.push_back(sqrt(*i));
 		} // for
 		return result;
-	} // mat_sqrt()
+	} // mat_sqrt()*/
 
 	bool mat_sqrt(const complex_vec_t& matrix, complex_vec_t& result) {
 		result.clear();
@@ -576,22 +576,24 @@ namespace hig {
 		result.clear();
 		for(complex_vec_t::iterator i = matrix.begin(); i != matrix.end(); ++ i)
 			result.push_back(exp(*i));
+		return true;
 	} // mat_exp()
 
 
 	bool mat_exp_in(complex_vec_t& matrix) {
 		for(complex_vec_t::iterator i = matrix.begin(); i != matrix.end(); ++ i) *i = exp(*i);
+		return true;
 	} // mat_exp_in()
 
 
-	std::vector<complex_t>& mat_besselj(int j, unsigned int nx, unsigned int ny, unsigned int nz,
+	/*std::vector<complex_t>& mat_besselj(int j, unsigned int nx, unsigned int ny, unsigned int nz,
 										std::vector<complex_t>& matrix) {
 		std::vector<complex_t> result;
 		for(std::vector<complex_t>::iterator i = matrix.begin(); i != matrix.end(); ++ i) {
 			result.push_back(cbessj(*i, j));
 		} // for
 		return result;
-	} // mat_besselj()
+	} // mat_besselj()*/
 
 	bool mat_besselj(int j, unsigned int nx, unsigned int ny, unsigned int nz,
 						const complex_vec_t& matrix, complex_vec_t& result) {
@@ -613,8 +615,8 @@ namespace hig {
 
 
 	// pari
-	complex_t besselj(int j, complex_t m) {
-	/*	pari_init(5000000, 100000);
+	/*complex_t besselj(int j, complex_t m) {
+		pari_init(5000000, 100000);
 		GEN inp_m;
 		inp_m = cgetc(64);	// using double precision
 		gel(inp_m, 1) = dbltor(m.real());
@@ -631,8 +633,8 @@ namespace hig {
 
 		pari_close();
 
-		return complex_t(out_real, out_imag); */
-	} // besselj()
+		return complex_t(out_real, out_imag);
+	} // besselj()*/
 
 
 /*	extern "C" {

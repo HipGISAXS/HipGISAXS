@@ -5,7 +5,7 @@
   *
   *  File: cu_complex_numeric.cuh
   *  Created: Oct 17, 2012
-  *  Modified: Sat 23 Feb 2013 01:11:34 PM PST
+  *  Modified: Wed 03 Apr 2013 11:14:03 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -91,11 +91,11 @@ namespace hig {
 	} // operator+()
 
 	__device__ static __inline__ cuFloatComplex operator*(cuFloatComplex a, float b) {
-		return make_cuFloatComplex(a.x * b, a.y);
+		return make_cuFloatComplex(a.x * b, a.y * b);
 	} // operator+()
 
 	__device__ static __inline__ cuFloatComplex operator*(float a, cuFloatComplex b) {
-		return make_cuFloatComplex(a * b.x, b.y);
+		return make_cuFloatComplex(a * b.x, a * b.y);
 	} // operator+()
 
 	__device__ static __inline__ cuDoubleComplex operator*(cuDoubleComplex a, cuDoubleComplex b) {
@@ -103,11 +103,11 @@ namespace hig {
 	} // operator+()
 
 	__device__ static __inline__ cuDoubleComplex operator*(cuDoubleComplex a, double b) {
-		return make_cuDoubleComplex(a.x * b, a.y);
+		return make_cuDoubleComplex(a.x * b, a.y * b);
 	} // operator+()
 
 	__device__ static __inline__ cuDoubleComplex operator*(double a, cuDoubleComplex b) {
-		return make_cuDoubleComplex(a * b.x, b.y);
+		return make_cuDoubleComplex(a * b.x, a * b.y);
 	} // operator+()
 
 

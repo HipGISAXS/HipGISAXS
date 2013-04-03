@@ -5,7 +5,7 @@
   *
   *  File: hipgisaxs_main.cpp
   *  Created: Jun 14, 2012
-  *  Modified: Thu 28 Mar 2013 02:37:42 PM PDT
+  *  Modified: Wed 03 Apr 2013 11:28:43 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -27,7 +27,13 @@
 #include "hipgisaxs_main.hpp"
 #include "typedefs.hpp"
 #include "utilities.hpp"
-#include "init_gpu.cuh"
+
+#if defined USE_GPU || defined FF_ANA_GPU || defined FF_NUM_GPU
+	#include "init_gpu.cuh"
+#elif defined USE_MIC
+	#include "init_mic.hpp"
+#endif
+
 
 namespace hig {
 
@@ -87,17 +93,20 @@ namespace hig {
 			return false;
 		} // if
 
-#ifdef _OPENMP
+		#ifdef _OPENMP
 		//#pragma omp parallel
 		//{
 			std::cout << "++  Max number of OpenMP threads: " << omp_get_max_threads() << std::endl;
 			//if(omp_get_thread_num() == 0)
 				//std::cout << "**         Number of CPU threads: " << omp_get_num_threads() << std::endl;
 		//}
-#endif // _OPENMP
-#ifdef USE_GPU
-		init_gpu();
-#endif // USE_GPU
+		#endif // _OPENMP
+
+		#if defined USE_GPU || defined FF_ANA_GPU || defined FF_NUM_GPU
+			init_gpu();
+		#elif defined USE_MIC
+			init_mic();
+		#endif
 
 		return true;
 	} // HipGISAXS::init()
@@ -623,8 +632,9 @@ namespace hig {
 							shape_tau, shape_eta, r_tot1, r_tot2, r_tot3, world_comm);
 				//ff_.print_ff(nqx_, nqy_, nqz_extended_);
 				//ff_.printff(nqx_, nqy_, nqz_extended_);
-/*
-				if(mpi_rank == 0) {
+
+				// save form factor data on disk
+/*				if(mpi_rank == 0) {
 					std::stringstream alphai_b, phi_b, tilt_b;
 					std::string alphai_s, phi_s, tilt_s;
 					alphai_b << alpha_i; alphai_s = alphai_b.str();

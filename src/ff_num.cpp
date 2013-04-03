@@ -5,7 +5,7 @@
   *
   *  File: ff_num.cpp
   *  Created: Jul 18, 2012
-  *  Modified: Fri 22 Mar 2013 11:35:32 AM PDT
+  *  Modified: Tue 02 Apr 2013 01:25:00 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -220,7 +220,15 @@ namespace hig {
 													, block_x, block_y, block_z, block_t
 												#endif
 												);
-			#else	// use CPU
+			#elif defined USE_MIC	// use MIC
+				ret_nt = mff_.compute_form_factor(rank, shape_def, p_ff,
+												qx, p_nqx, p_qy, p_nqy, p_qz, p_nqz,
+												kernel_time, red_time, temp_mem_time
+												#ifdef FINDBLOCK
+													, block_x, block_y, block_z, block_t
+												#endif
+												);
+			#else	// use only CPU
 				ret_nt = cff_.compute_form_factor(rank, shape_def, p_ff,
 												qx, p_nqx, p_qy, p_nqy, p_qz, p_nqz,
 												kernel_time, red_time, temp_mem_time
@@ -228,7 +236,7 @@ namespace hig {
 													, block_x, block_y, block_z, block_t
 												#endif
 												);
-			#endif // FF_NUM_GPU
+			#endif
 
 			computetimer.stop();
 

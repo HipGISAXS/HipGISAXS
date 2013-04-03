@@ -242,12 +242,11 @@ namespace hig {
 		} // if
 		host_mem_usage += total_qpoints * sizeof(cucomplex_t);
 
-		// read the shape file
-#ifndef KERNEL2
-		unsigned int num_triangles = shape_def.size() / 7;
-#else // KERNEL2
-		unsigned int num_triangles = shape_def.size() / T_PROP_SIZE_;
-#endif // KERNEL2
+		#ifndef KERNEL2
+			unsigned int num_triangles = shape_def.size() / 7;
+		#else
+			unsigned int num_triangles = shape_def.size() / T_PROP_SIZE_;
+		#endif // KERNEL2
 		if(num_triangles < 1) return 0;
 
 		cudaError_t err;

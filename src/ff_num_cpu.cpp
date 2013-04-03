@@ -3,7 +3,7 @@
  *
  *  File: ff_num_cpu.hpp
  *  Created: Nov 05, 2011
- *  Modified: Sat 23 Mar 2013 11:00:32 PM PDT
+ *  Modified: Wed 03 Apr 2013 11:18:54 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -28,7 +28,7 @@ namespace hig {
 	NumericFormFactorC::~NumericFormFactorC() { }
 
 	// TODO: ...
-	bool NumericFormFactorC::init() { }
+	bool NumericFormFactorC::init() { return true; }
 
 	/**
 	 * The main host function called from outside, as part of the API for a single node.

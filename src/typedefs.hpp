@@ -3,7 +3,7 @@
   *
   *  File: typedefs.hpp
   *  Created: Jul 08, 2012
-  *  Modified: Sat 02 Mar 2013 09:23:29 AM PST
+  *  Modified: Tue 02 Apr 2013 09:42:11 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -17,15 +17,32 @@
 
 namespace hig {
 
-#ifdef DOUBLEP	// double precision
-	typedef double						float_t;
-	typedef cuDoubleComplex				cucomplex_t;
-#else			// single precision
-	typedef float						float_t;
-	typedef cuFloatComplex				cucomplex_t;
-#endif	// DOUBLEP
+	#if defined USE_MIC
+		typedef struct {	// serialized complex
+			double x;
+			double y; }		double2_t;
 
-	// TODO: multiprecision? ...
+		typedef struct {	// serialized complex
+			float x;
+			float y; }		float2_t;
+	#endif
+
+	#ifdef DOUBLEP						// double precision
+		typedef double					float_t;
+		typedef cuDoubleComplex			cucomplex_t;
+		#if defined USE_MIC
+			typedef double2_t			scomplex_t;
+		#endif
+	#else								// single precision
+		typedef float					float_t;
+		typedef cuFloatComplex			cucomplex_t;
+		#if defined USE_MIC
+			typedef float2_t			scomplex_t;
+		#endif
+	#endif
+
+	// TODO: handle multiprecision? ...
+
 
 	typedef std::complex<float_t>		complex_t;
 	typedef std::vector<float_t> 		float_vec_t;

@@ -3,7 +3,7 @@
   *
   *  File: fitting_steepest_descent.cpp
   *  Created: Dec 06, 2012
-  *  Modified: Thu 13 Dec 2012 05:19:45 AM PST
+  *  Modified: Tue 02 Apr 2013 06:35:11 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -53,6 +53,8 @@ namespace hig {
 		c_mat[1] = - a_mat[1] / det_a;
 		c_mat[2] = - a_mat[2] / det_a;
 		c_mat[3] = a_mat[0] / det_a;
+
+		return true;
 	} // mldivide()
 
 	// currently only hacked for spheres, with radius and sd as two parameters
