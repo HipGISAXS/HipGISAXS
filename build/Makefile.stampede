@@ -17,19 +17,23 @@ USE_MIC = y
 
 ## base directories
 BOOST_DIR = $(TACC_BOOST_DIR)
-CUDA_DIR = $(TACC_CUDA_DIR)
 HDF5_DIR = $(TACC_HDF5_DIR)
 #Z_DIR =
 #SZ_DIR =
 TIFF_DIR = $(HOME)/installs/tiff-4.0.2
 MPI_DIR = $(MPICH_HOME)
+ifeq ($(USE_GPU), y)
+CUDA_DIR = $(TACC_CUDA_DIR)
+endif
 
 #export PATH:=$(MPI_DIR)/bin:$(PATH)
 
 ## compilers
 CXX = mpicxx
 H5CC = h5pcc
+ifeq ($(USE_GPU), y)
 NVCC = nvcc
+endif
 
 ## compiler flags
 ## gnu c++ compilers >= 4.3 support -std=c++0x [requirement for hipgisaxs 4.3.x <= g++ <= 4.6.x]
@@ -57,6 +61,7 @@ MPI_INCL = -I $(MPI_DIR)/include
 MPI_LIBS = -L $(MPI_DIR)/lib
 
 ## cuda
+ifeq ($(USE_GPU), y)
 CUDA_INCL = -I$(CUDA_DIR)/include
 CUDA_LIBS = -L$(CUDA_DIR)/lib64 -lcudart -lcufft
 NVCC_FLAGS = -Xcompiler -fPIC -Xcompiler -fopenmp -m64
@@ -66,11 +71,11 @@ NVCC_FLAGS += -gencode arch=compute_20,code=sm_21
 NVCC_FLAGS += -gencode arch=compute_30,code=sm_30
 NVCC_FLAGS += -gencode arch=compute_35,code=sm_35
 #NVCC_FLAGS += -Xptxas -v -Xcompiler -v -Xlinker -v
-#NVCC_FLAGS += --ptxas-options="-v"
-NVCC_FLAGS += #-G #-DFINDBLOCK #-DAXIS_ROT
-NVCC_FLAGS +=
+NVCC_FLAGS += --ptxas-options="-v"
+NVCC_FLAGS += -G -lineinfo #-DFINDBLOCK #-DAXIS_ROT
 NVLIB_FLAGS = -Xlinker -lgomp
 NVLIB_FLAGS += -Wl,-rpath -Wl,$(CUDA_DIR)/lib64
+endif
 
 ## libtiff
 TIFF_INCL = -I $(TIFF_DIR)/include
@@ -78,18 +83,22 @@ TIFF_LIBS = -L $(TIFF_DIR)/lib -ltiff
 
 ## miscellaneous
 MISC_INCL =
-MISC_FLAGS = -DGPUR -DKERNEL2
-MISC_FLAGS += #-DREDUCTION2 #-DAXIS_ROT
+MISC_FLAGS = #-DAXIS_ROT
 
+## GPU related flags
+ifeq ($(USE_GPU), y)
+MISC_FLAGS += -DUSE_GPU
+MISC_FLAGS += -DGPUR -DKERNEL2
+MISC_FLAGS += #-DREDUCTION2
 ifeq ($(USE_ANA_GPU), y)
 MISC_FLAGS += -DFF_ANA_GPU
 endif
 ifeq ($(USE_NUM_GPU), y)
 MISC_FLAGS += -DFF_NUM_GPU
 endif
-ifeq ($(USE_GPU), y)
-MISC_FLAGS += -DUSE_GPU
 endif
+
+## MIC related flags
 ifeq ($(USE_MIC), y)
 MISC_FLAGS += -DUSE_MIC
 endif
@@ -120,16 +129,20 @@ OBJ_DIR = $(PREFIX)/obj
 SRC_DIR = $(PREFIX)/src
 
 ## all objects
-OBJECTS_MAIN = reduction.o ff_num_gpu.o utilities.o numeric_utils.o compute_params.o hig_input.o \
+OBJECTS_MAIN = utilities.o numeric_utils.o compute_params.o hig_input.o \
 		  image.o inst_detector.o inst_scattering.o layer.o qgrid.o read_oo_input.o sf.o \
-		  ff_ana.o ff_num.o ff.o shape.o structure.o object2hdf5.o hipgisaxs_main.o ff_ana_gpu.o \
+		  ff_ana.o ff_num.o ff.o shape.o structure.o object2hdf5.o hipgisaxs_main.o \
 		  ff_ana_sphere.o ff_ana_box.o ff_ana_cylinder.o ff_ana_hcylinder.o ff_ana_prism3x.o \
 		  ff_ana_prism6.o ff_ana_prism.o ff_ana_pyramid.o ff_ana_rand_cylinder.o \
 		  ff_ana_sawtooth_down.o ff_ana_sawtooth_up.o ff_ana_trunc_cone.o ff_ana_trunc_pyramid.o \
-		  ff_ana_sphere_gpu.o ff_ana_box_gpu.o ff_ana_cylinder_gpu.o ff_ana_hcylinder_gpu.o \
-		  ff_ana_prism6_gpu.o ff_ana_prism_gpu.o ff_ana_rand_cylinder_gpu.o \
-		  ff_num_cpu.o ff_num_gpu.o \
+		  ff_num_cpu.o \
 		  fitting_steepest_descent.o
+
+ifeq ($(USE_GPU), y)
+OBJECTS_MAIN += reduction.o ff_num_gpu.o ff_ana_gpu.o ff_ana_sphere_gpu.o ff_ana_box_gpu.o \
+				ff_ana_cylinder_gpu.o ff_ana_hcylinder_gpu.o ff_ana_prism6_gpu.o \
+				ff_ana_prism_gpu.o ff_ana_rand_cylinder_gpu.o
+endif
 
 ifeq ($(USE_MIC), y)
 OBJECTS_MAIN += ff_num_mic.o
@@ -151,6 +164,8 @@ $(BINARY_FIT): $(OBJ_BIN_FIT)
 	$(CXX) -o $(BIN_DIR)/$@ $^ $(OPT_FLAGS) $(INTEL_DEBUG) $(CXX_FLAGS) $(PREC_FLAG) $(MISC_FLAGS) $(ALL_LIBS)
 
 ## cuda compilation
+ifeq ($(USE_GPU), y)
+
 _DEPS_NV = %.cuh
 DEPS_NV = $(patsubst %,$(SRC_DIR)/%,$(_DEPS_NV))
 
@@ -184,6 +199,8 @@ $(OBJ_DIR)/ff_ana_rand_cylinder_gpu.o: $(SRC_DIR)/ff_ana_rand_cylinder_gpu.cu
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cu $(DEPS_NV)
 	$(NVCC) -c $< -o $@ $(OPT_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS) $(NVCC_FLAGS)
+
+endif
 
 ## hdf5-parallel compilation
 _DEPS_HDF = object2hdf5.h
