@@ -5,7 +5,7 @@
   *
   *  File: utilities.cpp
   *  Created: Jun 25, 2012
-  *  Modified: Tue 02 Apr 2013 06:32:35 PM PDT
+  *  Modified: Wed 03 Apr 2013 07:35:07 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -183,15 +183,6 @@ namespace hig {
 	 * arithmetic operators for complex types
 	 */
 
-	complex_t operator*(float2 c, float2 s) {
-		return complex_t(c.x * s.x - c.y * s.y, c.x * s.y + c.y * s.x);
-	} // operator*()
-
-/*	complex_t operator*(complex_t c, complex_t s) {
-		return complex_t(c.real() * s.real() - c.imag() * s.imag(),
-						 c.real() * s.imag() + c.imag() * s.real());
-	} // operator*()
-*/
 	complex_t operator*(complex_t c, float_t s) {
 		return complex_t(c.real() * s, c.imag() * s);
 	} // operator*()
@@ -200,45 +191,53 @@ namespace hig {
 		return complex_t(c.real() * s, c.imag() * s);
 	} // operator*()
 
-	complex_t operator*(cucomplex_t c, float_t s) {
-		return complex_t(s * c.x, s * c.y);
-	} // operator*()
-
-	complex_t operator*(float_t s, cucomplex_t c) {
-		return complex_t(s * c.x, s * c.y);
-	} // operator*()
-
-	complex_t operator*(complex_t s, cucomplex_t c) {
-		return complex_t(s.real() * c.x - s.imag() * c.y, s.real() * c.y + s.imag() * c.x);
-	} // operator*()
-
-	complex_t operator*(cucomplex_t c, complex_t s) {
-		return complex_t(s.real() * c.x - s.imag() * c.y, s.real() * c.y + s.imag() * c.x);
-	} // operator*()
-
 	std::complex<long double> operator*(std::complex<long double> c, long double s) {
 		return std::complex<long double>(c.real() * s, c.imag() * s);
 	} // operator*()
 
+	#ifdef USE_GPU
+
+		complex_t operator*(float2 c, float2 s) {
+			return complex_t(c.x * s.x - c.y * s.y, c.x * s.y + c.y * s.x);
+		} // operator*()
+
+		complex_t operator*(cucomplex_t c, float_t s) {
+			return complex_t(s * c.x, s * c.y);
+		} // operator*()
+
+		complex_t operator*(float_t s, cucomplex_t c) {
+			return complex_t(s * c.x, s * c.y);
+		} // operator*()
+
+		complex_t operator*(complex_t s, cucomplex_t c) {
+			return complex_t(s.real() * c.x - s.imag() * c.y, s.real() * c.y + s.imag() * c.x);
+		} // operator*()
+
+		complex_t operator*(cucomplex_t c, complex_t s) {
+			return complex_t(s.real() * c.x - s.imag() * c.y, s.real() * c.y + s.imag() * c.x);
+		} // operator*()
+
+		complex_t operator+(complex_t s, cucomplex_t c) {
+			return complex_t(s.real() + c.x, s.imag() + c.y);
+		} // operator+()
+
+		complex_t operator+(cucomplex_t c, complex_t s) {
+			return complex_t(s.real() + c.x, s.imag() + c.y);
+		} // operator+()
+
+		complex_t operator+(cucomplex_t c, float_t s) {
+			return complex_t(s + c.x, c.y);
+		} // operator+()
+
+		complex_t operator+(float_t s, cucomplex_t c) {
+			return complex_t(s + c.x, c.y);
+		} // operator+()
+
+	#endif
+
 	std::complex<long double> operator/(std::complex<long double> c, long double s) {
 		return std::complex<long double>(c.real() / s, c.imag() / s);
-	} // operator*()
-
-	complex_t operator+(complex_t s, cucomplex_t c) {
-		return complex_t(s.real() + c.x, s.imag() + c.y);
-	} // operator+()
-
-	complex_t operator+(cucomplex_t c, complex_t s) {
-		return complex_t(s.real() + c.x, s.imag() + c.y);
-	} // operator+()
-
-	complex_t operator+(cucomplex_t c, float_t s) {
-		return complex_t(s + c.x, c.y);
-	} // operator+()
-
-	complex_t operator+(float_t s, cucomplex_t c) {
-		return complex_t(s + c.x, c.y);
-	} // operator+()
+	} // operator/()
 
 
 	/**
@@ -677,16 +676,6 @@ namespace hig {
 		return count;
 	} // count_naninfs()
 
-
-	int count_naninfs(int nx, int ny, int nz, const cucomplex_t* arr) {
-		int count = 0;
-		for(unsigned int i = 0; i < nx * ny * nz; ++ i) {
-			if(!(boost::math::isfinite(arr[i].x) && boost::math::isfinite(arr[i].y))) ++ count;
-		} // for
-		return count;
-	} // count_naninfs()
-
-
 	int count_naninfs(int nx, int ny, int nz, const std::vector<complex_t>& arr) {
 		int count = 0;
 		for(std::vector<complex_t>::const_iterator i = arr.begin(); i != arr.end(); ++ i) {
@@ -694,6 +683,16 @@ namespace hig {
 		} // for
 		return count;
 	} // count_naninfs()
+
+	#ifdef USE_GPU
+		int count_naninfs(int nx, int ny, int nz, const cucomplex_t* arr) {
+			int count = 0;
+			for(unsigned int i = 0; i < nx * ny * nz; ++ i) {
+				if(!(boost::math::isfinite(arr[i].x) && boost::math::isfinite(arr[i].y))) ++ count;
+			} // for
+			return count;
+		} // count_naninfs()
+	#endif
 
 
 	// compute integral of e^(ikx) between x1 and x2

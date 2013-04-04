@@ -3,7 +3,7 @@
   *
   *  File: ff_ana_trunc_cone.cpp
   *  Created: Jul 12, 2012
-  *  Modified: Thu 21 Feb 2013 03:45:47 PM PST
+  *  Modified: Wed 03 Apr 2013 07:43:06 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -12,6 +12,7 @@
 
 #include "woo/timer/woo_boostchronotimers.hpp"
 
+#include "constants.hpp"
 #include "ff_ana.hpp"
 #include "shape.hpp"
 #include "enums.hpp"

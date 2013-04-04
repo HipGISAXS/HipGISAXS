@@ -5,7 +5,7 @@
   *
   *  File: utilities.hpp
   *  Created: Jun 25, 2012
-  *  Modified: Sat 23 Mar 2013 10:25:11 PM PDT
+  *  Modified: Wed 03 Apr 2013 07:30:26 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -91,21 +91,23 @@ namespace hig {
 	 * complex operators
 	 */
 
-	extern complex_t operator*(float2 c, float2 s);
-	//extern complex_t operator*(complex_t c, complex_t s);
 	extern complex_t operator*(complex_t c, float_t s);
 	extern complex_t operator*(float_t s, complex_t c);
-	extern complex_t operator*(float_t s, cucomplex_t c);
-	extern complex_t operator*(cucomplex_t c, float_t s);
-	extern complex_t operator*(complex_t s, cucomplex_t c);
-	extern complex_t operator*(cucomplex_t c, complex_t s);
-
 	extern std::complex<long double> operator*(std::complex<long double> c, long double s);
+	#ifdef USE_GPU
+		extern complex_t operator*(float2 c, float2 s);
+		extern complex_t operator*(float_t s, cucomplex_t c);
+		extern complex_t operator*(cucomplex_t c, float_t s);
+		extern complex_t operator*(complex_t s, cucomplex_t c);
+		extern complex_t operator*(cucomplex_t c, complex_t s);
+	#endif
 
-	extern complex_t operator+(float_t s, cucomplex_t c);
-	extern complex_t operator+(cucomplex_t c, float_t s);
-	extern complex_t operator+(complex_t s, cucomplex_t c);
-	extern complex_t operator+(cucomplex_t c, complex_t s);
+	#ifdef USE_GPU
+		extern complex_t operator+(float_t s, cucomplex_t c);
+		extern complex_t operator+(cucomplex_t c, float_t s);
+		extern complex_t operator+(complex_t s, cucomplex_t c);
+		extern complex_t operator+(cucomplex_t c, complex_t s);
+	#endif
 
 	/**
 	 * matrix and vector operation functions
@@ -189,8 +191,10 @@ namespace hig {
 	extern bool mat_mul_3x1(vector3_t a, vector3_t b, vector3_t c, vector3_t d, vector3_t& x);
 
 	extern int count_naninfs(int, int, int, const complex_t*);
-	extern int count_naninfs(int, int, int, const cucomplex_t*);
 	extern int count_naninfs(int, int, int, const std::vector<complex_t>&);
+	#ifdef USE_GPU
+		extern int count_naninfs(int, int, int, const cucomplex_t*);
+	#endif
 
 	extern complex_t integral_e(float_t, float_t, complex_t);
 	extern complex_t integral_xe(float_t, float_t, float_t, float_t, complex_t);

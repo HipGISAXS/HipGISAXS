@@ -3,7 +3,7 @@
  *
  *  File: ff_num.hpp
  *  Created: Nov 05, 2011
- *  Modified: Tue 02 Apr 2013 01:24:45 PM PDT
+ *  Modified: Wed 03 Apr 2013 07:39:39 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -58,8 +58,10 @@ namespace hig {
 	#endif
 							);
 */	
-	//template<typename complex_t>
-	void write_slice_to_file(cucomplex_t *ff, int nqx, int nqy, int nqz, char* filename, int axis, int slice);
+	#ifdef FF_NUM_GPU
+		void write_slice_to_file(cucomplex_t *ff, int nqx, int nqy, int nqz,
+									char* filename, int axis, int slice);
+	#endif
 	
 	
 	/**

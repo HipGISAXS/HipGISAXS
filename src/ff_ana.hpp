@@ -5,7 +5,7 @@
   *
   *  File: ff_ana.hpp
   *  Created: Jul 12, 2012
-  *  Modified: Sat 23 Feb 2013 07:13:06 PM PST
+  *  Modified: Wed 03 Apr 2013 07:36:54 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -20,7 +20,9 @@
 #include "globals.hpp"
 #include "enums.hpp"
 #include "shape.hpp"
-#include "ff_ana_gpu.cuh"
+#ifdef USE_GPU
+	#include "ff_ana_gpu.cuh"
+#endif
 
 namespace hig {
 
