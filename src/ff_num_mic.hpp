@@ -3,7 +3,7 @@
  *
  *  File: ff_num_mic.hpp
  *  Created: Apr 02, 2013
- *  Modified: Wed 03 Apr 2013 03:10:05 PM PDT
+ *  Modified: Thu 04 Apr 2013 11:00:40 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -39,6 +39,12 @@ namespace hig {
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									scomplex_t*);
+			__attribute__((target(mic:0)))
+			void form_factor_kernel_opt(float_t*, float_t*, scomplex_t*, float_t*,
+									unsigned int, unsigned int, unsigned int, unsigned int,
+									unsigned int, unsigned int, unsigned int, unsigned int,
+									unsigned int, unsigned int, unsigned int, unsigned int,
+									scomplex_t*, scomplex_t*);
 
 			__attribute__((target(mic:0)))
 			float2_t compute_fq(float, float2_t, float2_t);

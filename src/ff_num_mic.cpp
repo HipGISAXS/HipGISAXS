@@ -3,7 +3,7 @@
  *
  *  File: ff_num_mic.cpp
  *  Created: Apr 02, 2013
- *  Modified: Wed 03 Apr 2013 04:41:37 PM PDT
+ *  Modified: Thu 04 Apr 2013 11:00:05 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -59,8 +59,7 @@ namespace hig {
 				return 0;
 			} // if
 		#else
-			std::cerr << "error: offloading to MIC not set!" << std::endl;
-			return 0;
+			std::cerr << "warning: offloading to MIC not set! using host." << std::endl;
 		#endif
 
 		// initialize MIC by dummy offload
@@ -430,8 +429,7 @@ namespace hig {
 				return 0;
 			} // if
 		#else
-			std::cerr << "error: offloading to MIC not set!" << std::endl;
-			return 0;
+			std::cerr << "warning: offloading to MIC not set! using host." << std::endl;
 		#endif
 
 		unsigned int num_triangles = shape_def_vec.size() / 7;
@@ -581,34 +579,54 @@ namespace hig {
 						// double buffering
 						if(curr_buffer_i == 0) {
 							// call the main kernel offloaded to MIC
-							#pragma offload target(mic:0) \
-									in(curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles) \
-									in(b_nqx, b_nqy, b_nqz, num_triangles) \
-									in(nqx, nqy, nqz, ib_x, ib_y, ib_z, ib_t) \
-									in(shape_def: length(0) MIC_REUSE) \
-									in(qx: length(0) MIC_REUSE) \
-									in(qy: length(0) MIC_REUSE) \
-									in(qz_flat: length(0) MIC_REUSE) \
-									out(fq_buffer0: length(0) MIC_REUSE)
-							form_factor_kernel_db(qx, qy, qz_flat, shape_def,
-									curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles,
-									b_nqx, b_nqy, b_nqz, b_num_triangles,
-									ib_x, ib_y, ib_z, ib_t,
-									fq_buffer0);
+							#ifndef FF_MIC_OPT
+								#pragma offload target(mic:0) \
+										in(curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles) \
+										in(b_nqx, b_nqy, b_nqz, num_triangles) \
+										in(nqx, nqy, nqz, ib_x, ib_y, ib_z, ib_t) \
+										in(shape_def: length(0) MIC_REUSE) \
+										in(qx: length(0) MIC_REUSE) \
+										in(qy: length(0) MIC_REUSE) \
+										in(qz_flat: length(0) MIC_REUSE) \
+										out(fq_buffer0: length(0) MIC_REUSE)
+								form_factor_kernel_db(qx, qy, qz_flat, shape_def,
+										curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles,
+										b_nqx, b_nqy, b_nqz, b_num_triangles,
+										ib_x, ib_y, ib_z, ib_t,
+										fq_buffer0);
 
-							// call the reduction kernel offloaded to MIC
-							#pragma offload target(mic:0) signal(ff_buffer0) \
-									in(curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles) \
-									in(b_nqx, b_nqy, b_nqz, num_triangles) \
-									in(nqx, nqy, nqz, ib_x, ib_y, ib_z, ib_t) \
-									in(fq_buffer0: length(0) MIC_REUSE) \
-									out(ff_buffer0: length(curr_b_nqx * curr_b_nqy * curr_b_nqz) MIC_REUSE)
-							reduction_kernel_db(curr_b_nqx, curr_b_nqy, curr_b_nqz,
-									curr_b_num_triangles, blocked_matrix_size,
-									b_nqx, b_nqy, b_nqz, num_triangles,
-									nqx, nqy, nqz,
-									ib_x, ib_y, ib_z, ib_t,
-									fq_buffer0, ff_buffer0);
+								// call the reduction kernel offloaded to MIC
+								#pragma offload target(mic:0) signal(ff_buffer0) \
+										in(curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles) \
+										in(b_nqx, b_nqy, b_nqz, num_triangles) \
+										in(nqx, nqy, nqz, ib_x, ib_y, ib_z, ib_t) \
+										in(fq_buffer0: length(0) MIC_REUSE) \
+										out(ff_buffer0: \
+												length(curr_b_nqx * curr_b_nqy * curr_b_nqz) MIC_REUSE)
+									reduction_kernel_db(curr_b_nqx, curr_b_nqy, curr_b_nqz,
+											curr_b_num_triangles, blocked_matrix_size,
+											b_nqx, b_nqy, b_nqz, num_triangles,
+											nqx, nqy, nqz,
+											ib_x, ib_y, ib_z, ib_t,
+											fq_buffer0, ff_buffer0);
+							#else
+								#pragma offload target(mic:0) signal(ff_buffer0) \
+										in(curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles) \
+										in(b_nqx, b_nqy, b_nqz, num_triangles) \
+										in(nqx, nqy, nqz, ib_x, ib_y, ib_z, ib_t) \
+										in(shape_def: length(0) MIC_REUSE) \
+										in(qx: length(0) MIC_REUSE) \
+										in(qy: length(0) MIC_REUSE) \
+										in(qz_flat: length(0) MIC_REUSE) \
+										out(fq_buffer0: length(0) MIC_REUSE) \
+										out(ff_buffer0: \
+												length(curr_b_nqx * curr_b_nqy * curr_b_nqz) MIC_REUSE)
+								form_factor_kernel_opt(qx, qy, qz_flat, shape_def,
+										curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles,
+										b_nqx, b_nqy, b_nqz, b_num_triangles,
+										ib_x, ib_y, ib_z, ib_t,
+										fq_buffer0, ff_buffer0);
+							#endif
 
 							if(ib_x + ib_y + ib_z + ib_t != 0) {
 								// wait for transfer of 1 to finish before moving
@@ -621,34 +639,54 @@ namespace hig {
 							} // if
 						} else {
 							// call the main kernel offloaded to MIC
-							#pragma offload target(mic:0) \
-									in(curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles) \
-									in(b_nqx, b_nqy, b_nqz, num_triangles) \
-									in(nqx, nqy, nqz, ib_x, ib_y, ib_z, ib_t) \
-									in(shape_def: length(0) MIC_REUSE) \
-									in(qx: length(0) MIC_REUSE) \
-									in(qy: length(0) MIC_REUSE) \
-									in(qz_flat: length(0) MIC_REUSE) \
-									out(fq_buffer1: length(0) MIC_REUSE)
-							form_factor_kernel_db(qx, qy, qz_flat, shape_def,
-									curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles,
-									b_nqx, b_nqy, b_nqz, b_num_triangles,
-									ib_x, ib_y, ib_z, ib_t,
-									fq_buffer1);
+							#ifndef FF_MIC_OPT
+								#pragma offload target(mic:0) \
+										in(curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles) \
+										in(b_nqx, b_nqy, b_nqz, num_triangles) \
+										in(nqx, nqy, nqz, ib_x, ib_y, ib_z, ib_t) \
+										in(shape_def: length(0) MIC_REUSE) \
+										in(qx: length(0) MIC_REUSE) \
+										in(qy: length(0) MIC_REUSE) \
+										in(qz_flat: length(0) MIC_REUSE) \
+										out(fq_buffer1: length(0) MIC_REUSE)
+									form_factor_kernel_db(qx, qy, qz_flat, shape_def,
+											curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles,
+											b_nqx, b_nqy, b_nqz, b_num_triangles,
+											ib_x, ib_y, ib_z, ib_t,
+											fq_buffer1);
 
-							// call the reduction kernel offloaded to MIC
-							#pragma offload target(mic:0) signal(ff_buffer1) \
-									in(curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles) \
-									in(b_nqx, b_nqy, b_nqz, num_triangles) \
-									in(nqx, nqy, nqz, ib_x, ib_y, ib_z, ib_t) \
-									in(fq_buffer1: length(0) MIC_REUSE) \
-									out(ff_buffer1: length(curr_b_nqx * curr_b_nqy * curr_b_nqz) MIC_REUSE)
-							reduction_kernel_db(curr_b_nqx, curr_b_nqy, curr_b_nqz,
-									curr_b_num_triangles, blocked_matrix_size,
-									b_nqx, b_nqy, b_nqz, num_triangles,
-									nqx, nqy, nqz,
-									ib_x, ib_y, ib_z, ib_t,
-									fq_buffer1, ff_buffer1);
+								// call the reduction kernel offloaded to MIC
+								#pragma offload target(mic:0) signal(ff_buffer1) \
+										in(curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles) \
+										in(b_nqx, b_nqy, b_nqz, num_triangles) \
+										in(nqx, nqy, nqz, ib_x, ib_y, ib_z, ib_t) \
+										in(fq_buffer1: length(0) MIC_REUSE) \
+										out(ff_buffer1: \
+												length(curr_b_nqx * curr_b_nqy * curr_b_nqz) MIC_REUSE)
+									reduction_kernel_db(curr_b_nqx, curr_b_nqy, curr_b_nqz,
+											curr_b_num_triangles, blocked_matrix_size,
+											b_nqx, b_nqy, b_nqz, num_triangles,
+											nqx, nqy, nqz,
+											ib_x, ib_y, ib_z, ib_t,
+											fq_buffer1, ff_buffer1);
+							#else
+								#pragma offload target(mic:0) signal(ff_buffer1) \
+										in(curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles) \
+										in(b_nqx, b_nqy, b_nqz, num_triangles) \
+										in(nqx, nqy, nqz, ib_x, ib_y, ib_z, ib_t) \
+										in(shape_def: length(0) MIC_REUSE) \
+										in(qx: length(0) MIC_REUSE) \
+										in(qy: length(0) MIC_REUSE) \
+										in(qz_flat: length(0) MIC_REUSE) \
+										out(fq_buffer1: length(0) MIC_REUSE) \
+										out(ff_buffer1: \
+												length(curr_b_nqx * curr_b_nqy * curr_b_nqz) MIC_REUSE)
+								form_factor_kernel_opt(qx, qy, qz_flat, shape_def,
+										curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles,
+										b_nqx, b_nqy, b_nqz, b_num_triangles,
+										ib_x, ib_y, ib_z, ib_t,
+										fq_buffer1, ff_buffer1);
+							#endif
 
 							if(ib_x + ib_y + ib_z + ib_t != 0) {
 								// wait for transfer of 0 to finish before moving
@@ -739,7 +777,9 @@ namespace hig {
 					unsigned int ib_x, unsigned int ib_y, unsigned int ib_z, unsigned int ib_t,
 					scomplex_t* fq_buffer) {
 
-		omp_set_num_threads(MIC_OMP_NUM_THREADS_);
+		#ifdef __INTEL_OFFLOAD
+			omp_set_num_threads(MIC_OMP_NUM_THREADS_);
+		#endif
 		#pragma omp parallel
 		{
 			#pragma omp for nowait //schedule(auto)
@@ -805,7 +845,9 @@ namespace hig {
 		unsigned int curr_b_nqxy = curr_b_nqx * curr_b_nqy;
 		scomplex_t temp_complex = make_sC((float_t) 0.0, (float_t) -1.0);
 
-		omp_set_num_threads(MIC_OMP_NUM_THREADS_);
+		#ifdef __INTEL_OFFLOAD
+			omp_set_num_threads(MIC_OMP_NUM_THREADS_);
+		#endif
 
 		// reduction over all triangles
 		for(unsigned int i_x = 0; i_x < curr_b_nqx; ++ i_x) {
@@ -828,6 +870,99 @@ namespace hig {
 			} // pragma omp parallel
 		} // for i_x
 	} // NumericFormFactorM::reduction_kernel_db()
+	
+	
+	/***
+	 * the following kernels are with optimizations (trials)
+	 * TODO ... clean this
+	 */
+
+	__attribute__((target(mic:0)))
+	void NumericFormFactorM::form_factor_kernel_opt(float_t* qx, float_t* qy, scomplex_t* qz_flat,
+					float_t* shape_def,
+					unsigned int curr_nqx, unsigned int curr_nqy, unsigned int curr_nqz,
+					unsigned int curr_num_triangles,
+					unsigned int b_nqx, unsigned int b_nqy, unsigned int b_nqz, unsigned int b_num_triangles,
+					unsigned int ib_x, unsigned int ib_y, unsigned int ib_z, unsigned int ib_t,
+					scomplex_t* fq_buffer, scomplex_t* ff_buffer) {
+
+		#ifdef __INTEL_OFFLOAD
+			omp_set_num_threads(MIC_OMP_NUM_THREADS_);
+		#endif
+		#pragma omp parallel
+		{
+			#pragma omp for nowait //schedule(auto)
+			for(unsigned int i_t = 0; i_t < curr_num_triangles; ++ i_t) {
+				unsigned int shape_off = (ib_t * b_num_triangles + i_t) * 7;
+				float_t s = shape_def[shape_off];
+				float_t nx = shape_def[shape_off + 1];
+				float_t ny = shape_def[shape_off + 2];
+				float_t nz = shape_def[shape_off + 3];
+				float_t x = shape_def[shape_off + 4];
+				float_t y = shape_def[shape_off + 5];
+				float_t z = shape_def[shape_off + 6];
+
+				unsigned int xy_size = curr_nqx * curr_nqy;
+				unsigned int matrix_off = xy_size * curr_nqz * i_t;
+				unsigned int start_z = b_nqz * ib_z;
+				unsigned int start_y = b_nqy * ib_y;
+				unsigned int start_x = b_nqx * ib_x;
+
+				for(unsigned int i_z = 0, global_i_z = start_z; i_z < curr_nqz;
+						++ i_z, ++ global_i_z) {
+					unsigned int off_start = matrix_off + xy_size * i_z;
+					scomplex_t temp_z = qz_flat[global_i_z];
+					scomplex_t qz2 = temp_z * temp_z;
+					scomplex_t qzn = temp_z * nz;
+					scomplex_t qzt = temp_z * z;
+
+					for(unsigned int i_y = 0, global_i_y = start_y; i_y < curr_nqy;
+							++ i_y, ++ global_i_y) {
+						unsigned int xy_off_start = curr_nqx * i_y;
+						float_t temp_y = qy[global_i_y];
+						float_t qy2 = temp_y * temp_y;
+						float_t qyn = temp_y * ny;
+						float_t qyt = temp_y * y;
+
+						for(unsigned int i_x = 0, global_i_x = start_x; i_x < curr_nqx;
+								++ i_x, ++ global_i_x) {
+							unsigned int off = off_start + xy_off_start + i_x;
+							float_t temp_x = qx[global_i_x];
+							scomplex_t q2 = temp_x * temp_x + qy2 + qz2;
+							scomplex_t qt = temp_x * x + qyt + qzt;
+							scomplex_t qn = (temp_x * nx + qyn + qzn) / q2;
+
+							fq_buffer[off] = compute_fq(s, qt, qn);
+						} // for z
+					} // for y
+				} // for x
+			} // for t
+		} // pragma omp parallel
+		
+		// merging reduction here itself
+		unsigned int curr_nqxyz = curr_nqx * curr_nqy * curr_nqz;
+		unsigned int curr_nqxy = curr_nqx * curr_nqy;
+		scomplex_t temp_complex = make_sC((float_t) 0.0, (float_t) -1.0);
+		for(unsigned int i_x = 0; i_x < curr_nqx; ++ i_x) {
+			#pragma omp parallel
+			{
+				#pragma omp for nowait collapse(2) //schedule(auto)
+				for(unsigned int i_y = 0; i_y < curr_nqy; ++ i_y) {
+					for(unsigned int i_z = 0; i_z < curr_nqz; ++ i_z) {
+						scomplex_t total = make_sC((float_t) 0.0, (float_t) 0.0);
+						for(unsigned int i_t = 0; i_t < curr_num_triangles; ++ i_t) {
+							unsigned int i_fq = curr_nqxyz * i_t + curr_nqxy * i_z +
+												curr_nqx * i_y + i_x;
+							total = total + fq_buffer[i_fq];
+						} // for i_t
+						unsigned int i_ff = curr_nqxy * i_z + curr_nqx * i_y + i_x;
+						//ff_buffer[i_ff] = total * temp_complex;
+						ff_buffer[i_ff] = make_sC(total.y, - total.x);
+					} // for i_z
+				} // for i_y
+			} // pragma omp parallel
+		} // for i_x
+	} // NumericFormFactorM::form_factor_kernel_opt()
 	
 	
 	/**
