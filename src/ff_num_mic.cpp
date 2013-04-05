@@ -3,7 +3,7 @@
  *
  *  File: ff_num_mic.cpp
  *  Created: Apr 02, 2013
- *  Modified: Thu 04 Apr 2013 11:00:05 AM PDT
+ *  Modified: Thu 04 Apr 2013 06:15:27 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -14,6 +14,8 @@
 #ifdef _OPENMP
 #include <omp.h>
 #endif
+
+#include "woo/timer/woo_boostchronotimers.hpp"
 
 #include "constants.hpp"
 #include "parameters.hpp"
@@ -62,16 +64,12 @@ namespace hig {
 			std::cerr << "warning: offloading to MIC not set! using host." << std::endl;
 		#endif
 
-		// initialize MIC by dummy offload
-		#pragma offload_transfer target(mic:0)
-	
 		unsigned int num_triangles = shape_def_vec.size() / 7;
 		if(num_triangles < 1) return 0;
 
 		float_t* shape_def = &shape_def_vec[0];
 	
 		unsigned int total_qpoints = nqx * nqy * nqz;
-		unsigned int host_mem_usage = ((unsigned int) nqx + nqy + nqz) * sizeof(float_t);
 	
 		// allocate memory for the final FF 3D matrix
 		ff = new (std::nothrow) complex_t[total_qpoints];	// allocate and initialize to 0
@@ -81,7 +79,6 @@ namespace hig {
 			return 0;
 		} // if
 		memset(ff, 0, total_qpoints * sizeof(complex_t));
-		host_mem_usage += total_qpoints * sizeof(complex_t);
 
 		scomplex_t* qz_flat = new (std::nothrow) scomplex_t[nqz];
 		if(qz_flat == NULL) {
@@ -94,6 +91,12 @@ namespace hig {
 			qz_flat[i] = make_sC(qz[i].real(), qz[i].imag());
 		} // for
 
+		unsigned int host_mem_usage = ((unsigned int) nqx + nqy) * sizeof(float_t) +	// qx, qy
+										(unsigned int) nqz * sizeof(complex_t) +		// qz
+										(unsigned int) nqz * sizeof(scomplex_t) +		// qz_flat
+										(unsigned int) shape_def_vec.size() * sizeof(float_t) +	// shape_def
+										total_qpoints * sizeof(complex_t);				// ff
+
 		// allocate memory buffers on the target and transfer data
 		#pragma offload_transfer target(mic:0) \
 								in(qx: length(nqx) MIC_ALLOC) \
@@ -101,6 +104,10 @@ namespace hig {
 								in(qz_flat: length(nqz) MIC_ALLOC) \
 								in(shape_def: length(7 * num_triangles) MIC_ALLOC)
 	
+		unsigned int target_mem_usage = ((unsigned int) nqx + nqy) * sizeof(float_t) +
+										(unsigned int) nqz * sizeof(scomplex_t) +
+										(unsigned int) num_triangles * 7 * sizeof(float_t);
+
 		unsigned int matrix_size = (unsigned int) nqx * nqy * nqz * num_triangles;
 
 		// get some information about the target and display ...
@@ -114,6 +121,10 @@ namespace hig {
 								, block_x, block_y, block_z, block_t
 							#endif
 							);
+		if(rank == 0) {
+			std::cout << "++               Hyperblock size: " << b_nqx << " x " << b_nqy
+						<< " x " << b_nqz << " x " << b_num_triangles << std::endl;
+		} // if
 	
 		unsigned int blocked_3d_matrix_size = (unsigned int) b_nqx * b_nqy * b_nqz;
 		unsigned int blocked_matrix_size = (unsigned int) blocked_3d_matrix_size * b_num_triangles;
@@ -126,7 +137,6 @@ namespace hig {
 			std::cout << "++    Estimated host memory need: " << (float) estimated_host_mem_need / 1024 / 1024
 						<< " MB" << std::endl;
 		} // if
-		host_mem_usage += (blocked_matrix_size + blocked_3d_matrix_size) * sizeof(complex_t);
 
 		// allocate ff and fq buffers on host first
 		scomplex_t *fq_buffer = new (std::nothrow) scomplex_t[blocked_matrix_size]();
@@ -138,111 +148,109 @@ namespace hig {
 						<< std::endl;
 			delete[] ff;
 			return 0;
-		} else {
-			if(rank == 0) {
-				std::cout << "++              Host memory used: " << (float) host_mem_usage / 1024 / 1024
-							<< " MB" << std::endl << std::flush;
-			} // if
+		} // if
 
-			// allocate ff and fq buffers on target
-			#pragma offload_transfer target(mic:0) \
-								nocopy(fq_buffer: length(blocked_matrix_size) MIC_ALLOC) \
-								nocopy(ff_buffer: length(blocked_3d_matrix_size) MIC_ALLOC)
+		host_mem_usage += (blocked_matrix_size + blocked_3d_matrix_size) * sizeof(complex_t);
 
-			// display actual target memory used ...
-			// TODO ...
+		if(rank == 0) {
+			std::cout << "++              Host memory used: " << (float) host_mem_usage / 1024 / 1024
+						<< " MB" << std::endl << std::flush;
+		} // if
+
+		// allocate ff and fq buffers on target
+		#pragma offload_transfer target(mic:0) \
+							nocopy(fq_buffer: length(blocked_matrix_size) MIC_ALLOC) \
+							nocopy(ff_buffer: length(blocked_3d_matrix_size) MIC_ALLOC)
+
+		// display actual target memory used ...
+		// TODO ...
 	
-			// compute the number of sub-blocks, along each of the 4 dimensions
-			// formulate loops over each dimension, to go over each sub block
-			unsigned int nb_x = (unsigned int) ceil((float) nqx / b_nqx);
-			unsigned int nb_y = (unsigned int) ceil((float) nqy / b_nqy);
-			unsigned int nb_z = (unsigned int) ceil((float) nqz / b_nqz);
-			unsigned int nb_t = (unsigned int) ceil((float) num_triangles / b_num_triangles);
+		// compute the number of sub-blocks, along each of the 4 dimensions
+		// formulate loops over each dimension, to go over each sub block
+		unsigned int nb_x = (unsigned int) ceil((float) nqx / b_nqx);
+		unsigned int nb_y = (unsigned int) ceil((float) nqy / b_nqy);
+		unsigned int nb_z = (unsigned int) ceil((float) nqz / b_nqz);
+		unsigned int nb_t = (unsigned int) ceil((float) num_triangles / b_num_triangles);
 	
-			unsigned int curr_b_nqx = b_nqx, curr_b_nqy = b_nqy, curr_b_nqz = b_nqz;
-			unsigned int curr_b_num_triangles = b_num_triangles;
-			unsigned int num_blocks = nb_x * nb_y * nb_z * nb_t;
+		unsigned int curr_b_nqx = b_nqx, curr_b_nqy = b_nqy, curr_b_nqz = b_nqz;
+		unsigned int curr_b_num_triangles = b_num_triangles;
+		unsigned int num_blocks = nb_x * nb_y * nb_z * nb_t;
 	
-			if(rank == 0) {
-				std::cout << "++               Hyperblock size: " << b_nqx << " x " << b_nqy
-							<< " x " << b_nqz << " x " << b_num_triangles << std::endl;
-				std::cout << "++         Number of hyperblocks: " << num_blocks
-							<< " [" << nb_x << " x " << nb_y << " x " << nb_z << " x " << nb_t << "]"
-							<< std::endl;
-			} // if
+		if(rank == 0) {
+			std::cout << "++         Number of hyperblocks: " << num_blocks
+						<< " [" << nb_x << " x " << nb_y << " x " << nb_z << " x " << nb_t << "]"
+						<< std::endl;
+		} // if
 	
-			unsigned int block_num = 0;
+		unsigned int block_num = 0;
 
-			if(rank == 0) std::cout << "-- Computing form factor on MIC ... " << std::flush;
+		if(rank == 0) std::cout << "-- Computing form factor on MIC ... " << std::flush;
 
-			// compute for each hyperblock
-			curr_b_nqx = b_nqx;
-			for(unsigned int ib_x = 0; ib_x < nb_x; ++ ib_x) {
-				if(ib_x == nb_x - 1) curr_b_nqx = nqx - b_nqx * ib_x;
-				curr_b_nqy = b_nqy;
-				for(unsigned int ib_y = 0; ib_y < nb_y; ++ ib_y) {
-					if(ib_y == nb_y - 1) curr_b_nqy = nqy - b_nqy * ib_y;
-					curr_b_nqz = b_nqz;
-					for(unsigned int ib_z = 0; ib_z < nb_z; ++ ib_z) {
-						if(ib_z == nb_z - 1) curr_b_nqz = nqz - b_nqz * ib_z;
-						curr_b_num_triangles = b_num_triangles;
-						for(unsigned int ib_t = 0; ib_t < nb_t; ++ ib_t) {
-							if(ib_t == nb_t - 1)
-								curr_b_num_triangles = num_triangles - b_num_triangles * ib_t;
+		// compute for each hyperblock
+		curr_b_nqx = b_nqx;
+		for(unsigned int ib_x = 0; ib_x < nb_x; ++ ib_x) {
+			if(ib_x == nb_x - 1) curr_b_nqx = nqx - b_nqx * ib_x;
+			curr_b_nqy = b_nqy;
+			for(unsigned int ib_y = 0; ib_y < nb_y; ++ ib_y) {
+				if(ib_y == nb_y - 1) curr_b_nqy = nqy - b_nqy * ib_y;
+				curr_b_nqz = b_nqz;
+				for(unsigned int ib_z = 0; ib_z < nb_z; ++ ib_z) {
+					if(ib_z == nb_z - 1) curr_b_nqz = nqz - b_nqz * ib_z;
+					curr_b_num_triangles = b_num_triangles;
+					for(unsigned int ib_t = 0; ib_t < nb_t; ++ ib_t) {
+						if(ib_t == nb_t - 1)
+							curr_b_num_triangles = num_triangles - b_num_triangles * ib_t;
 
-							#ifdef VERBOSITY_3
-								if(rank == 0) {
-									std::cout << "-- Processing hyperblock " << ++ block_num << " of "
-											<< num_blocks << ": Kernel... " << std::flush;
-								} // if
-							#endif
+						#ifdef VERBOSITY_3
+							if(rank == 0) {
+								std::cout << "-- Processing hyperblock " << ++ block_num << " of "
+										<< num_blocks << ": Kernel... " << std::flush;
+							} // if
+						#endif
 
-							// call the main kernel offloaded to MIC
-							form_factor_kernel(qx, qy, qz_flat, shape_def,
-									curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles,
-									b_nqx, b_nqy, b_nqz, b_num_triangles,
-									ib_x, ib_y, ib_z, ib_t,
-									fq_buffer);
+						// call the main kernel offloaded to MIC
+						form_factor_kernel(qx, qy, qz_flat, shape_def,
+								curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles,
+								b_nqx, b_nqy, b_nqz, b_num_triangles,
+								ib_x, ib_y, ib_z, ib_t,
+								fq_buffer);
 
-							#ifdef VERBOSITY_3
-								if(rank == 0) {
-									std::cout << "done [" << temp_kernel_time << "s]. Reduction... "
-											<< std::flush;
-								} // if
-							#endif
+						#ifdef VERBOSITY_3
+							if(rank == 0) {
+								std::cout << "done [" << temp_kernel_time << "s]. Reduction... "
+										<< std::flush;
+							} // if
+						#endif
 
-							// call the reduction kernel offloaded to MIC
-							reduction_kernel(curr_b_nqx, curr_b_nqy, curr_b_nqz,
-									curr_b_num_triangles, blocked_matrix_size,
-									b_nqx, b_nqy, b_nqz, num_triangles,
-									nqx, nqy, nqz,
-									ib_x, ib_y, ib_z, ib_t,
-									fq_buffer, ff_buffer);
+						// call the reduction kernel offloaded to MIC
+						reduction_kernel(curr_b_nqx, curr_b_nqy, curr_b_nqz,
+								curr_b_num_triangles, blocked_matrix_size,
+								b_nqx, b_nqy, b_nqz, num_triangles,
+								nqx, nqy, nqz,
+								ib_x, ib_y, ib_z, ib_t,
+								fq_buffer, ff_buffer);
 
-							#ifdef VERBOSITY_3
-								if(rank == 0) {
-									std::cout << "done [" << temp_reduce_time << "s]." << std::endl;
-								} // if
-							#endif
+						#ifdef VERBOSITY_3
+							if(rank == 0) {
+								std::cout << "done [" << temp_reduce_time << "s]." << std::endl;
+							} // if
+						#endif
 
-							move_to_main_ff(ff_buffer, curr_b_nqx, curr_b_nqy, curr_b_nqz,
-											b_nqx, b_nqy, b_nqz, nqx, nqy, nqz,
-											ib_x, ib_y, ib_z, ff);
-						} // for ib_t
-					} // for ib_z
-				} // for ib_y
-			} // for ib_x
-	
-			// free f buffers on target
-			#pragma offload_transfer target(mic:0) \
-									nocopy(fq_buffer: length(0) MIC_FREE) \
-									nocopy(ff_buffer: length(0) MIC_FREE)
-			// and host
-			delete[] ff_buffer;
-			delete[] fq_buffer;
+						move_to_main_ff(ff_buffer, curr_b_nqx, curr_b_nqy, curr_b_nqz,
+										b_nqx, b_nqy, b_nqz, nqx, nqy, nqz,
+										ib_x, ib_y, ib_z, ff);
+					} // for ib_t
+				} // for ib_z
+			} // for ib_y
+		} // for ib_x
 
-			if(rank == 0) std::cout << "done." << std::endl;
-		} // if-else
+		// free f buffers on target
+		#pragma offload_transfer target(mic:0) \
+								nocopy(fq_buffer: length(0) MIC_FREE) \
+								nocopy(ff_buffer: length(0) MIC_FREE)
+		// and host
+		delete[] ff_buffer;
+		delete[] fq_buffer;
 
 		#pragma offload_transfer target(mic:0) \
 								nocopy(shape_def: length(0) MIC_FREE) \
@@ -251,6 +259,8 @@ namespace hig {
 								nocopy(qz_flat: length(0) MIC_FREE)
 	
 		delete[] qz_flat;
+
+		if(rank == 0) std::cout << "done." << std::endl;
 
 		pass_kernel_time = total_kernel_time;
 		red_time = total_reduce_time;
@@ -415,6 +425,8 @@ namespace hig {
 						) {
 		double kernel_time = 0.0, reduce_time = 0.0, total_kernel_time = 0.0, total_reduce_time = 0.0,
 				temp_mem_time = 0.0, total_mem_time = 0.0;
+		woo::BoostChronoTimer kerneltimer;
+
 		#ifdef _OPENMP
 			if(rank == 0)
 				std::cout << "++ Number of Host OpenMP threads: " << omp_get_max_threads() << std::endl;
@@ -438,7 +450,6 @@ namespace hig {
 		float_t* shape_def = &shape_def_vec[0];
 	
 		unsigned int total_qpoints = nqx * nqy * nqz;
-		unsigned int host_mem_usage = ((unsigned int) nqx + nqy + nqz) * sizeof(float_t);
 	
 		// allocate memory for the final FF 3D matrix
 		ff = new (std::nothrow) complex_t[total_qpoints];	// allocate and initialize to 0
@@ -448,7 +459,7 @@ namespace hig {
 			return 0;
 		} // if
 		memset(ff, 0, total_qpoints * sizeof(complex_t));
-		host_mem_usage += total_qpoints * sizeof(complex_t);
+		unsigned long int host_mem_usage = total_qpoints * sizeof(complex_t);
 
 		//scomplex_t* qz_flat = new (std::nothrow) scomplex_t[nqz];
 		scomplex_t* qz_flat = (scomplex_t*) _mm_malloc(nqz * sizeof(scomplex_t), 64);
@@ -462,6 +473,12 @@ namespace hig {
 			qz_flat[i] = make_sC(qz[i].real(), qz[i].imag());
 		} // for
 
+		host_mem_usage += ((unsigned int) nqx + nqy) * sizeof(float_t) +	// qx, qy
+							(unsigned int) nqz * sizeof(complex_t) +        // qz
+							(unsigned int) nqz * sizeof(scomplex_t) +       // qz_flat
+							(unsigned int) shape_def_vec.size() * sizeof(float_t) + // shape_def
+							total_qpoints * sizeof(complex_t);              // ff
+
 		// allocate memory buffers on the target and transfer data asynchronously
 		#pragma offload_transfer target(mic:0) \
 								in(qx: length(nqx) MIC_ALLOC) \
@@ -469,68 +486,21 @@ namespace hig {
 								in(qz_flat: length(nqz) MIC_ALLOC) \
 								in(shape_def: length(7 * num_triangles) MIC_ALLOC) \
 								signal(shape_def)
-	
+		
+		unsigned long int target_mem_usage = ((unsigned int) nqx + nqy) * sizeof(float_t) +
+											(unsigned int) nqz * sizeof(scomplex_t) +
+											(unsigned int) num_triangles * 7 * sizeof(float_t);
+
 		unsigned int matrix_size = (unsigned int) nqx * nqy * nqz * num_triangles;
 
-		// get some information about the target and display ...
-		// TODO ...
-		
-		// do hyperblocking to use less memory
+		// do hyperblocking to use less memory and computation - mem transfer overlap
 		unsigned int b_nqx = 0, b_nqy = 0, b_nqz = 0, b_num_triangles = 0;
 		compute_hyperblock_size(nqx, nqy, nqz, num_triangles,
-							b_nqx, b_nqy, b_nqz, b_num_triangles
-							#ifdef FINDBLOCK
-								, block_x, block_y, block_z, block_t
-							#endif
-							);
-	
-		unsigned int blocked_3d_matrix_size = (unsigned int) b_nqx * b_nqy * b_nqz;
-		unsigned int blocked_matrix_size = (unsigned int) blocked_3d_matrix_size * b_num_triangles;
-
-		// do target memory usage estimation ...
-		// TODO ...
-		
-		size_t estimated_host_mem_need = host_mem_usage + blocked_matrix_size * sizeof(complex_t);
-		if(rank == 0) {
-			std::cout << "++    Estimated host memory need: " << (float) estimated_host_mem_need / 1024 / 1024
-						<< " MB" << std::endl;
-		} // if
-		host_mem_usage += 2 * (blocked_matrix_size + blocked_3d_matrix_size) * sizeof(complex_t);
-
-		// allocate ff and fq buffers on host first (double buffering)
-		scomplex_t *fq_buffer0, *fq_buffer1, *ff_buffer0, *ff_buffer1;
-		//fq_buffer0 = new (std::nothrow) scomplex_t[blocked_matrix_size]();
-		//fq_buffer1 = new (std::nothrow) scomplex_t[blocked_matrix_size]();
-		//ff_buffer0 = new (std::nothrow) scomplex_t[blocked_3d_matrix_size]();
-		//ff_buffer1 = new (std::nothrow) scomplex_t[blocked_3d_matrix_size]();
-		fq_buffer0 = (scomplex_t*) _mm_malloc(sizeof(scomplex_t) * blocked_matrix_size, 64);
-		fq_buffer1 = (scomplex_t*) _mm_malloc(sizeof(scomplex_t) * blocked_matrix_size, 64);
-		ff_buffer0 = (scomplex_t*) _mm_malloc(sizeof(scomplex_t) * blocked_3d_matrix_size, 64);
-		ff_buffer1 = (scomplex_t*) _mm_malloc(sizeof(scomplex_t) * blocked_3d_matrix_size, 64);
-		if(fq_buffer0 == NULL || fq_buffer1 == NULL || ff_buffer0 == NULL || ff_buffer1 == NULL) {
-			std::cerr << "Memory allocation failed for f buffers. blocked_matrix_size = "
-						<< blocked_matrix_size << std::endl
-						<< "Host memory usage = " << (float) host_mem_usage / 1024 / 1024 << " MB"
-						<< std::endl;
-			delete[] ff;
-			return 0;
-		} // if
-
-		if(rank == 0) {
-			std::cout << "++              Host memory used: " << (float) host_mem_usage / 1024 / 1024
-						<< " MB" << std::endl << std::flush;
-		} // if
-
-		// allocate ff and fq buffers on target
-		#pragma offload_transfer target(mic:0) \
-							nocopy(fq_buffer0: length(blocked_matrix_size) MIC_ALLOC) \
-							nocopy(fq_buffer1: length(blocked_matrix_size) MIC_ALLOC) \
-							nocopy(ff_buffer0: length(blocked_3d_matrix_size) MIC_ALLOC) \
-							nocopy(ff_buffer1: length(blocked_3d_matrix_size) MIC_ALLOC)
-
-		// display actual target memory used ...
-		// TODO ...
-	
+								b_nqx, b_nqy, b_nqz, b_num_triangles
+								#ifdef FINDBLOCK
+									, block_x, block_y, block_z, block_t
+								#endif
+								);
 		// compute the number of sub-blocks, along each of the 4 dimensions
 		// formulate loops over each dimension, to go over each sub block
 		unsigned int nb_x = (unsigned int) ceil((float) nqx / b_nqx);
@@ -541,6 +511,8 @@ namespace hig {
 		unsigned int curr_b_nqx = b_nqx, curr_b_nqy = b_nqy, curr_b_nqz = b_nqz;
 		unsigned int curr_b_num_triangles = b_num_triangles;
 		unsigned int num_blocks = nb_x * nb_y * nb_z * nb_t;
+		unsigned int progress_delta = 10;
+		unsigned int progress_step = (unsigned int) ceil((float) num_blocks / progress_delta);
 	
 		if(rank == 0) {
 			std::cout << "++               Hyperblock size: " << b_nqx << " x " << b_nqy
@@ -550,16 +522,92 @@ namespace hig {
 						<< std::endl;
 		} // if
 	
-		unsigned int block_num = 0;
+		unsigned int blocked_3d_matrix_size = (unsigned int) b_nqx * b_nqy * b_nqz;
+		unsigned long int blocked_matrix_size = (unsigned int) blocked_3d_matrix_size * b_num_triangles;
 
-		if(rank == 0) std::cout << "-- Computing form factor on MIC (DB) ... " << std::flush;
+		// allocate ff and fq buffers on host first (double buffering)
+		scomplex_t *fq_buffer0, *fq_buffer1, *ff_buffer0, *ff_buffer1;
+		//fq_buffer0 = new (std::nothrow) scomplex_t[blocked_matrix_size]();
+		//fq_buffer1 = new (std::nothrow) scomplex_t[blocked_matrix_size]();
+		//ff_buffer0 = new (std::nothrow) scomplex_t[blocked_3d_matrix_size]();
+		//ff_buffer1 = new (std::nothrow) scomplex_t[blocked_3d_matrix_size]();
+		#ifdef MIC_PADDING
+			// to make buffers multiple of 64B:
+			unsigned int pad_fq = (unsigned int) ceil(blocked_matrix_size * sizeof(scomplex_t) / 64.0f) *
+													64 - blocked_matrix_size * sizeof(scomplex_t);
+			unsigned int pad_ff = (unsigned int) ceil(blocked_3d_matrix_size * sizeof(scomplex_t) / 64.0f) *
+													64 - blocked_3d_matrix_size * sizeof(scomplex_t);
+			unsigned int fq_bytes = blocked_3d_matrix_size * sizeof(scomplex_t) + pad_fq;
+			unsigned int ff_bytes = blocked_matrix_size * sizeof(scomplex_t) + pad_ff;
+			unsigned int fq_size = fq_bytes / sizeof(scomplex_t);
+			unsigned int ff_size = ff_bytes / sizeof(scomplex_t);
+			if(rank == 0) {
+				std::cout << "++                Buffer padding: " << pad_ff << " B" << std::endl;
+			} // if
+			fq_buffer0 = (scomplex_t*) _mm_malloc(fq_bytes, 64);
+			fq_buffer1 = (scomplex_t*) _mm_malloc(fq_bytes, 64);
+			ff_buffer0 = (scomplex_t*) _mm_malloc(ff_bytes, 64);
+			ff_buffer1 = (scomplex_t*) _mm_malloc(ff_bytes, 64);
+			host_mem_usage += 2 * (fq_bytes + ff_bytes);
+			target_mem_usage += 2 * (fq_bytes + ff_bytes);
+		#else
+			fq_buffer0 = (scomplex_t*) _mm_malloc(sizeof(scomplex_t) * blocked_matrix_size, 64);
+			fq_buffer1 = (scomplex_t*) _mm_malloc(sizeof(scomplex_t) * blocked_matrix_size, 64);
+			ff_buffer0 = (scomplex_t*) _mm_malloc(sizeof(scomplex_t) * blocked_3d_matrix_size, 2147483648);
+			ff_buffer1 = (scomplex_t*) _mm_malloc(sizeof(scomplex_t) * blocked_3d_matrix_size, 2147483648);
+			host_mem_usage += 2 * (blocked_matrix_size + blocked_3d_matrix_size) * sizeof(scomplex_t);
+			target_mem_usage += 2 * (blocked_matrix_size + blocked_3d_matrix_size) * sizeof(scomplex_t);
+		#endif
+		if(fq_buffer0 == NULL || fq_buffer1 == NULL || ff_buffer0 == NULL || ff_buffer1 == NULL) {
+			std::cerr << "Memory allocation failed for f buffers. blocked_matrix_size = "
+						<< blocked_matrix_size << std::endl
+						<< "Host memory usage = " << (float) host_mem_usage / 1024 / 1024 << " MB"
+						<< std::endl;
+			return 0;
+		} // if
+
+		if(rank == 0) {
+			std::cout << "++             Host memory usage: " << (float) host_mem_usage / 1024 / 1024
+						<< " MB" << std::endl << std::flush;
+			#ifdef __INTEL_OFFLOAD
+				std::cout << "++           Target memory usage: " << (float) target_mem_usage / 1024 / 1024
+							<< " MB" << std::endl << std::flush;
+			#endif
+		} // if
+
+		// allocate ff and fq buffers on target
+		#ifdef MIC_PADDING
+			#pragma offload_transfer target(mic:0) \
+							nocopy(fq_buffer0: length(fq_size) MIC_ALLOC) \
+							nocopy(fq_buffer1: length(fq_size) MIC_ALLOC) \
+							nocopy(ff_buffer0: length(ff_size) MIC_ALLOC) \
+							nocopy(ff_buffer1: length(ff_size) MIC_ALLOC)
+		#else
+			#pragma offload_transfer target(mic:0) \
+							nocopy(fq_buffer0: length(blocked_matrix_size) MIC_ALLOC) \
+							nocopy(fq_buffer1: length(blocked_matrix_size) MIC_ALLOC) \
+							nocopy(ff_buffer0: length(blocked_3d_matrix_size) MIC_ALLOC) \
+							nocopy(ff_buffer1: length(blocked_3d_matrix_size) MIC_ALLOC)
+		#endif
+
+		if(rank == 0) {
+			#ifdef __INTEL_OFFLOAD
+				std::cout << "-- Computing form factor on MIC (DB) ... " << std::flush;
+			#else
+				std::cout << "-- Computing form factor on CPU (fallback) ... " << std::flush;
+			#endif
+		} // if
 
 		int curr_buffer_i = 0;	// buffer index
 		unsigned int prev_b_nqx, prev_b_nqy, prev_b_nqz, prev_b_num_triangles;
 		int prev_ib_x, prev_ib_y, prev_ib_z, prev_ib_t;
 
+		unsigned int hblock_counter = 0;
+
 		// wait for input transfer to complete
 		#pragma offload_wait target(mic:0) wait(shape_def)
+
+		kerneltimer.start();
 
 		// compute for each hyperblock
 		curr_b_nqx = b_nqx;
@@ -596,31 +644,53 @@ namespace hig {
 										fq_buffer0);
 
 								// call the reduction kernel offloaded to MIC
-								#pragma offload target(mic:0) signal(ff_buffer0) \
-										in(curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles) \
-										in(b_nqx, b_nqy, b_nqz, num_triangles) \
-										in(nqx, nqy, nqz, ib_x, ib_y, ib_z, ib_t) \
-										in(fq_buffer0: length(0) MIC_REUSE) \
-										out(ff_buffer0: \
-												length(curr_b_nqx * curr_b_nqy * curr_b_nqz) MIC_REUSE)
-									reduction_kernel_db(curr_b_nqx, curr_b_nqy, curr_b_nqz,
-											curr_b_num_triangles, blocked_matrix_size,
-											b_nqx, b_nqy, b_nqz, num_triangles,
-											nqx, nqy, nqz,
-											ib_x, ib_y, ib_z, ib_t,
-											fq_buffer0, ff_buffer0);
+								#ifdef MIC_PADDING
+									#pragma offload target(mic:0) signal(ff_buffer0) \
+											in(curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles) \
+											in(b_nqx, b_nqy, b_nqz, num_triangles) \
+											in(nqx, nqy, nqz, ib_x, ib_y, ib_z, ib_t) \
+											in(fq_buffer0: length(0) MIC_REUSE) \
+											out(ff_buffer0: length(ff_size) MIC_REUSE)
+								#else
+									#pragma offload target(mic:0) signal(ff_buffer0) \
+											in(curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles) \
+											in(b_nqx, b_nqy, b_nqz, num_triangles) \
+											in(nqx, nqy, nqz, ib_x, ib_y, ib_z, ib_t) \
+											in(fq_buffer0: length(0) MIC_REUSE) \
+											out(ff_buffer0: \
+													length(curr_b_nqx * curr_b_nqy * curr_b_nqz) MIC_REUSE)
+								#endif
+								reduction_kernel_db(curr_b_nqx, curr_b_nqy, curr_b_nqz,
+										curr_b_num_triangles, blocked_matrix_size,
+										b_nqx, b_nqy, b_nqz, num_triangles,
+										nqx, nqy, nqz,
+										ib_x, ib_y, ib_z, ib_t,
+										fq_buffer0, ff_buffer0);
 							#else
-								#pragma offload target(mic:0) signal(ff_buffer0) \
-										in(curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles) \
-										in(b_nqx, b_nqy, b_nqz, num_triangles) \
-										in(nqx, nqy, nqz, ib_x, ib_y, ib_z, ib_t) \
-										in(shape_def: length(0) MIC_REUSE) \
-										in(qx: length(0) MIC_REUSE) \
-										in(qy: length(0) MIC_REUSE) \
-										in(qz_flat: length(0) MIC_REUSE) \
-										out(fq_buffer0: length(0) MIC_REUSE) \
-										out(ff_buffer0: \
-												length(curr_b_nqx * curr_b_nqy * curr_b_nqz) MIC_REUSE)
+								#ifdef MIC_PADDING
+									#pragma offload target(mic:0) signal(ff_buffer0) \
+											in(curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles) \
+											in(b_nqx, b_nqy, b_nqz, num_triangles) \
+											in(nqx, nqy, nqz, ib_x, ib_y, ib_z, ib_t) \
+											in(shape_def: length(0) MIC_REUSE) \
+											in(qx: length(0) MIC_REUSE) \
+											in(qy: length(0) MIC_REUSE) \
+											in(qz_flat: length(0) MIC_REUSE) \
+											out(fq_buffer0: length(0) MIC_REUSE) \
+											out(ff_buffer0: length(ff_size) MIC_REUSE)
+								#else
+									#pragma offload target(mic:0) signal(ff_buffer0) \
+											in(curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles) \
+											in(b_nqx, b_nqy, b_nqz, num_triangles) \
+											in(nqx, nqy, nqz, ib_x, ib_y, ib_z, ib_t) \
+											in(shape_def: length(0) MIC_REUSE) \
+											in(qx: length(0) MIC_REUSE) \
+											in(qy: length(0) MIC_REUSE) \
+											in(qz_flat: length(0) MIC_REUSE) \
+											out(fq_buffer0: length(0) MIC_REUSE) \
+											out(ff_buffer0: \
+													length(curr_b_nqx * curr_b_nqy * curr_b_nqz) MIC_REUSE)
+								#endif
 								form_factor_kernel_opt(qx, qy, qz_flat, shape_def,
 										curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles,
 										b_nqx, b_nqy, b_nqz, b_num_triangles,
@@ -649,38 +719,60 @@ namespace hig {
 										in(qy: length(0) MIC_REUSE) \
 										in(qz_flat: length(0) MIC_REUSE) \
 										out(fq_buffer1: length(0) MIC_REUSE)
-									form_factor_kernel_db(qx, qy, qz_flat, shape_def,
-											curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles,
-											b_nqx, b_nqy, b_nqz, b_num_triangles,
-											ib_x, ib_y, ib_z, ib_t,
-											fq_buffer1);
+								form_factor_kernel_db(qx, qy, qz_flat, shape_def,
+										curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles,
+										b_nqx, b_nqy, b_nqz, b_num_triangles,
+										ib_x, ib_y, ib_z, ib_t,
+										fq_buffer1);
 
 								// call the reduction kernel offloaded to MIC
-								#pragma offload target(mic:0) signal(ff_buffer1) \
-										in(curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles) \
-										in(b_nqx, b_nqy, b_nqz, num_triangles) \
-										in(nqx, nqy, nqz, ib_x, ib_y, ib_z, ib_t) \
-										in(fq_buffer1: length(0) MIC_REUSE) \
-										out(ff_buffer1: \
-												length(curr_b_nqx * curr_b_nqy * curr_b_nqz) MIC_REUSE)
-									reduction_kernel_db(curr_b_nqx, curr_b_nqy, curr_b_nqz,
-											curr_b_num_triangles, blocked_matrix_size,
-											b_nqx, b_nqy, b_nqz, num_triangles,
-											nqx, nqy, nqz,
-											ib_x, ib_y, ib_z, ib_t,
-											fq_buffer1, ff_buffer1);
+								#ifdef MIC_PADDING
+									#pragma offload target(mic:0) signal(ff_buffer1) \
+											in(curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles) \
+											in(b_nqx, b_nqy, b_nqz, num_triangles) \
+											in(nqx, nqy, nqz, ib_x, ib_y, ib_z, ib_t) \
+											in(fq_buffer1: length(0) MIC_REUSE) \
+											out(ff_buffer1: length(ff_size) MIC_REUSE)
+								#else
+									#pragma offload target(mic:0) signal(ff_buffer1) \
+											in(curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles) \
+											in(b_nqx, b_nqy, b_nqz, num_triangles) \
+											in(nqx, nqy, nqz, ib_x, ib_y, ib_z, ib_t) \
+											in(fq_buffer1: length(0) MIC_REUSE) \
+											out(ff_buffer1: \
+													length(curr_b_nqx * curr_b_nqy * curr_b_nqz) MIC_REUSE)
+								#endif
+								reduction_kernel_db(curr_b_nqx, curr_b_nqy, curr_b_nqz,
+										curr_b_num_triangles, blocked_matrix_size,
+										b_nqx, b_nqy, b_nqz, num_triangles,
+										nqx, nqy, nqz,
+										ib_x, ib_y, ib_z, ib_t,
+										fq_buffer1, ff_buffer1);
 							#else
-								#pragma offload target(mic:0) signal(ff_buffer1) \
-										in(curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles) \
-										in(b_nqx, b_nqy, b_nqz, num_triangles) \
-										in(nqx, nqy, nqz, ib_x, ib_y, ib_z, ib_t) \
-										in(shape_def: length(0) MIC_REUSE) \
-										in(qx: length(0) MIC_REUSE) \
-										in(qy: length(0) MIC_REUSE) \
-										in(qz_flat: length(0) MIC_REUSE) \
-										out(fq_buffer1: length(0) MIC_REUSE) \
-										out(ff_buffer1: \
-												length(curr_b_nqx * curr_b_nqy * curr_b_nqz) MIC_REUSE)
+								#ifdef MIC_PADDING
+									#pragma offload target(mic:0) signal(ff_buffer1) \
+											in(curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles) \
+											in(b_nqx, b_nqy, b_nqz, num_triangles) \
+											in(nqx, nqy, nqz, ib_x, ib_y, ib_z, ib_t) \
+											in(shape_def: length(0) MIC_REUSE) \
+											in(qx: length(0) MIC_REUSE) \
+											in(qy: length(0) MIC_REUSE) \
+											in(qz_flat: length(0) MIC_REUSE) \
+											out(fq_buffer1: length(0) MIC_REUSE) \
+											out(ff_buffer1: length(ff_size) MIC_REUSE)
+								#else
+									#pragma offload target(mic:0) signal(ff_buffer1) \
+											in(curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles) \
+											in(b_nqx, b_nqy, b_nqz, num_triangles) \
+											in(nqx, nqy, nqz, ib_x, ib_y, ib_z, ib_t) \
+											in(shape_def: length(0) MIC_REUSE) \
+											in(qx: length(0) MIC_REUSE) \
+											in(qy: length(0) MIC_REUSE) \
+											in(qz_flat: length(0) MIC_REUSE) \
+											out(fq_buffer1: length(0) MIC_REUSE) \
+											out(ff_buffer1: \
+													length(curr_b_nqx * curr_b_nqy * curr_b_nqz) MIC_REUSE)
+								#endif
 								form_factor_kernel_opt(qx, qy, qz_flat, shape_def,
 										curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles,
 										b_nqx, b_nqy, b_nqz, b_num_triangles,
@@ -704,6 +796,13 @@ namespace hig {
 						prev_b_nqx = curr_b_nqx; prev_b_nqy = curr_b_nqy; prev_b_nqz = curr_b_nqz;
 						prev_b_num_triangles = curr_b_num_triangles;
 						prev_ib_x = ib_x; prev_ib_y = ib_y; prev_ib_z = ib_z; prev_ib_t = ib_t;
+
+						++ hblock_counter;
+
+						if(rank == 0) {
+							if(hblock_counter % progress_step == 0)
+								std::cout << (hblock_counter / progress_step) * progress_delta << "% ";
+						} // if
 					} // for ib_t
 				} // for ib_z
 			} // for ib_y
@@ -728,6 +827,8 @@ namespace hig {
 							prev_ib_x, prev_ib_y, prev_ib_z, ff);
 		} // if-else
 
+		kerneltimer.stop();
+
 		// free f buffers on target
 		#pragma offload_transfer target(mic:0) \
 				nocopy(fq_buffer0: length(0) MIC_FREE) \
@@ -744,8 +845,6 @@ namespace hig {
 		_mm_free(fq_buffer0);
 		_mm_free(fq_buffer1);
 
-		if(rank == 0) std::cout << "done." << std::endl;
-
 		#pragma offload_transfer target(mic:0) \
 				nocopy(shape_def: length(0) MIC_FREE) \
 				nocopy(qx: length(0) MIC_FREE) \
@@ -755,7 +854,9 @@ namespace hig {
 		//delete[] qz_flat;
 		_mm_free(qz_flat);
 
-		pass_kernel_time = total_kernel_time;
+		if(rank == 0) std::cout << "done." << std::endl;
+
+		pass_kernel_time = kerneltimer.elapsed_msec();
 		red_time = total_reduce_time;
 		mem_time = total_mem_time;
 	
@@ -889,6 +990,8 @@ namespace hig {
 		#ifdef __INTEL_OFFLOAD
 			omp_set_num_threads(MIC_OMP_NUM_THREADS_);
 		#endif
+
+		unsigned int curr_nqxy = curr_nqx * curr_nqy;
 		#pragma omp parallel
 		{
 			#pragma omp for nowait //schedule(auto)
@@ -902,7 +1005,7 @@ namespace hig {
 				float_t y = shape_def[shape_off + 5];
 				float_t z = shape_def[shape_off + 6];
 
-				unsigned int xy_size = curr_nqx * curr_nqy;
+				unsigned int xy_size = curr_nqxy;
 				unsigned int matrix_off = xy_size * curr_nqz * i_t;
 				unsigned int start_z = b_nqz * ib_z;
 				unsigned int start_y = b_nqy * ib_y;
@@ -933,20 +1036,27 @@ namespace hig {
 							scomplex_t qn = (temp_x * nx + qyn + qzn) / q2;
 
 							fq_buffer[off] = compute_fq(s, qt, qn);
+							/*unsigned int i_ff = curr_nqxy * i_z + curr_nqx * i_y + i_x;
+							scomplex_t res = compute_fq(s, qt, qn);
+							res = make_sC(res.y, - res.x);
+							#pragma omp atomic
+							ff_buffer[i_ff].x += res.x;
+							#pragma omp atomic
+							ff_buffer[i_ff].y += res.y;*/
 						} // for z
 					} // for y
 				} // for x
 			} // for t
 		} // pragma omp parallel
 		
-		// merging reduction here itself
+		// doing reduction here itself
+		// a separate reduction helps avoid use of atomics otherwise (which are SLOW!)
 		unsigned int curr_nqxyz = curr_nqx * curr_nqy * curr_nqz;
-		unsigned int curr_nqxy = curr_nqx * curr_nqy;
-		scomplex_t temp_complex = make_sC((float_t) 0.0, (float_t) -1.0);
-		for(unsigned int i_x = 0; i_x < curr_nqx; ++ i_x) {
-			#pragma omp parallel
-			{
-				#pragma omp for nowait collapse(2) //schedule(auto)
+		//scomplex_t temp_complex = make_sC((float_t) 0.0, (float_t) -1.0);
+		#pragma omp parallel
+		{
+			#pragma omp for nowait collapse(3) //schedule(auto)
+			for(unsigned int i_x = 0; i_x < curr_nqx; ++ i_x) {
 				for(unsigned int i_y = 0; i_y < curr_nqy; ++ i_y) {
 					for(unsigned int i_z = 0; i_z < curr_nqz; ++ i_z) {
 						scomplex_t total = make_sC((float_t) 0.0, (float_t) 0.0);
@@ -960,8 +1070,8 @@ namespace hig {
 						ff_buffer[i_ff] = make_sC(total.y, - total.x);
 					} // for i_z
 				} // for i_y
-			} // pragma omp parallel
-		} // for i_x
+			} // for i_x
+		} // pragma omp parallel
 	} // NumericFormFactorM::form_factor_kernel_opt()
 	
 	

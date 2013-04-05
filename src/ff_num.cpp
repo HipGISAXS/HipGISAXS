@@ -5,7 +5,7 @@
   *
   *  File: ff_num.cpp
   *  Created: Jul 18, 2012
-  *  Modified: Wed 03 Apr 2013 07:40:58 PM PDT
+  *  Modified: Thu 04 Apr 2013 06:09:46 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -40,8 +40,6 @@ namespace hig {
 		float_t total_start = 0.0, total_end = 0.0, total_time = 0.0;
 
 		woo::BoostChronoTimer maintimer, computetimer;
-
-		maintimer.start();
 
 		unsigned int nqx = QGrid::instance().nqx();
 		unsigned int nqy = QGrid::instance().nqy();
@@ -119,16 +117,19 @@ namespace hig {
 		#ifdef FINDBLOCK
 			int block_x = 0, block_y = 0, block_z = 0, block_t = 0;
 			int block_x_max = 0, block_y_max = 0, block_z_max = 0, block_t_max = 0;
-			block_x_max = (nqx < 100) ? nqx : 100;
-			block_y_max = (nqy < 100) ? nqy : 100;
-			block_z_max = (nqz < 100) ? nqz : 100;
-			block_t_max = (num_triangles < 2000) ? num_triangles : 2000;
+			block_x_max = (nqx < 400) ? nqx : 400;
+			block_y_max = (nqy < 400) ? nqy : 400;
+			block_z_max = (nqz < 400) ? nqz : 400;
+			block_t_max = (num_triangles < 2500) ? num_triangles : 2500;
 			block_t = block_t_max;
-			for(block_x = block_x_max; block_x > 0; block_x -= 5) {
-			for(block_y = 5; block_y < block_y_max; block_y += 5) {
-			for(block_z = 5; block_z < block_z_max; block_z += 5) {
+			for(block_t = block_t_max; block_t > std::min(99, block_t_max - 1); block_t -= 100) {
+			for(block_x = block_x_max; block_x > std::min(3, block_x_max - 1); block_x -= 2) {
+			for(block_y = block_y_max; block_y > std::min(3, block_y_max - 1); block_y -= 2) {
+			for(block_z = block_z_max; block_z > std::min(3, block_z_max - 1); block_z -= 2) {
 		#endif
 		
+		maintimer.start();
+
 		if(rank < p_y * p_z) {
 			total_start = MPI::Wtime();
 	
@@ -208,6 +209,7 @@ namespace hig {
 				complex_t *p_ff = NULL;
 			#endif
 	
+			computetimer.reset();
 			computetimer.start();
 
 			unsigned int ret_nt = 0;
@@ -266,7 +268,8 @@ namespace hig {
 	
 			mem_start = MPI::Wtime();
 			#ifdef FINDBLOCK
-				if(ff != NULL) delete[] ff;
+				//if(ff != NULL) delete[] ff;
+				ff.clear();
 			#endif
 			if(p_ff != NULL) delete[] p_ff;
 			delete[] p_qz;
@@ -289,9 +292,9 @@ namespace hig {
 							<< "**             FF reduction time: " << red_time << " ms." << std::endl
 							<< "**         FF memory and IO time: " << mem_time * 1000 << " ms." << std::endl
 							<< "**            Communication time: " << comm_time * 1000 << " ms." << std::endl
-							<< "**                 Total FF time: " << total_time * 1000 << " ms."
-							<< " (" << total_end << " - " << total_start << ")" << std::endl
-							<< "**                  Main FF time: " << maintimer.elapsed_msec() << " ms."
+							//<< "**                 Total FF time: " << total_time * 1000 << " ms."
+							//<< " (" << total_end << " - " << total_start << ")" << std::endl
+							<< "**                 Total FF time: " << maintimer.elapsed_msec() << " ms."
 							<< std::endl << std::flush;
 			} // if
 		} // if
@@ -307,6 +310,7 @@ namespace hig {
 		world_comm.Barrier();
 
 		#ifdef FINDBLOCK
+			} // block_t
 			} // block_z
 			} // block_y
 			} // block_x
