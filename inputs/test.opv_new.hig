@@ -1,8 +1,8 @@
 hipGisaxsInput = {
 	shape = {
 		key = "s1",	 		# a unique key to identify this shape in this file
-		#name = "data/opv_zyplane.hd5"	# name of the file containing the discretized shape data
-		name = "data/opv_zyplane_high.hd5"
+		name = "data/opv_zyplane.hd5"	# name of the file containing the discretized shape data
+		#name = "data/opv_zyplane_high.hd5"
 		#name = "data/Test_struc.hd5"	# name of the file containing the discretized shape data
 	},
 	layer = {
@@ -45,8 +45,8 @@ hipGisaxsInput = {
 		method = "dwba",					# theorical approach (see list)
         #outputregion = { type = "pixels" , minpoint = [ 400 550 ], maxpoint = [ 550 750 ] },	# full ff
 		#outputregion = { type = "pixels" , minpoint = [ 233 740 ], maxpoint = [ 745 971 ] },	# half
-		outputregion = { type = "qspace" , minpoint = [ 0.15 0.15 ], maxpoint = [ 2.5 2.5 ] },
-		resolution = [ 0.1 0.1 ],			# number of q points per pixel
+		outputregion = { type = "qspace" , minpoint = [ 0.15 0.15 ], maxpoint = [ 2 2 ] },
+		resolution = [ 0.05 0.05 ],			# number of q points per pixel
 		nslices = 0							# max number of slices for slicing algorithm
 	}
 }

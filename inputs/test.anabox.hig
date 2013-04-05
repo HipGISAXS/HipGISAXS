@@ -24,7 +24,7 @@ hipGisaxsInput = {
 			refindex = { delta = 7.4E-06, beta = 3.37E-08 },
 			layer:key = "l1",
 			repetition = [ 40 40 1 ],
-			lattice = { type = "cubic" },
+			lattice = { type = "hex" },
 			scaling = 50
 		},
 		ensemble = {
