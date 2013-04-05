@@ -3,7 +3,7 @@
  *
  *  File: ff_num_mic.cpp
  *  Created: Apr 02, 2013
- *  Modified: Thu 04 Apr 2013 06:15:27 PM PDT
+ *  Modified: Fri 05 Apr 2013 10:41:57 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -511,7 +511,8 @@ namespace hig {
 		unsigned int curr_b_nqx = b_nqx, curr_b_nqy = b_nqy, curr_b_nqz = b_nqz;
 		unsigned int curr_b_num_triangles = b_num_triangles;
 		unsigned int num_blocks = nb_x * nb_y * nb_z * nb_t;
-		unsigned int progress_delta = 10;
+		// for the progress indicator
+		unsigned int progress_delta = 10; // display progress at 10% intervals
 		unsigned int progress_step = (unsigned int) ceil((float) num_blocks / progress_delta);
 	
 		if(rank == 0) {
@@ -800,8 +801,11 @@ namespace hig {
 						++ hblock_counter;
 
 						if(rank == 0) {
-							if(hblock_counter % progress_step == 0)
-								std::cout << (hblock_counter / progress_step) * progress_delta << "% ";
+							float progress = ((float) hblock_counter / num_blocks) * 100;
+							double intpart, fracpart;
+							fracpart = modf(progress, &intpart);
+							if(((unsigned int)intpart) % progress_delta == 0 && fracpart < 100.0 / num_blocks)
+								std::cout << intpart << "% ";
 						} // if
 					} // for ib_t
 				} // for ib_z

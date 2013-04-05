@@ -3,7 +3,7 @@
   *
   *  File: parameters_mic.hpp
   *  Created: Apr 02, 2013
-  *  Modified: Thu 04 Apr 2013 05:33:19 PM PDT
+  *  Modified: Fri 05 Apr 2013 10:21:22 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -14,13 +14,13 @@
 namespace hig {
 
 	/***
-	 * parameters for computations on MIC
+	 * tunable parameters for computations on MIC
 	 */
 
 	// hyperblock size
 	const int MIC_BLOCK_X_ = 100;
 	const int MIC_BLOCK_Y_ = 40;
-	const int MIC_BLOCK_Z_ = 40;
+	const int MIC_BLOCK_Z_ = 30;
 	const int MIC_BLOCK_T_ = 2500;
 
 	// number of OMP threads on MIC
