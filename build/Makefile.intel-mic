@@ -52,7 +52,7 @@ BOOST_LIBS = -L $(BOOST_DIR)/lib -lboost_system -lboost_filesystem -lboost_timer
 ## parallel hdf5
 HDF5_INCL = -I$(HDF5_DIR)/include -I$(SZ_DIR)/include -I$(Z_DIR)/include
 HDF5_LIBS = -L$(SZ_DIR)/lib -L$(Z_DIR)/lib -L$(HDF5_DIR)/lib -lhdf5 -lz -lsz -lm
-HDF5_FLAGS = -Wl,-rpath -Wl,$(HDF5_DIR)/lib
+#HDF5_FLAGS = -Wl,-rpath -Wl,$(HDF5_DIR)/lib
 HDF5_FLAGS += -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -D_POSIX_SOURCE -D_BSD_SOURCE
 
 ## mpi (openmpi)
@@ -100,7 +100,7 @@ endif
 
 ## MIC related flags
 ifeq ($(USE_MIC), y)
-MISC_FLAGS += -DUSE_MIC
+MISC_FLAGS += -DUSE_MIC -DFF_MIC_OPT #-DFINDBLOCK #-DMIC_PADDING
 endif
 
 MISC_FLAGS += -DTIME_DETAIL_1 -DTIME_DETAIL_2
@@ -108,7 +108,7 @@ MISC_FLAGS += -DTIME_DETAIL_1 -DTIME_DETAIL_2
 ## choose optimization levels, debug flags, gprof flag, etc
 #OPT_FLAGS = -g -DDEBUG #-pg
 #INTEL_DEBUG = -debug all
-OPT_FLAGS = -O3 -DNDEBUG #-v
+OPT_FLAGS = -O3 -DNDEBUG -v
 
 ## choose single or double precision here
 PREC_FLAG =			# leave empty for single precision
@@ -124,9 +124,11 @@ ALL_LIBS = $(BOOST_LIBS) $(MPI_LIBS) $(NVLIB_FLAGS) $(CUDA_LIBS) $(HDF5_LIBS) $(
 PREFIX = $(PWD)
 BINARY_SIM = hipgisaxs
 BINARY_FIT = hipgisaxs-fit
+LIB_SIM = libhipgisaxs.a
 BIN_DIR = $(PREFIX)/bin
 OBJ_DIR = $(PREFIX)/obj
 SRC_DIR = $(PREFIX)/src
+LIB_DIR = $(PREFIX)/lib
 
 ## all objects
 OBJECTS_MAIN = utilities.o numeric_utils.o compute_params.o hig_input.o \
@@ -157,11 +159,22 @@ OBJ_BIN_SIM = $(patsubst %,$(OBJ_DIR)/%,$(OBJECTS_SIM))
 
 OBJ_BIN_FIT = $(patsubst %,$(OBJ_DIR)/%,$(OBJECTS_FIT))
 
-$(BINARY_SIM): $(OBJ_BIN_SIM)
-	$(CXX) -o $(BIN_DIR)/$@ $^ $(OPT_FLAGS) $(INTEL_DEBUG) $(CXX_FLAGS) $(PREC_FLAG) $(MISC_FLAGS) $(ALL_LIBS)
+OBJ_LIB_SIM = $(patsubst %,$(OBJ_DIR)/%,$(OBJECTS_MAIN))
+
+#$(BINARY_SIM): $(OBJ_BIN_SIM)
+#	$(CXX) -o $(BIN_DIR)/$@ $^ $(OPT_FLAGS) $(INTEL_DEBUG) $(CXX_FLAGS) $(PREC_FLAG) $(MISC_FLAGS) $(ALL_LIBS)
+
+$(BINARY_SIM): $(OBJ_DIR)/hipgisaxs_sim.o
+	$(CXX) -o $(BIN_DIR)/$@ $^ $(CXX_FLAGS) $(ALL_LIBS) -L ./lib -lhipgisaxs
 
 $(BINARY_FIT): $(OBJ_BIN_FIT)
 	$(CXX) -o $(BIN_DIR)/$@ $^ $(OPT_FLAGS) $(INTEL_DEBUG) $(CXX_FLAGS) $(PREC_FLAG) $(MISC_FLAGS) $(ALL_LIBS)
+
+nomic: CXX_FLAGS += -no-offload
+nomic: $(BINARY_SIM)
+
+library: $(OBJ_LIB_SIM)
+	 xiar rs -qoffload-build $(LIB_DIR)/$(LIB_SIM) $^
 
 ## cuda compilation
 ifeq ($(USE_GPU), y)
@@ -346,4 +359,4 @@ all: hipgisaxs test_conv test_read test_ff test_image object2shape shape2hdf5
 .PHONY: clean
 
 clean:
-	rm -f $(OBJ_BIN_SIM) $(OBJ_BIN_FIT) $(BIN_DIR)/$(BINARY_SIM) $(BIN_DIR)/$(BINARY_FIT) $(BIN_DIR)/test_conv $(OBJ_DIR)/test_conv.o $(BIN_DIR)/test_read $(OBJ_DIR)/test_read.o $(BIN_DIR)/test_ff $(OBJ_DIR)/test_ff.o $(BIN_DIR)/test_image $(OBJ_DIR)/test_image.o $(OBJ_DIR)/qgrid_test_create.o $(OBJ_DIR)/plot_gisaxs.o $(OBJ_DIR)/plot_ff.o $(OBJ_DIR)/generate_palette.o $(OBJ_DIR)/*MIC.o
+	rm -f $(OBJ_BIN_SIM) $(OBJ_BIN_FIT) $(BIN_DIR)/$(BINARY_SIM) $(BIN_DIR)/$(BINARY_FIT) $(BIN_DIR)/test_conv $(OBJ_DIR)/test_conv.o $(BIN_DIR)/test_read $(OBJ_DIR)/test_read.o $(BIN_DIR)/test_ff $(OBJ_DIR)/test_ff.o $(BIN_DIR)/test_image $(OBJ_DIR)/test_image.o $(OBJ_DIR)/qgrid_test_create.o $(OBJ_DIR)/plot_gisaxs.o $(OBJ_DIR)/plot_ff.o $(OBJ_DIR)/generate_palette.o $(OBJ_DIR)/*MIC.o $(LIB_DIR)/*.a $(LIB_DIR)/*.so
