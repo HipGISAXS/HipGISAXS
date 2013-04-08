@@ -5,7 +5,7 @@
   *
   *  File: qgrid.cpp
   *  Created: Jun 17, 2012
-  *  Modified: Sat 06 Apr 2013 11:28:04 AM PDT
+  *  Modified: Mon 08 Apr 2013 04:00:50 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -20,7 +20,7 @@ namespace hig {
 	/**
 	 * create Q-grid in reciprocal space
 	 */
-	bool QGrid::create(float_t freq, float_t alpha_i, float_t k0) {
+	bool QGrid::create(float_t freq, float_t alpha_i, float_t k0, int mpi_rank) {
 										// x and y are reversed in slim's code ? ...
 		vector2_t total_pixels = HiGInput::instance().detector_total_pixels();
 		vector2_t min_pixel = HiGInput::instance().param_output_minpoint();
@@ -136,12 +136,14 @@ namespace hig {
 			return false;
 		} // if-else
 
-		//std::cout << "new min q-point: " << qmin[0] << ", " << qmin[1] << ", " << qmin[2] << std::endl;
-		//std::cout << "new max q-point: " << qmax[0] << ", " << qmax[1] << ", " << qmax[2] << std::endl;
-		//std::cout << "step: " << step[0] << ", " << step[1] << ", " << step[2] << std::endl;
-		std::cout << "**                  Q-grid range: ("
-					<< qmin[0] << ", " << qmin[1] << ", " << qmin[2] << ") x ("
-					<< qmax[0] << ", " << qmax[1] << ", " << qmax[2] << ")" << std::endl;
+		if(mpi_rank == 0) {
+			//std::cout << "new min q-point: " << qmin[0] << ", " << qmin[1] << ", " << qmin[2] << std::endl;
+			//std::cout << "new max q-point: " << qmax[0] << ", " << qmax[1] << ", " << qmax[2] << std::endl;
+			//std::cout << "step: " << step[0] << ", " << step[1] << ", " << step[2] << std::endl;
+			std::cout << "**                  Q-grid range: ("
+						<< qmin[0] << ", " << qmin[1] << ", " << qmin[2] << ") x ("
+						<< qmax[0] << ", " << qmax[1] << ", " << qmax[2] << ")" << std::endl;
+		} // if
 
 		qx_.push_back(qmin[0]);
 		qy_.push_back(qmin[1]);
@@ -150,8 +152,10 @@ namespace hig {
 		for(float_t val = qmin[1] + step[1]; val < qmax[1]; val += step[1]) qy_.push_back(val);
 		for(float_t val = qmin[2] + step[2]; val < qmax[2]; val += step[2]) qz_.push_back(val);
 
-		std::cout << "**               NQX x NQY x NQZ: " << qx_.size() << " x " << qy_.size()
-					<< " x " << qz_.size() << std::endl;
+		if(mpi_rank == 0) {
+			std::cout << "**               NQX x NQY x NQZ: " << qx_.size() << " x " << qy_.size()
+						<< " x " << qz_.size() << std::endl;
+		} // if
 
 		return true;
 	} // QGrid::create()
@@ -352,8 +356,7 @@ namespace hig {
 					<< " x " << qz_.size() << std::endl;
 
 		return true;
-	} // QGrid::create()
-
+	} // QGrid::create_z_cut()
 
 
 } // namespace hig

@@ -5,7 +5,7 @@
   *
   *  File: hipgisaxs_main.cpp
   *  Created: Jun 14, 2012
-  *  Modified: Sat 06 Apr 2013 11:33:15 AM PDT
+  *  Modified: Mon 08 Apr 2013 04:06:13 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -78,7 +78,7 @@ namespace hig {
 
 		// create Q-grid
 		float_t min_alphai = HiGInput::instance().scattering_min_alpha_i() * PI_ / 180;
-		if(!QGrid::instance().create(freq_, min_alphai, k0_)) {
+		if(!QGrid::instance().create(freq_, min_alphai, k0_, mpi_rank)) {
 			if(mpi_rank == 0) std::cerr << "error: could not create Q-grid" << std::endl;
 			return false;
 		} // if
@@ -217,7 +217,7 @@ namespace hig {
 		/* domain cell size */
 		vector3_t min_vec(0.0, 0.0, 0.0), max_vec(0.0, 0.0, 0.0);
 		float_t z_min_0 = 0.0, z_max_0 = 0.0;
-		if(!HiGInput::instance().compute_domain_size(min_vec, max_vec, z_min_0, z_max_0)) {
+		if(!HiGInput::instance().compute_domain_size(min_vec, max_vec, z_min_0, z_max_0, mpi_rank)) {
 			if(mpi_rank == 0) std::cerr << "error: could not construct domain sizes" << std::endl;
 			return false;
 		} // if

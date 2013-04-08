@@ -3,7 +3,7 @@
  *
  *  File: ff_num_mic.cpp
  *  Created: Apr 02, 2013
- *  Modified: Sat 06 Apr 2013 12:32:57 PM PDT
+ *  Modified: Mon 08 Apr 2013 04:07:18 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -449,7 +449,9 @@ namespace hig {
 		int num_mic = 0;
 		#ifdef __INTEL_OFFLOAD
 			num_mic = _Offload_number_of_devices();
-			std::cout << "++         Number of Target MICs: " << num_mic << std::endl;
+			if(rank == 0) {
+				std::cout << "++         Number of Target MICs: " << num_mic << std::endl;
+			} // if
 			if(num_mic == 0) {
 				std::cerr << "error: no Target MIC found!" << std::endl;
 				return 0;

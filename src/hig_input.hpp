@@ -5,7 +5,7 @@
   *
   *  File: hig_input.hpp
   *  Created: Jun 11, 2012
-  *  Modified: Fri 01 Mar 2013 08:34:21 AM PST
+  *  Modified: Mon 08 Apr 2013 04:05:40 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -111,8 +111,8 @@ namespace hig {
 
 			/* computers */
 
-			bool compute_shape_domain(Shape& shape, vector3_t& min, vector3_t& max);
-			bool compute_shapedef_minmax(vector3_t&, vector3_t&);
+			bool compute_shape_domain(Shape&, vector3_t&, vector3_t&, int);
+			bool compute_shapedef_minmax(vector3_t&, vector3_t&, int);
 
 			/* iterators */
 
@@ -145,7 +145,7 @@ namespace hig {
 			bool construct_lattice_vectors();
 			bool construct_layer_profile();
 
-			bool compute_domain_size(vector3_t&, vector3_t&, float_t&, float_t&);
+			bool compute_domain_size(vector3_t&, vector3_t&, float_t&, float_t&, int);
 
 			const std::string& path() const { return compute_.pathprefix(); }
 			const std::string& runname() const { return compute_.runname(); }

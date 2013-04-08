@@ -5,7 +5,7 @@
   *
   *  File: qgrid.hpp
   *  Created: Jun 17, 2012
-  *  Modified: Wed 20 Feb 2013 12:26:17 PM PST
+  *  Modified: Mon 08 Apr 2013 04:01:19 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -50,7 +50,7 @@ namespace hig {
 			} // instance()
 
 			/* create the Q-grid */
-			bool create(float_t, float_t, float_t);
+			bool create(float_t, float_t, float_t, int);
 			bool create_qz_extended(float_t, float_t, complex_t, complex_t);
 			bool create_test();
 

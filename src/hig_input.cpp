@@ -5,7 +5,7 @@
   *
   *  File: hig_input.cpp
   *  Created: Jun 11, 2012
-  *  Modified: Sun 24 Mar 2013 12:09:14 PM PDT
+  *  Modified: Mon 08 Apr 2013 04:05:50 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -1104,7 +1104,7 @@ namespace hig {
 	/* shapes */
 
 	// technically some of these are not completely correct. correct them later ...	// this function can go into the shape class ...
-	bool HiGInput::compute_shape_domain(Shape &shape, vector3_t& min_dim, vector3_t& max_dim) {
+	bool HiGInput::compute_shape_domain(Shape &shape, vector3_t& min_dim, vector3_t& max_dim, int mpi_rank) {
 		min_dim[0] = min_dim[1] = min_dim[2] = 0.0;
 		max_dim[0] = max_dim[1] = max_dim[2] = 0.0;
 		shape_param_iterator_t param = shape.param_begin();
@@ -1491,7 +1491,7 @@ namespace hig {
 			case shape_custom:
 				shape_filename = shape.filename();
 				read_shape_definition(shape_filename.c_str());
-				compute_shapedef_minmax(min_dim, max_dim);
+				compute_shapedef_minmax(min_dim, max_dim, mpi_rank);
 				break;
 
 			case shape_null:
@@ -1511,7 +1511,7 @@ namespace hig {
 	} // HiGInput::compute_shape_domain()
 
 
-	bool HiGInput::compute_shapedef_minmax(vector3_t& min_dim, vector3_t& max_dim) {
+	bool HiGInput::compute_shapedef_minmax(vector3_t& min_dim, vector3_t& max_dim, int mpi_rank) {
 		float_t min_a = shape_def_[4], max_a = shape_def_[4];
 		float_t min_b = shape_def_[5], max_b = shape_def_[5];
 		float_t min_c = shape_def_[6], max_c = shape_def_[6];
@@ -1572,17 +1572,19 @@ namespace hig {
             } // if-else
         } // if-else
 #endif
-        std::cout << "**              Shape size range: ("
-					<< min_dim[0] << ", " << min_dim[1] << ", " << min_dim[2] << ") x ("
-					<< max_dim[0] << ", " << max_dim[1] << ", "	<< max_dim[2] << ")" << std::endl;
-        /*std::cout << "++ Final shape min point: " << min_dim[0] << ", "
-                    << min_dim[1] << ", " << min_dim[2] << std::endl;
-        std::cout << "++ Final shape max point: " << max_dim[0] << ", "
-                    << max_dim[1] << ", " << max_dim[2] << std::endl;
-        std::cout << "++ Final shape dimensions: "
-                    << fabs(max_dim[0] - min_dim[0]) << " x "
-                    << fabs(max_dim[1] - min_dim[1]) << " x "
-                    << fabs(max_dim[2] - min_dim[2]) << std::endl;*/
+		if(mpi_rank == 0) {
+	        std::cout << "**              Shape size range: ("
+						<< min_dim[0] << ", " << min_dim[1] << ", " << min_dim[2] << ") x ("
+						<< max_dim[0] << ", " << max_dim[1] << ", "	<< max_dim[2] << ")" << std::endl;
+	        /*std::cout << "++ Final shape min point: " << min_dim[0] << ", "
+    	                << min_dim[1] << ", " << min_dim[2] << std::endl;
+        	std::cout << "++ Final shape max point: " << max_dim[0] << ", "
+            	        << max_dim[1] << ", " << max_dim[2] << std::endl;
+	        std::cout << "++ Final shape dimensions: "
+    	                << fabs(max_dim[0] - min_dim[0]) << " x "
+        	            << fabs(max_dim[1] - min_dim[1]) << " x "
+            	        << fabs(max_dim[2] - min_dim[2]) << std::endl;*/
+		} // if
 
 		return true;
 	} // HiGInput::compute_shapedef_minmax()
@@ -1824,7 +1826,7 @@ namespace hig {
 
 
 	bool HiGInput::compute_domain_size(vector3_t& min_vec, vector3_t& max_vec,
-										float_t& z_min_0, float_t& z_max_0) {
+										float_t& z_min_0, float_t& z_max_0, int mpi_rank) {
 		float_t ma = FLT_MAX;
 		float_t mi = -FLT_MAX;
 
@@ -1838,7 +1840,7 @@ namespace hig {
 
 			Shape curr_shape = shapes_[(*s).second.grain_shape_key()];
 			vector3_t shape_min(0.0, 0.0, 0.0), shape_max(0.0, 0.0, 0.0);
-			compute_shape_domain(curr_shape, shape_min, shape_max);
+			compute_shape_domain(curr_shape, shape_min, shape_max, mpi_rank);
 
 			/*std::cout << "++ Shape min point: " << shape_min[0] << ", " << shape_min[1]
 						<< ", " << shape_min[2] << std::endl;
