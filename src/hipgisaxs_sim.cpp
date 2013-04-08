@@ -3,7 +3,7 @@
   *
   *  File: hipgisaxs_sim.cpp
   *  Created: Dec 06, 2012
-  *  Modified: Fri 22 Feb 2013 01:29:58 PM PST
+  *  Modified: Sat 06 Apr 2013 11:22:30 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -61,7 +61,8 @@ int main(int narg, char** args) {
 	} // if
 	//hig::HiGInput::instance().print_all();	// for testing
 	readtimer.stop();
-	std::cout << "**       Input construction time: " << readtimer.elapsed_msec() << " ms." << std::endl;
+	if(mpi_rank == 0)
+		std::cout << "**       Input construction time: " << readtimer.elapsed_msec() << " ms." << std::endl;
 
 	//computetimer.start();
 	/* run the simulation */
@@ -74,9 +75,12 @@ int main(int narg, char** args) {
 	} // if
 	//computetimer.stop();
 	maintimer.stop();
-	//std::cout << "**         Total simulation time: " << computetimer.elapsed_msec() << " ms." << std::endl;
-	std::cout << "**                    Total time: " << maintimer.elapsed_msec() << " ms." << std::endl;
-	std::cout << std::endl;
+	if(mpi_rank == 0) {
+		//std::cout << "**         Total simulation time: " << computetimer.elapsed_msec() << " ms."
+		//				<< std::endl;
+		std::cout << "**                    Total time: " << maintimer.elapsed_msec() << " ms." << std::endl;
+		std::cout << std::endl;
+	} // if
 
 	MPI::Finalize();
 	return 0;

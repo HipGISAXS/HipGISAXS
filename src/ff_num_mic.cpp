@@ -3,7 +3,7 @@
  *
  *  File: ff_num_mic.cpp
  *  Created: Apr 02, 2013
- *  Modified: Fri 05 Apr 2013 10:41:57 AM PDT
+ *  Modified: Sat 06 Apr 2013 12:32:57 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -26,6 +26,18 @@
 #include "ff_num_mic.hpp"
 	
 namespace hig {
+
+	__attribute__((target(mic)))
+	int get_target_omp_num_threads() {
+		int thread_count;
+		#pragma omp parallel
+		{
+			#pragma omp single
+			//thread_count = omp_get_num_threads();
+			thread_count = omp_get_max_threads();
+		}
+		return thread_count;
+	} // get_target_omp_num_threads()
 	
 	NumericFormFactorM::NumericFormFactorM() { }
 
@@ -55,7 +67,9 @@ namespace hig {
 		int num_mic = 0;
 		#ifdef __INTEL_OFFLOAD
 			num_mic = _Offload_number_of_devices();
-			std::cout << "++         Number of Target MICs: " << num_mic << std::endl;
+			if(rank == 0) {
+				std::cout << "++         Number of Target MICs: " << num_mic << std::endl;
+			} // if
 			if(num_mic == 0) {
 				std::cerr << "error: no Target MIC found!" << std::endl;
 				return 0;
@@ -593,6 +607,10 @@ namespace hig {
 
 		if(rank == 0) {
 			#ifdef __INTEL_OFFLOAD
+				int num = 0;
+				#pragma offload target(mic:0)
+				num = get_target_omp_num_threads();
+				std::cout << "-- OMP threads on MIC / process: " << num << std::endl;
 				std::cout << "-- Computing form factor on MIC (DB) ... " << std::flush;
 			#else
 				std::cout << "-- Computing form factor on CPU (fallback) ... " << std::flush;
@@ -920,6 +938,7 @@ namespace hig {
 						float_t qyn = temp_y * ny;
 						float_t qyt = temp_y * y;
 
+						// ... not vectorized by compiler ... TODO
 						for(unsigned int i_x = 0, global_i_x = start_x; i_x < curr_nqx;
 								++ i_x, ++ global_i_x) {
 							unsigned int off = off_start + xy_off_start + i_x;
@@ -962,6 +981,7 @@ namespace hig {
 				for(unsigned int i_y = 0; i_y < curr_b_nqy; ++ i_y) {
 					for(unsigned int i_z = 0; i_z < curr_b_nqz; ++ i_z) {
 						scomplex_t total = make_sC((float_t) 0.0, (float_t) 0.0);
+						// ... not vectorized by compiler ... TODO
 						for(unsigned int i_t = 0; i_t < curr_b_num_triangles; ++ i_t) {
 							unsigned int i_fq = curr_b_nqxyz * i_t + curr_b_nqxy * i_z +
 												curr_b_nqx * i_y + i_x;
@@ -992,7 +1012,7 @@ namespace hig {
 					scomplex_t* fq_buffer, scomplex_t* ff_buffer) {
 
 		#ifdef __INTEL_OFFLOAD
-			omp_set_num_threads(MIC_OMP_NUM_THREADS_);
+//			omp_set_num_threads(MIC_OMP_NUM_THREADS_);
 		#endif
 
 		unsigned int curr_nqxy = curr_nqx * curr_nqy;
@@ -1031,6 +1051,7 @@ namespace hig {
 						float_t qyn = temp_y * ny;
 						float_t qyt = temp_y * y;
 
+						// ... not vectorized by compiler ... TODO (-ipo vectorizes)
 						for(unsigned int i_x = 0, global_i_x = start_x; i_x < curr_nqx;
 								++ i_x, ++ global_i_x) {
 							unsigned int off = off_start + xy_off_start + i_x;
@@ -1064,6 +1085,7 @@ namespace hig {
 				for(unsigned int i_y = 0; i_y < curr_nqy; ++ i_y) {
 					for(unsigned int i_z = 0; i_z < curr_nqz; ++ i_z) {
 						scomplex_t total = make_sC((float_t) 0.0, (float_t) 0.0);
+						// ... not vectorized by compiler ... TODO
 						for(unsigned int i_t = 0; i_t < curr_num_triangles; ++ i_t) {
 							unsigned int i_fq = curr_nqxyz * i_t + curr_nqxy * i_z +
 												curr_nqx * i_y + i_x;

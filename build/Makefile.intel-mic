@@ -42,7 +42,8 @@ CXX_FLAGS = -lm #-lgsl -lgslcblas #-v
 #CXX_FLAGS += -gxx-name=$(HOME)/opt/gcc-4.6.3/bin/g++ -std=c++0x #-Wall -Wextra
 CXX_FLAGS += -std=c++0x #-Wall -Wextra
 CXX_FLAGS += -m64 -openmp #-ww2568
-CXX_FLAGS += -offload-option,mic,compiler,"-vec-report2" -opt-report-phase=offload
+## mic specific compiler reporting
+CXX_FLAGS += -offload-option,mic,compiler,"-vec-report3" -opt-report-phase=offload
 CXX_FLAGS += -offload-option,mic,ld,"-z defs"
 
 ## boost
@@ -108,7 +109,11 @@ MISC_FLAGS += -DTIME_DETAIL_1 -DTIME_DETAIL_2
 ## choose optimization levels, debug flags, gprof flag, etc
 #OPT_FLAGS = -g -DDEBUG #-pg
 #INTEL_DEBUG = -debug all
-OPT_FLAGS = -O3 -DNDEBUG -v
+OPT_FLAGS = -O3 -DNDEBUG
+## FOR INTEL
+OPT_FLAGS += -xHost -parallel #-prof_use #-ipo #-axavx,ssse3,sse4.1,sse4.2
+## Intel specific optimization reporting
+#CXX_FLAGS += -opt-report-phase=hlo -opt-report-phase=hpo
 
 ## choose single or double precision here
 PREC_FLAG =			# leave empty for single precision
@@ -161,11 +166,11 @@ OBJ_BIN_FIT = $(patsubst %,$(OBJ_DIR)/%,$(OBJECTS_FIT))
 
 OBJ_LIB_SIM = $(patsubst %,$(OBJ_DIR)/%,$(OBJECTS_MAIN))
 
-#$(BINARY_SIM): $(OBJ_BIN_SIM)
-#	$(CXX) -o $(BIN_DIR)/$@ $^ $(OPT_FLAGS) $(INTEL_DEBUG) $(CXX_FLAGS) $(PREC_FLAG) $(MISC_FLAGS) $(ALL_LIBS)
+$(BINARY_SIM): $(OBJ_BIN_SIM)
+	$(CXX) -o $(BIN_DIR)/$@ $^ $(OPT_FLAGS) $(INTEL_DEBUG) $(CXX_FLAGS) $(PREC_FLAG) $(MISC_FLAGS) $(ALL_LIBS)
 
-$(BINARY_SIM): $(OBJ_DIR)/hipgisaxs_sim.o
-	$(CXX) -o $(BIN_DIR)/$@ $^ $(CXX_FLAGS) $(ALL_LIBS) -L ./lib -lhipgisaxs
+#$(BINARY_SIM): $(OBJ_DIR)/hipgisaxs_sim.o
+#	$(CXX) -o $(BIN_DIR)/$@ $^ $(CXX_FLAGS) $(ALL_LIBS) -L ./lib -lhipgisaxs
 
 $(BINARY_FIT): $(OBJ_BIN_FIT)
 	$(CXX) -o $(BIN_DIR)/$@ $^ $(OPT_FLAGS) $(INTEL_DEBUG) $(CXX_FLAGS) $(PREC_FLAG) $(MISC_FLAGS) $(ALL_LIBS)

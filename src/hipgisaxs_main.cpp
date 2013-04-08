@@ -5,7 +5,7 @@
   *
   *  File: hipgisaxs_main.cpp
   *  Created: Jun 14, 2012
-  *  Modified: Wed 03 Apr 2013 11:28:43 AM PDT
+  *  Modified: Sat 06 Apr 2013 11:33:15 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -94,18 +94,16 @@ namespace hig {
 		} // if
 
 		#ifdef _OPENMP
-		//#pragma omp parallel
-		//{
-			std::cout << "++  Max number of OpenMP threads: " << omp_get_max_threads() << std::endl;
-			//if(omp_get_thread_num() == 0)
-				//std::cout << "**         Number of CPU threads: " << omp_get_num_threads() << std::endl;
-		//}
-		#endif // _OPENMP
+		if(mpi_rank == 0)
+			std::cout << "++ Number of host OpenMP threads: " << omp_get_max_threads() << std::endl;
+		#endif
 
 		#if defined USE_GPU || defined FF_ANA_GPU || defined FF_NUM_GPU
 			init_gpu();
 		#elif defined USE_MIC
+			if(mpi_rank == 0) std::cout << "-- Waking up MIC(s) ..." << std::flush;
 			init_mic();
+			if(mpi_rank == 0) std::cout << " done." << std::endl;
 		#endif
 
 		return true;
@@ -279,9 +277,11 @@ namespace hig {
 		if(tilt_step == 0) num_tilt = 1;
 		else num_tilt = (tilt_max - tilt_min) / tilt_step + 1;
 
-		std::cout << "**                    Num alphai: " << num_alphai << std::endl
-					<< "**                       Num phi: " << num_phi << std::endl
-					<< "**                      Num tilt: " << num_tilt << std::endl;
+		if(mpi_rank == 0) {
+			std::cout << "**                    Num alphai: " << num_alphai << std::endl
+						<< "**                       Num phi: " << num_phi << std::endl
+						<< "**                      Num tilt: " << num_tilt << std::endl;
+		} // if
 
 		float_t alpha_i = alphai_min;
 		// high level of parallelism here (alphai, phi, tilt) for dynamicity ...
@@ -293,11 +293,13 @@ namespace hig {
 				float_t tilt = tilt_min;
 				for(int k = 0; k < num_tilt; k ++, tilt += tilt_step) {
 
-					std::cout << "-- Computing GISAXS "
-								<< i * num_phi * num_tilt + j * num_tilt + k + 1 << " / "
-								<< num_alphai * num_phi * num_tilt
-								<< " [alphai = " << alpha_i << ", phi = " << phi
-								<< ", tilt = " << tilt << "] ..." << std::endl;
+					if(mpi_rank == 0) {
+						std::cout << "-- Computing GISAXS "
+									<< i * num_phi * num_tilt + j * num_tilt + k + 1 << " / "
+									<< num_alphai * num_phi * num_tilt
+									<< " [alphai = " << alpha_i << ", phi = " << phi
+									<< ", tilt = " << tilt << "] ..." << std::endl;
+					} // if
 
 					/* run a gisaxs simulation */
 
@@ -379,7 +381,10 @@ namespace hig {
 		} // for alphai
 
 		sim_timer.stop();
-		std::cout << "**         Total simulation time: " << sim_timer.elapsed_msec() << " ms." << std::endl;
+		if(mpi_rank == 0) {
+			std::cout << "**         Total simulation time: " << sim_timer.elapsed_msec() << " ms."
+						<< std::endl;
+		} // if
 
 		return true;
 	} // HipGISAXS::run_all_gisaxs()
@@ -463,7 +468,9 @@ namespace hig {
 			// get the shape
 			// compute t, lattice, ndoms, dd, nn, id etc.
 
-			std::cout << "-- Processing structure " << s_num + 1 << " ..." << std::endl;
+			if(mpi_rank == 0) {
+				std::cout << "-- Processing structure " << s_num + 1 << " ..." << std::endl;
+			} // if
 
 			Structure *curr_struct = &((*s).second);
 			Shape *curr_shape = HiGInput::instance().shape(*curr_struct);
@@ -489,7 +496,9 @@ namespace hig {
 			int r2axis = (int) (*s).second.rotation_rot2()[0];
 			int r3axis = (int) (*s).second.rotation_rot3()[0];
 
-			std::cout << "-- Grains: " << num_domains << std::endl;
+			if(mpi_rank == 0) {
+				std::cout << "-- Grains: " << num_domains << std::endl;
+			} // if
 
 			//std::cout << "DD: " << std::endl;
 			//for(unsigned int d = 0; d < num_domains; ++ d) {
@@ -523,7 +532,10 @@ namespace hig {
 			 * ensemble containing num_domains grains */
 			for(int j = 0; j < num_domains; j ++) {	// or distributions
 
-				std::cout << "-- Processing grain " << j + 1 << " / " << num_domains << " ..." << std::endl;
+				if(mpi_rank == 0) {
+					std::cout << "-- Processing grain " << j + 1 << " / " << num_domains << " ..."
+								<< std::endl;
+				} // if
 
 				// define r_norm (domain orientation by tau and eta)
 				// define full domain rotation matrix r_total = r_phi * r_norm
@@ -1512,62 +1524,3 @@ namespace hig {
 	} // HipGISAXS::read_form_factor()
 
 } // namespace hig
-
-
-/* The main for HipGISAXS
- */
-/*int main(int narg, char** args) {
-
-	if(narg != 2) {
-		std::cout << "usage: hipgisaxs <input_config>" << std::endl;
-		return 1;
-	} // if
-
-*/	/* initialize MPI */
-/*	MPI::Init(narg, args);
-	int mpi_rank = MPI::COMM_WORLD.Get_rank();
-	int mpi_num_procs = MPI::COMM_WORLD.Get_size();
-
-	if(mpi_rank == 0) {
-		std::cout << std::endl
-					<< "********************************************************************************"
-					<< std::endl
-					<< "***************************** HipGISAXS v0.01-alpha ****************************"
-					<< std::endl
-					<< "********************************************************************************"
-					<< std::endl << std::endl;
-	} // if
-
-	woo::BoostChronoTimer maintimer, readtimer, computetimer;
-	maintimer.start();
-	readtimer.start();
-*/	/* read input file and construct input structures */
-/*	hig::HipGISAXS my_gisaxs;
-	if(mpi_rank == 0) std::cout << "**                HiG input file: " << args[1] << std::endl;
-	if(!my_gisaxs.construct_input(args[1])) {
-		if(mpi_rank == 0) std::cerr << "error: failed to construct input containers" << std::endl;
-		MPI::Finalize();
-		return 1;
-	} // if
-	//hig::HiGInput::instance().print_all();	// for testing
-	readtimer.stop();
-	std::cout << "**       Input construction time: " << readtimer.elapsed_msec() << " ms." << std::endl;
-
-	computetimer.start();
-*/	/* run the simulation */
-/*	if(!my_gisaxs.run_all_gisaxs(MPI::COMM_WORLD)) {
-		std::cerr << "error: could not run the simulation - some error occured" << std::endl;
-		computetimer.stop();
-		maintimer.stop();
-		MPI::Finalize();
-		return 1;
-	} // if
-	computetimer.stop();
-	maintimer.stop();
-	std::cout << "**         Total simulation time: " << computetimer.elapsed_msec() << " ms." << std::endl;
-	std::cout << "**                    Total time: " << maintimer.elapsed_msec() << " ms." << std::endl;
-	std::cout << std::endl;
-
-	MPI::Finalize();
-	return 0;
-} // main()*/
