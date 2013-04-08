@@ -8,11 +8,12 @@
 ##
 
 ## location of all the required packages
-MPI_DIR = /home/asarje/opt/openmpi-1.6.4-intel
-BOOST_DIR = /home/asarje/opt/boost_1_53_0-intel
-HDF5_DIR = /home/asarje/opt/hdf5-1.8.10-patch1-parallel-intel
-SZ_DIR = /home/asarje/opt/szip-2.1-intel
-TIFF_DIR = /home/asarje/opt/tiff-4.0.2-intel
+MPI_DIR = /usr/local/openmpi-1.6
+BOOST_DIR = /usr/local/boost_1_49_0
+HDF5_DIR = /usr/local/hdf5-1.8.9
+SZ_DIR = /usr/local/szip-2.1
+TIFF_DIR = /usr/local
+CUDA_DIR = /usr/local/cuda-5.0
 HIPGISAXS_DIR = /home/asarje/hipgisaxs.git
 
 ## the compiler
@@ -22,12 +23,17 @@ CXX = $(MPI_DIR)/bin/mpicxx
 BINARY = test_hipgisaxs
 
 ## some flags
-CXX_FLAGS = -m64 -openmp -std=c++0x
+CXX_FLAGS = -m64 -fopenmp -std=c++0x
 
 ## hipgisaxs include and library linking flags
 HIPGISAXS_INCL = -I $(HIPGISAXS_DIR)/src
 HIPGISAXS_LDFLAGS = -L $(HIPGISAXS_DIR)/lib
 HIPGISAXS_LIBS = -lhipgisaxs
+
+## cuda include and libraries linking flags
+CUDA_INCL = -I $(CUDA_DIR)/include
+CUDA_LDFLAGS = -L $(CUDA_DIR)/lib64
+CUDA_LIBS = -lcudart
 
 ## boost include and libraries linking flags
 BOOST_INCL = -I $(BOOST_DIR)/include
@@ -37,7 +43,7 @@ BOOST_LIBS = -lboost_system -lboost_filesystem -lboost_timer -lboost_chrono
 ## hdf5 include and library linking flags
 HDF5_INCL = -I $(HDF5_DIR)/include
 HDF5_LDFLAGS = -L $(HDF5_DIR)/lib -L $(SZ_DIR)/lib
-HDF5_LIBS = -lhdf5 -lsz
+HDF5_LIBS = -lsz -lz -lhdf5
 
 ## tiff include and library linking flags
 TIFF_INCL = -I $(TIFF_DIR)/include
@@ -45,9 +51,9 @@ TIFF_LDFLAGS = -L $(TIFF_DIR)/lib
 TIFF_LIBS = -ltiff
 
 ## put things together
-ALL_INCL = $(HIPGISAXS_INCL) $(BOOST_INCL) $(HDF5_INCL) $(TIFF_INCL)
-ALL_LDFLAGS = $(HIPGISAXS_LDFLAGS) $(BOOST_LDFLAGS) $(HDF5_LDFLAGS) $(TIFF_LDFLAGS)
-ALL_LIBS = $(HIPGISAXS_LIBS) $(BOOST_LIBS) $(HDF5_LIBS) $(TIFF_LIBS)
+ALL_INCL = $(HIPGISAXS_INCL) $(CUDA_INCL) $(BOOST_INCL) $(HDF5_INCL) $(TIFF_INCL)
+ALL_LDFLAGS = $(HIPGISAXS_LDFLAGS) $(CUDA_LDFLAGS) $(BOOST_LDFLAGS) $(HDF5_LDFLAGS) $(TIFF_LDFLAGS)
+ALL_LIBS = $(HIPGISAXS_LIBS) $(CUDA_LIBS) $(BOOST_LIBS) $(HDF5_LIBS) $(TIFF_LIBS)
 
 ## generate the binary
 $(BINARY): test_hipgisaxs.cpp
