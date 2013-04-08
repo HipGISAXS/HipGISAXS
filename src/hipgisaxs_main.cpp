@@ -5,7 +5,7 @@
   *
   *  File: hipgisaxs_main.cpp
   *  Created: Jun 14, 2012
-  *  Modified: Mon 08 Apr 2013 04:06:13 PM PDT
+  *  Modified: Mon 08 Apr 2013 04:22:02 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -36,6 +36,34 @@
 
 
 namespace hig {
+
+	// TODO: improve and clean the constructors - for gpu/cpu etc. unify ...
+	HipGISAXS::HipGISAXS(): freq_(0.0), k0_(0.0),
+				num_layers_(0), num_structures_(0),
+				nqx_(0), nqy_(0), nqz_(0), nqz_extended_(0),
+				#ifdef FF_NUM_GPU   // use GPU
+					#ifdef KERNEL2
+						ff_(2, 4, 4)
+					#else
+						ff_(64)
+					#endif // KERNEL2
+				#else   // use CPU
+					ff_()
+				#endif
+					{
+		single_layer_refindex_.delta(0.0);
+		single_layer_refindex_.beta(0.0);
+		single_layer_thickness_ = 0.0;
+		HiGInput::instance();
+		QGrid::instance();
+		//MPI::Init();
+	} // HipGISAXS::HipGISAXS()
+
+
+	HipGISAXS::~HipGISAXS() {
+		//MPI::Finalize();
+	} // HipGISAXS::~HipGISAXS()
+
 
 	bool HipGISAXS::init(MPI::Intracomm& world_comm) {
 						// is called at the beginning of the runs (after input is read)
@@ -278,9 +306,9 @@ namespace hig {
 		else num_tilt = (tilt_max - tilt_min) / tilt_step + 1;
 
 		if(mpi_rank == 0) {
-			std::cout << "**                    Num alphai: " << num_alphai << std::endl
-						<< "**                       Num phi: " << num_phi << std::endl
-						<< "**                      Num tilt: " << num_tilt << std::endl;
+			std::cout << "**                  Num alphai: " << num_alphai << std::endl
+						<< "**                     Num phi: " << num_phi << std::endl
+						<< "**                    Num tilt: " << num_tilt << std::endl;
 		} // if
 
 		float_t alpha_i = alphai_min;
@@ -337,7 +365,8 @@ namespace hig {
 											"_tilt=" + tilt_s + ".tif");
 
 						//img.save(output, x_min, x_max);
-						std::cout << "**                    Image size: " << nqy_  << " x " << nqz_ << std::endl;
+						std::cout << "**                    Image size: " << nqy_  << " x " << nqz_
+									<< std::endl;
 						std::cout << "-- Saving image in " << output << " ... " << std::flush;
 						img.save(output);
 						std::cout << "done." << std::endl;

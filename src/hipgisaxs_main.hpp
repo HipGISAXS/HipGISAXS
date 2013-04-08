@@ -5,7 +5,7 @@
   *
   *  File: hipgisaxs_main.hpp
   *  Created: Jun 11, 2012
-  *  Modified: Sat 06 Apr 2013 11:20:53 AM PDT
+  *  Modified: Mon 08 Apr 2013 04:16:06 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -109,8 +109,11 @@ namespace hig {
 			void printfr(const char*, float_t*, unsigned int);
 
 		public:
+			HipGISAXS();
+			~HipGISAXS();
+
 			// TODO: improve and clean the constructors - for gpu/cpu etc. unify ...
-			HipGISAXS(): freq_(0.0), k0_(0.0),
+			/*HipGISAXS(): freq_(0.0), k0_(0.0),
 						num_layers_(0), num_structures_(0),
 						nqx_(0), nqy_(0), nqz_(0), nqz_extended_(0), 
 						#ifdef FF_NUM_GPU	// use GPU
@@ -134,8 +137,7 @@ namespace hig {
 
 			~HipGISAXS() {
 				//MPI::Finalize();
-			} // ~HipGISAXS()
-
+			} // ~HipGISAXS()*/
 
 			bool construct_input(char* filename) {
 				return HiGInput::instance().construct_input_config(filename);
