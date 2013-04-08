@@ -1,0 +1,5 @@
+module unload pgi openmpi
+module load gcc/4.6.1 openmpi-gnu/1.6.3
+module load cuda
+module load hdf5-parallel/1.8.9-gnu
+module load tiff/4.0.3
