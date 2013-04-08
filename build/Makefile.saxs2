@@ -68,8 +68,8 @@ NVCC_FLAGS += -gencode arch=compute_20,code=sm_21
 NVCC_FLAGS += -gencode arch=compute_30,code=sm_30
 NVCC_FLAGS += -gencode arch=compute_35,code=sm_35
 #NVCC_FLAGS += -Xptxas -v -Xcompiler -v -Xlinker -v
-NVCC_FLAGS += --ptxas-options="-v"
-NVCC_FLAGS += -G -lineinfo #-DFINDBLOCK #-DAXIS_ROT
+#NVCC_FLAGS += --ptxas-options="-v"
+#NVCC_FLAGS += -G -lineinfo #-DFINDBLOCK #-DAXIS_ROT
 NVLIB_FLAGS = -Xlinker -lgomp
 NVLIB_FLAGS += -Wl,-rpath -Wl,$(CUDA_DIR)/lib64
 endif
@@ -97,7 +97,7 @@ endif
 
 ## MIC related flags
 ifeq ($(USE_MIC), y)
-MISC_FLAGS += -DUSE_MIC
+MISC_FLAGS += -DUSE_MIC -DFF_MIC_OPT
 endif
 
 MISC_FLAGS += -DTIME_DETAIL_1 -DTIME_DETAIL_2
@@ -120,9 +120,11 @@ ALL_LIBS = $(BOOST_LIBS) $(MPI_LIBS) $(NVLIB_FLAGS) $(CUDA_LIBS) $(HDF5_LIBS) $(
 PREFIX = $(PWD)
 BINARY_SIM = hipgisaxs
 BINARY_FIT = hipgisaxs-fit
+LIB_SIM = libhipgisaxs.a
 BIN_DIR = $(PREFIX)/bin
 OBJ_DIR = $(PREFIX)/obj
 SRC_DIR = $(PREFIX)/src
+LIB_DIR = $(PREFIX)/lib
 
 ## all objects
 OBJECTS_MAIN = utilities.o numeric_utils.o compute_params.o hig_input.o \
@@ -153,11 +155,16 @@ OBJ_BIN_SIM = $(patsubst %,$(OBJ_DIR)/%,$(OBJECTS_SIM))
 
 OBJ_BIN_FIT = $(patsubst %,$(OBJ_DIR)/%,$(OBJECTS_FIT))
 
+OBJ_LIB_SIM = $(patsubst %,$(OBJ_DIR)/%,$(OBJECTS_MAIN))
+
 $(BINARY_SIM): $(OBJ_BIN_SIM)
 	$(CXX) -o $(BIN_DIR)/$@ $^ $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(MISC_FLAGS) $(ALL_LIBS)
 
 $(BINARY_FIT): $(OBJ_BIN_FIT)
 	$(CXX) -o $(BIN_DIR)/$@ $^ $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(MISC_FLAGS) $(ALL_LIBS)
+
+library: $(OBJ_LIB_SIM)
+	ar rs $(LIB_DIR)/$(LIB_SIM) $^
 
 ## cuda compilation
 ifeq ($(USE_GPU), y)

@@ -17,32 +17,34 @@ A. Operating System Platforms:
 
 B. System Hardware (COMPUTE ENVIRONMENT):
    -------------------------------------
-1. Clusters/Supercomputers equipped with GPUs as accelerators on each node.
-2. Generic desktop equipped with a compute GPU (see next point).
-3. Coming soon: Any generic CPU (multi-cores), without GPU accelerators.
+1. Clusters/Supercomputers equipped with GPUs as accelerators on each node when using GPU version.
+2. Generic desktop equipped with a compute GPU when using GPU version (also see next point).
+3. Any generic CPU (multi-cores), without GPU accelerators.
+4. Any Intel CPU equipped with Intel Phi coprocessor, when using MIC version.
 
-C. System Hardware (GPU/CPU):
-   -------------------------
+C. System Hardware (GPU/CPU/MIC):
+   -----------------------------
 1. Fermi or Kepler architecture based Nvidia GPUs.
-   Compute capability of these GPUs >= 2.x.
+   Compute capability of these GPUs >= 2.0.
 2. Intel/AMD processors (including multi-cores).
    We have not extensively tested on various types of processors yet.
+3. Intel MIC architecture based Intel Phi coprocessors.
+   Requires intel compilers, version >= 13.1.0.146.
 
 
 ** SOFTWARE PRE-REQUISITES:
    -----------------------
 Current version of HipGISAXS suppports only compute GPU equipped systems.
 This software uses third-party libraries, and they need to be installed and available in order to compile and run this code.
-Use software already available on your system.
-Alternatively, download and install it yourself.
-NOTE: The supplied compiled binary is dynamically linked with these libraries, some of them installed in /global/homes/a/asarje/local.
+Use software already available on your system. Alternatively, download and install it yourself.
 The following are the dependencies of this software:
-1. GNU C/C++ compilers, version >= 4.3 and <= 4.5.x.
-2. Nvidia CUDA version 4.x.
+1. GNU C/C++ compilers, version >= 4.3 and < 4.7.
+2. Nvidia CUDA version > 4.x. (5.0 recommended).
    CUDA can be obtained from: http://developer.nvidia.com/cuda/cuda-downloads
-   NOTE: CUDA version 5.0rc is also supported.
 3. GNU compiled OpenMPI version > 1.4.4.
    OpenMPI can be obtained from: http://www.open-mpi.org/software
+   NOTE: Currently, even if you do not plan to use MPI, the compilation process still needs MPIi.
+   		 This will be improved in future.
 4. Boost and numeric extension to Boost GIL.
    Boost can be obtained from: http://www.boost.org
    Numeric extension to Boost GIL can be obtained from the following (file name 'numeric.zip'):
@@ -72,14 +74,25 @@ The following are the dependencies of this software:
        |- data    : This provides some sample input shape definition files in HDF5 format.
        |- doc     : This contains detailed documentation of HipGISAXS. [TODO]
        |- inputs  : This gives some sample input files to HipGISAXS program in HiG format.
+	   |- lib     : The hipgisaxs library is generated here.
        |- man     : This has the man pages.
        |- obj     : All the object files generated during build are stored here.
+	   |- samples : This contains some compilable samples on how to use the hipgisaxs library.
        |- src     : This is the main source directory containing the whole code.
 
 
-** TO RE-BUILD:
-   -----------
-If you want to re-build the binaries, use "make" as in the following cases:
+** TO BUILD THE APPLICATION:
+   ------------------------
+If you want to build the application binary, use "make".
+
+
+** TO BUILD THE LIBRARY:
+   --------------------
+To build the HipGISAXS library, use "make library".
+
+
+** SPECIAL INSTRUCTIONS FOR SPECIFIC SYSTEMS:
+   -----------------------------------------
 
 A. On Carver/Dirac at NERSC:
    ------------------------
@@ -89,7 +102,7 @@ A. On Carver/Dirac at NERSC:
 2. Unload the default PGI modules:
     $ module unload pgi openmpi
 3. Load the required modules:
-    $ module load openmpi-gnu gcc/4.5.2 cuda/4.2
+    $ module load openmpi-gnu gcc/4.5.2 cuda
     $ module load szip zlib
     $ module load hdf5-parallel/1.8.3-gnu
 4. The Boost module available on Carver does not contain the GIL numeric extension.
@@ -101,7 +114,7 @@ A. On Carver/Dirac at NERSC:
     ## base directories
 	BOOST_DIR = /global/homes/a/asarje/local/boost_1_49_0
 	MPI_DIR = 
-	CUDA_DIR = /usr/common/usg/cuda/4.2
+	CUDA_DIR = /usr/common/usg/cuda/5.0
 	HDF5_DIR = /global/homes/a/asarje/local/hdf5-1.8.8-gnu/parallel
     TIFF_DIR = /global/homes/a/asarje/local/tiff-4.0.2
 	Z_DIR = $(ZLIB_DIR)     # an environment variable set by loading zlib module
@@ -109,8 +122,9 @@ A. On Carver/Dirac at NERSC:
 	...
 6. Build the code from within the code directory:
     $ make clean
-    $ make
+    $ make [or, make library]
    This will generate the binary in directory "bin".
+   When building the library, it will be generated into the "lib" directory.
    All the generated object files are in the directory "obj".
 
 B. On a generic Linux system:
@@ -118,9 +132,9 @@ B. On a generic Linux system:
 1. Make sure all above prerequisites are available.
 2. Make sure all system environment variables are set accordingly to include the prerequisites.
 3. Set all paths correctly in the sample Makefile, and edit as needed (as above).
-4. Build the code from within the code directory:
+4. Build the library from within the code directory:
     $ make clean
-    $ make
+    $ make library
 
 C. For certain users, on saxs-waxs-gpu:
    -----------------------------------
@@ -142,13 +156,21 @@ C. For certain users, on saxs-waxs-gpu:
 	...
 3. Build the code from within the code's main directory:
     $ make clean
-    $ make
+    $ make [or, make library]
    This will generate the binary in directory "bin".
+   When building the library, it will be generated into the "lib" directory.
    All the generated object files are in the directory "obj".
 
 
-** TO RUN:
-   ------
+** TO USE THE HIPGISAXS LIBRARY IN YOUR OWN APPLICATION:
+   ----------------------------------------------------
+   Please refer to the example provided in the "samples" directory.
+   It contains a simple code which uses the hipgisaxs library.
+   Its corresponsing Makefile is also provided.
+
+
+** TO RUN THE APPLICATION:
+   ----------------------
    
 A. Interactively on Dirac:
    ----------------------
