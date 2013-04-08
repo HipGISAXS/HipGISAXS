@@ -8,12 +8,13 @@
 ##
 
 ## location of all the required packages
-MPI_DIR = /usr/local/openmpi-1.6
+MPI_DIR = /usr/local/openmpi-1.6.4
 BOOST_DIR = /usr/local/boost_1_49_0
 HDF5_DIR = /usr/local/hdf5-1.8.9
 SZ_DIR = /usr/local/szip-2.1
-TIFF_DIR = /usr/local
-CUDA_DIR = /usr/local/cuda-5.0
+ZLIB_DIR = /usr/local/zlib-1.2.7
+TIFF_DIR = /usr/local/tiff-4.0.2
+CUDA_DIR = /usr/local/cuda
 HIPGISAXS_DIR = /home/asarje/hipgisaxs.git
 
 ## the compiler
@@ -42,8 +43,8 @@ BOOST_LIBS = -lboost_system -lboost_filesystem -lboost_timer -lboost_chrono
 
 ## hdf5 include and library linking flags
 HDF5_INCL = -I $(HDF5_DIR)/include
-HDF5_LDFLAGS = -L $(HDF5_DIR)/lib -L $(SZ_DIR)/lib
-HDF5_LIBS = -lsz -lz -lhdf5
+HDF5_LDFLAGS = -L $(HDF5_DIR)/lib -L $(SZ_DIR)/lib -L $(ZLIB_DIR)/lib
+HDF5_LIBS = -lhdf5 -lsz -lz
 
 ## tiff include and library linking flags
 TIFF_INCL = -I $(TIFF_DIR)/include
