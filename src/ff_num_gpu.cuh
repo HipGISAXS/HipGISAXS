@@ -3,7 +3,7 @@
  *
  *  File: ff_num_gpu.cuh
  *  Created: Nov 05, 2011
- *  Modified: Sat 02 Mar 2013 09:21:04 AM PST
+ *  Modified: Tue 09 Apr 2013 11:51:53 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -35,6 +35,11 @@ namespace hig {
 			NumericFormFactorG(int block_cuda_t, int block_cuda_y, int block_cuda_z): block_cuda_(0),
 				block_cuda_t_(block_cuda_t), block_cuda_y_(block_cuda_y), block_cuda_z_(block_cuda_z) { }
 
+			#ifdef FF_NUM_GPU_FUSED
+				NumericFormFactorG(int block_cuda_y, int block_cuda_z): block_cuda_(0),
+					block_cuda_t_(0), block_cuda_y_(block_cuda_y), block_cuda_z_(block_cuda_z) { }
+			#endif
+
 			NumericFormFactorG():	// called when not using this GPU version
 				block_cuda_(0), block_cuda_t_(0), block_cuda_y_(0), block_cuda_z_(0) { }
 
@@ -55,6 +60,19 @@ namespace hig {
 
 			/* with double buffering - default */
 			unsigned int compute_form_factor_db(int,
+					std::vector<float_t> &shape_def, std::vector<short int> &axes,
+					cucomplex_t* &ff,
+					float_t* &qx_h, int nqx,
+					float_t* &qy_h, int nqy,
+					cucomplex_t* &qz_h, int nqz,
+					float_t&, float_t&, float_t&
+					#ifdef FINDBLOCK
+						, const int, const int, const int, const int
+					#endif
+					);
+
+			/* with fused kernels and double buffering */
+			unsigned int compute_form_factor_db_fused(int,
 					std::vector<float_t> &shape_def, std::vector<short int> &axes,
 					cucomplex_t* &ff,
 					float_t* &qx_h, int nqx,

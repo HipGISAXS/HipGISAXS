@@ -5,7 +5,7 @@
   *
   *  File: ff_num.cpp
   *  Created: Jul 18, 2012
-  *  Modified: Thu 04 Apr 2013 06:09:46 PM PDT
+  *  Modified: Tue 09 Apr 2013 11:45:56 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -215,13 +215,23 @@ namespace hig {
 			unsigned int ret_nt = 0;
 
 			#ifdef FF_NUM_GPU	// use GPU
-				ret_nt = gff_.compute_form_factor_db(rank, shape_def, axes, p_ff,
+				#ifdef FF_NUM_GPU_FUSED
+					ret_nt = gff_.compute_form_factor_db_fused(rank, shape_def, axes, p_ff,
 												qx, p_nqx, p_qy, p_nqy, p_qz, p_nqz,
 												kernel_time, red_time, temp_mem_time
 												#ifdef FINDBLOCK
 													, block_x, block_y, block_z, block_t
 												#endif
 												);
+				#else
+					ret_nt = gff_.compute_form_factor_db(rank, shape_def, axes, p_ff,
+												qx, p_nqx, p_qy, p_nqy, p_qz, p_nqz,
+												kernel_time, red_time, temp_mem_time
+												#ifdef FINDBLOCK
+													, block_x, block_y, block_z, block_t
+												#endif
+												);
+				#endif
 			#elif defined USE_MIC	// use MIC
 				ret_nt = mff_.compute_form_factor_db(rank, shape_def, p_ff,
 												qx, p_nqx, p_qy, p_nqy, p_qz, p_nqz,

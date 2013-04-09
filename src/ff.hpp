@@ -5,7 +5,7 @@
   *
   *  File: ff.hpp
   *  Created: Jul 18, 2012
-  *  Modified: Sat 02 Mar 2013 11:36:20 AM PST
+  *  Modified: Tue 09 Apr 2013 11:56:00 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -36,7 +36,10 @@ namespace hig {
 		public:
 			// TODO: clean/unify and improve constructors for gpu/cpu ana/num etc ...
 			#ifdef FF_NUM_GPU
-				#ifdef KERNEL2
+				#ifdef FF_NUM_GPU_FUSED
+					FormFactor(): numeric_ff_(16, 16), is_analytic_(false) { }
+					FormFactor(int a, int b): numeric_ff_(a, b), is_analytic_(false) { }
+				#elif defined KERNEL2
 					FormFactor(): numeric_ff_(2, 4, 4), is_analytic_(false) { } // default cuda block size
 					FormFactor(int a, int b, int c): numeric_ff_(a, b, c), is_analytic_(false) { }
 				#else
@@ -44,7 +47,7 @@ namespace hig {
 					FormFactor(int s): numeric_ff_(s), is_analytic_(false) { }
 				#endif // KERNEL2
 			#else	// use CPU
-				FormFactor(): numeric_ff_(), is_analytic_(false) { } // default cuda block size
+				FormFactor(): numeric_ff_(), is_analytic_(false) { }
 			#endif
 
 			~FormFactor() { }

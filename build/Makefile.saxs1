@@ -91,6 +91,7 @@ MISC_FLAGS += -DFF_ANA_GPU
 endif
 ifeq ($(USE_NUM_GPU), y)
 MISC_FLAGS += -DFF_NUM_GPU
+MISC_FLAGS += -DFF_NUM_GPU_FUSED
 endif
 endif
 

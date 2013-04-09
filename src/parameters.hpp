@@ -3,7 +3,7 @@
  *
  * File: parameters.hpp
  * Created: June 5, 2012
- * Modified: Thu 28 Feb 2013 11:23:11 AM PST
+ * Modified: Tue 09 Apr 2013 11:49:52 AM PDT
  *
  * Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -28,10 +28,17 @@ namespace hig {
 
 	// 4 decomposition hyperblock parameters to auto-tune later.
 	// Y and Z are most important for tuning.
+#ifdef FF_NUM_GPU_FUSED
+	const int BLOCK_X_ = 100;
+	const int BLOCK_Y_ = 512;
+	const int BLOCK_Z_ = 512;
+	const int BLOCK_T_ = 256;
+#else
 	const int BLOCK_X_ = 100;
 	const int BLOCK_Y_ = 32;
 	const int BLOCK_Z_ = 16;
 	const int BLOCK_T_ = 512;
+#endif
 
 	// CUDA block sizes (kernel 1)
 	//const int BLOCK_CUDA_ = 64;

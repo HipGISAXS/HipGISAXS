@@ -5,7 +5,7 @@
   *
   *  File: hipgisaxs_main.cpp
   *  Created: Jun 14, 2012
-  *  Modified: Mon 08 Apr 2013 04:22:02 PM PDT
+  *  Modified: Tue 09 Apr 2013 11:57:38 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -42,11 +42,13 @@ namespace hig {
 				num_layers_(0), num_structures_(0),
 				nqx_(0), nqy_(0), nqz_(0), nqz_extended_(0),
 				#ifdef FF_NUM_GPU   // use GPU
-					#ifdef KERNEL2
+					#ifdef FF_NUM_GPU_FUSED
+						ff_(16, 16)
+					#elif defined KERNEL2
 						ff_(2, 4, 4)
 					#else
 						ff_(64)
-					#endif // KERNEL2
+					#endif
 				#else   // use CPU
 					ff_()
 				#endif

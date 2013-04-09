@@ -19,6 +19,7 @@
 #include "reduction.cuh"
 
 #include "ff_num_gpu.cuh"
+#include "cu_complex_numeric.cuh"
 
 namespace hig {
 
@@ -85,6 +86,13 @@ namespace hig {
 							const unsigned int, const unsigned int, const unsigned int, const unsigned int,
 							const unsigned int, const unsigned int, const unsigned int, const unsigned int,
 							cucomplex_t*,	cucomplex_t*);
+	/* K9: combines ff K4 with reduction */
+	__global__ void form_factor_kernel_fused(const float_t*, const float_t*, const cucomplex_t*,
+							const float_t*, const short int*,
+							const unsigned int, const unsigned int, const unsigned int, const unsigned int,
+							const unsigned int, const unsigned int, const unsigned int, const unsigned int,
+							const unsigned int, const unsigned int, const unsigned int, const unsigned int,
+							cucomplex_t*);
 	__device__ cuFloatComplex compute_fq(float s, cuFloatComplex qt_d, cuFloatComplex qn_d);
 	__device__ cuDoubleComplex compute_fq(double s, cuDoubleComplex qt_d, cuDoubleComplex qn_d);
 	__device__ void compute_z(cuFloatComplex temp_z, float nz, float z,
@@ -1178,6 +1186,369 @@ namespace hig {
 		return num_triangles;
 	} // NumericFormFactorG::compute_form_factor_db()
 
+
+	/**
+	 * The main host function.
+	 * This one fuses ff and reduction and uses double buffering
+	 */
+	unsigned int NumericFormFactorG::compute_form_factor_db_fused(int rank,
+						std::vector<float_t> &shape_def, std::vector<short int> &axes,
+						cucomplex_t* &ff,
+						float_t* &qx_h, int nqx,
+						float_t* &qy_h, int nqy,
+						cucomplex_t* &qz_h, int nqz,
+						float_t& pass_kernel_time, float_t& red_time, float_t& mem_time
+						#ifdef FINDBLOCK
+							, const int block_x, const int block_y, const int block_z, const int block_t
+						#endif
+						) {
+		cudaDeviceSetCacheConfig(cudaFuncCachePreferShared);
+	
+		float kernel_time = 0.0, reduce_time = 0.0;
+		float temp_mem_time = 0.0, total_mem_time = 0.0;
+		cudaEvent_t start, stop;
+		cudaEvent_t total_begin_event, total_end_event;
+		cudaEvent_t mem_begin_event, mem_end_event;
+		cudaEventCreate(&total_begin_event); cudaEventCreate(&total_end_event);
+		cudaEventCreate(&mem_begin_event); cudaEventCreate(&mem_end_event);
+	
+		cudaEventRecord(total_begin_event, 0);
+	
+		cudaEventRecord(mem_begin_event, 0);
+		unsigned long int total_qpoints = nqx * nqy * nqz;
+		unsigned long int host_mem_usage = ((unsigned long int) nqx + nqy + nqz) * sizeof(float_t);
+		size_t device_mem_avail, device_mem_total, device_mem_used;
+	
+		// allocate memory for the final FF 3D matrix
+		ff = new (std::nothrow) cucomplex_t[total_qpoints]();	// allocate and initialize to 0
+		if(ff == NULL) {
+			std::cerr << "Memory allocation failed for ff. Size = "
+						<< total_qpoints * sizeof(cucomplex_t) << " b" << std::endl;
+			return 0;
+		} // if
+		host_mem_usage += total_qpoints * sizeof(cucomplex_t);
+	
+		// read the shape file
+		#ifndef KERNEL2
+			unsigned int num_triangles = shape_def.size() / 7;
+		#else // KERNEL2
+			unsigned int num_triangles = shape_def.size() / T_PROP_SIZE_;
+		#endif // KERNEL2
+		if(num_triangles < 1) return 0;
+	
+		cudaError_t err;
+		float_t *qx_d, *qy_d;
+		cucomplex_t *qz_d;
+		if(cudaMalloc((void **) &qx_d, nqx * sizeof(float_t)) != cudaSuccess) {
+			std::cerr << "Device memory allocation failed for qx_d. "
+						<< "Size = " << nqx * sizeof(float_t) << " B" << std::endl;
+			delete[] ff;
+			return 0;
+		} // if
+		if(cudaMalloc((void **) &qy_d, nqy * sizeof(float_t)) != cudaSuccess) {
+			std::cerr << "Device memory allocation failed for qy_d. "
+						<< "Size = " << nqy * sizeof(float_t) << " B" << std::endl;
+			cudaFree(qx_d);
+			delete[] ff;
+			return 0;
+		} // if
+		if(cudaMalloc((void **) &qz_d, nqz * sizeof(cucomplex_t)) != cudaSuccess) {
+			std::cerr << "Device memory allocation failed for qz_d. "
+						<< "Size = " << nqz * sizeof(float_t) << " B" << std::endl;
+			cudaFree(qy_d);
+			cudaFree(qx_d);
+			delete[] ff;
+			return 0;
+		} // if
+		cudaMemcpyAsync(qx_d, qx_h, nqx * sizeof(float_t), cudaMemcpyHostToDevice);
+		cudaMemcpyAsync(qy_d, qy_h, nqy * sizeof(float_t), cudaMemcpyHostToDevice);
+		cudaMemcpyAsync(qz_d, qz_h, nqz * sizeof(cucomplex_t), cudaMemcpyHostToDevice);
+	
+		float_t *shape_def_d;
+		float_t *shape_def_h = &shape_def[0];
+		#ifndef KERNEL2
+			err = cudaMalloc((void **) &shape_def_d, 7 * num_triangles * sizeof(float_t));
+			if(err != cudaSuccess) {
+				std::cerr << "Device memory allocation failed for shape_def_d. "
+							<< "Size = " << 7 * num_triangles * sizeof(float_t) << " B"
+							<< std::endl;
+				cudaFree(qz_d);
+				cudaFree(qy_d);
+				cudaFree(qx_d);
+				delete[] ff;
+				return 0;
+			} // if
+			cudaMemcpyAsync(shape_def_d, shape_def_h, 7 * num_triangles * sizeof(float_t),
+							cudaMemcpyHostToDevice);
+		#else // KERNEL2
+			err = cudaMalloc((void **) &shape_def_d, T_PROP_SIZE_ * num_triangles * sizeof(float_t));
+			if(err != cudaSuccess) {
+				std::cerr << "Device memory allocation failed for shape_def_d. "
+							<< "Size = " << T_PROP_SIZE_ * num_triangles * sizeof(float_t) << " B"
+							<< std::endl;
+				cudaFree(qz_d);
+				cudaFree(qy_d);
+				cudaFree(qx_d);
+				delete[] ff;
+				return 0;
+			} // if
+			cudaMemcpyAsync(shape_def_d, shape_def_h, T_PROP_SIZE_ * num_triangles * sizeof(float_t),
+							cudaMemcpyHostToDevice);
+		#endif // KERNEL2
+
+		short int *axes_h = &axes[0];
+		short int *axes_d;
+		err = cudaMalloc((void**) &axes_d, 3 * sizeof(short int));
+		cudaMemcpy(axes_d, axes_h, 3 * sizeof(short int), cudaMemcpyHostToDevice);
+		
+		unsigned long int matrix_size = (unsigned long int) nqx * nqy * nqz * num_triangles;
+		
+		cudaMemGetInfo(&device_mem_avail, &device_mem_total);
+		device_mem_used = device_mem_total - device_mem_avail;
+		size_t estimated_device_mem_need = matrix_size * sizeof(cucomplex_t) + device_mem_used;
+		if(rank == 0) {
+			std::cout << "++       Available device memory: "
+						<< (float) device_mem_avail / 1024 / 1024
+						<< " MB" << std::endl;
+			std::cout << "++  Estimated device memory need: "
+						<< (float) estimated_device_mem_need / 1024 / 1024
+						<< " MB" << std::endl;
+		} // if
+	
+		// do hyperblocking
+		unsigned int b_nqx = 0, b_nqy = 0, b_nqz = 0, b_num_triangles = 0;
+		// this computes a hyperblock size
+		compute_hyperblock_size(nqx, nqy, nqz, num_triangles,
+								estimated_device_mem_need, device_mem_avail,
+								b_nqx, b_nqy, b_nqz, b_num_triangles
+								#ifdef FINDBLOCK
+									, block_x, block_y, block_z, block_t
+								#endif
+								);
+		///////////////////////////////////////////////////////
+		//b_nqy = 512;
+		//b_nqz = 512;
+		//b_num_triangles = 256;
+		///////////////////////////////////////////////////////
+	
+		unsigned long int blocked_3d_matrix_size = (unsigned long int) b_nqx * b_nqy * b_nqz;
+		
+		cucomplex_t *ff_buffer = NULL, *ff_d = NULL;
+		cucomplex_t *ff_double_buff[2], *ff_double_d[2];
+	
+		size_t estimated_host_mem_need = host_mem_usage + 2 * blocked_3d_matrix_size * sizeof(cucomplex_t);
+		if(rank == 0) {
+			std::cout << "++    Estimated host memory need: "
+						<< (float) estimated_host_mem_need / 1024 / 1024
+						<< " MB" << std::endl;
+		} // if
+		host_mem_usage += 2 * blocked_3d_matrix_size * sizeof(cucomplex_t);
+		if(cudaMallocHost((void **) &ff_buffer, 2 * blocked_3d_matrix_size * sizeof(cucomplex_t))
+				!= cudaSuccess) {
+			std::cerr << "Memory allocation failed for ff_buffer. blocked_3d_matrix_size = "
+						<< blocked_3d_matrix_size << std::endl
+						<< "Host memory usage = "
+						<< (float) host_mem_usage / 1024 / 1024 << " MB"
+						<< std::endl;
+		} else {
+			ff_double_buff[0] = ff_buffer;
+			ff_double_buff[1] = ff_buffer + blocked_3d_matrix_size;
+
+			if(cudaMalloc((void **) &ff_d, 2 * blocked_3d_matrix_size * sizeof(cucomplex_t))
+					!= cudaSuccess) {
+				std::cerr << "Device memory allocation failed for ff_d. "
+							<< "Size = " << 2 * blocked_3d_matrix_size * sizeof(cucomplex_t) << " B"
+							<< std::endl;
+			} else {
+				ff_double_d[0] = ff_d;
+				ff_double_d[1] = ff_d + blocked_3d_matrix_size;
+
+				cudaMemGetInfo(&device_mem_avail, &device_mem_total);
+				device_mem_used = device_mem_total - device_mem_avail;
+				if(rank == 0) {
+					std::cout << "++     Actual device memory used: "
+								<< (float) device_mem_used / 1024 / 1024
+								<< " MB" << std::endl;
+					std::cout << "++       Actual host memory used: "
+								<< (float) host_mem_usage / 1024 / 1024
+								<< " MB" << std::endl << std::flush;
+				} // if
+
+				// compute the number of sub-blocks, along each of the 4 dimensions
+				// formulate loops over each dimension, to go over each sub block
+				unsigned int nb_x = (unsigned int) ceil((float) nqx / b_nqx);
+				unsigned int nb_y = (unsigned int) ceil((float) nqy / b_nqy);
+				unsigned int nb_z = (unsigned int) ceil((float) nqz / b_nqz);
+				unsigned int nb_t = (unsigned int) ceil((float) num_triangles / b_num_triangles);
+
+				unsigned int curr_b_nqx = b_nqx, curr_b_nqy = b_nqy, curr_b_nqz = b_nqz;
+				unsigned int curr_b_num_triangles = b_num_triangles;
+				unsigned int num_blocks = nb_x * nb_y * nb_z * nb_t;
+
+				////////////////////////////////////////////////////////////////////////
+				//block_cuda_y_ = 16;
+				//block_cuda_z_ = 16;
+				////////////////////////////////////////////////////////////////////////
+
+				// decompose only along y and z (no t since reducing along t)
+
+				if(rank == 0) {
+					std::cout << "++               Hyperblock size: " << b_nqx << " x " << b_nqy
+								<< " x " << b_nqz << " x " << b_num_triangles << std::endl;
+					std::cout << "++         Number of hyperblocks: " << num_blocks
+								<< " [" << nb_x << " x " << nb_y << " x "
+								<< nb_z << " x " << nb_t << "]"
+								<< std::endl;
+
+					std::cout << "++     FF kernel CUDA block size: ";
+					std::cout << block_cuda_y_ << " x " << block_cuda_z_ << std::endl;
+				} // if
+
+				cudaEventRecord(mem_end_event, 0);
+				cudaEventSynchronize(mem_end_event);
+				cudaEventElapsedTime(&temp_mem_time, mem_begin_event, mem_end_event);
+				total_mem_time += temp_mem_time;
+
+				cudaEventCreate(&start); cudaEventCreate(&stop);
+
+				if(rank == 0) std::cout << "-- Computing form factor on GPU ... " << std::flush;
+
+				// compute for each block with double buffering
+
+				cudaStream_t stream[2];
+				cudaStreamCreate(&(stream[0]));
+				cudaStreamCreate(&(stream[1]));
+				int active = 0, passive;
+				unsigned int prev_ib_x = 0, prev_ib_y = 0, prev_ib_z = 0;
+				unsigned int prev_cbnqx = curr_b_nqx, prev_cbnqy = curr_b_nqy, prev_cbnqz = curr_b_nqz;
+
+				cudaDeviceSynchronize();
+
+				curr_b_nqx = b_nqx;
+
+				for(unsigned int ib_x = 0; ib_x < nb_x; ++ ib_x) {
+					if(ib_x == nb_x - 1) curr_b_nqx = nqx - b_nqx * ib_x;
+					curr_b_nqy = b_nqy;
+
+					for(unsigned int ib_y = 0; ib_y < nb_y; ++ ib_y) {
+						if(ib_y == nb_y - 1) curr_b_nqy = nqy - b_nqy * ib_y;
+						curr_b_nqz = b_nqz;
+
+						for(unsigned int ib_z = 0; ib_z < nb_z; ++ ib_z) {
+							if(ib_z == nb_z - 1) curr_b_nqz = nqz - b_nqz * ib_z;
+							curr_b_num_triangles = b_num_triangles;
+
+							for(unsigned int ib_t = 0; ib_t < nb_t; ++ ib_t) {
+								if(ib_t == nb_t - 1)
+									curr_b_num_triangles = num_triangles - b_num_triangles * ib_t;
+
+								passive = 1 - active;
+
+								if(ib_x + ib_y + ib_z + ib_t != 0) {
+									cudaStreamSynchronize(stream[passive]);
+									cudaMemcpyAsync(ff_double_buff[passive], ff_double_d[passive],
+													b_nqx * b_nqy * b_nqz * sizeof(cucomplex_t),
+													cudaMemcpyDeviceToHost, stream[passive]);
+								} // if
+
+								// call the main kernel on the device
+								//unsigned int ff_t_blocks = (unsigned int)
+								//				ceil((float) curr_b_num_triangles / block_cuda_t_);
+								unsigned int ff_y_blocks = (unsigned int)
+												ceil((float) curr_b_nqy / block_cuda_y_);
+								unsigned int ff_z_blocks = (unsigned int)
+												ceil((float) curr_b_nqz / block_cuda_z_);
+								dim3 ff_grid_size(ff_y_blocks, ff_z_blocks);
+								dim3 ff_block_size(block_cuda_y_, block_cuda_z_);
+								size_t dyna_shmem_size = sizeof(float_t) *
+															(T_PROP_SIZE_ * curr_b_num_triangles +
+															b_nqx + block_cuda_y_) +
+															sizeof(cucomplex_t) * block_cuda_z_;
+								size_t stat_shmem_size = 0;
+								size_t total_shmem_size = dyna_shmem_size + stat_shmem_size;
+								if(rank == 0 && ib_x + ib_y + ib_z + ib_t == 0) {
+									std::cout << std::endl
+												<< "++              FF shared memory: "
+												<< (float) total_shmem_size
+												<< " B" << std::endl;
+								} // if
+								if(total_shmem_size > 49152) {
+									std::cerr << "error: too much shared memory requested!" << std::endl;
+									exit(1);
+								} // if
+
+								form_factor_kernel_fused
+								<<< ff_grid_size, ff_block_size, dyna_shmem_size, stream[active] >>> (
+										qx_d, qy_d, qz_d, shape_def_d, axes_d,
+										curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles,
+									b_nqx, b_nqy, b_nqz, b_num_triangles,
+										ib_x, ib_y, ib_z, ib_t,
+										ff_double_d[active]);
+
+								if(ib_x + ib_y + ib_z + ib_t != 0) {
+									// move ff_buffer to correct location in ff
+									cudaStreamSynchronize(stream[passive]);
+									move_to_main_ff(ff_double_buff[passive],
+													prev_cbnqx, prev_cbnqy, prev_cbnqz,
+													b_nqx, b_nqy, b_nqz,
+												nqx, nqy, nqz,
+													prev_ib_x, prev_ib_y, prev_ib_z, ff);
+								} // if
+
+								active = 1 - active;
+								prev_ib_x = ib_x;
+								prev_ib_y = ib_y;
+								prev_ib_z = ib_z;
+								prev_cbnqx = curr_b_nqx;
+								prev_cbnqy = curr_b_nqy;
+								prev_cbnqz = curr_b_nqz;
+							} // for ib_t
+						} // for ib_z
+					} // for ib_y
+				} // for ib_x
+
+				// for the last part
+				passive = 1 - active;
+				cudaStreamSynchronize(stream[passive]);
+				cudaMemcpyAsync(ff_double_buff[passive], ff_double_d[passive],
+								b_nqx * b_nqy * b_nqz * sizeof(cucomplex_t),
+								cudaMemcpyDeviceToHost, stream[passive]);
+				cudaStreamSynchronize(stream[passive]);
+				move_to_main_ff(ff_double_buff[passive],
+								curr_b_nqx, curr_b_nqy, curr_b_nqz,
+								b_nqx, b_nqy, b_nqz,
+								nqx, nqy, nqz,
+								nb_x - 1, nb_y - 1, nb_z - 1, ff);
+
+				cudaDeviceSynchronize();
+				cudaStreamDestroy(stream[0]);
+				cudaStreamDestroy(stream[1]);
+	
+				cudaFree(ff_d);
+			} // if-else
+			if(ff_buffer != NULL) cudaFreeHost(ff_buffer);
+		} // if-else
+	
+		cudaFree(shape_def_d);
+		cudaFree(qz_d);
+		cudaFree(qy_d);
+		cudaFree(qx_d);
+	
+		float total_time;
+		cudaEventRecord(total_end_event, 0);
+		cudaEventSynchronize(total_end_event);
+		cudaEventElapsedTime(&total_time, total_begin_event, total_end_event);
+	
+		//if(rank == 0) std::cout << "TOTAL TIME: " << total_time / 1000 << std::endl;
+	
+		pass_kernel_time = kernel_time;
+		red_time = reduce_time;
+		mem_time = total_mem_time;
+	
+		return num_triangles;
+	} // NumericFormFactorG::compute_form_factor_db_fused()
+
+
 	/**
 	 * Function to compute the decomposition block size
 	 * TODO Improve it later ...
@@ -1522,6 +1893,97 @@ namespace hig {
 			} // for x */
 		} // if
 	} // form_factor_kernel_new_shared2()
+
+
+	__global__ void form_factor_kernel_fused(
+						const float_t* qx, const float_t* qy, const cucomplex_t* qz,
+						const float_t* shape_def, const short int* axes,
+						const unsigned int curr_nqx, const unsigned int curr_nqy,
+						const unsigned int curr_nqz, const unsigned int curr_num_triangles,
+						const unsigned int b_nqx, const unsigned int b_nqy,
+						const unsigned int b_nqz, const unsigned int b_num_triangles,
+						const unsigned int ib_x, const unsigned int ib_y,
+						const unsigned int ib_z, const unsigned int ib_t,
+						cucomplex_t* ff) {
+		unsigned int i_y = blockDim.x * blockIdx.x + threadIdx.x;
+		unsigned int i_z = blockDim.y * blockIdx.y + threadIdx.y;
+		unsigned int i_thread = blockDim.x * threadIdx.y + threadIdx.x;
+		unsigned int num_threads = blockDim.x * blockDim.y;
+
+		// sizes are:	shared_shape_def = T_PROP_SIZE_ * blockDim.x
+		// 				shared_qx = curr_nqx	// the whole qx
+		// 				shared_qy = blockDim.y
+		// 				shared_qz = blockDim.z
+		// reversed to fix alignment:
+		float_t *shared_shape_def = (float_t*) dynamic_shared;
+		cucomplex_t *shared_qz = (cucomplex_t*) &shared_shape_def[T_PROP_SIZE_ * curr_num_triangles];
+		float_t *shared_qy = (float_t*) &shared_qz[blockDim.y];
+		float_t *shared_qx = (float_t*) &shared_qy[blockDim.x];
+
+		unsigned int i_shared, base_offset, num_loads;
+
+		// load triangles
+		unsigned int shape_def_size = T_PROP_SIZE_ * curr_num_triangles;
+		num_loads = __float2int_ru(__fdividef(__int2float_ru(shape_def_size), num_threads));
+		base_offset = T_PROP_SIZE_ * b_num_triangles * ib_t;
+		for(int l = 0; l < num_loads; ++ l) {
+			i_shared = num_threads * l + i_thread;
+			if(i_shared < shape_def_size) shared_shape_def[i_shared] = shape_def[base_offset + i_shared];
+		} // for
+
+		// load qx
+		num_loads = __float2uint_ru(__fdividef(__uint2float_ru(curr_nqx), num_threads));
+		base_offset = b_nqx * ib_x;             // all qx of this hyperblock need to be loaded
+		for(int l = 0; l < num_loads; ++ l) {
+			i_shared = num_threads * l + i_thread;
+			if(i_shared < curr_nqx) shared_qx[i_shared] = qx[base_offset + i_shared];
+		} // for
+
+		// load qy
+		unsigned int i_qy = b_nqy * ib_y + i_y;
+		if(threadIdx.y == 0 && i_y < curr_nqy)
+			shared_qy[threadIdx.x] = qy[i_qy];	// M: spread about access ...
+
+		// load qz
+		unsigned int i_qz = b_nqz * ib_z + i_z;
+		if(threadIdx.x == 0 && i_z < curr_nqz)
+			shared_qz[threadIdx.y] = qz[i_qz];	// M: spread about access ...
+
+		__syncthreads();	// sync to make sure all data is loaded and available
+
+		cucomplex_t ff_tot = make_cuC((float_t) 0.0, (float_t) 0.0);
+		if(i_y < curr_nqy && i_z < curr_nqz) {
+			float_t temp_y = shared_qy[threadIdx.x];
+			cucomplex_t temp_z = shared_qz[threadIdx.y];
+			for(unsigned int i_x = 0; i_x < curr_nqx; ++ i_x) {
+				float_t temp_x = shared_qx[i_x];
+				for(int i_t = 0; i_t < curr_num_triangles; ++ i_t) {
+					unsigned int shape_off = T_PROP_SIZE_ * i_t;
+					float_t s = shared_shape_def[shape_off];
+					float_t nx = shared_shape_def[shape_off + 1];
+					float_t ny = shared_shape_def[shape_off + 2];
+					float_t nz = shared_shape_def[shape_off + 3];
+					float_t x = shared_shape_def[shape_off + 4];
+					float_t y = shared_shape_def[shape_off + 5];
+					float_t z = shared_shape_def[shape_off + 6];
+
+					float_t qy2 = temp_y * temp_y;
+					float_t qyn = temp_y * ny;
+					float_t qyt = temp_y * y;
+					cucomplex_t qz2, qzn, qzt;
+					compute_z(temp_z, nz, z, qz2, qzn, qzt);
+
+					cucomplex_t qn_d, qt_d;
+					compute_x(temp_x, qy2, qz2, nx, qyn, qzn, x, qyt, qzt, qn_d, qt_d);
+					cucomplex_t fq_temp = compute_fq(s, qt_d, qn_d);
+					ff_tot = ff_tot + fq_temp;
+				} // for
+				unsigned int i_ff = curr_nqx * curr_nqy * i_z + curr_nqx * i_y + i_x;
+				ff[i_ff] = ff_tot;
+			} // for
+		} // if
+	} // form_factor_kernel_fused()
+
 
 	/* K8:
 	 * kernel with 3D decomposition along t, y, z; dynamic shared mem for input, none for output (K4)

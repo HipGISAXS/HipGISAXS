@@ -3,7 +3,7 @@
  *
  *  File: ff_num.hpp
  *  Created: Nov 05, 2011
- *  Modified: Wed 03 Apr 2013 07:39:39 PM PDT
+ *  Modified: Tue 09 Apr 2013 11:53:57 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -73,6 +73,12 @@ namespace hig {
 		public:
 
 			#ifdef FF_NUM_GPU	// use GPUs for numerical
+				#ifdef FF_NUM_GPU_FUSED
+					NumericFormFactor(int block_cuda_y, int block_cuda_z):
+									block_cuda_t_(0),
+									block_cuda_y_(block_cuda_y), block_cuda_z_(block_cuda_z),
+									gff_(block_cuda_y, block_cuda_z) { }
+				#endif
 				#ifdef KERNEL2
 					NumericFormFactor(int block_cuda_t, int block_cuda_y, int block_cuda_z):
 									block_cuda_t_(block_cuda_t), block_cuda_y_(block_cuda_y),
