@@ -5,7 +5,7 @@
   *
   *  File: ff_num.cpp
   *  Created: Jul 18, 2012
-  *  Modified: Tue 09 Apr 2013 11:45:56 AM PDT
+  *  Modified: Tue 09 Apr 2013 03:00:49 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -216,8 +216,8 @@ namespace hig {
 
 			#ifdef FF_NUM_GPU	// use GPU
 				#ifdef FF_NUM_GPU_FUSED
-					ret_nt = gff_.compute_form_factor_db_fused(rank, shape_def, axes, p_ff,
-												qx, p_nqx, p_qy, p_nqy, p_qz, p_nqz,
+					ret_nt = gff_.compute_form_factor_kb_fused(rank, shape_def, axes, p_ff,
+												qx, p_nqx, p_qy, p_nqy, p_qz, p_nqz, 3,
 												kernel_time, red_time, temp_mem_time
 												#ifdef FINDBLOCK
 													, block_x, block_y, block_z, block_t

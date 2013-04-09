@@ -3,7 +3,7 @@
  *
  *  File: ff_num_gpu.cuh
  *  Created: Nov 05, 2011
- *  Modified: Tue 09 Apr 2013 11:51:53 AM PDT
+ *  Modified: Tue 09 Apr 2013 02:53:45 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -78,6 +78,19 @@ namespace hig {
 					float_t* &qx_h, int nqx,
 					float_t* &qy_h, int nqy,
 					cucomplex_t* &qz_h, int nqz,
+					float_t&, float_t&, float_t&
+					#ifdef FINDBLOCK
+						, const int, const int, const int, const int
+					#endif
+					);
+
+			/* with fused kernels and triple buffering */
+			unsigned int compute_form_factor_kb_fused(int,
+					std::vector<float_t> &shape_def, std::vector<short int> &axes,
+					cucomplex_t* &ff,
+					float_t* &qx_h, int nqx,
+					float_t* &qy_h, int nqy,
+					cucomplex_t* &qz_h, int nqz, int k,
 					float_t&, float_t&, float_t&
 					#ifdef FINDBLOCK
 						, const int, const int, const int, const int
