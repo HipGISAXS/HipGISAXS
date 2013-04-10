@@ -13,6 +13,8 @@
 #include <omp.h>
 #endif
 
+#include "woo/timer/woo_cudatimers.hpp"
+
 #include "typedefs.hpp"
 #include "constants.hpp"
 #include "parameters.hpp"
@@ -1741,8 +1743,8 @@ namespace hig {
 								<< nb_z << " x " << nb_t << "]"
 								<< std::endl;
 
-					std::cout << "++     FF kernel CUDA block size: ";
-					std::cout << block_cuda_y_ << " x " << block_cuda_z_ << std::endl;
+					//std::cout << "++     FF kernel CUDA block size: ";
+					//std::cout << block_cuda_y_ << " x " << block_cuda_z_ << std::endl;
 				} // if
 
 				cudaEventRecord(mem_end_event, 0);
@@ -1750,9 +1752,71 @@ namespace hig {
 				cudaEventElapsedTime(&temp_mem_time, mem_begin_event, mem_end_event);
 				total_mem_time += temp_mem_time;
 
+
+				#ifdef FF_NUM_AUTOTUNE
+					// AUTOTUNING: find optimal CUDA block size
+					// ... TODO: improve ...
+
+					std::cout << "-- Autotuning CUDA block size ... " << std::flush;
+					unsigned int CUDA_BLOCK_MAX_THREADS_ = 1024;
+					double min_time = 1000000.0;
+					unsigned int min_bc_y = 1, min_bc_z = 1;
+					woo::CUDATimer at_kernel_timer, at_overhead_timer;
+					at_overhead_timer.start();
+					for(unsigned int bc_y = 1; bc_y <= std::min(b_nqy, CUDA_BLOCK_MAX_THREADS_); ++ bc_y) {
+						for(unsigned int bc_z = 1; bc_z <= std::min(b_nqz, CUDA_BLOCK_MAX_THREADS_);
+								++ bc_z) {
+							// maximum number of threads per block = 1024
+							if(bc_y * bc_z > CUDA_BLOCK_MAX_THREADS_) continue;
+							if(bc_y * bc_z % 32 != 0) continue;
+	
+							at_kernel_timer.start();
+
+							unsigned int ff_y_blocks = (unsigned int) ceil((float) b_nqy / bc_y);
+							unsigned int ff_z_blocks = (unsigned int) ceil((float) b_nqz / bc_z);
+							dim3 ff_grid_size(ff_y_blocks, ff_z_blocks);
+							dim3 ff_block_size(bc_y, bc_z);
+							size_t dyna_shmem_size = sizeof(float_t) * (T_PROP_SIZE_ * b_num_triangles +
+															b_nqx + bc_y) + sizeof(cucomplex_t) * bc_z;
+							size_t stat_shmem_size = 0;
+							size_t total_shmem_size = dyna_shmem_size + stat_shmem_size;
+							if(total_shmem_size > 49152) continue;
+
+							form_factor_kernel_fused <<< ff_grid_size, ff_block_size, dyna_shmem_size >>> (
+									qx_d, qy_d, qz_d, shape_def_d, axes_d,
+									b_nqx, b_nqy, b_nqz, b_num_triangles,
+									b_nqx, b_nqy, b_nqz, b_num_triangles,
+									0, 0, 0, 0, ff_double_d[0]);
+
+							at_kernel_timer.stop();
+							double curr_time = at_kernel_timer.elapsed_msec();
+							std::cout << "== " << bc_y << " x " << bc_z << " : " << curr_time << std::endl;
+							if(curr_time < min_time) {
+								min_time = curr_time;
+								min_bc_y = bc_y; min_bc_z = bc_z;
+							} // if
+						} // for
+					} // for
+					at_overhead_timer.stop();
+					std::cout << "done." << std::endl;
+
+					block_cuda_y_ = min_bc_y; block_cuda_z_ = min_bc_z;
+					if(rank == 0) {
+						std::cout << "++           Autotuner overhead: " << at_overhead_timer.elapsed_msec()
+									<< " ms." << std::endl;
+					} // if
+				#endif
+
+				if(rank == 0) {
+					std::cout << "++    Autotuned CUDA block size: " << block_cuda_y_ << " x "
+								<< block_cuda_z_ << std::endl;
+				} // if
+
 				cudaEventCreate(&start); cudaEventCreate(&stop);
 
 				if(rank == 0) std::cout << "-- Computing form factor on GPU ... " << std::flush;
+				woo::CUDATimer fftimer;
+				fftimer.start();
 
 				// compute for each block with double buffering
 
@@ -1911,6 +1975,12 @@ namespace hig {
 				} // for
 	
 				cudaFree(ff_d);
+
+				fftimer.stop();
+				if(rank == 0) {
+					std::cout << "**                FF kernel time: " << fftimer.elapsed_msec() << " ms."
+								<< std::endl;
+				} // if
 			} // if-else
 			if(ff_buffer != NULL) cudaFreeHost(ff_buffer);
 		} // if-else
