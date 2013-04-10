@@ -1,6 +1,4 @@
 ##
-# $Id: Makefile 35 2012-08-09 18:29:50Z asarje $
-#
 # Project: HipGISAXS
 #
 # File: Makefile
@@ -16,7 +14,7 @@ USE_NUM_GPU = y
 USE_MIC = n
 
 ## base directories
-BOOST_DIR = /usr/local/boost_1_49_0
+BOOST_DIR = /usr/local
 HDF5_DIR = /usr/local/hdf5-1.8.9
 Z_DIR = /usr/local/zlib-1.2.7
 SZ_DIR = /usr/local/szip-2.1
@@ -44,7 +42,7 @@ CXX_FLAGS += -std=c++0x #-Wall -Wextra
 CXX_FLAGS += -m64 -fopenmp
 
 ## boost
-BOOST_INCL = -I $(BOOST_DIR)
+BOOST_INCL = -I $(BOOST_DIR)/include
 BOOST_LIBS = -L $(BOOST_DIR)/lib -lboost_system -lboost_filesystem -lboost_timer -lboost_chrono
 
 ## parallel hdf5
@@ -92,6 +90,7 @@ MISC_FLAGS += -DFF_ANA_GPU
 endif
 ifeq ($(USE_NUM_GPU), y)
 MISC_FLAGS += -DFF_NUM_GPU
+MISC_FLAGS += -DFF_NUM_GPU_FUSED
 endif
 endif
 
@@ -349,4 +348,4 @@ all: hipgisaxs test_conv test_read test_ff test_image object2shape shape2hdf5
 .PHONY: clean
 
 clean:
-	rm -f $(OBJ_BIN_SIM) $(OBJ_BIN_FIT) $(BIN_DIR)/$(BINARY_SIM) $(BIN_DIR)/$(BINARY_FIT) $(BIN_DIR)/test_conv $(OBJ_DIR)/test_conv.o $(BIN_DIR)/test_read $(OBJ_DIR)/test_read.o $(BIN_DIR)/test_ff $(OBJ_DIR)/test_ff.o $(BIN_DIR)/test_image $(OBJ_DIR)/test_image.o $(OBJ_DIR)/qgrid_test_create.o $(OBJ_DIR)/plot_gisaxs.o $(OBJ_DIR)/plot_ff.o $(OBJ_DIR)/generate_palette.o
+	rm -f $(OBJ_BIN_SIM) $(OBJ_BIN_FIT) $(BIN_DIR)/$(BINARY_SIM) $(BIN_DIR)/$(BINARY_FIT) $(BIN_DIR)/test_conv $(OBJ_DIR)/test_conv.o $(BIN_DIR)/test_read $(OBJ_DIR)/test_read.o $(BIN_DIR)/test_ff $(OBJ_DIR)/test_ff.o $(BIN_DIR)/test_image $(OBJ_DIR)/test_image.o $(OBJ_DIR)/qgrid_test_create.o $(OBJ_DIR)/plot_gisaxs.o $(OBJ_DIR)/plot_ff.o $(OBJ_DIR)/generate_palette.o $(LIB_DIR)/$(LIB_SIM)
