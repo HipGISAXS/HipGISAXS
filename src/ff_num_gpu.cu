@@ -1693,6 +1693,8 @@ namespace hig {
 			unsigned int min_b_nqx = 1, min_b_nqy = 1, min_b_nqz = 1, min_b_num_triangles = 1;
 			woo::CUDATimer at_kernel_timer, at_overhead_timer;
 			at_overhead_timer.start();
+			cucomplex_t* ff_temp;
+			cudaMallocHost((void **) &ff_temp, nqx * nqy * nqz * sizeof(cucomplex_t));
 			for(unsigned int b_nqx_i = 1; b_nqx_i <= nqx; ++ b_nqx_i) {
 				for(unsigned int b_nqy_i = block_cuda_y_; b_nqy_i <= nqy; ++ b_nqy_i) {
 					for(unsigned int b_nqz_i = block_cuda_z_; b_nqz_i <= nqz; ++ b_nqz_i) {
@@ -1717,9 +1719,7 @@ namespace hig {
 							size_t total_shmem_size = dyna_shmem_size + stat_shmem_size;
 							if(total_shmem_size > 49152) continue;
 
-							cucomplex_t* ff_temp;
 							unsigned int ff_size = b_nqx_i * b_nqy_i * b_nqz_i;
-							cudaMallocHost((void **) &ff_temp, ff_size * sizeof(cucomplex_t));
 
 							form_factor_kernel_fused <<< ff_grid_size, ff_block_size, dyna_shmem_size >>> (
 									qx_d, qy_d, qz_d, shape_def_d, axes_d,
@@ -1738,10 +1738,12 @@ namespace hig {
 								min_b_nqx = b_nqx_i; min_b_nqy = b_nqy_i; min_b_nqz = b_nqz_i;
 								min_b_num_triangles = b_nt_i;
 							} // if
+
 						} // for
 					} // for
 				} // for
 			} // for
+			cudaFree(ff_temp);
 			at_overhead_timer.stop();
 
 			b_nqx = min_b_nqx; b_nqy = min_b_nqy; b_nqz = min_b_nqz; b_num_triangles = min_b_num_triangles;
