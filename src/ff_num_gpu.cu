@@ -95,6 +95,13 @@ namespace hig {
 							const unsigned int, const unsigned int, const unsigned int, const unsigned int,
 							const unsigned int, const unsigned int, const unsigned int, const unsigned int,
 							cucomplex_t*);
+	/* K9-1: special case of K9 when curr_nqx == 1 */
+	__global__ void form_factor_kernel_fused_nqx1(const float_t*, const float_t*, const cucomplex_t*,
+							const float_t*, const short int*,
+							const unsigned int, const unsigned int, const unsigned int, const unsigned int,
+							const unsigned int, const unsigned int, const unsigned int, const unsigned int,
+							const unsigned int, const unsigned int, const unsigned int, const unsigned int,
+							cucomplex_t*);
 	__device__ cuFloatComplex compute_fq(float s, cuFloatComplex qt_d, cuFloatComplex qn_d);
 	__device__ cuDoubleComplex compute_fq(double s, cuDoubleComplex qt_d, cuDoubleComplex qn_d);
 	__device__ void compute_z(cuFloatComplex temp_z, float nz, float z,
@@ -1576,6 +1583,7 @@ namespace hig {
 						#endif
 						) {
 		cudaDeviceSetCacheConfig(cudaFuncCachePreferShared);
+		cudaSetDevice(2);
 
 		if(k < 3) {
 			if(rank == 0) {
@@ -1957,9 +1965,22 @@ namespace hig {
 									exit(1);
 								} // if
 
-								#pragma omp sections nowait
-								{
-									#pragma omp section
+								//#pragma omp parallel
+								//{
+								//#pragma omp sections
+								//{
+								//	#pragma omp section
+								//	{
+								//	cudaStreamSynchronize(stream[active]);
+								if(b_nqx == 1) {
+									form_factor_kernel_fused_nqx1
+									<<< ff_grid_size, ff_block_size, dyna_shmem_size, stream[active] >>> (
+											qx_d, qy_d, qz_d, shape_def_d, axes_d,
+											curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles,
+											b_nqx, b_nqy, b_nqz, b_num_triangles,
+											ib_x, ib_y, ib_z, ib_t,
+											ff_double_d[active]);
+								} else {
 									form_factor_kernel_fused
 									<<< ff_grid_size, ff_block_size, dyna_shmem_size, stream[active] >>> (
 											qx_d, qy_d, qz_d, shape_def_d, axes_d,
@@ -1967,7 +1988,9 @@ namespace hig {
 											b_nqx, b_nqy, b_nqz, b_num_triangles,
 											ib_x, ib_y, ib_z, ib_t,
 											ff_double_d[active]);
-									#pragma omp section
+								} // if-else
+								//	}
+								//	#pragma omp section
 									if(hblock_iter > k - 2) {
 										// move ff_buffer to correct location in ff
 										cudaStreamSynchronize(stream[passive]);
@@ -1977,7 +2000,8 @@ namespace hig {
 														nqx, nqy, nqz,
 														prev_ib_x, prev_ib_y, prev_ib_z, ff);
 									} // if
-								} // pragma omp sections
+								//} // pragma omp sections
+								//}
 
 								active = (active + 1) % k;
 
@@ -2457,8 +2481,8 @@ namespace hig {
 		} // for
 
 		// load qx
-		num_loads = __float2uint_ru(__fdividef(__uint2float_ru(curr_nqx), num_threads));
 		base_offset = b_nqx * ib_x;             // all qx of this hyperblock need to be loaded
+		num_loads = __float2uint_ru(__fdividef(__uint2float_ru(curr_nqx), num_threads));
 		for(int l = 0; l < num_loads; ++ l) {
 			i_shared = num_threads * l + i_thread;
 			if(i_shared < curr_nqx) shared_qx[i_shared] = qx[base_offset + i_shared];
@@ -2479,9 +2503,12 @@ namespace hig {
 		cucomplex_t ff_tot = make_cuC((float_t) 0.0, (float_t) 0.0);
 		if(i_y < curr_nqy && i_z < curr_nqz) {
 			float_t temp_y = shared_qy[threadIdx.x];
+			float_t qy2 = temp_y * temp_y;
 			cucomplex_t temp_z = shared_qz[threadIdx.y];
-			for(unsigned int i_x = 0; i_x < curr_nqx; ++ i_x) {
+
+			for(int i_x = 0; i_x < curr_nqx; ++ i_x) {
 				float_t temp_x = shared_qx[i_x];
+
 				for(int i_t = 0; i_t < curr_num_triangles; ++ i_t) {
 					unsigned int shape_off = T_PROP_SIZE_ * i_t;
 					float_t s = shared_shape_def[shape_off];
@@ -2492,7 +2519,6 @@ namespace hig {
 					float_t y = shared_shape_def[shape_off + 5];
 					float_t z = shared_shape_def[shape_off + 6];
 
-					float_t qy2 = temp_y * temp_y;
 					float_t qyn = temp_y * ny;
 					float_t qyt = temp_y * y;
 					cucomplex_t qz2, qzn, qzt;
@@ -2509,6 +2535,7 @@ namespace hig {
 		} // if
 	} // form_factor_kernel_fused()
 
+	#include "ff_num_gpu_kernels.cuh"
 
 	/* K8:
 	 * kernel with 3D decomposition along t, y, z; dynamic shared mem for input, none for output (K4)
@@ -2769,52 +2796,71 @@ namespace hig {
 	 * For single precision
 	 */
 
-	__device__ cuFloatComplex compute_fq(float s, cuFloatComplex qt_d, cuFloatComplex qn_d) {
+	__device__ __inline__ cuFloatComplex compute_fq(float s, cuFloatComplex qt_d, cuFloatComplex qn_d) {
 		cuFloatComplex v1 = cuCmulf(qn_d, make_cuFloatComplex(cosf(qt_d.x), sinf(qt_d.x)));
 		float v2 = s * expf(qt_d.y);
-		return cuCmulf(v1, make_cuFloatComplex(v2, 0.0f));
+		//return cuCmulf(v1, make_cuFloatComplex(v2, 0.0f));
+		return v1 * v2;
 	} // compute_fq()
 
-	__device__ void compute_z(cuFloatComplex temp_z, float nz, float z,
+
+	__device__ __inline__ void compute_z(cuFloatComplex temp_z, float nz, float z,
 				cuFloatComplex& qz2, cuFloatComplex& qzn, cuFloatComplex& qzt) {
-		qz2 = cuCmulf(temp_z, temp_z);
-		qzn = cuCmulf(temp_z, make_cuFloatComplex(nz, 0.0f));
-		qzt = cuCmulf(temp_z, make_cuFloatComplex(z, 0.0f));
+		//qz2 = cuCmulf(temp_z, temp_z);
+		//qzn = cuCmulf(temp_z, make_cuFloatComplex(nz, 0.0f));
+		//qzt = cuCmulf(temp_z, make_cuFloatComplex(z, 0.0f));
+		qz2 = cuCsqr(temp_z);
+		qzn = temp_z * nz;
+		qzt = temp_z * z;
 	} // compute_z()
 
-	__device__ void compute_x(float temp_x, float qy2, cuFloatComplex qz2, float nx, float qyn,
+
+	__device__ __inline__ void compute_x(float temp_x, float qy2, cuFloatComplex qz2, float nx, float qyn,
 				cuFloatComplex qzn, float x, float qyt,	cuFloatComplex qzt,
 				cuFloatComplex& qn_d, cuFloatComplex& qt_d) {
-		cuFloatComplex q2 = cuCaddf(make_cuFloatComplex(fmaf(temp_x, temp_x, qy2), 0.0f), qz2);
-		qn_d = cuCdivf(cuCaddf(make_cuFloatComplex(temp_x * nx, 0.0f),
-								cuCaddf(make_cuFloatComplex(qyn, 0.0f), qzn)), q2);
-		qt_d = cuCaddf(make_cuFloatComplex(fmaf(temp_x, x, qyt), 0.0f), qzt);
+		//cuFloatComplex q2 = cuCaddf(make_cuFloatComplex(fmaf(temp_x, temp_x, qy2), 0.0f), qz2);
+		//qn_d = cuCdivf(cuCaddf(make_cuFloatComplex(temp_x * nx, 0.0f),
+		//						cuCaddf(make_cuFloatComplex(qyn, 0.0f), qzn)), q2);
+		//qt_d = cuCaddf(make_cuFloatComplex(fmaf(temp_x, x, qyt), 0.0f), qzt);
+		cuFloatComplex q2 = fmaf(temp_x, temp_x, qy2) + qz2;
+		qt_d = fmaf(temp_x, x, qyt) + qzt;
+		qn_d = cuCdivf((fmaf(temp_x, nx, qyn) + qzn), q2);
 	} // compute_x()
+
 
 	/**
 	 * For double precision
 	 */
 
-	__device__ cuDoubleComplex compute_fq(double s, cuDoubleComplex qt_d, cuDoubleComplex qn_d) {
+	__device__ __inline__ cuDoubleComplex compute_fq(double s, cuDoubleComplex qt_d, cuDoubleComplex qn_d) {
 		cuDoubleComplex v1 = cuCmul(qn_d, make_cuDoubleComplex(cos(qt_d.x), sin(qt_d.x)));
 		double v2 = s * exp(qt_d.y);
-		return cuCmul(v1, make_cuDoubleComplex(v2, 0.0));
+		//return cuCmul(v1, make_cuDoubleComplex(v2, 0.0));
+		return v1 * v2;
 	} // compute_fq()
 
-	__device__ void compute_z(cuDoubleComplex temp_z, double nz, double z,
+
+	__device__ __inline__ void compute_z(cuDoubleComplex temp_z, double nz, double z,
 				cuDoubleComplex& qz2, cuDoubleComplex& qzn, cuDoubleComplex& qzt) {
-		qz2 = cuCmul(temp_z, temp_z);
-		qzn = cuCmul(temp_z, make_cuDoubleComplex(nz, 0.0));
-		qzt = cuCmul(temp_z, make_cuDoubleComplex(z, 0.0));
+		//qz2 = cuCmul(temp_z, temp_z);
+		//qzn = cuCmul(temp_z, make_cuDoubleComplex(nz, 0.0));
+		//qzt = cuCmul(temp_z, make_cuDoubleComplex(z, 0.0));
+		qz2 = cuCsqr(temp_z);
+		qzn = temp_z * nz;
+		qzt = temp_z * z;
 	} // compute_z()
 
-	__device__ void compute_x(double temp_x, double qy2, cuDoubleComplex qz2, double nx, double qyn,
+
+	__device__ __inline__ void compute_x(double temp_x, double qy2, cuDoubleComplex qz2, double nx, double qyn,
 				cuDoubleComplex qzn, double x, double qyt,	cuDoubleComplex qzt,
 				cuDoubleComplex& qn_d, cuDoubleComplex& qt_d) {
-		cuDoubleComplex q2 = cuCadd(make_cuDoubleComplex(fma(temp_x, temp_x, qy2), 0.0), qz2);
-		qn_d = cuCdiv(cuCadd(make_cuDoubleComplex(temp_x * nx, 0.0),
-								cuCadd(make_cuDoubleComplex(qyn, 0.0), qzn)), q2);
-		qt_d = cuCadd(make_cuDoubleComplex(fma(temp_x, x, qyt), 0.0), qzt);
+		//cuDoubleComplex q2 = cuCadd(make_cuDoubleComplex(fma(temp_x, temp_x, qy2), 0.0), qz2);
+		//qn_d = cuCdiv(cuCadd(make_cuDoubleComplex(temp_x * nx, 0.0),
+		//						cuCadd(make_cuDoubleComplex(qyn, 0.0), qzn)), q2);
+		//qt_d = cuCadd(make_cuDoubleComplex(fma(temp_x, x, qyt), 0.0), qzt);
+		cuDoubleComplex q2 = fma(temp_x, temp_x, qy2) + qz2;
+		qt_d = fma(temp_x, x, qyt) + qzt;
+		qn_d = cuCdiv((fma(temp_x, nx, qyn) + qzn), q2);
 	} // compute_x()
 
 } // namespace hig

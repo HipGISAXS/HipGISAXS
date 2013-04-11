@@ -5,7 +5,7 @@
   *
   *  File: cu_complex_numeric.cuh
   *  Created: Oct 17, 2012
-  *  Modified: Wed 03 Apr 2013 11:14:03 AM PDT
+  *  Modified: Thu 11 Apr 2013 02:29:46 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -181,6 +181,14 @@ namespace hig {
 			return x > 0 ? make_cuC(u, y / t) : make_cuC(fabs(y) / t, y < 0 ? -u : u);
 		} // if-else
 	} // cuCsqrt()
+
+	__device__ static __inline__ cuFloatComplex cuCsqr(cuFloatComplex a) {
+		return make_cuFloatComplex(a.x * a.x - a.y * a.y, 2.0f * a.x * a.y);
+	} // cuCpow()
+
+	__device__ static __inline__ cuDoubleComplex cuCsqr(cuDoubleComplex a) {
+		return make_cuDoubleComplex(a.x * a.x - a.y * a.y, 2.0 * a.x * a.y);
+	} // cuCpow()
 
 	__device__ static __inline__ cuFloatComplex cuCpow(cuFloatComplex a, int p) {
 		// ...
