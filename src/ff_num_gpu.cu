@@ -1696,9 +1696,9 @@ namespace hig {
 			cucomplex_t* ff_temp;
 			cudaMallocHost((void **) &ff_temp, nqx * nqy * nqz * sizeof(cucomplex_t));
 			for(unsigned int b_nqx_i = 1; b_nqx_i <= nqx; ++ b_nqx_i) {
-				for(unsigned int b_nqy_i = block_cuda_y_; b_nqy_i <= nqy; ++ b_nqy_i) {
-					for(unsigned int b_nqz_i = block_cuda_z_; b_nqz_i <= nqz; ++ b_nqz_i) {
-						for(unsigned int b_nt_i = 1; b_nt_i <= num_triangles; ++ b_nt_i) {
+				for(unsigned int b_nqy_i = block_cuda_y_; b_nqy_i <= nqy; b_nqy_i += 10) {
+					for(unsigned int b_nqz_i = block_cuda_z_; b_nqz_i <= nqz; b_nqz_i += 10) {
+						for(unsigned int b_nt_i = 10; b_nt_i <= num_triangles; b_nt_i += 10) {
 							at_kernel_timer.start();
 
 							// compute the number of sub-blocks, along each of the 4 dimensions
