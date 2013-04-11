@@ -5,7 +5,7 @@
   *
   *  File: qgrid.cpp
   *  Created: Jun 17, 2012
-  *  Modified: Mon 08 Apr 2013 04:00:50 PM PDT
+  *  Modified: Thu 11 Apr 2013 11:53:57 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -200,8 +200,10 @@ namespace hig {
 	bool QGrid::pixel_to_kspace(vector2_t pixel, float_t k0, float_t alpha_i,
 					float_t rho, float_t distance, vector2_t beam,
 					vector3_t& qpoint) {
-		float_t alpha_f = atan(rho * (pixel[1] - 2 * beam[1] + 1043) / distance) - alpha_i;
-		float_t theta_f = atan(rho * (pixel[0] - beam[0]) / distance);
+		//float_t alpha_f = atan(rho * (pixel[1] - 2 * beam[1] + 1043) / distance) - alpha_i;
+		//float_t theta_f = atan(rho * (pixel[0] - beam[0]) / distance);
+		float_t alpha_f = atan(rho * (pixel[1] - 2 * beam[1] + 1043) / 4350) - alpha_i;
+		float_t theta_f = atan(rho * (pixel[0] - beam[0]) / 4350);
 
 		qpoint[0] = k0 * (cos(theta_f) * cos(alpha_f) - cos(alpha_i));	// x
 		qpoint[1] = k0 * cos(alpha_f) * sin(theta_f);					// y
