@@ -13,6 +13,9 @@
 #include <omp.h>
 #endif
 
+//#include <nvToolsExt.h>
+#include <cuda_profiler_api.h>
+
 #include "woo/timer/woo_cudatimers.hpp"
 
 #include "typedefs.hpp"
@@ -1591,18 +1594,10 @@ namespace hig {
 			} // if
 			return 0;
 		} // if
+
+		//nvtxRangeId_t nvtx0 = nvtxRangeStart("ff_kb_fused");
+		cudaProfilerStart();
 	
-		float kernel_time = 0.0, reduce_time = 0.0;
-		float temp_mem_time = 0.0, total_mem_time = 0.0;
-		cudaEvent_t start, stop;
-		cudaEvent_t total_begin_event, total_end_event;
-		cudaEvent_t mem_begin_event, mem_end_event;
-		cudaEventCreate(&total_begin_event); cudaEventCreate(&total_end_event);
-		cudaEventCreate(&mem_begin_event); cudaEventCreate(&mem_end_event);
-	
-		cudaEventRecord(total_begin_event, 0);
-	
-		cudaEventRecord(mem_begin_event, 0);
 		unsigned long int total_qpoints = nqx * nqy * nqz;
 		unsigned long int host_mem_usage = ((unsigned long int) nqx + nqy + nqz) * sizeof(float_t);
 		size_t device_mem_avail, device_mem_total, device_mem_used;
@@ -1823,12 +1818,6 @@ namespace hig {
 					//std::cout << block_cuda_y_ << " x " << block_cuda_z_ << std::endl;
 				} // if
 
-				cudaEventRecord(mem_end_event, 0);
-				cudaEventSynchronize(mem_end_event);
-				cudaEventElapsedTime(&temp_mem_time, mem_begin_event, mem_end_event);
-				total_mem_time += temp_mem_time;
-
-
 				#ifdef FF_NUM_AUTOTUNE
 					// AUTOTUNING: find optimal CUDA block size
 					// ... TODO: improve ...
@@ -1888,8 +1877,6 @@ namespace hig {
 								<< block_cuda_z_ << std::endl;
 				} // if
 
-				cudaEventCreate(&start); cudaEventCreate(&stop);
-
 				if(rank == 0) std::cout << "-- Computing form factor on GPU ... " << std::flush;
 				woo::CUDATimer fftimer;
 				fftimer.start();
@@ -1915,6 +1902,9 @@ namespace hig {
 				unsigned int hblock_iter = 0;
 				curr_b_nqx = b_nqx;
 
+				woo::CUDATimer ff_move_timer;
+				double ff_move_time = 0.0;
+
 				for(unsigned int ib_x = 0; ib_x < nb_x; ++ ib_x) {
 					if(ib_x == nb_x - 1) curr_b_nqx = nqx - b_nqx * ib_x;
 					curr_b_nqy = b_nqy;
@@ -1934,7 +1924,8 @@ namespace hig {
 								passive = (active + 1) % k;
 
 								if(hblock_iter > k - 2) {
-									cudaStreamSynchronize(stream[passive]);
+									// dont need to sync since move_to_main_ff is not async
+									//cudaStreamSynchronize(stream[passive]);
 									cudaMemcpyAsync(ff_double_buff[passive], ff_double_d[passive],
 													b_nqx * b_nqy * b_nqz * sizeof(cucomplex_t),
 													cudaMemcpyDeviceToHost, stream[passive]);
@@ -1965,13 +1956,6 @@ namespace hig {
 									exit(1);
 								} // if
 
-								//#pragma omp parallel
-								//{
-								//#pragma omp sections
-								//{
-								//	#pragma omp section
-								//	{
-								//	cudaStreamSynchronize(stream[active]);
 								if(b_nqx == 1) {
 									form_factor_kernel_fused_nqx1
 									<<< ff_grid_size, ff_block_size, dyna_shmem_size, stream[active] >>> (
@@ -1989,19 +1973,20 @@ namespace hig {
 											ib_x, ib_y, ib_z, ib_t,
 											ff_double_d[active]);
 								} // if-else
-								//	}
-								//	#pragma omp section
-									if(hblock_iter > k - 2) {
-										// move ff_buffer to correct location in ff
-										cudaStreamSynchronize(stream[passive]);
-										move_to_main_ff(ff_double_buff[passive],
-														prev_cbnqx, prev_cbnqy, prev_cbnqz,
-														b_nqx, b_nqy, b_nqz,
-														nqx, nqy, nqz,
-														prev_ib_x, prev_ib_y, prev_ib_z, ff);
-									} // if
-								//} // pragma omp sections
-								//}
+
+								// move ff_buffer to correct location in ff
+								if(hblock_iter > k - 2) {
+									// wait for the async memcpy to finish
+									cudaStreamSynchronize(stream[passive]);
+									ff_move_timer.start();
+									move_to_main_ff(ff_double_buff[passive],
+													prev_cbnqx, prev_cbnqy, prev_cbnqz,
+													b_nqx, b_nqy, b_nqz,
+													nqx, nqy, nqz,
+													prev_ib_x, prev_ib_y, prev_ib_z, ff);
+									ff_move_timer.stop();
+									ff_move_time += ff_move_timer.elapsed_msec();
+								} // if
 
 								active = (active + 1) % k;
 
@@ -2072,6 +2057,8 @@ namespace hig {
 				if(rank == 0) {
 					std::cout << "**                FF kernel time: " << fftimer.elapsed_msec() << " ms."
 								<< std::endl;
+					std::cout << "**                  FF move time: " << ff_move_time << " ms."
+								<< std::endl;
 				} // if
 			} // if-else
 			if(ff_buffer != NULL) cudaFreeHost(ff_buffer);
@@ -2082,14 +2069,12 @@ namespace hig {
 		cudaFree(qy_d);
 		cudaFree(qx_d);
 	
-		float total_time;
-		cudaEventRecord(total_end_event, 0);
-		cudaEventSynchronize(total_end_event);
-		cudaEventElapsedTime(&total_time, total_begin_event, total_end_event);
-	
-		pass_kernel_time = kernel_time;
-		red_time = reduce_time;
-		mem_time = total_mem_time;
+		pass_kernel_time = 0.0;
+		red_time = 0.0;
+		mem_time = 0.0;
+
+		cudaProfilerStop();
+		//nvtxRangeEnd(nvtx0);
 	
 		return num_triangles;
 	} // NumericFormFactorG::compute_form_factor_kb_fused()
@@ -2797,8 +2782,8 @@ namespace hig {
 	 */
 
 	__device__ __inline__ cuFloatComplex compute_fq(float s, cuFloatComplex qt_d, cuFloatComplex qn_d) {
-		cuFloatComplex v1 = cuCmulf(qn_d, make_cuFloatComplex(cosf(qt_d.x), sinf(qt_d.x)));
-		float v2 = s * expf(qt_d.y);
+		cuFloatComplex v1 = cuCmulf(qn_d, make_cuFloatComplex(__cosf(qt_d.x), __sinf(qt_d.x)));
+		float v2 = s * __expf(qt_d.y);
 		//return cuCmulf(v1, make_cuFloatComplex(v2, 0.0f));
 		return v1 * v2;
 	} // compute_fq()
@@ -2833,8 +2818,8 @@ namespace hig {
 	 */
 
 	__device__ __inline__ cuDoubleComplex compute_fq(double s, cuDoubleComplex qt_d, cuDoubleComplex qn_d) {
-		cuDoubleComplex v1 = cuCmul(qn_d, make_cuDoubleComplex(cos(qt_d.x), sin(qt_d.x)));
-		double v2 = s * exp(qt_d.y);
+		cuDoubleComplex v1 = cuCmul(qn_d, make_cuDoubleComplex(__cos(qt_d.x), __sin(qt_d.x)));
+		double v2 = s * __exp(qt_d.y);
 		//return cuCmul(v1, make_cuDoubleComplex(v2, 0.0));
 		return v1 * v2;
 	} // compute_fq()

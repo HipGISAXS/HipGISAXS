@@ -3,7 +3,7 @@
   *
   *  File: ff_num_gpu_kernels.cuh
   *  Created: Apr 11, 2013
-  *  Modified: Thu 11 Apr 2013 02:34:55 PM PDT
+  *  Modified: Fri 12 Apr 2013 08:10:58 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -32,7 +32,7 @@
 		// 				shared_qy = blockDim.y
 		// 				shared_qz = blockDim.z
 		// reversed to fix alignment:
-		float_t *shared_shape_def = (float_t*) dynamic_shared;
+		volatile float_t *shared_shape_def = (float_t*) dynamic_shared;
 		cucomplex_t *shared_qz = (cucomplex_t*) &shared_shape_def[T_PROP_SIZE_ * curr_num_triangles];
 		float_t *shared_qy = (float_t*) &shared_qz[blockDim.y];
 		float_t *shared_qx = (float_t*) &shared_qy[blockDim.x];
@@ -42,6 +42,16 @@
 		// load triangles
 		unsigned int shape_def_size = T_PROP_SIZE_ * curr_num_triangles;
 		num_loads = __float2int_ru(__fdividef(__int2float_ru(shape_def_size), num_threads));
+		//asm("{\n\t"
+		//		" .reg .f32 r1;\n\t"
+		//		" .reg .f32 r2;\n\t"
+		//		" .reg .f32 r3;\n\t"
+		//		" cvt.rp.f32.u32 r1, %1;\n\t"
+		//		" cvt.rp.f32.u32 r2, %2;\n\t"
+		//		" div.approx.f32 r3, r1, r2;\n\t"
+		//		" cvt.rpi.u32.f32 %0, r3;\n\t"
+		//	"}"
+		//	: "=r"(num_loads) : "r"(shape_def_size), "r"(num_threads));
 		base_offset = T_PROP_SIZE_ * b_num_triangles * ib_t;
 		for(int l = 0; l < num_loads; ++ l) {
 			i_shared = num_threads * l + i_thread;
@@ -65,11 +75,13 @@
 
 		cucomplex_t ff_tot = make_cuC((float_t) 0.0, (float_t) 0.0);
 		if(i_y < curr_nqy && i_z < curr_nqz) {
+			cucomplex_t temp_z = shared_qz[threadIdx.y];
 			float_t temp_y = shared_qy[threadIdx.x];
 			float_t qy2 = temp_y * temp_y;
-			cucomplex_t temp_z = shared_qz[threadIdx.y];
 			float_t temp_x = shared_qx[0];
 
+			// TODO: try dynamic parallelism to parallelize this ...
+			#pragma unroll 16
 			for(int i_t = 0; i_t < curr_num_triangles; ++ i_t) {
 				unsigned int shape_off = T_PROP_SIZE_ * i_t;
 				float_t s = shared_shape_def[shape_off];
@@ -93,6 +105,6 @@
 			} // for
 			ff[curr_nqy * i_z + i_y] = ff_tot;
 		} // if
-	} // form_factor_kernel_fused()
+	} // form_factor_kernel_fused_nqx1()
 
 
