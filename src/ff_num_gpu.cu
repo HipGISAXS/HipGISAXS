@@ -105,8 +105,15 @@ namespace hig {
 							const unsigned int, const unsigned int, const unsigned int, const unsigned int,
 							const unsigned int, const unsigned int, const unsigned int, const unsigned int,
 							cucomplex_t*);
+
 	__device__ cuFloatComplex compute_fq(float s, cuFloatComplex qt_d, cuFloatComplex qn_d);
 	__device__ cuDoubleComplex compute_fq(double s, cuDoubleComplex qt_d, cuDoubleComplex qn_d);
+	__device__ void compute_qi_d(float temp_x, float nx, float x, float qyt, float qyn,
+				cuFloatComplex qzt, cuFloatComplex qzn, cuFloatComplex q2,
+				cuFloatComplex& qt_d, cuFloatComplex& qn_d);
+	__device__ void compute_qi_d(double temp_x, double nx, double x, double qyt, double qyn,
+				cuDoubleComplex qzt, cuDoubleComplex qzn, cuDoubleComplex q2,
+				cuDoubleComplex& qt_d, cuDoubleComplex& qn_d);
 	__device__ void compute_z(cuFloatComplex temp_z, float nz, float z,
 				cuFloatComplex& qz2, cuFloatComplex& qzn, cuFloatComplex& qzt);
 	__device__ void compute_z(cuDoubleComplex temp_z, double nz, double z,
@@ -228,17 +235,6 @@ namespace hig {
 						) {
 		float kernel_time, reduce_time, total_kernel_time = 0.0, total_reduce_time = 0.0,
 				temp_mem_time = 0.0, total_mem_time = 0.0;
-
-		//cudaSetDevice(2);		////////////////////////////////////////////////////////////////////////////
-		//if(rank == 1) cudaSetDevice(2);
-
-		cudaDeviceSetCacheConfig(cudaFuncCachePreferShared);
-		//cudaDeviceSetCacheConfig(cudaFuncCachePreferL1);
-		//cudaDeviceSetCacheConfig(cudaFuncCachePreferEqual);
-
-		//cudaFuncCache cache_conf;
-		//cudaDeviceGetCacheConfig(&cache_conf);
-		//if(rank == 0) std::cout << "Device cache config: " << cache_conf << std::endl;
 
 		cudaEvent_t begin_event, end_event;
 		cudaEvent_t total_begin_event, total_end_event;
@@ -693,9 +689,6 @@ namespace hig {
 						, const int block_x, const int block_y, const int block_z, const int block_t
 	#endif
 						) {
-		//cudaSetDevice(2);		////////////////////////////////////////////////////////////////////////////
-		cudaDeviceSetCacheConfig(cudaFuncCachePreferShared);
-	
 		float kernel_time = 0.0, reduce_time = 0.0;
 		float temp_mem_time = 0.0, total_mem_time = 0.0;
 		cudaEvent_t start, stop;
@@ -1214,8 +1207,6 @@ namespace hig {
 							, const int block_x, const int block_y, const int block_z, const int block_t
 						#endif
 						) {
-		cudaDeviceSetCacheConfig(cudaFuncCachePreferShared);
-	
 		float kernel_time = 0.0, reduce_time = 0.0;
 		float temp_mem_time = 0.0, total_mem_time = 0.0;
 		cudaEvent_t start, stop;
@@ -1585,9 +1576,6 @@ namespace hig {
 							, const int block_x, const int block_y, const int block_z, const int block_t
 						#endif
 						) {
-		cudaDeviceSetCacheConfig(cudaFuncCachePreferShared);
-		cudaSetDevice(2);
-
 		if(k < 3) {
 			if(rank == 0) {
 				std::cerr << "error: when using k-bufferring, k should be >= 3." << std::endl;
@@ -1978,14 +1966,14 @@ namespace hig {
 								if(hblock_iter > k - 2) {
 									// wait for the async memcpy to finish
 									cudaStreamSynchronize(stream[passive]);
-									ff_move_timer.start();
+									//ff_move_timer.start();
 									move_to_main_ff(ff_double_buff[passive],
 													prev_cbnqx, prev_cbnqy, prev_cbnqz,
 													b_nqx, b_nqy, b_nqz,
 													nqx, nqy, nqz,
 													prev_ib_x, prev_ib_y, prev_ib_z, ff);
-									ff_move_timer.stop();
-									ff_move_time += ff_move_timer.elapsed_msec();
+									//ff_move_timer.stop();
+									//ff_move_time += ff_move_timer.elapsed_msec();
 								} // if
 
 								active = (active + 1) % k;
@@ -2011,12 +1999,17 @@ namespace hig {
 
 				// for the last k - 1 parts
 
+				int current = active;
 				for(int i_k = 0; i_k < k - 1; ++ i_k) {
-					passive = (active + 1) % k;
+					passive = (current + 1) % k;
 					cudaStreamSynchronize(stream[passive]);
 					cudaMemcpyAsync(ff_double_buff[passive], ff_double_d[passive],
 									b_nqx * b_nqy * b_nqz * sizeof(cucomplex_t),
 									cudaMemcpyDeviceToHost, stream[passive]);
+					current = (current + 1) % k;
+				} // for
+				for(int i_k = 0; i_k < k - 1; ++ i_k) {
+					passive = (active + 1) % k;
 					cudaStreamSynchronize(stream[passive]);
 					move_to_main_ff(ff_double_buff[passive],
 									prev_cbnqx, prev_cbnqy, prev_cbnqz,
@@ -2050,15 +2043,14 @@ namespace hig {
 				for(int i_k = 0; i_k < k; ++ i_k) {
 					cudaStreamDestroy(stream[i_k]);
 				} // for
-	
 				cudaFree(ff_d);
 
 				fftimer.stop();
 				if(rank == 0) {
 					std::cout << "**                FF kernel time: " << fftimer.elapsed_msec() << " ms."
 								<< std::endl;
-					std::cout << "**                  FF move time: " << ff_move_time << " ms."
-								<< std::endl;
+					//std::cout << "**                  FF move time: " << ff_move_time << " ms."
+					//			<< std::endl;
 				} // if
 			} // if-else
 			if(ff_buffer != NULL) cudaFreeHost(ff_buffer);
@@ -2772,80 +2764,5 @@ namespace hig {
 		} // if
 	} // NumericFormFactorG::form_factor_kernel_new_2()
 	*/
-
-	/**
-	 * Helper device functions
-	 */
-
-	/**
-	 * For single precision
-	 */
-
-	__device__ __inline__ cuFloatComplex compute_fq(float s, cuFloatComplex qt_d, cuFloatComplex qn_d) {
-		cuFloatComplex v1 = cuCmulf(qn_d, make_cuFloatComplex(__cosf(qt_d.x), __sinf(qt_d.x)));
-		float v2 = s * __expf(qt_d.y);
-		//return cuCmulf(v1, make_cuFloatComplex(v2, 0.0f));
-		return v1 * v2;
-	} // compute_fq()
-
-
-	__device__ __inline__ void compute_z(cuFloatComplex temp_z, float nz, float z,
-				cuFloatComplex& qz2, cuFloatComplex& qzn, cuFloatComplex& qzt) {
-		//qz2 = cuCmulf(temp_z, temp_z);
-		//qzn = cuCmulf(temp_z, make_cuFloatComplex(nz, 0.0f));
-		//qzt = cuCmulf(temp_z, make_cuFloatComplex(z, 0.0f));
-		qz2 = cuCsqr(temp_z);
-		qzn = temp_z * nz;
-		qzt = temp_z * z;
-	} // compute_z()
-
-
-	__device__ __inline__ void compute_x(float temp_x, float qy2, cuFloatComplex qz2, float nx, float qyn,
-				cuFloatComplex qzn, float x, float qyt,	cuFloatComplex qzt,
-				cuFloatComplex& qn_d, cuFloatComplex& qt_d) {
-		//cuFloatComplex q2 = cuCaddf(make_cuFloatComplex(fmaf(temp_x, temp_x, qy2), 0.0f), qz2);
-		//qn_d = cuCdivf(cuCaddf(make_cuFloatComplex(temp_x * nx, 0.0f),
-		//						cuCaddf(make_cuFloatComplex(qyn, 0.0f), qzn)), q2);
-		//qt_d = cuCaddf(make_cuFloatComplex(fmaf(temp_x, x, qyt), 0.0f), qzt);
-		cuFloatComplex q2 = fmaf(temp_x, temp_x, qy2) + qz2;
-		qt_d = fmaf(temp_x, x, qyt) + qzt;
-		qn_d = cuCdivf((fmaf(temp_x, nx, qyn) + qzn), q2);
-	} // compute_x()
-
-
-	/**
-	 * For double precision
-	 */
-
-	__device__ __inline__ cuDoubleComplex compute_fq(double s, cuDoubleComplex qt_d, cuDoubleComplex qn_d) {
-		cuDoubleComplex v1 = cuCmul(qn_d, make_cuDoubleComplex(__cos(qt_d.x), __sin(qt_d.x)));
-		double v2 = s * __exp(qt_d.y);
-		//return cuCmul(v1, make_cuDoubleComplex(v2, 0.0));
-		return v1 * v2;
-	} // compute_fq()
-
-
-	__device__ __inline__ void compute_z(cuDoubleComplex temp_z, double nz, double z,
-				cuDoubleComplex& qz2, cuDoubleComplex& qzn, cuDoubleComplex& qzt) {
-		//qz2 = cuCmul(temp_z, temp_z);
-		//qzn = cuCmul(temp_z, make_cuDoubleComplex(nz, 0.0));
-		//qzt = cuCmul(temp_z, make_cuDoubleComplex(z, 0.0));
-		qz2 = cuCsqr(temp_z);
-		qzn = temp_z * nz;
-		qzt = temp_z * z;
-	} // compute_z()
-
-
-	__device__ __inline__ void compute_x(double temp_x, double qy2, cuDoubleComplex qz2, double nx, double qyn,
-				cuDoubleComplex qzn, double x, double qyt,	cuDoubleComplex qzt,
-				cuDoubleComplex& qn_d, cuDoubleComplex& qt_d) {
-		//cuDoubleComplex q2 = cuCadd(make_cuDoubleComplex(fma(temp_x, temp_x, qy2), 0.0), qz2);
-		//qn_d = cuCdiv(cuCadd(make_cuDoubleComplex(temp_x * nx, 0.0),
-		//						cuCadd(make_cuDoubleComplex(qyn, 0.0), qzn)), q2);
-		//qt_d = cuCadd(make_cuDoubleComplex(fma(temp_x, x, qyt), 0.0), qzt);
-		cuDoubleComplex q2 = fma(temp_x, temp_x, qy2) + qz2;
-		qt_d = fma(temp_x, x, qyt) + qzt;
-		qn_d = cuCdiv((fma(temp_x, nx, qyn) + qzn), q2);
-	} // compute_x()
 
 } // namespace hig

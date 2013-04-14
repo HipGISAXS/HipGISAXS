@@ -3,7 +3,7 @@
   *
   *  File: init_gpu.cuh
   *  Created: Feb 22, 2013
-  *  Modified: Fri 22 Feb 2013 01:23:10 PM PST
+  *  Modified: Sat 13 Apr 2013 08:46:19 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -18,6 +18,8 @@ namespace hig {
 
 	void init_gpu() {
 		std::cout << "-- Waking up GPU(s) ..." << std::flush << std::endl;
+		//cudaSetDevice(2);
+		cudaDeviceSetCacheConfig(cudaFuncCachePreferShared);
 		cudaFree(0);
 	} // init_gpu()
 

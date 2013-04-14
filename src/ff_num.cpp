@@ -5,7 +5,7 @@
   *
   *  File: ff_num.cpp
   *  Created: Jul 18, 2012
-  *  Modified: Fri 12 Apr 2013 06:02:29 PM PDT
+  *  Modified: Sat 13 Apr 2013 12:04:29 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -296,16 +296,15 @@ namespace hig {
 			mem_time += mem_end - mem_start;
 	
 			if(rank == 0) {
-				std::cout << "**               FF compute time: " << computetimer.elapsed_msec() << " ms."
-							<< std::endl
-							<< "**                FF kernel time: " << kernel_time << " ms." << std::endl
-							<< "**             FF reduction time: " << red_time << " ms." << std::endl
-							<< "**         FF memory and IO time: " << mem_time * 1000 << " ms." << std::endl
-							<< "**            Communication time: " << comm_time * 1000 << " ms." << std::endl
-							//<< "**                 Total FF time: " << total_time * 1000 << " ms."
-							//<< " (" << total_end << " - " << total_start << ")" << std::endl
-							<< "**                 Total FF time: " << maintimer.elapsed_msec() << " ms."
-							<< std::endl << std::flush;
+				std::cout << "**               FF compute time: " << computetimer.elapsed_msec() << " ms."							<< std::endl
+						//<< "**                FF kernel time: " << kernel_time << " ms." << std::endl
+						//<< "**             FF reduction time: " << red_time << " ms." << std::endl
+						<< "**         FF memory and IO time: " << mem_time * 1000 << " ms." << std::endl
+						<< "**            Communication time: " << comm_time * 1000 << " ms." << std::endl
+						//<< "**                 Total FF time: " << total_time * 1000 << " ms."
+						//<< " (" << total_end << " - " << total_start << ")" << std::endl
+						<< "**                 Total FF time: " << maintimer.elapsed_msec() << " ms."
+						<< std::endl << std::flush;
 			} // if
 		} // if
 
