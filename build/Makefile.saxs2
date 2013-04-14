@@ -58,8 +58,8 @@ MPI_LIBS = -L $(MPI_DIR)/lib -lmpi_cxx -lmpi
 ## cuda
 ifeq ($(USE_GPU), y)
 CUDA_INCL = -I$(CUDA_DIR)/include
-CUDA_LIBS = -L$(CUDA_DIR)/lib64 -lcudart -lcufft
-NVCC_FLAGS = -Xcompiler -fPIC -Xcompiler -fopenmp -m 64
+CUDA_LIBS = -L$(CUDA_DIR)/lib64 -lcudart -lcufft #-lnvToolsExt
+NVCC_FLAGS = -Xcompiler -fPIC -Xcompiler -fopenmp -m64
 NVCC_FLAGS += -gencode arch=compute_20,code=sm_20
 NVCC_FLAGS += -gencode arch=compute_20,code=compute_20
 NVCC_FLAGS += -gencode arch=compute_20,code=sm_21
@@ -91,6 +91,8 @@ endif
 ifeq ($(USE_NUM_GPU), y)
 MISC_FLAGS += -DFF_NUM_GPU
 MISC_FLAGS += -DFF_NUM_GPU_FUSED
+#MISC_FLAGS += -DFF_NUM_AUTOTUNE
+#MISC_FLAGS += -DFF_NUM_AUTOTUNE_HB
 endif
 endif
 
