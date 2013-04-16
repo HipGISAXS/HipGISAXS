@@ -38,11 +38,20 @@ namespace hig {
 			bool init();	// TODO ...
 	
 		private:
+			#ifndef FF_NUM_CPU_FUSED
+			
 			void form_factor_kernel(float_t*, float_t*, complex_t*, float_vec_t&,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									complex_t*);
+
+			void reduction_kernel(unsigned int, unsigned int, unsigned int,	unsigned int,
+									unsigned long int, unsigned int, unsigned int, unsigned int,
+									unsigned int, unsigned int, unsigned int, unsigned int,
+									unsigned int, unsigned int, unsigned int, unsigned int,
+									complex_t*, complex_t*);
+			#else
 
 			void form_factor_kernel_fused(float_t*, float_t*, complex_t*, float_vec_t&,
 									unsigned int, unsigned int, unsigned int, unsigned int,
@@ -55,6 +64,9 @@ namespace hig {
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
+									#ifdef FF_NUM_CPU_PADDING
+										unsigned int, unsigned int, unsigned int,
+									#endif
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									complex_t*);
 
@@ -62,16 +74,14 @@ namespace hig {
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
+									#ifdef FF_NUM_CPU_PADDING
+										unsigned int, unsigned int, unsigned int,
+									#endif
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									complex_t*);
+			#endif
 
 			complex_t compute_fq(float_t, complex_t, complex_t);
-
-			void reduction_kernel(unsigned int, unsigned int, unsigned int,	unsigned int,
-									unsigned long int, unsigned int, unsigned int, unsigned int,
-									unsigned int, unsigned int, unsigned int, unsigned int,
-									unsigned int, unsigned int, unsigned int, unsigned int,
-									complex_t*, complex_t*);
 
 			void compute_block_size(int, int, int, int, unsigned int&, unsigned int&, unsigned int&,
 									unsigned int&

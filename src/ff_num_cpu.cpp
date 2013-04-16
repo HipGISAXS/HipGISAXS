@@ -48,14 +48,28 @@ namespace hig {
 				std::cout << "++      Number of OpenMP threads: " << omp_get_max_threads() << std::endl;
 		#endif
 	
-		unsigned int num_triangles = shape_def.size() / 7;
+		unsigned int num_triangles = shape_def.size() / CPU_T_PROP_SIZE_;
 		if(num_triangles < 1) return 0;
 	
-		unsigned long int total_qpoints = nqx * nqy * nqz;
-		unsigned long int host_mem_usage = ((unsigned long int) nqx + nqy + nqz) * sizeof(float_t);
+		//#ifndef FF_NUM_CPU_PADDING
+			unsigned long int total_qpoints = nqx * nqy * nqz;
+			unsigned long int host_mem_usage = ((unsigned long int) nqx + nqy) * sizeof(float_t) +
+												nqz * sizeof(complex_t);
+		//#else
+			// padding to 16 bytes
+			//const unsigned int PAD_LINE_ = 16;
+			//unsigned int pad_x = 0;
+			//if(nqx != 1) pad_x = (PAD_LINE_ - (nqx % PAD_LINE_)) % PAD_LINE_;
+			//unsigned int pad_y = (PAD_LINE_ - (nqy % PAD_LINE_)) % PAD_LINE_;
+			//unsigned int pad_z = (PAD_LINE_ - (nqz % PAD_LINE_)) % PAD_LINE_;
+			//unsigned int pnqx = nqx + pad_x, pnqy = nqy + pad_y, pnqz = nqz + pad_z;
+			//unsigned long int total_qpoints = pnqx * pnqy * pnqz;
+			//unsigned long int host_mem_usage = ((unsigned long int) pnqx + pnqy) * sizeof(float_t) +
+			//									pnqz * sizeof(complex_t);
+		//#endif
 	
 		// allocate memory for the final FF 3D matrix
-		ff = new (std::nothrow) complex_t[total_qpoints]();	// allocate and initialize to 0
+		ff = new (std::nothrow) complex_t[total_qpoints];	// allocate and initialize to 0
 		memset(ff, 0, total_qpoints * sizeof(complex_t));
 		if(ff == NULL) {
 			std::cerr << "Memory allocation failed for ff. Size = "
@@ -64,19 +78,28 @@ namespace hig {
 		} // if
 		host_mem_usage += total_qpoints * sizeof(complex_t);
 	
-		unsigned long int matrix_size = (unsigned long int) nqx * nqy * nqz * num_triangles;
+		//unsigned long int matrix_size = (unsigned long int) nqx * nqy * nqz * num_triangles;
 		
 		// do hyperblocking to use less memory
 		unsigned int b_nqx = 0, b_nqy = 0, b_nqz = 0, b_num_triangles = 0;
-		compute_block_size(nqx, nqy, nqz, num_triangles,
-							b_nqx, b_nqy, b_nqz, b_num_triangles
-							#ifdef FINDBLOCK
-								, block_x, block_y, block_z, block_t
-							#endif
-							);
+		//#ifndef FF_NUM_CPU_PADDING
+			compute_block_size(nqx, nqy, nqz, num_triangles,
+								b_nqx, b_nqy, b_nqz, b_num_triangles
+								#ifdef FINDBLOCK
+									, block_x, block_y, block_z, block_t
+								#endif
+								);
+		//#else
+		//	// lets have hyperblock dimensions a multiple of 16 (TODO: autotune ...)
+		//	compute_block_size(pnqx, pnqy, pnqz, num_triangles,
+		//						b_nqx, b_nqy, b_nqz, b_num_triangles
+		//						#ifdef FINDBLOCK
+		//							, block_x, block_y, block_z, block_t
+		//						#endif
+		//						);
+		//#endif
 	
 		unsigned long int blocked_3d_matrix_size = (unsigned long int) b_nqx * b_nqy * b_nqz;
-		unsigned long int blocked_matrix_size = (unsigned long int) blocked_3d_matrix_size * b_num_triangles;
 		
 		//size_t estimated_host_mem_need = host_mem_usage + blocked_matrix_size * sizeof(complex_t);
 		//if(rank == 0) {
@@ -84,6 +107,8 @@ namespace hig {
 		//				<< " MB" << std::endl;
 		//} // if
 		#ifndef FF_NUM_CPU_FUSED
+			unsigned long int blocked_matrix_size =
+										(unsigned long int) blocked_3d_matrix_size * b_num_triangles;
 			host_mem_usage += blocked_matrix_size * sizeof(complex_t);
 			complex_t *fq_buffer = new (std::nothrow) complex_t[blocked_matrix_size]();
 			if(fq_buffer == NULL) {
@@ -96,7 +121,7 @@ namespace hig {
 			} // if
 		#endif
 		if(rank == 0) {
-			std::cout << "++              Host memory used: " << (float) host_mem_usage / 1024 / 1024
+			std::cout << "++             Host memory usage: " << (float) host_mem_usage / 1024 / 1024
 						<< " MB" << std::endl << std::flush;
 		} // if
 
@@ -211,8 +236,11 @@ namespace hig {
 	} // NumericFormFactorC::compute_form_factor()
 		
 
+	#ifndef FF_NUM_CPU_FUSED
+
 	/**
 	 * the main Form Factor kernel function - for one hyperblock.
+	 * needs reduction kernel after this.
 	 */
 	void NumericFormFactorC::form_factor_kernel(float_t* qx, float_t* qy, complex_t* qz,
 					float_vec_t& shape_def,
@@ -227,7 +255,7 @@ namespace hig {
 		{
 			#pragma omp for nowait //schedule(auto)
 			for(unsigned int i_t = 0; i_t < curr_num_triangles; ++ i_t) {
-				unsigned int shape_off = (ib_t * b_num_triangles + i_t) * 7;
+				unsigned int shape_off = (ib_t * b_num_triangles + i_t) * CPU_T_PROP_SIZE_;
 				float_t s = shape_def[shape_off];
 				float_t nx = shape_def[shape_off + 1];
 				float_t ny = shape_def[shape_off + 2];
@@ -276,87 +304,6 @@ namespace hig {
 	
 	
 	/**
-	 * the main Form Factor kernel with fused reduction function - for one hyperblock.
-	 */
-	void NumericFormFactorC::form_factor_kernel_fused(float_t* qx, float_t* qy, complex_t* qz,
-					float_vec_t& shape_def,
-					unsigned int curr_nqx, unsigned int curr_nqy, unsigned int curr_nqz,
-					unsigned int curr_num_triangles,
-					unsigned int b_nqx, unsigned int b_nqy, unsigned int b_nqz, unsigned int b_num_triangles,
-					unsigned int nqx, unsigned int nqy, unsigned int nqz, unsigned int num_triangles,
-					unsigned int ib_x, unsigned int ib_y, unsigned int ib_z, unsigned int ib_t,
-					complex_t* ff) {
-		if(ff == NULL || qx == NULL || qy == NULL || qz == NULL) return;
-	
-		unsigned long int xy_size = (unsigned long int) curr_nqx * curr_nqy;
-		unsigned int start_z = b_nqz * ib_z;
-		unsigned int start_y = b_nqy * ib_y;
-		unsigned int start_x = b_nqx * ib_x;
-
-		#pragma omp parallel
-		{
-			#pragma omp for collapse(3)
-			for(int i_z = 0; i_z < curr_nqz; ++ i_z) {
-				for(int i_y = 0; i_y < curr_nqy; ++ i_y) {
-					for(int i_x = 0; i_x < curr_nqx; ++ i_x) {
-						for(int i_t = 0; i_t < curr_num_triangles; ++ i_t) {
-							unsigned int shape_off = (ib_t * b_num_triangles + i_t) * 7;
-							float_t s = shape_def[shape_off];
-							float_t nx = shape_def[shape_off + 1];
-							float_t ny = shape_def[shape_off + 2];
-							float_t nz = shape_def[shape_off + 3];
-							float_t x = shape_def[shape_off + 4];
-							float_t y = shape_def[shape_off + 5];
-							float_t z = shape_def[shape_off + 6];
-	
-							complex_t temp_z = qz[start_z + i_z];
-							complex_t qz2 = temp_z * temp_z;
-							complex_t qzn = temp_z * nz;
-							complex_t qzt = temp_z * z;
-	
-							float_t temp_y = qy[start_y + i_y];
-							float_t qy2 = temp_y * temp_y;
-							float_t qyn = temp_y * ny;
-							float_t qyt = temp_y * y;
-	
-							float_t temp_x = qx[start_x + i_x];
-							complex_t q2 = temp_x * temp_x + qy2 + qz2;
-							complex_t qt = temp_x * x + qyt + qzt;
-							complex_t qn = (temp_x * nx + qyn + qzn) / q2;
-
-							unsigned long int super_i = (unsigned long int) nqx * nqy * (ib_z * b_nqz + i_z) +
-														nqx * (ib_y * b_nqy + i_y) + ib_x * b_nqx + i_x;
-							ff[super_i] += compute_fq(s, qt, qn);
-						} // for t
-					} // for x
-				} // for y
-			} // for z
-		} // pragma omp parallel
-	} // NumericFormFactorC::form_factor_kernel_fused()
-	
-
-	/**
-	 * Include kernels with various optimizations.
-	 */
-	#include "ff_num_cpu_kernels.hpp"
-	
-	
-	/**
-	 * Computational kernel function.
-	 */
-	inline complex_t NumericFormFactorC::compute_fq(float_t s, complex_t qt, complex_t qn) {
-		/*complex_t temp = s * qn;
-		//complex_t result(temp * cos(qt), temp * sin(qt));	// Euler's Formula:
-															//exp(i * qt) = cos(qt) + i * sin(qt)
-		complex_t result = temp * exp(complex_t(-qt.imag(), qt.real()));
-		return result;*/
-		complex_t v1 = qn * complex_t(cos(qt.real()), sin(qt.real()));
-		float_t v2 = s * exp(qt.imag());
-		return v1 * v2;
-	} // NumericFormFactorC::compute_fq()
-	
-	
-	/**
 	 * Reduction kernel
 	 */
 	void NumericFormFactorC::reduction_kernel(
@@ -402,6 +349,85 @@ namespace hig {
 			} // omp parallel
 		} // for i_x
 	} // NumericFormFactorC::reduction_kernel()
+	
+	#else
+	
+	/**
+	 * the main Form Factor kernel with fused reduction function - for one hyperblock.
+	 * using this as baseline.
+	 */
+	void NumericFormFactorC::form_factor_kernel_fused(float_t* qx, float_t* qy, complex_t* qz,
+					float_vec_t& shape_def,
+					unsigned int curr_nqx, unsigned int curr_nqy, unsigned int curr_nqz,
+					unsigned int curr_num_triangles,
+					unsigned int b_nqx, unsigned int b_nqy, unsigned int b_nqz, unsigned int b_num_triangles,
+					unsigned int nqx, unsigned int nqy, unsigned int nqz, unsigned int num_triangles,
+					unsigned int ib_x, unsigned int ib_y, unsigned int ib_z, unsigned int ib_t,
+					complex_t* ff) {
+		if(ff == NULL || qx == NULL || qy == NULL || qz == NULL) return;
+	
+		unsigned long int xy_size = (unsigned long int) curr_nqx * curr_nqy;
+		unsigned int start_z = b_nqz * ib_z;
+		unsigned int start_y = b_nqy * ib_y;
+		unsigned int start_x = b_nqx * ib_x;
+
+		#pragma omp parallel
+		{
+			#pragma omp for collapse(3)
+			for(int i_z = 0; i_z < curr_nqz; ++ i_z) {
+				for(int i_y = 0; i_y < curr_nqy; ++ i_y) {
+					for(int i_x = 0; i_x < curr_nqx; ++ i_x) {
+						for(int i_t = 0; i_t < curr_num_triangles; ++ i_t) {
+							unsigned int shape_off = (ib_t * b_num_triangles + i_t) * CPU_T_PROP_SIZE_;
+							float_t s = shape_def[shape_off];
+							float_t nx = shape_def[shape_off + 1];
+							float_t ny = shape_def[shape_off + 2];
+							float_t nz = shape_def[shape_off + 3];
+							float_t x = shape_def[shape_off + 4];
+							float_t y = shape_def[shape_off + 5];
+							float_t z = shape_def[shape_off + 6];
+	
+							complex_t temp_z = qz[start_z + i_z];
+							complex_t qz2 = temp_z * temp_z;
+							complex_t qzn = temp_z * nz;
+							complex_t qzt = temp_z * z;
+	
+							float_t temp_y = qy[start_y + i_y];
+							float_t qy2 = temp_y * temp_y;
+							float_t qyn = temp_y * ny;
+							float_t qyt = temp_y * y;
+	
+							float_t temp_x = qx[start_x + i_x];
+							complex_t q2 = temp_x * temp_x + qy2 + qz2;
+							complex_t qt = temp_x * x + qyt + qzt;
+							complex_t qn = (temp_x * nx + qyn + qzn) / q2;
+
+							unsigned long int super_i = (unsigned long int) nqx * nqy * (ib_z * b_nqz + i_z) +
+														nqx * (ib_y * b_nqy + i_y) + ib_x * b_nqx + i_x;
+							ff[super_i] += compute_fq(s, qt, qn);
+						} // for t
+					} // for x
+				} // for y
+			} // for z
+		} // pragma omp parallel
+	} // NumericFormFactorC::form_factor_kernel_fused()
+	
+
+	/**
+	 * Include kernels with various optimizations.
+	 */
+	#include "ff_num_cpu_kernels.hpp"
+	
+	#endif
+	
+	/**
+	 * Computational kernel function.
+	 */
+	inline complex_t NumericFormFactorC::compute_fq(float_t s, complex_t qt, complex_t qn) {
+		complex_t v1 = qn * complex_t(cos(qt.real()), sin(qt.real()));
+		float_t v2 = s * exp(qt.imag());
+		return v1 * v2;
+	} // NumericFormFactorC::compute_fq()
 	
 	
 	/**

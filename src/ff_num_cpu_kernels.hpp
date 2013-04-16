@@ -26,7 +26,7 @@
 		unsigned int start_z = b_nqz * ib_z;
 		unsigned int start_y = b_nqy * ib_y;
 		unsigned int start_x = b_nqx * ib_x;
-		unsigned int start_t = b_num_triangles * ib_t * 7;
+		unsigned int start_t = b_num_triangles * ib_t * CPU_T_PROP_SIZE_;
 
 		int unroll_rem = curr_num_triangles % 4;
 		int unroll_off = curr_num_triangles - unroll_rem;
@@ -47,7 +47,7 @@
 						complex_t q2 = temp_x * temp_x + qy2 + qz2;
 
 						for(int i_t = 0; i_t < curr_num_triangles; i_t += 4) {
-							unsigned int shape_off1 = start_t + i_t * 7;
+							unsigned int shape_off1 = start_t + i_t * CPU_T_PROP_SIZE_;
 							float_t s1 = shape_def[shape_off1];
 							float_t nx1 = shape_def[shape_off1 + 1];
 							float_t ny1 = shape_def[shape_off1 + 2];
@@ -55,7 +55,7 @@
 							float_t x1 = shape_def[shape_off1 + 4];
 							float_t y1 = shape_def[shape_off1 + 5];
 							float_t z1 = shape_def[shape_off1 + 6];
-							unsigned int shape_off2 = start_t + (i_t + 1) * 7;
+							unsigned int shape_off2 = start_t + (i_t + 1) * CPU_T_PROP_SIZE_;
 							float_t s2 = shape_def[shape_off2];
 							float_t nx2 = shape_def[shape_off2 + 1];
 							float_t ny2 = shape_def[shape_off2 + 2];
@@ -63,7 +63,7 @@
 							float_t x2 = shape_def[shape_off2 + 4];
 							float_t y2 = shape_def[shape_off2 + 5];
 							float_t z2 = shape_def[shape_off2 + 6];
-							unsigned int shape_off3 = start_t + (i_t + 2) * 7;
+							unsigned int shape_off3 = start_t + (i_t + 2) * CPU_T_PROP_SIZE_;
 							float_t s3 = shape_def[shape_off3];
 							float_t nx3 = shape_def[shape_off3 + 1];
 							float_t ny3 = shape_def[shape_off3 + 2];
@@ -71,7 +71,7 @@
 							float_t x3 = shape_def[shape_off3 + 4];
 							float_t y3 = shape_def[shape_off3 + 5];
 							float_t z3 = shape_def[shape_off3 + 6];
-							unsigned int shape_off4 = start_t + (i_t + 3) * 7;
+							unsigned int shape_off4 = start_t + (i_t + 3) * CPU_T_PROP_SIZE_;
 							float_t s4 = shape_def[shape_off4];
 							float_t nx4 = shape_def[shape_off4 + 1];
 							float_t ny4 = shape_def[shape_off4 + 2];
@@ -123,7 +123,7 @@
 	
 						switch(unroll_rem) {
 							case 3:
-								shape_off = start_t + (unroll_off + 2) * 7;
+								shape_off = start_t + (unroll_off + 2) * CPU_T_PROP_SIZE_;
 								s = shape_def[shape_off];
 								nx = shape_def[shape_off + 1];
 								ny = shape_def[shape_off + 2];
@@ -142,7 +142,7 @@
 								ff[super_i] += compute_fq(s, qt, qn);
 
 							case 2:
-								shape_off = start_t + (unroll_off + 1) * 7;
+								shape_off = start_t + (unroll_off + 1) * CPU_T_PROP_SIZE_;
 								s = shape_def[shape_off];
 								nx = shape_def[shape_off + 1];
 								ny = shape_def[shape_off + 2];
@@ -161,7 +161,7 @@
 								ff[super_i] += compute_fq(s, qt, qn);
 
 							case 1:
-								shape_off = start_t + (unroll_off) * 7;
+								shape_off = start_t + (unroll_off) * CPU_T_PROP_SIZE_;
 								s = shape_def[shape_off];
 								nx = shape_def[shape_off + 1];
 								ny = shape_def[shape_off + 2];
@@ -212,7 +212,7 @@
 		unsigned int start_z = b_nqz * ib_z;
 		unsigned int start_y = b_nqy * ib_y;
 		unsigned int start_x = 0;
-		unsigned int start_t = b_num_triangles * ib_t * 7;
+		unsigned int start_t = b_num_triangles * ib_t * CPU_T_PROP_SIZE_;
 
 		//int unroll_rem = curr_num_triangles % 4;
 		int unroll_rem = curr_num_triangles & 3;
@@ -236,7 +236,7 @@
 					complex_t total(0.0, 0.0);
 
 					for(int i_t = 0; i_t < curr_num_triangles; i_t += 4) {
-						unsigned int shape_off1 = start_t + i_t * 7;
+						unsigned int shape_off1 = start_t + i_t * CPU_T_PROP_SIZE_;
 						float_t s1 = shape_def[shape_off1];
 						float_t nx1 = shape_def[shape_off1 + 1];
 						float_t ny1 = shape_def[shape_off1 + 2];
@@ -244,7 +244,7 @@
 						float_t x1 = shape_def[shape_off1 + 4];
 						float_t y1 = shape_def[shape_off1 + 5];
 						float_t z1 = shape_def[shape_off1 + 6];
-						unsigned int shape_off2 = start_t + (i_t + 1) * 7;
+						unsigned int shape_off2 = start_t + (i_t + 1) * CPU_T_PROP_SIZE_;
 						float_t s2 = shape_def[shape_off2];
 						float_t nx2 = shape_def[shape_off2 + 1];
 						float_t ny2 = shape_def[shape_off2 + 2];
@@ -252,7 +252,7 @@
 						float_t x2 = shape_def[shape_off2 + 4];
 						float_t y2 = shape_def[shape_off2 + 5];
 						float_t z2 = shape_def[shape_off2 + 6];
-						unsigned int shape_off3 = start_t + (i_t + 2) * 7;
+						unsigned int shape_off3 = start_t + (i_t + 2) * CPU_T_PROP_SIZE_;
 						float_t s3 = shape_def[shape_off3];
 						float_t nx3 = shape_def[shape_off3 + 1];
 						float_t ny3 = shape_def[shape_off3 + 2];
@@ -260,7 +260,7 @@
 						float_t x3 = shape_def[shape_off3 + 4];
 						float_t y3 = shape_def[shape_off3 + 5];
 						float_t z3 = shape_def[shape_off3 + 6];
-						unsigned int shape_off4 = start_t + (i_t + 3) * 7;
+						unsigned int shape_off4 = start_t + (i_t + 3) * CPU_T_PROP_SIZE_;
 						float_t s4 = shape_def[shape_off4];
 						float_t nx4 = shape_def[shape_off4 + 1];
 						float_t ny4 = shape_def[shape_off4 + 2];
@@ -313,7 +313,7 @@
 
 					switch(unroll_rem) {
 						case 3:
-							shape_off = start_t + (unroll_off + 2) * 7;
+							shape_off = start_t + (unroll_off + 2) * CPU_T_PROP_SIZE_;
 							s = shape_def[shape_off];
 							nx = shape_def[shape_off + 1];
 							ny = shape_def[shape_off + 2];
@@ -332,7 +332,7 @@
 							total += compute_fq(s, qt, qn);
 
 						case 2:
-							shape_off = start_t + (unroll_off + 1) * 7;
+							shape_off = start_t + (unroll_off + 1) * CPU_T_PROP_SIZE_;
 							s = shape_def[shape_off];
 							nx = shape_def[shape_off + 1];
 							ny = shape_def[shape_off + 2];
@@ -351,7 +351,7 @@
 							total += compute_fq(s, qt, qn);
 
 						case 1:
-							shape_off = start_t + (unroll_off) * 7;
+							shape_off = start_t + (unroll_off) * CPU_T_PROP_SIZE_;
 							s = shape_def[shape_off];
 							nx = shape_def[shape_off + 1];
 							ny = shape_def[shape_off + 2];

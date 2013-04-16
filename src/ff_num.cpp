@@ -19,6 +19,7 @@
 #include "woo/timer/woo_boostchronotimers.hpp"
 
 #include "parameters.hpp"
+#include "parameters_cpu.hpp"
 #include "object2hdf5.h"
 #include "qgrid.hpp"
 #include "utilities.hpp"
@@ -600,9 +601,16 @@ namespace hig {
 					else { shape_def.push_back((float_t)temp_shape_def[j]); ++ j; }
 				} // for
 			#endif // KERNEL2
-		#else	// using CPU
+		#elif defined USE_MIC	// using MIC
 			for(unsigned int i = 0; i < num_triangles * 7; ++ i)
 				shape_def.push_back((float_t)temp_shape_def[i]);
+		#else					// using CPU
+			//for(unsigned int i = 0; i < num_triangles * CPU_T_PROP_SIZE_; ++ i)
+				//shape_def.push_back((float_t)temp_shape_def[i]);
+			for(unsigned int i = 0, j = 0; i < num_triangles * CPU_T_PROP_SIZE_; ++ i) {
+				if((i + 1) % CPU_T_PROP_SIZE_ == 0) shape_def.push_back((float_t) 0.0);	// padding
+				else { shape_def.push_back((float_t)temp_shape_def[j]); ++ j; }
+			} // for
 		#endif // FF_NUM_GPU
 
 		return num_triangles;
