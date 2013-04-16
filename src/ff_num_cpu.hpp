@@ -44,6 +44,20 @@ namespace hig {
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									complex_t*);
 
+			void form_factor_kernel_fused(float_t*, float_t*, complex_t*, float_vec_t&,
+									unsigned int, unsigned int, unsigned int, unsigned int,
+									unsigned int, unsigned int, unsigned int, unsigned int,
+									unsigned int, unsigned int, unsigned int, unsigned int,
+									unsigned int, unsigned int, unsigned int, unsigned int,
+									complex_t*);
+
+			void form_factor_kernel_fused_unroll4(float_t*, float_t*, complex_t*, float_vec_t&,
+									unsigned int, unsigned int, unsigned int, unsigned int,
+									unsigned int, unsigned int, unsigned int, unsigned int,
+									unsigned int, unsigned int, unsigned int, unsigned int,
+									unsigned int, unsigned int, unsigned int, unsigned int,
+									complex_t*);
+
 			complex_t compute_fq(float_t, complex_t, complex_t);
 
 			void reduction_kernel(unsigned int, unsigned int, unsigned int,	unsigned int,

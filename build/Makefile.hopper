@@ -25,7 +25,7 @@ CUDA_DIR = $(CRAY_CUDATOOLKIT_DIR)
 endif
 
 ## compilers
-CXX = CC
+CXX = CC #tau_cxx.sh #CC
 H5CC = cc
 ifeq ($(USE_GPU), y)
 NVCC = nvcc
@@ -65,7 +65,7 @@ NVCC_FLAGS += -gencode arch=compute_30,code=sm_30
 NVCC_FLAGS += -gencode arch=compute_35,code=sm_35
 #NVCC_FLAGS += -Xptxas -v -Xcompiler -v -Xlinker -v
 NVCC_FLAGS += --ptxas-options="-v"
-NVCC_FLAGS += #-G #-DFINDBLOCK #-DAXIS_ROT
+NVCC_FLAGS += #-DFINDBLOCK #-DAXIS_ROT
 NVLIB_FLAGS = -Xlinker -lgomp
 NVLIB_FLAGS += -Wl,-rpath -Wl,$(CUDA_DIR)/lib64
 endif
@@ -80,7 +80,7 @@ GSL_LIBS = -L $(GSL_DIR)/lib -lgsl
 
 ## miscellaneous
 MISC_INCL =
-MISC_FLAGS =
+MISC_FLAGS = -DFF_NUM_CPU_FUSED
 
 ifeq ($(USE_GPU), y)
 MISC_FLAGS += -DUSE_GPU
@@ -91,6 +91,7 @@ MISC_FLAGS += -DFF_ANA_GPU
 endif
 ifeq ($(USE_NUM_GPU), y)
 MISC_FLAGS += -DFF_NUM_GPU
+MISC_FLAGS += -DFF_NUM_GPU_FUSED
 endif
 endif
 
@@ -104,6 +105,7 @@ MISC_FLAGS += -DTIME_DETAIL_1 -DTIME_DETAIL_2
 ## choose optimization levels, debug flags, gprof flag, etc
 #OPT_FLAGS = -g -DDEBUG #-v #-pg
 OPT_FLAGS = -O3 -DNDEBUG #-v
+OPT_FLAGS += -march=barcelona -ffast-math -Ofast
 
 ## choose single or double precision here
 PREC_FLAG =			# leave empty for single precision
