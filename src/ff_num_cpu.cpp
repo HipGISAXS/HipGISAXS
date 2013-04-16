@@ -153,12 +153,21 @@ namespace hig {
 									ib_x, ib_y, ib_z, ib_t,
 									fq_buffer);
 						#else
-							form_factor_kernel_fused_unroll4(qx, qy, qz, shape_def,
+							if(nqx == 1) {
+								form_factor_kernel_fused_nqx1_unroll4(qx, qy, qz, shape_def,
 									curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles,
 									b_nqx, b_nqy, b_nqz, b_num_triangles,
 									nqx, nqy, nqz, num_triangles,
 									ib_x, ib_y, ib_z, ib_t,
 									ff);
+							} else {
+								form_factor_kernel_fused_unroll4(qx, qy, qz, shape_def,
+									curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles,
+									b_nqx, b_nqy, b_nqz, b_num_triangles,
+									nqx, nqy, nqz, num_triangles,
+									ib_x, ib_y, ib_z, ib_t,
+									ff);
+							} // if-else
 						#endif
 
 						#ifdef VERBOSITY_3
