@@ -1,0 +1,3 @@
+module swap PrgEnv-intel PrgEnv-gnu
+module load boost
+module load gsl
