@@ -485,7 +485,7 @@ namespace hig {
 												"/err_surf_ai=" + alphai_s + "_rot=" + phi_s +
 												"_tilt=" + tilt_s + ".dat");
 					// write param_error_data
-					std::ofstream param_error_f(param_error_file);
+					std::ofstream param_error_f(param_error_file.c_str());
 					for(std::vector<float_t>::iterator pei = param_error_data.begin();
 							pei != param_error_data.end(); pei += 4) {
 						param_error_f << *pei << "\t" << *(pei + 1) << "\t" << *(pei + 2) << "\t"
@@ -493,7 +493,7 @@ namespace hig {
 					} // for
 					param_error_f.close();
 					// write ref_z_cut and z_cuts
-					std::ofstream zcut_f(z_cut_file);
+					std::ofstream zcut_f(z_cut_file.c_str());
 					for(unsigned int yy = 0; yy < nqy_; ++ yy) {
 						zcut_f << ref_z_cut[yy] << "\t";
 					} // for
@@ -506,7 +506,7 @@ namespace hig {
 					} // for
 					zcut_f.close();
 					// write error surface
-					std::ofstream err_surf_f(err_surf_file);
+					std::ofstream err_surf_f(err_surf_file.c_str());
 					for(std::vector<float_t>::iterator surfi = err_surface.begin();
 							surfi != err_surface.end(); surfi += 3) {
 						err_surf_f << *surfi << "\t" << *(surfi + 1) << "\t" << *(surfi + 2) << std::endl;

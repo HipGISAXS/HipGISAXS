@@ -422,7 +422,7 @@ namespace hig {
 
 	
 	void HipGISAXS::save_gisaxs(float_t *final_data, std::string output) {
-		std::ofstream f(output);
+		std::ofstream f(output.c_str());
 		//std::cout << "NQY x NQZ: " << nqy_ << " x " << nqz_ << std::endl;
 		for(unsigned int z = 0; z < nqz_; ++ z) {
 			for(unsigned int y = 0; y < nqy_; ++ y) {

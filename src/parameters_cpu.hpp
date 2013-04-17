@@ -18,9 +18,9 @@ namespace hig {
 	 */
 
 	const unsigned int CPU_BLOCK_X_ = 100;
-	const unsigned int CPU_BLOCK_Y_ = 20;
-	const unsigned int CPU_BLOCK_Z_ = 15;
-	const unsigned int CPU_BLOCK_T_ = 2000;
+	const unsigned int CPU_BLOCK_Y_ = 256; // 20;
+	const unsigned int CPU_BLOCK_Z_ = 256; // 15;
+	const unsigned int CPU_BLOCK_T_ = 256; // 2000;
 
 	// padding shape definitions
 	const unsigned int CPU_T_PROP_SIZE_ = 8;
