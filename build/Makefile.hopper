@@ -75,8 +75,8 @@ TIFF_INCL = -I $(TIFF_DIR)/include
 TIFF_LIBS = -L $(TIFF_DIR)/lib -ltiff
 
 ## gsl
-GSL_INCL = -I $(GSL_DIR)/include
-GSL_LIBS = -L $(GSL_DIR)/lib -lgsl
+#GSL_INCL = -I $(GSL_DIR)/include
+#GSL_LIBS = -L $(GSL_DIR)/lib -lgsl
 
 ## miscellaneous
 MISC_INCL =
