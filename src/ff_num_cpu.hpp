@@ -70,6 +70,16 @@ namespace hig {
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									complex_t*);
 
+			void form_factor_kernel_fused_nqx1(float_t*, float_t*, complex_t*, float_vec_t&,
+									unsigned int, unsigned int, unsigned int, unsigned int,
+									unsigned int, unsigned int, unsigned int, unsigned int,
+									unsigned int, unsigned int, unsigned int, unsigned int,
+									#ifdef FF_NUM_CPU_PADDING
+										unsigned int, unsigned int, unsigned int,
+									#endif
+									unsigned int, unsigned int, unsigned int, unsigned int,
+									complex_t*);
+
 			void form_factor_kernel_fused_nqx1_unroll4(float_t*, float_t*, complex_t*, float_vec_t&,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,

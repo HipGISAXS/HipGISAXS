@@ -21,7 +21,7 @@
 					unsigned int ib_x, unsigned int ib_y, unsigned int ib_z, unsigned int ib_t,
 					complex_t* ff) {
 		if(ff == NULL || qx == NULL || qy == NULL || qz == NULL) return;
-	
+
 		unsigned long int xy_size = (unsigned long int) curr_nqx * curr_nqy;
 		unsigned int start_z = b_nqz * ib_z;
 		unsigned int start_y = b_nqy * ib_y;
@@ -192,6 +192,94 @@
 
 	/**
 	 * special case of nqx == 1 of Form Factor kernel with fused reduction
+	 */
+	void NumericFormFactorC::form_factor_kernel_fused_nqx1(float_t* qx, float_t* qy, complex_t* qz,
+					float_vec_t& shape_def,
+					unsigned int curr_nqx, unsigned int curr_nqy, unsigned int curr_nqz,
+					unsigned int curr_num_triangles,
+					unsigned int b_nqx, unsigned int b_nqy, unsigned int b_nqz, unsigned int b_num_triangles,
+					unsigned int nqx, unsigned int nqy, unsigned int nqz, unsigned int num_triangles,
+					unsigned int ib_x, unsigned int ib_y, unsigned int ib_z, unsigned int ib_t,
+					complex_t* ff) {
+		if(ff == NULL || qx == NULL || qy == NULL || qz == NULL) return;
+
+		if(nqx != 1) {
+			std::cout << "error: wrong form factor function called!" << std::endl;
+			return;
+		} // if
+	
+		unsigned long int xy_size = (unsigned long int) curr_nqy;
+		unsigned int start_z = b_nqz * ib_z;
+		unsigned int start_y = b_nqy * ib_y;
+		unsigned int start_x = 0;
+		unsigned int start_t = b_num_triangles * ib_t * CPU_T_PROP_SIZE_;
+
+		#ifdef PROFILE_PAPI
+			//int papi_events[3] = { PAPI_FP_OPS, PAPI_SP_OPS, PAPI_DP_OPS };
+			//long long papi_counter_vals[3];
+		#endif
+
+		#pragma omp parallel
+		{
+			#pragma omp for collapse(2)
+			for(int i_z = 0; i_z < curr_nqz; ++ i_z) {
+				for(int i_y = 0; i_y < curr_nqy; ++ i_y) {
+					#ifdef PROFILE_PAPI
+						//if(ib_y + ib_z + ib_t + i_z + i_y == 0) PAPI_start_counters(papi_events, 3);
+					#endif
+
+					unsigned long int super_i = (unsigned long int) nqy * (ib_z * b_nqz + i_z) +
+													(ib_y * b_nqy + i_y);
+					complex_t temp_z = qz[start_z + i_z];
+					float_t temp_y = qy[start_y + i_y];
+					float_t temp_x = qx[0];
+					complex_t qz2 = temp_z * temp_z;
+					float_t qy2 = temp_y * temp_y;
+					float_t qx2 = temp_x * temp_x;
+					complex_t q2 = qx2 + qy2 + qz2;
+					complex_t q2_inv = ((float_t) 1.0) / q2;
+
+					complex_t total(0.0, 0.0);
+
+					for(int i_t = 0; i_t < curr_num_triangles; ++ i_t) {
+						unsigned int shape_off = start_t + i_t * CPU_T_PROP_SIZE_;
+						float_t s = shape_def[shape_off];
+						float_t nx = shape_def[shape_off + 1];
+						float_t ny = shape_def[shape_off + 2];
+						float_t nz = shape_def[shape_off + 3];
+						float_t x = shape_def[shape_off + 4];
+						float_t y = shape_def[shape_off + 5];
+						float_t z = shape_def[shape_off + 6];
+
+						complex_t qzn = temp_z * nz;
+						complex_t qzt = temp_z * z;
+						float_t qyn = temp_y * ny;
+						float_t qyt = temp_y * y;
+						complex_t qt = temp_x * x + qyt + qzt;
+						complex_t qn = (temp_x * nx + qyn + qzn) * q2_inv;
+						complex_t fq = compute_fq(s, qt, qn);
+
+						total += fq;
+					} // for t
+
+					ff[super_i] += total;
+
+					#ifdef PROFILE_PAPI
+						//if(ib_y + ib_z + ib_t + i_z + i_y == 0) {
+						//	PAPI_stop_counters(papi_counter_vals, 3);
+						//	std::cout << "==== FP_OPS: " << papi_counter_vals[0] << std::endl;
+						//	std::cout << "==== SP_OPS: " << papi_counter_vals[1] << std::endl;
+						//	std::cout << "==== DP_OPS: " << papi_counter_vals[2] << std::endl;
+						//} // if
+					#endif
+				} // for y
+			} // for z
+		} // pragma omp parallel
+	} // NumericFormFactorC::form_factor_kernel_fused_nqx1()
+
+
+	/**
+	 * special case of nqx == 1 of Form Factor kernel with fused reduction, and loop unrolling
 	 */
 	void NumericFormFactorC::form_factor_kernel_fused_nqx1_unroll4(float_t* qx, float_t* qy, complex_t* qz,
 					float_vec_t& shape_def,

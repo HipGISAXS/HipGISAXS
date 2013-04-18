@@ -14,6 +14,11 @@
 #ifdef _OPENMP
 #include <omp.h>
 #endif
+#ifdef PROFILE_PAPI
+#include <papi.h>
+#endif
+
+#include "woo/timer/woo_boostchronotimers.hpp"
 
 #include "constants.hpp"
 #include "parameters.hpp"
@@ -146,7 +151,15 @@ namespace hig {
 
 		unsigned int block_num = 0;
 
+		#ifdef PROFILE_PAPI
+			long long int papi_total_cycles = 0, papi_total_inst = 0, papi_total_flop = 0;
+			double overall_ipc = 0.0;
+		#endif
+
 		if(rank == 0) std::cout << "-- Computing form factor on CPU ... " << std::flush;
+
+		woo::BoostChronoTimer kernel_timer;
+		kernel_timer.start();
 
 		// compute for each hyperblock
 		curr_b_nqx = b_nqx;
@@ -170,6 +183,58 @@ namespace hig {
 							} // if
 						#endif
 
+						#ifdef PROFILE_PAPI
+							// PAPI_L1_DCM  0x80000000  No   Level 1 data cache misses
+							// PAPI_L1_ICM  0x80000001  No   Level 1 instruction cache misses
+							// PAPI_L2_DCM  0x80000002  No   Level 2 data cache misses
+							// PAPI_L2_ICM  0x80000003  No   Level 2 instruction cache misses
+							// PAPI_L1_TCM  0x80000006  Yes  Level 1 cache misses
+							// PAPI_L2_TCM  0x80000007  No   Level 2 cache misses
+							// PAPI_FPU_IDL 0x80000012  No   Cycles floating point units are idle
+							// PAPI_TLB_DM  0x80000014  No   Data translation lookaside buffer misses
+							// PAPI_TLB_IM  0x80000015  No   Instruction translation lookaside buffer misses
+							// PAPI_TLB_TL  0x80000016  Yes  Total translation lookaside buffer misses
+							// PAPI_STL_ICY 0x80000025  No   Cycles with no instruction issue
+							// PAPI_HW_INT  0x80000029  No   Hardware interrupts
+							// PAPI_BR_TKN  0x8000002c  No   Conditional branch instructions taken
+							// PAPI_BR_MSP  0x8000002e  No   Conditional branch instructions mispredicted
+							// PAPI_TOT_INS 0x80000032  No   Instructions completed
+							// PAPI_FP_INS  0x80000034  No   Floating point instructions
+							// PAPI_BR_INS  0x80000037  No   Branch instructions
+							// PAPI_VEC_INS 0x80000038  No   Vector/SIMD instructions (could include integer)
+							// PAPI_RES_STL 0x80000039  No   Cycles stalled on any resource
+							// PAPI_TOT_CYC 0x8000003b  No   Total cycles
+							// PAPI_L1_DCH  0x8000003e  Yes  Level 1 data cache hits
+							// PAPI_L2_DCH  0x8000003f  Yes  Level 2 data cache hits
+							// PAPI_L1_DCA  0x80000040  No   Level 1 data cache accesses
+							// PAPI_L2_DCA  0x80000041  No   Level 2 data cache accesses
+							// PAPI_L1_ICH  0x80000049  Yes  Level 1 instruction cache hits
+							// PAPI_L2_ICH  0x8000004a  No   Level 2 instruction cache hits
+							// PAPI_L1_ICA  0x8000004c  No   Level 1 instruction cache accesses
+							// PAPI_L2_ICA  0x8000004d  No   Level 2 instruction cache accesses
+							// PAPI_L1_ICR  0x8000004f  No   Level 1 instruction cache reads
+							// PAPI_L1_TCH  0x80000055  Yes  Level 1 total cache hits
+							// PAPI_L2_TCH  0x80000056  Yes  Level 2 total cache hits
+							// PAPI_L1_TCA  0x80000058  Yes  Level 1 total cache accesses
+							// PAPI_L2_TCA  0x80000059  No   Level 2 total cache accesses
+							// PAPI_FML_INS 0x80000061  No   Floating point multiply instructions
+							// PAPI_FAD_INS 0x80000062  No   Floating point add instructions
+							//                               (Also includes subtract instructions)
+							// PAPI_FDV_INS 0x80000063  No   Floating point divide instructions
+							//                               (Counts both divide and square root instructions)
+							// PAPI_FSQ_INS 0x80000064  No   Floating point square root instructions
+							//                               (Counts both divide and square root instructions)
+							// PAPI_FP_OPS  0x80000066  No   Floating point operations
+							// PAPI_SP_OPS  0x80000067  No   Floating point operations; optimized to count
+							//                               scaled single precision vector operations
+							// PAPI_DP_OPS  0x80000068  No   Floating point operations; optimized to count
+							//                               scaled double precision vector operations
+
+							int papi_events[3] = { PAPI_TOT_CYC, PAPI_TOT_INS, PAPI_FP_OPS };
+							long long  papi_counter_values[3];
+							PAPI_start_counters(papi_events, 3);
+						#endif
+
 						// call the main kernel
 						#ifndef FF_NUM_CPU_FUSED
 							form_factor_kernel(qx, qy, qz, shape_def,
@@ -179,7 +244,7 @@ namespace hig {
 									fq_buffer);
 						#else
 							if(nqx == 1) {
-								form_factor_kernel_fused_nqx1_unroll4(qx, qy, qz, shape_def,
+								form_factor_kernel_fused_nqx1(qx, qy, qz, shape_def,
 									curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles,
 									b_nqx, b_nqy, b_nqz, b_num_triangles,
 									nqx, nqy, nqz, num_triangles,
@@ -217,16 +282,43 @@ namespace hig {
 								std::cout << "done [" << temp_reduce_time << "s]." << std::endl;
 							} // if
 						#endif
+
+						#ifdef PROFILE_PAPI
+							PAPI_stop_counters(papi_counter_values, 3);
+							papi_total_cycles += papi_counter_values[0];
+							papi_total_inst += papi_counter_values[1];
+							papi_total_flop += papi_counter_values[2];
+						#endif
 					} // for ib_t
 				} // for ib_z
 			} // for ib_y
 		} // for ib_x
+
+		kernel_timer.stop();
+		float_t ktime = kernel_timer.elapsed_msec();
 
 		#ifndef FF_NUM_CPU_FUSED
 			delete[] fq_buffer;
 		#endif
 
 		if(rank == 0) std::cout << "done." << std::endl;
+
+		#ifdef PROFILE_PAPI
+			if(rank == 0) {
+				//std::cout << "++                  PAPI_TOT_CYC: " << papi_total_cycles << std::endl;
+				//std::cout << "++                  PAPI_TOT_INS: " << papi_total_inst << std::endl;
+				std::cout << "++                           IPC: "
+							<< (double) papi_total_inst / papi_total_cycles << std::endl;
+				//std::cout << "++                   PAPI_FP_OPS: " << papi_total_flop << std::endl;
+				std::cout << "++                        Flop/s: "
+							<< (double) papi_total_flop / (1000000 * ktime) << " GFlops" << std::endl;
+			} // if
+		#endif
+
+		if(rank == 0) {
+			std::cout << "**                FF kernel time: " << ktime << " ms."
+						<< std::endl;
+		} // if
 	
 		pass_kernel_time = total_kernel_time;
 		red_time = total_reduce_time;
