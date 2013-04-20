@@ -1,5 +1,3 @@
 module swap PrgEnv-pgi PrgEnv-gnu
-module swap gcc gcc/4.6.3		## not really needed
 module load hdf5-parallel
 module load boost/1.51-gnu
-module load gsl

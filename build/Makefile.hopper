@@ -78,10 +78,27 @@ TIFF_LIBS = -L $(TIFF_DIR)/lib -ltiff
 #GSL_INCL = -I $(GSL_DIR)/include
 #GSL_LIBS = -L $(GSL_DIR)/lib -lgsl
 
+## AMD LibM
+#ALIBM_INCL = -I $(HOME)/local/amdlibm-3-0-2/include
+#ALIBM_LIBS = -L $(HOME)/local/amdlibm-3-0-2/lib/static -lamdlibm
+
+
+## all includes
+ALL_INCL = $(MPI_INCL) $(CUDA_INCL) $(BOOST_INCL) $(HDF5_INCL) $(MISC_INCL) $(TIFF_INCL) $(ALIBM_INCL)
+
+## all libraries
+ALL_LIBS = $(BOOST_LIBS) $(MPI_LIBS) $(NVLIB_FLAGS) $(CUDA_LIBS) $(HDF5_LIBS) $(TIFF_LIBS) $(ALIBM_LIBS)
+
+
 ## miscellaneous
 MISC_INCL =
-MISC_FLAGS = -DFF_NUM_CPU_FUSED
+MISC_FLAGS =
 
+## stuff for CPU
+MISC_FLAGS += -DFF_NUM_CPU_FUSED
+MISC_FLAGS += -DPROFILE_PAPI
+
+## stuff for GPU
 ifeq ($(USE_GPU), y)
 MISC_FLAGS += -DUSE_GPU
 MISC_FLAGS += -DGPUR -DKERNEL2
@@ -103,22 +120,17 @@ endif
 MISC_FLAGS += -DTIME_DETAIL_1 -DTIME_DETAIL_2
 
 ## choose optimization levels, debug flags, gprof flag, etc
-#OPT_FLAGS = -g -DDEBUG #-v #-pg
-OPT_FLAGS = -O3 -DNDEBUG #-v
+#OPT_FLAGS = -g #-DDEBUG #-v #-pg
+OPT_FLAGS += -O3 -DNDEBUG #-v
 
 ## stuff for AMD x86_64
-OPT_FLAGS += -march=barcelona -msse4a -ffast-math -Ofast
+OPT_FLAGS += -march=barcelona -ffast-math -Ofast
+OPT_FLAGS += -msse4a
+#OPT_FLAGS += -U__SSE3__
 
 ## choose single or double precision here
 PREC_FLAG =			# leave empty for single precision
 #PREC_FLAG = -DDOUBLEP	# define this for double precision
-
-
-## all includes
-ALL_INCL = $(MPI_INCL) $(CUDA_INCL) $(BOOST_INCL) $(HDF5_INCL) $(MISC_INCL) $(TIFF_INCL)
-
-## all libraries
-ALL_LIBS = $(BOOST_LIBS) $(MPI_LIBS) $(NVLIB_FLAGS) $(CUDA_LIBS) $(HDF5_LIBS) $(TIFF_LIBS) $(GSL_LIBS)
 
 
 PREFIX = $(PWD)
@@ -137,8 +149,7 @@ OBJECTS_MAIN = utilities.o numeric_utils.o compute_params.o hig_input.o \
 			ff_ana_sphere.o ff_ana_box.o ff_ana_cylinder.o ff_ana_hcylinder.o ff_ana_prism3x.o \
 			ff_ana_prism6.o ff_ana_prism.o ff_ana_pyramid.o ff_ana_rand_cylinder.o \
 			ff_ana_sawtooth_down.o ff_ana_sawtooth_up.o ff_ana_trunc_cone.o ff_ana_trunc_pyramid.o \
-			ff_num_cpu.o \
-			fitting_steepest_descent.o
+			ff_num_cpu.o
 
 ifeq ($(USE_GPU), y)
 OBJECTS_MAIN += reduction.o ff_num_gpu.o ff_ana_gpu.o ff_ana_sphere_gpu.o ff_ana_box_gpu.o \
@@ -152,7 +163,7 @@ endif
 
 OBJECTS_SIM = $(OBJECTS_MAIN) hipgisaxs_sim.o
 
-OBJECTS_FIT = $(OBJECTS_MAIN) hipgisaxs_fit.o
+OBJECTS_FIT = $(OBJECTS_MAIN) fitting_steepest_descent.o hipgisaxs_fit.o
 
 ## the main binary
 OBJ_BIN_SIM = $(patsubst %,$(OBJ_DIR)/%,$(OBJECTS_SIM))
