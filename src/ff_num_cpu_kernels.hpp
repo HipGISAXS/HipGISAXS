@@ -3,11 +3,13 @@
  *
  *  File: ff_num_cpu.hpp
  *  Created: Nov 05, 2011
- *  Modified: Wed 03 Apr 2013 11:18:54 AM PDT
+ *  Modified: Sat 20 Apr 2013 11:41:37 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
 	
+
+	#ifndef __SSE3__	// when not using sse3 optimizations
 
 	/**
 	 * the main Form Factor kernel with fused reduction function - for one hyperblock.
@@ -188,13 +190,18 @@
 			} // for z
 		} // pragma omp parallel
 	} // NumericFormFactorC::form_factor_kernel_fused_unroll()
-	
 
+	#endif
+	
 	/**
 	 * special case of nqx == 1 of Form Factor kernel with fused reduction
 	 */
 	void NumericFormFactorC::form_factor_kernel_fused_nqx1(float_t* qx, float_t* qy, complex_t* qz,
-					float_vec_t& shape_def,
+					#ifndef __SSE3__
+						float_vec_t& shape_def,
+					#else
+						float_t* shape_def,
+					#endif
 					unsigned int curr_nqx, unsigned int curr_nqy, unsigned int curr_nqz,
 					unsigned int curr_num_triangles,
 					unsigned int b_nqx, unsigned int b_nqy, unsigned int b_nqz, unsigned int b_num_triangles,
@@ -214,19 +221,22 @@
 		unsigned int start_x = 0;
 		unsigned int start_t = b_num_triangles * ib_t * CPU_T_PROP_SIZE_;
 
-		#ifdef PROFILE_PAPI
+		//#ifdef PROFILE_PAPI
 			//int papi_events[3] = { PAPI_FP_OPS, PAPI_SP_OPS, PAPI_DP_OPS };
+			//int papi_events[3] = { PAPI_FML_INS, PAPI_FAD_INS, PAPI_FDV_INS };
 			//long long papi_counter_vals[3];
-		#endif
+		//#endif
+
+		#ifndef __SSE3__	// fallback
 
 		#pragma omp parallel
 		{
 			#pragma omp for collapse(2)
 			for(int i_z = 0; i_z < curr_nqz; ++ i_z) {
 				for(int i_y = 0; i_y < curr_nqy; ++ i_y) {
-					#ifdef PROFILE_PAPI
+					//#ifdef PROFILE_PAPI
 						//if(ib_y + ib_z + ib_t + i_z + i_y == 0) PAPI_start_counters(papi_events, 3);
-					#endif
+					//#endif
 
 					unsigned long int super_i = (unsigned long int) nqy * (ib_z * b_nqz + i_z) +
 													(ib_y * b_nqy + i_y);
@@ -255,8 +265,10 @@
 						complex_t qzt = temp_z * z;
 						float_t qyn = temp_y * ny;
 						float_t qyt = temp_y * y;
-						complex_t qt = temp_x * x + qyt + qzt;
-						complex_t qn = (temp_x * nx + qyn + qzn) * q2_inv;
+						float_t qxn = temp_x * nx;
+						float_t qxt = temp_x * x;
+						complex_t qt = qxt + qyt + qzt;
+						complex_t qn = (qxn + qyn + qzn) * q2_inv;
 						complex_t fq = compute_fq(s, qt, qn);
 
 						total += fq;
@@ -264,19 +276,136 @@
 
 					ff[super_i] += total;
 
-					#ifdef PROFILE_PAPI
+					//#ifdef PROFILE_PAPI
 						//if(ib_y + ib_z + ib_t + i_z + i_y == 0) {
 						//	PAPI_stop_counters(papi_counter_vals, 3);
 						//	std::cout << "==== FP_OPS: " << papi_counter_vals[0] << std::endl;
 						//	std::cout << "==== SP_OPS: " << papi_counter_vals[1] << std::endl;
 						//	std::cout << "==== DP_OPS: " << papi_counter_vals[2] << std::endl;
 						//} // if
-					#endif
+					//#endif
 				} // for y
 			} // for z
 		} // pragma omp parallel
+
+		#else			// sse3 specific optimizations
+
+		// FIXME: assuming only float for now (4 bytes per float)
+		unsigned int shape_padding = (4 - (num_triangles & 3)) & 3;
+		unsigned int vec_size = 4; //16 / sizeof(float_t);	// FIXME: for now assuming SP (float) only ...
+		unsigned int padded_num_triangles = num_triangles + shape_padding;
+		start_t = b_num_triangles * ib_t;
+
+		// shape padding guarantees that padded_num_triangles is a multiple of 4
+
+		#pragma omp parallel
+		{
+			#pragma omp for collapse(2)
+			for(int i_z = 0; i_z < curr_nqz; ++ i_z) {
+				for(int i_y = 0; i_y < curr_nqy; ++ i_y) {
+					//#ifdef PROFILE_PAPI
+					//	if(ib_y + ib_z + ib_t + i_z + i_y == 0) PAPI_start_counters(papi_events, 3);
+					//#endif
+
+					// ////////////////////////////////////////////////////
+					// intrinsic wrapper naming (only for floating-point)
+					// _mm_xxx_abc  => a = r|c, b = p|s, c = s|d
+					// _mm_xxx_abcd => a = r|c, b = r|c, c = p|s, d = s|d
+					// r = real,             c = complex,
+					// p = packed (vector),  s = scalar,
+					// s = single-precision, d = double-precision
+					// ////////////////////////////////////////////////////
+
+					unsigned long int super_i = (unsigned long int) nqy * (ib_z * b_nqz + i_z) +
+													(ib_y * b_nqy + i_y);
+					sse_m128c_t temp_z = sse_set1_cps(qz[start_z + i_z]);
+					sse_m128_t temp_y = sse_set1_rps(qy[start_y + i_y]);
+					sse_m128_t temp_x = sse_set1_rps(qx[start_x]);
+
+					sse_m128c_t qz2 = sse_mul_ccps(temp_z, temp_z);
+					sse_m128_t qy2 = sse_mul_rrps(temp_y, temp_y);
+					sse_m128_t qx2 = sse_mul_rrps(temp_x, temp_x);
+					sse_m128c_t q2 = sse_add_rcps(sse_add_rrps(qx2, qy2), qz2);
+					sse_m128c_t q2_inv = sse_rcp_cps(q2);
+
+					sse_m128c_t total = sse_setzero_cps();
+
+					// FIXME: for now assuming curr_num_triangles is always multiple of 4 ...
+					for(int i_t = 0; i_t < curr_num_triangles; i_t += vec_size) {
+						// load 16 / sizeof(float_t) entries at a time:
+						unsigned int shape_off = start_t + i_t;
+						sse_m128_t s = sse_load_rps(& shape_def[shape_off]);
+						shape_off += padded_num_triangles;
+						sse_m128_t nx = sse_load_rps(& shape_def[shape_off]);
+						shape_off += padded_num_triangles;
+						sse_m128_t ny = sse_load_rps(& shape_def[shape_off]);
+						shape_off += padded_num_triangles;
+						sse_m128_t nz = sse_load_rps(& shape_def[shape_off]);
+						shape_off += padded_num_triangles;
+						sse_m128_t x = sse_load_rps(& shape_def[shape_off]);
+						shape_off += padded_num_triangles;
+						sse_m128_t y = sse_load_rps(& shape_def[shape_off]);
+						shape_off += padded_num_triangles;
+						sse_m128_t z = sse_load_rps(& shape_def[shape_off]);
+
+						sse_m128c_t qzn = sse_mul_crps(temp_z, nz);
+						sse_m128c_t qzt = sse_mul_crps(temp_z, z);
+						sse_m128_t qyn = sse_mul_rrps(temp_y, ny);
+						sse_m128_t qyt = sse_mul_rrps(temp_y, y);
+						sse_m128_t qxn = sse_mul_rrps(temp_x, nx);
+						sse_m128_t qxt = sse_mul_rrps(temp_x, x);
+						sse_m128c_t qt = sse_add_rcps(sse_add_rrps(qxt, qyt), qzt);
+						sse_m128c_t temp_qn = sse_add_rcps(sse_add_rrps(qxn, qyn), qzn);
+						sse_m128c_t qn = sse_mul_ccps(temp_qn, q2_inv);
+						sse_m128c_t fq = sse_compute_fq(s, qt, qn);
+
+						total = sse_add_ccps(total, fq);
+					} // for t
+					// remainder triangles
+					// ...
+
+					total = sse_hadd_ccps(total, total);
+					total = sse_hadd_ccps(total, total);
+
+					//ff[super_i] += total[0];
+					float_t real, imag;
+					_mm_store_ss(&real, total.xvec);
+					_mm_store_ss(&imag, total.yvec);
+					ff[super_i] += complex_t(real, imag);
+
+					//#ifdef PROFILE_PAPI
+					//	if(ib_y + ib_z + ib_t + i_z + i_y == 0) {
+					//		PAPI_stop_counters(papi_counter_vals, 3);
+					//		std::cout << "==== FP_OPS: " << papi_counter_vals[0] << std::endl;
+					//		std::cout << "==== SP_OPS: " << papi_counter_vals[1] << std::endl;
+					//		std::cout << "==== DP_OPS: " << papi_counter_vals[2] << std::endl;
+					//	} // if
+					//#endif
+				} // for y
+			} // for z
+		} // pragma omp parallel
+
+		#endif
 	} // NumericFormFactorC::form_factor_kernel_fused_nqx1()
 
+
+	#ifdef __SSE3__
+
+		inline sse_m128c_t NumericFormFactorC::sse_compute_fq(sse_m128_t s, sse_m128c_t qt, sse_m128c_t qn) {
+			sse_m128c_t temp;
+			temp.xvec = sse_cos_rps(qt.xvec);
+			temp.yvec = sse_sin_rps(qt.xvec);
+			sse_m128c_t v1 = sse_mul_ccps(qn, temp);
+			sse_m128_t v2 = sse_mul_rrps(s, sse_exp_rps(qt.yvec));
+			return sse_mul_crps(v1, v2);
+		} // NumericFormFactorC::sse_compute_fq()
+
+	#endif
+
+
+
+
+	#ifndef __SSE3__	// not using sse3 optimizations
 
 	/**
 	 * special case of nqx == 1 of Form Factor kernel with fused reduction, and loop unrolling
@@ -467,3 +596,5 @@
 			} // for z
 		} // pragma omp parallel
 	} // NumericFormFactorC::form_factor_kernel_fused_nqx1_unroll4()
+
+	#endif

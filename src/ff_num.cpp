@@ -5,7 +5,7 @@
   *
   *  File: ff_num.cpp
   *  Created: Jul 18, 2012
-  *  Modified: Sat 13 Apr 2013 12:04:29 PM PDT
+  *  Modified: Sat 20 Apr 2013 09:26:02 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -15,6 +15,9 @@
 #include <mpi.h>
 #include <cmath>
 #include <cstring>
+#ifdef __SSE3__
+#include <malloc.h>
+#endif
 
 #include "woo/timer/woo_boostchronotimers.hpp"
 
@@ -59,7 +62,11 @@ namespace hig {
 	
 		// all procs read the shape file
 		// TODO: improve to parallel IO, or one proc reading and sending to all ...
-		float_vec_t shape_def;
+		#ifndef __SSE3__
+			float_vec_t shape_def;
+		#else
+			float_t* shape_def = NULL;
+		#endif
 		// use the new file reader instead ...
 		unsigned int num_triangles = read_shapes_hdf5(filename, shape_def, world_comm);
 						// TODO ... <--- sadly all procs read this! IMPROVE!!!
@@ -242,7 +249,11 @@ namespace hig {
 												#endif
 												);
 			#else	// use only CPU
-				ret_nt = cff_.compute_form_factor(rank, shape_def, p_ff,
+				ret_nt = cff_.compute_form_factor(rank, shape_def,
+												#ifdef __SSE3__
+													num_triangles,
+												#endif
+												p_ff,
 												qx, p_nqx, p_qy, p_nqy, p_qz, p_nqz,
 												kernel_time, red_time, temp_mem_time
 												#ifdef FINDBLOCK
@@ -583,10 +594,13 @@ namespace hig {
 	/**
 	 * Function to read the shape definition input file in HDF5 format.
 	 */
-	//template<typename float_t, typename complex_t, typename cucomplex_t>
-	//unsigned int NumericFormFactor<float_t, complex_t, cucomplex_t>::read_shapes_hdf5(const char* filename,
 	unsigned int NumericFormFactor::read_shapes_hdf5(const char* filename,
-														float_vec_t &shape_def, MPI::Intracomm& comm) {
+													#ifndef __SSE3__
+														float_vec_t &shape_def,
+													#else
+														float_t* &shape_def,
+													#endif
+													MPI::Intracomm& comm) {
 		unsigned int num_triangles = 0;
 		double* temp_shape_def = NULL;
 	
@@ -607,10 +621,31 @@ namespace hig {
 		#else					// using CPU
 			//for(unsigned int i = 0; i < num_triangles * CPU_T_PROP_SIZE_; ++ i)
 				//shape_def.push_back((float_t)temp_shape_def[i]);
-			for(unsigned int i = 0, j = 0; i < num_triangles * CPU_T_PROP_SIZE_; ++ i) {
-				if((i + 1) % CPU_T_PROP_SIZE_ == 0) shape_def.push_back((float_t) 0.0);	// padding
-				else { shape_def.push_back((float_t)temp_shape_def[j]); ++ j; }
-			} // for
+			#ifndef __SSE3__
+				for(unsigned int i = 0, j = 0; i < num_triangles * CPU_T_PROP_SIZE_; ++ i) {
+					if((i + 1) % CPU_T_PROP_SIZE_ == 0) shape_def.push_back((float_t) 0.0);	// padding
+					else { shape_def.push_back((float_t)temp_shape_def[j]); ++ j; }
+				} // for
+			#else		// using SSE3, so store data differently
+				// group all 's', 'nx', 'ny', 'nz', 'x', 'y', 'z' together
+				// for alignment at 16 bytes, make sure each of the 7 groups is padded
+				// compute amount of padding
+				// 16 bytes = 4 floats or 2 doubles. FIXME: assuming float only for now ...
+				unsigned int padding = (4 - (num_triangles & 3)) & 3;
+				unsigned int shape_size = (num_triangles + padding) * 7;
+				//shape_def = new (std::nothrow) float_t[shape_size];
+				shape_def = (float_t*) _mm_malloc(shape_size * sizeof(float_t), 16);
+				if(shape_def == NULL) {
+					std::cerr << "error: failed to allocate aligned memory for shape_def" << std::endl;
+					return 0;
+				} // if
+				memset(shape_def, 0, shape_size * sizeof(float_t));
+				for(int i = 0; i < num_triangles; ++ i) {
+					for(int j = 0; j < 7; ++ j) {
+						shape_def[(num_triangles + padding) * j + i] = temp_shape_def[7 * i + j];
+					} // for
+				} // for
+			#endif // __SSE3__
 		#endif // FF_NUM_GPU
 
 		return num_triangles;

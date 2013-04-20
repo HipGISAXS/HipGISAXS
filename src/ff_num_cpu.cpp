@@ -3,7 +3,7 @@
  *
  *  File: ff_num_cpu.hpp
  *  Created: Nov 05, 2011
- *  Modified: Wed 03 Apr 2013 11:18:54 AM PDT
+ *  Modified: Sat 20 Apr 2013 12:47:15 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -11,11 +11,17 @@
 #include <iostream>
 #include <cmath>
 #include <cstring>
+
 #ifdef _OPENMP
 #include <omp.h>
 #endif
+
 #ifdef PROFILE_PAPI
 #include <papi.h>
+#endif
+
+#ifdef __SSE3__
+#include "sse3_numerics.hpp"
 #endif
 
 #include "woo/timer/woo_boostchronotimers.hpp"
@@ -39,7 +45,12 @@ namespace hig {
 	 * The main host function called from outside, as part of the API for a single node.
 	 */
 	unsigned int NumericFormFactorC::compute_form_factor(int rank,
-						float_vec_t &shape_def, complex_t* &ff,
+						#ifndef __SSE3__
+							float_vec_t &shape_def,
+						#else
+							float_t* shape_def, unsigned int num_triangles,
+						#endif
+						complex_t* &ff,
 						float_t* &qx, int nqx, float_t* &qy, int nqy, complex_t* &qz, int nqz,
 						float_t& pass_kernel_time, float_t& red_time, float_t& mem_time
 						#ifdef FINDBLOCK
@@ -53,8 +64,14 @@ namespace hig {
 				std::cout << "++      Number of OpenMP threads: " << omp_get_max_threads() << std::endl;
 		#endif
 	
-		unsigned int num_triangles = shape_def.size() / CPU_T_PROP_SIZE_;
+		#ifndef __SSE3__
+			unsigned int num_triangles = shape_def.size() / CPU_T_PROP_SIZE_;
+		#endif
 		if(num_triangles < 1) return 0;
+
+		#ifdef __SSE3__
+			unsigned int shape_padding = (16 - (num_triangles & 15)) & 15;
+		#endif
 	
 		//#ifndef FF_NUM_CPU_PADDING
 			unsigned long int total_qpoints = nqx * nqy * nqz;
@@ -231,6 +248,8 @@ namespace hig {
 							//                               scaled double precision vector operations
 
 							int papi_events[3] = { PAPI_TOT_CYC, PAPI_TOT_INS, PAPI_FP_OPS };
+							//int papi_events[3] = { PAPI_FML_INS, PAPI_FAD_INS, PAPI_FDV_INS };
+							//int papi_events[3] = { PAPI_FP_OPS, PAPI_SP_OPS, PAPI_DP_OPS };
 							long long  papi_counter_values[3];
 							PAPI_start_counters(papi_events, 3);
 						#endif
@@ -245,18 +264,24 @@ namespace hig {
 						#else
 							if(nqx == 1) {
 								form_factor_kernel_fused_nqx1(qx, qy, qz, shape_def,
-									curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles,
-									b_nqx, b_nqy, b_nqz, b_num_triangles,
-									nqx, nqy, nqz, num_triangles,
-									ib_x, ib_y, ib_z, ib_t,
-									ff);
+								//form_factor_kernel_fused_nqx1_unroll4(qx, qy, qz, shape_def,
+										curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles,
+										b_nqx, b_nqy, b_nqz, b_num_triangles,
+										nqx, nqy, nqz, num_triangles,
+										ib_x, ib_y, ib_z, ib_t,
+										ff);
 							} else {
-								form_factor_kernel_fused_unroll4(qx, qy, qz, shape_def,
-									curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles,
-									b_nqx, b_nqy, b_nqz, b_num_triangles,
-									nqx, nqy, nqz, num_triangles,
-									ib_x, ib_y, ib_z, ib_t,
-									ff);
+								#ifdef __SSE3__
+									if(rank == 0)
+										std::cout << "uh-oh: no SSE3 version!" << std::endl;
+								#else
+									form_factor_kernel_fused_unroll4(qx, qy, qz, shape_def,
+										curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles,
+										b_nqx, b_nqy, b_nqz, b_num_triangles,
+										nqx, nqy, nqz, num_triangles,
+										ib_x, ib_y, ib_z, ib_t,
+										ff);
+								#endif // __SSE3__
 							} // if-else
 						#endif
 
@@ -305,13 +330,13 @@ namespace hig {
 
 		#ifdef PROFILE_PAPI
 			if(rank == 0) {
-				//std::cout << "++                  PAPI_TOT_CYC: " << papi_total_cycles << std::endl;
-				//std::cout << "++                  PAPI_TOT_INS: " << papi_total_inst << std::endl;
+				std::cout << "++                  PAPI_TOT_CYC: " << papi_total_cycles << std::endl;
+				std::cout << "++                  PAPI_TOT_INS: " << papi_total_inst << std::endl;
+				std::cout << "++                   PAPI_FP_OPS: " << papi_total_flop << std::endl;
 				std::cout << "++                           IPC: "
 							<< (double) papi_total_inst / papi_total_cycles << std::endl;
-				//std::cout << "++                   PAPI_FP_OPS: " << papi_total_flop << std::endl;
 				std::cout << "++                        Flop/s: "
-							<< (double) papi_total_flop / (1000000 * ktime) << " GFlops" << std::endl;
+							<< (double) papi_total_flop / (1000000 * ktime) << " GFlop/s" << std::endl;
 			} // if
 		#endif
 
@@ -510,8 +535,9 @@ namespace hig {
 	 */
 	#include "ff_num_cpu_kernels.hpp"
 	
-	#endif
+	#endif // FF_NUM_CPU_FUSED
 	
+
 	/**
 	 * Computational kernel function.
 	 */

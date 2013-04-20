@@ -3,7 +3,7 @@
  *
  *  File: ff_num.hpp
  *  Created: Nov 05, 2011
- *  Modified: Tue 09 Apr 2013 11:53:57 AM PDT
+ *  Modified: Fri 19 Apr 2013 08:33:33 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -118,8 +118,13 @@ namespace hig {
 			#endif
 	
 			unsigned int read_shape_surface_file(const char* filename, std::vector<float_t>& shape_def);
-			unsigned int read_shapes_hdf5(const char* filename, std::vector<float_t>& shape_def,
-											MPI::Intracomm& comm);
+			unsigned int read_shapes_hdf5(const char* filename,
+										#ifndef __SSE3__
+											std::vector<float_t>& shape_def,
+										#else
+											float_t* &shape_def,
+										#endif
+										MPI::Intracomm& comm);
 			void find_axes_orientation(std::vector<float_t> &shape_def, std::vector<short int> &axes);
 			void construct_ff(int rank, int num_procs, MPI::Comm &comm,
 								MPI::Comm &col_comm, MPI::Comm &row_comm,

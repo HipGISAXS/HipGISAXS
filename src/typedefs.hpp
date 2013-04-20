@@ -3,7 +3,7 @@
   *
   *  File: typedefs.hpp
   *  Created: Jul 08, 2012
-  *  Modified: Wed 03 Apr 2013 07:27:44 PM PDT
+  *  Modified: Fri 19 Apr 2013 02:18:01 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -15,6 +15,9 @@
 #include <complex>
 #ifdef USE_GPU
 	#include <cuComplex.h>
+#endif
+#ifdef __SSE3__
+	#include <pmmintrin.h>
 #endif
 
 namespace hig {
@@ -53,6 +56,14 @@ namespace hig {
 
 	#ifdef USE_GPU
 		typedef std::vector<cucomplex_t>	cucomplex_vec_t;
+	#endif
+
+	#ifdef __SSE3__
+		typedef __m128						sse_m128_t;
+		typedef struct {
+			__m128 xvec;
+			__m128 yvec;
+		}									sse_m128c_t;
 	#endif
 
 	// TODO: handle multiprecision? ...

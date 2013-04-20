@@ -3,7 +3,7 @@
  *
  *  File: ff_num_cpu.hpp
  *  Created: Nov 05, 2011
- *  Modified: Sat 02 Mar 2013 09:30:13 AM PST
+ *  Modified: Fri 19 Apr 2013 02:04:52 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -60,7 +60,9 @@ namespace hig {
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									complex_t*);
 
-			void form_factor_kernel_fused_unroll4(float_t*, float_t*, complex_t*, float_vec_t&,
+			#ifndef __SSE3__
+			void form_factor_kernel_fused_unroll4(float_t*, float_t*, complex_t*,
+									float_vec_t&,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
@@ -69,8 +71,14 @@ namespace hig {
 									#endif
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									complex_t*);
+			#endif // __SSE3__
 
-			void form_factor_kernel_fused_nqx1(float_t*, float_t*, complex_t*, float_vec_t&,
+			void form_factor_kernel_fused_nqx1(float_t*, float_t*, complex_t*,
+									#ifndef __SSE3__
+										float_vec_t&,
+									#else
+										float_t*,
+									#endif // __SSE3__
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
@@ -89,9 +97,17 @@ namespace hig {
 									#endif
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									complex_t*);
-			#endif
+
+			#endif // FF_NUM_CPU_FUSED
+
 
 			complex_t compute_fq(float_t, complex_t, complex_t);
+
+			#ifdef __SSE3__
+
+			sse_m128c_t sse_compute_fq(sse_m128_t, sse_m128c_t, sse_m128c_t);
+
+			#endif // __SSE3__
 
 			void compute_block_size(int, int, int, int, unsigned int&, unsigned int&, unsigned int&,
 									unsigned int&
@@ -102,7 +118,13 @@ namespace hig {
 
 		public:
 
-			unsigned int compute_form_factor(int, float_vec_t&, complex_t*&,
+			unsigned int compute_form_factor(int,
+									#ifndef __SSE3__
+										float_vec_t&,
+									#else
+										float_t*, unsigned int,
+									#endif
+									complex_t*&,
 									float_t*&, int, float_t*&, int, complex_t* &qz, int,
 									float_t&, float_t&, float_t&
 									#ifdef FINDBLOCK
