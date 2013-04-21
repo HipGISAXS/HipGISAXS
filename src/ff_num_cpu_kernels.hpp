@@ -3,7 +3,7 @@
  *
  *  File: ff_num_cpu.hpp
  *  Created: Nov 05, 2011
- *  Modified: Sat 20 Apr 2013 11:41:37 AM PDT
+ *  Modified: Sun 21 Apr 2013 01:11:41 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -367,11 +367,11 @@
 					total = sse_hadd_ccps(total, total);
 					total = sse_hadd_ccps(total, total);
 
-					//ff[super_i] += total[0];
-					float_t real, imag;
-					_mm_store_ss(&real, total.xvec);
-					_mm_store_ss(&imag, total.yvec);
-					ff[super_i] += complex_t(real, imag);
+					//float_t real, imag;
+					//_mm_store_ss(&real, total.xvec);
+					//_mm_store_ss(&imag, total.yvec);
+					//ff[super_i] += complex_t(real, imag);
+					sse_addstore_css(&(ff[super_i]), total);
 
 					//#ifdef PROFILE_PAPI
 					//	if(ib_y + ib_z + ib_t + i_z + i_y == 0) {
@@ -393,8 +393,9 @@
 
 		inline sse_m128c_t NumericFormFactorC::sse_compute_fq(sse_m128_t s, sse_m128c_t qt, sse_m128c_t qn) {
 			sse_m128c_t temp;
-			temp.xvec = sse_cos_rps(qt.xvec);
-			temp.yvec = sse_sin_rps(qt.xvec);
+			//temp.xvec = sse_cos_rps(qt.xvec);
+			//temp.yvec = sse_sin_rps(qt.xvec);
+			sse_sincos_rps(qt.xvec, &temp.yvec, &temp.xvec);
 			sse_m128c_t v1 = sse_mul_ccps(qn, temp);
 			sse_m128_t v2 = sse_mul_rrps(s, sse_exp_rps(qt.yvec));
 			return sse_mul_crps(v1, v2);

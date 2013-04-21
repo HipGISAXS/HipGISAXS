@@ -3,7 +3,7 @@
   *
   *  File: sse3_numerics.hpp
   *  Created: Apr 19, 2013
-  *  Modified: Sat 20 Apr 2013 12:50:55 PM PDT
+  *  Modified: Sun 21 Apr 2013 12:47:25 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -15,6 +15,11 @@
 
 #include <pmmintrin.h>
 //#include <amdlibm.h>		// for exp, sin, cos
+/*#ifdef __cplusplus
+extern "C" {
+#include <mkl.h>
+}
+#endif*/
 
 #include "typedefs.hpp"
 #include "sse_mathfun.h"
@@ -31,12 +36,21 @@ namespace hig {
 	// ////////////////////////////////////////////////////
 
 	/**
-	 * load
+	 * load store
 	 */
 
 	static inline sse_m128_t sse_load_rps(float_t* p) {
 		return _mm_load_ps(p);
 	} // sse_load_rps()
+
+	static inline void sse_addstore_css(complex_t* p, sse_m128c_t v) {
+		float_t real = _mm_cvtss_f32(v.xvec);
+		float_t imag = _mm_cvtss_f32(v.yvec);
+		//float_t real, imag;
+		//_mm_store_ss(&real, v.xvec);
+		//_mm_store_ss(&imag, v.yvec);
+		(*p) += complex_t(real, imag);
+	} // sse_store_css()
 
 
 	/**
@@ -131,27 +145,39 @@ namespace hig {
 
 
 	/**
-	 * exponential - uses AMD Libm
+	 * exponential
 	 */
 
 	static inline sse_m128_t sse_exp_rps(sse_m128_t a) {
 		//return amd_vrs4_expf(a);
 		return sse_mathfun::exp_ps(a);
+		/*float* mivec = (float*) _mm_malloc(4 * sizeof(float), 16);
+		float* movec = (float*) _mm_malloc(4 * sizeof(float), 16);
+		_mm_store_ps(mivec, a);
+		vsExp(4, mivec, movec);
+		sse_m128_t ret_vec = _mm_load_ps(movec);
+		_mm_free(movec);
+		_mm_free(mivec);
+		return ret_vec;*/
 	} // sse_exp_rps()
 
 
 	/**
-	 * trigonometry - uses AMD Libm
+	 * trigonometry
 	 */
 
 	static inline sse_m128_t sse_sin_rps(sse_m128_t a) {
 		//return amd_vrs4_sinf(a);
-		return sse_mathfun::sin_ps(a);
+		return sse_mathfun::newsin_ps(a);
 	} // sse_exp_rps()
 
 	static inline sse_m128_t sse_cos_rps(sse_m128_t a) {
 		//return amd_vrs4_cosf(a);
-		return sse_mathfun::cos_ps(a);
+		return sse_mathfun::newcos_ps(a);
+	} // sse_exp_rps()
+
+	static inline void sse_sincos_rps(sse_m128_t a, sse_m128_t* s, sse_m128_t* c) {
+		sse_mathfun::newsincos_ps(a, s, c);
 	} // sse_exp_rps()
 
 } // namespace hig
