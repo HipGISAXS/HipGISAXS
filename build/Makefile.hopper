@@ -82,12 +82,16 @@ TIFF_LIBS = -L $(TIFF_DIR)/lib -ltiff
 #ALIBM_INCL = -I $(HOME)/local/amdlibm-3-0-2/include
 #ALIBM_LIBS = -L $(HOME)/local/amdlibm-3-0-2/lib/static -lamdlibm
 
+## Intel MKL
+#MKL_INCL = -I /opt/intel/composer_xe_2013.1.117/mkl/include
+#MKL_LIBS = -L /opt/intel/composer_xe_2013.1.117/mkl/lib/intel64 -lmkl_core -lmkl_vml_def
+
 
 ## all includes
-ALL_INCL = $(MPI_INCL) $(CUDA_INCL) $(BOOST_INCL) $(HDF5_INCL) $(MISC_INCL) $(TIFF_INCL) $(ALIBM_INCL)
+ALL_INCL = $(MPI_INCL) $(CUDA_INCL) $(BOOST_INCL) $(HDF5_INCL) $(MISC_INCL) $(TIFF_INCL) $(MKL_INCL)
 
 ## all libraries
-ALL_LIBS = $(BOOST_LIBS) $(MPI_LIBS) $(NVLIB_FLAGS) $(CUDA_LIBS) $(HDF5_LIBS) $(TIFF_LIBS) $(ALIBM_LIBS)
+ALL_LIBS = $(BOOST_LIBS) $(MPI_LIBS) $(NVLIB_FLAGS) $(CUDA_LIBS) $(HDF5_LIBS) $(TIFF_LIBS) $(MKL_LIBS) $(IPM_GNU) #$(MKL)
 
 
 ## miscellaneous
@@ -116,6 +120,9 @@ endif
 ifeq ($(USE_MIC), y)
 MISC_FLAGS += -DUSE_MIC -DFF_MIC_OPT
 endif
+
+## CPU related flags
+#MISC_FLAGS += -DFF_NUM_CPU_AUTOTUNE_HB
 
 MISC_FLAGS += -DTIME_DETAIL_1 -DTIME_DETAIL_2
 
