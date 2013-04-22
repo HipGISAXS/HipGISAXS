@@ -208,6 +208,7 @@ _PS_CONST(exp_lo,	-88.3762626647949f);
 _PS_CONST(cephes_LOG2EF, 1.44269504088896341);
 _PS_CONST(cephes_exp_C1, 0.693359375);
 _PS_CONST(cephes_exp_C2, -2.12194440e-4);
+_PS_CONST(cephes_exp_C12, 0.69314718056);
 
 _PS_CONST(cephes_exp_p0, 1.9875691500E-4);
 _PS_CONST(cephes_exp_p1, 1.3981999507E-3);
@@ -295,6 +296,61 @@ v4sf exp_ps(v4sf x) {
   return y;
 }
 
+v4sf newexp_ps(v4sf x) {
+  v4sf one = *(v4sf*)_ps_1;
+  v4sf zero = *(v4sf*)_ps_0;
+
+  x = _mm_min_ps(x, *(v4sf*)_ps_exp_hi);
+  x = _mm_max_ps(x, *(v4sf*)_ps_exp_lo);
+
+  v4sf temp_2 = _mm_mul_ps(x, *(v4sf*)_ps_cephes_LOG2EF);
+  temp_2 = _mm_add_ps(temp_2, *(v4sf*)_ps_0p5);
+
+  v4si emm0 = _mm_cvttps_epi32(temp_2);
+  v4sf temp_1 = _mm_cvtepi32_ps(emm0);
+  v4sf temp_3 = _mm_sub_ps(temp_1, temp_2);
+  v4sf mask = _mm_cmpgt_ps(temp_3, zero);
+
+  mask = _mm_and_ps(mask, one);
+  temp_2 = _mm_sub_ps(temp_1, mask);
+  emm0 = _mm_cvttps_epi32(temp_2);
+
+  temp_1 = _mm_mul_ps(temp_2, *(v4sf*)_ps_cephes_exp_C12);
+  x = _mm_sub_ps(x, temp_1);
+
+  v4sf x2 = _mm_mul_ps(x, x);
+  v4sf x3 = _mm_mul_ps(x2, x);
+  v4sf x4 = _mm_mul_ps(x2, x2);
+ 
+  temp_1 = _mm_add_ps(x, one);
+  temp_2 = _mm_mul_ps(x2, *(v4sf*)_ps_cephes_exp_p5);
+  temp_3 = _mm_mul_ps(x3, *(v4sf*)_ps_cephes_exp_p4);
+  temp_1 = _mm_add_ps(temp_1, temp_2);
+
+  temp_2 = _mm_mul_ps(x3, *(v4sf*)_ps_cephes_exp_p0);
+
+  temp_1 = _mm_add_ps(temp_1, temp_3);
+
+  v4sf temp_4 = _mm_mul_ps(x, *(v4sf*)_ps_cephes_exp_p2);
+  temp_3 = _mm_mul_ps(x2, *(v4sf*)_ps_cephes_exp_p1);
+
+  emm0 = _mm_add_epi32(emm0, *(v4si*)_pi32_0x7f);
+
+  temp_2 = _mm_add_ps(temp_2, temp_3);
+  temp_3 = _mm_add_ps(temp_3, temp_4);
+
+  emm0 = _mm_slli_epi32(emm0, 23);
+  v4sf pow2n = _mm_castsi128_ps(emm0);
+
+  temp_2 = _mm_add_ps(temp_2, temp_3);
+  temp_2 = _mm_mul_ps(temp_2, x4);
+
+  v4sf y = _mm_add_ps(temp_1, temp_2);
+
+  y = _mm_mul_ps(y, pow2n);
+  return y;
+} // newexp_ps()
+
 _PS_CONST(minus_cephes_DP1, -0.78515625);
 _PS_CONST(minus_cephes_DP2, -2.4187564849853515625e-4);
 _PS_CONST(minus_cephes_DP3, -3.77489497744594108e-8);
@@ -336,7 +392,7 @@ _PS_CONST(cephes_FOPI, 1.27323954473516); // 4 / M_PI
    Since it is based on SSE intrinsics, it has to be compiled at -O2 to
    deliver full speed.
 */
-/*v4sf sin_ps(v4sf x) { // any x
+v4sf sin_ps(v4sf x) { // any x
   v4sf xmm1, xmm2 = _mm_setzero_ps(), xmm3, sign_bit, y;
 
 #ifdef __SSE2__
@@ -450,7 +506,7 @@ _PS_CONST(cephes_FOPI, 1.27323954473516); // 4 / M_PI
   // update the sign
   y = _mm_xor_ps(y, sign_bit);
   return y;
-}*/
+}
 
 v4sf newsin_ps(v4sf x) {
   v4sf sign_bit = _mm_and_ps(x, *(v4sf*)_ps_sign_mask);
@@ -508,7 +564,7 @@ v4sf newsin_ps(v4sf x) {
 } // newsin_ps()
 
 // almost the same as sin_ps
-/*v4sf cos_ps(v4sf x) { // any x
+v4sf cos_ps(v4sf x) { // any x
   v4sf xmm1, xmm2 = _mm_setzero_ps(), xmm3, y;
 #ifdef __SSE2__
   v4si emm0, emm2;
@@ -578,7 +634,7 @@ v4sf newsin_ps(v4sf x) {
   _mm_empty(); // good-bye mmx
 #endif
   // The magic pass: "Extended precision modular arithmetic" 
-     x = ((x - y * DP1) - y * DP2) - y * DP3;
+  // x = ((x - y * DP1) - y * DP2) - y * DP3;
   xmm1 = *(v4sf*)_ps_minus_cephes_DP1;
   xmm2 = *(v4sf*)_ps_minus_cephes_DP2;
   xmm3 = *(v4sf*)_ps_minus_cephes_DP3;
@@ -623,7 +679,7 @@ v4sf newsin_ps(v4sf x) {
   y = _mm_xor_ps(y, sign_bit);
 
   return y;
-}*/
+}
 
 v4sf newcos_ps(v4sf x) {
   x = _mm_and_ps(x, *(v4sf*)_ps_inv_sign_mask);
@@ -839,25 +895,29 @@ void newsincos_ps(v4sf x, v4sf *s, v4sf *c) {
 
   v4si cos_emm2 = _mm_sub_epi32(emm2, *(v4si*)_pi32_2);
 
-  v4si emm0 = _mm_and_si128(emm2, *(v4si*)_pi32_4);
-  v4si cos_emm0 = _mm_andnot_si128(cos_emm2, *(v4si*)_pi32_4);
+  v4si temp_1 = *(v4si*)_pi32_4;
+  v4si emm0 = _mm_and_si128(emm2, temp_1);
+  v4si cos_emm0 = _mm_andnot_si128(cos_emm2, temp_1);
   emm0 = _mm_slli_epi32(emm0, 29);
   cos_emm0 = _mm_slli_epi32(cos_emm0, 29);
 
-  emm2 = _mm_and_si128(emm2, *(v4si*)_pi32_2);
-  cos_emm2 = _mm_and_si128(cos_emm2, *(v4si*)_pi32_2);
+  temp_1 = *(v4si*)_pi32_2;
+  emm2 = _mm_and_si128(emm2, temp_1);
+  cos_emm2 = _mm_and_si128(cos_emm2, temp_1);
   emm2 = _mm_cmpeq_epi32(emm2, _mm_setzero_si128());
   cos_emm2 = _mm_cmpeq_epi32(cos_emm2, _mm_setzero_si128());
   
-  v4sf swap_sign_bit = _mm_castsi128_ps(emm0);
-  v4sf poly_mask = _mm_castsi128_ps(emm2);
-  sign_bit = _mm_xor_ps(sign_bit, swap_sign_bit);
-  v4sf cos_sign_bit = _mm_castsi128_ps(cos_emm0);
-  v4sf cos_poly_mask = _mm_castsi128_ps(cos_emm2);
-  
-  v4sf temp = *(v4sf*)_ps_minus_cephes_DP123;
-  temp = _mm_mul_ps(y, temp);
-  x = _mm_add_ps(x, temp);
+  // casting has no mapped instructions (i.e. are free)
+  v4sf emm0f = _mm_castsi128_ps(emm0);
+  v4sf emm2f = _mm_castsi128_ps(emm2);
+  v4sf cos_emm0f = _mm_castsi128_ps(cos_emm0);
+  v4sf cos_emm2f = _mm_castsi128_ps(cos_emm2);
+
+  sign_bit = _mm_xor_ps(sign_bit, emm0f);
+
+  v4sf temp_2 = *(v4sf*)_ps_minus_cephes_DP123;
+  temp_2 = _mm_mul_ps(y, temp_2);
+  x = _mm_add_ps(x, temp_2);
 
   v4sf x2 = _mm_mul_ps(x, x);
   v4sf x3 = _mm_mul_ps(x2, x);
@@ -875,22 +935,22 @@ void newsincos_ps(v4sf x, v4sf *s, v4sf *c) {
   y2 = _mm_add_ps(y2, *(v4sf*)_ps_sincof_p2);
   y = _mm_mul_ps(y, x4);
   y2 = _mm_mul_ps(y2, x3);
-  temp = _mm_mul_ps(x2, *(v4sf*)_ps_0p5);
-  temp = _mm_sub_ps(temp, *(v4sf*)_ps_1);
-  y = _mm_sub_ps(y, temp);
+  temp_2 = _mm_mul_ps(x2, *(v4sf*)_ps_0p5);
   y2 = _mm_add_ps(y2, x);
+  temp_2 = _mm_sub_ps(temp_2, *(v4sf*)_ps_1);
+  y = _mm_sub_ps(y, temp_2);
 
   v4sf cos_y = y;
   v4sf cos_y2 = y2;
-  y = _mm_andnot_ps(poly_mask, y);
-  cos_y = _mm_andnot_ps(cos_poly_mask, cos_y);
-  y2 = _mm_and_ps(poly_mask, y2);
-  cos_y2 = _mm_and_ps(cos_poly_mask, cos_y2);
+  y = _mm_andnot_ps(emm2f, y);
+  cos_y = _mm_andnot_ps(cos_emm2f, cos_y);
+  y2 = _mm_and_ps(emm2f, y2);
+  cos_y2 = _mm_and_ps(cos_emm2f, cos_y2);
   y = _mm_add_ps(y, y2);
   cos_y = _mm_add_ps(cos_y, cos_y2);
 
   *s = _mm_xor_ps(y, sign_bit);
-  *c = _mm_xor_ps(cos_y, cos_sign_bit);
+  *c = _mm_xor_ps(cos_y, cos_emm0f);
 } // newsincos_ps()
 
 

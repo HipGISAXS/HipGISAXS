@@ -3,7 +3,7 @@
  *
  *  File: ff_num_cpu.hpp
  *  Created: Nov 05, 2011
- *  Modified: Sat 20 Apr 2013 12:47:15 PM PDT
+ *  Modified: Sun 21 Apr 2013 06:42:38 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -104,22 +104,65 @@ namespace hig {
 		
 		// do hyperblocking to use less memory
 		unsigned int b_nqx = 0, b_nqy = 0, b_nqz = 0, b_num_triangles = 0;
-		//#ifndef FF_NUM_CPU_PADDING
+		#ifndef FF_NUM_CPU_AUTOTUNE_HB
 			compute_block_size(nqx, nqy, nqz, num_triangles,
 								b_nqx, b_nqy, b_nqz, b_num_triangles
 								#ifdef FINDBLOCK
 									, block_x, block_y, block_z, block_t
 								#endif
 								);
-		//#else
-		//	// lets have hyperblock dimensions a multiple of 16 (TODO: autotune ...)
-		//	compute_block_size(pnqx, pnqy, pnqz, num_triangles,
-		//						b_nqx, b_nqy, b_nqz, b_num_triangles
-		//						#ifdef FINDBLOCK
-		//							, block_x, block_y, block_z, block_t
-		//						#endif
-		//						);
-		//#endif
+		#else
+			std::cout << "-- Autotuning hyperblock size ... " << std::endl;
+			double min_time_hb = 1000000.0;
+			unsigned int min_b_nqx = 1, min_b_nqy = 1, min_b_nqz = 1, min_b_num_triangles = 1;
+			woo::BoostChronoTimer at_kernel_timer, at_overhead_timer;
+			at_overhead_timer.start();
+			complex_t* ff_temp;
+			ff_temp = new (std::nothrow) complex_t[nqx * nqy * nqz];
+			for(int b_nqx_i = 1; b_nqx_i <= nqx; ++ b_nqx_i) {
+				for(int b_nqy_i = 10; b_nqy_i <= nqy; b_nqy_i += 10) {
+					for(int b_nqz_i = 10; b_nqz_i <= nqz; b_nqz_i += 10) {
+						for(int b_nt_i = 10; b_nt_i <= num_triangles; b_nt_i += 10) {
+							at_kernel_timer.start();
+
+							// compute the number of sub-blocks, along each of the 4 dimensions
+							unsigned int nb_x = (unsigned int) ceil((float) nqx / b_nqx_i);
+							unsigned int nb_y = (unsigned int) ceil((float) nqy / b_nqy_i);
+							unsigned int nb_z = (unsigned int) ceil((float) nqz / b_nqz_i);
+							unsigned int nb_t = (unsigned int) ceil((float) num_triangles / b_nt_i);
+							unsigned int num_blocks = nb_x * nb_y * nb_z * nb_t;
+
+							form_factor_kernel_fused_nqx1(qx, qy, qz, shape_def,
+									b_nqx_i, b_nqy_i, b_nqz_i, b_nt_i,
+									b_nqx_i, b_nqy_i, b_nqz_i, b_nt_i,
+									nqx, nqy, nqz, num_triangles,
+									0, 0, 0, 0,
+									ff);
+
+							at_kernel_timer.stop();
+							double curr_time = at_kernel_timer.elapsed_msec();
+							double tot_time = curr_time * num_blocks;
+							std::cout << "## " << b_nqx_i << " x " << b_nqy_i << " x " << b_nqz_i
+										<< " x " << b_nt_i << "\t" << num_blocks << "\t:\t"
+										<< curr_time << "\t" << tot_time << std::endl;
+							if(tot_time < min_time_hb) {
+								min_time_hb = tot_time;
+								min_b_nqx = b_nqx_i; min_b_nqy = b_nqy_i; min_b_nqz = b_nqz_i;
+								min_b_num_triangles = b_nt_i;
+							} // if
+						} // for
+					} // for
+				} // for
+			} // for
+			delete[] ff_temp;
+			at_overhead_timer.stop();
+
+			b_nqx = min_b_nqx; b_nqy = min_b_nqy; b_nqz = min_b_nqz; b_num_triangles = min_b_num_triangles;
+			if(rank == 0) {
+				std::cout << "##    HBlock Autotuner overhead: " << at_overhead_timer.elapsed_msec()
+							<< " ms." << std::endl;
+			} // if
+		#endif
 	
 		unsigned long int blocked_3d_matrix_size = (unsigned long int) b_nqx * b_nqy * b_nqz;
 		

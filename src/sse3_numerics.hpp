@@ -3,7 +3,7 @@
   *
   *  File: sse3_numerics.hpp
   *  Created: Apr 19, 2013
-  *  Modified: Sun 21 Apr 2013 12:47:25 PM PDT
+  *  Modified: Sun 21 Apr 2013 05:37:07 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -150,7 +150,8 @@ namespace hig {
 
 	static inline sse_m128_t sse_exp_rps(sse_m128_t a) {
 		//return amd_vrs4_expf(a);
-		return sse_mathfun::exp_ps(a);
+		//return sse_mathfun::exp_ps(a);
+		return sse_mathfun::newexp_ps(a);
 		/*float* mivec = (float*) _mm_malloc(4 * sizeof(float), 16);
 		float* movec = (float*) _mm_malloc(4 * sizeof(float), 16);
 		_mm_store_ps(mivec, a);
