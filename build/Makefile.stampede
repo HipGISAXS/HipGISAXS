@@ -42,8 +42,6 @@ CXX_FLAGS = -lm #-lgsl -lgslcblas #-v
 #CXX_FLAGS += -gxx-name=$(HOME)/opt/gcc-4.6.3/bin/g++ -std=c++0x #-Wall -Wextra
 CXX_FLAGS += -std=c++0x #-Wall -Wextra
 CXX_FLAGS += -m64 -openmp #-ww2568
-CXX_FLAGS += -offload-option,mic,compiler,"-vec-report2" -opt-report-phase=offload
-CXX_FLAGS += -offload-option,mic,ld,"-z defs"
 
 ## boost
 BOOST_INCL = -I $(BOOST_DIR)/include -I $(HOME)/installs/boost-extras
@@ -81,9 +79,24 @@ endif
 TIFF_INCL = -I $(TIFF_DIR)/include
 TIFF_LIBS = -L $(TIFF_DIR)/lib -ltiff
 
+## Intel MIC stuff
+MIC_LIBS = -lsvml
+
+
+## all includes
+ALL_INCL = $(MPI_INCL) $(CUDA_INCL) $(BOOST_INCL) $(HDF5_INCL) $(TIFF_INCL) $(MISC_INCL)
+
+## all libraries
+ALL_LIBS = $(BOOST_LIBS) $(MPI_LIBS) $(NVLIB_FLAGS) $(CUDA_LIBS) $(HDF5_LIBS) $(TIFF_LIBS)
+
+
 ## miscellaneous
 MISC_INCL =
 MISC_FLAGS = #-DAXIS_ROT
+
+## stuff for CPU
+MISC_FLAGS += -DFF_NUM_CPU_FUSED
+#MISC_FLAGS += -DPROFILE_PAPI
 
 ## GPU related flags
 ifeq ($(USE_GPU), y)
@@ -100,7 +113,10 @@ endif
 
 ## MIC related flags
 ifeq ($(USE_MIC), y)
-MISC_FLAGS += -DUSE_MIC
+MISC_FLAGS += -DUSE_MIC -DFF_MIC_OPT
+MISC_FLAGS += -DFF_NUM_MIC_SWAP
+MISC_FLAGS += -DFF_NUM_MIC_KB
+#MISC_FLAGS += -DMIC_PADDING    ## goes out of memory on target
 endif
 
 MISC_FLAGS += -DTIME_DETAIL_1 -DTIME_DETAIL_2
@@ -110,23 +126,29 @@ MISC_FLAGS += -DTIME_DETAIL_1 -DTIME_DETAIL_2
 #INTEL_DEBUG = -debug all
 OPT_FLAGS = -O3 -DNDEBUG #-v
 
+## FOR INTEL
+#OPT_FLAGS += -xHost -parallel #-prof_use #-ipo
+OPT_FLAGS += -xsse4.2
+#OPT_FLAGS += -no-vec
+## Intel specific optimization reporting
+#CXX_FLAGS += -opt-report-phase=hlo -opt-report-phase=hpo
+## mic specific compiler reporting
+CXX_FLAGS += -offload-option,mic,compiler,"-vec-report3" -opt-report-phase=offload
+CXX_FLAGS += -offload-option,mic,ld,"-z defs"
+
 ## choose single or double precision here
 PREC_FLAG =			# leave empty for single precision
 #PREC_FLAG = -DDOUBLEP	# define this for double precision
 
 
-## all includes
-ALL_INCL = $(MPI_INCL) $(CUDA_INCL) $(BOOST_INCL) $(HDF5_INCL) $(TIFF_INCL) $(MISC_INCL)
-
-## all libraries
-ALL_LIBS = $(BOOST_LIBS) $(MPI_LIBS) $(NVLIB_FLAGS) $(CUDA_LIBS) $(HDF5_LIBS) $(TIFF_LIBS)
-
 PREFIX = $(PWD)
 BINARY_SIM = hipgisaxs
 BINARY_FIT = hipgisaxs-fit
+LIB_SIM = libhipgisaxs.a
 BIN_DIR = $(PREFIX)/bin
 OBJ_DIR = $(PREFIX)/obj
 SRC_DIR = $(PREFIX)/src
+LIB_DIR = $(PREFIX)/lib
 
 ## all objects
 OBJECTS_MAIN = utilities.o numeric_utils.o compute_params.o hig_input.o \
@@ -135,8 +157,7 @@ OBJECTS_MAIN = utilities.o numeric_utils.o compute_params.o hig_input.o \
 		  ff_ana_sphere.o ff_ana_box.o ff_ana_cylinder.o ff_ana_hcylinder.o ff_ana_prism3x.o \
 		  ff_ana_prism6.o ff_ana_prism.o ff_ana_pyramid.o ff_ana_rand_cylinder.o \
 		  ff_ana_sawtooth_down.o ff_ana_sawtooth_up.o ff_ana_trunc_cone.o ff_ana_trunc_pyramid.o \
-		  ff_num_cpu.o \
-		  fitting_steepest_descent.o
+		  ff_num_cpu.o
 
 ifeq ($(USE_GPU), y)
 OBJECTS_MAIN += reduction.o ff_num_gpu.o ff_ana_gpu.o ff_ana_sphere_gpu.o ff_ana_box_gpu.o \
@@ -150,18 +171,26 @@ endif
 
 OBJECTS_SIM = $(OBJECTS_MAIN) hipgisaxs_sim.o
 
-OBJECTS_FIT = $(OBJECTS_MAIN) hipgisaxs_fit.o
+OBJECTS_FIT = $(OBJECTS_MAIN) fitting_steepest_descent.o hipgisaxs_fit.o
 
 ## the main binary
 OBJ_BIN_SIM = $(patsubst %,$(OBJ_DIR)/%,$(OBJECTS_SIM))
 
 OBJ_BIN_FIT = $(patsubst %,$(OBJ_DIR)/%,$(OBJECTS_FIT))
 
+OBJ_LIB_SIM = $(patsubst %,$(OBJ_DIR)/%,$(OBJECTS_MAIN))
+
 $(BINARY_SIM): $(OBJ_BIN_SIM)
 	$(CXX) -o $(BIN_DIR)/$@ $^ $(OPT_FLAGS) $(INTEL_DEBUG) $(CXX_FLAGS) $(PREC_FLAG) $(MISC_FLAGS) $(ALL_LIBS)
 
 $(BINARY_FIT): $(OBJ_BIN_FIT)
 	$(CXX) -o $(BIN_DIR)/$@ $^ $(OPT_FLAGS) $(INTEL_DEBUG) $(CXX_FLAGS) $(PREC_FLAG) $(MISC_FLAGS) $(ALL_LIBS)
+
+nomic: CXX_FLAGS += -no-offload
+nomic: $(BINARY_SIM)
+
+library: $(OBJ_LIB_SIM)
+	xiar rs -qoffload-build $(LIB_DIR)/$(LIB_SIM) $^
 
 ## cuda compilation
 ifeq ($(USE_GPU), y)
