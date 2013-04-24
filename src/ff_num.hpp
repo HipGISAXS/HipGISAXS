@@ -3,7 +3,7 @@
  *
  *  File: ff_num.hpp
  *  Created: Nov 05, 2011
- *  Modified: Fri 19 Apr 2013 08:33:33 PM PDT
+ *  Modified: Tue 23 Apr 2013 10:33:08 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -122,7 +122,11 @@ namespace hig {
 										#ifndef __SSE3__
 											std::vector<float_t>& shape_def,
 										#else
-											float_t* &shape_def,
+											//#ifdef USE_MIC
+											//	float_vec_t &shape_def,
+											//#else
+												float_t* &shape_def,
+											//#endif
 										#endif
 										MPI::Intracomm& comm);
 			void find_axes_orientation(std::vector<float_t> &shape_def, std::vector<short int> &axes);

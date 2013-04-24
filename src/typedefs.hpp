@@ -3,7 +3,7 @@
   *
   *  File: typedefs.hpp
   *  Created: Jul 08, 2012
-  *  Modified: Fri 19 Apr 2013 02:18:01 PM PDT
+  *  Modified: Tue 23 Apr 2013 12:17:20 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -18,6 +18,9 @@
 #endif
 #ifdef __SSE3__
 	#include <pmmintrin.h>
+#endif
+#ifdef USE_MIC
+	#include <immintrin.h>
 #endif
 
 namespace hig {
@@ -58,12 +61,23 @@ namespace hig {
 		typedef std::vector<cucomplex_t>	cucomplex_vec_t;
 	#endif
 
+
+	// SSE/AVX vector types:
+
 	#ifdef __SSE3__
 		typedef __m128						sse_m128_t;
 		typedef struct {
 			__m128 xvec;
 			__m128 yvec;
 		}									sse_m128c_t;
+	#endif
+
+	#ifdef USE_MIC
+		typedef __m512						mic_m512_t;
+		typedef struct {
+			__m512 xvec;
+			__m512 yvec;
+		}									mic_m512c_t;
 	#endif
 
 	// TODO: handle multiprecision? ...

@@ -3,7 +3,7 @@
  *
  *  File: ff_num_mic.hpp
  *  Created: Apr 02, 2013
- *  Modified: Thu 04 Apr 2013 11:00:40 AM PDT
+ *  Modified: Tue 23 Apr 2013 01:30:49 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -39,17 +39,44 @@ namespace hig {
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									scomplex_t*);
+			#ifndef FF_NUM_MIC_SWAP
 			__attribute__((target(mic:0)))
 			void form_factor_kernel_opt(float_t*, float_t*, scomplex_t*, float_t*,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									scomplex_t*, scomplex_t*);
+			#else
+			__attribute__((target(mic:0)))
+			void form_factor_kernel_loopswap(float_t*, float_t*, scomplex_t*, float_t*,
+									unsigned int, unsigned int, unsigned int, unsigned int,
+									unsigned int, unsigned int, unsigned int, unsigned int,
+									unsigned int, unsigned int, unsigned int, unsigned int,
+									unsigned int, unsigned int, unsigned int, unsigned int,
+									scomplex_t*);
+			__attribute__((target(mic:0)))
+			void form_factor_kernel_loopswap_nqx1(float_t*, float_t*, scomplex_t*, float_t*,
+									unsigned int, unsigned int, unsigned int, unsigned int,
+									unsigned int, unsigned int, unsigned int, unsigned int,
+									unsigned int, unsigned int, unsigned int, unsigned int,
+									unsigned int, unsigned int, unsigned int, unsigned int,
+									scomplex_t*);
+			__attribute__((target(mic:0)))
+			void form_factor_kernel_loopswap_vec_nqx1(float_t*, float_t*, scomplex_t*, float_t*,
+									unsigned int, unsigned int, unsigned int, unsigned int,
+									unsigned int, unsigned int, unsigned int, unsigned int,
+									unsigned int, unsigned int, unsigned int, unsigned int,
+									unsigned int, unsigned int, unsigned int, unsigned int,
+									scomplex_t*);
 
-			__attribute__((target(mic:0)))
-			float2_t compute_fq(float, float2_t, float2_t);
-			__attribute__((target(mic:0)))
-			double2_t compute_fq(double, double2_t, double2_t);
+			__attribute__((target(mic:0))) float2_t compute_fq_nqx1(float, float2_t, float2_t);
+			__attribute__((target(mic:0))) double2_t compute_fq_nqx1(double, double2_t, double2_t);
+			__attribute__((target(mic:0))) mic_m512c_t compute_fq_vec_nqx1(mic_m512_t, mic_m512c_t, mic_m512c_t);
+			//__attribute__((target(mic:0))) double2_t compute_fq_vec_nqx1(double, double2_t, double2_t);
+			#endif
+
+			__attribute__((target(mic:0))) float2_t compute_fq(float, float2_t, float2_t);
+			__attribute__((target(mic:0))) double2_t compute_fq(double, double2_t, double2_t);
 
 			void reduction_kernel(unsigned int, unsigned int, unsigned int,	unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
@@ -87,6 +114,13 @@ namespace hig {
 									);
 			unsigned int compute_form_factor_db(int, float_vec_t&, complex_t*&,
 									float_t*, int, float_t*, int, complex_t* qz, int,
+									float_t&, float_t&, float_t&
+									#ifdef FINDBLOCK
+										, const int, const int, const int, const int
+									#endif
+									);
+			unsigned int compute_form_factor_kb(int, float_t*, unsigned int, complex_t*&,
+									float_t*, int, float_t*, int, complex_t* qz, int, int,
 									float_t&, float_t&, float_t&
 									#ifdef FINDBLOCK
 										, const int, const int, const int, const int

@@ -5,7 +5,7 @@
   *
   *  File: ff_num.cpp
   *  Created: Jul 18, 2012
-  *  Modified: Sat 20 Apr 2013 09:26:02 AM PDT
+  *  Modified: Tue 23 Apr 2013 11:25:24 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -65,7 +65,11 @@ namespace hig {
 		#ifndef __SSE3__
 			float_vec_t shape_def;
 		#else
-			float_t* shape_def = NULL;
+			//#ifdef USE_MIC
+			//	float_vec_t shape_def;
+			//#else
+				float_t* shape_def = NULL;
+			//#endif
 		#endif
 		// use the new file reader instead ...
 		unsigned int num_triangles = read_shapes_hdf5(filename, shape_def, world_comm);
@@ -241,13 +245,25 @@ namespace hig {
 												);
 				#endif
 			#elif defined USE_MIC	// use MIC
-				ret_nt = mff_.compute_form_factor_db(rank, shape_def, p_ff,
+				#ifndef FF_NUM_MIC_KB
+					ret_nt = mff_.compute_form_factor_db(rank, shape_def, p_ff,
 												qx, p_nqx, p_qy, p_nqy, p_qz, p_nqz,
 												kernel_time, red_time, temp_mem_time
 												#ifdef FINDBLOCK
 													, block_x, block_y, block_z, block_t
 												#endif
 												);
+				#else
+					ret_nt = mff_.compute_form_factor_kb(rank, shape_def,
+												num_triangles,
+												p_ff,
+												qx, p_nqx, p_qy, p_nqy, p_qz, p_nqz, 3,
+												kernel_time, red_time, temp_mem_time
+												#ifdef FINDBLOCK
+													, block_x, block_y, block_z, block_t
+												#endif
+												);
+				#endif
 			#else	// use only CPU
 				ret_nt = cff_.compute_form_factor(rank, shape_def,
 												#ifdef __SSE3__
@@ -598,7 +614,11 @@ namespace hig {
 													#ifndef __SSE3__
 														float_vec_t &shape_def,
 													#else
-														float_t* &shape_def,
+														//#ifdef USE_MIC
+														//	float_vec_t &shape_def,
+														//#else
+															float_t* &shape_def,
+														//#endif
 													#endif
 													MPI::Intracomm& comm) {
 		unsigned int num_triangles = 0;
@@ -615,36 +635,52 @@ namespace hig {
 					else { shape_def.push_back((float_t)temp_shape_def[j]); ++ j; }
 				} // for
 			#endif // KERNEL2
-		#elif defined USE_MIC	// using MIC
-			for(unsigned int i = 0; i < num_triangles * 7; ++ i)
-				shape_def.push_back((float_t)temp_shape_def[i]);
+		//#elif defined USE_MIC	// using MIC
+		//	for(unsigned int i = 0; i < num_triangles * 7; ++ i)
+		//		shape_def.push_back((float_t)temp_shape_def[i]);
 		#else					// using CPU
-			//for(unsigned int i = 0; i < num_triangles * CPU_T_PROP_SIZE_; ++ i)
-				//shape_def.push_back((float_t)temp_shape_def[i]);
 			#ifndef __SSE3__
 				for(unsigned int i = 0, j = 0; i < num_triangles * CPU_T_PROP_SIZE_; ++ i) {
 					if((i + 1) % CPU_T_PROP_SIZE_ == 0) shape_def.push_back((float_t) 0.0);	// padding
 					else { shape_def.push_back((float_t)temp_shape_def[j]); ++ j; }
 				} // for
-			#else		// using SSE3, so store data differently
-				// group all 's', 'nx', 'ny', 'nz', 'x', 'y', 'z' together
-				// for alignment at 16 bytes, make sure each of the 7 groups is padded
-				// compute amount of padding
-				// 16 bytes = 4 floats or 2 doubles. FIXME: assuming float only for now ...
-				unsigned int padding = (4 - (num_triangles & 3)) & 3;
-				unsigned int shape_size = (num_triangles + padding) * 7;
-				//shape_def = new (std::nothrow) float_t[shape_size];
-				shape_def = (float_t*) _mm_malloc(shape_size * sizeof(float_t), 16);
-				if(shape_def == NULL) {
-					std::cerr << "error: failed to allocate aligned memory for shape_def" << std::endl;
-					return 0;
-				} // if
-				memset(shape_def, 0, shape_size * sizeof(float_t));
-				for(int i = 0; i < num_triangles; ++ i) {
-					for(int j = 0; j < 7; ++ j) {
-						shape_def[(num_triangles + padding) * j + i] = temp_shape_def[7 * i + j];
+			#else		// using SSE3, so store data differently: FOR CPU AND MIC (vectorization)
+				#ifndef USE_MIC		// generic cpu version with SSE3
+					// group all 's', 'nx', 'ny', 'nz', 'x', 'y', 'z' together
+					// for alignment at 16 bytes, make sure each of the 7 groups is padded
+					// compute amount of padding
+					// 16 bytes = 4 floats or 2 doubles. FIXME: assuming float only for now ...
+					unsigned int padding = (4 - (num_triangles & 3)) & 3;
+					unsigned int shape_size = (num_triangles + padding) * 7;
+					shape_def = (float_t*) _mm_malloc(shape_size * sizeof(float_t), 16);
+					if(shape_def == NULL) {
+						std::cerr << "error: failed to allocate aligned memory for shape_def" << std::endl;
+						return 0;
+					} // if
+					memset(shape_def, 0, shape_size * sizeof(float_t));
+					for(int i = 0; i < num_triangles; ++ i) {
+						for(int j = 0; j < 7; ++ j) {
+							shape_def[(num_triangles + padding) * j + i] = temp_shape_def[7 * i + j];
+						} // for
 					} // for
-				} // for
+				#else	// optimized for MIC only: AVX2, 64 byte alignments (512-bit vector registers)
+						// FIXME: float only for now: 16 floats in one vector!
+					unsigned int padding = (16 - (num_triangles & 15)) & 15;
+					unsigned int shape_size = (num_triangles + padding) * 7;
+					shape_def = (float_t*) _mm_malloc(shape_size * sizeof(float_t), 64);
+					if(shape_def == NULL) {
+						std::cerr << "error: failed to allocate aligned memory for shape_def" << std::endl;
+						return 0;
+					} // if
+					memset(shape_def, 0, shape_size * sizeof(float_t));
+					for(int i = 0; i < num_triangles; ++ i) {
+						for(int j = 0; j < 7; ++ j) {
+							shape_def[(num_triangles + padding) * j + i] = temp_shape_def[7 * i + j];
+						} // for
+					} // for
+					// TODO: try grouping 16 triangles together ...
+					// that will give completely sequential memory access!
+				#endif
 			#endif // __SSE3__
 		#endif // FF_NUM_GPU
 

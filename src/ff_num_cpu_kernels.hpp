@@ -3,7 +3,7 @@
  *
  *  File: ff_num_cpu.hpp
  *  Created: Nov 05, 2011
- *  Modified: Sun 21 Apr 2013 03:08:01 PM PDT
+ *  Modified: Tue 23 Apr 2013 11:35:57 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -297,6 +297,7 @@
 		start_t = b_num_triangles * ib_t;
 
 		// shape padding guarantees that padded_num_triangles is a multiple of 4
+		// FIXME: assuming that b_num_triangles is a multiple of 4 as well ...
 
 		#pragma omp parallel
 		{
