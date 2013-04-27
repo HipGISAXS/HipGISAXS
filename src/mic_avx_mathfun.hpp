@@ -71,14 +71,15 @@ _PS_CONST(cephes_exp_p5, 5.0000001201E-1);
 
 // exp()
 static inline mic_m512_t mic_exp_ps(mic_m512_t x) {
-	mic_m512_t one = *(mic_m512_t*)_ps_1;
 	mic_m512_t zero = *(mic_m512_t*)_ps_0;
+	mic_m512_t one = *(mic_m512_t*)_ps_1;
 
 	x = _mm512_min_ps(x, *(mic_m512_t*)_ps_exp_hi);
 	x = _mm512_max_ps(x, *(mic_m512_t*)_ps_exp_lo);
 
-	mic_m512_t temp_2 = _mm512_mul_ps(x, *(mic_m512_t*)_ps_cephes_LOG2EF);
-	temp_2 = _mm512_add_ps(temp_2, *(mic_m512_t*)_ps_0p5);
+	//mic_m512_t temp_2 = _mm512_mul_ps(x, *(mic_m512_t*)_ps_cephes_LOG2EF);
+	//temp_2 = _mm512_add_ps(temp_2, *(mic_m512_t*)_ps_0p5);
+	mic_m512_t temp_2 = _mm512_fmadd_ps(x, *(mic_m512_t*)_ps_cephes_LOG2EF, *(mic_m512_t*)_ps_0p5);
 
 	mic_m512_t temp_1 = _mm512_round_ps(temp_2, _MM_FROUND_TO_NEAREST_INT, _MM_EXPADJ_NONE);
 	mic_m512_t temp_3 = _mm512_sub_ps(temp_1, temp_2);
@@ -87,34 +88,37 @@ static inline mic_m512_t mic_exp_ps(mic_m512_t x) {
 	temp_2 = _mm512_mask_sub_ps(temp_1, mask, temp_1, one);
 	__m512i emm0 = _mm512_cvtfxpnt_round_adjustps_epi32(temp_2, _MM_FROUND_TO_NEAREST_INT, _MM_EXPADJ_NONE);
 
-	temp_1 = _mm512_mul_ps(temp_2, *(mic_m512_t*)_ps_cephes_exp_C12);
-	x = _mm512_sub_ps(x, temp_1);
+	//temp_1 = _mm512_mul_ps(temp_2, *(mic_m512_t*)_ps_cephes_exp_C12);
+	//x = _mm512_sub_ps(x, temp_1);
+	x = _mm512_fnmadd_ps(temp_2, *(mic_m512_t*)_ps_cephes_exp_C12, x);
 
 	mic_m512_t x2 = _mm512_mul_ps(x, x);
 	mic_m512_t x3 = _mm512_mul_ps(x2, x);
 	mic_m512_t x4 = _mm512_mul_ps(x2, x2);
  
+	//temp_2 = _mm512_mul_ps(x2, *(mic_m512_t*)_ps_cephes_exp_p5);
+	//temp_1 = _mm512_add_ps(temp_1, temp_2);
+	//temp_3 = _mm512_mul_ps(x3, *(mic_m512_t*)_ps_cephes_exp_p4);
+	//temp_1 = _mm512_add_ps(temp_1, temp_3);
+
 	temp_1 = _mm512_add_ps(x, one);
-	temp_2 = _mm512_mul_ps(x2, *(mic_m512_t*)_ps_cephes_exp_p5);
-	temp_3 = _mm512_mul_ps(x3, *(mic_m512_t*)_ps_cephes_exp_p4);
-	temp_1 = _mm512_add_ps(temp_1, temp_2);
+	temp_1 = _mm512_fmadd_ps(x2, *(mic_m512_t*)_ps_cephes_exp_p5, temp_1);
+	temp_1 = _mm512_fmadd_ps(x3, *(mic_m512_t*)_ps_cephes_exp_p4, temp_1);
 
 	temp_2 = _mm512_mul_ps(x3, *(mic_m512_t*)_ps_cephes_exp_p0);
-
-	temp_1 = _mm512_add_ps(temp_1, temp_3);
+	temp_3 = _mm512_mul_ps(x2, *(mic_m512_t*)_ps_cephes_exp_p1);
 
 	mic_m512_t temp_4 = _mm512_mul_ps(x, *(mic_m512_t*)_ps_cephes_exp_p2);
-	temp_3 = _mm512_mul_ps(x2, *(mic_m512_t*)_ps_cephes_exp_p1);
 
 	emm0 = _mm512_add_epi32(emm0, *(__m512i*)_pi32_0x7f);
 
 	temp_2 = _mm512_add_ps(temp_2, temp_3);
 	temp_3 = _mm512_add_ps(temp_3, temp_4);
+	temp_2 = _mm512_add_ps(temp_2, temp_3);
 
 	emm0 = _mm512_slli_epi32(emm0, 23);
 	mic_m512_t pow2n = _mm512_castsi512_ps(emm0);
 
-	temp_2 = _mm512_add_ps(temp_2, temp_3);
 	temp_2 = _mm512_mul_ps(temp_2, x4);
 
 	mic_m512_t y = _mm512_add_ps(temp_1, temp_2);
@@ -250,8 +254,7 @@ static inline mic_m512_t mic_cos_ps(mic_m512_t x) {
 
 // FIXME: this is not working correctly ... individual sin and cos are working good ...
 static inline void mic_sincos_ps(mic_m512_t x, mic_m512_t *s, mic_m512_t *c) {
-	__m512i sign_bit;
-	sign_bit = _mm512_and_epi32(_mm512_castps_si512(x), *(__m512i*)_pi32_sign_mask);
+	__m512i sign_bit = _mm512_and_epi32(_mm512_castps_si512(x), *(__m512i*)_pi32_sign_mask);
 	x = _mm512_castsi512_ps(_mm512_and_epi32(_mm512_castps_si512(x), *(__m512i*)_pi32_inv_sign_mask));
 
 	mic_m512_t y = _mm512_mul_ps(x, *(mic_m512_t*)_ps_cephes_FOPI);
@@ -279,30 +282,37 @@ static inline void mic_sincos_ps(mic_m512_t x, mic_m512_t *s, mic_m512_t *c) {
 	
 	sign_bit = _mm512_xor_epi32(sign_bit, emm0);
 
-	mic_m512_t temp_2 = *(mic_m512_t*)_ps_minus_cephes_DP123;
-	temp_2 = _mm512_mul_ps(y, temp_2);
-	x = _mm512_add_ps(x, temp_2);
+	x = _mm512_fmadd_ps(y, *(mic_m512_t*)_ps_minus_cephes_DP123, x);
 
 	mic_m512_t x2 = _mm512_mul_ps(x, x);
 	mic_m512_t x3 = _mm512_mul_ps(x2, x);
 	mic_m512_t x4 = _mm512_mul_ps(x2, x2);
 
-	y = *(mic_m512_t*)_ps_coscof_p0;
-	mic_m512_t y2 = *(mic_m512_t*)_ps_sincof_p0;
-	y = _mm512_mul_ps(y, x2);
-	y2 = _mm512_mul_ps(y2, x2);
-	y = _mm512_add_ps(y, *(mic_m512_t*)_ps_coscof_p1);
-	y2 = _mm512_add_ps(y2, *(mic_m512_t*)_ps_sincof_p1);
-	y = _mm512_mul_ps(y, x2);
-	y2 = _mm512_mul_ps(y2, x2);
-	y = _mm512_add_ps(y, *(mic_m512_t*)_ps_coscof_p2);
-	y2 = _mm512_add_ps(y2, *(mic_m512_t*)_ps_sincof_p2);
-	y = _mm512_mul_ps(y, x4);
-	y2 = _mm512_mul_ps(y2, x3);
-	temp_2 = _mm512_mul_ps(x2, *(mic_m512_t*)_ps_0p5);
-	y2 = _mm512_add_ps(y2, x);
-	temp_2 = _mm512_sub_ps(temp_2, *(mic_m512_t*)_ps_1);
-	y = _mm512_sub_ps(y, temp_2);
+	//y = *(mic_m512_t*)_ps_coscof_p0;
+	//y = _mm512_mul_ps(y, x2);
+	//y = _mm512_add_ps(y, *(mic_m512_t*)_ps_coscof_p1);
+	//y = _mm512_mul_ps(y, x2);
+	//y = _mm512_add_ps(y, *(mic_m512_t*)_ps_coscof_p2);
+	//temp_2 = _mm512_mul_ps(x2, *(mic_m512_t*)_ps_0p5);
+	//temp_2 = _mm512_sub_ps(temp_2, *(mic_m512_t*)_ps_1);
+	//y = _mm512_mul_ps(y, x4);
+	//y = _mm512_sub_ps(y, temp_2);
+
+	//mic_m512_t y2 = *(mic_m512_t*)_ps_sincof_p0;
+	//y2 = _mm512_mul_ps(y2, x2);
+	//y2 = _mm512_add_ps(y2, *(mic_m512_t*)_ps_sincof_p1);
+	//y2 = _mm512_mul_ps(y2, x2);
+	//y2 = _mm512_add_ps(y2, *(mic_m512_t*)_ps_sincof_p2);
+	//y2 = _mm512_mul_ps(y2, x3);
+	//y2 = _mm512_add_ps(y2, x);
+
+	y = _mm512_fmadd_ps(*(mic_m512_t*)_ps_coscof_p0, x2, *(mic_m512_t*)_ps_coscof_p1);
+	mic_m512_t y2 = _mm512_fmadd_ps(*(mic_m512_t*)_ps_sincof_p0, x2, *(mic_m512_t*)_ps_sincof_p1);
+	y = _mm512_fmadd_ps(y, x2, *(mic_m512_t*)_ps_coscof_p2);
+	y2 = _mm512_fmadd_ps(y2, x2, *(mic_m512_t*)_ps_sincof_p2);
+	mic_m512_t temp_2 = _mm512_fmsub_ps(x2, *(mic_m512_t*)_ps_0p5, *(mic_m512_t*)_ps_1);
+	y2 = _mm512_fmadd_ps(y2, x3, x);
+	y = _mm512_fmsub_ps(y, x4, temp_2);
 
 	mic_m512_t cos_y = y;
 	mic_m512_t cos_y2 = y2;

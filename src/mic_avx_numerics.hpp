@@ -3,7 +3,7 @@
   *
   *  File: mic_avx_numerics.hpp
   *  Created: Apr 23, 2013
-  *  Modified: Tue 23 Apr 2013 09:06:06 PM PDT
+  *  Modified: Wed 24 Apr 2013 04:08:17 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -178,10 +178,10 @@ namespace hig {
 	} // mic_cos_rps()
 
 	static inline void mic_sincos_rps(mic_m512_t a, mic_m512_t* s, mic_m512_t* c) {
-		// svml: none!
+		// svml:
+		//*s = _mm512_sincos_ps(c, a);
 		//*s = _mm512_sin_ps(a);
 		//*c = _mm512_cos_ps(a);
-		//*s = _mm512_sincos_ps(c, a);
 		// custom:
 		return mic_sincos_ps(a, s, c);
 	} // mic_sincos_rps()

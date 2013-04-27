@@ -3,7 +3,7 @@
  *
  *  File: ff_num_mic.cpp
  *  Created: Apr 02, 2013
- *  Modified: Tue 23 Apr 2013 06:05:00 PM PDT
+ *  Modified: Sat 27 Apr 2013 01:44:14 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -145,6 +145,7 @@ namespace hig {
 								, block_x, block_y, block_z, block_t
 							#endif
 							);
+
 		if(rank == 0) {
 			std::cout << "++               Hyperblock size: " << b_nqx << " x " << b_nqy
 						<< " x " << b_nqz << " x " << b_num_triangles << std::endl;
@@ -1093,7 +1094,74 @@ namespace hig {
 									#endif
 									);
 		#else
-			// TODO: ... autotune ...
+			// Autotuning to find optimal hyperblock size ... TODO: improve ...
+
+			std::cout << "-- Autotuning hyperblock size ... " << std::endl;
+			double min_time_hb = 100000000.0;
+			unsigned int min_b_nqx = 1, min_b_nqy = 1, min_b_nqz = 1, min_b_num_triangles = 1;
+			woo::BoostChronoTimer at_kernel_timer, at_overhead_timer;
+			at_overhead_timer.start();
+			scomplex_t* ff_temp;
+			ff_temp = new (std::nothrow) scomplex_t[nqx * nqy * nqz];
+			#pragma offload_transfer target(mic:0) in(ff_temp: length(nqx * nqy * nqz) MIC_ALLOC)
+
+			for(unsigned int b_nqx_i = 1; b_nqx_i <= nqx; ++ b_nqx_i) {
+				for(unsigned int b_nqy_i = 10; b_nqy_i <= nqy; b_nqy_i += 10) {
+					for(unsigned int b_nqz_i = 10; b_nqz_i <= nqz; b_nqz_i += 10) {
+						for(unsigned int b_nt_i = 100; b_nt_i <= num_triangles; b_nt_i += 100) {
+							at_kernel_timer.start();
+
+							// compute the number of sub-blocks, along each of the 4 dimensions
+							unsigned int nb_x = (unsigned int) ceil((float) nqx / b_nqx_i);
+							unsigned int nb_y = (unsigned int) ceil((float) nqy / b_nqy_i);
+							unsigned int nb_z = (unsigned int) ceil((float) nqz / b_nqz_i);
+							unsigned int nb_t = (unsigned int) ceil((float) num_triangles / b_nt_i);
+							unsigned int num_blocks = nb_x * nb_y * nb_z * nb_t;
+
+							unsigned int ff_size = b_nqx_i * b_nqy_i * b_nqz_i;
+
+							// call the main kernel offloaded to MIC
+							#pragma offload target(mic:0) \
+								in(b_nqx, b_nqy, b_nqz, num_triangles) \
+								in(nqx, nqy, nqz) \
+								in(shape_def: length(0) MIC_REUSE) \
+								in(qx: length(0) MIC_REUSE) \
+								in(qy: length(0) MIC_REUSE) \
+								in(qz_flat: length(0) MIC_REUSE) \
+								nocopy(ff_temp: length(0) MIC_REUSE)
+							form_factor_kernel_loopswap(qx, qy, qz_flat, shape_def,
+									b_nqx, b_nqy, b_nqz, b_num_triangles,
+									b_nqx, b_nqy, b_nqz, b_num_triangles,
+									nqx, nqy, nqz, num_triangles,
+									0, 0, 0, 0,
+									ff_temp);
+	
+							at_kernel_timer.stop();
+							double curr_time = at_kernel_timer.elapsed_msec();
+							double tot_time = curr_time * num_blocks;
+							std::cout << "## " << b_nqx_i << " x " << b_nqy_i << " x " << b_nqz_i
+										<< " x " << b_nt_i << "\t" << num_blocks << " : "
+										<< curr_time << "\t" << tot_time << std::endl;
+							if(tot_time < min_time_hb) {
+								min_time_hb = tot_time;
+								min_b_nqx = b_nqx_i; min_b_nqy = b_nqy_i; min_b_nqz = b_nqz_i;
+								min_b_num_triangles = b_nt_i;
+							} // if
+
+						} // for
+					} // for
+				} // for
+			} // for
+
+			#pragma offload_transfer target(mic:0) nocopy(ff_temp: length(0) MIC_FREE)
+			delete[] ff_temp;
+			at_overhead_timer.stop();
+
+			b_nqx = min_b_nqx; b_nqy = min_b_nqy; b_nqz = min_b_nqz; b_num_triangles = min_b_num_triangles;
+			if(rank == 0) {
+				std::cout << "##    HBlock Autotuner overhead: " << at_overhead_timer.elapsed_msec()
+							<< " ms." << std::endl;
+			} // if
 		#endif
 
 		// compute the number of sub-blocks, along each of the 4 dimensions
@@ -1535,6 +1603,10 @@ namespace hig {
 		if(rank == 0) {
 			std::cout << "**                FF kernel time: " << ktime << " ms."
 						<< std::endl;
+			// flop count for MIC:
+			double mflop = (double) nqx * nqy * nqz * ( 78 * num_triangles + 18) / 1000000;
+			float_t gflops = mflop / ktime;
+			std::cout << "**          One Node Performance: " << gflops << " GFLOPS/s" << std::endl;
 		} // if
 
 		pass_kernel_time = ktime;
