@@ -3,7 +3,7 @@
  *
  *  File: ff_num_mic.cpp
  *  Created: Apr 02, 2013
- *  Modified: Sat 27 Apr 2013 01:44:14 PM PDT
+ *  Modified: Sat 27 Apr 2013 09:37:17 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -1003,7 +1003,7 @@ namespace hig {
 	unsigned int NumericFormFactorM::compute_form_factor_kb(int rank,
 						float_t* shape_def, unsigned int num_triangles, complex_t* &ff,
 						float_t* qx, int nqx, float_t* qy, int nqy, complex_t* qz, int nqz, int k,
-						float_t& pass_kernel_time, float_t& red_time, float_t& mem_time
+						float_t& kernel_time, float_t& red_time, float_t& mem_time
 						#ifdef FINDBLOCK
 							, const int block_x, const int block_y, const int block_z, const int block_t
 						#endif
@@ -1011,7 +1011,7 @@ namespace hig {
 		k = 3; 		// this is only triple-buffering for now
 					// (not sure how to implement k version due to target memory allocation style)
 
-		double kernel_time = 0.0, reduce_time = 0.0, total_kernel_time = 0.0, total_reduce_time = 0.0,
+		double reduce_time = 0.0, total_reduce_time = 0.0,
 				temp_mem_time = 0.0, total_mem_time = 0.0;
 		woo::BoostChronoTimer kerneltimer;
 
@@ -1581,7 +1581,7 @@ namespace hig {
 
 		if(rank == 0) std::cout << "done." << std::endl;
 
-		double ktime = kerneltimer.elapsed_msec();
+		kernel_time = kerneltimer.elapsed_msec();
 
 		#ifdef PROFILE_PAPI
 		if(rank == 0) {
@@ -1591,25 +1591,20 @@ namespace hig {
 			std::cout << "++                  PAPI_RES_STL: " << papi_total_stall << std::endl;
 			std::cout << "++                           IPC: "
 						<< (double) papi_total_inst / papi_total_cycles << std::endl;
-			std::cout << "++             Instruction Reply: "
-						<< (double) (papi_total_iis - papi_total_inst) * 100 / papi_total_iis
-						<< " %" << std::endl;
+			//std::cout << "++             Instruction Reply: "
+			//			<< (double) (papi_total_iis - papi_total_inst) * 100 / papi_total_iis
+			//			<< " %" << std::endl;
 			std::cout << "++                Stalled Cycles: "
 						<< (double) papi_total_stall * 100 / papi_total_cycles
 						<< " %" << std::endl;
 		} // if
 		#endif
 
-		if(rank == 0) {
-			std::cout << "**                FF kernel time: " << ktime << " ms."
-						<< std::endl;
-			// flop count for MIC:
-			double mflop = (double) nqx * nqy * nqz * ( 78 * num_triangles + 18) / 1000000;
-			float_t gflops = mflop / ktime;
-			std::cout << "**          One Node Performance: " << gflops << " GFLOPS/s" << std::endl;
-		} // if
+		//if(rank == 0) {
+		//	std::cout << "**                FF kernel time: " << kernel_time << " ms."
+		//				<< std::endl;
+		//} // if
 
-		pass_kernel_time = ktime;
 		red_time = total_reduce_time;
 		mem_time = total_mem_time;
 	

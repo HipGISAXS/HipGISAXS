@@ -5,7 +5,7 @@
   *
   *  File: ff_num.cpp
   *  Created: Jul 18, 2012
-  *  Modified: Tue 23 Apr 2013 11:25:24 AM PDT
+  *  Modified: Sat 27 Apr 2013 09:43:38 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -324,15 +324,31 @@ namespace hig {
 			mem_time += mem_end - mem_start;
 	
 			if(rank == 0) {
-				std::cout << "**               FF compute time: " << computetimer.elapsed_msec() << " ms."							<< std::endl
-						//<< "**                FF kernel time: " << kernel_time << " ms." << std::endl
-						//<< "**             FF reduction time: " << red_time << " ms." << std::endl
+				std::cout
+						<< "**                FF kernel time: " << kernel_time << " ms." << std::endl
+						<< "**               FF compute time: " << computetimer.elapsed_msec() << " ms."
+						<< std::endl
 						<< "**         FF memory and IO time: " << mem_time * 1000 << " ms." << std::endl
 						<< "**            Communication time: " << comm_time * 1000 << " ms." << std::endl
-						//<< "**                 Total FF time: " << total_time * 1000 << " ms."
-						//<< " (" << total_end << " - " << total_start << ")" << std::endl
 						<< "**                 Total FF time: " << maintimer.elapsed_msec() << " ms."
 						<< std::endl << std::flush;
+
+				double mflop = 0.0; float_t gflops = 0.0;
+
+				#ifdef USE_GPU
+					// flop count for GPU
+					mflop = (double) nqx * nqy * nqz * ( 42 * num_triangles + 2) / 1000000;
+				#elif defined USE_MIC
+					// flop count for MIC
+					mflop = (double) nqx * nqy * nqz * ( 78 * num_triangles + 18) / 1000000;
+					//mflop = (double) p_nqx * p_nqy * p_nqz * ( 78 * num_triangles + 18) / 1000000;
+				#else
+					// flop count for CPU
+					mflop = (double) nqx * nqy * nqz * ( 68 * num_triangles + 20) / 1000000;
+				#endif
+				//gflops = nidle_num_procs * mflop / kernel_time;
+				gflops = mflop / kernel_time;
+				std::cout << "**            Kernel performance: " << gflops << " GFLOPS/s" << std::endl;
 			} // if
 		} // if
 
