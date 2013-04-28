@@ -79,8 +79,8 @@ TIFF_INCL = -I $(TIFF_DIR)/include
 TIFF_LIBS = -L $(TIFF_DIR)/lib -ltiff
 
 ## papi stuff
-#PAPI_INCL = -I $(PAPI_DIR)/include
-#PAPI_LIBS = -L $(PAPI_DIR)/lib -lpapi
+PAPI_INCL = -I $(PAPI_DIR)/include
+PAPI_LIBS = -L $(PAPI_DIR)/lib -lpapi
 
 ## Intel MKL
 MKL_INCL = -I /opt/intel/composerxe/mkl/include
@@ -105,7 +105,9 @@ MISC_FLAGS = #-DAXIS_ROT
 
 ## stuff for CPU
 MISC_FLAGS += -DFF_NUM_CPU_FUSED
-#MISC_FLAGS += -DPROFILE_PAPI
+
+## stuff for papi profiling
+MISC_FLAGS += -DPROFILE_PAPI
 
 ## GPU related flags
 ifeq ($(USE_GPU), y)

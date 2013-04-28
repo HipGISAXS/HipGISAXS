@@ -252,7 +252,6 @@ static inline mic_m512_t mic_cos_ps(mic_m512_t x) {
 } // cos_ps()
 
 
-// FIXME: this is not working correctly ... individual sin and cos are working good ...
 static inline void mic_sincos_ps(mic_m512_t x, mic_m512_t *s, mic_m512_t *c) {
 	__m512i sign_bit = _mm512_and_epi32(_mm512_castps_si512(x), *(__m512i*)_pi32_sign_mask);
 	x = _mm512_castsi512_ps(_mm512_and_epi32(_mm512_castps_si512(x), *(__m512i*)_pi32_inv_sign_mask));
@@ -288,24 +287,6 @@ static inline void mic_sincos_ps(mic_m512_t x, mic_m512_t *s, mic_m512_t *c) {
 	mic_m512_t x3 = _mm512_mul_ps(x2, x);
 	mic_m512_t x4 = _mm512_mul_ps(x2, x2);
 
-	//y = *(mic_m512_t*)_ps_coscof_p0;
-	//y = _mm512_mul_ps(y, x2);
-	//y = _mm512_add_ps(y, *(mic_m512_t*)_ps_coscof_p1);
-	//y = _mm512_mul_ps(y, x2);
-	//y = _mm512_add_ps(y, *(mic_m512_t*)_ps_coscof_p2);
-	//temp_2 = _mm512_mul_ps(x2, *(mic_m512_t*)_ps_0p5);
-	//temp_2 = _mm512_sub_ps(temp_2, *(mic_m512_t*)_ps_1);
-	//y = _mm512_mul_ps(y, x4);
-	//y = _mm512_sub_ps(y, temp_2);
-
-	//mic_m512_t y2 = *(mic_m512_t*)_ps_sincof_p0;
-	//y2 = _mm512_mul_ps(y2, x2);
-	//y2 = _mm512_add_ps(y2, *(mic_m512_t*)_ps_sincof_p1);
-	//y2 = _mm512_mul_ps(y2, x2);
-	//y2 = _mm512_add_ps(y2, *(mic_m512_t*)_ps_sincof_p2);
-	//y2 = _mm512_mul_ps(y2, x3);
-	//y2 = _mm512_add_ps(y2, x);
-
 	y = _mm512_fmadd_ps(*(mic_m512_t*)_ps_coscof_p0, x2, *(mic_m512_t*)_ps_coscof_p1);
 	mic_m512_t y2 = _mm512_fmadd_ps(*(mic_m512_t*)_ps_sincof_p0, x2, *(mic_m512_t*)_ps_sincof_p1);
 	y = _mm512_fmadd_ps(y, x2, *(mic_m512_t*)_ps_coscof_p2);
@@ -318,9 +299,9 @@ static inline void mic_sincos_ps(mic_m512_t x, mic_m512_t *s, mic_m512_t *c) {
 	mic_m512_t cos_y2 = y2;
 
 	y = _mm512_castsi512_ps(_mm512_andnot_epi32(emm2, _mm512_castps_si512(y)));
-	cos_y = _mm512_castsi512_ps(_mm512_andnot_epi32(emm2, _mm512_castps_si512(cos_y)));
 	y2 = _mm512_castsi512_ps(_mm512_and_epi32(emm2, _mm512_castps_si512(y2)));
-	cos_y2 = _mm512_castsi512_ps(_mm512_and_epi32(emm2, _mm512_castps_si512(cos_y2)));
+	cos_y = _mm512_castsi512_ps(_mm512_andnot_epi32(cos_emm2, _mm512_castps_si512(cos_y)));
+	cos_y2 = _mm512_castsi512_ps(_mm512_and_epi32(cos_emm2, _mm512_castps_si512(cos_y2)));
 
 	y = _mm512_add_ps(y, y2);
 	cos_y = _mm512_add_ps(cos_y, cos_y2);
