@@ -65,11 +65,11 @@ namespace hig {
 		#ifndef __SSE3__
 			float_vec_t shape_def;
 		#else
-			//#ifdef USE_MIC
-			//	float_vec_t shape_def;
-			//#else
+			#ifdef USE_GPU
+				float_vec_t shape_def;
+			#else
 				float_t* shape_def = NULL;
-			//#endif
+			#endif
 		#endif
 		// use the new file reader instead ...
 		unsigned int num_triangles = read_shapes_hdf5(filename, shape_def, world_comm);
@@ -630,11 +630,11 @@ namespace hig {
 													#ifndef __SSE3__
 														float_vec_t &shape_def,
 													#else
-														//#ifdef USE_MIC
-														//	float_vec_t &shape_def,
-														//#else
+														#ifdef USE_GPU
+															float_vec_t &shape_def,
+														#else
 															float_t* &shape_def,
-														//#endif
+														#endif
 													#endif
 													MPI::Intracomm& comm) {
 		unsigned int num_triangles = 0;

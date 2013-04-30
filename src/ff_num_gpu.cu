@@ -1571,7 +1571,7 @@ namespace hig {
 						float_t* &qy_h, int nqy,
 						cucomplex_t* &qz_h, int nqz,
 						int k,
-						float_t& pass_kernel_time, float_t& red_time, float_t& mem_time
+						float_t& kernel_time, float_t& red_time, float_t& mem_time
 						#ifdef FINDBLOCK
 							, const int block_x, const int block_y, const int block_z, const int block_t
 						#endif
@@ -2046,12 +2046,11 @@ namespace hig {
 				cudaFree(ff_d);
 
 				fftimer.stop();
-				if(rank == 0) {
-					std::cout << "**                FF kernel time: " << fftimer.elapsed_msec() << " ms."
-								<< std::endl;
-					//std::cout << "**                  FF move time: " << ff_move_time << " ms."
-					//			<< std::endl;
-				} // if
+				kernel_time = fftimer.elapsed_msec();
+				//if(rank == 0) {
+				//	std::cout << "**                FF kernel time: " << fftimer.elapsed_msec() << " ms."
+				//				<< std::endl;
+				//} // if
 			} // if-else
 			if(ff_buffer != NULL) cudaFreeHost(ff_buffer);
 		} // if-else
@@ -2061,7 +2060,6 @@ namespace hig {
 		cudaFree(qy_d);
 		cudaFree(qx_d);
 	
-		pass_kernel_time = 0.0;
 		red_time = 0.0;
 		mem_time = 0.0;
 
