@@ -3,7 +3,7 @@
   *
   *  File: ff_num_gpu_kernels.cuh
   *  Created: Apr 11, 2013
-  *  Modified: Wed 01 May 2013 06:10:47 PM PDT
+  *  Modified: Wed 01 May 2013 08:17:36 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -83,19 +83,25 @@
 
 			float_t qxy2 = fmaf(temp_x, temp_x, qy2);
 			cucomplex_t q2 = cuCsqr(temp_z) + qxy2;
+			cucomplex_t q2_inv = cuCdivf(make_cuC((float_t) 1.0, (float_t) 0.0), q2);
+			//cucomplex_t q2_inv = cuCrcpf(q2);
+			//cucomplex_t q2_inv = (float_t) 1.0 / q2;
 
-			// TODO: try dynamic parallelism to parallelize this on k20x ...
-			#pragma unroll 16
+			#if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ > 300)
+				#pragma unroll 8
+			#else
+				#pragma unroll 16
+			#endif
 			for(int i_t = 0; i_t < curr_num_triangles; ++ i_t) {
 				unsigned int shape_off = T_PROP_SIZE_ * i_t;
-				//float_t s = shared_shape_def[shape_off];
-				//float_t nx = shared_shape_def[shape_off + 1];
-				//float_t ny = shared_shape_def[shape_off + 2];
-				//float_t nz = shared_shape_def[shape_off + 3];
-				//float_t x = shared_shape_def[shape_off + 4];
-				//float_t y = shared_shape_def[shape_off + 5];
-				//float_t z = shared_shape_def[shape_off + 6];
-				float_t s, nx, ny, nz, x, y, z;
+				float_t s = shared_shape_def[shape_off];
+				float_t nx = shared_shape_def[shape_off + 1];
+				float_t ny = shared_shape_def[shape_off + 2];
+				float_t nz = shared_shape_def[shape_off + 3];
+				float_t x = shared_shape_def[shape_off + 4];
+				float_t y = shared_shape_def[shape_off + 5];
+				float_t z = shared_shape_def[shape_off + 6];
+			/*	float_t s, nx, ny, nz, x, y, z;
 				#ifndef DOUBLEP
 				asm("{\n"
 						" .reg .s64 rd1;\n"
@@ -150,16 +156,15 @@
 					: "=d"(s), "=d"(nx), "=d"(ny), "=d"(nz), "=d"(x), "=d"(y), "=d"(z)
 					: "r"(shape_off), "l"(shared_shape_def)
 				   );
-				#endif
+				#endif*/
 
 				float_t qyn = temp_y * ny;
 				float_t qyt = temp_y * y;
 				cucomplex_t qzn = temp_z * nz;
 				cucomplex_t qzt = temp_z * z;
 
-				cucomplex_t qt_d, qn_d;
-				qt_d = fmaf(temp_x, x, qyt) + qzt;
-				qn_d = cuCdivf((fmaf(temp_x, nx, qyn) + qzn), q2);
+				cucomplex_t qt_d = fmaf(temp_x, x, qyt) + qzt;
+				cucomplex_t qn_d = cuCmulf((fmaf(temp_x, nx, qyn) + qzn), q2_inv);
 
 				ff_tot = ff_tot + compute_fq(s, qt_d, qn_d);
 			} // for
@@ -271,7 +276,7 @@
 		//float ss, cc;
 		//__sincosf(qt_d.x, &ss, &cc);
 		//cuFloatComplex v1 = cuCmulf(qn_d, make_cuFloatComplex(cc, ss));
-		float v2 = s * __expf(qt_d.y);
+		float v2 = __fmul_ru(s, __expf(qt_d.y));
 		return v1 * v2;
 	} // compute_fq()
 
