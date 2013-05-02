@@ -3,7 +3,7 @@
   *
   *  File: ff_num_gpu_kernels.cuh
   *  Created: Apr 11, 2013
-  *  Modified: Sat 13 Apr 2013 04:28:57 PM PDT
+  *  Modified: Wed 01 May 2013 06:10:47 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -158,13 +158,104 @@
 				cucomplex_t qzt = temp_z * z;
 
 				cucomplex_t qt_d, qn_d;
-				compute_qi_d(temp_x, nx, x, qyt, qyn, qzt, qzn, q2, qt_d, qn_d);
+				qt_d = fmaf(temp_x, x, qyt) + qzt;
+				qn_d = cuCdivf((fmaf(temp_x, nx, qyn) + qzn), q2);
 
 				ff_tot = ff_tot + compute_fq(s, qt_d, qn_d);
 			} // for
 			ff[curr_nqy * i_z + i_y] = ff_tot;
 		} // if
 	} // form_factor_kernel_fused_nqx1()
+
+
+	/***
+	 * special case when b_nqx == 1, with dynamic parallelism
+	 */
+	__global__ void form_factor_kernel_fused_dyn_nqx1(
+						const float_t* __restrict__ qx, const float_t* __restrict__ qy,
+						const cucomplex_t* __restrict__ qz,
+						const float_t* __restrict__ shape_def, const short int* __restrict__ axes,
+						const unsigned int curr_nqx, const unsigned int curr_nqy,
+						const unsigned int curr_nqz, const unsigned int curr_num_triangles,
+						const unsigned int b_nqx, const unsigned int b_nqy,
+						const unsigned int b_nqz, const unsigned int b_num_triangles,
+						const unsigned int ib_x, const unsigned int ib_y,
+						const unsigned int ib_z, const unsigned int ib_t,
+						cucomplex_t* __restrict__ ff, cucomplex_t* fq) {
+		unsigned int i_y = blockDim.x * blockIdx.x + threadIdx.x;
+		unsigned int i_z = blockDim.y * blockIdx.y + threadIdx.y;
+		unsigned int i_qy = b_nqy * ib_y + i_y;
+		unsigned int i_qz = b_nqz * ib_z + i_z;
+		unsigned int base_offset = T_PROP_SIZE_ * b_num_triangles * ib_t;
+
+		cucomplex_t ff_tot = make_cuC((float_t) 0.0, (float_t) 0.0);
+		if(i_y < curr_nqy && i_z < curr_nqz) {
+			// assuming curr_num_triangles is multiple of 32
+			int block_size = 32;
+			int num_blocks = curr_num_triangles >> 5;
+
+			// allocate fq
+			//cucomplex_t *fq;
+			//fq = NULL;
+			cudaMalloc((void **) &fq, curr_num_triangles * sizeof(cucomplex_t));
+//			size_t sizeie;
+//			cudaDeviceGetLimit(&sizeie, cudaLimitMallocHeapSize);
+//			if(fq == NULL) { printf(":(((((((( %d (%d, %d) (%d, %d)\n", sizeie,
+//									blockIdx.x, blockIdx.y, threadIdx.x, threadIdx.y); }
+//			else { printf(":)))))))) %d\n", sizeie); }
+
+			form_factor_kernel_innermost <<< num_blocks, block_size >>> (
+					qx, qy + i_qy, qz + i_qz, shape_def + base_offset, fq
+					);
+			
+			cudaDeviceSynchronize();
+
+			// reduce fq across all threads
+			for(int i_t = 0; i_t < curr_num_triangles; ++ i_t) {
+				ff_tot = ff_tot + fq[i_t];
+			} // for
+			ff[curr_nqy * i_z + i_y] = ff_tot;
+
+			cudaFree(fq);
+		} // if
+	} // form_factor_kernel_fused_nqx1()
+
+
+	__global__ void form_factor_kernel_innermost(const float_t* qx_d, const float_t* qy_d,
+			const cucomplex_t* qz_d,
+			const __restrict__ float_t* shape_def, __restrict__ cucomplex_t* fq) {
+
+		unsigned int i_t = blockDim.x * blockIdx.x + threadIdx.x;
+		unsigned int shape_off = T_PROP_SIZE_ * i_t;
+		float_t s = shape_def[shape_off];
+		float_t nx = shape_def[shape_off + 1];
+		float_t ny = shape_def[shape_off + 2];
+		float_t nz = shape_def[shape_off + 3];
+		float_t x = shape_def[shape_off + 4];
+		float_t y = shape_def[shape_off + 5];
+		float_t z = shape_def[shape_off + 6];
+
+		float_t qx = qx_d[0];
+		float_t qy = qy_d[0];
+		cucomplex_t qz = qz_d[0];
+
+		float_t qx2 = qx * qx;
+		float_t qy2 = qy * qy;
+		cucomplex_t qz2 = qz * qz;
+		cucomplex_t q2 = qx2 + qy2 + qz2;
+
+		float_t qxn = qx * nx;
+		float_t qxt = qx * x;
+		float_t qyn = qy * ny;
+		float_t qyt = qy * y;
+		cucomplex_t qzn = qz * nz;
+		cucomplex_t qzt = qz * z;
+
+		cucomplex_t qt_d = qxt + qyt + qzt;
+		cucomplex_t qn_d = cuCdivf(qxn + qyn + qzn, q2);
+
+		fq[i_t] = compute_fq(s, qt_d, qn_d);
+	} // form_factor_kernel_innermost()
 
 
 	/**
@@ -175,16 +266,11 @@
 	 * For single precision
 	 */
 
-	__device__ __inline__ void compute_qi_d(float temp_x, float nx, float x, float qyt, float qyn,
-											cuFloatComplex qzt, cuFloatComplex qzn, cuFloatComplex q2,
-											cuFloatComplex& qt_d, cuFloatComplex& qn_d) {
-		qt_d = fmaf(temp_x, x, qyt) + qzt;
-		qn_d = cuCdivf((fmaf(temp_x, nx, qyn) + qzn), q2);
-	} // compute_qi_d()
-
-
 	__device__ __inline__ cuFloatComplex compute_fq(float s, cuFloatComplex qt_d, cuFloatComplex qn_d) {
 		cuFloatComplex v1 = cuCmulf(qn_d, make_cuFloatComplex(__cosf(qt_d.x), __sinf(qt_d.x)));
+		//float ss, cc;
+		//__sincosf(qt_d.x, &ss, &cc);
+		//cuFloatComplex v1 = cuCmulf(qn_d, make_cuFloatComplex(cc, ss));
 		float v2 = s * __expf(qt_d.y);
 		return v1 * v2;
 	} // compute_fq()

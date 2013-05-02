@@ -105,6 +105,15 @@ namespace hig {
 							const unsigned int, const unsigned int, const unsigned int, const unsigned int,
 							const unsigned int, const unsigned int, const unsigned int, const unsigned int,
 							cucomplex_t*);
+	/* K9-2: special case of K9 when curr_nqx == 1, with dynamic parallelism */
+	__global__ void form_factor_kernel_fused_dyn_nqx1(const float_t*, const float_t*, const cucomplex_t*,
+							const float_t*, const short int*,
+							const unsigned int, const unsigned int, const unsigned int, const unsigned int,
+							const unsigned int, const unsigned int, const unsigned int, const unsigned int,
+							const unsigned int, const unsigned int, const unsigned int, const unsigned int,
+							cucomplex_t*, cucomplex_t*);
+	/* K9-2: the child kernel */
+	__global__ void form_factor_kernel_innermost(const float_t*, const float_t*, const cucomplex_t*, const float_t*, cucomplex_t*);
 
 	__device__ cuFloatComplex compute_fq(float s, cuFloatComplex qt_d, cuFloatComplex qn_d);
 	__device__ cuDoubleComplex compute_fq(double s, cuDoubleComplex qt_d, cuDoubleComplex qn_d);
@@ -1583,6 +1592,17 @@ namespace hig {
 			return 0;
 		} // if
 
+//		#if defined (__CUDA_ARCH__) && (__CUDA_ARCH__ > 300)
+//			cudaDeviceSetSharedMemConfig(cudaSharedMemBankSizeEightByte);
+//		#endif
+//		cudaSharedMemConfig smcfg;
+//		cudaDeviceGetSharedMemConfig(&smcfg);
+//		std::cout << "SHARED MEM CONFIG: " << smcfg
+//				#ifdef __CUDA_ARCH__
+//					<< " " << __CUDA_ARCH__
+//				#endif
+//					<< std::endl;
+
 		//nvtxRangeId_t nvtx0 = nvtxRangeStart("ff_kb_fused");
 		cudaProfilerStart();
 	
@@ -1945,13 +1965,25 @@ namespace hig {
 								} // if
 
 								if(b_nqx == 1) {
-									form_factor_kernel_fused_nqx1
-									<<< ff_grid_size, ff_block_size, dyna_shmem_size, stream[active] >>> (
-											qx_d, qy_d, qz_d, shape_def_d, axes_d,
-											curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles,
-											b_nqx, b_nqy, b_nqz, b_num_triangles,
-											ib_x, ib_y, ib_z, ib_t,
-											ff_double_d[active]);
+									#ifdef FF_NUM_GPU_DYNAMICP
+										cucomplex_t* fq;
+										//form_factor_kernel_fused_nqx1
+										form_factor_kernel_fused_dyn_nqx1
+										<<< ff_grid_size, ff_block_size, dyna_shmem_size, stream[active] >>> (
+												qx_d, qy_d, qz_d, shape_def_d, axes_d,
+												curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles,
+												b_nqx, b_nqy, b_nqz, b_num_triangles,
+												ib_x, ib_y, ib_z, ib_t,
+												ff_double_d[active], fq);
+									#else
+										form_factor_kernel_fused_nqx1
+										<<< ff_grid_size, ff_block_size, dyna_shmem_size, stream[active] >>> (
+												qx_d, qy_d, qz_d, shape_def_d, axes_d,
+												curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles,
+												b_nqx, b_nqy, b_nqz, b_num_triangles,
+												ib_x, ib_y, ib_z, ib_t,
+												ff_double_d[active]);
+									#endif
 								} else {
 									form_factor_kernel_fused
 									<<< ff_grid_size, ff_block_size, dyna_shmem_size, stream[active] >>> (
