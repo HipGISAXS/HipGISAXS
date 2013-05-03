@@ -446,10 +446,10 @@ inline void newsincos_ps_dual(sse_m128_t x1, sse_m128_t x2, sse_m128_t *s1, sse_
 	sign_bit2 = _mm_xor_ps(sign_bit2, emm0f2);
 
 	tempa = *(sse_m128_t*)_ps_minus_cephes_DP123;
-	tempa = _mm_mul_ps(y1, tempa);
 	tempb = _mm_mul_ps(y2, tempa);
-	x1 = _mm_add_ps(x1, tempa);
+	tempa = _mm_mul_ps(y1, tempa);
 	x2 = _mm_add_ps(x2, tempb);
+	x1 = _mm_add_ps(x1, tempa);
 
 	sse_m128_t x21 = _mm_mul_ps(x1, x1);
 	sse_m128_t x22 = _mm_mul_ps(x2, x2);
@@ -501,7 +501,7 @@ inline void newsincos_ps_dual(sse_m128_t x1, sse_m128_t x2, sse_m128_t *s1, sse_
 	sse_m128_t cos_y21 = y21;
 	sse_m128_t cos_y22 = y22;
 	y1 = _mm_andnot_ps(emm2f1, y1);
-	y2 = _mm_andnot_ps(emm2f1, y1);
+	y2 = _mm_andnot_ps(emm2f2, y2);
 	cos_y1 = _mm_andnot_ps(cos_emm2f1, cos_y1);
 	cos_y2 = _mm_andnot_ps(cos_emm2f2, cos_y2);
 	y21 = _mm_and_ps(emm2f1, y21);

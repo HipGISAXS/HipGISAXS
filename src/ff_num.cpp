@@ -5,7 +5,7 @@
   *
   *  File: ff_num.cpp
   *  Created: Jul 18, 2012
-  *  Modified: Sat 27 Apr 2013 09:43:38 PM PDT
+  *  Modified: Fri 03 May 2013 10:40:17 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -15,8 +15,8 @@
 #include <mpi.h>
 #include <cmath>
 #include <cstring>
-#ifdef __SSE3__
-#include <malloc.h>
+#if defined(__SSE3__) || defined(INTEL_SB_AVX)
+	#include <malloc.h>
 #endif
 
 #include "woo/timer/woo_boostchronotimers.hpp"
@@ -654,31 +654,53 @@ namespace hig {
 		//#elif defined USE_MIC	// using MIC
 		//	for(unsigned int i = 0; i < num_triangles * 7; ++ i)
 		//		shape_def.push_back((float_t)temp_shape_def[i]);
-		#else					// using CPU
+		#else					// using CPU or MIC
 			#ifndef __SSE3__
 				for(unsigned int i = 0, j = 0; i < num_triangles * CPU_T_PROP_SIZE_; ++ i) {
 					if((i + 1) % CPU_T_PROP_SIZE_ == 0) shape_def.push_back((float_t) 0.0);	// padding
 					else { shape_def.push_back((float_t)temp_shape_def[j]); ++ j; }
 				} // for
 			#else		// using SSE3, so store data differently: FOR CPU AND MIC (vectorization)
-				#ifndef USE_MIC		// generic cpu version with SSE3
-					// group all 's', 'nx', 'ny', 'nz', 'x', 'y', 'z' together
-					// for alignment at 16 bytes, make sure each of the 7 groups is padded
-					// compute amount of padding
-					// 16 bytes = 4 floats or 2 doubles. FIXME: assuming float only for now ...
-					unsigned int padding = (4 - (num_triangles & 3)) & 3;
-					unsigned int shape_size = (num_triangles + padding) * 7;
-					shape_def = (float_t*) _mm_malloc(shape_size * sizeof(float_t), 16);
-					if(shape_def == NULL) {
-						std::cerr << "error: failed to allocate aligned memory for shape_def" << std::endl;
-						return 0;
-					} // if
-					memset(shape_def, 0, shape_size * sizeof(float_t));
-					for(int i = 0; i < num_triangles; ++ i) {
-						for(int j = 0; j < 7; ++ j) {
-							shape_def[(num_triangles + padding) * j + i] = temp_shape_def[7 * i + j];
+				#ifndef USE_MIC		// generic cpu version with SSE3 or AVX
+					#ifdef INTEL_SB_AVX		// CPU version with AVX
+						// group all 's', 'nx', 'ny', 'nz', 'x', 'y', 'z' together
+						// for alignment at 32 bytes, make sure each of the 7 groups is padded
+						// compute amount of padding
+						// 32 bytes = 8 floats or 4 doubles. FIXME: assuming float only for now ...
+						unsigned int padding = (8 - (num_triangles & 7)) & 7;
+						unsigned int shape_size = (num_triangles + padding) * 7;
+						shape_def = (float_t*) _mm_malloc(shape_size * sizeof(float_t), 32);
+						if(shape_def == NULL) {
+							std::cerr << "error: failed to allocate aligned memory for shape_def"
+										<< std::endl;
+							return 0;
+						} // if
+						memset(shape_def, 0, shape_size * sizeof(float_t));
+						for(int i = 0; i < num_triangles; ++ i) {
+							for(int j = 0; j < 7; ++ j) {
+								shape_def[(num_triangles + padding) * j + i] = temp_shape_def[7 * i + j];
+							} // for
 						} // for
-					} // for
+					#else				// CPU version with SSE3
+						// group all 's', 'nx', 'ny', 'nz', 'x', 'y', 'z' together
+						// for alignment at 16 bytes, make sure each of the 7 groups is padded
+						// compute amount of padding
+						// 16 bytes = 4 floats or 2 doubles. FIXME: assuming float only for now ...
+						unsigned int padding = (4 - (num_triangles & 3)) & 3;
+						unsigned int shape_size = (num_triangles + padding) * 7;
+						shape_def = (float_t*) _mm_malloc(shape_size * sizeof(float_t), 16);
+						if(shape_def == NULL) {
+							std::cerr << "error: failed to allocate aligned memory for shape_def"
+										<< std::endl;
+							return 0;
+						} // if
+						memset(shape_def, 0, shape_size * sizeof(float_t));
+						for(int i = 0; i < num_triangles; ++ i) {
+							for(int j = 0; j < 7; ++ j) {
+								shape_def[(num_triangles + padding) * j + i] = temp_shape_def[7 * i + j];
+							} // for
+						} // for
+					#endif
 				#else	// optimized for MIC only: AVX2, 64 byte alignments (512-bit vector registers)
 						// FIXME: float only for now: 16 floats in one vector!
 					unsigned int padding = (16 - (num_triangles & 15)) & 15;

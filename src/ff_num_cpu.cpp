@@ -3,7 +3,7 @@
  *
  *  File: ff_num_cpu.hpp
  *  Created: Nov 05, 2011
- *  Modified: Wed 01 May 2013 11:29:30 PM PDT
+ *  Modified: Fri 03 May 2013 10:12:15 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -20,7 +20,9 @@
 #include <papi.h>
 #endif
 
-#ifdef __SSE3__
+#ifdef INTEL_SB_AVX
+#include "avx_numerics.hpp"
+#elif defined __SSE3__
 #include "sse3_numerics.hpp"
 #endif
 
@@ -68,7 +70,9 @@ namespace hig {
 		#endif
 		if(num_triangles < 1) return 0;
 
-		#ifdef __SSE3__
+		#ifdef INTEL_SB_AVX
+			unsigned int shape_padding = (32 - (num_triangles & 31)) & 31;
+		#elif defined __SSE3__
 			unsigned int shape_padding = (16 - (num_triangles & 15)) & 15;
 		#endif
 	

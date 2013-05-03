@@ -3,7 +3,7 @@
  *
  *  File: ff_num_cpu.hpp
  *  Created: Nov 05, 2011
- *  Modified: Thu 02 May 2013 06:05:28 PM PDT
+ *  Modified: Fri 03 May 2013 09:47:27 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -103,7 +103,11 @@ namespace hig {
 
 			complex_t compute_fq(float_t, complex_t, complex_t);
 
-			#ifdef __SSE3__
+			#ifdef INTEL_SB_AVX
+
+			avx_m256c_t avx_compute_fq(avx_m256_t, avx_m256c_t, avx_m256c_t);
+
+			#elif defined __SSE3__
 
 			sse_m128c_t sse_compute_fq(sse_m128_t, sse_m128c_t, sse_m128c_t);
 

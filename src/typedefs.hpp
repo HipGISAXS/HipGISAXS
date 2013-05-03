@@ -3,7 +3,7 @@
   *
   *  File: typedefs.hpp
   *  Created: Jul 08, 2012
-  *  Modified: Tue 23 Apr 2013 12:17:20 PM PDT
+  *  Modified: Thu 02 May 2013 11:51:18 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -16,10 +16,11 @@
 #ifdef USE_GPU
 	#include <cuComplex.h>
 #endif
-#ifdef __SSE3__
+#ifdef INTEL_SB_AVX
+	#include <immintrin.h>
+#elif defined __SSE3__
 	#include <pmmintrin.h>
-#endif
-#ifdef USE_MIC
+#elif defined USE_MIC
 	#include <immintrin.h>
 #endif
 
@@ -64,7 +65,13 @@ namespace hig {
 
 	// SSE/AVX vector types:
 
-	#ifdef __SSE3__
+	#ifdef INTEL_SB_AVX
+		typedef __m256						avx_m256_t;
+		typedef struct {
+			__m256 xvec;
+			__m256 yvec;
+		}									avx_m256c_t;
+	#elif defined __SSE3__
 		typedef __m128						sse_m128_t;
 		typedef struct {
 			__m128 xvec;
