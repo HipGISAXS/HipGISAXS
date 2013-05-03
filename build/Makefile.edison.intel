@@ -102,21 +102,26 @@ else
 endif
 endif
 
+## MIC related flags
+ifeq ($(USE_MIC), y)
+MISC_FLAGS += -DUSE_MIC -DFF_MIC_OPT
+MISC_FLAGS += -DFF_NUM_MIC_SWAP
+MISC_FLAGS += -DFF_NUM_MIC_KB
+#MISC_FLAGS += -DMIC_PADDING    ## goes out of memory on target
+endif
+
 
 MISC_FLAGS += -DTIME_DETAIL_1 -DTIME_DETAIL_2
 
 ## choose optimization levels, debug flags, gprof flag, etc
 #OPT_FLAGS = -g -DDEBUG #-v #-pg
 OPT_FLAGS = -O3 -DNDEBUG #-v
-#INTEL_DEBUG = -debug all
 
 ## stuff for AMD x86_64
 #OPT_FLAGS += -march=barcelona -msse4a -ffast-math -Ofast
 
-## stuff for intel
-OPT_FLAGS += -xHost -parallel #-prof_use #-ipo #-axavx,ssse3,sse4.1,sse4.2
-## Intel specific optimization reporting
-#CXX_FLAGS += -opt-report-phase=hlo -opt-report-phase=hpo
+## stuff for Intel x86_64
+OPT_FLAGS += -mavx -Ofast -falign-functions -align -fma -fp-model fast=2 -parallel -funroll-loops -axAVX -xavx
 
 ## choose single or double precision here
 PREC_FLAG =			# leave empty for single precision
@@ -160,7 +165,7 @@ endif
 
 OBJECTS_SIM = $(OBJECTS_MAIN) hipgisaxs_sim.o
 
-OBJECTS_FIT = $(OBJECTS_MAIN) fitting_steepest_descent.o hipgisaxs_fit.o
+OBJECTS_FIT = $(OBJECTS_MAIN) hipgisaxs_fit.o fitting_steepest_descent.o
 
 ## the main binary
 OBJ_BIN_SIM = $(patsubst %,$(OBJ_DIR)/%,$(OBJECTS_SIM))
