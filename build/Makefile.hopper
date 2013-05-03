@@ -130,8 +130,8 @@ MISC_FLAGS += -DTIME_DETAIL_1 -DTIME_DETAIL_2
 #OPT_FLAGS = -g #-DDEBUG #-v #-pg
 OPT_FLAGS += -O3 -DNDEBUG #-v
 
-## stuff for AMD x86_64
-OPT_FLAGS += -march=barcelona -ffast-math -Ofast
+## stuff for AMD x86_64 (hopper)
+OPT_FLAGS += -march=barcelona -ffast-math -Ofast #-funroll-all-loops
 OPT_FLAGS += -msse4a
 #OPT_FLAGS += -U__SSE3__
 

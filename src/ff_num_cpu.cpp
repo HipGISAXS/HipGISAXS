@@ -3,7 +3,7 @@
  *
  *  File: ff_num_cpu.hpp
  *  Created: Nov 05, 2011
- *  Modified: Sun 21 Apr 2013 06:42:38 PM PDT
+ *  Modified: Wed 01 May 2013 11:29:30 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -52,13 +52,12 @@ namespace hig {
 						#endif
 						complex_t* &ff,
 						float_t* &qx, int nqx, float_t* &qy, int nqy, complex_t* &qz, int nqz,
-						float_t& pass_kernel_time, float_t& red_time, float_t& mem_time
+						float_t& kernel_time, float_t& red_time, float_t& mem_time
 						#ifdef FINDBLOCK
 							, const int block_x, const int block_y, const int block_z, const int block_t
 						#endif
 						) {
-		double kernel_time = 0.0, reduce_time = 0.0, total_kernel_time = 0.0, total_reduce_time = 0.0,
-				temp_mem_time = 0.0, total_mem_time = 0.0;
+		double temp_mem_time = 0.0, total_mem_time = 0.0;
 		#ifdef _OPENMP
 			if(rank == 0)
 				std::cout << "++      Number of OpenMP threads: " << omp_get_max_threads() << std::endl;
@@ -236,13 +235,6 @@ namespace hig {
 						if(ib_t == nb_t - 1)
 							curr_b_num_triangles = num_triangles - b_num_triangles * ib_t;
 
-						#ifdef VERBOSITY_3
-							if(rank == 0) {
-								std::cout << "-- Processing hyperblock " << ++ block_num << " of "
-										<< num_blocks << ": Kernel... " << std::flush;
-							} // if
-						#endif
-
 						#ifdef PROFILE_PAPI
 							// PAPI_L1_DCM  0x80000000  No   Level 1 data cache misses
 							// PAPI_L1_ICM  0x80000001  No   Level 1 instruction cache misses
@@ -328,13 +320,6 @@ namespace hig {
 							} // if-else
 						#endif
 
-						#ifdef VERBOSITY_3
-							if(rank == 0) {
-								std::cout << "done [" << temp_kernel_time << "s]. Reduction... "
-										<< std::flush;
-							} // if
-						#endif
-
 						#ifndef FF_NUM_CPU_FUSED
 							// call the reduction kernel
 							reduction_kernel(curr_b_nqx, curr_b_nqy, curr_b_nqz,
@@ -343,12 +328,6 @@ namespace hig {
 									nqx, nqy, nqz,
 									ib_x, ib_y, ib_z, ib_t,
 									fq_buffer, ff);
-						#endif
-
-						#ifdef VERBOSITY_3
-							if(rank == 0) {
-								std::cout << "done [" << temp_reduce_time << "s]." << std::endl;
-							} // if
 						#endif
 
 						#ifdef PROFILE_PAPI
@@ -363,7 +342,7 @@ namespace hig {
 		} // for ib_x
 
 		kernel_timer.stop();
-		float_t ktime = kernel_timer.elapsed_msec();
+		kernel_time = kernel_timer.elapsed_msec();
 
 		#ifndef FF_NUM_CPU_FUSED
 			delete[] fq_buffer;
@@ -378,20 +357,9 @@ namespace hig {
 				std::cout << "++                   PAPI_FP_OPS: " << papi_total_flop << std::endl;
 				std::cout << "++                           IPC: "
 							<< (double) papi_total_inst / papi_total_cycles << std::endl;
-				std::cout << "++                        Flop/s: "
-							<< (double) papi_total_flop / (1000000 * ktime) << " GFlop/s" << std::endl;
 			} // if
 		#endif
 
-		if(rank == 0) {
-			std::cout << "**                FF kernel time: " << ktime << " ms."
-						<< std::endl;
-		} // if
-	
-		pass_kernel_time = total_kernel_time;
-		red_time = total_reduce_time;
-		mem_time = total_mem_time;
-	
 		return num_triangles;
 	} // NumericFormFactorC::compute_form_factor()
 		
