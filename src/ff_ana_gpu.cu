@@ -3,7 +3,7 @@
   *
   *  File: ff_ana_gpu.cu
   *  Created: Oct 16, 2012
-  *  Modified: Fri 22 Feb 2013 12:16:20 PM PST
+  *  Modified: Mon 06 May 2013 10:37:57 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -58,6 +58,8 @@ namespace hig {
 			std::cerr << "error: device memory allocation failed" << std::endl;
 			return false;
 		} // if
+		cudaError_t err = cudaGetLastError();
+		//std::cerr << "AFTER MALLOCS: " << cudaGetErrorString(err) << std::endl;
 
 		// first need to construct host buffers
 		float_t* qx_h = new (std::nothrow) float_t[nqx_];

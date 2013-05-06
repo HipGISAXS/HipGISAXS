@@ -3,7 +3,7 @@
   *
   *  File: ff_ana_rand_cylinder_gpu.cu
   *  Created: Oct 16, 2012
-  *  Modified: Sat 02 Mar 2013 11:40:19 AM PST
+  *  Modified: Sat 04 May 2013 07:17:54 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -75,8 +75,8 @@ namespace hig {
 					transvec_,
 					ff_);
 
-		cudaThreadSynchronize();
 		cudaError_t err = cudaGetLastError();
+		cudaThreadSynchronize();
 		if(err != cudaSuccess) {
 			std::cerr << "error: random cylinders form factor kernel failed ["
 						<< __FILE__ << ":" << __LINE__ << "]: "
