@@ -15,7 +15,7 @@
 #include <mpi.h>
 #include <cmath>
 #include <cstring>
-#if defined(__SSE3__) || defined(INTEL_SB_AVX)
+#if (defined(__SSE3__) || defined(INTEL_SB_AVX)) && !defined(USE_GPU)
 	#include <malloc.h>
 #endif
 
