@@ -5,7 +5,7 @@
   *
   *  File: cu_complex_numeric.cuh
   *  Created: Oct 17, 2012
-  *  Modified: Wed 01 May 2013 07:36:57 PM PDT
+  *  Modified: Mon 06 May 2013 06:22:51 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */

@@ -3,7 +3,7 @@
   *
   *  File: ff_ana_rand_cylinder.cpp
   *  Created: Jul 12, 2012
-  *  Modified: Sat 23 Feb 2013 01:23:08 PM PST
+  *  Modified: Tue 07 May 2013 10:16:23 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -56,59 +56,72 @@ namespace hig {
 			return false;
 		} // if
 
-#ifdef TIME_DETAIL_2
-		woo::BoostChronoTimer maintimer;
-		maintimer.start();
-#endif // TIME_DETAIL_2
-#ifdef FF_ANA_GPU
-		// on gpu
-		std::cout << "-- Computing random cylinders FF on GPU ..." << std::endl;
+		#ifdef TIME_DETAIL_2
+			woo::BoostChronoTimer maintimer;
+			maintimer.start();
+		#endif // TIME_DETAIL_2
 
-		std::vector<float_t> transvec_v;
-		transvec_v.push_back(transvec[0]);
-		transvec_v.push_back(transvec[1]);
-		transvec_v.push_back(transvec[2]);
-		gff_.compute_random_cylinders(tau, eta, h, distr_h, r, distr_r, rot_, transvec_v, ff);
-#else
-		// on cpu
-		std::cout << "-- Computing random cylinder FF on CPU ..." << std::endl;
+		#ifdef FF_ANA_GPU
+			// on gpu
+			std::cout << "-- Computing random cylinders FF on GPU ..." << std::endl;
 
-		ff.clear();
-		ff.reserve(nqx_ * nqy_ * nqy_);
-		for(unsigned int i = 0; i < nqx_ * nqy_ * nqz_; ++ i) ff.push_back(complex_t(0.0, 0.0));
-		complex_t unitc(0, 1);
+			std::vector<float_t> transvec_v;
+			transvec_v.push_back(transvec[0]);
+			transvec_v.push_back(transvec[1]);
+			transvec_v.push_back(transvec[2]);
+			gff_.compute_random_cylinders(tau, eta, h, distr_h, r, distr_r, rot_, transvec_v, ff);
+		#else
+			// on cpu
+			std::cout << "-- Computing random cylinder FF on CPU ..." << std::endl;
 
-		float_t dx = 0.001;		// FIXME: hard-coded ???
-		unsigned int nx = (1.0 - dx) / dx + 1;
+			ff.clear();
+			ff.reserve(nqx_ * nqy_ * nqy_);
+			for(unsigned int i = 0; i < nqx_ * nqy_ * nqz_; ++ i) ff.push_back(complex_t(0.0, 0.0));
+			complex_t unitc(0, 1);
 
-		#pragma omp parallel for
-		for(unsigned int z = 0; z < nqz_; ++ z) {
-			complex_t qz = QGrid::instance().qz_extended(z);
-			complex_t temp_ff(0.0, 0.0);
-			for(unsigned int i_r = 0; i_r < r.size(); ++ i_r) {
-				for(unsigned int i_h = 0; i_h < h.size(); ++ i_h) {
-					float_t x_val = 0.0;
-					complex_t temp_ffx(0.0, 0.0);
-					for(unsigned int i_x = 0; i_x < nx; ++ i_x, x_val += dx) {
-						complex_t temp1 = sinc(qz * h[i_h] * x_val / (float_t) 2.0);
-						complex_t temp2 = qz * r[i_r] * sqrt(1 - x_val * x_val);
-						temp_ffx += temp1 * cbessj(temp2, 1) / temp2;
-					} // for
-					temp_ff += 4.0 * distr_r[i_r] * distr_h[i_h] * temp_ffx * temp_ffx;
-				} // for h
-			} // for r
-			for(unsigned int y = 0; y < nqy_; ++ y) {
-				for(unsigned int x = 0; x < nqx_; ++ x) {
-					unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
-					ff[index] = temp_ff;
-				} // for x
-			} // for y
-		} // for z
-#endif // FF_ANA_GPU
-#ifdef TIME_DETAIL_2
-		maintimer.stop();
-		std::cout << "** Rand Cylinder FF compute time: " << maintimer.elapsed_msec() << " ms." << std::endl;
-#endif // TIME_DETAIL_2
+			float_t dx = 0.001;		// FIXME: hard-coded ???
+			unsigned int nx = (unsigned int) ((1.0 - dx) / dx + 1.0);
+
+			#pragma omp parallel for
+			for(unsigned int z = 0; z < nqz_; ++ z) {
+				complex_t qz = QGrid::instance().qz_extended(z);
+				complex_t temp_ff(0.0, 0.0);
+				for(unsigned int i_r = 0; i_r < r.size(); ++ i_r) {
+					for(unsigned int i_h = 0; i_h < h.size(); ++ i_h) {
+						float_t x_val = 0.0;
+						complex_t temp_ffx(0.0, 0.0);
+						for(unsigned int i_x = 0; i_x < nx; ++ i_x, x_val += dx) {
+							complex_t temp1 = sinc(qz * h[i_h] * x_val / (float_t) 2.0);
+							complex_t temp2 = qz * r[i_r] * sqrt(1 - x_val * x_val);
+							if(!(temp2.real() == 0 && temp2.imag() == 0))	// TODO improve fp comparison ...
+								temp_ffx += temp1 * cbessj(temp2, 1) / temp2;
+							/*if(!(boost::math::isfinite(temp_ffx.real()) &&
+									boost::math::isfinite(temp_ffx.imag()))) {
+								std::cout << "&&&&&&&&&&&&& OHO OHOH OHOHO: "
+											<< z << ", " << i_x <<  ", " << i_r << ", " << i_h
+											<< ": " << r[i_r] << ", " << h[i_h] << ", (" << temp1.real()
+											<< "," << temp1.imag() << "), (" << temp2.real() << ","
+											<< temp2.imag() << ")" << ", (" << qz.real() << "," << qz.imag()
+											<< ")" << std::endl;
+							} // if*/
+						} // for
+						temp_ff += 4.0 * distr_r[i_r] * distr_h[i_h] * temp_ffx * temp_ffx;
+					} // for h
+				} // for r
+				// copy to all x and y
+				for(unsigned int y = 0; y < nqy_; ++ y) {
+					for(unsigned int x = 0; x < nqx_; ++ x) {
+						unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
+						ff[index] = temp_ff;
+					} // for x
+				} // for y
+			} // for z
+		#endif // FF_ANA_GPU
+		#ifdef TIME_DETAIL_2
+			maintimer.stop();
+			std::cout << "** Rand Cylinder FF compute time: " << maintimer.elapsed_msec() << " ms."
+						<< std::endl;
+		#endif // TIME_DETAIL_2
 		return true;
 
 	} // AnalyticFormFactor::compute_random_cylinders()

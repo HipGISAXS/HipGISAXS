@@ -67,7 +67,7 @@ NVARCH_FLAGS += -gencode arch=compute_35,code=sm_35
 NVCC_FLAGS += $(NVARCH_FLAGS)
 #NVCC_FLAGS += -Xptxas -v -Xcompiler -v -Xlinker -v
 NVCC_FLAGS += --ptxas-options="-v"
-NVCC_FLAGS += -use_fast_math
+NVCC_FLAGS += -use_fast_math -ftz=true -prec-div=false
 #NVCC_FLAGS += -G -lineinfo #-DFINDBLOCK #-DAXIS_ROT
 NVLIB_FLAGS = -Xlinker -lgomp
 NVLIB_FLAGS += -Xlinker -Wl,-rpath -Xlinker -Wl,$(CUDA_DIR)/lib64

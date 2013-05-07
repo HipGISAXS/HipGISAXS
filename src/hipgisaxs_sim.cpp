@@ -3,7 +3,7 @@
   *
   *  File: hipgisaxs_sim.cpp
   *  Created: Dec 06, 2012
-  *  Modified: Fri 12 Apr 2013 06:02:49 PM PDT
+  *  Modified: Mon 06 May 2013 10:54:39 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -42,7 +42,7 @@ int main(int narg, char** args) {
 		std::cout << std::endl
 					<< "********************************************************************************"
 					<< std::endl
-					<< "***************************** HipGISAXS v0.1-beta ******************************"
+					<< "***************************** HipGISAXS v0.2-alpha *****************************"
 					<< std::endl
 					<< "********************************************************************************"
 					<< std::endl << std::endl;
