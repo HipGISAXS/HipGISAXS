@@ -15,8 +15,7 @@
 #include <complex>
 #ifdef USE_GPU
 	#include <cuComplex.h>
-#endif
-#ifdef INTEL_SB_AVX
+#elif defined INTEL_SB_AVX
 	#include <immintrin.h>
 #elif defined __SSE3__
 	#include <pmmintrin.h>
@@ -60,12 +59,8 @@ namespace hig {
 
 	#ifdef USE_GPU
 		typedef std::vector<cucomplex_t>	cucomplex_vec_t;
-	#endif
-
-
-	// SSE/AVX vector types:
-
-	#ifdef INTEL_SB_AVX
+	#elif defined INTEL_SB_AVX
+		// SSE/AVX vector types:
 		typedef __m256						avx_m256_t;
 		typedef struct {
 			__m256 xvec;

@@ -187,7 +187,7 @@
 						const unsigned int ib_x, const unsigned int ib_y,
 						const unsigned int ib_z, const unsigned int ib_t,
 						cucomplex_t* __restrict__ ff, cucomplex_t* fq) {
-		unsigned int i_y = blockDim.x * blockIdx.x + threadIdx.x;
+/*		unsigned int i_y = blockDim.x * blockIdx.x + threadIdx.x;
 		unsigned int i_z = blockDim.y * blockIdx.y + threadIdx.y;
 		unsigned int i_qy = b_nqy * ib_y + i_y;
 		unsigned int i_qz = b_nqz * ib_z + i_z;
@@ -223,7 +223,7 @@
 
 			cudaFree(fq);
 		} // if
-	} // form_factor_kernel_fused_nqx1()
+*/	} // form_factor_kernel_fused_nqx1()
 
 
 	__global__ void form_factor_kernel_innermost(const float_t* qx_d, const float_t* qy_d,
@@ -318,8 +318,8 @@
 
 
 	__device__ __inline__ cuDoubleComplex compute_fq(double s, cuDoubleComplex qt_d, cuDoubleComplex qn_d) {
-		cuDoubleComplex v1 = cuCmul(qn_d, make_cuDoubleComplex(__cos(qt_d.x), __sin(qt_d.x)));
-		double v2 = s * __exp(qt_d.y);
+		cuDoubleComplex v1 = cuCmul(qn_d, make_cuDoubleComplex(cos(qt_d.x), sin(qt_d.x)));
+		double v2 = s * exp(qt_d.y);
 		//return cuCmul(v1, make_cuDoubleComplex(v2, 0.0));
 		return v1 * v2;
 	} // compute_fq()
