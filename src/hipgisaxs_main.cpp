@@ -5,7 +5,7 @@
   *
   *  File: hipgisaxs_main.cpp
   *  Created: Jun 14, 2012
-  *  Modified: Wed 08 May 2013 10:44:00 PM PDT
+  *  Modified: Wed 08 May 2013 10:49:43 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -1280,9 +1280,6 @@ namespace hig {
 		vector3_t maxgrains = (*s).second.ensemble_maxgrains();
 		std::string distribution = (*s).second.ensemble_distribution();
 		// vol_, cell_
-
-		std::cout << "^^^^^^ " << vol_[0] << ", " << vol_[1] << ", " << vol_[2] << std::endl;
-		std::cout << "^^^^^^ " << cell_[0] << ", " << cell_[1] << ", " << cell_[2] << std::endl;
 
 		vector3_t spaced_cell = cell_ + spacing;
 
