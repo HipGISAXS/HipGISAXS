@@ -5,7 +5,7 @@
   *
   *  File: sf.cpp
   *  Created: Jun 18, 2012
-  *  Modified: Tue 02 Apr 2013 08:02:19 PM PDT
+  *  Modified: Wed 08 May 2013 10:38:19 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -214,26 +214,38 @@ namespace hig {
 					//temp_x5 = temp_x2 + repet[2] * temp_f;
 					sc = temp_y4 * temp_x5;
 
-					/*if(!((boost::math::isfinite)(sa.real()) && (boost::math::isfinite)(sa.imag()))) {
+					if(!((boost::math::isfinite)(sa.real()) && (boost::math::isfinite)(sa.imag()))) {
 						std::cout << "sa sa sa sa sa sa sa: " << x << ", " << y << ", " << z << std::endl; }
 					if(!((boost::math::isfinite)(sb.real()) && (boost::math::isfinite)(sb.imag()))) {
 						std::cout << "sb sb sb sb sb sb sb: " << x << ", " << y << ", " << z << std::endl; }
 					if(!((boost::math::isfinite)(sc.real()) && (boost::math::isfinite)(sc.imag()))) {
-						std::cout << "sc sc sc sc sc sc sc: " << x << ", " << y << ", " << z << std::endl; }*/
+						std::cout << "sc sc sc sc sc sc sc: " << x << ", " << y << ", " << z << std::endl; }
 
-					sf_[nx_ * ny_ * z + nx_ * y + x] = exp(unit_ci *
-									(center[0] * qx + center[1] * qy + center[2] * qz)) *
-									sa * sb * sc *
-									(unit_c + exp(unit_ci * (l_t[0] * qx + l_t[1] * qy + l_t[2] * qz)));
-					if(!((boost::math::isfinite)(sf_[nx_ * ny_ * z + nx_ * y + x].real()) ||
-								(boost::math::isfinite)(sf_[nx_ * ny_ * z + nx_ * y + x].imag()))) {
+					unsigned long int sf_i = nx_ * ny_ * z + nx_ * y + x;
+					//sf_[sf_i] = exp(unit_ci *
+					//				(center[0] * qx + center[1] * qy + center[2] * qz)) *
+					//				sa * sb * sc *
+					//				(unit_c + exp(unit_ci * (l_t[0] * qx + l_t[1] * qy + l_t[2] * qz)));
+					temp1 = center[0] * qx + center[1] * qy + center[2] * qz;
+					complex_t temp3 = complex_t(-temp1.imag(), temp1.real());
+					complex_t temp2 = l_t[0] * qx + l_t[1] * qy + l_t[2] * qz;
+					temp2 = complex_t(-temp2.imag(), temp2.real()) + (float_t) 1.0;
+					temp3 = exp(temp3);
+					temp2 = exp(temp2);
+					sf_[sf_i] = temp3 * temp2 * sa * sb * sc;
+
+//					if(!((boost::math::isfinite)(sf_[sf_i].real()) &&
+//								(boost::math::isfinite)(sf_[sf_i].imag()))) {
+					if(!((boost::math::isfinite)(temp3.real()) && (boost::math::isfinite)(temp3.imag()))) {
 						std::cerr << "error: here it is not finite (666) " << x << ", " << y << ", " << z
-									<<std::endl;
+									<< ": here it is finite (444) " << center[0] << ", "
+									<< center[1] << ", " << center[2] << std::endl;
 					} // if
 
-					/*if(!((boost::math::isfinite)(sf_[nx_ * ny_ * z + nx_ * y + x].real()) &&
-								(boost::math::isfinite)(sf_[nx_ * ny_ * z + nx_ * y + x].imag()))) {
-						std::cout << "sf sf sf sf sf sf sf: " << x << ", " << y << ", " << z << std::endl; }*/
+					if(!((boost::math::isfinite)(temp2.real()) && (boost::math::isfinite)(temp2.imag()))) {
+						std::cerr << "error: here it is not finite (888) " << x << ", " << y << ", " << z
+									<< std::endl;
+					} // if
 				} // for x
 			} // for y
 		} // for z
