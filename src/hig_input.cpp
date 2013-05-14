@@ -5,7 +5,7 @@
   *
   *  File: hig_input.cpp
   *  Created: Jun 11, 2012
-  *  Modified: Mon 08 Apr 2013 04:05:50 PM PDT
+  *  Modified: Mon 13 May 2013 09:00:25 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -1977,8 +1977,30 @@ namespace hig {
 		z_min_0 = min(min_l[2], z_min_0);
 		z_max_0 = max(max_l[2], z_max_0);
 
+		domain_.max_[0] = max_l[0];
+		domain_.max_[1] = max_l[1];
+		domain_.max_[2] = max_l[2];
+		domain_.min_[0] = min_l[0];
+		domain_.min_[1] = min_l[1];
+		domain_.min_[2] = min_l[2];
+
+		domain_.z_min_ = z_min_0;
+		domain_.z_max_ = z_max_0;
+
 		return true;
 	} // HiGInput::construct_domain_size()
+
+
+	bool HiGInput::construct_slices() {
+
+		std::cout << "----> SLICING" << std::endl;
+		// ...
+		return false;
+
+		// TODO ...
+
+		return true;
+	} // HiGInput::construct_slices()
 
 
 	/** print functions for testing only

@@ -5,7 +5,7 @@
   *
   *  File: layer.hpp
   *  Created: Jun 13, 2012
-  *  Modified: Mon 01 Oct 2012 11:14:53 AM PDT
+  *  Modified: Tue 14 May 2013 10:45:46 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -39,7 +39,7 @@ namespace hig {
 
 			/* getters */
 			std::string key() const { return key_; }
-			RefractiveIndex& refindex() { return refindex_; }
+			RefractiveIndex& refindex() { return refindex_; } // FIXME: need reference in return ... ??
 			float_t thickness() const { return thickness_; }
 			int order() const { return order_; }
 			float_t z_val() const { return z_val_; }

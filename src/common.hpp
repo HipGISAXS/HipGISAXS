@@ -5,7 +5,7 @@
   *
   *  File: common.hpp
   *  Created: Jun 13, 2012
-  *  Modified: Mon 01 Oct 2012 11:11:43 AM PDT
+  *  Modified: Tue 14 May 2013 02:02:21 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -31,8 +31,21 @@ namespace hig {
 			void delta(float_t a) { delta_ = a; }
 			void beta(float_t a) { beta_ = a; }
 
-			void init();
-			void clear();
+			void init() { clear(); }
+			void clear() { delta_ = 0.0; beta_ = 0.0; }
+
+			// some arithmetic operations
+			RefractiveIndex operator+(RefractiveIndex toadd) {
+				return RefractiveIndex(delta_ + toadd.delta(), beta_ + toadd.beta());
+			} // operator+()
+
+			RefractiveIndex operator*(float_t scalar) {
+				return RefractiveIndex(delta_ * scalar, beta_ * scalar);
+			} // operator*()
+
+			RefractiveIndex operator/(float_t scalar) {
+				return RefractiveIndex(delta_ / scalar, beta_ / scalar);
+			} // operator/()
 	}; // class RefractiveIndex
 
 } // namespace hig

@@ -5,7 +5,7 @@
   *
   *  File: hipgisaxs_main.hpp
   *  Created: Jun 11, 2012
-  *  Modified: Mon 08 Apr 2013 04:16:06 PM PDT
+  *  Modified: Mon 13 May 2013 03:01:26 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -87,6 +87,7 @@ namespace hig {
 							MPI::Intracomm&);
 
 			bool layer_qgrid_qz(float_t, complex_t);
+			bool slice_qgrid_qz(float_t, complex_t);
 			bool compute_propagation_coefficients(float_t, complex_t*&, complex_t*&,
 									complex_t*&, complex_t*&, complex_t*&, complex_t*&,
 									complex_t*&, complex_t*&, complex_t*&);

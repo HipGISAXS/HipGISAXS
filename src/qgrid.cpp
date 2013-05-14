@@ -5,7 +5,7 @@
   *
   *  File: qgrid.cpp
   *  Created: Jun 17, 2012
-  *  Modified: Tue 07 May 2013 10:06:23 AM PDT
+  *  Modified: Mon 13 May 2013 04:34:14 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -197,9 +197,18 @@ namespace hig {
 	} // QGrid::create_qz_extended()
 
 
+	bool QGrid::create_slice_qz_extended(float_t k0, float_t kzi_0, complex_t kzi_q, complex_t dnl_q) {
+		std::cout << "----> SLICING" << std::endl;
+		// ...
+
+		return false;
+	} // QGrid::create_slice_qz_entended()
+
+
 	bool QGrid::pixel_to_kspace(vector2_t pixel, float_t k0, float_t alpha_i,
 					float_t rho, float_t distance, vector2_t beam,
 					vector3_t& qpoint) {
+		// FIXME: does this need to be fixed? ...
 		//float_t alpha_f = atan(rho * (pixel[1] - 2 * beam[1] + 1043) / distance) - alpha_i;
 		//float_t theta_f = atan(rho * (pixel[0] - beam[0]) / distance);
 		float_t alpha_f = atan(rho * (pixel[1] - 2 * beam[1] + 1043) / 4350) - alpha_i;
@@ -214,7 +223,7 @@ namespace hig {
 
 
 	bool QGrid::kspace_to_pixel() {
-		// needed ... ?
+		// TODO: needed ... ?
 		// do it later ...
 		return true;
 	} // QGrid::kspace_to_pixel()

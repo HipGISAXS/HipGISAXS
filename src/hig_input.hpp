@@ -5,7 +5,7 @@
   *
   *  File: hig_input.hpp
   *  Created: Jun 11, 2012
-  *  Modified: Mon 08 Apr 2013 04:05:40 PM PDT
+  *  Modified: Tue 14 May 2013 10:43:22 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -51,6 +51,16 @@ namespace hig {
 
 			std::vector<float_t> shape_def_;	/* shape definition from a file */
 			// there may be multiple shape files ... do this later ...
+
+			// domain
+			struct {
+				vector3_t min_;
+				vector3_t max_;
+				float_t z_min_;
+				float_t z_max_;
+			} domain_;
+
+			slice_list_t slices_;	// the actual slices
 
 			/* helpers */
 
@@ -146,6 +156,7 @@ namespace hig {
 			bool construct_layer_profile();
 
 			bool compute_domain_size(vector3_t&, vector3_t&, float_t&, float_t&, int);
+			bool construct_slices();
 
 			const std::string& path() const { return compute_.pathprefix(); }
 			const std::string& runname() const { return compute_.runname(); }
@@ -192,6 +203,7 @@ namespace hig {
 			vector2_t param_resolution() const { return compute_.resolution_; }
 			const std::string& param_pathprefix() const { return compute_.pathprefix_; }
 			unsigned int param_nslices() const { return compute_.nslices_; }
+			unsigned int num_slices() const { return slices_.size(); }
 
 			Shape* shape(Structure& s) { return &(shapes_[s.grain_shape_key()]); }
 			const Lattice* lattice(Structure& s) { return s.lattice(); }
@@ -210,9 +222,12 @@ namespace hig {
 
 			int structure_layer_order(Structure& s) { return layer_key_map_[s.grain_layer_key()]; }
 			float_t layer_z_val(int order) { return layers_[order].z_val(); }
-			float_t layer_z_val_min() {
-				layer_iterator_t begin = layers_.begin();
-				return (*begin).second.z_val();
+			float_t layer_z_val_min() {		// z vals are -ve, 0 is max
+				//layer_iterator_t begin = layers_.begin();
+				//return (*begin).second.z_val();
+				layer_iterator_t end = layers_.end();
+				-- end;
+				return (*end).second.z_val();
 			} // layer_z_val()
 			float_t layer_origin_z(Structure& s) {
 				int order = structure_layer_order(s);

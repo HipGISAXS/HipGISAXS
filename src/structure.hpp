@@ -5,7 +5,7 @@
   *
   *  File: structure.hpp
   *  Created: Jun 09, 2012
-  *  Modified: Thu 28 Mar 2013 02:26:56 PM PDT
+  *  Modified: Tue 14 May 2013 12:48:34 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -304,6 +304,9 @@ namespace hig {
 
 			const Lattice* lattice() const { return &(grain_.lattice_); }
 			bool lattice_abc_set() { return grain_.lattice_abc_set(); }
+			vector3_t lattice_vec_a() const { return grain_.lattice_.a(); }
+			vector3_t lattice_vec_b() const { return grain_.lattice_.b(); }
+			vector3_t lattice_vec_c() const { return grain_.lattice_.c(); }
 
 			vector3_t grain_repetition() const { return grain_.repetition_; }
 			std::string grain_orientation() { return ensemble_.orientations_.stat(); }
@@ -342,6 +345,12 @@ namespace hig {
 				return vector3_t((float_t) ((char)axis - 'x'), angs[0], angs[1]);
 				//return vector3_t((float_t) axis, angs[0], angs[1]);
 			} // rotation_rot3()
+
+			float_t absolute_z_val() const {
+				// TODO: ...
+				std::cout << "----> MISSING STUFF in struct" << std::endl;
+				return 0;
+			} // absolute_z_val()
 
 			/* testers */
 

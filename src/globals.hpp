@@ -5,7 +5,7 @@
   *
   *  File: globals.hpp
   *  Created: Jun 05, 2012
-  *  Modified: Wed 20 Feb 2013 12:28:48 PM PST
+  *  Modified: Tue 14 May 2013 11:40:36 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -104,11 +104,19 @@ namespace hig {
 			return vector3_t(vec_[0] + toadd, vec_[1] + toadd, vec_[2] + toadd);
 		} // operator+()
 
+		vector3_t operator+(float_t toadd) {
+			return vector3_t(vec_[0] + toadd, vec_[1] + toadd, vec_[2] + toadd);
+		} // operator+()
+
 		vector3_t operator+(vector3_t toadd) {
 			return vector3_t(vec_[0] + toadd[0], vec_[1] + toadd[1], vec_[2] + toadd[2]);
 		} // operator+()
 
 		vector3_t operator-(int tosub) {
+			return vector3_t(vec_[0] - tosub, vec_[1] - tosub, vec_[2] - tosub);
+		} // operator-()
+
+		vector3_t operator-(float_t tosub) {
 			return vector3_t(vec_[0] - tosub, vec_[1] - tosub, vec_[2] - tosub);
 		} // operator-()
 
@@ -119,6 +127,21 @@ namespace hig {
 		vector3_t operator/(vector3_t todiv) {
 			return vector3_t(vec_[0] / todiv[0], vec_[1] / todiv[1], vec_[2] / todiv[2]);
 		} // operator/()
+
+		// TODO: improve the following ... ?
+
+		inline vector3_t fabs() const {
+			return vector3_t(fabs(vec_[0]), fabs(vec_[1]), fabs(vec_[2]);
+		} // fabs()
+
+		inline float_t reduce_add() const {
+			return vec_[0] + vec_[1] + vec_[2];
+		} // reduce_mul()
+
+		inline float_t reduce_mul() const {
+			return vec_[0] * vec_[1] * vec_[2];
+		} // reduce_mul()
+
 	} vector3_t;
 
 

@@ -5,7 +5,7 @@
   *
   *  File: hipgisaxs_main.cpp
   *  Created: Jun 14, 2012
-  *  Modified: Wed 08 May 2013 10:49:43 PM PDT
+  *  Modified: Tue 14 May 2013 02:55:18 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -261,6 +261,7 @@ namespace hig {
 //					<< max_vec[2] - min_vec[2] << " ("
 //					<< z_max_0 - z_min_0 << ")" << std::endl;
 
+		// TODO: use domain_ instead of min max vecs ...
 		// min_vec and max_vec are the domain
 		cell_[0] = fabs(max_vec[0] - min_vec[0]);
 		cell_[1] = fabs(max_vec[1] - min_vec[1]);
@@ -467,17 +468,43 @@ namespace hig {
 		// this can also go into run_init() ...
 		complex_t *amm = NULL, *apm = NULL, *amp = NULL, *app = NULL;
 		complex_t *rk1 = NULL, *rk2 = NULL, *rk1rk2 = NULL, *tk1tk2 = NULL, *h0 = NULL;
-		if(!compute_propagation_coefficients(alphai, amm, apm, amp, app,
-											rk1, rk2, rk1rk2, tk1tk2, h0)) return false;
-		//printfc("amm", amm, nqx_ * nqy_ * nqz_);
-		//printfc("apm", apm, nqx_ * nqy_ * nqz_);
-		//printfc("amp", amp, nqx_ * nqy_ * nqz_);
-		//printfc("app", app, nqx_ * nqy_ * nqz_);
-		//printfc("rk1", rk1, nqx_ * nqy_ * nqz_);
-		//printfc("rk2", rk2, nqx_ * nqy_ * nqz_);
-		//printfc("rk1rk2", rk1rk2, nqx_ * nqy_ * nqz_);
-		//printfc("tk1tk2", tk1tk2, nqx_ * nqy_ * nqz_);
-		//printfc("h0", h0, nqx_ * nqy_ * nqz_);
+		complex_t *pa1 = NULL, *pa2 = NULL, *pa3 = NULL, *pa3 = 0;
+
+		if(HiGInput::instance().param_nslices() <= 1) {	/* computing without sample slicing */
+			complex_t dnl2 = 2.0 * complex_t(single_layer_refindex_.delta(),
+												single_layer_refindex_.beta());
+			if(!layer_qgrid_qz(alpha_i, dnl2)) {
+				std::cerr << "error: could not compute extended qz" << std::endl;
+				return false;
+			} // if
+
+			if(!compute_propagation_coefficients(alphai, amm, apm, amp, app,
+												rk1, rk2, rk1rk2, tk1tk2, h0)) return false;
+		} else {
+			/* computing using the sample slicing scheme */
+
+			// not yet implemented ...
+			std::cerr << "uh-oh: you hit a slicing part that has not been implemented yet" << std::endl;
+			return false;
+
+			// perform slicing of the sample
+			if(!HiGInput::instance().construct_slices()) return false;
+
+			// compute qz for all slices ..
+			for(int s = 0; s < HiGInput::instance().num_slices(); ++ s) {
+				if(!slice_qgrid_qz(alpha_i, dnl2)) {
+					std::cerr << "error: could not compute extended qz" << std::endl;
+					return false;
+				} // if
+
+				std::cout << "----> SLICING" << std::endl;
+				// and compute the "form factors" ?? for all slices
+				// ... TODO
+			} // for
+
+			// compute propogation amplitudes for all slices
+			if(!compute_wave_amplitudes(alphai, pa1, pa2, pa3, pa4)) return false;
+		} // if
 
 		// initialize memory for struct_intensity, ff and sf
 		// TODO: eliminate struct_intensity for each struct ...
@@ -548,9 +575,11 @@ namespace hig {
 			memset(id, 0 , num_domains * nqx_ * nqy_ * nqz_ * sizeof(complex_t));	// initialize to 0
 
 			vector3_t curr_transvec = (*s).second.grain_transvec();
-			if(HiGInput::instance().param_nslices() <= 1) {
+			if(HiGInput::instance().num_slices() <= 1) {
 				curr_transvec[2] = curr_transvec[2] - single_layer_thickness_;
 			} else {
+				std::cout << "----> SLICING" << std::endl;
+				// ...
 				curr_transvec[2] = curr_transvec[2]; // TODO/FIXME... for more than 1 layers ... incomplete
 			} // if-else
 			ShapeName shape_name = HiGInput::instance().shape_name((*s).second);
@@ -635,77 +664,76 @@ namespace hig {
 							r_norm1, r_norm2, r_norm3, r_tot1, r_tot2, r_tot3);
 
 				/* center of unit cell replica */
-				//vector3_t curr_dd_vec(dd[3 * j + 0], dd[3 * j + 1], dd[3 * j + 2]);
 				vector3_t curr_dd_vec(dd[j + 0], dd[j + num_domains], dd[j + 2 * num_domains]);
 				vector3_t result(0.0, 0.0, 0.0);
-				//std::cerr << "============ dd: " << curr_dd_vec[0] << ","
-				//			<< curr_dd_vec[1] << "," << curr_dd_vec[2] << std::endl;
 
 				mat_mul_3x1(rotation_matrix_.r1_, rotation_matrix_.r2_, rotation_matrix_.r3_,
 							curr_dd_vec, result);
-				//std::cerr << "::::::::::::::::: " << result[0] << "," << result[1] << "," << result[2]
-				//			<< " ::::::: " << curr_transvec[0] << "," << curr_transvec[1] << ","
-				//			<< curr_transvec[2] << std::endl;
 				vector3_t center = result + curr_transvec;
 
-				/*std::cout << "ROT MAT: " << std::endl;
-				std::cout << r_tot1[0] << "\t" << r_tot1[1] << "\t" << r_tot1[2] << std::endl;
-				std::cout << r_tot2[0] << "\t" << r_tot2[1] << "\t" << r_tot2[2] << std::endl;
-				std::cout << r_tot3[0] << "\t" << r_tot3[1] << "\t" << r_tot3[2] << std::endl;
-				std::cout << "CENTER: " << std::endl;
-				std::cout << center[0] << "\t" << center[1] << "\t" << center[2] << std::endl;*/
+				int sym_inv = 0;	// something hard coded ... TODO: needs to be fixed?
 
-				/* compute structure factor and form factor */
+				if(HiGInput::instance().num_slices() <= 1) {
+					/* without slicing */
 
-				structure_factor(HiGInput::instance().experiment(), center, curr_lattice,
-									grain_repeats, r_tot1, r_tot2, r_tot3, world_comm);
-				//sf_.printsf();
+					/* compute structure factor and form factor */
 
-/*				if(mpi_rank == 0) {
-					std::stringstream alphai_b, phi_b, tilt_b;
-					std::string alphai_s, phi_s, tilt_s;
-					alphai_b << alpha_i; alphai_s = alphai_b.str();
-					phi_b << phi; phi_s = phi_b.str();
-					tilt_b << tilt; tilt_s = tilt_b.str();
-					std::string sf_output(HiGInput::instance().param_pathprefix() +
-									"/" + HiGInput::instance().runname() +
-									"/sf_ai=" + alphai_s + "_rot=" + phi_s +
-									"_tilt=" + tilt_s + ".out");
-					std::cout << "-- Saving structure factor in " << sf_output << " ... " << std::flush;
-					sf_.save_sf(nqx_, nqy_, nqz_extended_, sf_output.c_str());
-					std::cout << "done." << std::endl;
-				} // if
-*/
-				//read_form_factor("curr_ff.out");
-				form_factor(shape_name, shape_file, shape_params, curr_transvec,
-							shape_tau, shape_eta, r_tot1, r_tot2, r_tot3, world_comm);
-				//ff_.print_ff(nqx_, nqy_, nqz_extended_);
-				//ff_.printff(nqx_, nqy_, nqz_extended_);
+					if(expt == "saxs") {
+						std::cout << "----> SAXS. Please write some code here!" << std::endl;
+						return false;
+					} else {
+						structure_factor(HiGInput::instance().experiment(), center, curr_lattice,
+											grain_repeats, r_tot1, r_tot2, r_tot3, world_comm);
+						//sf_.printsf();
 
-				// save form factor data on disk
-/*				if(mpi_rank == 0) {
-					std::stringstream alphai_b, phi_b, tilt_b;
-					std::string alphai_s, phi_s, tilt_s;
-					alphai_b << alpha_i; alphai_s = alphai_b.str();
-					phi_b << phi; phi_s = phi_b.str();
-					tilt_b << tilt; tilt_s = tilt_b.str();
-					std::string ff_output(HiGInput::instance().param_pathprefix() +
-									"/" + HiGInput::instance().runname() +
-									"/ff_ai=" + alphai_s + "_rot=" + phi_s +
-									"_tilt=" + tilt_s + ".out");
-					std::cout << "-- Saving form factor in " << ff_output << " ... " << std::flush;
-					ff_.save_ff(nqx_, nqy_, nqz_extended_, ff_output.c_str());
-					std::cout << "done." << std::endl;
-				} // if
-*/
-				/* compute intensities using sf and ff */
-				// processing of sf and ff is being done by just one processor ... parallelize ...
-				if(mpi_rank == 0) {
+						/*if(mpi_rank == 0) {
+							std::stringstream alphai_b, phi_b, tilt_b;
+							std::string alphai_s, phi_s, tilt_s;
+							alphai_b << alpha_i; alphai_s = alphai_b.str();
+							phi_b << phi; phi_s = phi_b.str();
+							tilt_b << tilt; tilt_s = tilt_b.str();
+							std::string sf_output(HiGInput::instance().param_pathprefix() +
+											"/" + HiGInput::instance().runname() +
+											"/sf_ai=" + alphai_s + "_rot=" + phi_s +
+											"_tilt=" + tilt_s + ".out");
+							std::cout << "-- Saving structure factor in " << sf_output << " ... "
+										<< std::flush;
+							sf_.save_sf(nqx_, nqy_, nqz_extended_, sf_output.c_str());
+							std::cout << "done." << std::endl;
+						} // if */
+
+						if(sym_inv == 0 || j == 0) { 		// FIXME: this needs fixing ... ?
+							//read_form_factor("curr_ff.out");
+							form_factor(shape_name, shape_file, shape_params, curr_transvec,
+										shape_tau, shape_eta, r_tot1, r_tot2, r_tot3, world_comm);
+
+							//ff_.print_ff(nqx_, nqy_, nqz_extended_);
+							//ff_.printff(nqx_, nqy_, nqz_extended_);
+							// save form factor data on disk
+							/*if(mpi_rank == 0) {
+								std::stringstream alphai_b, phi_b, tilt_b;
+								std::string alphai_s, phi_s, tilt_s;
+								alphai_b << alpha_i; alphai_s = alphai_b.str();
+								phi_b << phi; phi_s = phi_b.str();
+								tilt_b << tilt; tilt_s = tilt_b.str();
+								std::string ff_output(HiGInput::instance().param_pathprefix() +
+												"/" + HiGInput::instance().runname() +
+												"/ff_ai=" + alphai_s + "_rot=" + phi_s +
+												"_tilt=" + tilt_s + ".out");
+								std::cout << "-- Saving form factor in " << ff_output << " ... "
+											<< std::flush;
+								ff_.save_ff(nqx_, nqy_, nqz_extended_, ff_output.c_str());
+								std::cout << "done." << std::endl;
+							} // if */
+						} // if
+					} // if-else
+
+					/* compute intensities using sf and ff */
+
+					// TODO: processing of sf and ff is being done by just one processor ... parallelize ...
 					complex_t* base_id = id + j * nqx_ * nqy_ * nqz_;
 
-					unsigned int nslices = HiGInput::instance().param_nslices();
-					if(nslices <= 1) {
-						/* without slicing */
+					if(mpi_rank == 0) {
 						if(struct_in_layer &&
 								HiGInput::instance().structure_layer_order((*s).second) == 1) {
 														// structure is inside a layer, on top of substrate
@@ -778,14 +806,29 @@ namespace hig {
 										<< "make sure the layer order is correct" << std::endl;
 							return false;
 						} // if-else
-					} else {
-						/* perform slicing */
-						// not yet implemented ...
-						std::cout << "uh-oh: ever thought about implementing the slicing scheme?"
-									<< std::endl;
-						return false;
-					} // if-else
-				} // if mpi_rank == 0
+					} // if mpi_rank == 0
+
+				} else {
+
+					/* perform slicing */
+
+					// TODO: not yet implemented ...
+					std::cout << "uh-oh: ever thought about implementing the slicing scheme?"
+								<< std::endl;
+					return false;
+
+					for(int i_s = 0; i_s < HiGInput::instance().num_slices(); ++ i_s) {
+
+						// TODO: ...
+						/* compute structure factors */
+						// ...
+						/* compute form factors */
+						// ...
+						/* compute id array */
+						//base_id[curr_index] += ();
+						// ...
+					} // for
+				} // if-else
 
 				ff_.clear();
 				sf_.clear();
@@ -794,25 +837,6 @@ namespace hig {
 			delete[] nn;
 			delete[] dd;
 
-			// for testing
-			/*std::ofstream f("id.out");
-			for(unsigned int z = 0; z < nqz_; ++ z) {
-				for(unsigned int y = 0; y < nqy_; ++ y) {
-					for(unsigned int x = 0; x < nqx_; ++ x) {
-						unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
-						f << id[index].real() << "\t" << id[index].imag() << std::endl;
-					} // for
-					f << std::endl;
-				} // for
-				f << std::endl;
-			} // for
-			f.close(); */
-
-			//printfc("id", id, nqx_ * nqy_ * nqz_);
-
-			// in slim's code, this is inside num_domains loop ...
-			// i think it should be outside because it is summing
-			// over the 4th dimension which is the set of domains/grains ...
 			if(mpi_rank == 0) {
 				if(corr_doms == 1) {		// note: currently this is hardcoded as 0
 					unsigned int soffset = s_num * nqx_ * nqy_ * nqz_;
@@ -849,25 +873,10 @@ namespace hig {
 				} // if-else
 			} // if mpi_rank == 0
 
-			//printfr("struct_intensity", struct_intensity, nqx_ * nqy_ * nqz_);
-
 			delete[] id;
 		} // for num_structs
-		int num_structs = s_num;
 
-		// for testing
-		/*std::ofstream fs("structure_intensity.out");
-		for(unsigned int z = 0; z < nqz_; ++ z) {
-			for(unsigned int y = 0; y < nqy_; ++ y) {
-				for(unsigned int x = 0; x < nqx_; ++ x) {
-					unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
-					fs << struct_intensity[index] << "\t0.0"	<< std::endl;
-				} // for
-				fs << std::endl;
-			} // for
-			fs << std::endl;
-		} // for
-		fs.close();*/
+		int num_structs = s_num;
 
 		// TODO: arrays struct_intensity and id etc can be eliminated/reduced in size to nqx*nqy*nqz only
 		// ...
@@ -1021,53 +1030,47 @@ namespace hig {
 
 		// doesnt this also depend on the type of polarization of the light? ... ?
 
-		if(HiGInput::instance().param_nslices() <= 1) {	/* computing without sample slicing */
-			complex_t dnl2 = 2.0 * complex_t(single_layer_refindex_.delta(),
-											single_layer_refindex_.beta());
-			if(!layer_qgrid_qz(alpha_i, dnl2)) {
-				std::cerr << "error: could not compute extended qz" << std::endl;
+		if(HiGInput::instance().struct_in_layer() && HiGInput::instance().num_layers() == 1) {
+			/* compute fresnel coefficients for a structure
+			 * embedded inside a layer on a substrate */
+			if(!compute_fresnel_coefficients_embedded(alpha_i)) {
+				std::cerr << "error: could not compute fresnel coefficients" << std::endl;
 				return false;
 			} // if
-
-			if(HiGInput::instance().struct_in_layer() && HiGInput::instance().num_layers() == 1) {
-				/* compute fresnel coefficients for a structure
-				 * embedded inside a layer on a substrate */
-				if(!compute_fresnel_coefficients_embedded(alpha_i)) {
-					std::cerr << "error: could not compute fresnel coefficients" << std::endl;
-					return false;
-				} // if
-				// set aliases
-				amm = fc_;
-				apm = fc_ + nqx_ * nqy_ * nqz_;
-				amp = fc_ + 2 * nqx_ * nqy_ * nqz_;
-				app = fc_ + 3 * nqx_ * nqy_ * nqz_;
-				h0 = fc_ + 4 * nqx_ * nqy_ * nqz_;
-			} else if(HiGInput::instance().num_layers() == 1 || HiGInput::instance().num_layers() == 0) {
-				/* compute fresnel coefficients for a structure
-				 * on top of or buried inside a substrate */
-				if(!compute_fresnel_coefficients_top_buried(alpha_i)) {
-					std::cerr << "error: could not compute fresnel coefficients" << std::endl;
-					return false;
-				} // if
-				// set aliases
-				rk1 = fc_;							// re-check these ...
-				rk2 = fc_ + nqx_ * nqy_ * nqz_;
-				rk1rk2 = fc_ + 2 * nqx_ * nqy_ * nqz_;
-				tk1tk2 = fc_ + 3 * nqx_ * nqy_ * nqz_;
-				h0 = fc_ + 4 * nqx_ * nqy_ * nqz_;
-			} else {
-				std::cerr << "error: invalid number of layers in non-slicing scheme" << std::endl;
+			// set aliases
+			amm = fc_;
+			apm = fc_ + nqx_ * nqy_ * nqz_;
+			amp = fc_ + 2 * nqx_ * nqy_ * nqz_;
+			app = fc_ + 3 * nqx_ * nqy_ * nqz_;
+			h0 = fc_ + 4 * nqx_ * nqy_ * nqz_;
+		} else if(HiGInput::instance().num_layers() == 1 || HiGInput::instance().num_layers() == 0) {
+			/* compute fresnel coefficients for a structure
+			 * on top of or buried inside a substrate */
+			if(!compute_fresnel_coefficients_top_buried(alpha_i)) {
+				std::cerr << "error: could not compute fresnel coefficients" << std::endl;
 				return false;
-			} // if-else
+			} // if
+			// set aliases
+			rk1 = fc_;							// re-check these ...
+			rk2 = fc_ + nqx_ * nqy_ * nqz_;
+			rk1rk2 = fc_ + 2 * nqx_ * nqy_ * nqz_;
+			tk1tk2 = fc_ + 3 * nqx_ * nqy_ * nqz_;
+			h0 = fc_ + 4 * nqx_ * nqy_ * nqz_;
 		} else {
-			/* computing using the sample slicing scheme */
-			// not yet implemented ...
-			std::cerr << "uh-oh: you hit a slicing part that has not been implemented yet" << std::endl;
+			std::cerr << "error: invalid number of layers in non-slicing scheme" << std::endl;
 			return false;
-		} // if
+		} // if-else
 
 		return true;
 	} // HipGISAXS::compute_propagation_coefficients()
+
+
+	bool HipGISAXS::compute_wave_amplitudes(alphai, pa1, pa2, pa3, pa4) {
+		std::cout << "----> SLICING" << std::endl;
+		// ...
+
+		return false;
+	} // HipGISAXS::compute_wave_amplitudes();
 
 
 	bool HipGISAXS::layer_qgrid_qz(float_t alpha_i, complex_t dnl_j) {
@@ -1082,6 +1085,20 @@ namespace hig {
 
 		return true;
 	} // HipGISAXS::layer_qgrid_qz()
+
+
+	bool HipGISAXS::slice_qgrid_qz(float_t alpha_i, complex_t dnl_j) {
+		float_t kzi_0 = -1.0 * k0_ * sin(alpha_i);
+		complex_t kzi_j = -1.0 * k0_ * sqrt((float_t)pow(sin(alpha_i), 2) - dnl_j);
+
+		if(!QGrid::instance().create_slice_qz_extended(k0_, kzi_0, kzi_j, dnl_j)) {
+			std::cerr << "error: something went wrong while creating sliced qz_extended" << std::endl;
+			return false;
+		} // if
+		nqz_extended_ = QGrid::instance().nqz_extended();
+
+		return true;
+	} // HipGISAXS::slice_qgrid_qz()
 
 
 	// optimize this later ...

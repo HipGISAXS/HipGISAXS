@@ -5,7 +5,7 @@
   *
   *  File: compute_params.hpp
   *  Created: Jun 05, 2012
-  *  Modified: Tue 16 Oct 2012 02:30:58 PM PDT
+  *  Modified: Mon 13 May 2013 09:03:21 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -35,7 +35,7 @@ namespace hig {
 				OutputRegion() { }
 			} output_region_;
 			vector2_t resolution_;
-			unsigned int nslices_;
+			unsigned int nslices_;	// max number of slices (as input parameter)
 
 			std::string timestamp();
 
