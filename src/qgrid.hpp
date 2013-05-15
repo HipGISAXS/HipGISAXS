@@ -5,7 +5,7 @@
   *
   *  File: qgrid.hpp
   *  Created: Jun 17, 2012
-  *  Modified: Mon 13 May 2013 04:29:45 PM PDT
+  *  Modified: Tue 14 May 2013 03:49:39 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -20,11 +20,12 @@
 
 namespace hig {
 
-	class QGrid {								// should these all be complex ... ???
+	class QGrid {
 												// use the new 'std::array<>' instead ... ?
 		/* data types for qgrid data */
 		typedef std::vector<float_t> qvec_t;
 		typedef std::vector<complex_t> cqvec_t;
+
 		/* iterators for qgrid data types */
 		typedef qvec_t::const_iterator qvec_iter_t;
 		typedef cqvec_t::const_iterator cqvec_iter_t;
@@ -34,6 +35,7 @@ namespace hig {
 			qvec_t qy_;
 			qvec_t qz_;
 			cqvec_t qz_extended_;
+			std::vector <cqvec_t> qz_extended_slices_;	// TODO: improve ... compute on the fly? ...
 
 			/* singleton */
 			QGrid() { }
@@ -52,7 +54,8 @@ namespace hig {
 			/* create the Q-grid */
 			bool create(float_t, float_t, float_t, int);
 			bool create_qz_extended(float_t, float_t, complex_t, complex_t);
-			bool create_slice_qz_extended(float_t, float_t, complex_t, complex_t);
+			bool create_slice_qz_extended(float_t, float_t, complex_t);
+
 			bool create_test();
 
 			/* temporary for steepest descent fitting */

@@ -5,7 +5,7 @@
   *
   *  File: hig_input.hpp
   *  Created: Jun 11, 2012
-  *  Modified: Tue 14 May 2013 10:43:22 AM PDT
+  *  Modified: Tue 14 May 2013 03:05:08 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -60,7 +60,7 @@ namespace hig {
 				float_t z_max_;
 			} domain_;
 
-			slice_list_t slices_;	// the actual slices
+			slice_list_t slices_;				/* the actual slices */
 
 			/* helpers */
 

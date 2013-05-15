@@ -5,7 +5,7 @@
   *
   *  File: qgrid.cpp
   *  Created: Jun 17, 2012
-  *  Modified: Mon 13 May 2013 04:34:14 PM PDT
+  *  Modified: Tue 14 May 2013 04:04:58 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -197,11 +197,30 @@ namespace hig {
 	} // QGrid::create_qz_extended()
 
 
-	bool QGrid::create_slice_qz_extended(float_t k0, float_t kzi_0, complex_t kzi_q, complex_t dnl_q) {
-		std::cout << "----> SLICING" << std::endl;
-		// ...
 
-		return false;
+	// TODO: compute this on the fly instead of storing all of them ... ?
+	bool QGrid::create_slice_qz_extended(float_t k0, float_t alphai, complex_t avg_refindex) {
+		// TODO: find a more efficient way to do this ...
+		qz_extended_slices_.clear();
+		cqvec_t temp1, temp2, temp3, temp4;
+		complex_t ki_j = - k0 * sqrt(pow(sin(alphai), 2) - 2 * complex_avg_refindex);
+		for(qvec_iter_t q = qz_.begin(); q != qz_.end(); ++ q) {
+			complex_t kf_j = sqrt(pow((*q) - k0 * sin(alphai), 2) - 2 * k0 * k0 * complex_avg_refindex);
+			temp1.push_back(kf_j - ki_j);
+			temp2.push_back(kf_j + ki_j);
+			temp3.push_back(- kf_j - ki_j);
+			temp4.push_back(- kf_j + ki_j);
+		} // for
+
+		cqvec_t qz_ext;
+		qz_ext.insert(qz_ext.end(), temp1.begin(), temp1.end());
+		qz_ext.insert(qz_ext.end(), temp2.begin(), temp2.end());
+		qz_ext.insert(qz_ext.end(), temp3.begin(), temp3.end());
+		qz_ext.insert(qz_ext.end(), temp4.begin(), temp4.end());
+
+		qz_extended_slices_.pushback(qz_ext);
+
+		return true;
 	} // QGrid::create_slice_qz_entended()
 
 

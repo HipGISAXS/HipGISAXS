@@ -5,7 +5,7 @@
   *
   *  File: hipgisaxs_main.cpp
   *  Created: Jun 14, 2012
-  *  Modified: Tue 14 May 2013 02:55:18 PM PDT
+  *  Modified: Tue 14 May 2013 04:09:09 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -228,7 +228,7 @@ namespace hig {
 		} // if-else
 
 		complex_t temp(substrate_refindex_.delta(), substrate_refindex_.beta());
-		dns2_ = ((float_t) 2.0) * temp - (complex_t) pow(temp, 2);
+		dnsm2_ = ((float_t) 2.0) * temp - (complex_t) pow(temp, 2);
 
 		/* get initialization data from structures */
 		
@@ -473,7 +473,7 @@ namespace hig {
 		if(HiGInput::instance().param_nslices() <= 1) {	/* computing without sample slicing */
 			complex_t dnl2 = 2.0 * complex_t(single_layer_refindex_.delta(),
 												single_layer_refindex_.beta());
-			if(!layer_qgrid_qz(alpha_i, dnl2)) {
+			if(!layer_qgrid_qz(alphai, dnl2)) {
 				std::cerr << "error: could not compute extended qz" << std::endl;
 				return false;
 			} // if
@@ -491,11 +491,17 @@ namespace hig {
 			if(!HiGInput::instance().construct_slices()) return false;
 
 			// compute qz for all slices ..
-			for(int s = 0; s < HiGInput::instance().num_slices(); ++ s) {
-				if(!slice_qgrid_qz(alpha_i, dnl2)) {
+			for(slice_iterator_t slice = HiGInput::instance().slices_begin();
+					slice != HiGInput::instance().slices_end(); ++ slice) {
+				//float_t s_avg_volumetric_density = (*slice).sample_volume() / (*slice).slice_volume();
+				RefractiveIndex temp = s_avg_refindex - (*slice).layer_refindex();
+				complex_t s_dnm2 = - 2.0 * complex_t(temp.delta(), temp.beta());	// FIXME ...
+				RefractiveIndex s_avg_refindex = (*slice).avg_refindex();
+				if(!slice_qgrid_qz(alphai, s_avg_refindex)) {
 					std::cerr << "error: could not compute extended qz" << std::endl;
 					return false;
 				} // if
+				nqz_extended_ = 4 * nqz_;
 
 				std::cout << "----> SLICING" << std::endl;
 				// and compute the "form factors" ?? for all slices
@@ -1073,9 +1079,9 @@ namespace hig {
 	} // HipGISAXS::compute_wave_amplitudes();
 
 
-	bool HipGISAXS::layer_qgrid_qz(float_t alpha_i, complex_t dnl_j) {
-		float_t kzi_0 = -1.0 * k0_ * sin(alpha_i);
-		complex_t kzi_j = -1.0 * k0_ * sqrt((float_t)pow(sin(alpha_i), 2) - dnl_j);
+	bool HipGISAXS::layer_qgrid_qz(float_t alphai, complex_t dnl_j) {
+		float_t kzi_0 = -1.0 * k0_ * sin(alphai);
+		complex_t kzi_j = -1.0 * k0_ * sqrt((float_t)pow(sin(alphai), 2) - dnl_j);
 
 		if(!QGrid::instance().create_qz_extended(k0_, kzi_0, kzi_j, dnl_j)) {
 			std::cerr << "error: something went wrong while creating qz_extended" << std::endl;
@@ -1087,15 +1093,12 @@ namespace hig {
 	} // HipGISAXS::layer_qgrid_qz()
 
 
-	bool HipGISAXS::slice_qgrid_qz(float_t alpha_i, complex_t dnl_j) {
-		float_t kzi_0 = -1.0 * k0_ * sin(alpha_i);
-		complex_t kzi_j = -1.0 * k0_ * sqrt((float_t)pow(sin(alpha_i), 2) - dnl_j);
-
-		if(!QGrid::instance().create_slice_qz_extended(k0_, kzi_0, kzi_j, dnl_j)) {
+	bool HipGISAXS::slice_qgrid_qz(float_t alphai, RefractiveIndex avg_refindex) {
+		complex_t complex_avg_refindex = complex_t(avg_refindex.delta(), avg_refindex.beta());
+		if(!QGrid::instance().create_slice_qz_extended(k0_, alphai, complex_avg_refindex)) {
 			std::cerr << "error: something went wrong while creating sliced qz_extended" << std::endl;
 			return false;
 		} // if
-		nqz_extended_ = QGrid::instance().nqz_extended();
 
 		return true;
 	} // HipGISAXS::slice_qgrid_qz()
@@ -1235,9 +1238,9 @@ namespace hig {
 	// optimize ...
 	bool HipGISAXS::compute_fresnel_coefficients_top_buried(float_t alpha_i) {
 		//complex_t tk1 = ((float_t) 2.0 * sin(alpha_i)) / ((float_t)sin(alpha_i) +
-		//										sqrt((float_t)pow(sin(alpha_i), 2) - dns2_));
+		//										sqrt((float_t)pow(sin(alpha_i), 2) - dnsm2_));
 		complex_t tk1 = ((float_t) (2.0 * sin(alpha_i))) /
-						((float_t) sin(alpha_i) + sqrt((float_t)pow(sin(alpha_i), 2) - dns2_));
+						((float_t) sin(alpha_i) + sqrt((float_t)pow(sin(alpha_i), 2) - dnsm2_));
 		complex_t rk1 = tk1 - complex_t(1.0, 0.0);
 
 		fc_ = new (std::nothrow) complex_t[5 * nqx_ * nqy_ * nqz_];
@@ -1269,7 +1272,7 @@ namespace hig {
 				} // for y
 			} else {
 				complex_t sf = k2z / k0_;
-				tk2 = 2.0 * sf / (sf + sqrt(sf * sf - dns2_));
+				tk2 = 2.0 * sf / (sf + sqrt(sf * sf - dnsm2_));
 				rk2 = tk2 - (float_t) 1.0;
 				for(unsigned int y = 0; y < nqy_; y ++) {
 					for(unsigned int x = 0; x < nqx_; x ++) {

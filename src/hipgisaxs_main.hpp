@@ -5,7 +5,7 @@
   *
   *  File: hipgisaxs_main.hpp
   *  Created: Jun 11, 2012
-  *  Modified: Mon 13 May 2013 03:01:26 PM PDT
+  *  Modified: Tue 14 May 2013 03:19:52 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -42,7 +42,7 @@ namespace hig {
 			RefractiveIndex single_layer_refindex_;		// or can these be filled while reading input? ...
 			float_t single_layer_thickness_;
 
-			complex_t dns2_; 	// find a better name ...
+			complex_t dnsm2_; 	// find a better name ...
 
 			vector3_t vol_;			/* represents the illuminated volume */
 			vector3_t cell_;		/* stores the domain size in each dimension */
