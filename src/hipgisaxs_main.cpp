@@ -5,7 +5,7 @@
   *
   *  File: hipgisaxs_main.cpp
   *  Created: Jun 14, 2012
-  *  Modified: Tue 14 May 2013 04:09:09 PM PDT
+  *  Modified: Thu 16 May 2013 03:39:54 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -503,9 +503,10 @@ namespace hig {
 				} // if
 				nqz_extended_ = 4 * nqz_;
 
-				std::cout << "----> SLICING" << std::endl;
-				// and compute the "form factors" ?? for all slices
+				std::cout << "----> SLICING: put more code here" << std::endl;
+				// and compute the "form factors" for all slices ...
 				// ... TODO
+
 			} // for
 
 			// compute propogation amplitudes for all slices
@@ -1071,12 +1072,56 @@ namespace hig {
 	} // HipGISAXS::compute_propagation_coefficients()
 
 
-	bool HipGISAXS::compute_wave_amplitudes(alphai, pa1, pa2, pa3, pa4) {
-		std::cout << "----> SLICING" << std::endl;
-		// ...
-
+	bool HipGISAXS::compute_propogation_amplitudes(alphai, pa1, pa2, pa3, pa4) {
+		std::cout << "----> SLICING needs more code!" << std::endl;
 		return false;
-	} // HipGISAXS::compute_wave_amplitudes();
+
+		if(HiGInput::instance().num_slices() == 0 || HiGInput::instance().slice(0).z_top() != 0) return false;
+		if(alphai < 0) return false;
+
+		float_t sin2 = pow(sin(alphai), 2);
+		RefractiveIndex sub_refindex = HiGInput::instance().substrate_layer().refindex();
+		std::vector <complex_t> kz;
+
+		kz.push_back(complex_t(- k0_ * sin(alphai), 0));	// for vacuum layer/slice
+		slice_iterator_t s_i = HiGInput::instance().slices_begin();
+		++ s_i;		// the first is just vacuum interface
+		for(; s_i != HiGInput::instance().slices_end(); ++ s_i) {
+			RefractiveIndex temp_ref = (*s_i).avg_refindex();
+			complex_t temp_kz = - k0_ * sqrt(sin2 - 2 * complex_t(temp_ref.delta(), temp_ref.beta()));
+			kz.push_back(temp_kz);
+		} // for
+		kz.push_back(- k0_ * sqrt(sin2 - 2 * complex_t(sub_refindex.delta(), sub_refindex.beta())));
+															// for substrate layer/slice
+		// a_lp1 = a_np1 = [ 1 0 ]
+		float_t a_lp1[2]; a_lp1[0] = 1; a_lp1[1] = 0;
+		std::vector <complex_t> a; a.resize(2 * HiGInput::instance().num_slices() + 2);
+		//s_i = HiGInput::instance().slices_begin();
+		//for(std::vector<complex_t>::iterator k_i = kz.begin(); k_i != kz.end(); ++ k_i, ++ s_i)
+		for(int i = kz.size() - 2; i >= 0; -- i) {
+			complex_t pl_lp1 = (kz[i] + kz[i + 1]) / (2 * kz[i]);
+			complex_t ml_lp1 = (kz[i] - kz[i + 1]) / (2 * kz[i]);
+
+			float_t slice_z_bottom = HiGInput::instance().slice(i).z_bottom();
+			complex_t expkzp = exp(complex_t(0, ((kz[i + 1] + kz[i]) * slice_z_bottom)));
+			complex_t expkzm = exp(complex_t(0, ((kz[i + 1] - kz[i]) * slice_z_bottom));
+
+			complex_t mat_ml_lp1[4], mat_a_l[2];
+			mat_ml_lp1[0] = pl_lp1 * expkzm; mat_ml_lp1[1] = ml_lp1 * conj(expkzp);
+			mat_ml_lp1[2] = ml_lp1 * expkzp; mat_ml_lp1[3] = pl_lp1 * conj(expkzm);
+
+			mat_a_l[0] = mat_ml_lp1[0] * a_lp1[0] + mat_ml_lp1[1] * a_lp1[1];
+			mat_a_l[1] = mat_ml_lp1[2] * a_lp1[0] + mat_ml_lp1[3] * a_lp1[1];
+
+			a[2 * i] = mat_a_l[0]; a[2 * i + 1] = mat_a_l[1];
+
+			a_lp1[0] = mat_a_l[0]; a_lp1[1] = mat_a_l[1];
+		} // for
+
+		for(std::vector<complex_t>::iterator a_i = a.begin(); a_i != a.end(); ++ a_i) (*a_i) /= a[0];
+
+		return true;
+	} // HipGISAXS::compute_propogation_amplitudes();
 
 
 	bool HipGISAXS::layer_qgrid_qz(float_t alphai, complex_t dnl_j) {

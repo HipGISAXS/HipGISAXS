@@ -5,7 +5,7 @@
   *
   *  File: hig_input.cpp
   *  Created: Jun 11, 2012
-  *  Modified: Mon 13 May 2013 09:00:25 PM PDT
+  *  Modified: Wed 15 May 2013 09:44:54 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -1687,29 +1687,17 @@ namespace hig {
 	/* layers */
 
 	unsigned int HiGInput::num_layers() const {
-		// -1 is substrate layer
-		// 0 is vacuum
+		// -1 is substrate layer - extends to -inf below last layer
+		// 0 is vacuum - extends +inf above first layer (has z value > 0)
 		// dont count these two
-		//if(has_substrate_layer() && layers_.count(0) != 0) return layers_.size() - 2;
-		//if(has_substrate_layer() || layers_.count(0) != 0) return layers_.size() - 1;
-		//return layers_.size();
-		if(has_substrate_layer() && has_vacuum_layer())
-			return layers_.size() - 2;
-		if((!has_substrate_layer()) && has_vacuum_layer() ||
-				has_substrate_layer() && (!has_vacuum_layer())) 
+		if(has_substrate_layer() && has_vacuum_layer()) return layers_.size() - 2;
+		if((!has_substrate_layer()) && has_vacuum_layer() || has_substrate_layer() && (!has_vacuum_layer())) 
 			return layers_.size() - 1;
 		return layers_.size();
 	} // HiGInput::num_layers()
 
 
 	bool HiGInput::is_single_layer() const {
-		//if(has_substrate_layer() && has_vacuum_layer() && layers_.size() == 3 ||
-		//		(!has_substrate_layer()) && has_vacuum_layer() && layers_.size() == 2 ||
-		//		has_substrate_layer() && (!has_vacuum_layer()) && layers_.size() == 2 ||
-		//		(!has_substrate_layer()) && (!has_vacuum_layer()) && layers_.size == 1)
-		//	return true;
-		//else
-		//	return false;
 		return (num_layers() == 1);
 	} // HiGInput::is_single_layer()
 
@@ -1721,22 +1709,12 @@ namespace hig {
 
 	bool HiGInput::has_substrate_layer() const {	// substrate is the one with order -1
 													// it extends to infinity
-		//layer_iterator_t i = layers_.begin();
-		/*auto i = layers_.begin();
-		while(i != layers_.end() && (*i).second.order() != -1) i ++;
-		if(i == layers_.end()) return false;
-		return true;*/
 		return (layers_.count(-1) != 0);
 	} // HiGInput::substrate_layer()
 
 
 	Layer& HiGInput::substrate_layer() {	// substrate is the one with order -1
 											// it extends to infinity
-		//layer_iterator_t i = layers_.begin();
-		/*auto i = layers_.begin();
-		while(i != layers_.end() && (*i).second.order() != -1) ++ i;
-		if(i == layers_.end()) return (*i).second;	// what to send here ... ? NULL doesnt work ...
-		return (*i).second;*/
 		return layers_[-1];
 	} // HiGInput::substrate_layer()
 

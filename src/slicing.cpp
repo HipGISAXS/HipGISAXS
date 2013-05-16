@@ -3,7 +3,7 @@
   *
   *  File: slicing.cpp
   *  Created: May 13, 2013
-  *  Modified: Tue 14 May 2013 02:48:38 PM PDT
+  *  Modified: Thu 16 May 2013 03:22:56 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -22,6 +22,18 @@ namespace hig {
 		} else if(param_nslices() < 2) {
 			return true;
 		} else {
+			// slices are as follows:
+			// ----------------------
+			// z = 0
+			//   slice 0 = vacuum (size = 0)
+			//   slice 1 = topmost
+			//   slice 2
+			//   ...
+			//   slice n = bottommost
+			// z = z_min
+			// total size = n + 2
+			// ----------------------
+
 			float_t z_min = min(layer_z_val_min(), domain_.min_[2]);
 			float_t z_max = 0.0;		// FIXME ??? need to hard code?
 
@@ -31,20 +43,28 @@ namespace hig {
 
 			// slice thickness (uniform slicing)
 			float_t d_slice = d_z / (param_nslices() + 1);
-
 			slices_.clear();
-			Slice s_vacuum; s_vacuum.clear();
-			slices_.push_back(s_vacuum);
 
-			for(int s_i = 0; s_i < param_nslices(); ++ s_i) {
+			for(int s_i = param_nslices(); s_i >= 0; -- s_i) {
 				Slice s;
-				s.z_top(z_max + s_i * d_slice);
-				s.z_bottom(z_top - d_slice);
+				s.z_bottom(z_min + s_i * d_slice);
+				s.z_top(z_min + (s_i + 1) * d_slice);
 				s.volume(d_x * d_y * d_slice);
-				if(!s.compute_slice_data(s_i)) return false;
+				if(!s.compute_slice_data(param_nslice() - s_i + 1)) return false;
 				slices_.push_back(s);
 			} // for
 		} // if-else
+
+		// shift to make overall z_top = 0
+		float_t z_top = z_min + (param_nslices() + 1) * d_slice;
+		for(slices_iterator s_i = slices_.begin(); s_i != slices_.end(); ++ s_i) {
+			(*s_i).z_bottom((*s_i).z_bottom - z_top);
+			(*s_i).z_top((*s_i).z_top - z_top);
+		} // for
+
+		// add upper interface with vacuum
+		Slice s_vacuum; s_vacuum.clear();
+		slices_.insert(slices_.begin(), s_vacuum);
 
 		return true;
 	} // HiGInput::construct_slices()
