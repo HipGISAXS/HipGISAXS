@@ -5,7 +5,7 @@
   *
   *  File: hipgisaxs_main.cpp
   *  Created: Jun 14, 2012
-  *  Modified: Wed 08 May 2013 10:49:43 PM PDT
+  *  Modified: Thu 16 May 2013 03:58:51 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -202,7 +202,7 @@ namespace hig {
 					// 	+ get structure info
 					// 	+ construct lattice vectors
 					// 	+ construct the illuminated volume
-					// 	+ compute domain size
+					// 	+ compute grain size
 					//	+ construct rotation matrices
 
 		int mpi_rank = world_comm.Get_rank();
@@ -244,11 +244,11 @@ namespace hig {
 			return false;
 		} // if
 
-		/* domain cell size */
+		/* grain cell size */
 		vector3_t min_vec(0.0, 0.0, 0.0), max_vec(0.0, 0.0, 0.0);
 		float_t z_min_0 = 0.0, z_max_0 = 0.0;
 		if(!HiGInput::instance().compute_domain_size(min_vec, max_vec, z_min_0, z_max_0, mpi_rank)) {
-			if(mpi_rank == 0) std::cerr << "error: could not construct domain sizes" << std::endl;
+			if(mpi_rank == 0) std::cerr << "error: could not construct grain sizes" << std::endl;
 			return false;
 		} // if
 //		std::cout << "++ Domain min point: " << min_vec[0] << ", " << min_vec[1]
@@ -261,7 +261,7 @@ namespace hig {
 //					<< max_vec[2] - min_vec[2] << " ("
 //					<< z_max_0 - z_min_0 << ")" << std::endl;
 
-		// min_vec and max_vec are the domain
+		// min_vec and max_vec are the grain
 		cell_[0] = fabs(max_vec[0] - min_vec[0]);
 		cell_[1] = fabs(max_vec[1] - min_vec[1]);
 		cell_[2] = fabs(z_max_0 - z_min_0);
@@ -484,17 +484,17 @@ namespace hig {
 		// can be reduced into just one ... come back ...
 		float_t* struct_intensity = new (std::nothrow) float_t[num_structures_ * nqx_ * nqy_ * nqz_];
 
-		/* loop over all structures and domains/grains */
+		/* loop over all structures and grains/grains */
 		// these are also a level of parallelism for dynamicity ...
 		int s_num = 0;
 		for(structure_iterator_t s = HiGInput::instance().structure_begin();
 				s != HiGInput::instance().structure_end(); ++ s, ++ s_num) {
 			// get all repetitions of the structure in the volume
 			// with position dr and orientation (tau, eta)
-			// i.e. compute matrix that defines all num_domains grains inside the volume
+			// i.e. compute matrix that defines all num_grains grains inside the volume
 			// distr = [ drx_i dry_i drz_i  tau_i eta_i ] (NDISTR x 5 )
 			// get params of the shape repeated in this structure: [dn2, id, dims, invar, t, seta, stau]
-			// allocate id(nqy, nqz, num_domains)
+			// allocate id(nqy, nqz, num_grains)
 
 			// get the shape
 			// compute t, lattice, ndoms, dd, nn, id etc.
@@ -510,7 +510,7 @@ namespace hig {
 
 			vector3_t grain_repeats = (*s).second.grain_repetition();
 
-			int num_domains = 0;
+			int num_grains = 0;
 			int num_nn = 0;
 			float_t *dd = NULL, *nn = NULL;		// come back to this ...
 												// these structures can be improved ...
@@ -521,31 +521,31 @@ namespace hig {
 			spatial_distribution(s, tz, num_dimen, ndx, ndy, dd);
 			orientation_distribution(s, dd, ndx, ndy, nn);
 			num_nn = ndx;
-			num_domains = num_nn;
+			num_grains = num_nn;
 
 			int r1axis = (int) (*s).second.rotation_rot1()[0];
 			int r2axis = (int) (*s).second.rotation_rot2()[0];
 			int r3axis = (int) (*s).second.rotation_rot3()[0];
 
 			if(mpi_rank == 0) {
-				std::cout << "-- Grains: " << num_domains << std::endl;
+				std::cout << "-- Grains: " << num_grains << std::endl;
 			} // if
 
 			//std::cout << "DD: " << std::endl;
-			//for(unsigned int d = 0; d < num_domains; ++ d) {
-			//	std::cerr << dd[d] << "\t" << dd[num_domains + d] << "\t" << dd[num_domains * 2 + d]
+			//for(unsigned int d = 0; d < num_grains; ++ d) {
+			//	std::cerr << dd[d] << "\t" << dd[num_grains + d] << "\t" << dd[num_grains * 2 + d]
 			//				<< std::endl;
 			//} // for*/
 
 			complex_t *id = NULL;		// TODO: come back and improve ...
-										// eliminate id for each domain ...
+										// eliminate id for each grain ...
 										// this can be reduced on the fly to reduce mem usage ...
-			id = new (std::nothrow) complex_t[num_domains * nqx_ * nqy_ * nqz_];
+			id = new (std::nothrow) complex_t[num_grains * nqx_ * nqy_ * nqz_];
 			if(id == NULL) {
 				if(mpi_rank == 0) std::cerr << "error: could not allocate memory for 'id'" << std::endl;
 				return false;
 			} // if
-			memset(id, 0 , num_domains * nqx_ * nqy_ * nqz_ * sizeof(complex_t));	// initialize to 0
+			memset(id, 0 , num_grains * nqx_ * nqy_ * nqz_ * sizeof(complex_t));	// initialize to 0
 
 			vector3_t curr_transvec = (*s).second.grain_transvec();
 			if(HiGInput::instance().param_nslices() <= 1) {
@@ -560,16 +560,16 @@ namespace hig {
 			shape_param_list_t shape_params = HiGInput::instance().shape_params((*s).second);
 
 			/* computing dwba ff for each grain in structure (*s) with
-			 * ensemble containing num_domains grains */
-			for(int j = 0; j < num_domains; j ++) {	// or distributions
+			 * ensemble containing num_grains grains */
+			for(int j = 0; j < num_grains; j ++) {	// or distributions
 
 				if(mpi_rank == 0) {
-					std::cout << "-- Processing grain " << j + 1 << " / " << num_domains << " ..."
+					std::cout << "-- Processing grain " << j + 1 << " / " << num_grains << " ..."
 								<< std::endl;
 				} // if
 
-				// define r_norm (domain orientation by tau and eta)
-				// define full domain rotation matrix r_total = r_phi * r_norm
+				// define r_norm (grain orientation by tau and eta)
+				// define full grain rotation matrix r_total = r_phi * r_norm
 				// TODO: ... i think these tau eta zeta can be computed on the fly to save memory ...
 				//float_t tau = nn[0 * num_nn + j];
 				//float_t eta = nn[1 * num_nn + j];
@@ -636,7 +636,7 @@ namespace hig {
 
 				/* center of unit cell replica */
 				//vector3_t curr_dd_vec(dd[3 * j + 0], dd[3 * j + 1], dd[3 * j + 2]);
-				vector3_t curr_dd_vec(dd[j + 0], dd[j + num_domains], dd[j + 2 * num_domains]);
+				vector3_t curr_dd_vec(dd[j + 0], dd[j + num_grains], dd[j + 2 * num_grains]);
 				vector3_t result(0.0, 0.0, 0.0);
 				//std::cerr << "============ dd: " << curr_dd_vec[0] << ","
 				//			<< curr_dd_vec[1] << "," << curr_dd_vec[2] << std::endl;
@@ -789,30 +789,11 @@ namespace hig {
 
 				ff_.clear();
 				sf_.clear();
-			} // for num_domains
+			} // for num_grains
 
 			delete[] nn;
 			delete[] dd;
 
-			// for testing
-			/*std::ofstream f("id.out");
-			for(unsigned int z = 0; z < nqz_; ++ z) {
-				for(unsigned int y = 0; y < nqy_; ++ y) {
-					for(unsigned int x = 0; x < nqx_; ++ x) {
-						unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
-						f << id[index].real() << "\t" << id[index].imag() << std::endl;
-					} // for
-					f << std::endl;
-				} // for
-				f << std::endl;
-			} // for
-			f.close(); */
-
-			//printfc("id", id, nqx_ * nqy_ * nqz_);
-
-			// in slim's code, this is inside num_domains loop ...
-			// i think it should be outside because it is summing
-			// over the 4th dimension which is the set of domains/grains ...
 			if(mpi_rank == 0) {
 				if(corr_doms == 1) {		// note: currently this is hardcoded as 0
 					unsigned int soffset = s_num * nqx_ * nqy_ * nqz_;
@@ -821,7 +802,7 @@ namespace hig {
 							for(unsigned int x = 0; x < nqx_; ++ x) {
 								unsigned int curr_index = nqx_ * nqy_ * z + nqx_ * y + x;
 								complex_t sum(0.0, 0.0);
-								for(int d = 0; d < num_domains; ++ d) {
+								for(int d = 0; d < num_grains; ++ d) {
 									unsigned int id_index = d * nqx_ * nqy_ * nqz_ + curr_index;
 									sum += id[id_index];
 								} // for d
@@ -837,7 +818,7 @@ namespace hig {
 							for(unsigned int x = 0; x < nqx_; ++ x) {
 								unsigned int curr_index = nqx_ * nqy_ * z + nqx_ * y + x;
 								float_t sum = 0.0;
-								for(int d = 0; d < num_domains; ++ d) {
+								for(int d = 0; d < num_grains; ++ d) {
 									unsigned int id_index = d * nqx_ * nqy_ * nqz_ + curr_index;
 									sum += id[id_index].real() * id[id_index].real() +
 											id[id_index].imag() * id[id_index].imag();
@@ -849,28 +830,9 @@ namespace hig {
 				} // if-else
 			} // if mpi_rank == 0
 
-			//printfr("struct_intensity", struct_intensity, nqx_ * nqy_ * nqz_);
-
 			delete[] id;
 		} // for num_structs
 		int num_structs = s_num;
-
-		// for testing
-		/*std::ofstream fs("structure_intensity.out");
-		for(unsigned int z = 0; z < nqz_; ++ z) {
-			for(unsigned int y = 0; y < nqy_; ++ y) {
-				for(unsigned int x = 0; x < nqx_; ++ x) {
-					unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
-					fs << struct_intensity[index] << "\t0.0"	<< std::endl;
-				} // for
-				fs << std::endl;
-			} // for
-			fs << std::endl;
-		} // for
-		fs.close();*/
-
-		// TODO: arrays struct_intensity and id etc can be eliminated/reduced in size to nqx*nqy*nqz only
-		// ...
 
 		if(mpi_rank == 0) {
 			img3d = new (std::nothrow) float_t[nqx_ * nqy_ * nqz_];
@@ -1286,7 +1248,7 @@ namespace hig {
 		if(distribution == "random") {
 			srand(time(NULL));
 			if(dim == 3) {
-				// find max density - number of domains in vol
+				// find max density - number of grains in vol
 				vector3_t max_density = min(floor(vol_ / spaced_cell) + 1, maxgrains);
 				rand_dim_x = max(1, (int)std::floor(max_density[0] * max_density[1] * max_density[2] / 4.0));
 				rand_dim_y = 3;
