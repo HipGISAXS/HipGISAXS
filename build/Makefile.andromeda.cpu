@@ -123,8 +123,8 @@ endif
 MISC_FLAGS += -DTIME_DETAIL_1 -DTIME_DETAIL_2
 
 ## choose optimization levels, debug flags, gprof flag, etc
-OPT_FLAGS = -g -O0 #-DDEBUG #-v #-pg
-#OPT_FLAGS += -O3 -DNDEBUG #-v
+#OPT_FLAGS = -g -O0 #-DDEBUG #-v #-pg
+OPT_FLAGS += -O3 -DNDEBUG #-v
 
 ## stuff for AMD x86_64
 #OPT_FLAGS += -march=barcelona -msse4a -ffast-math -Ofast
