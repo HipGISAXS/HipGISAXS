@@ -5,7 +5,7 @@
   *
   *  File: hig_input.cpp
   *  Created: Jun 11, 2012
-  *  Modified: Mon 08 Apr 2013 04:05:50 PM PDT
+  *  Modified: Fri 17 May 2013 12:18:36 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -180,6 +180,7 @@ namespace hig {
 					case instrument_token:	// nothing to do :-/
 					case compute_outregion_token:	// nothing to do :-/
 					case compute_token:	// nothing to do :-/
+					case compute_structcorr_token:	// nothing to do :-/
 					case hipgisaxs_token:	// nothing to do :-/
 						break;
 
@@ -562,6 +563,7 @@ namespace hig {
 			case compute_outregion_token:
 			case compute_outregion_maxpoint_token:
 			case compute_outregion_minpoint_token:
+			case compute_structcorr_token:
 				break;
 
 			case instrument_token:
@@ -1083,6 +1085,10 @@ namespace hig {
 
 			case compute_method_token:
 				compute_.method(str);
+				break;
+
+			case compute_structcorr_token:
+				compute_.structcorrelation(TokenMapper::instance().get_structcorr_type(str));
 				break;
 
 			default:

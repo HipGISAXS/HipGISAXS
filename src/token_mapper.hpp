@@ -5,7 +5,7 @@
   *
   *  File: token_mapper.hpp
   *  Created: Jun 05, 2012
-  *  Modified: Sat 23 Feb 2013 07:29:51 PM PST
+  *  Modified: Fri 17 May 2013 12:23:08 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -29,6 +29,7 @@ namespace hig {
 			std::unordered_map <std::string, StatisticType> StatisticKeyWords_;
 			std::unordered_map <std::string, LatticeType> LatticeKeyWords_;
 			std::unordered_map <std::string, OutputRegionType> OutputRegionKeyWords_;
+			std::unordered_map <std::string, StructCorrelationType> StructCorrelationKeyWords_;
 
 		public:
 			static TokenMapper& instance() {
@@ -77,6 +78,12 @@ namespace hig {
 				if(OutputRegionKeyWords_.count(str) > 0) return OutputRegionKeyWords_[str];
 				else return region_error;
 			} // get_output_region_type()
+
+
+			StructCorrelationType get_structcorr_type(const std::string& str) {
+				if(StructCorrelationKeyWords_.count(str) > 0) return StructCorrelationKeyWords_[str];
+				else return structcorr_error;
+			} // get_structcorr_type()
 
 			
 			bool key_exists(const std::string& str) {
@@ -171,6 +178,7 @@ namespace hig {
 				KeyWords_[std::string("spotarea")]			= instrument_scatter_spotarea_token;
 				KeyWords_[std::string("stat")]				= stat_token;
 				KeyWords_[std::string("step")]				= step_token;
+				KeyWords_[std::string("structcorrelation")]	= compute_structcorr_token;
 				KeyWords_[std::string("structure")]			= struct_token;
 				KeyWords_[std::string("thickness")]			= layer_thickness_token;
 				KeyWords_[std::string("tilt")]				= instrument_scatter_tilt_token;
@@ -227,6 +235,14 @@ namespace hig {
 				OutputRegionKeyWords_[std::string("angles")]	= region_angles;
 				OutputRegionKeyWords_[std::string("pixels")]	= region_pixels;
 				OutputRegionKeyWords_[std::string("qspace")]	= region_qspace;
+
+				/* structure grain/ensemble correlation keywords */
+
+				StructCorrelationKeyWords_[std::string("nGnE")]	= structcorr_nGnE;
+				StructCorrelationKeyWords_[std::string("nGE")]	= structcorr_nGE;
+				StructCorrelationKeyWords_[std::string("GnE")]	= structcorr_GnE;
+				StructCorrelationKeyWords_[std::string("GE")]	= structcorr_GE;
+
 		} // TokenMapper()
 
 		// singleton

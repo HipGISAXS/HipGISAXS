@@ -5,7 +5,7 @@
   *
   *  File: compute_params.hpp
   *  Created: Jun 05, 2012
-  *  Modified: Tue 16 Oct 2012 02:30:58 PM PDT
+  *  Modified: Fri 17 May 2013 11:55:47 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -21,13 +21,14 @@
 
 namespace hig {
 
-	class ComputeParams {	// just one instance of this
+	class ComputeParams {	// just one instance of this ... TODO ...
 		friend class HiGInput;
 
 		private:
 			std::string pathprefix_;
 			std::string runname_;
-			std::string method_;	// change to enum - "dwba" ?
+			std::string method_;	// TODO: ... change to enum - "dwba" ?
+			StructCorrelationType correlation_;		/* grain/ensemble correlation type */
 			struct OutputRegion {
 				OutputRegionType type_;
 				vector2_t minpoint_;
@@ -64,6 +65,7 @@ namespace hig {
 			void resolution(float_t a, float_t b) { resolution_[0] = a; resolution_[1] = b; }
 
 			void nslices(float_t d) { nslices_ = (unsigned int) d; }
+			void structcorrelation(StructCorrelationType c) { correlation_ = c; }
 
 			/* getters */
 			//OutputRegion output_region() { return output_region_; }

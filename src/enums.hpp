@@ -5,7 +5,7 @@
   *
   *  File: enums.hpp
   *  Created: Jun 11, 2012
-  *  Modified: Sat 23 Feb 2013 07:33:33 PM PST
+  *  Modified: Fri 17 May 2013 12:21:58 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -88,6 +88,15 @@ namespace hig {
 		shape_file_hdf5,		/* shape file in HDF5 format */
 		shape_file_object		/* raw object file (e.g. from maya) */
 	}; // enum ShapeFileType
+
+	enum StructCorrelationType {
+		structcorr_error,		/* error type */
+		structcorr_null,		/* default, no correlation */
+		structcorr_nGnE,		/* another name for default */
+		structcorr_nGE,			/* non-corr grain, corr ensemble */
+		structcorr_GnE,			/* corr grain, non-corr ensemble */
+		structcorr_GE,			/* both correlated */
+	}; // enum StructCorrelationType
 
 } // namespace hig
 
