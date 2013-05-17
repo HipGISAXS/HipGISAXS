@@ -5,7 +5,7 @@
   *
   *  File: hipgisaxs_main.cpp
   *  Created: Jun 14, 2012
-  *  Modified: Thu 16 May 2013 03:58:51 PM PDT
+  *  Modified: Fri 17 May 2013 01:33:17 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -469,20 +469,11 @@ namespace hig {
 		complex_t *rk1 = NULL, *rk2 = NULL, *rk1rk2 = NULL, *tk1tk2 = NULL, *h0 = NULL;
 		if(!compute_propagation_coefficients(alphai, amm, apm, amp, app,
 											rk1, rk2, rk1rk2, tk1tk2, h0)) return false;
-		//printfc("amm", amm, nqx_ * nqy_ * nqz_);
-		//printfc("apm", apm, nqx_ * nqy_ * nqz_);
-		//printfc("amp", amp, nqx_ * nqy_ * nqz_);
-		//printfc("app", app, nqx_ * nqy_ * nqz_);
-		//printfc("rk1", rk1, nqx_ * nqy_ * nqz_);
-		//printfc("rk2", rk2, nqx_ * nqy_ * nqz_);
-		//printfc("rk1rk2", rk1rk2, nqx_ * nqy_ * nqz_);
-		//printfc("tk1tk2", tk1tk2, nqx_ * nqy_ * nqz_);
-		//printfc("h0", h0, nqx_ * nqy_ * nqz_);
 
 		// initialize memory for struct_intensity, ff and sf
-		// TODO: eliminate struct_intensity for each struct ...
-		// can be reduced into just one ... come back ...
+		// TODO: improve ...
 		float_t* struct_intensity = new (std::nothrow) float_t[num_structures_ * nqx_ * nqy_ * nqz_];
+		complex_t* c_struct_intensity = new (std::nothrow) complex_t[num_structures_ * nqx_ * nqy_ * nqz_];
 
 		/* loop over all structures and grains/grains */
 		// these are also a level of parallelism for dynamicity ...
@@ -795,7 +786,7 @@ namespace hig {
 			delete[] dd;
 
 			if(mpi_rank == 0) {
-				if(corr_doms == 1) {		// note: currently this is hardcoded as 0
+				/*if(corr_doms == 1) {		// note: currently this is hardcoded as 0
 					unsigned int soffset = s_num * nqx_ * nqy_ * nqz_;
 					for(unsigned int z = 0; z < nqz_; ++ z) {
 						for(unsigned int y = 0; y < nqy_; ++ y) {
@@ -827,7 +818,84 @@ namespace hig {
 							} // for x
 						} // for y
 					} // for z
-				} // if-else
+				} // if-else*/
+
+
+				// new stuff for grain/ensemble correlation
+				unsigned int soffset = 0;
+				switch(HiGInput::instance().param_structcorrelation()) {
+					case structcorr_null:	// default
+					case structcorr_nGnE:	// no correlation
+						// struct_intensity = sum_grain(abs(grain_intensity)^2)
+						// intensity = sum_struct(struct_intensity)
+						soffset = s_num * nqx_ * nqy_ * nqz_;
+						for(unsigned int z = 0; z < nqz_; ++ z) {
+							for(unsigned int y = 0; y < nqy_; ++ y) {
+								for(unsigned int x = 0; x < nqx_; ++ x) {
+									unsigned int curr_index = nqx_ * nqy_ * z + nqx_ * y + x;
+									float_t sum = 0.0;
+									for(int d = 0; d < num_grains; ++ d) {
+										unsigned int id_index = d * nqx_ * nqy_ * nqz_ + curr_index;
+										sum += id[id_index].real() * id[id_index].real() +
+												id[id_index].imag() * id[id_index].imag();
+									} // for d
+									struct_intensity[soffset + curr_index] = sum;
+								} // for x
+							} // for y
+						} // for z
+						break;
+
+					case structcorr_nGE:	// non corr grains, corr ensemble
+						// grain_intensity = abs(sum_struct(struct_intensity))^2
+						// intensity = sum_grain(grain_itensity)
+						// TODO ...
+						std::cerr << "uh-oh: this nGE correlation is not yet implemented" << std::endl;
+						return false;
+						break;
+
+					case structcorr_GnE:	// corr grains, non corr ensemble
+						// struct_intensity = abs(sum_grain(grain_intensity))^2
+						// intensty = sum_struct(struct_intensity)
+						soffset = s_num * nqx_ * nqy_ * nqz_;
+						for(unsigned int z = 0; z < nqz_; ++ z) {
+							for(unsigned int y = 0; y < nqy_; ++ y) {
+								for(unsigned int x = 0; x < nqx_; ++ x) {
+									unsigned int curr_index = nqx_ * nqy_ * z + nqx_ * y + x;
+									complex_t sum(0.0, 0.0);
+									for(int d = 0; d < num_grains; ++ d) {
+										unsigned int id_index = d * nqx_ * nqy_ * nqz_ + curr_index;
+										sum += id[id_index];
+									} // for d
+									struct_intensity[soffset + curr_index] = sum.real() * sum.real() +
+																				sum.imag() * sum.imag();
+								} // for x
+							} // for y
+						} // for z
+						break;
+
+					case structcorr_GE:		// both correlated
+						// struct_intensity = sum_grain(grain_intensity)
+						// intensity = abs(sum_struct(struct_intensity))^2
+						soffset = s_num * nqx_ * nqy_ * nqz_;
+						for(unsigned int z = 0; z < nqz_; ++ z) {
+							for(unsigned int y = 0; y < nqy_; ++ y) {
+								for(unsigned int x = 0; x < nqx_; ++ x) {
+									unsigned int curr_index = nqx_ * nqy_ * z + nqx_ * y + x;
+									complex_t sum(0.0, 0.0);
+									for(int d = 0; d < num_grains; ++ d) {
+										unsigned int id_index = d * nqx_ * nqy_ * nqz_ + curr_index;
+										sum += id[id_index];
+									} // for d
+									c_struct_intensity[soffset + curr_index] = sum;
+								} // for x
+							} // for y
+						} // for z
+						break;
+
+					default:				// error
+						std::cerr << "error: unknown correlation type." << std::endl;
+						return false;
+				} // switch
 			} // if mpi_rank == 0
 
 			delete[] id;
@@ -837,7 +905,7 @@ namespace hig {
 		if(mpi_rank == 0) {
 			img3d = new (std::nothrow) float_t[nqx_ * nqy_ * nqz_];
 			// sum of all struct_intensity into intensity
-			for(unsigned int z = 0; z < nqz_; ++ z) {
+			/*for(unsigned int z = 0; z < nqz_; ++ z) {
 				for(unsigned int y = 0; y < nqy_; ++ y) {
 					for(unsigned int x = 0; x < nqx_; ++ x) {
 						unsigned int curr_index = nqx_ * nqy_ * z + nqx_ * y + x;
@@ -849,9 +917,81 @@ namespace hig {
 						img3d[curr_index] = sum;
 					} // for x
 				} // for y
-			} // for z
+			} // for z*/
+
+			// new stuff for correlation
+			switch(HiGInput::instance().param_structcorrelation()) {
+				case structcorr_null:	// default
+				case structcorr_nGnE:	// no correlation
+					// struct_intensity = sum_grain(abs(grain_intensity)^2)
+					// intensity = sum_struct(struct_intensity)
+					for(unsigned int z = 0; z < nqz_; ++ z) {
+						for(unsigned int y = 0; y < nqy_; ++ y) {
+							for(unsigned int x = 0; x < nqx_; ++ x) {
+								unsigned int curr_index = nqx_ * nqy_ * z + nqx_ * y + x;
+								float_t sum = 0.0;
+								for(int s = 0; s < num_structs; ++ s) {
+									unsigned int index = s * nqx_ * nqy_ * nqz_ + curr_index;
+									sum += struct_intensity[index];
+								} // for d
+								img3d[curr_index] = sum;
+							} // for x
+						} // for y
+					} // for z
+					break;
+
+				case structcorr_nGE:	// non corr grains, corr ensemble
+					// grain_intensity = abs(sum_struct(struct_intensity))^2
+					// intensity = sum_grain(grain_itensity)
+					// TODO ...
+					std::cerr << "uh-oh: this nGE correlation is not yet implemented" << std::endl;
+					return false;
+					break;
+
+				case structcorr_GnE:	// corr grains, non corr ensemble
+					// struct_intensity = abs(sum_grain(grain_intensity))^2
+					// intensty = sum_struct(struct_intensity)
+					for(unsigned int z = 0; z < nqz_; ++ z) {
+						for(unsigned int y = 0; y < nqy_; ++ y) {
+							for(unsigned int x = 0; x < nqx_; ++ x) {
+								unsigned int curr_index = nqx_ * nqy_ * z + nqx_ * y + x;
+								float_t sum = 0.0;
+								for(int s = 0; s < num_structs; ++ s) {
+									unsigned int index = s * nqx_ * nqy_ * nqz_ + curr_index;
+									sum += struct_intensity[index];
+								} // for d
+								img3d[curr_index] = sum;
+							} // for x
+						} // for y
+					} // for z
+					break;
+
+				case structcorr_GE:		// both correlated
+					// struct_intensity = sum_grain(grain_intensity)
+					// intensity = abs(sum_struct(struct_intensity))^2
+					for(unsigned int z = 0; z < nqz_; ++ z) {
+						for(unsigned int y = 0; y < nqy_; ++ y) {
+							for(unsigned int x = 0; x < nqx_; ++ x) {
+								unsigned int curr_index = nqx_ * nqy_ * z + nqx_ * y + x;
+								complex_t sum = 0.0;
+								for(int s = 0; s < num_structs; ++ s) {
+									unsigned int index = s * nqx_ * nqy_ * nqz_ + curr_index;
+									sum += c_struct_intensity[index];
+								} // for d
+								img3d[curr_index] = sum.real() * sum.real() + sum.imag() * sum.imag();
+							} // for x
+						} // for y
+					} // for z
+					break;
+
+				default:				// error
+					std::cerr << "error: unknown correlation type." << std::endl;
+					return false;
+			} // switch
+
 		} // if mpi_rank == 0
 
+		delete[] c_struct_intensity;
 		delete[] struct_intensity;
 		delete[] fc_;
 
