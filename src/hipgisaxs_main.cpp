@@ -5,7 +5,7 @@
   *
   *  File: hipgisaxs_main.cpp
   *  Created: Jun 14, 2012
-  *  Modified: Fri 17 May 2013 01:33:17 PM PDT
+  *  Modified: Fri 17 May 2013 02:55:05 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -135,61 +135,6 @@ namespace hig {
 			init_mic();
 			if(mpi_rank == 0) std::cout << " done." << std::endl;
 		#endif
-
-		return true;
-	} // HipGISAXS::init()
-
-
-	// this is temporary, for newton's fit method
-	bool HipGISAXS::init_steepest_fit(MPI::Intracomm& world_comm, float_t qzcut) {
-						// is called at the beginning of the runs (after input is read)
-		// first check if the input has been constructed ...
-
-		int mpi_rank = world_comm.Get_rank();
-
-		//photon conversion
-		float_t photon = 0.0;
-		std::string unit;
-		freq_ = 0; k0_ = 0;
-		HiGInput::instance().photon_energy(photon, unit);
-		if(unit == "ev") {
-		//	freq_ = photon * 1.60217646e9 / 6.626068;
-			photon = photon / 1000;		// in keV
-			freq_ = 1e-9 * photon * 1.60217646e-19 * 1000 / 6.626068e-34;
-		} else { /* do something else ? ... */
-			if(mpi_rank == 0) std::cerr << "error: photon energy is not given in 'ev'" << std::endl;
-			return false;
-		} // if-else
-
-		k0_ = 2 * PI_ * freq_ / LIGHT_SPEED_;
-
-		// create output directory
-		if(mpi_rank == 0) {		// this is not quite good for mpi ... improve ...
-			const std::string p = HiGInput::instance().path() + "/" + HiGInput::instance().runname();
-			if(!boost::filesystem::create_directory(p)) {
-				std::cerr << "error: could not create output directory " << p << std::endl;
-				return false;
-			} // if
-		} // if
-
-		world_comm.Barrier();
-
-		// create Q-grid
-		float_t min_alphai = HiGInput::instance().scattering_min_alpha_i() * PI_ / 180;
-		if(!QGrid::instance().create_z_cut(freq_, min_alphai, k0_, qzcut)) {
-			if(mpi_rank == 0) std::cerr << "error: could not create Q-grid" << std::endl;
-			return false;
-		} // if
-
-		nqx_ = QGrid::instance().nqx();
-		nqy_ = QGrid::instance().nqy();
-		nqz_ = QGrid::instance().nqz();
-
-		/* construct layer profile */
-		if(!HiGInput::instance().construct_layer_profile()) {	// also can be done at input reading ...
-			if(mpi_rank == 0) std::cerr << "error: could not construct layer profile" << std::endl;
-			return false;
-		} // if
 
 		return true;
 	} // HipGISAXS::init()
