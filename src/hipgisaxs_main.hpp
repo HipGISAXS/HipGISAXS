@@ -5,7 +5,7 @@
   *
   *  File: hipgisaxs_main.hpp
   *  Created: Jun 11, 2012
-  *  Modified: Mon 08 Apr 2013 04:16:06 PM PDT
+  *  Modified: Fri 17 May 2013 03:11:20 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -81,7 +81,6 @@ namespace hig {
 									MPI::Intracomm&);
 
 			/* wrapper over ff function */
-			//template <typename float_t, typename complex_t>
 			bool form_factor(ShapeName, std::string, shape_param_list_t&, vector3_t&,
 							float_t, float_t, vector3_t&, vector3_t&, vector3_t&,
 							MPI::Intracomm&);
@@ -112,41 +111,16 @@ namespace hig {
 			HipGISAXS();
 			~HipGISAXS();
 
-			// TODO: improve and clean the constructors - for gpu/cpu etc. unify ...
-			/*HipGISAXS(): freq_(0.0), k0_(0.0),
-						num_layers_(0), num_structures_(0),
-						nqx_(0), nqy_(0), nqz_(0), nqz_extended_(0), 
-						#ifdef FF_NUM_GPU	// use GPU
-							#ifdef KERNEL2
-								ff_(2, 4, 4)
-							#else
-								ff_(64)
-							#endif // KERNEL2
-						#else	// use CPU
-							ff_()
-						#endif
-							{
-				single_layer_refindex_.delta(0.0);
-				single_layer_refindex_.beta(0.0);
-				single_layer_thickness_ = 0.0;
-				HiGInput::instance();
-				QGrid::instance();
-				//MPI::Init();
-			} // HipGISAXS()
-
-
-			~HipGISAXS() {
-				//MPI::Finalize();
-			} // ~HipGISAXS()*/
-
 			bool construct_input(char* filename) {
 				return HiGInput::instance().construct_input_config(filename);
 			} // construct_input()
 
+			get_fit_parameters_map();	// returns a map of "parameter" -> value
+
 			/* loops over all configs and computes GISAXS for each */
 			bool run_all_gisaxs(MPI::Intracomm&, int = 0, int = 0, int = 0);
 
-			/* does the initial 1D fitting */
+			/* temporary -- does the initial 1D fitting */
 			bool fit_steepest_descent(float_t, float_t, float_t, float_t,
 										float_t, float_t, float_t, unsigned int,
 										MPI::Intracomm&, int = 0, int = 0, int = 0);

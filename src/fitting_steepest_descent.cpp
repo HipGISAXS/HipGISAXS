@@ -3,7 +3,7 @@
   *
   *  File: fitting_steepest_descent.cpp
   *  Created: Dec 06, 2012
-  *  Modified: Fri 17 May 2013 02:55:03 PM PDT
+  *  Modified: Fri 17 May 2013 03:01:20 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -587,7 +587,7 @@ namespace hig {
 		} // for alphai
 
 		return true;
-	} // HipGISAXS::fit_all_gisaxs()
+	} // HipGISAXS::fit_steepest_descent()
 
 
 	float_t HipGISAXS::compute_cut_fit_error(float_t* cut, float_t* ref, float_t dy) {

@@ -3,7 +3,7 @@
   *
   *  File: hipgisaxs_sim.cpp
   *  Created: Dec 06, 2012
-  *  Modified: Mon 06 May 2013 10:54:39 AM PDT
+  *  Modified: Fri 17 May 2013 03:06:33 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -48,7 +48,7 @@ int main(int narg, char** args) {
 					<< std::endl << std::endl;
 	} // if
 
-	woo::BoostChronoTimer maintimer, readtimer; //, computetimer;
+	woo::BoostChronoTimer maintimer, readtimer;
 	maintimer.start();
 	readtimer.start();
 	/* read input file and construct input structures */
@@ -64,20 +64,15 @@ int main(int narg, char** args) {
 	if(mpi_rank == 0)
 		std::cout << "**       Input construction time: " << readtimer.elapsed_msec() << " ms." << std::endl;
 
-	//computetimer.start();
 	/* run the simulation */
 	if(!my_gisaxs.run_all_gisaxs(MPI::COMM_WORLD)) {
 		std::cerr << "error: could not run the simulation - some error occured" << std::endl;
-		//computetimer.stop();
 		maintimer.stop();
 		MPI::Finalize();
 		return 1;
 	} // if
-	//computetimer.stop();
 	maintimer.stop();
 	if(mpi_rank == 0) {
-		//std::cout << "**         Total simulation time: " << computetimer.elapsed_msec() << " ms."
-		//				<< std::endl;
 		std::cout << "**                    Total time: " << maintimer.elapsed_msec() << " ms." << std::endl;
 		std::cout << std::endl;
 	} // if
