@@ -5,7 +5,7 @@
   *
   *  File: hipgisaxs_main.cpp
   *  Created: Jun 14, 2012
-  *  Modified: Fri 17 May 2013 02:55:05 PM PDT
+  *  Modified: Fri 17 May 2013 09:55:16 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -225,7 +225,6 @@ namespace hig {
 
 
 	bool HipGISAXS::run_all_gisaxs(MPI::Intracomm& world_comm,
-									//int x_min = 0, int x_max = 0, int x_step = 0) {
 									int x_min, int x_max, int x_step) {
 		int mpi_rank = world_comm.Get_rank();
 
@@ -288,7 +287,7 @@ namespace hig {
 					//Image img3d(nqx_, nqy_, nqz_);
 					//if(!run_gisaxs(alphai, phi, tilt, img3d)) {
 					
-					if(mpi_rank == 0) {
+/*					if(mpi_rank == 0) {
 						// note that final_data stores 3d info
 						// for 2d, just take a slice of the data
 						std::cout << "-- Constructing GISAXS image ... " << std::flush;
@@ -329,7 +328,7 @@ namespace hig {
 						std::cout << "done." << std::endl;
 
 						// for future ...
-						/*for(int x = x_min; x <= x_max; x += x_step) {
+*/						/*for(int x = x_min; x <= x_max; x += x_step) {
 							Image *img2d = NULL;
 							img3d.slice(x, img2d);
 	
@@ -346,9 +345,12 @@ namespace hig {
 							img2d.save(output);
 								// save in buffer too ... ? not for now
 						 //} for x */
-					} // if
+/*					} // if
 
 					delete[] final_data;
+*/
+					//if(final_data_ != NULL) delete[] final_data_;
+					final_data_ = final_data;		/// temporary fix ... FIXME ...
 
 					// synchronize all procs after each run
 					world_comm.Barrier();
@@ -1571,5 +1573,6 @@ namespace hig {
 	bool HipGISAXS::read_form_factor(const char* filename) {
 		return ff_.read_form_factor(filename, nqx_, nqy_, nqz_extended_);
 	} // HipGISAXS::read_form_factor()
+
 
 } // namespace hig

@@ -5,7 +5,7 @@
   *
   *  File: shape.hpp
   *  Created: Jun 05, 2012
-  *  Modified: Thu 06 Dec 2012 10:08:21 PM PST
+  *  Modified: Fri 17 May 2013 09:41:53 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -156,6 +156,15 @@ namespace hig {
 			shape_param_iterator_t param_end() { return params_.end(); }
 
 			void print();
+
+			////////////////////////////////////////////
+			// temporary ... FIXME ...
+			// /////////////////////////////////////////
+			bool update_radius(float_t val) {
+				if(params_[0].type_name_.compare(std::string("radius")) != 0) return false;
+				params_[0].min_ = val;
+				return true;
+			} // update_radius()
 
 	}; // class Shape
 

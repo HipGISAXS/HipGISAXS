@@ -5,7 +5,7 @@
   *
   *  File: hig_input.hpp
   *  Created: Jun 11, 2012
-  *  Modified: Fri 17 May 2013 11:50:18 AM PDT
+  *  Modified: Fri 17 May 2013 09:47:20 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -28,6 +28,8 @@
 #include "inst_detector.hpp"
 #include "compute_params.hpp"
 #include "read_oo_input.hpp"
+#include "fit_param_map.hpp"
+
 
 namespace hig {
 
@@ -50,7 +52,7 @@ namespace hig {
 			bool struct_in_layer_;
 
 			std::vector<float_t> shape_def_;	/* shape definition from a file */
-			// there may be multiple shape files ... do this later ...
+			// TODO: there may be multiple shape files ... do this later ...
 
 			/* helpers */
 
@@ -67,6 +69,10 @@ namespace hig {
 			Layer curr_layer_;
 			Structure curr_structure_;
 			std::vector <float_t> curr_vector_;		// to store values in a vector while parsing it
+
+			/* fitting related stuff */
+
+			FitParamMap fit_param_map_;
 
 
 			/**
@@ -233,6 +239,14 @@ namespace hig {
 
 			/* printing for testing */
 			void print_all();
+
+
+			// ///////////////////////////////////////////////////////////
+			// temporary stuff for sphere radius fitting
+			// ///////////////////////////////////////////////////////////
+			
+			//FitParamMap& get_fit_params_map() { return fit_param_map_; }
+			bool update_fit_param(std::string, float_t);
 
 	}; // class HiGInput
 

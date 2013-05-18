@@ -5,7 +5,7 @@
   *
   *  File: hipgisaxs_main.hpp
   *  Created: Jun 11, 2012
-  *  Modified: Fri 17 May 2013 03:11:20 PM PDT
+  *  Modified: Sat 18 May 2013 09:57:19 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -25,7 +25,11 @@
 #include "sf.hpp"
 #include "image.hpp"
 
+//#include "hipgisaxs_error.hpp"
+
 namespace hig {
+
+	class HipGISAXSError;
 
 	/* This class provides high level functions for all the
 	 * components underneath in the HipGISAXS package. */
@@ -68,6 +72,14 @@ namespace hig {
 			complex_t* fc_;				/* fresnel coefficients */
 			FormFactor ff_;				/* form factor object */
 			StructureFactor sf_;		/* structure factor object */
+
+			//////////////////////////////////////////////////////////
+			// temporary ... FIXME
+			// ///////////////////////////////////////////////////////
+			float_t* final_data_;
+			float_t* reference_data_;
+
+			/////////////////////////////////////////////////////////
 
 			bool init(MPI::Intracomm&);	/* global initialization for all runs */
 			bool init_steepest_fit(MPI::Intracomm&, float_t);	/* init for steepest descent fitting ... */
@@ -115,10 +127,62 @@ namespace hig {
 				return HiGInput::instance().construct_input_config(filename);
 			} // construct_input()
 
-			get_fit_parameters_map();	// returns a map of "parameter" -> value
-
 			/* loops over all configs and computes GISAXS for each */
 			bool run_all_gisaxs(MPI::Intracomm&, int = 0, int = 0, int = 0);
+
+
+			/***
+			 * the following are to incorporate fitting
+			 */
+
+			////////////////////////////////////////////////
+			// temporary stuff ... FIXME
+			// /////////////////////////////////////////////
+
+			// FIXME ... these are all just temporary fixes ...
+
+			/* get map of parameters that are being fitted */
+			//FitParamMap& get_fit_parameters_map() { return HiGInput::instance().get_fit_params_map(); }
+
+			float_t operator[](unsigned int i) { return final_data_[i]; }
+
+			bool update_fit_param(std::string key, float_t val) {
+				return HiGInput::instance().update_fit_param(key, val);
+			} // update_fit_param()
+
+			/* update values of parameters being fitted */
+			//bool update_fit_parameters(FitParamMap*);
+
+			/* to compute gisaxs pattern, and error with base input */
+			template <typename ErrorFunction>
+			float_t compute_gisaxs_error(ErrorFunction error, MPI::Intracomm& comm) {
+				if(!run_all_gisaxs(comm)) {
+					std::cerr << "error: failed to compute gisaxs" << std::endl;
+					return 0;
+				} // if
+				return error(reference_data_, final_data_, nqx_, nqy_, nqz_);
+			} // compute_gisaxs_error()
+
+			unsigned int nqx() const { return nqx_; }
+			unsigned int nqy() const { return nqy_; }
+			unsigned int nqz() const { return nqz_; }
+
+			bool read_reference_gisaxs_data(const char* filename) {
+				reference_data_ = new (std::nothrow) float_t[nqx_ * nqy_ * nqz_];
+				if(reference_data_ == NULL) return false;
+				std::ifstream fin(filename);
+				for(int z = 0; z < nqz_; ++ z) {
+					for(int y = 0; y < nqy_; ++ y) {
+						for(int x = 0; x < nqx_; ++ x) {
+							unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
+							fin >> reference_data_[index];
+						} // for x
+					} // for y
+				} // for z
+				fin.close();
+				return true;
+			} // read_reference_gisaxs_data()
+
 
 			/* temporary -- does the initial 1D fitting */
 			bool fit_steepest_descent(float_t, float_t, float_t, float_t,

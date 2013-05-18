@@ -1,11 +1,9 @@
 /***
-  *  $Id: hig_input.cpp 47 2012-08-23 21:05:16Z asarje $
-  *
   *  Project: HipGISAXS (High-Performance GISAXS)
   *
   *  File: hig_input.cpp
   *  Created: Jun 11, 2012
-  *  Modified: Fri 17 May 2013 12:18:36 PM PDT
+  *  Modified: Fri 17 May 2013 09:47:41 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -16,8 +14,9 @@
 #include "utilities.hpp"
 #include "parameters.hpp"
 #include "hig_file_reader.hpp"
-//#include "object2hdf5.h"
 
+#include "fit_globals.hpp"
+#include "shape.hpp"
 
 namespace hig {
 
@@ -43,7 +42,6 @@ namespace hig {
 
 
 	bool HiGInput::construct_input_config(char* filename) {
-		//if(!input_reader_.init(filename)) {
 		if(!InputReader::instance().read_input(filename)) {
 			std::cerr << "fatal error: some error happened in opening or reading "
 						<< "input config file. aborting"
@@ -67,8 +65,25 @@ namespace hig {
 			curr_token_ = InputReader::instance().get_next_token();
 		} // while
 
+
+		// //////////////////////////////////////////////////////////
+		// temporary hack -- creating fit param mapper
+		// //////////////////////////////////////////////////////////
+		fit_param_map_.mapper_["radius"] = RADIUS_GUESS_;
+
 		return true;
 	} // HiGInput::read_input_config()
+
+
+	///////////////////////////////////////////////////////
+	// temporary ... FIXME ...
+	// ////////////////////////////////////////////////////
+	bool HiGInput::update_fit_param(std::string key, float_t val) {
+		// assuming key == "shape:...:radius:min" ... FIXME
+		// assuming there is only one shape ... and only one shape param ... else it wont work :P
+		if(key != "radius") { std::cerr << "error: fit param is not radius" << std::endl; return false; }
+		return shapes_[0].update_radius(val);
+	} // HiGInput::update_fit_param()
 
 
 	bool HiGInput::process_curr_token() {
