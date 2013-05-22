@@ -5,7 +5,7 @@
   *
   *  File: hig_input.hpp
   *  Created: Jun 11, 2012
-  *  Modified: Fri 17 May 2013 09:47:20 PM PDT
+  *  Modified: Wed 22 May 2013 11:25:18 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -242,11 +242,11 @@ namespace hig {
 
 
 			// ///////////////////////////////////////////////////////////
-			// temporary stuff for sphere radius fitting
+			// temporary stuff for cylinder radius and height fitting
 			// ///////////////////////////////////////////////////////////
 			
 			//FitParamMap& get_fit_params_map() { return fit_param_map_; }
-			bool update_fit_param(std::string, float_t);
+			bool update_fit_param(std::string, float_t, std::string, float_t);
 
 	}; // class HiGInput
 

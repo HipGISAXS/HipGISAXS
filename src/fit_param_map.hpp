@@ -3,7 +3,7 @@
   *
   *  File: fit_param_map.hpp
   *  Created: May 17, 2013
-  *  Modified: Fri 17 May 2013 09:45:44 PM PDT
+  *  Modified: Sat 18 May 2013 03:47:13 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -32,7 +32,10 @@ namespace hig {
 			// this map is created/populated during the input construction
 
 			// accessing and assigning
-			float_t& operator[](std::string str) { return mapper_[str]; }
+			float_t& operator[](std::string str) {
+				if(mapper_.count(str) == 0) mapper_[str] = 0;
+				return mapper_[str];
+			} // operator[]()
 
 			friend class HiGInput;
 	}; // class FitParamMap

@@ -5,7 +5,7 @@
   *
   *  File: qgrid.cpp
   *  Created: Jun 17, 2012
-  *  Modified: Tue 07 May 2013 10:06:23 AM PDT
+  *  Modified: Wed 22 May 2013 12:30:18 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -37,6 +37,9 @@ namespace hig {
 			max_pixel[0] = total_pixels[0];
 		if(max_pixel[1] < 0 || max_pixel[1] <= min_pixel[1] || max_pixel[1] > total_pixels[1])
 			max_pixel[1] = total_pixels[1];
+
+		// clear the q-grid (in case there was something there from an earlier iteration)
+		clear();
 
 		vector3_t qmax, qmin;
 		vector3_t step;

@@ -5,7 +5,7 @@
   *
   *  File: hipgisaxs_main.cpp
   *  Created: Jun 14, 2012
-  *  Modified: Fri 17 May 2013 09:55:16 PM PDT
+  *  Modified: Sat 18 May 2013 09:15:52 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -58,6 +58,15 @@ namespace hig {
 		single_layer_thickness_ = 0.0;
 		HiGInput::instance();
 		QGrid::instance();
+
+		//reference_data_ = NULL;
+		reference_data_ = (float_t*) 0x5e;
+		final_data_ = NULL;
+
+		std::cout << "-- HipGISAXS object created" << std::endl;
+		if(reference_data_ != NULL) std::cout << reference_data_ << std::endl;
+		if(final_data_ != NULL) std::cout << final_data_ << std::endl;
+
 		//MPI::Init();
 	} // HipGISAXS::HipGISAXS()
 
@@ -96,13 +105,13 @@ namespace hig {
 		k0_ = 2 * PI_ * freq_ / LIGHT_SPEED_;
 
 		// create output directory
-		if(mpi_rank == 0) {		// this is not quite good for mpi ... improve ...
+/*		if(mpi_rank == 0) {		// this is not quite good for mpi ... improve ...
 			const std::string p = HiGInput::instance().path() + "/" + HiGInput::instance().runname();
 			if(!boost::filesystem::create_directory(p)) {
 				std::cerr << "error: could not create output directory " << p << std::endl;
 				return false;
 			} // if
-		} // if
+		} // if*/
 
 		world_comm.Barrier();
 

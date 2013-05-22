@@ -5,7 +5,7 @@
   *
   *  File: hipgisaxs_main.hpp
   *  Created: Jun 11, 2012
-  *  Modified: Sat 18 May 2013 09:57:19 AM PDT
+  *  Modified: Wed 22 May 2013 11:24:32 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -36,6 +36,14 @@ namespace hig {
 
 	class HipGISAXS {
 		private:
+			//////////////////////////////////////////////////////////
+			// temporary ... FIXME
+			// ///////////////////////////////////////////////////////
+			float_t* final_data_;
+			float_t* reference_data_;
+			//std::vector<float_t> reference_data_;
+			/////////////////////////////////////////////////////////
+
 			float_t freq_;
 			float_t k0_;
 
@@ -72,14 +80,6 @@ namespace hig {
 			complex_t* fc_;				/* fresnel coefficients */
 			FormFactor ff_;				/* form factor object */
 			StructureFactor sf_;		/* structure factor object */
-
-			//////////////////////////////////////////////////////////
-			// temporary ... FIXME
-			// ///////////////////////////////////////////////////////
-			float_t* final_data_;
-			float_t* reference_data_;
-
-			/////////////////////////////////////////////////////////
 
 			bool init(MPI::Intracomm&);	/* global initialization for all runs */
 			bool init_steepest_fit(MPI::Intracomm&, float_t);	/* init for steepest descent fitting ... */
@@ -146,8 +146,8 @@ namespace hig {
 
 			float_t operator[](unsigned int i) { return final_data_[i]; }
 
-			bool update_fit_param(std::string key, float_t val) {
-				return HiGInput::instance().update_fit_param(key, val);
+			bool update_fit_param(std::string key1, float_t val1, std::string key2, float_t val2) {
+				return HiGInput::instance().update_fit_param(key1, val1, key2, val2);
 			} // update_fit_param()
 
 			/* update values of parameters being fitted */
@@ -160,26 +160,30 @@ namespace hig {
 					std::cerr << "error: failed to compute gisaxs" << std::endl;
 					return 0;
 				} // if
-				return error(reference_data_, final_data_, nqx_, nqy_, nqz_);
+				return error(&(reference_data_[0]), final_data_, nqx_, nqy_, nqz_);
 			} // compute_gisaxs_error()
 
-			unsigned int nqx() const { return nqx_; }
-			unsigned int nqy() const { return nqy_; }
-			unsigned int nqz() const { return nqz_; }
-
 			bool read_reference_gisaxs_data(const char* filename) {
-				reference_data_ = new (std::nothrow) float_t[nqx_ * nqy_ * nqz_];
-				if(reference_data_ == NULL) return false;
+				//reference_data_.clear();
+				//reference_data_.reserve(300000000);
+				float_t *temp_data = new (std::nothrow) float_t[9000000];
 				std::ifstream fin(filename);
-				for(int z = 0; z < nqz_; ++ z) {
-					for(int y = 0; y < nqy_; ++ y) {
-						for(int x = 0; x < nqx_; ++ x) {
-							unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
-							fin >> reference_data_[index];
-						} // for x
-					} // for y
-				} // for z
+				if(!fin.is_open()) {
+					std::cerr << "error: failed to read reference data" << std::endl;
+					return false; 
+				} // if
+				unsigned int i = 0;
+				while(true) {
+					float_t temp;
+					fin >> temp;
+					if(fin.eof() || !fin.good()) break;
+					//reference_data_.push_back(temp);
+					temp_data[i ++] = temp;
+				} // while
 				fin.close();
+				//std::vector <float_t> hmmm(temp_data, temp_data + i);
+				reference_data_ = temp_data;
+				temp_data = NULL;
 				return true;
 			} // read_reference_gisaxs_data()
 

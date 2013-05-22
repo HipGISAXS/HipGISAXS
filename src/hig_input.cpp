@@ -3,7 +3,7 @@
   *
   *  File: hig_input.cpp
   *  Created: Jun 11, 2012
-  *  Modified: Fri 17 May 2013 09:47:41 PM PDT
+  *  Modified: Wed 22 May 2013 01:00:27 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -69,7 +69,15 @@ namespace hig {
 		// //////////////////////////////////////////////////////////
 		// temporary hack -- creating fit param mapper
 		// //////////////////////////////////////////////////////////
-		fit_param_map_.mapper_["radius"] = RADIUS_GUESS_;
+		//fit_param_map_.mapper_["radius"] = RADIUS_GUESS_;
+		shape_iterator_t sh = shapes_.begin();
+		shape_param_iterator_t pa = (*sh).second.param_list().begin();
+		fit_param_map_.mapper_["height"] = (*pa).second.min();
+		++ pa;
+		fit_param_map_.mapper_["radius"] = (*pa).second.min();
+
+		std::cout << "-- Initial height = " << fit_param_map_.mapper_["height"] << std::endl;
+		std::cout << "-- Initial radius = " << fit_param_map_.mapper_["radius"] << std::endl;
 
 		return true;
 	} // HiGInput::read_input_config()
@@ -78,11 +86,20 @@ namespace hig {
 	///////////////////////////////////////////////////////
 	// temporary ... FIXME ...
 	// ////////////////////////////////////////////////////
-	bool HiGInput::update_fit_param(std::string key, float_t val) {
-		// assuming key == "shape:...:radius:min" ... FIXME
-		// assuming there is only one shape ... and only one shape param ... else it wont work :P
-		if(key != "radius") { std::cerr << "error: fit param is not radius" << std::endl; return false; }
-		return shapes_[0].update_radius(val);
+	bool HiGInput::update_fit_param(std::string key1, float_t val1, std::string key2, float_t val2) {
+		// assuming key1 is radius == "shape:...:radius:min" ... FIXME
+		// assuming key2 is height == "shape:...:height:min" ... FIXME
+		// assuming there is only one shape ... and only two shape params ... else it wont work :D ...
+		if(key1.compare("radius") != 0 || key2.compare("height") != 0) {
+			std::cerr << "error: fit params not as expected (radius and height)!" << std::endl;
+			return false;
+		} // if
+		bool ret1 = (*shapes_.begin()).second.update_cyl_radius(val1);
+		bool ret2 = (*shapes_.begin()).second.update_cyl_height(val2);
+
+		//print_shapes();
+
+		return (ret1 && ret2);
 	} // HiGInput::update_fit_param()
 
 

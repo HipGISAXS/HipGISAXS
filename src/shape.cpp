@@ -5,7 +5,7 @@
   *
   *  File: shape.cpp
   *  Created: Jun 05, 2012
-  *  Modified: Mon 08 Oct 2012 10:49:09 PM PDT
+  *  Modified: Wed 22 May 2013 01:01:35 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -126,5 +126,38 @@ namespace hig {
 		} // for
 		std::cout << std::endl;
 	} // Shape::print()
+
+
+	//////////////////////////////////////////////
+	// temporary ...... FIXME ......
+	// ///////////////////////////////////////////
+	bool Shape::update_cyl_height(float_t val) {
+		shape_param_iterator_t i = params_.begin();
+		std::string temp_str((*i).first);
+		//std::cout << " THE FIRST PARAM: " << temp_str << std::endl;
+		if(temp_str.compare("height") != 0) {
+			std::cerr << "error: please have the first param as cylinder height for now" << std::endl;
+			return false;
+		} // if
+		(*i).second.min_ = val;
+		return true;
+	} // update_cyl_radius()
+
+	bool Shape::update_cyl_radius(float_t val) {
+		shape_param_iterator_t i = params_.begin();
+		++ i;
+		if(i == params_.end()) {
+			std::cerr << "error: second parameter missing for cylinder!" << std::endl;
+			return false;
+		} // if
+		std::string temp_str((*i).first);
+		//std::cout << " THE SECOND PARAM: " << temp_str << std::endl;
+		if(temp_str.compare("radius") != 0) {
+			std::cerr << "error: please have the second param as cylinder radius for now" << std::endl;
+			return false;
+		} // if
+		(*i).second.min_ = val;
+		return true;
+	} // update_cyl_height()
 
 } // namespace hig

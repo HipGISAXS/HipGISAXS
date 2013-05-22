@@ -21,10 +21,11 @@ HIPGISAXS_DIR = /home/asarje/hipgisaxs.git
 CXX = $(MPI_DIR)/bin/mpicxx
 
 ## name of the needed binary
-BINARY = test_hipgisaxs
+TEST_BINARY = test_hipgisaxs
+FIT_BINARY = fit_hipgisaxs
 
 ## some flags
-CXX_FLAGS = -m64 -fopenmp -std=c++0x
+CXX_FLAGS = -m64 -fopenmp -std=c++0x -g
 
 ## hipgisaxs include and library linking flags
 HIPGISAXS_INCL = -I $(HIPGISAXS_DIR)/src
@@ -44,7 +45,7 @@ BOOST_LIBS = -lboost_system -lboost_filesystem -lboost_timer -lboost_chrono
 ## hdf5 include and library linking flags
 HDF5_INCL = -I $(HDF5_DIR)/include
 HDF5_LDFLAGS = -L $(HDF5_DIR)/lib -L $(SZ_DIR)/lib -L $(ZLIB_DIR)/lib
-HDF5_LIBS = -lhdf5 -lsz -lz
+HDF5_LIBS = -lhdf5 -lz
 
 ## tiff include and library linking flags
 TIFF_INCL = -I $(TIFF_DIR)/include
@@ -57,10 +58,19 @@ ALL_LDFLAGS = $(HIPGISAXS_LDFLAGS) $(CUDA_LDFLAGS) $(BOOST_LDFLAGS) $(HDF5_LDFLA
 ALL_LIBS = $(HIPGISAXS_LIBS) $(CUDA_LIBS) $(BOOST_LIBS) $(HDF5_LIBS) $(TIFF_LIBS)
 
 ## generate the binary
-$(BINARY): test_hipgisaxs.cpp
+all: fit test
+
+test: $(TEST_BINARY)
+
+$(TEST_BINARY): test_hipgisaxs.cpp
+	$(CXX) -o $@ $^ $(CXX_FLAGS) $(ALL_INCL) $(ALL_LDFLAGS) $(ALL_LIBS)
+
+fit: $(FIT_BINARY)
+
+$(FIT_BINARY): fit_hipgisaxs.cpp
 	$(CXX) -o $@ $^ $(CXX_FLAGS) $(ALL_INCL) $(ALL_LDFLAGS) $(ALL_LIBS)
 
 .PHONY: clean
 
 clean:
-	rm -f *.o $(BINARY)
+	rm -f *.o $(TEST_BINARY) $(FIT_BINARY)

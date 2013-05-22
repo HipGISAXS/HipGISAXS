@@ -5,7 +5,7 @@
   *
   *  File: ff.cpp
   *  Created: Jul 17, 2012
-  *  Modified: Fri 01 Mar 2013 10:30:13 AM PST
+  *  Modified: Sat 18 May 2013 09:22:12 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -30,6 +30,7 @@ namespace hig {
 										vector3_t& transvec, float_t shp_tau, float_t shp_eta,
 										vector3_t& rot1, vector3_t& rot2, vector3_t& rot3,
 										MPI::Intracomm& world_comm) {
+		clear();
 		if(shape == shape_custom) {
 			/* compute numerically */
 			is_analytic_ = false;
