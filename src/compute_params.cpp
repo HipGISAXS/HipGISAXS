@@ -5,7 +5,7 @@
   *
   *  File: compute_params.cpp
   *  Created: Jun 05, 2012
-  *  Modified: Tue 16 Oct 2012 02:26:45 PM PDT
+  *  Modified: Fri 17 May 2013 01:24:09 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -28,6 +28,7 @@ namespace hig {
 		resolution_[0] = 1;
 		resolution_[1] = 1;
 		nslices_ = 0;
+		correlation_ = structcorr_null;
 	} // ComputeParams::init()
 
 

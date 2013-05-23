@@ -5,7 +5,7 @@
   *
   *  File: tokens.hpp
   *  Created: Jun 05, 2012
-  *  Modified: Mon 01 Oct 2012 11:19:38 AM PDT
+  *  Modified: Fri 17 May 2013 11:28:34 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -129,6 +129,7 @@ namespace hig {
 		compute_outregion_minpoint_token,
 		compute_outregion_maxpoint_token,
 		compute_nslices_token,
+		compute_structcorr_token,			/* defined grain/ensemble correlations */
 
 		/* experiment instrumentation - scatter and detector */
 		instrument_token,

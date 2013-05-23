@@ -4,7 +4,7 @@ hipGisaxsInput = {
 		name = "sphere",		# shape name
 		originvec = [0 0 0],
 		#param = { type = "radius", min = 10, max = 25, p1 = 22, p2 = 7, stat = "gaussian", nvalues = 10 }
-		param = { type = "radius", min = 10 }
+		param = { type = "radius", min = 5 }
 	},
 	layer = {
 		key = "substr",	 	# special key for case of the substrate layer infinite in lower half space
@@ -27,15 +27,15 @@ hipGisaxsInput = {
 			lattice = { type = "hex" },		# lattice forming grain
 			scaling = 50,					# scaling factor for lattice vectors
 			repetition = [ 40 40 1 ]		# shape repetitions in x, y and z
-		},
-		ensemble = {
-			maxgrains = [ 20 20 1 ],		# maximum number of grains along x, y and z
-			distribution = "random",		# spatial domain distribution in irrad. volume
-			orientations = {
-				stat = "range",				# domain orientation distribution
-				rot1 = { axis = "z", angles = [ 0 360 ] }	# first rotation to apply to domain
-			}
 		}
+#		ensemble = {
+#			maxgrains = [ 20 20 1 ],		# maximum number of grains along x, y and z
+#			distribution = "random",		# spatial domain distribution in irrad. volume
+#			orientations = {
+#				stat = "range",				# domain orientation distribution
+#				rot1 = { axis = "z", angles = [ 0 360 ] }	# first rotation to apply to domain
+#			}
+#		}
 	},
 	instrumentation = {
 		scattering = {

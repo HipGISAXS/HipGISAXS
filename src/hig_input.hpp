@@ -5,7 +5,7 @@
   *
   *  File: hig_input.hpp
   *  Created: Jun 11, 2012
-  *  Modified: Tue 14 May 2013 03:05:08 PM PDT
+  *  Modified: Wed 22 May 2013 02:07:04 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -141,8 +141,8 @@ namespace hig {
 			void print_compute_params();
 
 		public:
+			// TODO: ...
 			//typedef HiGIterators <Shape> shape_iterator_t;
-
 			//typedef std::unordered_map <std::string, Structure>::iterator structure_iterator_t;
 			//typedef structure_list_t::iterator structure_iterator_t;
 
@@ -204,6 +204,7 @@ namespace hig {
 			const std::string& param_pathprefix() const { return compute_.pathprefix_; }
 			unsigned int param_nslices() const { return compute_.nslices_; }
 			unsigned int num_slices() const { return slices_.size(); }
+			StructCorrelationType param_structcorrelation() const { return compute_.correlation_; }
 
 			Shape* shape(Structure& s) { return &(shapes_[s.grain_shape_key()]); }
 			const Lattice* lattice(Structure& s) { return s.lattice(); }
