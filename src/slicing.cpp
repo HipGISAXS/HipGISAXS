@@ -3,7 +3,7 @@
   *
   *  File: slicing.cpp
   *  Created: May 13, 2013
-  *  Modified: Thu 16 May 2013 03:22:56 PM PDT
+  *  Modified: Wed 29 May 2013 02:08:35 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -14,7 +14,7 @@ namespace hig {
 
 	bool HiGInput::construct_slices() {
 
-		if(param_nslices() == -1) {	// this case will never happen :-/ ... check ...
+		if(param_nslices() == -1) {	// this case will never happen in current impl :-/ ... check ...
 
 			std::cout << "----> SLICING - this is not there in " << __FILE__ << ":" << __LINE__ << std::endl;
 			// ...

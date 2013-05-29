@@ -5,7 +5,7 @@
   *
   *  File: qgrid.hpp
   *  Created: Jun 17, 2012
-  *  Modified: Tue 14 May 2013 03:49:39 PM PDT
+  *  Modified: Wed 29 May 2013 02:12:34 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -20,7 +20,7 @@
 
 namespace hig {
 
-	class QGrid {
+	class QGrid {	// this is singleton
 												// use the new 'std::array<>' instead ... ?
 		/* data types for qgrid data */
 		typedef std::vector<float_t> qvec_t;
