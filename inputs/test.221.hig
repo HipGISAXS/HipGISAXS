@@ -1,8 +1,7 @@
 hipGisaxsInput = {
 	shape = {
-		key = "s1",	 		# a unique key to identify this shape in this file
+		key = "s1",				 		# a unique key to identify this shape in this file
 		name = "data/Shape_221.hd5"		# name of the file containing the discretized shape data
-		#name = "opv.hd5"	# name of the file containing the discretized shape data
 	},
 	layer = {
 		key = "substr",	 	# special key for case of the substrate layer infinite in lower half space
@@ -37,10 +36,10 @@ hipGisaxsInput = {
 		}
 	},
 	computation = {
-		pathprefix = ".",						# path to input files directory
-		runname = "221",							# name for current run and folder name for outputs
+		pathprefix = "../hipgisaxs.test",		# path to input files directory
+		runname = "221",						# name for current run and folder name for outputs
 		method = "dwba",						# theorical approach (see list)
-		outputregion = { type = "pixels" , minpoint = [ 300 750 ], maxpoint = [ 700 1000 ] },
+		outputregion = { type = "qspace" , minpoint = [ 0 0 ], maxpoint = [ 1 1 ] },
 		#outputregion = { type = "pixels" , minpoint = [ 350 710 ], maxpoint = [ 550 900 ] },
 		resolution = [ 1 1 ],					# number of q points per pixel
 		nslices = 0								# max number of slices for slicing algorithm

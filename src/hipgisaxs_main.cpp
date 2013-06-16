@@ -5,7 +5,7 @@
   *
   *  File: hipgisaxs_main.cpp
   *  Created: Jun 14, 2012
-  *  Modified: Wed 10 Apr 2013 10:06:21 AM PDT
+  *  Modified: Fri 17 May 2013 01:33:17 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -202,7 +202,7 @@ namespace hig {
 					// 	+ get structure info
 					// 	+ construct lattice vectors
 					// 	+ construct the illuminated volume
-					// 	+ compute domain size
+					// 	+ compute grain size
 					//	+ construct rotation matrices
 
 		int mpi_rank = world_comm.Get_rank();
@@ -244,11 +244,11 @@ namespace hig {
 			return false;
 		} // if
 
-		/* domain cell size */
+		/* grain cell size */
 		vector3_t min_vec(0.0, 0.0, 0.0), max_vec(0.0, 0.0, 0.0);
 		float_t z_min_0 = 0.0, z_max_0 = 0.0;
 		if(!HiGInput::instance().compute_domain_size(min_vec, max_vec, z_min_0, z_max_0, mpi_rank)) {
-			if(mpi_rank == 0) std::cerr << "error: could not construct domain sizes" << std::endl;
+			if(mpi_rank == 0) std::cerr << "error: could not construct grain sizes" << std::endl;
 			return false;
 		} // if
 //		std::cout << "++ Domain min point: " << min_vec[0] << ", " << min_vec[1]
@@ -261,7 +261,7 @@ namespace hig {
 //					<< max_vec[2] - min_vec[2] << " ("
 //					<< z_max_0 - z_min_0 << ")" << std::endl;
 
-		// min_vec and max_vec are the domain
+		// min_vec and max_vec are the grain
 		cell_[0] = fabs(max_vec[0] - min_vec[0]);
 		cell_[1] = fabs(max_vec[1] - min_vec[1]);
 		cell_[2] = fabs(z_max_0 - z_min_0);
@@ -469,32 +469,23 @@ namespace hig {
 		complex_t *rk1 = NULL, *rk2 = NULL, *rk1rk2 = NULL, *tk1tk2 = NULL, *h0 = NULL;
 		if(!compute_propagation_coefficients(alphai, amm, apm, amp, app,
 											rk1, rk2, rk1rk2, tk1tk2, h0)) return false;
-		//printfc("amm", amm, nqx_ * nqy_ * nqz_);
-		//printfc("apm", apm, nqx_ * nqy_ * nqz_);
-		//printfc("amp", amp, nqx_ * nqy_ * nqz_);
-		//printfc("app", app, nqx_ * nqy_ * nqz_);
-		//printfc("rk1", rk1, nqx_ * nqy_ * nqz_);
-		//printfc("rk2", rk2, nqx_ * nqy_ * nqz_);
-		//printfc("rk1rk2", rk1rk2, nqx_ * nqy_ * nqz_);
-		//printfc("tk1tk2", tk1tk2, nqx_ * nqy_ * nqz_);
-		//printfc("h0", h0, nqx_ * nqy_ * nqz_);
 
 		// initialize memory for struct_intensity, ff and sf
-		// TODO: eliminate struct_intensity for each struct ...
-		// can be reduced into just one ... come back ...
+		// TODO: improve ...
 		float_t* struct_intensity = new (std::nothrow) float_t[num_structures_ * nqx_ * nqy_ * nqz_];
+		complex_t* c_struct_intensity = new (std::nothrow) complex_t[num_structures_ * nqx_ * nqy_ * nqz_];
 
-		/* loop over all structures and domains/grains */
+		/* loop over all structures and grains/grains */
 		// these are also a level of parallelism for dynamicity ...
 		int s_num = 0;
 		for(structure_iterator_t s = HiGInput::instance().structure_begin();
 				s != HiGInput::instance().structure_end(); ++ s, ++ s_num) {
 			// get all repetitions of the structure in the volume
 			// with position dr and orientation (tau, eta)
-			// i.e. compute matrix that defines all num_domains grains inside the volume
+			// i.e. compute matrix that defines all num_grains grains inside the volume
 			// distr = [ drx_i dry_i drz_i  tau_i eta_i ] (NDISTR x 5 )
 			// get params of the shape repeated in this structure: [dn2, id, dims, invar, t, seta, stau]
-			// allocate id(nqy, nqz, num_domains)
+			// allocate id(nqy, nqz, num_grains)
 
 			// get the shape
 			// compute t, lattice, ndoms, dd, nn, id etc.
@@ -510,7 +501,7 @@ namespace hig {
 
 			vector3_t grain_repeats = (*s).second.grain_repetition();
 
-			int num_domains = 0;
+			int num_grains = 0;
 			int num_nn = 0;
 			float_t *dd = NULL, *nn = NULL;		// come back to this ...
 												// these structures can be improved ...
@@ -521,31 +512,31 @@ namespace hig {
 			spatial_distribution(s, tz, num_dimen, ndx, ndy, dd);
 			orientation_distribution(s, dd, ndx, ndy, nn);
 			num_nn = ndx;
-			num_domains = num_nn;
+			num_grains = num_nn;
 
 			int r1axis = (int) (*s).second.rotation_rot1()[0];
 			int r2axis = (int) (*s).second.rotation_rot2()[0];
 			int r3axis = (int) (*s).second.rotation_rot3()[0];
 
 			if(mpi_rank == 0) {
-				std::cout << "-- Grains: " << num_domains << std::endl;
+				std::cout << "-- Grains: " << num_grains << std::endl;
 			} // if
 
 			//std::cout << "DD: " << std::endl;
-			//for(unsigned int d = 0; d < num_domains; ++ d) {
-			//	std::cout << dd[d] << "\t" << dd[num_domains + d] << "\t" << dd[num_domains * 2 + d]
+			//for(unsigned int d = 0; d < num_grains; ++ d) {
+			//	std::cerr << dd[d] << "\t" << dd[num_grains + d] << "\t" << dd[num_grains * 2 + d]
 			//				<< std::endl;
 			//} // for*/
 
 			complex_t *id = NULL;		// TODO: come back and improve ...
-										// eliminate id for each domain ...
+										// eliminate id for each grain ...
 										// this can be reduced on the fly to reduce mem usage ...
-			id = new (std::nothrow) complex_t[num_domains * nqx_ * nqy_ * nqz_];
+			id = new (std::nothrow) complex_t[num_grains * nqx_ * nqy_ * nqz_];
 			if(id == NULL) {
 				if(mpi_rank == 0) std::cerr << "error: could not allocate memory for 'id'" << std::endl;
 				return false;
 			} // if
-			memset(id, 0 , num_domains * nqx_ * nqy_ * nqz_ * sizeof(complex_t));	// initialize to 0
+			memset(id, 0 , num_grains * nqx_ * nqy_ * nqz_ * sizeof(complex_t));	// initialize to 0
 
 			vector3_t curr_transvec = (*s).second.grain_transvec();
 			if(HiGInput::instance().param_nslices() <= 1) {
@@ -560,16 +551,16 @@ namespace hig {
 			shape_param_list_t shape_params = HiGInput::instance().shape_params((*s).second);
 
 			/* computing dwba ff for each grain in structure (*s) with
-			 * ensemble containing num_domains grains */
-			for(int j = 0; j < num_domains; j ++) {	// or distributions
+			 * ensemble containing num_grains grains */
+			for(int j = 0; j < num_grains; j ++) {	// or distributions
 
 				if(mpi_rank == 0) {
-					std::cout << "-- Processing grain " << j + 1 << " / " << num_domains << " ..."
+					std::cout << "-- Processing grain " << j + 1 << " / " << num_grains << " ..."
 								<< std::endl;
 				} // if
 
-				// define r_norm (domain orientation by tau and eta)
-				// define full domain rotation matrix r_total = r_phi * r_norm
+				// define r_norm (grain orientation by tau and eta)
+				// define full grain rotation matrix r_total = r_phi * r_norm
 				// TODO: ... i think these tau eta zeta can be computed on the fly to save memory ...
 				//float_t tau = nn[0 * num_nn + j];
 				//float_t eta = nn[1 * num_nn + j];
@@ -636,10 +627,16 @@ namespace hig {
 
 				/* center of unit cell replica */
 				//vector3_t curr_dd_vec(dd[3 * j + 0], dd[3 * j + 1], dd[3 * j + 2]);
-				vector3_t curr_dd_vec(dd[j + 0], dd[j + num_domains], dd[j + 2 * num_domains]);
+				vector3_t curr_dd_vec(dd[j + 0], dd[j + num_grains], dd[j + 2 * num_grains]);
 				vector3_t result(0.0, 0.0, 0.0);
+				//std::cerr << "============ dd: " << curr_dd_vec[0] << ","
+				//			<< curr_dd_vec[1] << "," << curr_dd_vec[2] << std::endl;
+
 				mat_mul_3x1(rotation_matrix_.r1_, rotation_matrix_.r2_, rotation_matrix_.r3_,
 							curr_dd_vec, result);
+				//std::cerr << "::::::::::::::::: " << result[0] << "," << result[1] << "," << result[2]
+				//			<< " ::::::: " << curr_transvec[0] << "," << curr_transvec[1] << ","
+				//			<< curr_transvec[2] << std::endl;
 				vector3_t center = result + curr_transvec;
 
 				/*std::cout << "ROT MAT: " << std::endl;
@@ -783,39 +780,20 @@ namespace hig {
 
 				ff_.clear();
 				sf_.clear();
-			} // for num_domains
+			} // for num_grains
 
 			delete[] nn;
 			delete[] dd;
 
-			// for testing
-			/*std::ofstream f("id.out");
-			for(unsigned int z = 0; z < nqz_; ++ z) {
-				for(unsigned int y = 0; y < nqy_; ++ y) {
-					for(unsigned int x = 0; x < nqx_; ++ x) {
-						unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
-						f << id[index].real() << "\t" << id[index].imag() << std::endl;
-					} // for
-					f << std::endl;
-				} // for
-				f << std::endl;
-			} // for
-			f.close(); */
-
-			//printfc("id", id, nqx_ * nqy_ * nqz_);
-
-			// in slim's code, this is inside num_domains loop ...
-			// i think it should be outside because it is summing
-			// over the 4th dimension which is the set of domains/grains ...
 			if(mpi_rank == 0) {
-				if(corr_doms == 1) {		// note: currently this is hardcoded as 0
+				/*if(corr_doms == 1) {		// note: currently this is hardcoded as 0
 					unsigned int soffset = s_num * nqx_ * nqy_ * nqz_;
 					for(unsigned int z = 0; z < nqz_; ++ z) {
 						for(unsigned int y = 0; y < nqy_; ++ y) {
 							for(unsigned int x = 0; x < nqx_; ++ x) {
 								unsigned int curr_index = nqx_ * nqy_ * z + nqx_ * y + x;
 								complex_t sum(0.0, 0.0);
-								for(int d = 0; d < num_domains; ++ d) {
+								for(int d = 0; d < num_grains; ++ d) {
 									unsigned int id_index = d * nqx_ * nqy_ * nqz_ + curr_index;
 									sum += id[id_index];
 								} // for d
@@ -831,7 +809,7 @@ namespace hig {
 							for(unsigned int x = 0; x < nqx_; ++ x) {
 								unsigned int curr_index = nqx_ * nqy_ * z + nqx_ * y + x;
 								float_t sum = 0.0;
-								for(int d = 0; d < num_domains; ++ d) {
+								for(int d = 0; d < num_grains; ++ d) {
 									unsigned int id_index = d * nqx_ * nqy_ * nqz_ + curr_index;
 									sum += id[id_index].real() * id[id_index].real() +
 											id[id_index].imag() * id[id_index].imag();
@@ -840,36 +818,94 @@ namespace hig {
 							} // for x
 						} // for y
 					} // for z
-				} // if-else
-			} // if mpi_rank == 0
+				} // if-else*/
 
-			//printfr("struct_intensity", struct_intensity, nqx_ * nqy_ * nqz_);
+
+				// new stuff for grain/ensemble correlation
+				unsigned int soffset = 0;
+				switch(HiGInput::instance().param_structcorrelation()) {
+					case structcorr_null:	// default
+					case structcorr_nGnE:	// no correlation
+						// struct_intensity = sum_grain(abs(grain_intensity)^2)
+						// intensity = sum_struct(struct_intensity)
+						soffset = s_num * nqx_ * nqy_ * nqz_;
+						for(unsigned int z = 0; z < nqz_; ++ z) {
+							for(unsigned int y = 0; y < nqy_; ++ y) {
+								for(unsigned int x = 0; x < nqx_; ++ x) {
+									unsigned int curr_index = nqx_ * nqy_ * z + nqx_ * y + x;
+									float_t sum = 0.0;
+									for(int d = 0; d < num_grains; ++ d) {
+										unsigned int id_index = d * nqx_ * nqy_ * nqz_ + curr_index;
+										sum += id[id_index].real() * id[id_index].real() +
+												id[id_index].imag() * id[id_index].imag();
+									} // for d
+									struct_intensity[soffset + curr_index] = sum;
+								} // for x
+							} // for y
+						} // for z
+						break;
+
+					case structcorr_nGE:	// non corr grains, corr ensemble
+						// grain_intensity = abs(sum_struct(struct_intensity))^2
+						// intensity = sum_grain(grain_itensity)
+						// TODO ...
+						std::cerr << "uh-oh: this nGE correlation is not yet implemented" << std::endl;
+						return false;
+						break;
+
+					case structcorr_GnE:	// corr grains, non corr ensemble
+						// struct_intensity = abs(sum_grain(grain_intensity))^2
+						// intensty = sum_struct(struct_intensity)
+						soffset = s_num * nqx_ * nqy_ * nqz_;
+						for(unsigned int z = 0; z < nqz_; ++ z) {
+							for(unsigned int y = 0; y < nqy_; ++ y) {
+								for(unsigned int x = 0; x < nqx_; ++ x) {
+									unsigned int curr_index = nqx_ * nqy_ * z + nqx_ * y + x;
+									complex_t sum(0.0, 0.0);
+									for(int d = 0; d < num_grains; ++ d) {
+										unsigned int id_index = d * nqx_ * nqy_ * nqz_ + curr_index;
+										sum += id[id_index];
+									} // for d
+									struct_intensity[soffset + curr_index] = sum.real() * sum.real() +
+																				sum.imag() * sum.imag();
+								} // for x
+							} // for y
+						} // for z
+						break;
+
+					case structcorr_GE:		// both correlated
+						// struct_intensity = sum_grain(grain_intensity)
+						// intensity = abs(sum_struct(struct_intensity))^2
+						soffset = s_num * nqx_ * nqy_ * nqz_;
+						for(unsigned int z = 0; z < nqz_; ++ z) {
+							for(unsigned int y = 0; y < nqy_; ++ y) {
+								for(unsigned int x = 0; x < nqx_; ++ x) {
+									unsigned int curr_index = nqx_ * nqy_ * z + nqx_ * y + x;
+									complex_t sum(0.0, 0.0);
+									for(int d = 0; d < num_grains; ++ d) {
+										unsigned int id_index = d * nqx_ * nqy_ * nqz_ + curr_index;
+										sum += id[id_index];
+									} // for d
+									c_struct_intensity[soffset + curr_index] = sum;
+								} // for x
+							} // for y
+						} // for z
+						break;
+
+					default:				// error
+						std::cerr << "error: unknown correlation type." << std::endl;
+						return false;
+				} // switch
+			} // if mpi_rank == 0
 
 			delete[] id;
 		} // for num_structs
 		int num_structs = s_num;
 
-		// for testing
-		/*std::ofstream fs("structure_intensity.out");
-		for(unsigned int z = 0; z < nqz_; ++ z) {
-			for(unsigned int y = 0; y < nqy_; ++ y) {
-				for(unsigned int x = 0; x < nqx_; ++ x) {
-					unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
-					fs << struct_intensity[index] << "\t0.0"	<< std::endl;
-				} // for
-				fs << std::endl;
-			} // for
-			fs << std::endl;
-		} // for
-		fs.close();*/
-
-		// TODO: arrays struct_intensity and id etc can be eliminated/reduced in size to nqx*nqy*nqz only
-		// ...
-
 		if(mpi_rank == 0) {
 			img3d = new (std::nothrow) float_t[nqx_ * nqy_ * nqz_];
 			// sum of all struct_intensity into intensity
-			for(unsigned int z = 0; z < nqz_; ++ z) {
+			/*for(unsigned int z = 0; z < nqz_; ++ z) {
 				for(unsigned int y = 0; y < nqy_; ++ y) {
 					for(unsigned int x = 0; x < nqx_; ++ x) {
 						unsigned int curr_index = nqx_ * nqy_ * z + nqx_ * y + x;
@@ -881,9 +917,81 @@ namespace hig {
 						img3d[curr_index] = sum;
 					} // for x
 				} // for y
-			} // for z
+			} // for z*/
+
+			// new stuff for correlation
+			switch(HiGInput::instance().param_structcorrelation()) {
+				case structcorr_null:	// default
+				case structcorr_nGnE:	// no correlation
+					// struct_intensity = sum_grain(abs(grain_intensity)^2)
+					// intensity = sum_struct(struct_intensity)
+					for(unsigned int z = 0; z < nqz_; ++ z) {
+						for(unsigned int y = 0; y < nqy_; ++ y) {
+							for(unsigned int x = 0; x < nqx_; ++ x) {
+								unsigned int curr_index = nqx_ * nqy_ * z + nqx_ * y + x;
+								float_t sum = 0.0;
+								for(int s = 0; s < num_structs; ++ s) {
+									unsigned int index = s * nqx_ * nqy_ * nqz_ + curr_index;
+									sum += struct_intensity[index];
+								} // for d
+								img3d[curr_index] = sum;
+							} // for x
+						} // for y
+					} // for z
+					break;
+
+				case structcorr_nGE:	// non corr grains, corr ensemble
+					// grain_intensity = abs(sum_struct(struct_intensity))^2
+					// intensity = sum_grain(grain_itensity)
+					// TODO ...
+					std::cerr << "uh-oh: this nGE correlation is not yet implemented" << std::endl;
+					return false;
+					break;
+
+				case structcorr_GnE:	// corr grains, non corr ensemble
+					// struct_intensity = abs(sum_grain(grain_intensity))^2
+					// intensty = sum_struct(struct_intensity)
+					for(unsigned int z = 0; z < nqz_; ++ z) {
+						for(unsigned int y = 0; y < nqy_; ++ y) {
+							for(unsigned int x = 0; x < nqx_; ++ x) {
+								unsigned int curr_index = nqx_ * nqy_ * z + nqx_ * y + x;
+								float_t sum = 0.0;
+								for(int s = 0; s < num_structs; ++ s) {
+									unsigned int index = s * nqx_ * nqy_ * nqz_ + curr_index;
+									sum += struct_intensity[index];
+								} // for d
+								img3d[curr_index] = sum;
+							} // for x
+						} // for y
+					} // for z
+					break;
+
+				case structcorr_GE:		// both correlated
+					// struct_intensity = sum_grain(grain_intensity)
+					// intensity = abs(sum_struct(struct_intensity))^2
+					for(unsigned int z = 0; z < nqz_; ++ z) {
+						for(unsigned int y = 0; y < nqy_; ++ y) {
+							for(unsigned int x = 0; x < nqx_; ++ x) {
+								unsigned int curr_index = nqx_ * nqy_ * z + nqx_ * y + x;
+								complex_t sum = 0.0;
+								for(int s = 0; s < num_structs; ++ s) {
+									unsigned int index = s * nqx_ * nqy_ * nqz_ + curr_index;
+									sum += c_struct_intensity[index];
+								} // for d
+								img3d[curr_index] = sum.real() * sum.real() + sum.imag() * sum.imag();
+							} // for x
+						} // for y
+					} // for z
+					break;
+
+				default:				// error
+					std::cerr << "error: unknown correlation type." << std::endl;
+					return false;
+			} // switch
+
 		} // if mpi_rank == 0
 
+		delete[] c_struct_intensity;
 		delete[] struct_intensity;
 		delete[] fc_;
 
@@ -1280,8 +1388,8 @@ namespace hig {
 		if(distribution == "random") {
 			srand(time(NULL));
 			if(dim == 3) {
-				// find max density - number of domains in vol
-				vector3_t max_density = min(floor(vol_ / cell_) + 1, maxgrains);
+				// find max density - number of grains in vol
+				vector3_t max_density = min(floor(vol_ / spaced_cell) + 1, maxgrains);
 				rand_dim_x = max(1, (int)std::floor(max_density[0] * max_density[1] * max_density[2] / 4.0));
 				rand_dim_y = 3;
 
@@ -1296,86 +1404,51 @@ namespace hig {
 				float_t mul_val1 = vol_[0] / 2;
 				float_t mul_val2 = vol_[1] / 2;
 				float_t mul_val3 = vol_[2];
-				/*int y = 0;
-				for(int x = 0; x < rand_dim_x; ++ x) {	// d1
-					d[4 * rand_dim_x * y + x] = d_rand[rand_dim_x * y + x] * mul_val1;
-				} // for x
-				for(int x = 0; x < rand_dim_x; ++ x) {	// d2
-					d[4 * rand_dim_x * y + rand_dim_x + x] = d_rand[rand_dim_x * y + x] * mul_val1 * -1.0;
-				} // for x
-				for(int x = 0; x < rand_dim_x; ++ x) {	// d3
-					d[4 * rand_dim_x * y + 2 * rand_dim_x + x] = d_rand[rand_dim_x * y + x] * mul_val1;
-				} // for x
-				for(int x = 0; x < rand_dim_x; ++ x) {	// d4
-					d[4 * rand_dim_x * y + 3 * rand_dim_x + x] = d_rand[rand_dim_x * y + x] * mul_val1 * -1.0;
-				} // for x
-				y = 1;
-				for(int x = 0; x < rand_dim_x; ++ x) {	// d1
-					d[4 * rand_dim_x * y + x] = d_rand[rand_dim_x * y + x] * mul_val2;
-				} // for x
-				for(int x = 0; x < rand_dim_x; ++ x) {	// d2
-					d[4 * rand_dim_x * y + rand_dim_x + x] = d_rand[rand_dim_x * y + x] * mul_val2;
-				} // for x
-				for(int x = 0; x < rand_dim_x; ++ x) {	// d3
-					d[4 * rand_dim_x * y + 2 * rand_dim_x + x] = d_rand[rand_dim_x * y + x] * mul_val2 * -1.0;
-				} // for x
-				for(int x = 0; x < rand_dim_x; ++ x) {	// d4
-					d[4 * rand_dim_x * y + 3 * rand_dim_x + x] = d_rand[rand_dim_x * y + x] * mul_val2 * -1.0;
-				} // for x
-				y = 2;
-				for(int x = 0; x < rand_dim_x; ++ x) {	// d1
-					d[4 * rand_dim_x * y + x] = d_rand[rand_dim_x * y + x] * mul_val3 + tz;
-				} // for x
-				for(int x = 0; x < rand_dim_x; ++ x) {	// d2
-					d[4 * rand_dim_x * y + rand_dim_x + x] = d_rand[rand_dim_x * y + x] * mul_val3 + tz;
-				} // for x
-				for(int x = 0; x < rand_dim_x; ++ x) {	// d3
-					d[4 * rand_dim_x * y + 2 * rand_dim_x + x] = d_rand[rand_dim_x * y + x] * mul_val3 + tz;
-				} // for x
-				for(int x = 0; x < rand_dim_x; ++ x) {	// d4
-					d[4 * rand_dim_x * y + 3 * rand_dim_x + x] = d_rand[rand_dim_x * y + x] * mul_val3 + tz;
-				} // for x*/
 
 				// D0
 				if(maxgrains[0] == 1) {
-					for(int x = 0; x < rand_dim_x; ++ x) d[rand_dim_y * x] = 0;
+					for(int x = 0; x < rand_dim_x; ++ x) d[x] = 0;
 				} else {
 					for(int x = 0; x < rand_dim_x; ++ x)
-						d[rand_dim_y * x] = d_rand[rand_dim_y * x] * mul_val1;
+						d[x] = d_rand[x] * mul_val1;
 				} // if-else
 				if(maxgrains[1] == 1) {
-					for(int x = 0; x < rand_dim_x; ++ x) d[rand_dim_y * x + 1] = 0;
+					for(int x = 0; x < rand_dim_x; ++ x) d[4 * rand_dim_x + x] = 0;
 				} else {
 					for(int x = 0; x < rand_dim_x; ++ x)
-						d[rand_dim_y * x + 1] = d_rand[rand_dim_y * x + 1] * mul_val2;
+						d[4 * rand_dim_x + x] = d_rand[rand_dim_x + x] * mul_val2;
 				} // if-else
 				if(maxgrains[2] == 1) {
-					for(int x = 0; x < rand_dim_x; ++ x) d[rand_dim_y * x + 2] = tz;
+					for(int x = 0; x < rand_dim_x; ++ x) d[8 * rand_dim_x + x] = tz;
 				} else {
 					for(int x = 0; x < rand_dim_x; ++ x)
-						d[rand_dim_y * x + 2] = d_rand[rand_dim_y * x + 2] * mul_val3 + tz;
+						d[8 * rand_dim_x + x] = d_rand[2 * rand_dim_x + x] * mul_val3 + tz;
 				} // if-else
 				// D1
 				for(int x = 0; x < rand_dim_x; ++ x)
-					d[rand_dim_x * rand_dim_y + rand_dim_y * x] = - d[rand_dim_y * x];
+					d[rand_dim_x + x] = - d[x];
 				for(int x = 0; x < rand_dim_x; ++ x)
-					d[rand_dim_x * rand_dim_y + rand_dim_y * x + 1] = d[rand_dim_y * x + 1];
+					d[4 * rand_dim_x + rand_dim_x + x] = d[4 * rand_dim_x + x];
 				for(int x = 0; x < rand_dim_x; ++ x)
-					d[rand_dim_x * rand_dim_y + rand_dim_y * x + 2] = d[rand_dim_y * x + 2];
+					d[8 * rand_dim_x + rand_dim_x + x] = d[8 * rand_dim_x + x];
 				// D2
 				for(int x = 0; x < rand_dim_x; ++ x)
-					d[2 * rand_dim_x * rand_dim_y + rand_dim_y * x] = d[rand_dim_y * x];
+					d[2 * rand_dim_x + x] = d[x];
 				for(int x = 0; x < rand_dim_x; ++ x)
-					d[2 * rand_dim_x * rand_dim_y + rand_dim_y * x + 1] = - d[rand_dim_y * x + 1];
+					d[4 * rand_dim_x + 2 * rand_dim_x + x] = - d[4 * rand_dim_x + x];
 				for(int x = 0; x < rand_dim_x; ++ x)
-					d[2 * rand_dim_x * rand_dim_y + rand_dim_y * x + 2] = d[rand_dim_y * x + 2];
+					d[8 * rand_dim_x + 2 * rand_dim_x + x] = d[8 * rand_dim_x + x];
 				// D3
 				for(int x = 0; x < rand_dim_x; ++ x)
-					d[3 * rand_dim_x * rand_dim_y + rand_dim_y * x] = - d[rand_dim_y * x];
+					d[3 * rand_dim_x + x] = - d[x];
 				for(int x = 0; x < rand_dim_x; ++ x)
-					d[3 * rand_dim_x * rand_dim_y + rand_dim_y * x + 1] = - d[rand_dim_y * x + 1];
+					d[4 * rand_dim_x + 3 * rand_dim_x + x] = - d[4 * rand_dim_x + x];
 				for(int x = 0; x < rand_dim_x; ++ x)
-					d[3 * rand_dim_x * rand_dim_y + rand_dim_y * x + 2] = d[rand_dim_y * x + 2];
+					d[8 * rand_dim_x + 3 * rand_dim_x + x] = d[8 * rand_dim_x + x];
+
+				// fix the rand_dim_x
+				rand_dim_x *= 4;
+
 			} else if(dim == 2) {
 				std::cerr << "error: dim == 2 case not implemented" << std::endl;
 				// ...

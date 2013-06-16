@@ -5,7 +5,7 @@
   *
   *  File: ff_ana_gpu.cuh
   *  Created: Oct 16, 2012
-  *  Modified: Fri 22 Feb 2013 12:24:51 PM PST
+  *  Modified: Mon 06 May 2013 05:13:40 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -28,15 +28,29 @@ namespace hig {
 
 			// device buffers
 
+			float_t* transvec_;
+			float_t* rot_;
+
 			float_t* qx_;
 			float_t* qy_;
 			cucomplex_t* qz_;
 			cucomplex_t* ff_;
 
-			float_t* transvec_;
-			float_t* rot_;
+			unsigned int b_nqx_;		// hyperblock size
+			unsigned int b_nqy_;
+			unsigned int b_nqz_;
+			unsigned int nb_x_;
+			unsigned int nb_y_;
+			unsigned int nb_z_;
+			cucomplex_t* ff_buff_d_;	// device buffer
+			cucomplex_t* ff_buff_h_;	// host buffer
 
 			bool construct_output_ff(std::vector<complex_t>&);
+			bool compute_hyperblock_size(unsigned int, unsigned int);
+			bool move_ff_buff_to_host_ff(std::vector<complex_t>&,
+								unsigned int, unsigned int, unsigned int,
+								unsigned int, unsigned int, unsigned int,
+								int, int, int);
 
 		public:
 			AnalyticFormFactorG(unsigned int, unsigned int, unsigned int);
@@ -45,6 +59,7 @@ namespace hig {
 
 			bool init(unsigned int, unsigned int, unsigned int);
 			bool run_init(const float_t*, const std::vector<float_t>&);
+			bool run_init(const float_t*, const std::vector<float_t>&, std::vector<complex_t>&);
 			bool clear();
 			bool destroy();
 

@@ -5,7 +5,7 @@
   *
   *  File: ff_num.cpp
   *  Created: Jul 18, 2012
-  *  Modified: Tue 23 Apr 2013 11:25:24 AM PDT
+  *  Modified: Fri 03 May 2013 02:04:19 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -15,8 +15,8 @@
 #include <mpi.h>
 #include <cmath>
 #include <cstring>
-#ifdef __SSE3__
-#include <malloc.h>
+#if (defined(__SSE3__) || defined(INTEL_SB_AVX)) && !defined(USE_GPU)
+	#include <malloc.h>
 #endif
 
 #include "woo/timer/woo_boostchronotimers.hpp"
@@ -65,11 +65,11 @@ namespace hig {
 		#ifndef __SSE3__
 			float_vec_t shape_def;
 		#else
-			//#ifdef USE_MIC
-			//	float_vec_t shape_def;
-			//#else
+			#ifdef USE_GPU
+				float_vec_t shape_def;
+			#else
 				float_t* shape_def = NULL;
-			//#endif
+			#endif
 		#endif
 		// use the new file reader instead ...
 		unsigned int num_triangles = read_shapes_hdf5(filename, shape_def, world_comm);
@@ -324,15 +324,34 @@ namespace hig {
 			mem_time += mem_end - mem_start;
 	
 			if(rank == 0) {
-				std::cout << "**               FF compute time: " << computetimer.elapsed_msec() << " ms."							<< std::endl
-						//<< "**                FF kernel time: " << kernel_time << " ms." << std::endl
-						//<< "**             FF reduction time: " << red_time << " ms." << std::endl
+				std::cout
+						<< "**                FF kernel time: " << kernel_time << " ms." << std::endl
+						<< "**               FF compute time: " << computetimer.elapsed_msec() << " ms."
+						<< std::endl
 						<< "**         FF memory and IO time: " << mem_time * 1000 << " ms." << std::endl
 						<< "**            Communication time: " << comm_time * 1000 << " ms." << std::endl
-						//<< "**                 Total FF time: " << total_time * 1000 << " ms."
-						//<< " (" << total_end << " - " << total_start << ")" << std::endl
 						<< "**                 Total FF time: " << maintimer.elapsed_msec() << " ms."
 						<< std::endl << std::flush;
+
+				double mflop = 0.0; float_t gflops = 0.0;
+
+				#ifdef USE_GPU
+					// flop count for GPU
+					mflop = (double) nqx * nqy * nqz * (42 * num_triangles + 2) / 1000000;
+				#elif defined USE_MIC
+					// flop count for MIC
+					mflop = (double) nqx * nqy * nqz * (78 * num_triangles + 18) / 1000000;
+					//mflop = (double) p_nqx * p_nqy * p_nqz * ( 78 * num_triangles + 18) / 1000000;
+				#elif defined INTEL_SB_AVX
+					// flop count for Sandy Bridge with AVX
+					mflop = (double) nqx * nqy * nqz * (85 * num_triangles + 16) / 1000000;
+				#else
+					// flop count for SSE3 CPU (hopper)
+					mflop = (double) nqx * nqy * nqz * (68 * num_triangles + 20) / 1000000;
+				#endif
+				//gflops = nidle_num_procs * mflop / kernel_time;
+				gflops = mflop / kernel_time;
+				std::cout << "**            Kernel performance: " << gflops << " GFLOPS/s" << std::endl;
 			} // if
 		} // if
 
@@ -614,11 +633,11 @@ namespace hig {
 													#ifndef __SSE3__
 														float_vec_t &shape_def,
 													#else
-														//#ifdef USE_MIC
-														//	float_vec_t &shape_def,
-														//#else
+														#ifdef USE_GPU
+															float_vec_t &shape_def,
+														#else
 															float_t* &shape_def,
-														//#endif
+														#endif
 													#endif
 													MPI::Intracomm& comm) {
 		unsigned int num_triangles = 0;
@@ -638,31 +657,53 @@ namespace hig {
 		//#elif defined USE_MIC	// using MIC
 		//	for(unsigned int i = 0; i < num_triangles * 7; ++ i)
 		//		shape_def.push_back((float_t)temp_shape_def[i]);
-		#else					// using CPU
+		#else					// using CPU or MIC
 			#ifndef __SSE3__
 				for(unsigned int i = 0, j = 0; i < num_triangles * CPU_T_PROP_SIZE_; ++ i) {
 					if((i + 1) % CPU_T_PROP_SIZE_ == 0) shape_def.push_back((float_t) 0.0);	// padding
 					else { shape_def.push_back((float_t)temp_shape_def[j]); ++ j; }
 				} // for
 			#else		// using SSE3, so store data differently: FOR CPU AND MIC (vectorization)
-				#ifndef USE_MIC		// generic cpu version with SSE3
-					// group all 's', 'nx', 'ny', 'nz', 'x', 'y', 'z' together
-					// for alignment at 16 bytes, make sure each of the 7 groups is padded
-					// compute amount of padding
-					// 16 bytes = 4 floats or 2 doubles. FIXME: assuming float only for now ...
-					unsigned int padding = (4 - (num_triangles & 3)) & 3;
-					unsigned int shape_size = (num_triangles + padding) * 7;
-					shape_def = (float_t*) _mm_malloc(shape_size * sizeof(float_t), 16);
-					if(shape_def == NULL) {
-						std::cerr << "error: failed to allocate aligned memory for shape_def" << std::endl;
-						return 0;
-					} // if
-					memset(shape_def, 0, shape_size * sizeof(float_t));
-					for(int i = 0; i < num_triangles; ++ i) {
-						for(int j = 0; j < 7; ++ j) {
-							shape_def[(num_triangles + padding) * j + i] = temp_shape_def[7 * i + j];
+				#ifndef USE_MIC		// generic cpu version with SSE3 or AVX
+					#ifdef INTEL_SB_AVX		// CPU version with AVX
+						// group all 's', 'nx', 'ny', 'nz', 'x', 'y', 'z' together
+						// for alignment at 32 bytes, make sure each of the 7 groups is padded
+						// compute amount of padding
+						// 32 bytes = 8 floats or 4 doubles. FIXME: assuming float only for now ...
+						unsigned int padding = (8 - (num_triangles & 7)) & 7;
+						unsigned int shape_size = (num_triangles + padding) * 7;
+						shape_def = (float_t*) _mm_malloc(shape_size * sizeof(float_t), 32);
+						if(shape_def == NULL) {
+							std::cerr << "error: failed to allocate aligned memory for shape_def"
+										<< std::endl;
+							return 0;
+						} // if
+						memset(shape_def, 0, shape_size * sizeof(float_t));
+						for(int i = 0; i < num_triangles; ++ i) {
+							for(int j = 0; j < 7; ++ j) {
+								shape_def[(num_triangles + padding) * j + i] = temp_shape_def[7 * i + j];
+							} // for
 						} // for
-					} // for
+					#else				// CPU version with SSE3
+						// group all 's', 'nx', 'ny', 'nz', 'x', 'y', 'z' together
+						// for alignment at 16 bytes, make sure each of the 7 groups is padded
+						// compute amount of padding
+						// 16 bytes = 4 floats or 2 doubles. FIXME: assuming float only for now ...
+						unsigned int padding = (4 - (num_triangles & 3)) & 3;
+						unsigned int shape_size = (num_triangles + padding) * 7;
+						shape_def = (float_t*) _mm_malloc(shape_size * sizeof(float_t), 16);
+						if(shape_def == NULL) {
+							std::cerr << "error: failed to allocate aligned memory for shape_def"
+										<< std::endl;
+							return 0;
+						} // if
+						memset(shape_def, 0, shape_size * sizeof(float_t));
+						for(int i = 0; i < num_triangles; ++ i) {
+							for(int j = 0; j < 7; ++ j) {
+								shape_def[(num_triangles + padding) * j + i] = temp_shape_def[7 * i + j];
+							} // for
+						} // for
+					#endif
 				#else	// optimized for MIC only: AVX2, 64 byte alignments (512-bit vector registers)
 						// FIXME: float only for now: 16 floats in one vector!
 					unsigned int padding = (16 - (num_triangles & 15)) & 15;

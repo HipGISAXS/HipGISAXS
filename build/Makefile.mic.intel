@@ -79,8 +79,8 @@ TIFF_INCL = -I $(TIFF_DIR)/include
 TIFF_LIBS = -L $(TIFF_DIR)/lib -ltiff
 
 ## papi stuff
-#PAPI_INCL = -I $(PAPI_DIR)/include
-#PAPI_LIBS = -L $(PAPI_DIR)/lib -lpapi
+PAPI_INCL = -I $(PAPI_DIR)/include
+PAPI_LIBS = -L $(PAPI_DIR)/lib -lpapi
 
 ## Intel MKL
 MKL_INCL = -I /opt/intel/composerxe/mkl/include
@@ -105,7 +105,9 @@ MISC_FLAGS = #-DAXIS_ROT
 
 ## stuff for CPU
 MISC_FLAGS += -DFF_NUM_CPU_FUSED
-#MISC_FLAGS += -DPROFILE_PAPI
+
+## stuff for papi profiling
+MISC_FLAGS += -DPROFILE_PAPI
 
 ## GPU related flags
 ifeq ($(USE_GPU), y)
@@ -124,9 +126,12 @@ endif
 ## MIC related flags
 ifeq ($(USE_MIC), y)
 MISC_FLAGS += -DUSE_MIC -DFF_MIC_OPT
-MISC_FLAGS += -DFF_NUM_MIC_SWAP
+MISC_FLAGS += -DFF_NUM_MIC_SWAP		## the kernel with triangles as inner loop
 MISC_FLAGS += -DFF_NUM_MIC_KB
-#MISC_FLAGS += -DMIC_PADDING	## goes out of memory on target
+#MISC_FLAGS += -DFF_NUM_MIC_AUTOTUNE_HB
+#MISC_FLAGS += -DMIC_PADDING	## very slow!!!
+## profiling related flags
+#MISC_FLAGS += -profile-functions -profile-loops=all -profile-loops-report=2
 endif
 
 MISC_FLAGS += -DTIME_DETAIL_1 -DTIME_DETAIL_2

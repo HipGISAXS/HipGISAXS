@@ -105,6 +105,15 @@ namespace hig {
 							const unsigned int, const unsigned int, const unsigned int, const unsigned int,
 							const unsigned int, const unsigned int, const unsigned int, const unsigned int,
 							cucomplex_t*);
+	/* K9-2: special case of K9 when curr_nqx == 1, with dynamic parallelism */
+	__global__ void form_factor_kernel_fused_dyn_nqx1(const float_t*, const float_t*, const cucomplex_t*,
+							const float_t*, const short int*,
+							const unsigned int, const unsigned int, const unsigned int, const unsigned int,
+							const unsigned int, const unsigned int, const unsigned int, const unsigned int,
+							const unsigned int, const unsigned int, const unsigned int, const unsigned int,
+							cucomplex_t*, cucomplex_t*);
+	/* K9-2: the child kernel */
+	__global__ void form_factor_kernel_innermost(const float_t*, const float_t*, const cucomplex_t*, const float_t*, cucomplex_t*);
 
 	__device__ cuFloatComplex compute_fq(float s, cuFloatComplex qt_d, cuFloatComplex qn_d);
 	__device__ cuDoubleComplex compute_fq(double s, cuDoubleComplex qt_d, cuDoubleComplex qn_d);
@@ -1571,7 +1580,7 @@ namespace hig {
 						float_t* &qy_h, int nqy,
 						cucomplex_t* &qz_h, int nqz,
 						int k,
-						float_t& pass_kernel_time, float_t& red_time, float_t& mem_time
+						float_t& kernel_time, float_t& red_time, float_t& mem_time
 						#ifdef FINDBLOCK
 							, const int block_x, const int block_y, const int block_z, const int block_t
 						#endif
@@ -1582,6 +1591,17 @@ namespace hig {
 			} // if
 			return 0;
 		} // if
+
+//		#if defined (__CUDA_ARCH__) && (__CUDA_ARCH__ > 300)
+//			cudaDeviceSetSharedMemConfig(cudaSharedMemBankSizeEightByte);
+//		#endif
+//		cudaSharedMemConfig smcfg;
+//		cudaDeviceGetSharedMemConfig(&smcfg);
+//		std::cout << "SHARED MEM CONFIG: " << smcfg
+//				#ifdef __CUDA_ARCH__
+//					<< " " << __CUDA_ARCH__
+//				#endif
+//					<< std::endl;
 
 		//nvtxRangeId_t nvtx0 = nvtxRangeStart("ff_kb_fused");
 		cudaProfilerStart();
@@ -1651,11 +1671,8 @@ namespace hig {
 		err = cudaMalloc((void**) &axes_d, k * sizeof(short int));
 		cudaMemcpyAsync(axes_d, axes_h, k * sizeof(short int), cudaMemcpyHostToDevice);
 		
-		unsigned long int matrix_size = (unsigned long int) nqx * nqy * nqz * num_triangles;
-		
 		cudaMemGetInfo(&device_mem_avail, &device_mem_total);
 		device_mem_used = device_mem_total - device_mem_avail;
-		size_t estimated_device_mem_need = matrix_size * sizeof(cucomplex_t) + device_mem_used;
 		if(rank == 0) {
 			std::cout << "++       Available device memory: "
 						<< (float) device_mem_avail / 1024 / 1024
@@ -1667,6 +1684,9 @@ namespace hig {
 	
 		// do hyperblocking
 		unsigned int b_nqx = 0, b_nqy = 0, b_nqz = 0, b_num_triangles = 0;
+		size_t estimated_device_mem_need = 3 * nqx * nqy * nqz * sizeof(cucomplex_t) +
+											(nqx + nqy) * sizeof(float_t) + nqz * sizeof(complex_t) +
+											T_PROP_SIZE_ * num_triangles * sizeof(float_t);
 		// this computes a hyperblock size
 		compute_hyperblock_size(nqx, nqy, nqz, num_triangles,
 								estimated_device_mem_need, device_mem_avail,
@@ -1690,6 +1710,11 @@ namespace hig {
 				for(unsigned int b_nqy_i = block_cuda_y_; b_nqy_i <= nqy; b_nqy_i += 10) {
 					for(unsigned int b_nqz_i = block_cuda_z_; b_nqz_i <= nqz; b_nqz_i += 10) {
 						for(unsigned int b_nt_i = 10; b_nt_i <= num_triangles; b_nt_i += 10) {
+							size_t dev_est_mem = 3 * b_nqx_i * b_nqy_i * b_nqz_i * sizeof(cucomplex_t) +
+												(nqx + nqy) * sizeof(float_t) + nqz * sizeof(complex_t) +
+												T_PROP_SIZE_ * num_triangles * sizeof(float_t);
+							if(dev_est_mem > device_mem_avail) continue;
+
 							at_kernel_timer.start();
 
 							// compute the number of sub-blocks, along each of the 4 dimensions
@@ -1708,9 +1733,15 @@ namespace hig {
 														sizeof(cucomplex_t) * block_cuda_z_;
 							size_t stat_shmem_size = 0;
 							size_t total_shmem_size = dyna_shmem_size + stat_shmem_size;
-							if(total_shmem_size > 49152) continue;
+							if(total_shmem_size > 49152) {
+								at_kernel_timer.stop();
+								continue;
+							} // if
 
 							unsigned int ff_size = b_nqx_i * b_nqy_i * b_nqz_i;
+
+							// calculate memory requirements and skip the infeasible ones
+							// ... TODO ...
 
 							form_factor_kernel_fused <<< ff_grid_size, ff_block_size, dyna_shmem_size >>> (
 									qx_d, qy_d, qz_d, shape_def_d, axes_d,
@@ -1945,13 +1976,25 @@ namespace hig {
 								} // if
 
 								if(b_nqx == 1) {
-									form_factor_kernel_fused_nqx1
-									<<< ff_grid_size, ff_block_size, dyna_shmem_size, stream[active] >>> (
-											qx_d, qy_d, qz_d, shape_def_d, axes_d,
-											curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles,
-											b_nqx, b_nqy, b_nqz, b_num_triangles,
-											ib_x, ib_y, ib_z, ib_t,
-											ff_double_d[active]);
+									#ifdef FF_NUM_GPU_DYNAMICP
+										cucomplex_t* fq;
+										//form_factor_kernel_fused_nqx1
+										form_factor_kernel_fused_dyn_nqx1
+										<<< ff_grid_size, ff_block_size, dyna_shmem_size, stream[active] >>> (
+												qx_d, qy_d, qz_d, shape_def_d, axes_d,
+												curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles,
+												b_nqx, b_nqy, b_nqz, b_num_triangles,
+												ib_x, ib_y, ib_z, ib_t,
+												ff_double_d[active], fq);
+									#else
+										form_factor_kernel_fused_nqx1
+										<<< ff_grid_size, ff_block_size, dyna_shmem_size, stream[active] >>> (
+												qx_d, qy_d, qz_d, shape_def_d, axes_d,
+												curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles,
+												b_nqx, b_nqy, b_nqz, b_num_triangles,
+												ib_x, ib_y, ib_z, ib_t,
+												ff_double_d[active]);
+									#endif
 								} else {
 									form_factor_kernel_fused
 									<<< ff_grid_size, ff_block_size, dyna_shmem_size, stream[active] >>> (
@@ -2046,12 +2089,11 @@ namespace hig {
 				cudaFree(ff_d);
 
 				fftimer.stop();
-				if(rank == 0) {
-					std::cout << "**                FF kernel time: " << fftimer.elapsed_msec() << " ms."
-								<< std::endl;
-					//std::cout << "**                  FF move time: " << ff_move_time << " ms."
-					//			<< std::endl;
-				} // if
+				kernel_time = fftimer.elapsed_msec();
+				//if(rank == 0) {
+				//	std::cout << "**                FF kernel time: " << fftimer.elapsed_msec() << " ms."
+				//				<< std::endl;
+				//} // if
 			} // if-else
 			if(ff_buffer != NULL) cudaFreeHost(ff_buffer);
 		} // if-else
@@ -2061,7 +2103,6 @@ namespace hig {
 		cudaFree(qy_d);
 		cudaFree(qx_d);
 	
-		pass_kernel_time = 0.0;
 		red_time = 0.0;
 		mem_time = 0.0;
 

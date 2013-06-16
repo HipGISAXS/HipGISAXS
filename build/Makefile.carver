@@ -1,4 +1,6 @@
 ##
+# $Id: Makefile 35 2012-08-09 18:29:50Z asarje $
+#
 # Project: HipGISAXS
 #
 # File: Makefile
@@ -14,26 +16,25 @@ USE_NUM_GPU = n
 USE_MIC = n
 
 ## base directories
-#BOOST_DIR = $(BOOST_DIR)
-MPI_DIR = $(CRAY_MPICH2_DIR)
-HDF5_DIR = $(HOME)/local/hdf5-1.8.9-edison-intel
-#Z_DIR = #/usr/local/zlib-1.2.7
-#SZ_DIR = #/usr/local/szip-2.1
-TIFF_DIR = $(HOME)/local/tiff-4.0.2-edison-intel
-ifeq ($(USE_GPU), y)
-CUDA_DIR = $(CRAY_CUDATOOLKIT_DIR)
-endif
+#BOOST_DIR = /global/homes/a/asarje/local/boost_1_49_0
+MPI_DIR = $(OMPI_DIR)
+#CUDA_DIR = $(CUDA_PATH)
+HDF5_DIR = /usr/common/usg/hdf5/1.8.9/gcc/parallel
+#Z_DIR = $(ZLIB_DIR)
+#SZ_DIR = $(SZIP_DIR)
+#TIFF_DIR = $(TIFF_DIR)
 
 ## compilers
-CXX = CC #tau_cxx.sh #CC
-H5CC = cc
+CXX = $(MPI_DIR)/bin/mpicxx
+H5CC = $(HDF5_DIR)/bin/h5pcc
 ifeq ($(USE_GPU), y)
-NVCC = nvcc
+NVCC = $(CUDA_DIR)/bin/nvcc
 endif
 
 ## compiler flags
 CXX_FLAGS = -std=c++0x #-Wall -Wextra
-CXX_FLAGS += -openmp -m64
+CXX_FLAGS += -fopenmp -m64
+#CXX_FLAGS += -lgsl -lgslcblas -lm #-v
 CXX_FLAGS += -lm #-v
 ## gnu c++ compilers >= 4.3 support -std=c++0x [requirement for hipgisaxs 4.3.x <= g++ <= 4.6.x]
 ## gnu c++ compilers >= 4.7 also support -std=c++11, but they are not supported by cuda
@@ -43,14 +44,14 @@ BOOST_INCL = -I $(BOOST_DIR)/include -I $(HOME)/local/boost_1_49_0/include
 BOOST_LIBS = -L $(BOOST_DIR)/lib -lboost_system -lboost_filesystem -lboost_timer -lboost_chrono
 
 ## parallel hdf5
-HDF5_INCL = -I$(HDF5_DIR)/include
-HDF5_LIBS += -L$(HDF5_DIR)/lib -lhdf5 -lz
+HDF5_INCL = -I$(HDF5_DIR)/include -I$(SZ_DIR)/include -I$(Z_DIR)/include
+HDF5_LIBS = -L$(HDF5_DIR)/lib -lhdf5 -lz
 HDF5_FLAGS = -Wl,-rpath -Wl,$(HDF5_DIR)/lib
 HDF5_FLAGS += -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -D_POSIX_SOURCE -D_BSD_SOURCE
 
 ## mpi (openmpi)
 MPI_INCL = -I $(MPI_DIR)/include
-MPI_LIBS = -L $(MPI_DIR)/lib -lmpichcxx -lmpich
+MPI_LIBS = -L $(MPI_DIR)/lib -lmpi_cxx -lmpi
 
 ## cuda
 ifeq ($(USE_GPU), y)
@@ -63,8 +64,8 @@ NVCC_FLAGS += -gencode arch=compute_20,code=sm_21
 NVCC_FLAGS += -gencode arch=compute_30,code=sm_30
 NVCC_FLAGS += -gencode arch=compute_35,code=sm_35
 #NVCC_FLAGS += -Xptxas -v -Xcompiler -v -Xlinker -v
-NVCC_FLAGS += --ptxas-options="-v"
-NVCC_FLAGS += #-DFINDBLOCK #-DAXIS_ROT
+#NVCC_FLAGS += --ptxas-options="-v"
+NVCC_FLAGS += #-G #-DFINDBLOCK #-DAXIS_ROT
 NVLIB_FLAGS = -Xlinker -lgomp
 NVLIB_FLAGS += -Wl,-rpath -Wl,$(CUDA_DIR)/lib64
 endif
@@ -73,19 +74,28 @@ endif
 TIFF_INCL = -I $(TIFF_DIR)/include
 TIFF_LIBS = -L $(TIFF_DIR)/lib -ltiff
 
-## gsl
-#GSL_INCL = -I $(GSL_DIR)/include
-#GSL_LIBS = -L $(GSL_DIR)/lib -lgsl
+
+## all includes
+ALL_INCL = $(MPI_INCL) $(BOOST_INCL) $(HDF5_INCL) $(MISC_INCL) $(TIFF_INCL)
+
+## all libraries
+ALL_LIBS = $(BOOST_LIBS) $(MPI_LIBS) $(HDF5_LIBS) $(TIFF_LIBS)
+
+
 
 ## miscellaneous
 MISC_INCL =
-MISC_FLAGS = -DFF_NUM_CPU_FUSED
+MISC_FLAGS = #-DAXIS_ROT
+
+## stuff for CPU
+MISC_FLAGS += -DFF_NUM_CPU_FUSED
+#MISC_FLAGS += -DPROFILE_PAPI
 
 ## GPU related flags
 ifeq ($(USE_GPU), y)
 MISC_FLAGS += -DUSE_GPU
 MISC_FLAGS += -DGPUR -DKERNEL2
-MISC_FLAGS += #-DREDUCTION2 #-DAXIS_ROT
+MISC_FLAGS += #-DREDUCTION2
 ifeq ($(USE_ANA_GPU), y)
 MISC_FLAGS += -DFF_ANA_GPU
 endif
@@ -93,35 +103,21 @@ ifeq ($(USE_NUM_GPU), y)
 MISC_FLAGS += -DFF_NUM_GPU
 MISC_FLAGS += -DFF_NUM_GPU_FUSED
 endif
-else
-## MIC related flags
-ifeq ($(USE_MIC), y)
-MISC_FLAGS += -DUSE_MIC -DFF_MIC_OPT
-else
-## CPU related flags
-endif
 endif
 
 ## MIC related flags
 ifeq ($(USE_MIC), y)
 MISC_FLAGS += -DUSE_MIC -DFF_MIC_OPT
-MISC_FLAGS += -DFF_NUM_MIC_SWAP
-MISC_FLAGS += -DFF_NUM_MIC_KB
-#MISC_FLAGS += -DMIC_PADDING    ## goes out of memory on target
 endif
-
 
 MISC_FLAGS += -DTIME_DETAIL_1 -DTIME_DETAIL_2
 
 ## choose optimization levels, debug flags, gprof flag, etc
 #OPT_FLAGS = -g -DDEBUG #-v #-pg
-OPT_FLAGS = -O3 -DNDEBUG #-v
+OPT_FLAGS += -O3 -DNDEBUG #-v
 
-## stuff for AMD x86_64
-#OPT_FLAGS += -march=barcelona -msse4a -ffast-math -Ofast
-
-## stuff for Intel x86_64
-OPT_FLAGS += -mavx -Ofast -falign-functions -align -fma -fp-model fast=2 -parallel -funroll-loops -axAVX -xavx
+## for carver CPU
+OPT_FLAGS += -msse4a -ffast-math -Ofast
 
 ## choose single or double precision here
 PREC_FLAG =			# leave empty for single precision
@@ -132,8 +128,7 @@ PREC_FLAG =			# leave empty for single precision
 ALL_INCL = $(MPI_INCL) $(CUDA_INCL) $(BOOST_INCL) $(HDF5_INCL) $(MISC_INCL) $(TIFF_INCL)
 
 ## all libraries
-ALL_LIBS = $(BOOST_LIBS) $(MPI_LIBS) $(NVLIB_FLAGS) $(CUDA_LIBS) $(HDF5_LIBS) $(TIFF_LIBS) $(GSL_LIBS)
-
+ALL_LIBS = $(BOOST_LIBS) $(MPI_LIBS) $(NVLIB_FLAGS) $(CUDA_LIBS) $(HDF5_LIBS) $(TIFF_LIBS) $(GSL)
 
 PREFIX = $(PWD)
 BINARY_SIM = hipgisaxs
@@ -146,17 +141,17 @@ LIB_DIR = $(PREFIX)/lib
 
 ## all objects
 OBJECTS_MAIN = utilities.o numeric_utils.o compute_params.o hig_input.o \
-			image.o inst_detector.o inst_scattering.o layer.o qgrid.o read_oo_input.o sf.o \
-			ff_ana.o ff_num.o ff.o shape.o structure.o object2hdf5.o hipgisaxs_main.o \
-			ff_ana_sphere.o ff_ana_box.o ff_ana_cylinder.o ff_ana_hcylinder.o ff_ana_prism3x.o \
-			ff_ana_prism6.o ff_ana_prism.o ff_ana_pyramid.o ff_ana_rand_cylinder.o \
-			ff_ana_sawtooth_down.o ff_ana_sawtooth_up.o ff_ana_trunc_cone.o ff_ana_trunc_pyramid.o \
-			ff_num_cpu.o
+          image.o inst_detector.o inst_scattering.o layer.o qgrid.o read_oo_input.o sf.o \
+          ff_ana.o ff_num.o ff.o shape.o structure.o object2hdf5.o hipgisaxs_main.o \
+          ff_ana_sphere.o ff_ana_box.o ff_ana_cylinder.o ff_ana_hcylinder.o ff_ana_prism3x.o \
+          ff_ana_prism6.o ff_ana_prism.o ff_ana_pyramid.o ff_ana_rand_cylinder.o \
+          ff_ana_sawtooth_down.o ff_ana_sawtooth_up.o ff_ana_trunc_cone.o ff_ana_trunc_pyramid.o \
+          ff_num_cpu.o
 
 ifeq ($(USE_GPU), y)
 OBJECTS_MAIN += reduction.o ff_num_gpu.o ff_ana_gpu.o ff_ana_sphere_gpu.o ff_ana_box_gpu.o \
-			ff_ana_cylinder_gpu.o ff_ana_hcylinder_gpu.o ff_ana_prism6_gpu.o \
-			ff_ana_prism_gpu.o ff_ana_rand_cylinder_gpu.o
+                ff_ana_cylinder_gpu.o ff_ana_hcylinder_gpu.o ff_ana_prism6_gpu.o \
+                ff_ana_prism_gpu.o ff_ana_rand_cylinder_gpu.o
 endif
 
 ifeq ($(USE_MIC), y)
@@ -165,7 +160,7 @@ endif
 
 OBJECTS_SIM = $(OBJECTS_MAIN) hipgisaxs_sim.o
 
-OBJECTS_FIT = $(OBJECTS_MAIN) hipgisaxs_fit.o fitting_steepest_descent.o
+OBJECTS_FIT = $(OBJECTS_MAIN) fitting_steepest_descent.o hipgisaxs_fit.o
 
 ## the main binary
 OBJ_BIN_SIM = $(patsubst %,$(OBJ_DIR)/%,$(OBJECTS_SIM))

@@ -5,7 +5,7 @@
   *
   *  File: cu_complex_numeric.cuh
   *  Created: Oct 17, 2012
-  *  Modified: Thu 11 Apr 2013 02:29:46 PM PDT
+  *  Modified: Mon 06 May 2013 06:22:51 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -115,27 +115,36 @@ namespace hig {
 
 	__device__ static __inline__ cuFloatComplex operator/(cuFloatComplex a, cuFloatComplex b) {
 		return cuCdivf(a, b);
-	} // operator+()
+	} // operator/()
 
 	__device__ static __inline__ cuDoubleComplex operator/(cuDoubleComplex a, cuDoubleComplex b) {
 		return cuCdiv(a, b);
-	} // operator+()
+	} // operator/()
 
 	__device__ static __inline__ cuFloatComplex operator/(cuFloatComplex a, float b) {
 		return make_cuFloatComplex(a.x / b, a.y / b);
-	} // operator+()
+	} // operator/()
 
 	__device__ static __inline__ cuDoubleComplex operator/(cuDoubleComplex a, double b) {
 		return make_cuDoubleComplex(a.x / b, a.y / b);
-	} // operator+()
+	} // operator/()
 
 	__device__ static __inline__ cuFloatComplex operator/(float a, cuFloatComplex b) {
-		return cuCdivf(make_cuFloatComplex(a, 0.0f), b);
-	} // operator+()
+		//return cuCdivf(make_cuFloatComplex(a, 0.0f), b);
+		float den = b.x * b.x + b.y * b.y;
+		float den_inv = 1.0f / den;
+		return make_cuFloatComplex((a * b.x) * den_inv, (a * b.y) * den_inv);
+	} // operator/()
+
+	__device__ static __inline__ cuFloatComplex cuCrcpf(cuFloatComplex b) {
+		float den = __fadd_ru(__fmul_ru(b.x, b.x), __fmul_ru(b.y, b.y));
+		float den_inv = __frcp_rn(den);
+		return make_cuFloatComplex(__fmul_ru(b.x, den_inv), __fmul_ru(b.y, den_inv));
+	} // operator/()
 
 	__device__ static __inline__ cuDoubleComplex operator/(double a, cuDoubleComplex b) {
 		return cuCdiv(make_cuDoubleComplex(a, 0.0), b);
-	} // operator+()
+	} // operator/()
 
 
 /*	__device__ static __inline__ float cuCabs(cuFloatComplex z) {

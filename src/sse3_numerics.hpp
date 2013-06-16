@@ -3,7 +3,7 @@
   *
   *  File: sse3_numerics.hpp
   *  Created: Apr 19, 2013
-  *  Modified: Sun 21 Apr 2013 05:37:07 PM PDT
+  *  Modified: Thu 02 May 2013 03:56:18 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -162,6 +162,10 @@ namespace hig {
 		return ret_vec;*/
 	} // sse_exp_rps()
 
+	static inline void sse_exp_rps_dual(sse_m128_t a1, sse_m128_t a2, sse_m128_t* exp1, sse_m128_t* exp2) {
+		sse_mathfun::newexp_ps_dual(a1, a2, exp1, exp2);
+	} // sse_exp_rps()
+
 
 	/**
 	 * trigonometry
@@ -179,6 +183,11 @@ namespace hig {
 
 	static inline void sse_sincos_rps(sse_m128_t a, sse_m128_t* s, sse_m128_t* c) {
 		sse_mathfun::newsincos_ps(a, s, c);
+	} // sse_exp_rps()
+
+	static inline void sse_sincos_rps_dual(sse_m128_t a1, sse_m128_t a2, sse_m128_t* s1, sse_m128_t* s2,
+											sse_m128_t* c1, sse_m128_t* c2) {
+		sse_mathfun::newsincos_ps_dual(a1, a2, s1, s2, c1, c2);
 	} // sse_exp_rps()
 
 } // namespace hig

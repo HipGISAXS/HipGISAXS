@@ -3,7 +3,7 @@
  *
  *  File: ff_num_cpu.hpp
  *  Created: Nov 05, 2011
- *  Modified: Tue 23 Apr 2013 11:35:57 AM PDT
+ *  Modified: Fri 03 May 2013 01:04:18 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -196,11 +196,13 @@
 	/**
 	 * special case of nqx == 1 of Form Factor kernel with fused reduction
 	 */
-	void NumericFormFactorC::form_factor_kernel_fused_nqx1(float_t* qx, float_t* qy, complex_t* qz,
+	void NumericFormFactorC::form_factor_kernel_fused_nqx1(
+					const float_t* __restrict__ qx, const float_t* __restrict__ qy,
+					const complex_t* __restrict__ qz,
 					#ifndef __SSE3__
 						float_vec_t& shape_def,
 					#else
-						float_t* shape_def,
+						float_t* __restrict__ shape_def,
 					#endif
 					unsigned int curr_nqx, unsigned int curr_nqy, unsigned int curr_nqz,
 					unsigned int curr_num_triangles,
@@ -288,7 +290,184 @@
 			} // for z
 		} // pragma omp parallel
 
-		#else			// sse3 specific optimizations
+		#elif defined INTEL_SB_AVX	// avx specific optimizations for intel sandy bridge (edison)
+
+		// FIXME: assuming only float for now (4 bytes per float)
+		unsigned int shape_padding = (8 - (num_triangles & 7)) & 7;
+		unsigned int vec_size = 8; // 32 / sizeof(float_t);
+		unsigned int padded_num_triangles = num_triangles + shape_padding;
+		start_t = b_num_triangles * ib_t;
+
+		// shape padding guarantees that padded_num_triangles is a multiple of 8
+		// FIXME: assuming that b_num_triangles is a multiple of 8 as well ...
+
+		#pragma omp parallel
+		{
+			#pragma omp for collapse(2)
+			for(int i_z = 0; i_z < curr_nqz; ++ i_z) {
+				for(int i_y = 0; i_y < curr_nqy; ++ i_y) {
+					//#ifdef PROFILE_PAPI
+					//	if(ib_y + ib_z + ib_t + i_z + i_y == 0) PAPI_start_counters(papi_events, 3);
+					//#endif
+
+					// ////////////////////////////////////////////////////
+					// intrinsic wrapper naming (only for floating-point)
+					// avx_xxx_abc  => a = r|c, b = p|s, c = s|d
+					// avx_xxx_abcd => a = r|c, b = r|c, c = p|s, d = s|d
+					// r = real,             c = complex,
+					// p = packed (vector),  s = scalar,
+					// s = single-precision, d = double-precision
+					// ////////////////////////////////////////////////////
+
+					unsigned long int super_i = (unsigned long int) nqy * (ib_z * b_nqz + i_z) +
+													(ib_y * b_nqy + i_y);
+					avx_m256c_t temp_z = avx_set1_cps(qz[start_z + i_z]);
+					avx_m256_t temp_y = avx_set1_rps(qy[start_y + i_y]);
+					avx_m256_t temp_x = avx_set1_rps(qx[start_x]);
+
+					avx_m256_t qx2 = avx_mul_rrps(temp_x, temp_x);
+					avx_m256_t qy2 = avx_mul_rrps(temp_y, temp_y);
+					avx_m256c_t qz2 = avx_mul_ccps(temp_z, temp_z);
+					avx_m256_t qxy2 = avx_add_rrps(qx2, qy2);
+					avx_m256c_t q2 = avx_add_rcps(qxy2, qz2);
+					avx_m256c_t q2_inv = avx_rcp_cps(q2);
+
+/*					avx_m256c_t total = avx_setzero_cps();
+
+					// FIXME: for now assuming curr_num_triangles is always multiple of 4 (vec size) ...
+					for(int i_t = 0; i_t < curr_num_triangles; i_t += vec_size) {
+						// load 16 / sizeof(float_t) entries at a time:
+						unsigned int shape_off = start_t + i_t;
+						avx_m256_t s = avx_load_rps(& shape_def[shape_off]);
+						shape_off += padded_num_triangles;
+						avx_m256_t nx = avx_load_rps(& shape_def[shape_off]);
+						shape_off += padded_num_triangles;
+						avx_m256_t ny = avx_load_rps(& shape_def[shape_off]);
+						shape_off += padded_num_triangles;
+						avx_m256_t nz = avx_load_rps(& shape_def[shape_off]);
+						shape_off += padded_num_triangles;
+						avx_m256_t x = avx_load_rps(& shape_def[shape_off]);
+						shape_off += padded_num_triangles;
+						avx_m256_t y = avx_load_rps(& shape_def[shape_off]);
+						shape_off += padded_num_triangles;
+						avx_m256_t z = avx_load_rps(& shape_def[shape_off]);
+
+						avx_m256c_t qzn = avx_mul_crps(temp_z, nz);
+						avx_m256c_t qzt = avx_mul_crps(temp_z, z);
+						avx_m256_t qyn = avx_mul_rrps(temp_y, ny);
+						avx_m256_t qyt = avx_mul_rrps(temp_y, y);
+						avx_m256_t qxn = avx_mul_rrps(temp_x, nx);
+						avx_m256_t qxt = avx_mul_rrps(temp_x, x);
+						avx_m256c_t qt = avx_add_rcps(avx_add_rrps(qxt, qyt), qzt);
+						avx_m256c_t temp_qn = avx_add_rcps(avx_add_rrps(qxn, qyn), qzn);
+						avx_m256c_t qn = avx_mul_ccps(temp_qn, q2_inv);
+						avx_m256c_t fq = avx_compute_fq(s, qt, qn);
+
+						total = avx_add_ccps(total, fq);
+					} // for t
+
+					total = avx_hadd_ccps(total, total);
+					total = avx_hadd_ccps(total, total);
+
+					//float_t real, imag;
+					//_mm_store_ss(&real, total.xvec);
+					//_mm_store_ss(&imag, total.yvec);
+					//ff[super_i] += complex_t(real, imag);
+					avx_addstore_css(&(ff[super_i]), total);
+
+*/
+					// unrolling twice, using function call fusion!
+
+					avx_m256c_t total1 = avx_setzero_cps();
+					avx_m256c_t total2 = avx_setzero_cps();
+
+					for(int i_t = 0; i_t < curr_num_triangles; i_t += 2 * vec_size) {
+						unsigned int shape_off = start_t + i_t;
+						avx_m256_t s1 = avx_load_rps(& shape_def[shape_off]);
+						avx_m256_t s2 = avx_load_rps(& shape_def[shape_off + vec_size]);
+						shape_off += padded_num_triangles;
+						avx_m256_t nx1 = avx_load_rps(& shape_def[shape_off]);
+						avx_m256_t nx2 = avx_load_rps(& shape_def[shape_off + vec_size]);
+						shape_off += padded_num_triangles;
+						avx_m256_t ny1 = avx_load_rps(& shape_def[shape_off]);
+						avx_m256_t ny2 = avx_load_rps(& shape_def[shape_off + vec_size]);
+						shape_off += padded_num_triangles;
+						avx_m256_t nz1 = avx_load_rps(& shape_def[shape_off]);
+						avx_m256_t nz2 = avx_load_rps(& shape_def[shape_off + vec_size]);
+						shape_off += padded_num_triangles;
+						avx_m256_t x1 = avx_load_rps(& shape_def[shape_off]);
+						avx_m256_t x2 = avx_load_rps(& shape_def[shape_off + vec_size]);
+						shape_off += padded_num_triangles;
+						avx_m256_t y1 = avx_load_rps(& shape_def[shape_off]);
+						avx_m256_t y2 = avx_load_rps(& shape_def[shape_off + vec_size]);
+						shape_off += padded_num_triangles;
+						avx_m256_t z1 = avx_load_rps(& shape_def[shape_off]);
+						avx_m256_t z2 = avx_load_rps(& shape_def[shape_off + vec_size]);
+
+						avx_m256_t qxn1 = avx_mul_rrps(temp_x, nx1);
+						avx_m256_t qxn2 = avx_mul_rrps(temp_x, nx2);
+						avx_m256_t qxt1 = avx_mul_rrps(temp_x, x1);
+						avx_m256_t qxt2 = avx_mul_rrps(temp_x, x2);
+						avx_m256_t qyn1 = avx_mul_rrps(temp_y, ny1);
+						avx_m256_t qyn2 = avx_mul_rrps(temp_y, ny2);
+						avx_m256_t qyt1 = avx_mul_rrps(temp_y, y1);
+						avx_m256_t qyt2 = avx_mul_rrps(temp_y, y2);
+						avx_m256c_t qzn1 = avx_mul_crps(temp_z, nz1);
+						avx_m256c_t qzn2 = avx_mul_crps(temp_z, nz2);
+						avx_m256c_t qzt1 = avx_mul_crps(temp_z, z1);
+						avx_m256c_t qzt2 = avx_mul_crps(temp_z, z2);
+						avx_m256_t qxyt1 = avx_add_rrps(qxt1, qyt1);
+						avx_m256_t qxyt2 = avx_add_rrps(qxt2, qyt2);
+						avx_m256_t qxyn1 = avx_add_rrps(qxn1, qyn1);
+						avx_m256_t qxyn2 = avx_add_rrps(qxn2, qyn2);
+						avx_m256c_t qt1 = avx_add_rcps(qxyt1, qzt1);
+						avx_m256c_t qt2 = avx_add_rcps(qxyt2, qzt2);
+						avx_m256c_t temp_qn1 = avx_add_rcps(qxyn1, qzn1);
+						avx_m256c_t temp_qn2 = avx_add_rcps(qxyn2, qzn2);
+						avx_m256c_t qn1 = avx_mul_ccps(temp_qn1, q2_inv);
+						avx_m256c_t qn2 = avx_mul_ccps(temp_qn2, q2_inv);
+						avx_m256c_t temp1, temp2;
+						avx_sincos_rps_dual(qt1.xvec, qt2.xvec, &temp1.yvec, &temp2.yvec,
+										&temp1.xvec, &temp2.xvec);
+						//avx_sincos_rps(qt1.xvec, &temp1.yvec, &temp1.xvec);
+						//avx_sincos_rps(qt2.xvec, &temp2.yvec, &temp2.xvec);
+						avx_m256_t temp_v21, temp_v22;
+						avx_exp_rps_dual(qt1.yvec, qt2.yvec, &temp_v21, &temp_v22);
+						//temp_v21 = avx_exp_rps(qt1.yvec);
+						//temp_v22 = avx_exp_rps(qt2.yvec);
+						avx_m256_t v21 = avx_mul_rrps(s1, temp_v21);
+						avx_m256_t v22 = avx_mul_rrps(s2, temp_v22);
+						avx_m256c_t v11 = avx_mul_ccps(qn1, temp1);
+						avx_m256c_t v12 = avx_mul_ccps(qn2, temp2);
+						avx_m256c_t fq1 = avx_mul_crps(v11, v21);
+						avx_m256c_t fq2 = avx_mul_crps(v12, v22);
+
+						total1 = avx_add_ccps(total1, fq1);
+						total2 = avx_add_ccps(total2, fq2);
+					} // for t
+
+					total1 = avx_hadd_ccps(total1, total1);
+					total2 = avx_hadd_ccps(total2, total2);
+					total1 = avx_hadd_ccps(total1, total1);
+					total2 = avx_hadd_ccps(total2, total2);
+
+					total1 = avx_add_ccps(total1, total2);
+					avx_addstore_css(&(ff[super_i]), total1);
+
+					//#ifdef PROFILE_PAPI
+					//	if(ib_y + ib_z + ib_t + i_z + i_y == 0) {
+					//		PAPI_stop_counters(papi_counter_vals, 3);
+					//		std::cout << "==== FP_OPS: " << papi_counter_vals[0] << std::endl;
+					//		std::cout << "==== SP_OPS: " << papi_counter_vals[1] << std::endl;
+					//		std::cout << "==== DP_OPS: " << papi_counter_vals[2] << std::endl;
+					//	} // if
+					//#endif
+				} // for y
+			} // for z
+		} // pragma omp parallel
+
+
+		#else		// sse3 specific optimizations for amd magny cours (hopper)
 
 		// FIXME: assuming only float for now (4 bytes per float)
 		unsigned int shape_padding = (4 - (num_triangles & 3)) & 3;
@@ -323,15 +502,16 @@
 					sse_m128_t temp_y = sse_set1_rps(qy[start_y + i_y]);
 					sse_m128_t temp_x = sse_set1_rps(qx[start_x]);
 
-					sse_m128c_t qz2 = sse_mul_ccps(temp_z, temp_z);
-					sse_m128_t qy2 = sse_mul_rrps(temp_y, temp_y);
 					sse_m128_t qx2 = sse_mul_rrps(temp_x, temp_x);
-					sse_m128c_t q2 = sse_add_rcps(sse_add_rrps(qx2, qy2), qz2);
+					sse_m128_t qy2 = sse_mul_rrps(temp_y, temp_y);
+					sse_m128c_t qz2 = sse_mul_ccps(temp_z, temp_z);
+					sse_m128_t qxy2 = sse_add_rrps(qx2, qy2);
+					sse_m128c_t q2 = sse_add_rcps(qxy2, qz2);
 					sse_m128c_t q2_inv = sse_rcp_cps(q2);
 
-					sse_m128c_t total = sse_setzero_cps();
+/*					sse_m128c_t total = sse_setzero_cps();
 
-					// FIXME: for now assuming curr_num_triangles is always multiple of 4 ...
+					// FIXME: for now assuming curr_num_triangles is always multiple of 4 (vec size) ...
 					for(int i_t = 0; i_t < curr_num_triangles; i_t += vec_size) {
 						// load 16 / sizeof(float_t) entries at a time:
 						unsigned int shape_off = start_t + i_t;
@@ -362,8 +542,6 @@
 
 						total = sse_add_ccps(total, fq);
 					} // for t
-					// remainder triangles
-					// ...
 
 					total = sse_hadd_ccps(total, total);
 					total = sse_hadd_ccps(total, total);
@@ -373,6 +551,85 @@
 					//_mm_store_ss(&imag, total.yvec);
 					//ff[super_i] += complex_t(real, imag);
 					sse_addstore_css(&(ff[super_i]), total);
+*/
+
+					// unrolling twice, using function call fusion!
+
+					sse_m128c_t total1 = sse_setzero_cps();
+					sse_m128c_t total2 = sse_setzero_cps();
+
+					for(int i_t = 0; i_t < curr_num_triangles; i_t += 2 * vec_size) {
+						unsigned int shape_off = start_t + i_t;
+						sse_m128_t s1 = sse_load_rps(& shape_def[shape_off]);
+						sse_m128_t s2 = sse_load_rps(& shape_def[shape_off + vec_size]);
+						shape_off += padded_num_triangles;
+						sse_m128_t nx1 = sse_load_rps(& shape_def[shape_off]);
+						sse_m128_t nx2 = sse_load_rps(& shape_def[shape_off + vec_size]);
+						shape_off += padded_num_triangles;
+						sse_m128_t ny1 = sse_load_rps(& shape_def[shape_off]);
+						sse_m128_t ny2 = sse_load_rps(& shape_def[shape_off + vec_size]);
+						shape_off += padded_num_triangles;
+						sse_m128_t nz1 = sse_load_rps(& shape_def[shape_off]);
+						sse_m128_t nz2 = sse_load_rps(& shape_def[shape_off + vec_size]);
+						shape_off += padded_num_triangles;
+						sse_m128_t x1 = sse_load_rps(& shape_def[shape_off]);
+						sse_m128_t x2 = sse_load_rps(& shape_def[shape_off + vec_size]);
+						shape_off += padded_num_triangles;
+						sse_m128_t y1 = sse_load_rps(& shape_def[shape_off]);
+						sse_m128_t y2 = sse_load_rps(& shape_def[shape_off + vec_size]);
+						shape_off += padded_num_triangles;
+						sse_m128_t z1 = sse_load_rps(& shape_def[shape_off]);
+						sse_m128_t z2 = sse_load_rps(& shape_def[shape_off + vec_size]);
+
+						sse_m128_t qxn1 = sse_mul_rrps(temp_x, nx1);
+						sse_m128_t qxn2 = sse_mul_rrps(temp_x, nx2);
+						sse_m128_t qxt1 = sse_mul_rrps(temp_x, x1);
+						sse_m128_t qxt2 = sse_mul_rrps(temp_x, x2);
+						sse_m128_t qyn1 = sse_mul_rrps(temp_y, ny1);
+						sse_m128_t qyn2 = sse_mul_rrps(temp_y, ny2);
+						sse_m128_t qyt1 = sse_mul_rrps(temp_y, y1);
+						sse_m128_t qyt2 = sse_mul_rrps(temp_y, y2);
+						sse_m128c_t qzn1 = sse_mul_crps(temp_z, nz1);
+						sse_m128c_t qzn2 = sse_mul_crps(temp_z, nz2);
+						sse_m128c_t qzt1 = sse_mul_crps(temp_z, z1);
+						sse_m128c_t qzt2 = sse_mul_crps(temp_z, z2);
+						sse_m128_t qxyt1 = sse_add_rrps(qxt1, qyt1);
+						sse_m128_t qxyt2 = sse_add_rrps(qxt2, qyt2);
+						sse_m128_t qxyn1 = sse_add_rrps(qxn1, qyn1);
+						sse_m128_t qxyn2 = sse_add_rrps(qxn2, qyn2);
+						sse_m128c_t qt1 = sse_add_rcps(qxyt1, qzt1);
+						sse_m128c_t qt2 = sse_add_rcps(qxyt2, qzt2);
+						sse_m128c_t temp_qn1 = sse_add_rcps(qxyn1, qzn1);
+						sse_m128c_t temp_qn2 = sse_add_rcps(qxyn2, qzn2);
+						sse_m128c_t qn1 = sse_mul_ccps(temp_qn1, q2_inv);
+						sse_m128c_t qn2 = sse_mul_ccps(temp_qn2, q2_inv);
+						sse_m128c_t temp1, temp2;
+						sse_sincos_rps_dual(qt1.xvec, qt2.xvec, &temp1.yvec, &temp2.yvec,
+										&temp1.xvec, &temp2.xvec);
+						//sse_sincos_rps(qt1.xvec, &temp1.yvec, &temp1.xvec);
+						//sse_sincos_rps(qt2.xvec, &temp2.yvec, &temp2.xvec);
+						sse_m128_t temp_v21, temp_v22;
+						sse_exp_rps_dual(qt1.yvec, qt2.yvec, &temp_v21, &temp_v22);
+						//temp_v21 = sse_exp_rps(qt1.yvec);
+						//temp_v22 = sse_exp_rps(qt2.yvec);
+						sse_m128_t v21 = sse_mul_rrps(s1, temp_v21);
+						sse_m128_t v22 = sse_mul_rrps(s2, temp_v22);
+						sse_m128c_t v11 = sse_mul_ccps(qn1, temp1);
+						sse_m128c_t v12 = sse_mul_ccps(qn2, temp2);
+						sse_m128c_t fq1 = sse_mul_crps(v11, v21);
+						sse_m128c_t fq2 = sse_mul_crps(v12, v22);
+
+						total1 = sse_add_ccps(total1, fq1);
+						total2 = sse_add_ccps(total2, fq2);
+					} // for t
+
+					total1 = sse_hadd_ccps(total1, total1);
+					total2 = sse_hadd_ccps(total2, total2);
+					total1 = sse_hadd_ccps(total1, total1);
+					total2 = sse_hadd_ccps(total2, total2);
+
+					total1 = sse_add_ccps(total1, total2);
+					sse_addstore_css(&(ff[super_i]), total1);
 
 					//#ifdef PROFILE_PAPI
 					//	if(ib_y + ib_z + ib_t + i_z + i_y == 0) {
@@ -390,20 +647,31 @@
 	} // NumericFormFactorC::form_factor_kernel_fused_nqx1()
 
 
-	#ifdef __SSE3__
+	#ifdef INTEL_SB_AVX
+
+		inline avx_m256c_t NumericFormFactorC::avx_compute_fq(avx_m256_t s, avx_m256c_t qt, avx_m256c_t qn) {
+			avx_m256c_t temp;
+			//temp.xvec = avx_cos_rps(qt.xvec);
+			//temp.yvec = avx_sin_rps(qt.xvec);
+			avx_sincos_rps(qt.xvec, &temp.yvec, &temp.xvec);
+			avx_m256_t v2 = avx_mul_rrps(s, avx_exp_rps(qt.yvec));
+			avx_m256c_t v1 = avx_mul_ccps(qn, temp);
+			return avx_mul_crps(v1, v2);
+		} // NumericFormFactorC::avx_compute_fq()
+
+	#elif defined __SSE3__
 
 		inline sse_m128c_t NumericFormFactorC::sse_compute_fq(sse_m128_t s, sse_m128c_t qt, sse_m128c_t qn) {
 			sse_m128c_t temp;
 			//temp.xvec = sse_cos_rps(qt.xvec);
 			//temp.yvec = sse_sin_rps(qt.xvec);
 			sse_sincos_rps(qt.xvec, &temp.yvec, &temp.xvec);
-			sse_m128c_t v1 = sse_mul_ccps(qn, temp);
 			sse_m128_t v2 = sse_mul_rrps(s, sse_exp_rps(qt.yvec));
+			sse_m128c_t v1 = sse_mul_ccps(qn, temp);
 			return sse_mul_crps(v1, v2);
 		} // NumericFormFactorC::sse_compute_fq()
 
 	#endif
-
 
 
 

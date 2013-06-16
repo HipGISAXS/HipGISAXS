@@ -3,7 +3,7 @@
  *
  *  File: ff_num.hpp
  *  Created: Nov 05, 2011
- *  Modified: Tue 23 Apr 2013 10:33:08 AM PDT
+ *  Modified: Thu 25 Apr 2013 02:46:25 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -117,16 +117,16 @@ namespace hig {
 				NumericFormFactorC cff_;		// for computation only on CPU
 			#endif
 	
-			unsigned int read_shape_surface_file(const char* filename, std::vector<float_t>& shape_def);
+			unsigned int read_shape_surface_file(const char* filename, float_vec_t& shape_def);
 			unsigned int read_shapes_hdf5(const char* filename,
 										#ifndef __SSE3__
-											std::vector<float_t>& shape_def,
+											float_vec_t& shape_def,
 										#else
-											//#ifdef USE_MIC
-											//	float_vec_t &shape_def,
-											//#else
+											#ifdef USE_GPU
+												float_vec_t &shape_def,
+											#else
 												float_t* &shape_def,
-											//#endif
+											#endif
 										#endif
 										MPI::Intracomm& comm);
 			void find_axes_orientation(std::vector<float_t> &shape_def, std::vector<short int> &axes);

@@ -14,19 +14,20 @@ USE_NUM_GPU = n
 USE_MIC = n
 
 ## base directories
-#BOOST_DIR = $(BOOST_DIR)
-MPI_DIR = $(CRAY_MPICH2_DIR)
-HDF5_DIR = $(HOME)/local/hdf5-1.8.9-edison-intel
-#Z_DIR = #/usr/local/zlib-1.2.7
-#SZ_DIR = #/usr/local/szip-2.1
-TIFF_DIR = $(HOME)/local/tiff-4.0.2-edison-intel
+BOOST_DIR = /usr/local/boost_1_49_0
+HDF5_DIR = /usr/local/hdf5-1.8.9
+#Z_DIR = /usr/local/zlib-1.2.7
+#SZ_DIR = /usr/local/szip-2.1
+TIFF_DIR = /usr/local/tiff-4.0.2
+MPI_DIR = /usr/local/openmpi-1.6.4
 ifeq ($(USE_GPU), y)
-CUDA_DIR = $(CRAY_CUDATOOLKIT_DIR)
+CUDA_DIR = /usr/local/cuda
 endif
+PAPI_DIR = /usr/local/papi-5.1.0
 
 ## compilers
-CXX = CC #tau_cxx.sh #CC
-H5CC = cc
+CXX = icpc
+H5CC = icc
 ifeq ($(USE_GPU), y)
 NVCC = nvcc
 endif
@@ -39,7 +40,7 @@ CXX_FLAGS += -lm #-v
 ## gnu c++ compilers >= 4.7 also support -std=c++11, but they are not supported by cuda
 
 ## boost
-BOOST_INCL = -I $(BOOST_DIR)/include -I $(HOME)/local/boost_1_49_0/include
+BOOST_INCL = -I $(BOOST_DIR)/include
 BOOST_LIBS = -L $(BOOST_DIR)/lib -lboost_system -lboost_filesystem -lboost_timer -lboost_chrono
 
 ## parallel hdf5
@@ -50,7 +51,7 @@ HDF5_FLAGS += -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -
 
 ## mpi (openmpi)
 MPI_INCL = -I $(MPI_DIR)/include
-MPI_LIBS = -L $(MPI_DIR)/lib -lmpichcxx -lmpich
+MPI_LIBS = -L $(MPI_DIR)/lib -lmpi_cxx -lmpi
 
 ## cuda
 ifeq ($(USE_GPU), y)
@@ -73,13 +74,21 @@ endif
 TIFF_INCL = -I $(TIFF_DIR)/include
 TIFF_LIBS = -L $(TIFF_DIR)/lib -ltiff
 
+## papi stuff
+PAPI_INCL = -I $(PAPI_DIR)/include
+PAPI_LIBS = -L $(PAPI_DIR)/lib -lpapi
+
 ## gsl
 #GSL_INCL = -I $(GSL_DIR)/include
 #GSL_LIBS = -L $(GSL_DIR)/lib -lgsl
 
 ## miscellaneous
 MISC_INCL =
-MISC_FLAGS = -DFF_NUM_CPU_FUSED
+MISC_FLAGS += -DFF_NUM_CPU_FUSED
+MISC_FLAGS += -DPROFILE_PAPI
+
+## for sandy bridgei CPU (edison)
+MISC_FLAGS += -DINTEL_SB_AVX
 
 ## GPU related flags
 ifeq ($(USE_GPU), y)
@@ -114,8 +123,8 @@ endif
 MISC_FLAGS += -DTIME_DETAIL_1 -DTIME_DETAIL_2
 
 ## choose optimization levels, debug flags, gprof flag, etc
-#OPT_FLAGS = -g -DDEBUG #-v #-pg
-OPT_FLAGS = -O3 -DNDEBUG #-v
+#OPT_FLAGS = -g -O0 #-DDEBUG #-v #-pg
+OPT_FLAGS += -O3 -DNDEBUG #-v
 
 ## stuff for AMD x86_64
 #OPT_FLAGS += -march=barcelona -msse4a -ffast-math -Ofast
@@ -123,16 +132,18 @@ OPT_FLAGS = -O3 -DNDEBUG #-v
 ## stuff for Intel x86_64
 OPT_FLAGS += -mavx -Ofast -falign-functions -align -fma -fp-model fast=2 -parallel -funroll-loops -axAVX -xavx
 
+
 ## choose single or double precision here
 PREC_FLAG =			# leave empty for single precision
 #PREC_FLAG = -DDOUBLEP	# define this for double precision
 
 
 ## all includes
-ALL_INCL = $(MPI_INCL) $(CUDA_INCL) $(BOOST_INCL) $(HDF5_INCL) $(MISC_INCL) $(TIFF_INCL)
+ALL_INCL = $(MPI_INCL) $(CUDA_INCL) $(BOOST_INCL) $(HDF5_INCL) $(MISC_INCL) $(TIFF_INCL) $(PAPI_INCL)
 
 ## all libraries
-ALL_LIBS = $(BOOST_LIBS) $(MPI_LIBS) $(NVLIB_FLAGS) $(CUDA_LIBS) $(HDF5_LIBS) $(TIFF_LIBS) $(GSL_LIBS)
+ALL_LIBS = $(BOOST_LIBS) $(MPI_LIBS) $(NVLIB_FLAGS) $(CUDA_LIBS) $(HDF5_LIBS) $(TIFF_LIBS) $(GSL_LIBS) \
+		   $(PAPI_LIBS)
 
 
 PREFIX = $(PWD)

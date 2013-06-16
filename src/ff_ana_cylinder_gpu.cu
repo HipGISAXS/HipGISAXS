@@ -3,7 +3,7 @@
   *
   *  File: ff_ana_cylinder_gpu.cu
   *  Created: Oct 16, 2012
-  *  Modified: Sat 02 Mar 2013 11:39:57 AM PST
+  *  Modified: Tue 07 May 2013 11:02:19 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -111,15 +111,15 @@ namespace hig {
 				cucomplex_t qpar = cuCsqrt(mqx * mqx + mqy * mqy);
 				cucomplex_t temp1 = sin(eta) * mqx;
 				cucomplex_t temp2 = cos(eta) * mqy;
-				cucomplex_t temp_qm = tan(tau) * (temp1 + temp2);
+				cucomplex_t temp_qm = mqz + tan(tau) * (temp1 + temp2);
 				cucomplex_t temp_ff = make_cuC((float_t) 0.0, (float_t) 0.0);
 				for(unsigned int p_r = 0; p_r < n_r; ++ p_r) {
 					for(unsigned int p_h = 0; p_h < n_h; ++ p_h) {
-						cucomplex_t temp3 = fq_inv(mqz + temp_qm, h[p_h]);
+						cucomplex_t temp3 = fq_inv(temp_qm, h[p_h]);
 						cucomplex_t temp4 = qpar * r[p_r];
 						cucomplex_t temp5;
-						if(cuCiszero(qpar)) temp5 = make_cuC((float_t) 0.5, (float_t) 0.0);
-						else cucomplex_t temp5 = cuCcbessj(temp4, 1) / temp4;
+						if(cuCiszero(temp4)) temp5 = make_cuC((float_t) 0.5, (float_t) 0.0);
+						else temp5 = cuCcbessj(temp4, 1) / temp4;
 						cucomplex_t temp6 = temp5 * temp3;
 						temp_ff = temp_ff + distr_r[p_r] * distr_h[p_h] * 2 * PI_ * r[p_r] * r[p_r] * temp6;
 					} // for h

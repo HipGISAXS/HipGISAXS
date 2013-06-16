@@ -3,7 +3,7 @@
   *
   *  File: init_gpu.cuh
   *  Created: Feb 22, 2013
-  *  Modified: Sat 13 Apr 2013 08:46:19 PM PDT
+  *  Modified: Mon 06 May 2013 10:36:10 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -18,8 +18,11 @@ namespace hig {
 
 	void init_gpu() {
 		std::cout << "-- Waking up GPU(s) ..." << std::flush << std::endl;
-		//cudaSetDevice(2);
+		//cudaSetDevice(3);
 		cudaDeviceSetCacheConfig(cudaFuncCachePreferShared);
+		#ifdef FF_NUM_GPU_DYNAMICP
+			cudaDeviceSetLimit(cudaLimitMallocHeapSize, 4 * sizeof(cucomplex_t));
+		#endif
 		cudaFree(0);
 	} // init_gpu()
 
