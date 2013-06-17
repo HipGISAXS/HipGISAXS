@@ -67,7 +67,10 @@ $(TEST_BINARY): test_hipgisaxs.cpp
 
 fit: $(FIT_BINARY)
 
-$(FIT_BINARY): fit_hipgisaxs.cpp
+#$(FIT_BINARY): fit_hipgisaxs.cpp
+#	$(CXX) -o $@ $^ $(CXX_FLAGS) $(ALL_INCL) $(ALL_LDFLAGS) $(ALL_LIBS)
+
+$(FIT_BINARY): fit_hipgisaxs_tpyr.cpp
 	$(CXX) -o $@ $^ $(CXX_FLAGS) $(ALL_INCL) $(ALL_LDFLAGS) $(ALL_LIBS)
 
 .PHONY: clean
