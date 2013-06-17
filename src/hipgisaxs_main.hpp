@@ -5,7 +5,7 @@
   *
   *  File: hipgisaxs_main.hpp
   *  Created: Jun 11, 2012
-  *  Modified: Wed 22 May 2013 11:24:32 AM PDT
+  *  Modified: Mon 17 Jun 2013 01:59:00 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -148,6 +148,11 @@ namespace hig {
 
 			bool update_fit_param(std::string key1, float_t val1, std::string key2, float_t val2) {
 				return HiGInput::instance().update_fit_param(key1, val1, key2, val2);
+			} // update_fit_param()
+
+			bool update_fit_param(std::string key1, float_t val1, std::string key2, float_t val2,
+									std::string key3, float_t val3, std::string key4, float_t val4) {
+				return HiGInput::instance().update_fit_param(key1, val1, key2, val2, key3, val3, key4, val4);
 			} // update_fit_param()
 
 			/* update values of parameters being fitted */

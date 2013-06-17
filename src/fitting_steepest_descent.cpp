@@ -3,12 +3,14 @@
   *
   *  File: fitting_steepest_descent.cpp
   *  Created: Dec 06, 2012
-  *  Modified: Fri 17 May 2013 03:01:20 PM PDT
+  *  Modified: Mon 17 Jun 2013 01:00:39 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
 
 //#include <gsl/gsl_linalg.h>
+
+#include <boost/filesystem.hpp>
 
 #include "hipgisaxs_main.hpp"
 

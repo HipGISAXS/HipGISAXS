@@ -5,7 +5,7 @@
   *
   *  File: hig_input.hpp
   *  Created: Jun 11, 2012
-  *  Modified: Wed 22 May 2013 11:25:18 AM PDT
+  *  Modified: Mon 17 Jun 2013 01:48:17 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -247,6 +247,8 @@ namespace hig {
 			
 			//FitParamMap& get_fit_params_map() { return fit_param_map_; }
 			bool update_fit_param(std::string, float_t, std::string, float_t);
+			bool update_fit_param(std::string, float_t, std::string, float_t,
+									std::string, float_t, std::string, float_t);
 
 	}; // class HiGInput
 

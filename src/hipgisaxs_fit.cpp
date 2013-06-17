@@ -3,7 +3,7 @@
   *
   *  File: hipgisaxs_fit.cpp
   *  Created: Jun 14, 2012
-  *  Modified: Thu 06 Dec 2012 09:50:08 PM PST
+  *  Modified: Mon 17 Jun 2013 01:01:46 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */

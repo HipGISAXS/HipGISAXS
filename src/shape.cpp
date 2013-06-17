@@ -5,7 +5,7 @@
   *
   *  File: shape.cpp
   *  Created: Jun 05, 2012
-  *  Modified: Wed 22 May 2013 01:01:35 PM PDT
+  *  Modified: Mon 17 Jun 2013 01:45:21 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -131,7 +131,7 @@ namespace hig {
 	//////////////////////////////////////////////
 	// temporary ...... FIXME ......
 	// ///////////////////////////////////////////
-	bool Shape::update_cyl_height(float_t val) {
+	/*bool Shape::update_cyl_height(float_t val) {
 		shape_param_iterator_t i = params_.begin();
 		std::string temp_str((*i).first);
 		//std::cout << " THE FIRST PARAM: " << temp_str << std::endl;
@@ -158,6 +158,67 @@ namespace hig {
 		} // if
 		(*i).second.min_ = val;
 		return true;
-	} // update_cyl_height()
+	} // update_cyl_height()*/
+
+	bool Shape::update_tpyr_xsize(float_t val) {
+		shape_param_iterator_t i = params_.begin();
+		std::string temp_str((*i).first);
+		//std::cout << " THE FIRST PARAM: " << temp_str << std::endl;
+		if(temp_str.compare("xsize") != 0) {
+			std::cerr << "error: please have the first param as xsize for now" << std::endl;
+			return false;
+		} // if
+		(*i).second.min_ = val;
+		return true;
+	} // update_tpyr_xsize()
+
+	bool Shape::update_tpyr_ysize(float_t val) {
+		shape_param_iterator_t i = params_.begin();
+		++ i;
+		if(i == params_.end()) {
+			std::cerr << "error: second parameter missing!" << std::endl;
+			return false;
+		} // if
+		std::string temp_str((*i).first);
+		//std::cout << " THE SECOND PARAM: " << temp_str << std::endl;
+		if(temp_str.compare("ysize") != 0) {
+			std::cerr << "error: please have the second param as ysize for now" << std::endl;
+			return false;
+		} // if
+		(*i).second.min_ = val;
+		return true;
+	} // update_tpyr_ysize()
+
+	bool Shape::update_tpyr_height(float_t val) {
+		shape_param_iterator_t i = params_.begin();
+		++ i; ++ i;
+		if(i == params_.end()) {
+			std::cerr << "error: third parameter missing!" << std::endl;
+			return false;
+		} // if
+		std::string temp_str((*i).first);
+		if(temp_str.compare("height") != 0) {
+			std::cerr << "error: please have the third param as height for now" << std::endl;
+			return false;
+		} // if
+		(*i).second.min_ = val;
+		return true;
+	} // update_tpyr_height()
+
+	bool Shape::update_tpyr_baseangle(float_t val) {
+		shape_param_iterator_t i = params_.begin();
+		++ i; ++i; ++i;
+		if(i == params_.end()) {
+			std::cerr << "error: fourth parameter missing!" << std::endl;
+			return false;
+		} // if
+		std::string temp_str((*i).first);
+		if(temp_str.compare("baseangle") != 0) {
+			std::cerr << "error: please have the fourth param as baseangle for now" << std::endl;
+			return false;
+		} // if
+		(*i).second.min_ = val;
+		return true;
+	} // update_tpyr_ysize()
 
 } // namespace hig

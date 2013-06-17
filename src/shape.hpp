@@ -5,7 +5,7 @@
   *
   *  File: shape.hpp
   *  Created: Jun 05, 2012
-  *  Modified: Wed 22 May 2013 11:17:15 AM PDT
+  *  Modified: Mon 17 Jun 2013 01:46:29 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -162,6 +162,10 @@ namespace hig {
 			// /////////////////////////////////////////
 			bool update_cyl_radius(float_t val);
 			bool update_cyl_height(float_t val);
+			bool update_tpyr_xsize(float_t val);
+			bool update_tpyr_ysize(float_t val);
+			bool update_tpyr_height(float_t val);
+			bool update_tpyr_baseangle(float_t val);
 
 	}; // class Shape
 
