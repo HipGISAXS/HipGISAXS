@@ -5,7 +5,7 @@
   *
   *  File: ff_ana.hpp
   *  Created: Jul 12, 2012
-  *  Modified: Wed 03 Apr 2013 07:36:54 PM PDT
+  *  Modified: Mon 17 Jun 2013 12:43:33 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -72,7 +72,10 @@ namespace hig {
 			bool compute_prism(shape_param_list_t&, std::vector<complex_t>&, float_t, float_t, vector3_t);
 			bool compute_prism6(shape_param_list_t&, std::vector<complex_t>&, float_t, float_t, vector3_t);
 			bool compute_prism3x(shape_param_list_t&, std::vector<complex_t>&, float_t, float_t, vector3_t);
-			bool compute_truncated_pyramid();
+			bool compute_truncated_pyramid(shape_param_list_t&, std::vector<complex_t>&, vector3_t);
+			complex_t truncated_pyramid_core(int, float_t, complex_t, complex_t, complex_t,
+							float_t, float_t, float_t, float_t, vector3_t);
+			bool compute_rotation_matrix(int, float_t, vector3_t&, vector3_t&, vector3_t&);
 			bool compute_truncated_cone(shape_param_list_t&, float_t, float_t, std::vector<complex_t>&,
 							vector3_t);
 			bool compute_sawtooth_up();

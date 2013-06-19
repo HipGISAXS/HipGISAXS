@@ -5,7 +5,7 @@
   *
   *  File: ff_ana.cpp
   *  Created: Jul 12, 2012
-  *  Modified: Wed 03 Apr 2013 07:37:51 PM PDT
+  *  Modified: Wed 19 Jun 2013 03:48:37 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -156,7 +156,7 @@ namespace hig {
 				} // if
 				break;
 			case shape_truncpyr:				// truncated pyramid
-				if(!compute_truncated_pyramid()) {
+				if(!compute_truncated_pyramid(params, ff, transvec)) {
 					std::cerr << "error: something went wrong while computing FF for a truncated pyramid"
 								<< std::endl;
 					return false;
