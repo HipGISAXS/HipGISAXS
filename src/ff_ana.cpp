@@ -5,7 +5,7 @@
   *
   *  File: ff_ana.cpp
   *  Created: Jul 12, 2012
-  *  Modified: Wed 03 Apr 2013 07:37:51 PM PDT
+  *  Modified: Thu 20 Jun 2013 03:00:07 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -156,7 +156,7 @@ namespace hig {
 				} // if
 				break;
 			case shape_truncpyr:				// truncated pyramid
-				if(!compute_truncated_pyramid()) {
+				if(!compute_truncated_pyramid(params, ff, transvec)) {
 					std::cerr << "error: something went wrong while computing FF for a truncated pyramid"
 								<< std::endl;
 					return false;
@@ -317,9 +317,9 @@ namespace hig {
 		mqy = qy * rot[3] + qx * rot[4] + qz * rot[5];
 		mqz = qy * rot[6] + qx * rot[7] + qz * rot[8];
 		// rotation transposed
-		/*mqx = qy * rot[0] + qx * rot[3] + qz * rot[6];
-		mqy = qy * rot[1] + qx * rot[4] + qz * rot[7];
-		mqz = qy * rot[2] + qx * rot[5] + qz * rot[8];*/
+		//mqx = qy * rot[0] + qx * rot[3] + qz * rot[6];
+		//mqy = qy * rot[1] + qx * rot[4] + qz * rot[7];
+		//mqz = qy * rot[2] + qx * rot[5] + qz * rot[8];
 	} // AnalyticFormFactor::compute_meshpoints()
 
 } // namespace hig
