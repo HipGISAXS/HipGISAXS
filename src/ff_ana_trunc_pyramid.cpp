@@ -3,7 +3,7 @@
   *
   *  File: ff_ana_trunc_pyramid.cpp
   *  Created: Jul 12, 2012
-  *  Modified: Thu 20 Jun 2013 02:59:53 PM PDT
+  *  Modified: Thu 20 Jun 2013 03:11:02 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -70,6 +70,7 @@ namespace hig {
 			ff.clear(); ff.reserve(nqx_ * nqy_ * nqz_);
 			for(int i = 0; i < nqx_ * nqy_ * nqz_; ++ i) ff.push_back(complex_t(0, 0));
 
+			#pragma omp parallel for collapse(3)
 			for(int zi = 0; zi < nqz_; ++ zi) {
 				for(int yi = 0; yi < nqy_; ++ yi) {
 					for(int xi = 0; xi < nqx_; ++ xi) {
