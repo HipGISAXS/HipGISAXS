@@ -3,10 +3,12 @@
   *
   *  File: ff_ana_trunc_pyramid.cpp
   *  Created: Jul 12, 2012
-  *  Modified: Wed 19 Jun 2013 03:45:03 PM PDT
+  *  Modified: Thu 20 Jun 2013 02:59:53 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
+
+#include <boost/math/special_functions/fpclassify.hpp>
 
 #include "woo/timer/woo_boostchronotimers.hpp"
 
@@ -153,11 +155,19 @@ namespace hig {
 		complex_t k3 = sinc_eiq3 + sinc_eiq4;
 		complex_t k4 = - complex_t(0, 1) * (sinc_eiq3 - sinc_eiq4);
 
-		complex_t val = h / (rqx * rqy) * (cos(rqx * x - rqy * y) * k1 +
+		if((boost::math::fpclassify(rqx.real()) == FP_ZERO &&
+				boost::math::fpclassify(rqx.imag()) == FP_ZERO) ||
+				(boost::math::fpclassify(rqy.real()) == FP_ZERO &&
+				 boost::math::fpclassify(rqy.imag()) == FP_ZERO)) {
+			// FIXME: this is temporary fix !!!!! ...
+			return complex_t(0.0, 0.0);
+		} // if
+		complex_t val = (h / (rqx * rqy)) * (cos(rqx * x - rqy * y) * k1 +
 											sin(rqx * x - rqy * y) * k2 -
 											cos(rqx * x + rqy * y) * k3 -
-											sin(rqx * x + rqy * y) * k4) * complex_t(0, 1) *
-									exp(rqx * transvec[0] + rqy * transvec[1] + rqz * transvec[2]);
+											sin(rqx * x + rqy * y) * k4) *
+											exp(complex_t(0, 1) *
+											(rqx * transvec[0] + rqy * transvec[1] + rqz * transvec[2]));
 
 		return val;
 	} // AnalyticFormFactor::truncated_pyramid_core()
