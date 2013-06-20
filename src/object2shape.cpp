@@ -66,6 +66,8 @@ void o2s_converter::load_object(char* filename,
 	while(!input.eof()) {
 		input.getline(temp_line, 256);
 		std::string temp_string(temp_line);
+
+		temp_string.erase(std::remove(temp_string.begin(), temp_string.end(), '\r'), temp_string.end());
 		if(temp_string.empty()) continue;
 
 		std::stringstream temp_stream(temp_string);
