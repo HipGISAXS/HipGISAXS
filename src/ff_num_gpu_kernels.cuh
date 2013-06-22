@@ -3,7 +3,7 @@
   *
   *  File: ff_num_gpu_kernels.cuh
   *  Created: Apr 11, 2013
-  *  Modified: Wed 01 May 2013 08:17:36 PM PDT
+  *  Modified: Sat 22 Jun 2013 09:38:18 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -299,7 +299,7 @@
 		//qn_d = cuCdivf(cuCaddf(make_cuFloatComplex(temp_x * nx, 0.0f),
 		//						cuCaddf(make_cuFloatComplex(qyn, 0.0f), qzn)), q2);
 		//qt_d = cuCaddf(make_cuFloatComplex(fmaf(temp_x, x, qyt), 0.0f), qzt);
-s		cuFloatComplex q2 = fmaf(temp_x, temp_x, qy2) + qz2;
+		cuFloatComplex q2 = fmaf(temp_x, temp_x, qy2) + qz2;
 		qt_d = fmaf(temp_x, x, qyt) + qzt;
 		qn_d = cuCdivf((fmaf(temp_x, nx, qyn) + qzn), q2);
 	} // compute_x()
