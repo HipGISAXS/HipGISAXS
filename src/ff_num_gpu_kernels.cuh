@@ -299,7 +299,7 @@
 		//qn_d = cuCdivf(cuCaddf(make_cuFloatComplex(temp_x * nx, 0.0f),
 		//						cuCaddf(make_cuFloatComplex(qyn, 0.0f), qzn)), q2);
 		//qt_d = cuCaddf(make_cuFloatComplex(fmaf(temp_x, x, qyt), 0.0f), qzt);
-		cuFloatComplex q2 = fmaf(temp_x, temp_x, qy2) + qz2;
+s		cuFloatComplex q2 = fmaf(temp_x, temp_x, qy2) + qz2;
 		qt_d = fmaf(temp_x, x, qyt) + qzt;
 		qn_d = cuCdivf((fmaf(temp_x, nx, qyn) + qzn), q2);
 	} // compute_x()
@@ -318,8 +318,8 @@
 
 
 	__device__ __inline__ cuDoubleComplex compute_fq(double s, cuDoubleComplex qt_d, cuDoubleComplex qn_d) {
-		cuDoubleComplex v1 = cuCmul(qn_d, make_cuDoubleComplex(cos(qt_d.x), sin(qt_d.x)));
-		double v2 = s * exp(qt_d.y);
+		cuDoubleComplex v1 = cuCmul(qn_d, make_cuDoubleComplex(__cos(qt_d.x), __sin(qt_d.x)));
+		double v2 = s * __exp(qt_d.y);
 		//return cuCmul(v1, make_cuDoubleComplex(v2, 0.0));
 		return v1 * v2;
 	} // compute_fq()
