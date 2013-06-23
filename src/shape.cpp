@@ -5,7 +5,7 @@
   *
   *  File: shape.cpp
   *  Created: Jun 05, 2012
-  *  Modified: Mon 17 Jun 2013 01:45:21 PM PDT
+  *  Modified: Sun 23 Jun 2013 10:20:12 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -161,7 +161,7 @@ namespace hig {
 	} // update_cyl_height()*/
 
 	bool Shape::update_tpyr_xsize(float_t val) {
-		shape_param_iterator_t i = params_.begin();
+		/*shape_param_iterator_t i = params_.begin();
 		std::string temp_str((*i).first);
 		//std::cout << " THE FIRST PARAM: " << temp_str << std::endl;
 		if(temp_str.compare("xsize") != 0) {
@@ -169,11 +169,21 @@ namespace hig {
 			return false;
 		} // if
 		(*i).second.min_ = val;
-		return true;
+		return true;*/
+		shape_param_iterator_t i = params_.begin();
+		while(i != params_.end()) {
+			std::string temp_str((*i).first);
+			if(temp_str.compare("xsize") == 0) {
+				(*i).second.min_ = val;
+				return true;
+			} // if
+			++ i;
+		} // while
+		return false;
 	} // update_tpyr_xsize()
 
 	bool Shape::update_tpyr_ysize(float_t val) {
-		shape_param_iterator_t i = params_.begin();
+		/*shape_param_iterator_t i = params_.begin();
 		++ i;
 		if(i == params_.end()) {
 			std::cerr << "error: second parameter missing!" << std::endl;
@@ -186,11 +196,21 @@ namespace hig {
 			return false;
 		} // if
 		(*i).second.min_ = val;
-		return true;
+		return true;*/
+		shape_param_iterator_t i = params_.begin();
+		while(i != params_.end()) {
+			std::string temp_str((*i).first);
+			if(temp_str.compare("ysize") == 0) {
+				(*i).second.min_ = val;
+				return true;
+			} // if
+			++ i;
+		} // while
+		return false;
 	} // update_tpyr_ysize()
 
 	bool Shape::update_tpyr_height(float_t val) {
-		shape_param_iterator_t i = params_.begin();
+		/*shape_param_iterator_t i = params_.begin();
 		++ i; ++ i;
 		if(i == params_.end()) {
 			std::cerr << "error: third parameter missing!" << std::endl;
@@ -202,11 +222,21 @@ namespace hig {
 			return false;
 		} // if
 		(*i).second.min_ = val;
-		return true;
+		return true;*/
+		shape_param_iterator_t i = params_.begin();
+		while(i != params_.end()) {
+			std::string temp_str((*i).first);
+			if(temp_str.compare("height") == 0) {
+				(*i).second.min_ = val;
+				return true;
+			} // if
+			++ i;
+		} // while
+		return false;
 	} // update_tpyr_height()
 
 	bool Shape::update_tpyr_baseangle(float_t val) {
-		shape_param_iterator_t i = params_.begin();
+		/*shape_param_iterator_t i = params_.begin();
 		++ i; ++i; ++i;
 		if(i == params_.end()) {
 			std::cerr << "error: fourth parameter missing!" << std::endl;
@@ -218,7 +248,17 @@ namespace hig {
 			return false;
 		} // if
 		(*i).second.min_ = val;
-		return true;
+		return true;*/
+		shape_param_iterator_t i = params_.begin();
+		while(i != params_.end()) {
+			std::string temp_str((*i).first);
+			if(temp_str.compare("baseangle") == 0) {
+				(*i).second.min_ = val;
+				return true;
+			} // if
+			++ i;
+		} // while
+		return false;
 	} // update_tpyr_ysize()
 
 } // namespace hig

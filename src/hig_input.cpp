@@ -3,7 +3,7 @@
   *
   *  File: hig_input.cpp
   *  Created: Jun 11, 2012
-  *  Modified: Mon 17 Jun 2013 01:41:19 PM PDT
+  *  Modified: Sun 23 Jun 2013 10:25:32 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -81,18 +81,18 @@ namespace hig {
 */
 		shape_iterator_t sh = shapes_.begin();
 		shape_param_iterator_t pa = (*sh).second.param_list().begin();
-		fit_param_map_.mapper_["xsize"] = (*pa).second.min();
-		++ pa;
-		fit_param_map_.mapper_["ysize"] = (*pa).second.min();
+		fit_param_map_.mapper_["baseangle"] = (*pa).second.min();
 		++ pa;
 		fit_param_map_.mapper_["height"] = (*pa).second.min();
 		++ pa;
-		fit_param_map_.mapper_["baseangle"] = (*pa).second.min();
+		fit_param_map_.mapper_["xsize"] = (*pa).second.min();
+		++ pa;
+		fit_param_map_.mapper_["ysize"] = (*pa).second.min();
 
-		std::cout << "-- Initial xsize = " << fit_param_map_.mapper_["height"] << std::endl;
-		std::cout << "-- Initial ysize = " << fit_param_map_.mapper_["height"] << std::endl;
+		std::cout << "-- Initial xsize = " << fit_param_map_.mapper_["xsize"] << std::endl;
+		std::cout << "-- Initial ysize = " << fit_param_map_.mapper_["ysize"] << std::endl;
 		std::cout << "-- Initial height = " << fit_param_map_.mapper_["height"] << std::endl;
-		std::cout << "-- Initial baseangle = " << fit_param_map_.mapper_["radius"] << std::endl;
+		std::cout << "-- Initial baseangle = " << fit_param_map_.mapper_["baseangle"] << std::endl;
 
 		return true;
 	} // HiGInput::read_input_config()
