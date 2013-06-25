@@ -3,7 +3,7 @@
   *
   *  File: ff_num_gpu_kernels.cuh
   *  Created: Apr 11, 2013
-  *  Modified: Wed 01 May 2013 08:17:36 PM PDT
+  *  Modified: Sat 22 Jun 2013 09:38:18 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -318,8 +318,8 @@
 
 
 	__device__ __inline__ cuDoubleComplex compute_fq(double s, cuDoubleComplex qt_d, cuDoubleComplex qn_d) {
-		cuDoubleComplex v1 = cuCmul(qn_d, make_cuDoubleComplex(cos(qt_d.x), sin(qt_d.x)));
-		double v2 = s * exp(qt_d.y);
+		cuDoubleComplex v1 = cuCmul(qn_d, make_cuDoubleComplex(__cos(qt_d.x), __sin(qt_d.x)));
+		double v2 = s * __exp(qt_d.y);
 		//return cuCmul(v1, make_cuDoubleComplex(v2, 0.0));
 		return v1 * v2;
 	} // compute_fq()
