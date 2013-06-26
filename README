@@ -2,8 +2,9 @@ HipGISAXS Version 0.2-beta: QUICK STARTER GUIDE
 ===============================================
 Bug (what bug?) reporting: Email: bug-submit@saxs-waxs-gpu.dhcp.lbl.gov and asarje@lbl.gov
 
+-----------------------------------------------------------------
 TABLE OF CONTENTS:
-------------------
+-----------------------------------------------------------------
   ** SUPPORTED PLATFORMS
     A. Operating System Platforms
     B. System Hardware (Compute Environment)
@@ -27,6 +28,7 @@ APPENDIX:
     E. On Mira at ALCF
     F. On a generic Linux system
     G. For certain users, on ALS GPU servers
+-----------------------------------------------------------------
 
 
 
