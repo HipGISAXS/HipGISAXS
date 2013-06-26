@@ -1,6 +1,33 @@
 HipGISAXS Version 0.2-beta: QUICK STARTER GUIDE
-=================================================
+===============================================
 Bug (what bug?) reporting: Email: bug-submit@saxs-waxs-gpu.dhcp.lbl.gov and asarje@lbl.gov
+
+TABLE OF CONTENTS:
+------------------
+  ** SUPPORTED PLATFORMS
+    A. Operating System Platforms
+    B. System Hardware (Compute Environment)
+    C. System Hardware (Processor Architectures)
+  ** SOFTWARE PRE_REQUISITES
+  ** HipGISAXS DIRECTORY LAYOUT
+  ** TO BUILD THE APPLICATION
+  ** TO BUILD THE LIBRARY
+  ** TO USE THE HIPGISAXS LIBRARY IN YOUR OWN APPLICATION
+  ** TO RUN THE APPLICATION
+    A. Interactively on Dirac (NERSC)
+    B. Submit batch job for multiple GPU nodes on Dirac (NERSC)
+    C. Interactively on a generic Linux machine equipped with GPU
+  ** INPUTS:
+APPENDIX:
+  ** SPECIAL BUILD INSTRUCTIONS FOR SPECIFIC SYSTEMS
+    A. On Carver/Dirac at NERSC
+    B. On Hopper/Edison at NERSC
+    C. On Titan at OLCF
+    D. On Stampede at TACC
+    E. On Mira at ALCF
+    F. On a generic Linux system
+    G. For certain users, on ALS GPU servers
+
 
 
 ** SUPPORTED PLATFORMS:
@@ -14,7 +41,7 @@ A. Operating System Platforms:
 3. You could try HipGISAXS on any UNIX based OS, but it may or may not support it.
    Please let us know about your platform so that we can include it in our list.
 
-B. System Hardware (COMPUTE ENVIRONMENT):
+B. System Hardware (Compute Environment):
    -------------------------------------
 1. Clusters/Supercomputers equipped with GPUs as accelerators on each node when using GPU version.
 2. Generic desktop equipped with a compute GPU when using GPU version (also see next point).
@@ -22,8 +49,8 @@ B. System Hardware (COMPUTE ENVIRONMENT):
 4. Clusters/Supercomputers equipped with Intel Phi coprocessors on each node when using MIC version.
 5. Any Intel CPU equipped with Intel Phi coprocessor when using MIC version.
 
-C. System Hardware (GPU/CPU/MIC):
-   -----------------------------
+C. System Hardware (Processor Architectures):
+   -----------------------------------------
 1. Fermi or Kepler architecture based Nvidia GPUs.
    Compute capability of these GPUs >= 2.0.
 2. Intel/AMD processors (including multi-cores).
@@ -209,10 +236,10 @@ The main components in the input file to update are the following:
 
 
 APPENDIX:
----------
+--------
 
 ** SPECIAL BUILD INSTRUCTIONS FOR SPECIFIC SYSTEMS:
-   ------------------------------------------------
+   -----------------------------------------------
 
 A. On Carver/Dirac at NERSC:
    ------------------------
