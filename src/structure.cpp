@@ -5,7 +5,7 @@
   *
   *  File: structure.cpp
   *  Created: Jun 12, 2012
-  *  Modified: Fri 07 Dec 2012 01:34:09 PM PST
+  *  Modified: Wed 10 Jul 2013 02:08:19 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -48,86 +48,88 @@ namespace hig {
 
 
 	bool Lattice::construct_vectors(float_t scaling) {
-		if(abc_set_) return true;	// a b c are already defined in the input
+		//if(abc_set_) return true;	// a b c are already defined in the input
 
 		float_t sqrt2 = sqrt(2.0);
 		float_t sqrt3 = sqrt(3.0);
 
-		switch(type_) {
-			case lattice_bcc:					// BCC
-				if(hkl_ == "100") {
+		if(!abc_set_) {
+			switch(type_) {
+				case lattice_bcc:					// BCC
+					if(hkl_ == "100") {
+						a_[0] = 1; a_[1] = 0; a_[2] = 0;
+						b_[0] = 0; b_[1] = 1; b_[2] = 0;
+						c_[0] = 0; b_[1] = 0; c_[2] = 1;
+						t_[0] = 0.5; t_[1] = 0.5; t_[2] = 0.5;
+					} else if(hkl_ == "110") {
+						a_[0] = 1; a_[1] = 0; a_[2] = 0;
+						b_[0] = 0.5; b_[1] = 0.5 / sqrt2; b_[2] = 0;
+						c_[0] = 0; b_[1] = 0; c_[2] = 1;
+						t_[0] = 0.5; t_[1] = 0; t_[2] = 0.5;
+					} else {
+						std::cerr << "error: invalid lattice type and hkl combination" << std::endl;
+						return false;
+					} // if-else
+					break;
+
+				case lattice_cubic:					// CUBIC
 					a_[0] = 1; a_[1] = 0; a_[2] = 0;
 					b_[0] = 0; b_[1] = 1; b_[2] = 0;
-					c_[0] = 0; b_[1] = 0; c_[2] = 1;
-					t_[0] = 0.5; t_[1] = 0.5; t_[2] = 0.5;
-				} else if(hkl_ == "110") {
+					c_[0] = 0; c_[1] = 0; c_[2] = 1;
+					t_[0] = 0; t_[1] = 0; t_[2] = 0;
+					break;
+
+				case lattice_fcc:					// FCC
+					if(hkl_ == "100") {
+						a_[0] = 1; a_[1] = 0; a_[2] = 0;
+						b_[0] = 0.5; b_[1] = 0.5; b_[2] = 0;
+						c_[0] = 0; b_[1] = 0; c_[2] = 1;
+						t_[0] = 0.5; t_[1] = 0; t_[2] = 0.5;
+					} else if(hkl_ == "111") {
+						a_[0] = 1; a_[1] = 0; a_[2] = 0;
+						b_[0] = 0.5; b_[1] = 1.0 / (2.0 * sqrt3); b_[2] = 0;
+						c_[0] = 0; b_[1] = 0; c_[2] = 2.0 / sqrt3;
+						t_[0] = sqrt3 / 3; t_[1] = 0; t_[2] = 1 / sqrt3;
+					} else {
+						std::cerr << "error: invalid lattice type and khl combination" << std::endl;
+						return false;
+					} // if-else
+					break;
+
+				case lattice_fco:					// FCO
 					a_[0] = 1; a_[1] = 0; a_[2] = 0;
-					b_[0] = 0.5; b_[1] = 0.5 / sqrt2; b_[2] = 0;
-					c_[0] = 0; b_[1] = 0; c_[2] = 1;
-					t_[0] = 0.5; t_[1] = 0; t_[2] = 0.5;
-				} else {
-					std::cerr << "error: invalid lattice type and hkl combination" << std::endl;
+					b_[0] = 0.5; b_[1] = tan(gamma_) / 2.0; b_[2] = 0;
+					c_[0] = 0; b_[1] = 0; c_[2] = ca_;
+					t_[0] = 0.5; t_[1] = 0; t_[2] = ca_ / 2;
+					break;
+
+				case lattice_hcp:					// HCP
+					a_[0] = 1; a_[1] = 0; a_[2] = 0;
+					b_[0] = 0.5; b_[1] = 1 / (2.0 * sqrt3); b_[2] = 0;
+					c_[0] = 0; b_[1] = 0; c_[2] = ca_ / sqrt3;
+					t_[0] = sqrt3 / 3.0; t_[1] = 0; t_[2] = ca_ / (2 * sqrt3);
+					break;
+
+				case lattice_hex:					// HEX
+					a_[0] = 1; a_[1] = 0; a_[2] = 0;
+					b_[0] = 0.5; b_[1] = 1 / (2.0 * sqrt3); b_[2] = 0;		// check ...
+					c_[0] = 0; c_[1] = 0; c_[2] = 1;
+					t_[0] = 0; t_[1] = 0; t_[2] = 0;
+					break;
+
+				case lattice_null:					// means custom vectors are defined
+					t_[0] = t_[1] = t_[2] = 0;
+					break;
+
+				case lattice_error:
+					std::cerr << "error: lattice type already has some previous error" << std::endl;
 					return false;
-				} // if-else
-				break;
 
-			case lattice_cubic:					// CUBIC
-				a_[0] = 1; a_[1] = 0; a_[2] = 0;
-				b_[0] = 0; b_[1] = 1; b_[2] = 0;
-				c_[0] = 0; c_[1] = 0; c_[2] = 1;
-				t_[0] = 0; t_[1] = 0; t_[2] = 0;
-				break;
-
-			case lattice_fcc:					// FCC
-				if(hkl_ == "100") {
-					a_[0] = 1; a_[1] = 0; a_[2] = 0;
-					b_[0] = 0.5; b_[1] = 0.5; b_[2] = 0;
-					c_[0] = 0; b_[1] = 0; c_[2] = 1;
-					t_[0] = 0.5; t_[1] = 0; t_[2] = 0.5;
-				} else if(hkl_ == "111") {
-					a_[0] = 1; a_[1] = 0; a_[2] = 0;
-					b_[0] = 0.5; b_[1] = 1.0 / (2.0 * sqrt3); b_[2] = 0;
-					c_[0] = 0; b_[1] = 0; c_[2] = 2.0 / sqrt3;
-					t_[0] = sqrt3 / 3; t_[1] = 0; t_[2] = 1 / sqrt3;
-				} else {
-					std::cerr << "error: invalid lattice type and khl combination" << std::endl;
+				default:
+					std::cerr << "error: lattice type has unknown value" << std::endl;
 					return false;
-				} // if-else
-				break;
-
-			case lattice_fco:					// FCO
-				a_[0] = 1; a_[1] = 0; a_[2] = 0;
-				b_[0] = 0.5; b_[1] = tan(gamma_) / 2.0; b_[2] = 0;
-				c_[0] = 0; b_[1] = 0; c_[2] = ca_;
-				t_[0] = 0.5; t_[1] = 0; t_[2] = ca_ / 2;
-				break;
-
-			case lattice_hcp:					// HCP
-				a_[0] = 1; a_[1] = 0; a_[2] = 0;
-				b_[0] = 0.5; b_[1] = 1 / (2.0 * sqrt3); b_[2] = 0;
-				c_[0] = 0; b_[1] = 0; c_[2] = ca_ / sqrt3;
-				t_[0] = sqrt3 / 3.0; t_[1] = 0; t_[2] = ca_ / (2 * sqrt3);
-				break;
-
-			case lattice_hex:					// HEX
-				a_[0] = 1; a_[1] = 0; a_[2] = 0;
-				b_[0] = 0.5; b_[1] = 1 / (2.0 * sqrt3); b_[2] = 0;		// check ...
-				c_[0] = 0; c_[1] = 0; c_[2] = 1;
-				t_[0] = 0; t_[1] = 0; t_[2] = 0;
-				break;
-
-			case lattice_null:					// means custom vectors are defined
-				t_[0] = t_[1] = t_[2] = 0;
-				break;
-
-			case lattice_error:
-				std::cerr << "error: lattice type already has some previous error" << std::endl;
-				return false;
-
-			default:
-				std::cerr << "error: lattice type has unknown value" << std::endl;
-				return false;
-		} // switch
+			} // switch
+		} // if
 
 		// scale the vector values
 		a_[0] *= scaling; a_[1] *= scaling; a_[2] *= scaling;
