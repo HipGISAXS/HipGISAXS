@@ -5,7 +5,7 @@
   *
   *  File: structure.cpp
   *  Created: Jun 12, 2012
-  *  Modified: Thu 11 Jul 2013 12:07:37 PM PDT
+  *  Modified: Fri 12 Jul 2013 01:17:43 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -105,7 +105,7 @@ namespace hig {
 
 				case lattice_hcp:					// HCP
 					a_[0] = 1; a_[1] = 0; a_[2] = 0;
-					b_[0] = 0.5; b_[1] = sqrt3 / 2.0; b_[2] = 0;
+					b_[0] = 0.5; b_[1] = 1.0 / (2.0 * sqrt3); b_[2] = 0;
 					c_[0] = 0; b_[1] = 0; c_[2] = ca_ / sqrt3;
 					t_[0] = sqrt3 / 3.0; t_[1] = 0; t_[2] = ca_ / (2 * sqrt3);
 					break;
