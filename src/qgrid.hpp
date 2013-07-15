@@ -5,7 +5,7 @@
   *
   *  File: qgrid.hpp
   *  Created: Jun 17, 2012
-  *  Modified: Mon 08 Apr 2013 04:01:19 PM PDT
+  *  Modified: Sat 13 Jul 2013 08:15:11 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -41,6 +41,7 @@ namespace hig {
 			QGrid& operator=(const QGrid&);
 
 			bool pixel_to_kspace(vector2_t, float_t, float_t, float_t, float_t, vector2_t, vector3_t&);
+			vector3_t pixel_to_kspace(vector2_t, float_t, float_t, float_t, float_t, vector2_t);
 			bool kspace_to_pixel();		// not implemented yet ...
 
 		public:

@@ -5,7 +5,7 @@
   *
   *  File: hig_input.cpp
   *  Created: Jun 11, 2012
-  *  Modified: Fri 17 May 2013 12:18:36 PM PDT
+  *  Modified: Fri 12 Jul 2013 02:19:54 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -43,7 +43,6 @@ namespace hig {
 
 
 	bool HiGInput::construct_input_config(char* filename) {
-		//if(!input_reader_.init(filename)) {
 		if(!InputReader::instance().read_input(filename)) {
 			std::cerr << "fatal error: some error happened in opening or reading "
 						<< "input config file. aborting"
@@ -93,8 +92,6 @@ namespace hig {
 				return false;
 
 			case comment_token:	// do nothing
-				//std::cerr << "error: something went wrong - "
-				//			<< "seeing comments when not supposed to!" << std::endl;
 				return true;
 
 			case object_begin_token:	// should be preceeded by '='

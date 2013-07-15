@@ -5,7 +5,7 @@
   *
   *  File: hig_input.hpp
   *  Created: Jun 11, 2012
-  *  Modified: Fri 17 May 2013 11:50:18 AM PDT
+  *  Modified: Fri 12 Jul 2013 02:20:12 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -31,7 +31,7 @@
 
 namespace hig {
 
-	// later on create a syntax tree out of the input reading
+	// TODO: later on create a syntax tree out of the input reading
 	// for that create a class with generic 'object type' and parent, children pointers
 	// ...
 
