@@ -5,7 +5,7 @@
   *
   *  File: structure.hpp
   *  Created: Jun 09, 2012
-  *  Modified: Thu 28 Mar 2013 02:26:56 PM PDT
+  *  Modified: Mon 15 Jul 2013 03:07:19 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */

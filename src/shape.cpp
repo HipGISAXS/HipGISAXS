@@ -5,7 +5,7 @@
   *
   *  File: shape.cpp
   *  Created: Jun 05, 2012
-  *  Modified: Mon 08 Oct 2012 10:49:09 PM PDT
+  *  Modified: Mon 15 Jul 2013 03:04:59 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -99,14 +99,14 @@ namespace hig {
 
 
 	bool Shape::insert_param(const std::pair <std::string, ShapeParam>& param) {
-		// check if it already exists ...
+		// TODO: check if it already exists ...
 		params_[param.first] = param.second;
 		return true;
 	} // Shape::insert_param()
 
 
 	bool Shape::insert_param(const std::string& type, const ShapeParam& param) {
-		// check if it already exists ...
+		// TODO: check if it already exists ...
 		params_[type] = param;
 		return true;
 	} // Shape::insert_param()
