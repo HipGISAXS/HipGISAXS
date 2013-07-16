@@ -1,0 +1,144 @@
+HipGISAXS v1.0 LICENSING
+========================
+
+The HipGISAXS software is only available to be downloaded and used by employees
+of academic research institutions, not-for-profit research laboratories, or
+governmental research facilities. Please read the following Non-Commercial End
+User License Agreement before downloading the software. By downloading the
+software, you are agreeing to be bound by the terms of this Non-Commercial End
+User License Agreement. This EULA is also provided as a PDF file along with
+the documentation.
+
+
+BERKELEY LAB HipGISAXS NON-COMMERCIAL END USER LICENSE AGREEMENT
+================================================================
+
+Software: HipGISAXS
+Version: 1.0
+
+This License Agreement (the "Agreement") is a legal agreement between The
+Regents of the University of California, Department of Energy contract-
+operators of the
+		Ernest Orlando Lawrence Berkeley National Laboratory,
+		1 Cyclotron Road, Berkeley, CA 94720
+("Berkeley Lab"), and "you" or "Licensee". By downloading this Software, you
+agree to be bound by the terms of this Agreement. If you do not agree to be
+bound by these terms, then do not download the Software.
+
+You or Licensee agrees to the following:
+
+1. LICENSE GRANT.
+Subject to receipt by Berkeley Lab of any required U.S. Department of Energy
+approvals, Berkeley Lab grants you, and you hereby accept, a nonexclusive,
+non-transferable, royalty-free perpetual license to install and use the version noted
+above of the computer software program noted above, in executable format only,
+together with any associated media, printed materials, and online or electronic
+documentation (if any) provided by Berkeley Lab (collectively, the “Software”),
+subject to the following terms and conditions:
+(a) You represent and acknowledge that you belong to either an academic research
+institution, a not-for-profit research laboratory, or a governmental research
+facility; You may use the Software solely for your own internal non-commercial
+research use;
+(b) You may use the Software solely at the site of your institution or research
+facility; you may not transfer the Software from that site without the prior written
+consent of Berkeley Lab; you may not allow the Software to be accessed over the
+internet or by users located at another site;
+(c) You may copy the Software solely to the extent reasonably necessary to exercise
+the foregoing license, and for backup and archival purposes; provided however that (i)
+you must reproduce all copyright notices and other proprietary notices on any copies
+of the Software and you must not remove or alter those notices; (ii) all copies of the
+Software shall be subject to the terms of this Agreement; and (iii) you may not
+otherwise copy or allow copies of the Software to be made;
+(d) You may not reverse engineer, disassemble, decompile, or otherwise attempt to
+derive the source code of the Software. You may not modify, alter, or create
+derivative works of the Software in any manner; and
+(e) You may not rent, lease, loan, sublicense, distribute or transfer the Software to
+any third party, nor use it for commercial time-sharing or service bureau use.
+
+2. COPYRIGHT; RETENTION OF RIGHTS.
+Subject to approval by the U.S. Department of Energy: (i) you hereby acknowledge that
+the Software is protected by United States copyright law and international treaty
+provisions; (ii) Berkeley Lab, and its licensors (if any), hereby reserve all rights,
+title and interest in and to the Software which are not explicitly granted to you
+herein; and (iii) without limiting the generality of the foregoing, Berkeley Lab and
+its licensors (if any) retain all title, copyright, and other proprietary interests in
+the Software and any copies thereof, and you do not acquire any rights, express or
+implied, in the Software, other than those specifically set forth in this Agreement.
+
+3. NO MAINTENANCE OR SUPPORT.
+Berkeley Lab shall be under no obligation whatsoever to: (i) provide maintenance or
+support for the Software; or (ii) to notify you of bug fixes, patches, or updates
+(collectively, "Update") to the Software (if any). If, in its sole discretion,
+Berkeley Lab makes an Update available to you and Berkeley Lab does not separately
+enter into a written license agreement with you relating to such Update, then it shall
+be deemed incorporated into the Software and subject to this Agreement.
+
+4. U.S. GOVERNMENT RIGHTS.
+The Software was developed under funding from the U.S. Department of Energy and the
+U.S. Government consequently retains certain rights as follows: the U.S. Government
+has been granted for itself and others acting on its behalf a paid-up, nonexclusive,
+irrevocable, worldwide license in the Software to reproduce, prepare derivative works,
+and perform publicly and display publicly. Beginning five (5) years after the date
+permission to assert copyright is obtained from the U.S. Department of Energy, and
+subject to any subsequent five (5) year renewals, the U.S. Government is granted for
+itself and others acting on its behalf a paid-up, nonexclusive, irrevocable, worldwide
+license in the Software to reproduce, prepare derivative works, distribute copies to
+the public, perform publicly and display publicly, and to permit others to do so.
+
+5. WARRANTY DISCLAIMER.
+THE SOFTWARE IS SUPPLIED "AS IS" WITHOUT WARRANTY OF ANY KIND. BERKELEY LAB, ITS
+LICENSORS, THE UNITED STATES, THE UNITED STATES DEPARTMENT OF ENERGY, AND THEIR
+EMPLOYEES: (1) DISCLAIM ANY WARRANTIES, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
+TO ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE
+OR NON-INFRINGEMENT, (2) DO NOT ASSUME ANY LEGAL LIABILITY OR RESPONSIBILITY FOR THE
+ACCURACY, COMPLETENESS, OR USEFULNESS OF THE SOFTWARE, (3) DO NOT REPRESENT THAT USE
+OF THE SOFTWARE WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS, (4) DO NOT WARRANT THAT THE
+SOFTWARE WILL FUNCTION UNINTERRUPTED, THAT IT IS ERROR-FREE OR THAT ANY ERRORS WILL BE
+CORRECTED.
+
+6. LIMITATION OF LIABILITY. IN NO EVENT WILL BERKELEY LAB OR ITS LICENSORS BE LIABLE
+FOR ANY INDIRECT, INCIDENTAL, CONSEQUENTIAL, SPECIAL OR PUNITIVE DAMAGES OF ANY KIND
+OR NATURE, INCLUDING BUT NOT LIMITED TO LOSS OF PROFITS OR LOSS OF DATA, FOR ANY
+REASON WHATSOEVER, WHETHER SUCH LIABILITY IS ASSERTED ON THE BASIS OF CONTRACT, TORT
+(INCLUDING NEGLIGENCE OR STRICT LIABILITY), OR OTHERWISE, EVEN IF BERKELEY LAB HAS
+BEEN WARNED OF THE POSSIBILITY OF SUCH LOSS OR DAMAGES. IN NO EVENT SHALL BERKELEY
+LAB’S LIABILITY FOR DAMAGES ARISING FROM OR IN CONNECTION WITH THIS AGREEMENT EXCEED
+THE AMOUNT PAID BY YOU FOR THE SOFTWARE.
+
+7. INDEMNITY.
+You shall indemnify, defend, and hold harmless Berkeley Lab, the U.S. Government, the
+Software developers, the Software sponsors, and their agents, officers, and employees,
+against any and all claims, suits, losses, damage, costs, fees, and expenses arising
+out of or in connection with this Agreement. You shall pay all costs incurred by
+Berkeley Lab in enforcing this provision, including reasonable attorney fees.
+
+8. TERM AND TERMINATION.
+The license granted to you under this Agreement will continue perpetually unless
+terminated by Berkeley Lab in accordance with this Agreement. If you breach any term
+of this Agreement, and fail to cure such breach within thirty (30) days of the date of
+written notice, this Agreement shall immediately terminate. Upon any such termination,
+you shall immediately cease using the Software, return to Berkeley Lab, or destroy,
+all copies of the Software, and provide Berkeley Lab with written certification of
+your compliance with the foregoing. Termination shall not relieve you from your
+obligations arising prior to such termination, including but not limited to the
+responsibility to pay previously accrued fees. Notwithstanding any provision of this
+Agreement to the contrary, Sections 5 through 10 shall survive termination of this
+Agreement.
+
+9. EXPORT CONTROLS.
+You shall observe all applicable United States and foreign laws and regulations (if
+any) with respect to the export, re-export, diversion or transfer of the Software,
+related technical data and direct products thereof, including, without limitation, the
+International Traffic in Arms Regulations (ITAR) and the Export Administration
+Regulations.
+
+10. GENERAL.
+This Agreement shall be governed by the laws of the State of California, excluding its
+rules governing conflicts of laws. No provision in either party's purchase orders, or
+in any other business forms employed by either party will supersede the terms of this
+Agreement, and no modification or amendment of this Agreement is binding, unless in
+writing signed by a duly authorized representative of each party. This Agreement is
+binding upon and shall inure to the benefit of Berkeley Lab, its successors and
+assigns. This Agreement represents the entire understanding of the parties, and
+supersedes all previous communications, written or oral, relating to the subject of
+this Agreement.
