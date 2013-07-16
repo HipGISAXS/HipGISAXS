@@ -1,14 +1,24 @@
-/***
-  *  $Id: hipgisaxs_main.hpp 47 2012-08-23 21:05:16Z asarje $
-  *
-  *  Project: HipGISAXS (High-Performance GISAXS)
-  *
-  *  File: hipgisaxs_main.hpp
-  *  Created: Jun 11, 2012
-  *  Modified: Mon 08 Apr 2013 04:16:06 PM PDT
-  *
-  *  Author: Abhinav Sarje <asarje@lbl.gov>
-  */
+/**
+ *  Project: HipGISAXS (High-Performance GISAXS)
+ *
+ *  File: hipgisaxs_main.hpp
+ *  Created: Jun 11, 2012
+ *  Modified: Tue 16 Jul 2013 11:50:57 AM PDT
+ *
+ *  Author: Abhinav Sarje <asarje@lbl.gov>
+ *  Developers: Slim Chourou <stchourou@lbl.gov>
+ *              Abhinav Sarje <asarje@lbl.gov>
+ *              Elaine Chan <erchan@lbl.gov>
+ *              Alexander Hexemer <ahexemer@lbl.gov>
+ *              Xiaoye Li <xsli@lbl.gov>
+ *
+ *  Licensing: The HipGISAXS software is only available to be downloaded and
+ *  used by employees of academic research institutions, not-for-profit
+ *  research laboratories, or governmental research facilities. Please read the
+ *  accompanying LICENSE file before downloading the software. By downloading
+ *  the software, you are agreeing to be bound by the terms of this
+ *  NON-COMMERCIAL END USER LICENSE AGREEMENT.
+ */
 
 #ifndef _HIPGISAXS_MAIN_HPP_
 #define _HIPGISAXS_MAIN_HPP_

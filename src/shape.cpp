@@ -1,14 +1,24 @@
-/***
-  *  $Id: shape.cpp 46 2012-08-23 02:01:21Z asarje $
-  *
-  *  Project: HipGISAXS (High-Performance GISAXS)
-  *
-  *  File: shape.cpp
-  *  Created: Jun 05, 2012
-  *  Modified: Mon 15 Jul 2013 03:04:59 PM PDT
-  *
-  *  Author: Abhinav Sarje <asarje@lbl.gov>
-  */
+/**
+ *  Project: HipGISAXS (High-Performance GISAXS)
+ *
+ *  File: shape.cpp
+ *  Created: Jun 05, 2012
+ *  Modified: Tue 16 Jul 2013 11:52:07 AM PDT
+ *
+ *  Author: Abhinav Sarje <asarje@lbl.gov>
+ *  Developers: Slim Chourou <stchourou@lbl.gov>
+ *              Abhinav Sarje <asarje@lbl.gov>
+ *              Elaine Chan <erchan@lbl.gov>
+ *              Alexander Hexemer <ahexemer@lbl.gov>
+ *              Xiaoye Li <xsli@lbl.gov>
+ *
+ *  Licensing: The HipGISAXS software is only available to be downloaded and
+ *  used by employees of academic research institutions, not-for-profit
+ *  research laboratories, or governmental research facilities. Please read the
+ *  accompanying LICENSE file before downloading the software. By downloading
+ *  the software, you are agreeing to be bound by the terms of this
+ *  NON-COMMERCIAL END USER LICENSE AGREEMENT.
+ */
 
 #include <iostream>
 

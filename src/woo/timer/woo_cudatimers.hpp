@@ -1,11 +1,9 @@
 /***
-  *  $Id$
-  *
-  *  Project:
+  *  Project: WOO Timer Library
   *
   *  File: woo_cudatimers.hpp
   *  Created: Nov 21, 2012
-  *  Modified: Thu 22 Nov 2012 10:54:52 AM PST
+  *  Modified: Mon 15 Jul 2013 03:31:26 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */

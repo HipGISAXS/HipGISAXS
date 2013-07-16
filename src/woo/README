@@ -1,7 +1,14 @@
--------------
-Woo Libraries
--------------
+-----------------------------------------------
+The WOO Libraries.
 
-Timers
-Dynamic Matrix
-CUDA Reduce Operation
+File: README
+Author: Abhinav Sarje <abhinav.sarje@gmail.com>
+
+Copyright (c) 2012-2013 Abhinav Sarje.
+Distributed under the Boost Software License.
+See accompanying file LICENSE.
+-----------------------------------------------
+
+WOO Timers
+WOO Dynamic Matrix
+WOO Reduce

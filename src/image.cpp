@@ -1,14 +1,24 @@
-/***
-  *  $Id: image.cpp 47 2012-08-23 21:05:16Z asarje $
-  *
-  *  Project: HipGISAXS (High-Performance GISAXS)
-  *
-  *  File: image.cpp
-  *  Created: Jun 18, 2012
-  *  Modified: Fri 30 Nov 2012 02:18:48 PM PST
-  *
-  *  Author: Abhinav Sarje <asarje@lbl.gov>
-  */
+/**
+ *  Project: HipGISAXS (High-Performance GISAXS)
+ *
+ *  File: image.cpp
+ *  Created: Jun 18, 2012
+ *  Modified: Tue 16 Jul 2013 11:51:00 AM PDT
+ *
+ *  Author: Abhinav Sarje <asarje@lbl.gov>
+ *  Developers: Slim Chourou <stchourou@lbl.gov>
+ *              Abhinav Sarje <asarje@lbl.gov>
+ *              Elaine Chan <erchan@lbl.gov>
+ *              Alexander Hexemer <ahexemer@lbl.gov>
+ *              Xiaoye Li <xsli@lbl.gov>
+ *
+ *  Licensing: The HipGISAXS software is only available to be downloaded and
+ *  used by employees of academic research institutions, not-for-profit
+ *  research laboratories, or governmental research facilities. Please read the
+ *  accompanying LICENSE file before downloading the software. By downloading
+ *  the software, you are agreeing to be bound by the terms of this
+ *  NON-COMMERCIAL END USER LICENSE AGREEMENT.
+ */
 
 #include <boost/math/special_functions/round.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>

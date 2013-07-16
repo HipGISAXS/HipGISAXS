@@ -1,14 +1,24 @@
-/***
-  *  $Id: inst_detector.hpp 46 2012-08-23 02:01:21Z asarje $
-  *
-  *  Project: HipGISAXS (High-Performance GISAXS)
-  *
-  *  File: inst_detector.hpp
-  *  Created: Jun 05, 2012
-  *  Modified: Mon 01 Oct 2012 11:14:36 AM PDT
-  *
-  *  Author: Abhinav Sarje <asarje@lbl.gov>
-  */
+/**
+ *  Project: HipGISAXS (High-Performance GISAXS)
+ *
+ *  File: inst_detector.hpp
+ *  Created: Jun 05, 2012
+ *  Modified: Tue 16 Jul 2013 11:51:08 AM PDT
+ *
+ *  Author: Abhinav Sarje <asarje@lbl.gov>
+ *  Developers: Slim Chourou <stchourou@lbl.gov>
+ *              Abhinav Sarje <asarje@lbl.gov>
+ *              Elaine Chan <erchan@lbl.gov>
+ *              Alexander Hexemer <ahexemer@lbl.gov>
+ *              Xiaoye Li <xsli@lbl.gov>
+ *
+ *  Licensing: The HipGISAXS software is only available to be downloaded and
+ *  used by employees of academic research institutions, not-for-profit
+ *  research laboratories, or governmental research facilities. Please read the
+ *  accompanying LICENSE file before downloading the software. By downloading
+ *  the software, you are agreeing to be bound by the terms of this
+ *  NON-COMMERCIAL END USER LICENSE AGREEMENT.
+ */
 
 #ifndef _INST_DETECTOR_HPP_
 #define _INST_DETECTOR_HPP_

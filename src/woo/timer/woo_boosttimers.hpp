@@ -1,11 +1,9 @@
 /***
-  *  $Id$
-  *
-  *  Project:
+  *  Project: WOO Timer Library
   *
   *  File: woo_boosttimers.hpp
   *  Created: Nov 21, 2012
-  *  Modified: Thu 22 Nov 2012 12:45:35 PM PST
+  *  Modified: Mon 15 Jul 2013 03:31:16 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */

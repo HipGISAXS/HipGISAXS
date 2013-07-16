@@ -1,14 +1,24 @@
-/***
-  *  $Id: inst_scattering.cpp 42 2012-08-22 05:07:05Z asarje $
-  *
-  *  Project: HipGISAXS (High-Performance GISAXS)
-  *
-  *  File: inst_scattering.cpp
-  *  Created: Jun 12, 2012
-  *  Modified: Tue 26 Mar 2013 03:54:56 PM PDT
-  *
-  *  Author: Abhinav Sarje <asarje@lbl.gov>
-  */
+/**
+ *  Project: HipGISAXS (High-Performance GISAXS)
+ *
+ *  File: inst_scattering.cpp
+ *  Created: Jun 12, 2012
+ *  Modified: Tue 16 Jul 2013 11:51:09 AM PDT
+ *
+ *  Author: Abhinav Sarje <asarje@lbl.gov>
+ *  Developers: Slim Chourou <stchourou@lbl.gov>
+ *              Abhinav Sarje <asarje@lbl.gov>
+ *              Elaine Chan <erchan@lbl.gov>
+ *              Alexander Hexemer <ahexemer@lbl.gov>
+ *              Xiaoye Li <xsli@lbl.gov>
+ *
+ *  Licensing: The HipGISAXS software is only available to be downloaded and
+ *  used by employees of academic research institutions, not-for-profit
+ *  research laboratories, or governmental research facilities. Please read the
+ *  accompanying LICENSE file before downloading the software. By downloading
+ *  the software, you are agreeing to be bound by the terms of this
+ *  NON-COMMERCIAL END USER LICENSE AGREEMENT.
+ */
 
 #include "inst_scattering.hpp"
 

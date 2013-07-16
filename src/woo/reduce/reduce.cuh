@@ -1,9 +1,9 @@
 /***
-  *  Project:
+  *  Project: WOO Reduce Library
   *
   *  File: reduce.cuh
   *  Created: Feb 12, 2013
-  *  Modified: Thu 28 Feb 2013 09:00:58 PM PST
+  *  Modified: Mon 15 Jul 2013 03:33:21 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */

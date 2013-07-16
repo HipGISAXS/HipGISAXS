@@ -3,11 +3,23 @@
  *
  *  File: ff_num_mic_kernels.hpp
  *  Created: Apr 22, 2013
- *  Modified: Sun 28 Apr 2013 10:06:35 AM PDT
+ *  Modified: Tue 16 Jul 2013 11:50:43 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
+ *  Developers: Slim Chourou <stchourou@lbl.gov>
+ *              Abhinav Sarje <asarje@lbl.gov>
+ *              Elaine Chan <erchan@lbl.gov>
+ *              Alexander Hexemer <ahexemer@lbl.gov>
+ *              Xiaoye Li <xsli@lbl.gov>
+ *
+ *  Licensing: The HipGISAXS software is only available to be downloaded and
+ *  used by employees of academic research institutions, not-for-profit
+ *  research laboratories, or governmental research facilities. Please read the
+ *  accompanying LICENSE file before downloading the software. By downloading
+ *  the software, you are agreeing to be bound by the terms of this
+ *  NON-COMMERCIAL END USER LICENSE AGREEMENT.
  */
-	
+
 	#ifdef FF_NUM_MIC_SWAP
 	
 	// special cases of the kernel when nqx == 1

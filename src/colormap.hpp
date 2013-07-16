@@ -1,18 +1,27 @@
-/***
-  *  Project: HipGISAXS (High-Performance GISAXS)
-  *
-  *  File: colormap.hpp
-  *  Created: Jul 02, 2012
-  *  Modified: Wed 17 Oct 2012 11:02:52 AM PDT
-  *
-  *  Author: Abhinav Sarje <asarje@lbl.gov>
-  *
-  *  Developers: Slim Chourou, Abhinav Sarje, Elaine Chan, Alexander Hexemer, Xiaoye Li
-  *  Affiliation: Lawrence Berkeley National Laboratory, Berkeley, CA, USA
-  */
+/**
+ *  Project: HipGISAXS (High-Performance GISAXS)
+ *
+ *  File: colormap.hpp
+ *  Created: Jul 02, 2012
+ *  Modified: Tue 16 Jul 2013 11:49:12 AM PDT
+ *
+ *  Author: Abhinav Sarje <asarje@lbl.gov>
+ *  Developers: Slim Chourou <stchourou@lbl.gov>
+ *              Abhinav Sarje <asarje@lbl.gov>
+ *              Elaine Chan <erchan@lbl.gov>
+ *              Alexander Hexemer <ahexemer@lbl.gov>
+ *              Xiaoye Li <xsli@lbl.gov>
+ *
+ *  Licensing: The HipGISAXS software is only available to be downloaded and
+ *  used by employees of academic research institutions, not-for-profit
+ *  research laboratories, or governmental research facilities. Please read the
+ *  accompanying LICENSE file before downloading the software. By downloading
+ *  the software, you are agreeing to be bound by the terms of this
+ *  NON-COMMERCIAL END USER LICENSE AGREEMENT.
+ */
 
-#ifndef _COLORMAP_HPP_
-#define _COLORMAP_HPP_
+#ifndef __COLORMAP_HPP__
+#define __COLORMAP_HPP__
 
 #include <cmath>
 #include <boost/array.hpp>
@@ -444,4 +453,4 @@ namespace hig {
 
 } // namespace hig
 	
-#endif /* _COLORMAP_HPP_ */
+#endif /* __COLORMAP_HPP__ */
