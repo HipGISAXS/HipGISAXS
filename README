@@ -1,10 +1,11 @@
-HipGISAXS Version 0.2-beta: QUICK STARTER GUIDE
-===============================================
+HipGISAXS Version 1.0: QUICK STARTER GUIDE
+==========================================
 Bug (what bug?) reporting: Email: bug-submit@saxs-waxs-gpu.dhcp.lbl.gov and asarje@lbl.gov
 
 -----------------------------------------------------------------
 TABLE OF CONTENTS:
 -----------------------------------------------------------------
+  ** LICENSING
   ** SUPPORTED PLATFORMS
     A. Operating System Platforms
     B. System Hardware (Compute Environment)
@@ -31,6 +32,15 @@ APPENDIX:
 -----------------------------------------------------------------
 
 
+** LICENSING:
+   ---------
+The HipGISAXS software is only available to be downloaded and used by employees
+of academic research institutions, not-for-profit research laboratories, or
+governmental research facilities. Please read the accompanying LICENSE file
+before downloading the software. By downloading the software, you are agreeing
+to be bound by the terms of this Non-Commercial End User License Agreement.
+This licensing information is also provided as a PDF file along with the documentation.
+
 
 ** SUPPORTED PLATFORMS:
    -------------------
@@ -45,11 +55,11 @@ A. Operating System Platforms:
 
 B. System Hardware (Compute Environment):
    -------------------------------------
-1. Clusters/Supercomputers equipped with GPUs as accelerators on each node when using GPU version.
-2. Generic desktop equipped with a compute GPU when using GPU version (also see next point).
-3. Any generic CPU (multi-cores), without GPU accelerators.
-4. Clusters/Supercomputers equipped with Intel Phi coprocessors on each node when using MIC version.
-5. Any Intel CPU equipped with Intel Phi coprocessor when using MIC version.
+1. Clusters/Supercomputers equipped with Nvidia GPUs as accelerators on each node when using the GPU version.
+2. Generic desktop equipped with an Nvidia GPU when using the GPU version.
+3. Clusters/Supercomputers equipped with Intel Phi coprocessors on each node when using MIC version.
+4. Any Intel CPU equipped with Intel Phi coprocessor when using MIC version.
+5. Any generic CPU (multi-cores), without accelerators.
 
 C. System Hardware (Processor Architectures):
    -----------------------------------------

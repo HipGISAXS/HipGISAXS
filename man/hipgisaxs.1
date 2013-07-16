@@ -1,4 +1,4 @@
-.TH "HIPGISAXS" "1" "08/28/2012" "" "Simulation Tools"
+.TH "HIPGISAXS" "1" "07/16/2013" "" "Simulation Tools"
 .nh
 .ad l
 .SH "NAME"
@@ -6,8 +6,10 @@ hipgisaxs \- High Performance GISAXS (Grazing Incidence Small Angle X-ray Scatte
 .SH "SYNOPSIS"
 .HP 6
 \fBhipgisaxs\fR [OPTION] HiG-INPUT-FILE
+.SH "VERSION"
+1.0
 .SH "DESCRIPTION"
-This is a high-performance tool which can take advantage of GPUs, multi-core CPUs and their clusters. Something something will come here.
+This is a high-performance tool which takes advantage of parallelism of the platform it is executed on, including multi-core CPUs, Nvidia GPUs, Intel MICs, and their clusters. Something more will come here.
 .SH "OPTIONS"
 None yet. If any come up in future versions, they will be listed here.
 .SH "ENVIRONMENT"
@@ -19,22 +21,28 @@ Description of the input file format.
 .SH "HiG INPUT EXAMPLES"
 Some examples of the input files.
 .SH "COMPATIBILITY"
-This code is not compatible with standards lower than C++0x/C++11. It is also not compatible with CUDA versions lower than 4.0. This code has only been tested with the OpenMPI implementation of MPI-2.
+This code is not compatible with standards lower than C++0x/C++11. It is also not compatible with CUDA versions lower than 4.0. This code has only been tested with the OpenMPI and MPICH2 implementations of the MPI-2 standard.
 .SH "STANDARDS"
 This tool conforms to C++11 standard.
 .SH "DOCUMENTATION"
-A complete documentation can be found in the doc directory included with this package. It can also be found at \fIhttp://www.lbl.gov/hipgisaxs/userguide.html\fR.
+A complete documentation can be found in the doc directory included with this package. It can also be found at \fIhttp://portal.nersc.gov/project/m1285/hipgisaxs.html\fR.
 .SH "AUTHOR"
-This \fIHipGISAXS\fR package based on C++, NVIDIA CUDA, OpenMP, MPI and parallel-HDF5 was written by Abhinav Sarje. HiG input format was developed by Abhinav Sarje, Slim T. Chourou and Elaine R. Chan.
+This \fIHipGISAXS\fR package based on C++, Nvidia CUDA, OpenMP, MPI and parallel-HDF5 was written by Abhinav Sarje. HiG input format was developed by Abhinav Sarje, Slim Chourou and Elaine Chan.
 .SH "DEVELOPERS"
-HipGISAXS was developed by Slim T. Chourou, Abhinav Sarje, Elaine R. Chan, Alexander Hexemer and Xiaoye S. Li at the Lawrence Berkeley National Laboratory, Berkeley, USA.
+HipGISAXS development team includes Slim Chourou, Abhinav Sarje, Elaine Chan, Alexander Hexemer and Xiaoye Li at the Lawrence Berkeley National Laboratory, Berkeley, USA.
 .SH "HISTORY"
-HipGISAXS was preceeded by a sequential MATLAB implementation written by Slim T. Chourou as a proof of concept.
+HipGISAXS was preceeded by a sequential MATLAB implementation which was written as a proof of concept.
 .SH "KNOWN BUGS"
-A list of known bugs which are being worked upon.
+Bugs? What bugs?
 .SH "REPORTING BUGS"
-Found a bug? Report any bugs which are not listed above to \fIbugs-hipgisaxs@lbl.gov\fR with detailed information about the case(s) when the bug(s) manifested.
+Found a bug?!!!??? Report any bugs to \fIbug-submit@saxs-waxs-gpu.dhcp.lbl.gov\fR or \fIasarje@lbl.gov\fR with detailed information about the case(s) when the bug(s) manifested.
 .SH "LICENSING AND COPYRIGHT"
-Here will be the licensing and copyright information.
+The HipGISAXS software is only available to be downloaded and used by employees
+of academic research institutions, not-for-profit research laboratories, or
+governmental research facilities. Please read the accompanying Non-Commercial End
+User License Agreement before downloading the software. By downloading the
+software, you are agreeing to be bound by the terms of this Non-Commercial End
+User License Agreement. This EULA is also provided as a PDF file along with
+the documentation.
 .SH "SEE ALSO"
 Anything to see also?
