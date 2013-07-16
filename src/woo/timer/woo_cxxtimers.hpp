@@ -1,11 +1,9 @@
 /***
-  *  $Id$
-  *
-  *  Project:
+  *  Project: WOO Timer Library
   *
   *  File: woo_cxxtimers.hpp
   *  Created: Nov 21, 2012
-  *  Modified: Sun 31 Mar 2013 02:04:12 PM PDT
+  *  Modified: Mon 15 Jul 2013 03:31:52 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */

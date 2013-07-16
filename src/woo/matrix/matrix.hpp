@@ -1,9 +1,9 @@
 /***
-  *  Project: Woo Matrix Library
+  *  Project: WOO Matrix Library
   *
   *  File: matrix.hpp
   *  Created: Dec 03, 2012
-  *  Modified: Wed 05 Dec 2012 03:25:32 PM PST
+  *  Modified: Mon 15 Jul 2013 03:33:57 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */

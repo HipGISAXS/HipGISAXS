@@ -1,14 +1,24 @@
-/***
-  *  $Id$
-  *
-  *  Project:
-  *
-  *  File: cu_complex_numeric.cuh
-  *  Created: Oct 17, 2012
-  *  Modified: Mon 06 May 2013 06:22:51 PM PDT
-  *
-  *  Author: Abhinav Sarje <asarje@lbl.gov>
-  */
+/**
+ *  Project: HipGISAXS (High-Performance GISAXS)
+ *
+ *  File: cu_complex_numeric.cuh
+ *  Created: Oct 17, 2012
+ *  Modified: Tue 16 Jul 2013 11:49:39 AM PDT
+ *
+ *  Author: Abhinav Sarje <asarje@lbl.gov>
+ *  Developers: Slim Chourou <stchourou@lbl.gov>
+ *              Abhinav Sarje <asarje@lbl.gov>
+ *              Elaine Chan <erchan@lbl.gov>
+ *              Alexander Hexemer <ahexemer@lbl.gov>
+ *              Xiaoye Li <xsli@lbl.gov>
+ *
+ *  Licensing: The HipGISAXS software is only available to be downloaded and
+ *  used by employees of academic research institutions, not-for-profit
+ *  research laboratories, or governmental research facilities. Please read the
+ *  accompanying LICENSE file before downloading the software. By downloading
+ *  the software, you are agreeing to be bound by the terms of this
+ *  NON-COMMERCIAL END USER LICENSE AGREEMENT.
+ */
 
 #ifndef _CU_COMPLEX_NUMERIC_CUH_
 #define _CU_COMPLEX_NUMERIC_CUH_

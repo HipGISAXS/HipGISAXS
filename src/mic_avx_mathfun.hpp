@@ -1,3 +1,25 @@
+/**
+ *  Project: HipGISAXS (High-Performance GISAXS)
+ *
+ *  File: mic_avx_mathfun.hpp
+ *  Created: Apr 23, 2013
+ *  Modified: Tue 16 Jul 2013 12:15:20 PM PDT
+ *
+ *  Author: Abhinav Sarje <asarje@lbl.gov>
+ *  Developers: Slim Chourou <stchourou@lbl.gov>
+ *              Abhinav Sarje <asarje@lbl.gov>
+ *              Elaine Chan <erchan@lbl.gov>
+ *              Alexander Hexemer <ahexemer@lbl.gov>
+ *              Xiaoye Li <xsli@lbl.gov>
+ *
+ *  Licensing: The HipGISAXS software is only available to be downloaded and
+ *  used by employees of academic research institutions, not-for-profit
+ *  research laboratories, or governmental research facilities. Please read the
+ *  accompanying LICENSE file before downloading the software. By downloading
+ *  the software, you are agreeing to be bound by the terms of this
+ *  NON-COMMERCIAL END USER LICENSE AGREEMENT.
+ */
+
 #pragma offload_attribute(push, target(mic))
 
 static const __m512i _pi32_sign_mask = _mm512_set1_epi32(0x80000000);

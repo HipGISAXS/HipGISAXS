@@ -1,14 +1,24 @@
-/***
-  *  $Id: ff_ana.cpp 37 2012-08-09 22:59:59Z asarje $
-  *
-  *  Project: HipGISAXS (High-Performance GISAXS)
-  *
-  *  File: ff_ana.cpp
-  *  Created: Jul 12, 2012
-  *  Modified: Wed 03 Apr 2013 07:37:51 PM PDT
-  *
-  *  Author: Abhinav Sarje <asarje@lbl.gov>
-  */
+/**
+ *  Project: HipGISAXS (High-Performance GISAXS)
+ *
+ *  File: ff_ana.cpp
+ *  Created: Jul 12, 2012
+ *  Modified: Tue 16 Jul 2013 11:49:51 AM PDT
+ *
+ *  Author: Abhinav Sarje <asarje@lbl.gov>
+ *  Developers: Slim Chourou <stchourou@lbl.gov>
+ *              Abhinav Sarje <asarje@lbl.gov>
+ *              Elaine Chan <erchan@lbl.gov>
+ *              Alexander Hexemer <ahexemer@lbl.gov>
+ *              Xiaoye Li <xsli@lbl.gov>
+ *
+ *  Licensing: The HipGISAXS software is only available to be downloaded and
+ *  used by employees of academic research institutions, not-for-profit
+ *  research laboratories, or governmental research facilities. Please read the
+ *  accompanying LICENSE file before downloading the software. By downloading
+ *  the software, you are agreeing to be bound by the terms of this
+ *  NON-COMMERCIAL END USER LICENSE AGREEMENT.
+ */
 
 #include <boost/math/special_functions/fpclassify.hpp>
 
@@ -156,7 +166,7 @@ namespace hig {
 				} // if
 				break;
 			case shape_truncpyr:				// truncated pyramid
-				if(!compute_truncated_pyramid()) {
+				if(!compute_truncated_pyramid(params, ff, transvec)) {
 					std::cerr << "error: something went wrong while computing FF for a truncated pyramid"
 								<< std::endl;
 					return false;
@@ -317,9 +327,9 @@ namespace hig {
 		mqy = qy * rot[3] + qx * rot[4] + qz * rot[5];
 		mqz = qy * rot[6] + qx * rot[7] + qz * rot[8];
 		// rotation transposed
-		/*mqx = qy * rot[0] + qx * rot[3] + qz * rot[6];
-		mqy = qy * rot[1] + qx * rot[4] + qz * rot[7];
-		mqz = qy * rot[2] + qx * rot[5] + qz * rot[8];*/
+		//mqx = qy * rot[0] + qx * rot[3] + qz * rot[6];
+		//mqy = qy * rot[1] + qx * rot[4] + qz * rot[7];
+		//mqz = qy * rot[2] + qx * rot[5] + qz * rot[8];
 	} // AnalyticFormFactor::compute_meshpoints()
 
 } // namespace hig

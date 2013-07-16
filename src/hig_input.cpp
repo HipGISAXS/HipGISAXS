@@ -1,14 +1,24 @@
-/***
-  *  $Id: hig_input.cpp 47 2012-08-23 21:05:16Z asarje $
-  *
-  *  Project: HipGISAXS (High-Performance GISAXS)
-  *
-  *  File: hig_input.cpp
-  *  Created: Jun 11, 2012
-  *  Modified: Wed 22 May 2013 02:07:21 PM PDT
-  *
-  *  Author: Abhinav Sarje <asarje@lbl.gov>
-  */
+/**
+ *  Project: HipGISAXS (High-Performance GISAXS)
+ *
+ *  File: hig_input.cpp
+ *  Created: Jun 11, 2012
+ *  Modified: Tue 16 Jul 2013 12:53:21 PM PDT
+ *
+ *  Author: Abhinav Sarje <asarje@lbl.gov>
+ *  Developers: Slim Chourou <stchourou@lbl.gov>
+ *              Abhinav Sarje <asarje@lbl.gov>
+ *              Elaine Chan <erchan@lbl.gov>
+ *              Alexander Hexemer <ahexemer@lbl.gov>
+ *              Xiaoye Li <xsli@lbl.gov>
+ *
+ *  Licensing: The HipGISAXS software is only available to be downloaded and
+ *  used by employees of academic research institutions, not-for-profit
+ *  research laboratories, or governmental research facilities. Please read the
+ *  accompanying LICENSE file before downloading the software. By downloading
+ *  the software, you are agreeing to be bound by the terms of this
+ *  NON-COMMERCIAL END USER LICENSE AGREEMENT.
+ */
 
 #include <cfloat>
 
@@ -43,7 +53,6 @@ namespace hig {
 
 
 	bool HiGInput::construct_input_config(char* filename) {
-		//if(!input_reader_.init(filename)) {
 		if(!InputReader::instance().read_input(filename)) {
 			std::cerr << "fatal error: some error happened in opening or reading "
 						<< "input config file. aborting"
@@ -93,8 +102,6 @@ namespace hig {
 				return false;
 
 			case comment_token:	// do nothing
-				//std::cerr << "error: something went wrong - "
-				//			<< "seeing comments when not supposed to!" << std::endl;
 				return true;
 
 			case object_begin_token:	// should be preceeded by '='
