@@ -1,12 +1,15 @@
-/***
-  *  Project: WOO Timer Library
-  *
-  *  File: woo_mpitimers.hpp
-  *  Created: Nov 21, 2012
-  *  Modified: Wed 21 Nov 2012 10:19:13 PM PST
-  *
-  *  Author: Abhinav Sarje <asarje@lbl.gov>
-  */
+/**
+ *  Project: WOO Timer Library
+ *
+ *  File: woo_mpitimers.hpp
+ *  Created: Nov 21, 2012
+ *  Modified: Wed 17 Jul 2013 10:26:30 AM PDT
+ *
+ *  Author: Abhinav Sarje <asarje@lbl.gov>
+ *  Copyright (c) 2012-2013 Abhinav Sarje
+ *  Distributed under the Boost Software License.
+ *  See accompanying LICENSE file.
+ */
 
 #include "wootimers.hpp"
 #include <mpi.h>

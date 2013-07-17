@@ -1,12 +1,15 @@
-/***
-  *  Project: WOO Timer Library
-  *
-  *  File: woo_cudatimers.hpp
-  *  Created: Nov 21, 2012
-  *  Modified: Mon 15 Jul 2013 03:31:26 PM PDT
-  *
-  *  Author: Abhinav Sarje <asarje@lbl.gov>
-  */
+/**
+ *  Project: WOO Timer Library
+ *
+ *  File: woo_cudatimers.hpp
+ *  Created: Nov 21, 2012
+ *  Modified: Wed 17 Jul 2013 10:25:34 AM PDT
+ *
+ *  Author: Abhinav Sarje <asarje@lbl.gov>
+ *  Copyright (c) 2012-2013 Abhinav Sarje
+ *  Distributed under the Boost Software License.
+ *  See accompanying LICENSE file.
+ */
 
 #include "wootimers.hpp"
 

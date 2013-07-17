@@ -1,12 +1,15 @@
-/***
-  *  Project: WOO Reduce Library
-  *
-  *  File: reduce.cuh
-  *  Created: Feb 12, 2013
-  *  Modified: Mon 15 Jul 2013 03:33:21 PM PDT
-  *
-  *  Author: Abhinav Sarje <asarje@lbl.gov>
-  */
+/**
+ *  Project: WOO Reduce Library
+ *
+ *  File: reduce.cuh
+ *  Created: Feb 12, 2013
+ *  Modified: Wed 17 Jul 2013 10:27:16 AM PDT
+ *
+ *  Author: Abhinav Sarje <asarje@lbl.gov>
+ *  Copyright (c) 2012-2013 Abhinav Sarje
+ *  Distributed under the Boost Software License.
+ *  See accompanying LICENSE file.
+ */
 
 //#include <nvToolsExt.h>
 

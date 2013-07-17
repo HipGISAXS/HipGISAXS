@@ -1,12 +1,15 @@
-/***
-  *  Project: WOO Timer Library
-  *
-  *  File: woo_boostchronotimers.hpp
-  *  Created: Nov 21, 2012
-  *  Modified: Thu 22 Nov 2012 12:39:11 PM PST
-  *
-  *  Author: Abhinav Sarje <asarje@lbl.gov>
-  */
+/**
+ *  Project: WOO Timer Library
+ *
+ *  File: woo_boostchronotimers.hpp
+ *  Created: Nov 21, 2012
+ *  Modified: Wed 17 Jul 2013 10:24:18 AM PDT
+ *
+ *  Author: Abhinav Sarje <asarje@lbl.gov>
+ *  Copyright (c) 2012-2013 Abhinav Sarje
+ *  Distributed under the Boost Software License.
+ *  See accompanying LICENSE file.
+ */
 
 #include "wootimers.hpp"
 #include <boost/chrono.hpp>
