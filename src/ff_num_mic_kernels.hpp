@@ -134,7 +134,7 @@
 		// shape padding guarantees that padded_num_triangles is a multiple of 16
 		// FIXME: assuming that b_num_triangles is a multiple of 16 as well ...
 
-		#pragma omp parallel
+/*		#pragma omp parallel
 		{
 			#pragma omp for collapse(2) nowait
 			for(int i_z = 0; i_z < curr_nqz; ++ i_z) {
@@ -202,8 +202,106 @@
 				} // for y
 			} // for z
 		} // pragma omp parallel
+*/
+		#pragma omp parallel
+		{
+			#pragma omp for collapse(2) nowait
+			for(int i_z = 0; i_z < curr_nqz; ++ i_z) {
+				for(int i_y = 0; i_y < curr_nqy; ++ i_y) {
+
+					// //////////////////////////////////////////////////////////
+					// mic intrinsic wrappers naming convention (floating only)
+					// mic_xxx_abc	=> a = r|c, b = p|s, c = s|d
+					// mic_xxx_abcd	=> a = r|c, b = r|c, c = p|s, d = s|d
+					// r = real, 				c = complex,
+					// p = packed (vector),		s = scalar,
+					// s = single-precision,	d = double-precision
+					// //////////////////////////////////////////////////////////
+
+					mic_m512c_t temp_z = mic_set1_cps(qz_flat[start_z + i_z]);
+					mic_m512_t temp_y = mic_set1_rps(qy[start_y + i_y]);
+					mic_m512_t temp_x = mic_set1_rps(qx[0]);
+
+					mic_m512c_t qz2 = mic_mul_ccps(temp_z, temp_z);
+					mic_m512_t qy2 = mic_mul_rrps(temp_y, temp_y);
+					mic_m512_t qx2 = mic_mul_rrps(temp_x, temp_x);
+
+					mic_m512c_t q2 = mic_add_rcps(mic_add_rrps(qx2, qy2), qz2);
+					mic_m512c_t q2_inv = mic_rcp_cps(q2);
+
+					mic_m512c_t total1 = mic_setzero_cps();
+					mic_m512c_t total2 = mic_setzero_cps();
+
+					// TODO: do blocking for cache ... ?
+					// TODO: do prefetching ... ?
+					for(int i_t = 0; i_t < curr_num_triangles; i_t += vec_size * 2) {
+						// load 16 floats at a time:
+						unsigned int shape_off = start_t + i_t;
+						mic_m512_t s1 = mic_load_rps(& shape_def[shape_off]);
+						mic_m512_t s2 = mic_load_rps(& shape_def[shape_off + vec_size]);
+						shape_off += padded_num_triangles;
+						mic_m512_t nx1 = mic_load_rps(& shape_def[shape_off]);
+						mic_m512_t nx2 = mic_load_rps(& shape_def[shape_off + vec_size]);
+						shape_off += padded_num_triangles;
+						mic_m512_t ny1 = mic_load_rps(& shape_def[shape_off]);
+						mic_m512_t ny2 = mic_load_rps(& shape_def[shape_off + vec_size]);
+						shape_off += padded_num_triangles;
+						mic_m512_t nz1 = mic_load_rps(& shape_def[shape_off]);
+						mic_m512_t nz2 = mic_load_rps(& shape_def[shape_off + vec_size]);
+						shape_off += padded_num_triangles;
+						mic_m512_t x1 = mic_load_rps(& shape_def[shape_off]);
+						mic_m512_t x2 = mic_load_rps(& shape_def[shape_off + vec_size]);
+						shape_off += padded_num_triangles;
+						mic_m512_t y1 = mic_load_rps(& shape_def[shape_off]);
+						mic_m512_t y2 = mic_load_rps(& shape_def[shape_off + vec_size]);
+						shape_off += padded_num_triangles;
+						mic_m512_t z1 = mic_load_rps(& shape_def[shape_off]);
+						mic_m512_t z2 = mic_load_rps(& shape_def[shape_off + vec_size]);
+
+						mic_m512c_t qzn1 = mic_mul_crps(temp_z, nz1);
+						mic_m512c_t qzn2 = mic_mul_crps(temp_z, nz2);
+						mic_m512c_t qzt1 = mic_mul_crps(temp_z, z1);
+						mic_m512c_t qzt2 = mic_mul_crps(temp_z, z2);
+						mic_m512_t qyn1 = mic_mul_rrps(temp_y, ny1);
+						mic_m512_t qyn2 = mic_mul_rrps(temp_y, ny2);
+						mic_m512_t qyt1 = mic_mul_rrps(temp_y, y1);
+						mic_m512_t qyt2 = mic_mul_rrps(temp_y, y2);
+						mic_m512_t qxn1 = mic_mul_rrps(temp_x, nx1);
+						mic_m512_t qxn2 = mic_mul_rrps(temp_x, nx2);
+						mic_m512_t qxt1 = mic_mul_rrps(temp_x, x1);
+						mic_m512_t qxt2 = mic_mul_rrps(temp_x, x2);
+						mic_m512c_t qt1 = mic_add_rcps(mic_add_rrps(qxt1, qyt1), qzt1);
+						mic_m512c_t qt2 = mic_add_rcps(mic_add_rrps(qxt2, qyt2), qzt2);
+						mic_m512c_t temp_qn1 = mic_add_rcps(mic_add_rrps(qxn1, qyn1), qzn1);
+						mic_m512c_t temp_qn2 = mic_add_rcps(mic_add_rrps(qxn2, qyn2), qzn2);
+						mic_m512c_t qn1 = mic_mul_ccps(temp_qn1, q2_inv);
+						mic_m512c_t qn2 = mic_mul_ccps(temp_qn2, q2_inv);
+
+						mic_m512c_t temp1;
+						mic_m512c_t temp2;
+						mic_sincos_rps(qt1.xvec, & temp1.yvec, & temp1.xvec);
+						mic_sincos_rps(qt2.xvec, & temp2.yvec, & temp2.xvec);
+						mic_m512c_t v11 = mic_mul_ccps(qn1, temp1);
+						mic_m512c_t v12 = mic_mul_ccps(qn2, temp2);
+						mic_m512_t v21 = mic_mul_rrps(s1, mic_exp_rps(qt1.yvec));
+						mic_m512_t v22 = mic_mul_rrps(s2, mic_exp_rps(qt2.yvec));
+						mic_m512c_t fq1 =  mic_mul_crps(v11, v21);
+						mic_m512c_t fq2 =  mic_mul_crps(v12, v22);
+
+						total1 = mic_add_ccps(total1, fq1);
+						total2 = mic_add_ccps(total2, fq2);
+					} // for t
+
+					unsigned int i_ff = curr_nqy * i_z + i_y;	// location in current buffer
+					scomplex_t ff = mic_reduce_add_cps(total1);
+					ff = ff + mic_reduce_add_cps(total2);
+					ff_buffer[i_ff] = make_sC(ff.y, - ff.x);
+				} // for y
+			} // for z
+		} // pragma omp parallel
 	} // NumericFormFactorM::form_factor_kernel_loopswap_vec_nqx1()
 	
+
 	// single precision, vectorized
 	__attribute__((target(mic:0)))
 	inline mic_m512c_t NumericFormFactorM::compute_fq_vec_nqx1(mic_m512_t s, mic_m512c_t qt, mic_m512c_t qn) {
