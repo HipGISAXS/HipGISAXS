@@ -3,7 +3,7 @@
  *
  *  File: typedefs.hpp
  *  Created: Jul 08, 2012
- *  Modified: Tue 16 Jul 2013 11:52:27 AM PDT
+ *  Modified: Tue 06 Aug 2013 04:59:02 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -27,12 +27,12 @@
 #include <complex>
 #ifdef USE_GPU
 	#include <cuComplex.h>
+#elif defined USE_MIC
+	#include <immintrin.h>
 #elif defined INTEL_SB_AVX
 	#include <immintrin.h>
 #elif defined __SSE3__
 	#include <pmmintrin.h>
-#elif defined USE_MIC
-	#include <immintrin.h>
 #endif
 
 namespace hig {
