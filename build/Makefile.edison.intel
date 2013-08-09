@@ -81,6 +81,9 @@ TIFF_LIBS = -L $(TIFF_DIR)/lib -ltiff
 MISC_INCL =
 MISC_FLAGS = -DFF_NUM_CPU_FUSED
 
+## for sandy bridge CPU (edison)
+MISC_FLAGS += -DINTEL_SB_AVX
+
 ## GPU related flags
 ifeq ($(USE_GPU), y)
 MISC_FLAGS += -DUSE_GPU
