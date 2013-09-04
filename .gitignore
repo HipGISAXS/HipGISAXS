@@ -1,0 +1,16 @@
+############################################
+# ignore stuff like output, profiles, etc. #
+############################################
+
+output
+outputs
+profile.*
+profiles
+Makefile
+Makefile*
+obj/*.o
+inputs/*.hig
+data/*.hd5
+data/*.dat
+data/obj
+bin/*

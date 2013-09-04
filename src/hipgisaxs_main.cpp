@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_main.cpp
  *  Created: Jun 14, 2012
- *  Modified: Tue 16 Jul 2013 12:12:55 PM PDT
+ *  Modified: Wed 04 Sep 2013 04:14:52 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -684,7 +684,7 @@ namespace hig {
 				//ff_.printff(nqx_, nqy_, nqz_extended_);
 
 				// save form factor data on disk
-/*				if(mpi_rank == 0) {
+				/*if(mpi_rank == 0) {
 					std::stringstream alphai_b, phi_b, tilt_b;
 					std::string alphai_s, phi_s, tilt_s;
 					alphai_b << alpha_i; alphai_s = alphai_b.str();
@@ -697,8 +697,8 @@ namespace hig {
 					std::cout << "-- Saving form factor in " << ff_output << " ... " << std::flush;
 					ff_.save_ff(nqx_, nqy_, nqz_extended_, ff_output.c_str());
 					std::cout << "done." << std::endl;
-				} // if
-*/
+				} // if*/
+
 				/* compute intensities using sf and ff */
 				// processing of sf and ff is being done by just one processor ... parallelize ...
 				if(mpi_rank == 0) {
