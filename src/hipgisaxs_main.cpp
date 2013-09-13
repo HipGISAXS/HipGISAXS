@@ -4,7 +4,11 @@
  *  File: hipgisaxs_main.cpp
  *  Created: Jun 14, 2012
 <<<<<<< HEAD
+<<<<<<< HEAD
  *  Modified: Tue 16 Jul 2013 12:53:00 PM PDT
+=======
+ *  Modified: Wed 04 Sep 2013 04:14:52 PM PDT
+>>>>>>> devel
 =======
  *  Modified: Wed 04 Sep 2013 04:14:52 PM PDT
 >>>>>>> devel
