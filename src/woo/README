@@ -1,14 +1,21 @@
------------------------------------------------
+================================================================================
 The WOO Libraries.
+================================================================================
 
 File: README
 Author: Abhinav Sarje <abhinav.sarje@gmail.com>
 
+================================================================================
 Copyright (c) 2012-2013 Abhinav Sarje.
 Distributed under the Boost Software License.
-See accompanying file LICENSE.
------------------------------------------------
+See accompanying LICENSE file.
+================================================================================
 
-WOO Timers
-WOO Dynamic Matrix
-WOO Reduce
+CONTENTS:
+--------
+
+** WOO Timers
+** WOO Dynamic Matrix
+** WOO Reduce
+
+================================================================================

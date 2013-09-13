@@ -3,7 +3,11 @@
  *
  *  File: hipgisaxs_main.cpp
  *  Created: Jun 14, 2012
+<<<<<<< HEAD
  *  Modified: Tue 16 Jul 2013 12:53:00 PM PDT
+=======
+ *  Modified: Wed 04 Sep 2013 04:14:52 PM PDT
+>>>>>>> devel
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -688,6 +692,7 @@ namespace hig {
 							curr_dd_vec, result);
 				vector3_t center = result + curr_transvec;
 
+<<<<<<< HEAD
 				int sym_inv = 0;	// something hard coded ... TODO: needs to be fixed?
 
 				if(HiGInput::instance().num_slices() <= 1) {
@@ -748,6 +753,61 @@ namespace hig {
 					/* compute intensities using sf and ff */
 
 					// TODO: processing of sf and ff is being done by just one processor ... parallelize ...
+=======
+				/*std::cout << "ROT MAT: " << std::endl;
+				std::cout << r_tot1[0] << "\t" << r_tot1[1] << "\t" << r_tot1[2] << std::endl;
+				std::cout << r_tot2[0] << "\t" << r_tot2[1] << "\t" << r_tot2[2] << std::endl;
+				std::cout << r_tot3[0] << "\t" << r_tot3[1] << "\t" << r_tot3[2] << std::endl;
+				std::cout << "CENTER: " << std::endl;
+				std::cout << center[0] << "\t" << center[1] << "\t" << center[2] << std::endl;*/
+
+				/* compute structure factor and form factor */
+
+				structure_factor(HiGInput::instance().experiment(), center, curr_lattice,
+									grain_repeats, r_tot1, r_tot2, r_tot3, world_comm);
+				//sf_.printsf();
+
+/*				if(mpi_rank == 0) {
+					std::stringstream alphai_b, phi_b, tilt_b;
+					std::string alphai_s, phi_s, tilt_s;
+					alphai_b << alpha_i; alphai_s = alphai_b.str();
+					phi_b << phi; phi_s = phi_b.str();
+					tilt_b << tilt; tilt_s = tilt_b.str();
+					std::string sf_output(HiGInput::instance().param_pathprefix() +
+									"/" + HiGInput::instance().runname() +
+									"/sf_ai=" + alphai_s + "_rot=" + phi_s +
+									"_tilt=" + tilt_s + ".out");
+					std::cout << "-- Saving structure factor in " << sf_output << " ... " << std::flush;
+					sf_.save_sf(nqx_, nqy_, nqz_extended_, sf_output.c_str());
+					std::cout << "done." << std::endl;
+				} // if
+*/
+				//read_form_factor("curr_ff.out");
+				form_factor(shape_name, shape_file, shape_params, curr_transvec,
+							shape_tau, shape_eta, r_tot1, r_tot2, r_tot3, world_comm);
+				//ff_.print_ff(nqx_, nqy_, nqz_extended_);
+				//ff_.printff(nqx_, nqy_, nqz_extended_);
+
+				// save form factor data on disk
+				/*if(mpi_rank == 0) {
+					std::stringstream alphai_b, phi_b, tilt_b;
+					std::string alphai_s, phi_s, tilt_s;
+					alphai_b << alpha_i; alphai_s = alphai_b.str();
+					phi_b << phi; phi_s = phi_b.str();
+					tilt_b << tilt; tilt_s = tilt_b.str();
+					std::string ff_output(HiGInput::instance().param_pathprefix() +
+									"/" + HiGInput::instance().runname() +
+									"/ff_ai=" + alphai_s + "_rot=" + phi_s +
+									"_tilt=" + tilt_s + ".out");
+					std::cout << "-- Saving form factor in " << ff_output << " ... " << std::flush;
+					ff_.save_ff(nqx_, nqy_, nqz_extended_, ff_output.c_str());
+					std::cout << "done." << std::endl;
+				} // if*/
+
+				/* compute intensities using sf and ff */
+				// processing of sf and ff is being done by just one processor ... parallelize ...
+				if(mpi_rank == 0) {
+>>>>>>> devel
 					complex_t* base_id = id + j * nqx_ * nqy_ * nqz_;
 
 					if(mpi_rank == 0) {
