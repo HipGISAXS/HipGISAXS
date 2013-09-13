@@ -23,9 +23,10 @@ MPI_DIR = /usr/local/openmpi-1.6.4
 ifeq ($(USE_GPU), y)
 CUDA_DIR = /usr/local/cuda
 endif
+PAPI_DIR = /usr/local/papi-5.1.0
 
 ## compilers
-CXX = $(MPI_DIR)/bin/mpicxx	#g++
+CXX = $(MPI_DIR)/bin/mpicxx
 H5CC = $(HDF5_DIR)/bin/h5pcc
 ifeq ($(USE_GPU), y)
 NVCC = $(CUDA_DIR)/bin/nvcc
@@ -78,9 +79,34 @@ endif
 TIFF_INCL = -I $(TIFF_DIR)/include
 TIFF_LIBS = -L $(TIFF_DIR)/lib -ltiff
 
+## papi stuff
+PAPI_INCL = -I $(PAPI_DIR)/include
+PAPI_LIBS = -L $(PAPI_DIR)/lib -lpapi
+
+## gsl
+#GSL_INCL = -I $(GSL_DIR)/include
+#GSL_LIBS = -L $(GSL_DIR)/lib -lgsl
+
+## AMD LibM
+#ALIBM_INCL = -I $(HOME)/local/amdlibm-3-0-2/include
+#ALIBM_LIBS = -L $(HOME)/local/amdlibm-3-0-2/lib/static -lamdlibm
+
+## Intel MKL
+#MKL_INCL = -I /opt/intel/composer_xe_2013.1.117/mkl/include
+#MKL_LIBS = -L /opt/intel/composer_xe_2013.1.117/mkl/lib/intel64 -lmkl_core -lmkl_vml_def
+
+
 ## miscellaneous
 MISC_INCL =
-MISC_FLAGS = #-DAXIS_ROT
+MISC_FLAGS =
+
+## stuff for CPU
+MISC_FLAGS += -DFF_NUM_CPU_FUSED
+#MISC_FLAGS += -DPROFILE_PAPI
+
+## for sandy bridge CPU (edison)
+#MISC_FLAGS += -DINTEL_SB_AVX
+MISC_FLAGS += #-DAXIS_ROT
 
 ## GPU related flags
 ifeq ($(USE_GPU), y)
@@ -102,13 +128,31 @@ endif
 ## MIC related flags
 ifeq ($(USE_MIC), y)
 MISC_FLAGS += -DUSE_MIC -DFF_MIC_OPT
+MISC_FLAGS += -DFF_NUM_MIC_SWAP
+MISC_FLAGS += -DFF_NUM_MIC_KB
+#MISC_FLAGS += -DMIC_PADDING    ## goes out of memory on target
 endif
+
+## CPU related flags
+#MISC_FLAGS += -DFF_NUM_CPU_AUTOTUNE_HB
 
 MISC_FLAGS += -DTIME_DETAIL_1 -DTIME_DETAIL_2
 
 ## choose optimization levels, debug flags, gprof flag, etc
 #OPT_FLAGS = -g -DDEBUG #-v #-pg
-OPT_FLAGS = -O3 -DNDEBUG #-v
+OPT_FLAGS += -O3 -DNDEBUG #-v
+
+## stuff for AMD x86_64
+#OPT_FLAGS += -march=barcelona -ffast-math -Ofast #-funroll-all-loops
+#OPT_FLAGS += -msse4a
+#OPT_FLAGS += -U__SSE3__
+
+
+## stuff for Intel x86_64
+#OPT_FLAGS += -mavx -Ofast -falign-functions -align -fma -fp-model fast=2 -parallel -funroll-loops -axAVX -xavx
+
+## for carver CPU
+#OPT_FLAGS += -msse4a -ffast-math -Ofast
 
 ## choose single or double precision here
 PREC_FLAG =			# leave empty for single precision
@@ -116,10 +160,10 @@ PREC_FLAG =			# leave empty for single precision
 
 
 ## all includes
-ALL_INCL = $(MPI_INCL) $(CUDA_INCL) $(BOOST_INCL) $(HDF5_INCL) $(TIFF_INCL) $(MISC_INCL)
+ALL_INCL = $(MPI_INCL) $(CUDA_INCL) $(BOOST_INCL) $(HDF5_INCL) $(TIFF_INCL) $(MISC_INCL) $(PAPI_INCL)
 
 ## all libraries
-ALL_LIBS = $(BOOST_LIBS) $(MPI_LIBS) $(CUDA_LIBS) $(HDF5_LIBS) $(TIFF_LIBS)
+ALL_LIBS = $(BOOST_LIBS) $(MPI_LIBS) $(CUDA_LIBS) $(HDF5_LIBS) $(TIFF_LIBS) $(PAPI_LIBS)
 
 PREFIX = $(PWD)
 BINARY_SIM = hipgisaxs
@@ -211,6 +255,7 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cu $(DEPS_NV)
 
 $(OBJ_DIR)/nv_hipgisaxs.o: $(NV_OBJ_BIN_SIM)
 	$(NVCC) $^ -o $@ $(NVLINK_FLAGS)
+
 endif
 
 ## hdf5-parallel compilation
