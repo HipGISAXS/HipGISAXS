@@ -3,7 +3,7 @@
  *
  *  File: ff_num_cpu.hpp
  *  Created: Nov 05, 2011
- *  Modified: Sat 14 Sep 2013 09:36:40 AM PDT
+ *  Modified: Sun 15 Sep 2013 02:35:12 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -30,9 +30,11 @@
 					float_vec_t& shape_def,
 					unsigned int curr_nqx, unsigned int curr_nqy, unsigned int curr_nqz,
 					unsigned int curr_num_triangles,
-					unsigned int b_nqx, unsigned int b_nqy, unsigned int b_nqz, unsigned int b_num_triangles,
+					unsigned int b_nqx, unsigned int b_nqy, unsigned int b_nqz,
+					unsigned int b_num_triangles,
 					unsigned int nqx, unsigned int nqy, unsigned int nqz, unsigned int num_triangles,
 					unsigned int ib_x, unsigned int ib_y, unsigned int ib_z, unsigned int ib_t,
+					float_t* rot,
 					complex_t* ff) {
 		if(ff == NULL || qx == NULL || qy == NULL || qz == NULL) return;
 
@@ -53,11 +55,17 @@
 					for(int i_x = 0; i_x < curr_nqx; ++ i_x) {
 						unsigned long int super_i = (unsigned long int) nqx * nqy * (ib_z * b_nqz + i_z) +
 													nqx * (ib_y * b_nqy + i_y) + ib_x * b_nqx + i_x;
-						complex_t temp_z = qz[start_z + i_z];
-						float_t temp_y = qy[start_y + i_y];
-						float_t temp_x = qx[start_x + i_x];
+						complex_t temp_qz = qz[start_z + i_z];
+						float_t temp_qy = qy[start_y + i_y];
+						float_t temp_qx = qx[start_x + i_x];
+
+						// compute rotation stuff ... FIXME double check transposition etc ...
+						complex_t temp_x = rot[0] * temp_qx + rot[1] * temp_qy + rot[2] * temp_qz;
+						complex_t temp_y = rot[3] * temp_qx + rot[4] * temp_qy + rot[5] * temp_qz;
+						complex_t temp_z = rot[6] * temp_qx + rot[7] * temp_qy + rot[8] * temp_qz;
+
 						complex_t qz2 = temp_z * temp_z;
-						float_t qy2 = temp_y * temp_y;
+						complex_t qy2 = temp_y * temp_y;
 						complex_t q2 = temp_x * temp_x + qy2 + qz2;
 
 						for(int i_t = 0; i_t < curr_num_triangles; i_t += 4) {
@@ -103,14 +111,14 @@
 							complex_t qzn4 = temp_z * nz4;
 							complex_t qzt4 = temp_z * z4;
 	
-							float_t qyn1 = temp_y * ny1;
-							float_t qyt1 = temp_y * y1;
-							float_t qyn2 = temp_y * ny2;
-							float_t qyt2 = temp_y * y2;
-							float_t qyn3 = temp_y * ny3;
-							float_t qyt3 = temp_y * y3;
-							float_t qyn4 = temp_y * ny4;
-							float_t qyt4 = temp_y * y4;
+							complex_t qyn1 = temp_y * ny1;
+							complex_t qyt1 = temp_y * y1;
+							complex_t qyn2 = temp_y * ny2;
+							complex_t qyt2 = temp_y * y2;
+							complex_t qyn3 = temp_y * ny3;
+							complex_t qyt3 = temp_y * y3;
+							complex_t qyn4 = temp_y * ny4;
+							complex_t qyt4 = temp_y * y4;
 	
 							complex_t qt1 = temp_x * x1 + qyt1 + qzt1;
 							complex_t qn1 = (temp_x * nx1 + qyn1 + qzn1) / q2;
@@ -201,7 +209,7 @@
 				} // for y
 			} // for z
 		} // pragma omp parallel
-	} // NumericFormFactorC::form_factor_kernel_fused_unroll()
+	} // NumericFormFactorC::form_factor_kernel_fused_unroll4()
 
 	#endif
 	
@@ -218,7 +226,8 @@
 					#endif
 					unsigned int curr_nqx, unsigned int curr_nqy, unsigned int curr_nqz,
 					unsigned int curr_num_triangles,
-					unsigned int b_nqx, unsigned int b_nqy, unsigned int b_nqz, unsigned int b_num_triangles,
+					unsigned int b_nqx, unsigned int b_nqy, unsigned int b_nqz,
+					unsigned int b_num_triangles,
 					unsigned int nqx, unsigned int nqy, unsigned int nqz, unsigned int num_triangles,
 					unsigned int ib_x, unsigned int ib_y, unsigned int ib_z, unsigned int ib_t,
 					float_t* rot,
@@ -351,15 +360,24 @@
 
 						unsigned long int super_i = (unsigned long int) nqy * (ib_z * b_nqz + i_z) +
 													(ib_y * b_nqy + i_y);
-						avx_m256c_t temp_z = avx_set1_cps(qz[start_z + i_z]);
-						avx_m256_t temp_y = avx_set1_rps(qy[start_y + i_y]);
-						avx_m256_t temp_x = avx_set1_rps(qx[start_x]);
 
-						avx_m256_t qx2 = avx_mul_rrps(temp_x, temp_x);
-						avx_m256_t qy2 = avx_mul_rrps(temp_y, temp_y);
+						// rotation stuff ... TODO: optimize later
+						float_t temp_qx = qx[start_x], temp_qy = qy[start_y + i_y];
+						complex_t temp_qz = qz[start_z + i_z];
+						complex_t mqx = rot[0] * temp_qx + rot[1] * temp_qy + rot[2] * temp_qz;
+						complex_t mqy = rot[3] * temp_qx + rot[4] * temp_qy + rot[5] * temp_qz;
+						complex_t mqz = rot[6] * temp_qx + rot[7] * temp_qy + rot[8] * temp_qz;
+
+
+						avx_m256c_t temp_z = avx_set1_cps(mqz);
+						avx_m256c_t temp_y = avx_set1_cps(mqy);
+						avx_m256c_t temp_x = avx_set1_cps(mqx);
+
+						avx_m256c_t qx2 = avx_mul_ccps(temp_x, temp_x);
+						avx_m256c_t qy2 = avx_mul_ccps(temp_y, temp_y);
 						avx_m256c_t qz2 = avx_mul_ccps(temp_z, temp_z);
-						avx_m256_t qxy2 = avx_add_rrps(qx2, qy2);
-						avx_m256c_t q2 = avx_add_rcps(qxy2, qz2);
+						avx_m256c_t qxy2 = avx_add_ccps(qx2, qy2);
+						avx_m256c_t q2 = avx_add_ccps(qxy2, qz2);
 						avx_m256c_t q2_inv = avx_rcp_cps(q2);
 
 /*						avx_m256c_t total = avx_setzero_cps();
@@ -434,26 +452,26 @@
 							avx_m256_t z1 = avx_load_rps(& shape_def[shape_off]);
 							avx_m256_t z2 = avx_load_rps(& shape_def[shape_off + vec_size]);
 
-							avx_m256_t qxn1 = avx_mul_rrps(temp_x, nx1);
-							avx_m256_t qxn2 = avx_mul_rrps(temp_x, nx2);
-							avx_m256_t qxt1 = avx_mul_rrps(temp_x, x1);
-							avx_m256_t qxt2 = avx_mul_rrps(temp_x, x2);
-							avx_m256_t qyn1 = avx_mul_rrps(temp_y, ny1);
-							avx_m256_t qyn2 = avx_mul_rrps(temp_y, ny2);
-							avx_m256_t qyt1 = avx_mul_rrps(temp_y, y1);
-							avx_m256_t qyt2 = avx_mul_rrps(temp_y, y2);
+							avx_m256c_t qxn1 = avx_mul_crps(temp_x, nx1);
+							avx_m256c_t qxn2 = avx_mul_crps(temp_x, nx2);
+							avx_m256c_t qxt1 = avx_mul_crps(temp_x, x1);
+							avx_m256c_t qxt2 = avx_mul_crps(temp_x, x2);
+							avx_m256c_t qyn1 = avx_mul_crps(temp_y, ny1);
+							avx_m256c_t qyn2 = avx_mul_crps(temp_y, ny2);
+							avx_m256c_t qyt1 = avx_mul_crps(temp_y, y1);
+							avx_m256c_t qyt2 = avx_mul_crps(temp_y, y2);
 							avx_m256c_t qzn1 = avx_mul_crps(temp_z, nz1);
 							avx_m256c_t qzn2 = avx_mul_crps(temp_z, nz2);
 							avx_m256c_t qzt1 = avx_mul_crps(temp_z, z1);
 							avx_m256c_t qzt2 = avx_mul_crps(temp_z, z2);
-							avx_m256_t qxyt1 = avx_add_rrps(qxt1, qyt1);
-							avx_m256_t qxyt2 = avx_add_rrps(qxt2, qyt2);
-							avx_m256_t qxyn1 = avx_add_rrps(qxn1, qyn1);
-							avx_m256_t qxyn2 = avx_add_rrps(qxn2, qyn2);
-							avx_m256c_t qt1 = avx_add_rcps(qxyt1, qzt1);
-							avx_m256c_t qt2 = avx_add_rcps(qxyt2, qzt2);
-							avx_m256c_t temp_qn1 = avx_add_rcps(qxyn1, qzn1);
-							avx_m256c_t temp_qn2 = avx_add_rcps(qxyn2, qzn2);
+							avx_m256c_t qxyt1 = avx_add_ccps(qxt1, qyt1);
+							avx_m256c_t qxyt2 = avx_add_ccps(qxt2, qyt2);
+							avx_m256c_t qxyn1 = avx_add_ccps(qxn1, qyn1);
+							avx_m256c_t qxyn2 = avx_add_ccps(qxn2, qyn2);
+							avx_m256c_t qt1 = avx_add_ccps(qxyt1, qzt1);
+							avx_m256c_t qt2 = avx_add_ccps(qxyt2, qzt2);
+							avx_m256c_t temp_qn1 = avx_add_ccps(qxyn1, qzn1);
+							avx_m256c_t temp_qn2 = avx_add_ccps(qxyn2, qzn2);
 							avx_m256c_t qn1 = avx_mul_ccps(temp_qn1, q2_inv);
 							avx_m256c_t qn2 = avx_mul_ccps(temp_qn2, q2_inv);
 							avx_m256c_t temp1, temp2;
@@ -752,7 +770,8 @@
 					float_vec_t& shape_def,
 					unsigned int curr_nqx, unsigned int curr_nqy, unsigned int curr_nqz,
 					unsigned int curr_num_triangles,
-					unsigned int b_nqx, unsigned int b_nqy, unsigned int b_nqz, unsigned int b_num_triangles,
+					unsigned int b_nqx, unsigned int b_nqy, unsigned int b_nqz,
+					unsigned int b_num_triangles,
 					unsigned int nqx, unsigned int nqy, unsigned int nqz, unsigned int num_triangles,
 					unsigned int ib_x, unsigned int ib_y, unsigned int ib_z, unsigned int ib_t,
 					complex_t* ff) {

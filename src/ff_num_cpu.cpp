@@ -3,7 +3,7 @@
  *
  *  File: ff_num_cpu.hpp
  *  Created: Nov 05, 2011
- *  Modified: Sat 14 Sep 2013 08:36:12 AM PDT
+ *  Modified: Sun 15 Sep 2013 02:33:49 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -333,6 +333,7 @@ namespace hig {
 										b_nqx, b_nqy, b_nqz, b_num_triangles,
 										nqx, nqy, nqz, num_triangles,
 										ib_x, ib_y, ib_z, ib_t,
+										rot,
 										ff);
 								#endif // __SSE3__
 							} // if-else
