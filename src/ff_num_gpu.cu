@@ -3,7 +3,7 @@
  *
  *  File: ff_num_gpu.cu
  *  Created: Aug 25, 2012
- *  Modified: Tue 16 Jul 2013 12:14:28 PM PDT
+ *  Modified: Sat 14 Sep 2013 08:28:20 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -245,8 +245,6 @@ namespace hig {
 	/**
 	 * The main host function called from outside, as part of the API for a single node.
 	 */
-	//template<typename float_t, typename complex_t>
-	//unsigned int NumericFormFactorG<float_t, complex_t>::compute_form_factor(int rank,
 	unsigned int NumericFormFactorG::compute_form_factor(int rank,
 						std::vector<float_t> &shape_def, std::vector<short int>& axes,
 						cucomplex_t* &ff,

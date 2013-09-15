@@ -3,7 +3,7 @@
  *
  *  File: ff.cpp
  *  Created: Jul 17, 2012
- *  Modified: Tue 16 Jul 2013 11:50:21 AM PDT
+ *  Modified: Fri 13 Sep 2013 04:16:10 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -43,8 +43,8 @@ namespace hig {
 		if(shape == shape_custom) {
 			/* compute numerically */
 			is_analytic_ = false;
-			numeric_ff_.init();
-			numeric_ff_.compute(shape_filename.c_str(), ff_, world_comm);
+			numeric_ff_.init(rot1, rot2, rot3, ff_);
+			numeric_ff_.compute(shape_filename.c_str(), ff_, rot1, rot2, rot3, world_comm);
 		} else {
 			/* compute analytically */
 			is_analytic_ = true;

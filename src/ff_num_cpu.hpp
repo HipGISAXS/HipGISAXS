@@ -3,7 +3,7 @@
  *
  *  File: ff_num_cpu.hpp
  *  Created: Nov 05, 2011
- *  Modified: Tue 16 Jul 2013 11:50:27 AM PDT
+ *  Modified: Sat 14 Sep 2013 09:20:09 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -50,30 +50,27 @@ namespace hig {
 			bool init();	// TODO ...
 	
 		private:
-			#ifndef FF_NUM_CPU_FUSED
-			
-			void form_factor_kernel(float_t*, float_t*, complex_t*, float_vec_t&,
+			#ifndef FF_NUM_CPU_FUSED			
+				void form_factor_kernel(float_t*, float_t*, complex_t*, float_vec_t&,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									complex_t*);
 
-			void reduction_kernel(unsigned int, unsigned int, unsigned int,	unsigned int,
+				void reduction_kernel(unsigned int, unsigned int, unsigned int,	unsigned int,
 									unsigned long int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									complex_t*, complex_t*);
 			#else
-
-			void form_factor_kernel_fused(float_t*, float_t*, complex_t*, float_vec_t&,
+				void form_factor_kernel_fused(float_t*, float_t*, complex_t*, float_vec_t&,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									complex_t*);
-
-			#ifndef __SSE3__
-			void form_factor_kernel_fused_unroll4(float_t*, float_t*, complex_t*,
+				#ifndef __SSE3__
+					void form_factor_kernel_fused_unroll4(float_t*, float_t*, complex_t*,
 									float_vec_t&,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
@@ -83,9 +80,8 @@ namespace hig {
 									#endif
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									complex_t*);
-			#endif // __SSE3__
-
-			void form_factor_kernel_fused_nqx1(const float_t*, const float_t*, const complex_t*,
+				#endif // __SSE3__
+				void form_factor_kernel_fused_nqx1(const float_t*, const float_t*, const complex_t*,
 									#ifndef __SSE3__
 										float_vec_t&,
 									#else
@@ -98,9 +94,10 @@ namespace hig {
 										unsigned int, unsigned int, unsigned int,
 									#endif
 									unsigned int, unsigned int, unsigned int, unsigned int,
+									float_t*,
 									complex_t*);
 
-			void form_factor_kernel_fused_nqx1_unroll4(float_t*, float_t*, complex_t*, float_vec_t&,
+				void form_factor_kernel_fused_nqx1_unroll4(float_t*, float_t*, complex_t*, float_vec_t&,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
@@ -116,13 +113,9 @@ namespace hig {
 			complex_t compute_fq(float_t, complex_t, complex_t);
 
 			#ifdef INTEL_SB_AVX
-
-			avx_m256c_t avx_compute_fq(avx_m256_t, avx_m256c_t, avx_m256c_t);
-
+				avx_m256c_t avx_compute_fq(avx_m256_t, avx_m256c_t, avx_m256c_t);
 			#elif defined __SSE3__
-
-			sse_m128c_t sse_compute_fq(sse_m128_t, sse_m128c_t, sse_m128c_t);
-
+				sse_m128c_t sse_compute_fq(sse_m128_t, sse_m128c_t, sse_m128c_t);
 			#endif // __SSE3__
 
 			void compute_block_size(int, int, int, int, unsigned int&, unsigned int&, unsigned int&,
@@ -142,6 +135,7 @@ namespace hig {
 									#endif
 									complex_t*&,
 									float_t*&, int, float_t*&, int, complex_t* &qz, int,
+									float_t*&,
 									float_t&, float_t&, float_t&
 									#ifdef FINDBLOCK
 										, const int, const int, const int, const int

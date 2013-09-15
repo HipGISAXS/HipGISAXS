@@ -3,7 +3,7 @@
  *
  *  File: ff_ana.cpp
  *  Created: Jul 12, 2012
- *  Modified: Tue 16 Jul 2013 11:49:51 AM PDT
+ *  Modified: Sat 14 Sep 2013 08:21:02 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -46,9 +46,9 @@ namespace hig {
 		// first make sure there is no residue from any previous computations
 		ff.clear();
 
-#ifdef FF_ANA_GPU
-		gff_.init(nqx_, nqy_, nqz_);
-#endif // FF_ANA_GPU
+		#ifdef FF_ANA_GPU
+			gff_.init(nqx_, nqy_, nqz_);
+		#endif // FF_ANA_GPU
 
 		// rotation matrices are new for each ff calculation
 		rot_ = new (std::nothrow) float_t[9];
@@ -62,9 +62,9 @@ namespace hig {
 
 	void AnalyticFormFactor::clear() {
 		nqx_ = nqy_ = nqz_ = 0;
-#ifdef FF_ANA_GPU
-		gff_.clear();
-#endif // FF_ANA_GPU
+		#ifdef FF_ANA_GPU
+			gff_.clear();
+		#endif // FF_ANA_GPU
 	} // AnalyticFormFactor::clear()
 
 
@@ -75,10 +75,10 @@ namespace hig {
 									MPI::Intracomm& world_comm) {
 
 		std::cout << "-- Computing form factor analytically ... " << std::endl;
-#ifdef TIME_DETAIL_1
-		woo::BoostChronoTimer compute_timer;
-		compute_timer.start();
-#endif // TIME_DETAIL_1
+		#ifdef TIME_DETAIL_1
+			woo::BoostChronoTimer compute_timer;
+			compute_timer.start();
+		#endif // TIME_DETAIL_1
 
 		switch(shape) {
 			case shape_box:						// cube or box
@@ -177,11 +177,11 @@ namespace hig {
 				return false;
 		} // switch
 
-#ifdef TIME_DETAIL_1
-		compute_timer.stop();
-		std::cout << "**               FF compute time: " << compute_timer.elapsed_msec() << " ms."
-					<< std::endl;
-#endif // TIME_DETAIL_1
+		#ifdef TIME_DETAIL_1
+			compute_timer.stop();
+			std::cout << "**               FF compute time: " << compute_timer.elapsed_msec() << " ms."
+						<< std::endl;
+		#endif // TIME_DETAIL_1
 
 		/*int rank;
 		MPI_Comm_rank(world_comm, &rank);

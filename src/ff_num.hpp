@@ -3,7 +3,7 @@
  *
  *  File: ff_num.hpp
  *  Created: Nov 05, 2011
- *  Modified: Tue 16 Jul 2013 11:50:40 AM PDT
+ *  Modified: Fri 13 Sep 2013 04:23:46 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -107,10 +107,12 @@ namespace hig {
 
 			~NumericFormFactor() { }
 
-			bool init() { return true; } 	// TODO ...
+			bool init(vector3_t&, vector3_t&, vector3_t&, std::vector<complex_t>&);
 			void clear() { }				// TODO ...
 
-			bool compute(const char* filename, std::vector<complex_t>& ff, MPI::Intracomm& world_comm);
+			bool compute(const char* filename, std::vector<complex_t>& ff,
+							vector3_t&, vector3_t&, vector3_t&,
+							MPI::Intracomm& world_comm);
 	
 		private:
 
@@ -128,6 +130,12 @@ namespace hig {
 			#else
 				NumericFormFactorC cff_;		// for computation only on CPU
 			#endif
+
+			unsigned int nqx_;
+			unsigned int nqy_;
+			unsigned int nqz_;
+
+			float_t* rot_;
 	
 			unsigned int read_shape_surface_file(const char* filename, float_vec_t& shape_def);
 			unsigned int read_shapes_hdf5(const char* filename,

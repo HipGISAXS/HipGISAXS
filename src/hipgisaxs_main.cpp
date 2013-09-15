@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_main.cpp
  *  Created: Jun 14, 2012
- *  Modified: Wed 04 Sep 2013 04:14:52 PM PDT
+ *  Modified: Fri 13 Sep 2013 03:43:57 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -47,7 +47,8 @@
 
 namespace hig {
 
-	// TODO: improve and clean the constructors - for gpu/cpu etc. unify ...
+	// TODO: do MPI initialization earlier ...
+	// move all that stuff from FF to main hipgisaxs ...
 	HipGISAXS::HipGISAXS(): freq_(0.0), k0_(0.0),
 				num_layers_(0), num_structures_(0),
 				nqx_(0), nqy_(0), nqz_(0), nqz_extended_(0),
@@ -68,7 +69,6 @@ namespace hig {
 		single_layer_thickness_ = 0.0;
 		HiGInput::instance();
 		QGrid::instance();
-		//MPI::Init();
 	} // HipGISAXS::HipGISAXS()
 
 
@@ -1023,7 +1023,6 @@ namespace hig {
 	} // HipGISAXS::structure_factor()
 
 
-	//template <typename float_t, typename complex_t>
 	bool HipGISAXS::form_factor(ShapeName shape_name, std::string shape_file,
 								shape_param_list_t& shape_params, vector3_t &curr_transvec,
 								float_t shp_tau, float_t shp_eta,

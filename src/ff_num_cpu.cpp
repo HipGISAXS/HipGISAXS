@@ -3,7 +3,7 @@
  *
  *  File: ff_num_cpu.hpp
  *  Created: Nov 05, 2011
- *  Modified: Tue 16 Jul 2013 11:50:26 AM PDT
+ *  Modified: Sat 14 Sep 2013 08:36:12 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -66,6 +66,7 @@ namespace hig {
 						#endif
 						complex_t* &ff,
 						float_t* &qx, int nqx, float_t* &qy, int nqy, complex_t* &qz, int nqz,
+						float_t* &rot,
 						float_t& kernel_time, float_t& red_time, float_t& mem_time
 						#ifdef FINDBLOCK
 							, const int block_x, const int block_y, const int block_z, const int block_t
@@ -320,6 +321,7 @@ namespace hig {
 										b_nqx, b_nqy, b_nqz, b_num_triangles,
 										nqx, nqy, nqz, num_triangles,
 										ib_x, ib_y, ib_z, ib_t,
+										rot,
 										ff);
 							} else {
 								#ifdef __SSE3__

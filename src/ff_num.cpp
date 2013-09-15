@@ -3,7 +3,7 @@
  *
  *  File: ff_num.cpp
  *  Created: Jul 18, 2012
- *  Modified: Tue 16 Jul 2013 11:50:24 AM PDT
+ *  Modified: Sat 14 Sep 2013 08:30:09 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -41,12 +41,28 @@
 
 namespace hig {
 
+	bool NumericFormFactor::init(vector3_t& rot1, vector3_t& rot2, vector3_t& rot3,
+									std::vector<complex_t>& ff) {
+		nqx_ = QGrid::instance().nqx();
+		nqy_ = QGrid::instance().nqy();
+		nqz_ = QGrid::instance().nqz_extended();
+
+		ff.clear();
+
+		rot_ = new (std::nothrow) float_t[9];
+		rot_[0] = rot1[0]; rot_[1] = rot1[1]; rot_[2] = rot1[2];
+		rot_[3] = rot2[0]; rot_[4] = rot2[1]; rot_[5] = rot2[2];
+		rot_[6] = rot3[0]; rot_[7] = rot3[1]; rot_[8] = rot3[2];
+
+		return true;
+	} // NumericFormFactor::init()
+
+
 	/**
 	 * main host function
 	 */
-	//template<typename float_t, typename complex_t, typename cucomplex_t>
-	//bool NumericFormFactor<float_t, complex_t, cucomplex_t>::compute(
 	bool NumericFormFactor::compute(const char* filename, complex_vec_t& ff,
+									vector3_t& rot1, vector3_t& rot2, vector3_t& rot3,
 									MPI::Intracomm& world_comm) {
 		float_t comp_start = 0.0, comp_end = 0.0, comm_start = 0.0, comm_end = 0.0;
 		float_t mem_start = 0.0, mem_end = 0.0;
@@ -281,6 +297,7 @@ namespace hig {
 												#endif
 												p_ff,
 												qx, p_nqx, p_qy, p_nqy, p_qz, p_nqz,
+												rot_,
 												kernel_time, red_time, temp_mem_time
 												#ifdef FINDBLOCK
 													, block_x, block_y, block_z, block_t
@@ -390,8 +407,6 @@ namespace hig {
 	 * Function to gather partial FF arrays from all processes to construct the final FF.
 	 * This is a bottleneck for large num procs ...
 	 */
-	//template<typename float_t, typename complex_t, typename cucomplex_t>
-	//void NumericFormFactor<float_t, complex_t, cucomplex_t>::construct_ff(int rank, int num_procs,
 	void NumericFormFactor::construct_ff(int rank, int num_procs,
 											MPI::Comm &comm, MPI::Comm &col_comm, MPI::Comm &row_comm,
 											int p_nqx, int p_nqy, int p_nqz,
@@ -517,8 +532,6 @@ namespace hig {
 	} // NumericFormFactor::construct_ff()
 	
 	
-	//template<typename float_t, typename complex_t, typename cucomplex_t>
-	//void NumericFormFactor<float_t, complex_t, cucomplex_t>::gather_all(std::complex<float> *cast_p_ff,
 	void NumericFormFactor::gather_all(std::complex<float> *cast_p_ff,
 			unsigned long int local_qpoints,
 			std::complex<float> *cast_ff, int *recv_counts, int *displacements, MPI::Comm &comm) {
@@ -527,8 +540,6 @@ namespace hig {
 	} // NumericFormFactor::gather_all()
 	
 	
-	//template<typename float_t, typename complex_t, typename cucomplex_t>
-	//void NumericFormFactor<float_t, complex_t, cucomplex_t>::gather_all(std::complex<double> *cast_p_ff,
 	void NumericFormFactor::gather_all(std::complex<double> *cast_p_ff,
 			unsigned long int local_qpoints,
 			std::complex<double> *cast_ff, int *recv_counts, int *displacements, MPI::Comm &comm) {
@@ -540,8 +551,6 @@ namespace hig {
 	/**
 	 * Function to read the input shape file.
 	 */
-	//template<typename float_t, typename complex_t, typename cucomplex_t>
-	//unsigned int NumericFormFactor<float_t, complex_t, cucomplex_t>::read_shape_surface_file(const char* filename,
 	unsigned int NumericFormFactor::read_shape_surface_file(const char* filename, float_vec_t &shape_def) {
 		std::ifstream f(filename);
 		if(!f.is_open()) {
@@ -569,8 +578,6 @@ namespace hig {
 	} // NumericFormFactor::read_shape_surface_file()
 	
 	
-	//template<typename float_t, typename complex_t, typename cucomplex_t>
-	//void NumericFormFactor<float_t, complex_t, cucomplex_t>::find_axes_orientation(
 	void NumericFormFactor::find_axes_orientation(float_vec_t &shape_def, std::vector<short int> &axes) {
 		float_t min_a = shape_def[4], max_a = shape_def[4];
 		float_t min_b = shape_def[5], max_b = shape_def[5];
