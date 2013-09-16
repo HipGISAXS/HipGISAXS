@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_main.cpp
  *  Created: Jun 14, 2012
- *  Modified: Fri 13 Sep 2013 03:43:57 PM PDT
+ *  Modified: Mon 16 Sep 2013 11:29:43 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -330,6 +330,8 @@ namespace hig {
 			float_t alphai = alpha_i * PI_ / 180;
 			float_t phi = phi_min;
 			for(int j = 0; j < num_phi; j ++, phi += phi_step) {
+				float_t phi_rad = phi * PI_ / 180;
+
 				float_t tilt = tilt_min;
 				for(int k = 0; k < num_tilt; k ++, tilt += tilt_step) {
 
@@ -344,7 +346,7 @@ namespace hig {
 					/* run a gisaxs simulation */
 
 					float_t* final_data = NULL;
-					if(!run_gisaxs(alpha_i, alphai, phi, tilt, final_data, world_comm, 0)) {
+					if(!run_gisaxs(alpha_i, alphai, phi_rad, tilt, final_data, world_comm, 0)) {
 						if(mpi_rank == 0) std::cerr << "error: could not finish successfully" << std::endl;
 						return false;
 					} // if
@@ -466,7 +468,8 @@ namespace hig {
  
 
 	/* all the real juice is here */
-	bool HipGISAXS::run_gisaxs(float_t alpha_i, float_t alphai, float_t phi, float_t tilt, float_t* &img3d,
+	bool HipGISAXS::run_gisaxs(float_t alpha_i, float_t alphai, float_t phi, float_t tilt,
+								float_t* &img3d,
 								MPI::Intracomm& world_comm, int corr_doms) {
 
 		if(!run_init(alphai, phi, tilt, world_comm)) return false;
