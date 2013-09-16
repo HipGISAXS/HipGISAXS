@@ -3,7 +3,7 @@
  *
  *  File: ff_num.cpp
  *  Created: Jul 18, 2012
- *  Modified: Tue 16 Jul 2013 11:50:24 AM PDT
+ *  Modified: Sun 15 Sep 2013 08:32:09 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -44,8 +44,6 @@ namespace hig {
 	/**
 	 * main host function
 	 */
-	//template<typename float_t, typename complex_t, typename cucomplex_t>
-	//bool NumericFormFactor<float_t, complex_t, cucomplex_t>::compute(
 	bool NumericFormFactor::compute(const char* filename, complex_vec_t& ff,
 									MPI::Intracomm& world_comm) {
 		float_t comp_start = 0.0, comp_end = 0.0, comm_start = 0.0, comm_end = 0.0;
