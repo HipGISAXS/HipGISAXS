@@ -3,7 +3,7 @@
  *
  *  File: ff_num.cpp
  *  Created: Jul 18, 2012
- *  Modified: Sun 15 Sep 2013 08:35:44 PM PDT
+ *  Modified: Mon 16 Sep 2013 04:14:18 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -63,30 +63,31 @@ namespace hig {
 	 */
 	bool NumericFormFactor::compute(const char* filename, complex_vec_t& ff,
 									vector3_t& rot1, vector3_t& rot2, vector3_t& rot3,
-									MPI::Intracomm& world_comm) {
+									MultiNode& world_comm) {
 		float_t comp_start = 0.0, comp_end = 0.0, comm_start = 0.0, comm_end = 0.0;
 		float_t mem_start = 0.0, mem_end = 0.0;
 		float_t comp_time = 0.0, comm_time = 0.0, mem_time = 0.0, kernel_time = 0.0, red_time = 0.0;
 		float_t total_start = 0.0, total_end = 0.0, total_time = 0.0;
 
 		woo::BoostChronoTimer maintimer, computetimer;
+		woo::BoostChronoTimer commtimer, memtimer;
 
 		unsigned int nqx = QGrid::instance().nqx();
 		unsigned int nqy = QGrid::instance().nqy();
 		unsigned int nqz = QGrid::instance().nqz_extended();
-		
-		comm_start = MPI::Wtime();
+
+		#ifdef USE_MPI
+			bool master = world_comm.is_master();
+		#else
+			bool master = true;
+		#endif
+
+		commtimer.start();
+		world_comm.barrier();
+		commtimer.stop();
+		comm_time += commtimer.elapsed_msec();
 	
-		world_comm.Barrier();	
-		int rank = world_comm.Get_rank();
-		int num_procs = world_comm.Get_size();
-		
-		comm_end = MPI::Wtime();
-		comm_time += comm_end - comm_start;
-	
-		mem_start = MPI::Wtime();
-	
-		// all procs read the shape file
+		// warning: all procs read the shape file!!!!
 		// TODO: improve to parallel IO, or one proc reading and sending to all ...
 		#ifndef __SSE3__
 			float_vec_t shape_def;
@@ -111,60 +112,66 @@ namespace hig {
 			find_axes_orientation(shape_def, axes);
 		#endif
 
-		if(rank == 0) {
+		#ifdef USE_MPI
+			int num_procs = world_comm.size();
+			int rank = world_comm.rank();
+		#endif
+
+		if(master) {
 			std::cout << "-- Numerical form factor computation ..." << std::endl
 						<< "**        Using input shape file: " << filename << std::endl
 						<< "**     Number of input triangles: " << num_triangles << std::endl
 						<< "**  Q-grid resolution (q-points): " << nqx * nqy * nqz << std::endl
 			            << "**               NQX x NQY x NQZ: "
 						<< nqx << " x " << nqy << " x " << nqz << std::endl
-						<< "** Number of processes requested: " << num_procs << std::endl << std::flush;
+						#ifdef USE_MPI
+							<< "** Number of processes requested: " << num_procs << std::endl
+						#endif
+						<< std::flush;
 		} // if
 		if(num_triangles < 1) {
 			std::cerr << "error: no triangles found in specified definition file" << std::endl;
 			return false;
 		} // if
 	
-		// decompose along y and z directions into blocks
-		int p_y = std::floor(sqrt((float_t) num_procs));	// some procs may be idle ...
-		int p_z = num_procs / p_y;
+		#ifdef USE_MPI
+			// decompose along y and z directions into blocks
+			int p_y = std::floor(sqrt((float_t) num_procs));	// some procs may be idle ...
+			int p_z = num_procs / p_y;
 		
-		int p_nqx = nqx;
-		int p_nqy = nqy / p_y + (((rank / p_z) < (int)nqy % p_y) ? 1 : 0);
-		int p_nqz = nqz / p_z + (((rank % p_z) < (int)nqz % p_z) ? 1 : 0);
+			int p_nqx = nqx;
+			int p_nqy = nqy / p_y + (((rank / p_z) < (int)nqy % p_y) ? 1 : 0);
+			int p_nqz = nqz / p_z + (((rank % p_z) < (int)nqz % p_z) ? 1 : 0);
+
+			// create row-wise and column-wise communicators
+			comm_start = MPI::Wtime();
+			MPI::Intracomm row_comm, col_comm;
+			int row = rank / p_z, col = rank % p_z;
+			if(row >= p_y) col = p_z;	// idle processes
+			row_comm = world_comm.Split(row, rank);
+			col_comm = world_comm.Split(col, rank);
 	
-		mem_end = MPI::Wtime();
-		mem_time += mem_end - mem_start;
-		
-		// create row-wise and column-wise communicators
-		comm_start = MPI::Wtime();
-		MPI::Intracomm row_comm, col_comm;
-		int row = rank / p_z, col = rank % p_z;
-		if(row >= p_y) col = p_z;	// idle processes
-		row_comm = world_comm.Split(row, rank);
-		col_comm = world_comm.Split(col, rank);
+			// construct a communicator for procs with rank < p_y * p_z
+			// so that the idle procs do not participate at all
+			MPI::Intracomm main_comm; int idle = 0;
+			if(rank >= p_y * p_z) idle = 1;
+			main_comm = world_comm.Split(idle, rank);
+			comm_end = MPI::Wtime();
+			comm_time += comm_end - comm_start;
 	
-		// construct a communicator for procs with rank < p_y * p_z
-		// so that the idle procs do not participate at all
-		MPI::Intracomm main_comm; int idle = 0;
-		if(rank >= p_y * p_z) idle = 1;
-		main_comm = world_comm.Split(idle, rank);
-		comm_end = MPI::Wtime();
-		comm_time += comm_end - comm_start;
-	
-		#ifdef FINDBLOCK
-			int block_x = 0, block_y = 0, block_z = 0, block_t = 0;
-			int block_x_max = 0, block_y_max = 0, block_z_max = 0, block_t_max = 0;
-			block_x_max = (nqx < 400) ? nqx : 400;
-			block_y_max = (nqy < 400) ? nqy : 400;
-			block_z_max = (nqz < 400) ? nqz : 400;
-			block_t_max = (num_triangles < 2500) ? num_triangles : 2500;
-			block_t = block_t_max;
-			for(block_t = block_t_max; block_t > std::min(99, block_t_max - 1); block_t -= 100) {
-			for(block_x = block_x_max; block_x > std::min(3, block_x_max - 1); block_x -= 2) {
-			for(block_y = block_y_max; block_y > std::min(3, block_y_max - 1); block_y -= 2) {
-			for(block_z = block_z_max; block_z > std::min(3, block_z_max - 1); block_z -= 2) {
-		#endif
+			#ifdef FINDBLOCK
+				int block_x = 0, block_y = 0, block_z = 0, block_t = 0;
+				int block_x_max = 0, block_y_max = 0, block_z_max = 0, block_t_max = 0;
+				block_x_max = (nqx < 400) ? nqx : 400;
+				block_y_max = (nqy < 400) ? nqy : 400;
+				block_z_max = (nqz < 400) ? nqz : 400;
+				block_t_max = (num_triangles < 2500) ? num_triangles : 2500;
+				block_t = block_t_max;
+				for(block_t = block_t_max; block_t > std::min(99, block_t_max - 1); block_t -= 100) {
+				for(block_x = block_x_max; block_x > std::min(3, block_x_max - 1); block_x -= 2) {
+				for(block_y = block_y_max; block_y > std::min(3, block_y_max - 1); block_y -= 2) {
+				for(block_z = block_z_max; block_z > std::min(3, block_z_max - 1); block_z -= 2) {
+			#endif
 		
 		maintimer.start();
 

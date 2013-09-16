@@ -3,7 +3,7 @@
  *
  *  File: ff_ana.hpp
  *  Created: Jul 12, 2012
- *  Modified: Tue 16 Jul 2013 11:49:59 AM PDT
+ *  Modified: Mon 16 Sep 2013 03:58:42 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -38,21 +38,15 @@ namespace hig {
 
 	class AnalyticFormFactor {	// make this and numerical ff inherited from class FormFactor ...
 		private:
-			//std::vector<complex_t> ff_;
-
 			unsigned int nqx_;
 			unsigned int nqy_;
 			unsigned int nqz_;
 
-			//std::vector<complex_t> mesh_qx_;
-			//std::vector<complex_t> mesh_qy_;
-			//std::vector<complex_t> mesh_qz_;
-
 			float_t *rot_;
 
-#ifdef FF_ANA_GPU
-			AnalyticFormFactorG gff_;
-#endif // FF_ANA_GPU
+			#ifdef FF_ANA_GPU
+				AnalyticFormFactorG gff_;
+			#endif // FF_ANA_GPU
 
 		public:
 			AnalyticFormFactor() { }
@@ -60,11 +54,18 @@ namespace hig {
 
 			bool init(vector3_t&, vector3_t&, vector3_t&, std::vector<complex_t> &ff);
 			void clear();
-			bool compute(ShapeName shape, float_t tau, float_t eta, vector3_t transvec,
-						std::vector<complex_t>&,
-						shape_param_list_t& params, float_t single_layer_thickness_,
-						vector3_t rot1, vector3_t rot2, vector3_t rot3,
-						MPI::Intracomm& world_comm);
+
+			#ifdef USE_MPI
+				bool compute(ShapeName shape, float_t tau, float_t eta, vector3_t transvec,
+							std::vector<complex_t>&,
+							shape_param_list_t& params, float_t single_layer_thickness_,
+							vector3_t rot1, vector3_t rot2, vector3_t rot3, MultiNode& multi_node);
+			#else
+				bool compute(ShapeName shape, float_t tau, float_t eta, vector3_t transvec,
+							std::vector<complex_t>&,
+							shape_param_list_t& params, float_t single_layer_thickness_,
+							vector3_t rot1, vector3_t rot2, vector3_t rot3, MultiNode& multi_node);
+			#endif
 
 		private:
 			/* compute ff for various shapes */
@@ -73,15 +74,19 @@ namespace hig {
 							ShapeName shape, shape_param_list_t& params,
 							float_t tau, float_t eta, vector3_t &transvec,
 							vector3_t &rot1, vector3_t &rot2, vector3_t &rot3);
-			bool compute_cylinder(shape_param_list_t&, float_t, float_t, std::vector<complex_t>&, vector3_t);
+			bool compute_cylinder(shape_param_list_t&, float_t, float_t,
+							std::vector<complex_t>&, vector3_t);
 			bool compute_horizontal_cylinder(float_t, float_t, shape_param_list_t&, vector3_t,
 							std::vector<complex_t>&);
 			bool compute_random_cylinders(shape_param_list_t&, std::vector<complex_t>&,
 							float_t, float_t, vector3_t);
 			bool compute_sphere(shape_param_list_t&, std::vector<complex_t>&, vector3_t);
-			bool compute_prism(shape_param_list_t&, std::vector<complex_t>&, float_t, float_t, vector3_t);
-			bool compute_prism6(shape_param_list_t&, std::vector<complex_t>&, float_t, float_t, vector3_t);
-			bool compute_prism3x(shape_param_list_t&, std::vector<complex_t>&, float_t, float_t, vector3_t);
+			bool compute_prism(shape_param_list_t&, std::vector<complex_t>&,
+							float_t, float_t, vector3_t);
+			bool compute_prism6(shape_param_list_t&, std::vector<complex_t>&,
+							float_t, float_t, vector3_t);
+			bool compute_prism3x(shape_param_list_t&, std::vector<complex_t>&,
+							float_t, float_t, vector3_t);
 			bool compute_truncated_pyramid(shape_param_list_t&, std::vector<complex_t>&, vector3_t);
 			complex_t truncated_pyramid_core(int, float_t, complex_t, complex_t, complex_t,
 							float_t, float_t, float_t, float_t, vector3_t);
@@ -102,7 +107,7 @@ namespace hig {
 			bool mat_sinc_in(unsigned int, unsigned int, unsigned int, complex_vec_t&);
 			complex_t sinc(complex_t value);
 			void compute_meshpoints(const float_t, const float_t, const complex_t, const float_t*,
-									complex_t&, complex_t&, complex_t&);
+							complex_t&, complex_t&, complex_t&);
 
 	}; // class AnalyticFormFactor
 

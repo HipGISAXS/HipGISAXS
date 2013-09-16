@@ -3,7 +3,7 @@
  *
  *  File: ff_ana.cpp
  *  Created: Jul 12, 2012
- *  Modified: Sat 14 Sep 2013 08:21:02 AM PDT
+ *  Modified: Mon 16 Sep 2013 03:59:50 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -38,7 +38,7 @@ namespace hig {
 	// 	one for overall (sets qgrid in gff_),
 	// 	other for each run/invocation (sets rotation matrices)
 	bool AnalyticFormFactor::init(vector3_t &rot1, vector3_t &rot2, vector3_t &rot3,
-				std::vector<complex_t> &ff) {
+									std::vector<complex_t> &ff) {
 		nqx_ = QGrid::instance().nqx();
 		nqy_ = QGrid::instance().nqy();
 		nqz_ = QGrid::instance().nqz_extended();
@@ -72,7 +72,7 @@ namespace hig {
 									std::vector<complex_t>& ff,
 									shape_param_list_t& params, float_t single_layer_thickness,
 									vector3_t rot1, vector3_t rot2, vector3_t rot3,
-									MPI::Intracomm& world_comm) {
+									MultiNode& world_comm) {
 
 		std::cout << "-- Computing form factor analytically ... " << std::endl;
 		#ifdef TIME_DETAIL_1
@@ -82,7 +82,8 @@ namespace hig {
 
 		switch(shape) {
 			case shape_box:						// cube or box
-				if(!compute_box(nqx_, nqy_, nqz_, ff, shape, params, tau, eta, transvec, rot1, rot2, rot3)) {
+				if(!compute_box(nqx_, nqy_, nqz_, ff, shape, params, tau, eta, transvec,
+								rot1, rot2, rot3)) {
 					std::cerr << "error: something went wrong while computing FF for a box"
 								<< std::endl;
 					return false;
@@ -104,7 +105,8 @@ namespace hig {
 				break;
 			case shape_horizontal_cylinder:		// horizontal cylinder
 				if(!compute_horizontal_cylinder(tau, eta, params, transvec, ff)) {
-					std::cerr << "error: something went wrong while computing FF for a horizontal cylinder"
+					std::cerr << "error: something went wrong while computing FF for a "
+								<< "horizontal cylinder"
 								<< std::endl;
 					return false;
 				} // if
@@ -183,13 +185,9 @@ namespace hig {
 						<< std::endl;
 		#endif // TIME_DETAIL_1
 
-		/*int rank;
-		MPI_Comm_rank(world_comm, &rank);
-		if(rank == 0) {
-			int naninfs = count_naninfs(nqx_, nqy_, nqz_, ff);
-			std::cout << " ------ " << naninfs << " / " << nqx_ * nqy_ * nqz_ << " nans or infs" << std::endl;
-		} // if
-*/
+		//int naninfs = count_naninfs(nqx_, nqy_, nqz_, ff);
+		//std::cout << " ------ " << naninfs << " / " << nqx_ * nqy_ * nqz_
+		//			<< " nans or infs" << std::endl;
 		return true;
 	} // AnalyticFormFactor::compute()
 
@@ -209,6 +207,7 @@ namespace hig {
 		return true;
 	} // AnalyticFormFactor::mat_fq_inv()
 
+
 	bool AnalyticFormFactor::mat_fq_inv(unsigned int x_size, unsigned int y_size, unsigned int z_size,
 										const complex_vec_t& matrix, float_t y, complex_vec_t& result) {
 		result.clear();
@@ -217,6 +216,7 @@ namespace hig {
 		} // for
 		return true;
 	} // AnalyticFormFactor::mat_fq_inv()
+
 
 	complex_t AnalyticFormFactor::fq_inv(complex_t value, float_t y) {
 		complex_t unitc(0, 1.0);
@@ -235,6 +235,7 @@ namespace hig {
 		} // for
 		return true;
 	} // AnalyticFormFactor::mat_sinc()
+
 
 	bool AnalyticFormFactor::mat_sinc_in(unsigned int x_size,
 											unsigned int y_size,
@@ -260,7 +261,7 @@ namespace hig {
 
 
 	/**
-	 * generate parameter's distribution
+	 * generate parameter distribution
 	 */
 	bool AnalyticFormFactor::param_distribution(ShapeParam& param, std::vector<float_t>& dim,
 												std::vector<float_t>& dim_vals) {

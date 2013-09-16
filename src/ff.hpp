@@ -3,7 +3,7 @@
  *
  *  File: ff.hpp
  *  Created: Jul 18, 2012
- *  Modified: Tue 16 Jul 2013 11:50:23 AM PDT
+ *  Modified: Mon 16 Sep 2013 03:49:01 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -69,12 +69,13 @@ namespace hig {
 									float_t single_thickness,
 									vector3_t& transvec, float_t shp_tau, float_t shp_eta,
 									vector3_t& rot1, vector3_t& rot2, vector3_t& rot3,
-									MPI::Intracomm& world_comm);
+									MultiNodeComm&);
 
 			complex_t operator[](unsigned int i) const { return ff_[i]; }
 
 			// for testing only ... remove ...
-			bool read_form_factor(const char* filename, unsigned int nqx, unsigned int nqy, unsigned int nqz);
+			bool read_form_factor(const char* filename,
+									unsigned int nqx, unsigned int nqy, unsigned int nqz);
 			void print_ff(unsigned int nqx, unsigned int nqy, unsigned int nqz);
 			void save_ff(unsigned int nqx, unsigned int nqy, unsigned int nqz, const char* filename);
 			void printff(unsigned int nqx, unsigned int nqy, unsigned int nqz) {

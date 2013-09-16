@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_main.hpp
  *  Created: Jun 11, 2012
- *  Modified: Tue 16 Jul 2013 11:50:57 AM PDT
+ *  Modified: Mon 16 Sep 2013 02:52:19 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -25,6 +25,7 @@
 
 #include <complex>
 #include <mpi.h>
+#include "woo/comm/multi_node_comm.hpp"
 
 #include "typedefs.hpp"
 #include "globals.hpp"
@@ -79,9 +80,13 @@ namespace hig {
 			FormFactor ff_;				/* form factor object */
 			StructureFactor sf_;		/* structure factor object */
 
+			#ifdef USE_MPI
+				woo::MultiNodeComm multi_node_;	/* for multi node communication */
+			#endif
+
 			bool init(MPI::Intracomm&);	/* global initialization for all runs */
-			bool init_steepest_fit(MPI::Intracomm&, float_t);	/* init for steepest descent fitting ... */
-			bool run_init(float_t, float_t, float_t, MPI::Intracomm&); 	/* initialization for a single run */
+			bool init_steepest_fit(MPI::Intracomm&, float_t);	/* init for steepest descent fitting */
+			bool run_init(float_t, float_t, float_t, MPI::Intracomm&); 	/* init for a single run */
 			bool run_gisaxs(float_t, float_t, float_t, float_t, float_t*&, MPI::Intracomm&, int c = 0);
 										/* a single GISAXS run */
 
@@ -119,7 +124,7 @@ namespace hig {
 			void printfr(const char*, float_t*, unsigned int);
 
 		public:
-			HipGISAXS();
+			HipGISAXS(int, char**);
 			~HipGISAXS();
 
 			// TODO: improve and clean the constructors - for gpu/cpu etc. unify ...

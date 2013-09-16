@@ -3,7 +3,7 @@
  *
  *  File: ff_num.hpp
  *  Created: Nov 05, 2011
- *  Modified: Fri 13 Sep 2013 04:23:46 PM PDT
+ *  Modified: Mon 16 Sep 2013 04:02:42 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -40,7 +40,7 @@
 #ifdef FF_NUM_GPU
 	#include "ff_num_gpu.cuh"	// for gpu version
 #elif defined USE_MIC
-	#include "ff_num_mic.hpp"	// for mic version -- TODO: merge it with cpu version ...
+	#include "ff_num_mic.hpp"	// for mic version
 #else
 	#include "ff_num_cpu.hpp"	// for cpu version
 #endif // FF_NUM_GPU
@@ -50,26 +50,6 @@ namespace hig {
 	/**
 	 * Some declarations.
 	 */
-	// for gpu version
-	//template<typename float_t, typename complex_t>
-/*	extern unsigned int compute_form_factor_gpu(int rank,
-							std::vector<float_t> &shape_def, unsigned int num_triangles,
-							std::vector<short int> &axes,
-							float_t* &qx_h, int nqx,
-							float_t* &qy_h, int nqy,
-							cucomplex_t* &qz_h, int nqz,
-							cucomplex_t* &ff,
-							float_t& kernel_time, float_t& red_time, float_t& mem_time
-	#ifdef FINDBLOCK
-							, const int block_x, const int block_y, const int block_z, const int block_t
-	#endif
-	#ifdef KERNEL2
-							, unsigned int cuda_t, unsigned int cuda_y, unsigned int cuda_z
-	#else // default kernel
-							, unsigned int cuda_t
-	#endif
-							);
-*/	
 	#ifdef FF_NUM_GPU
 		void write_slice_to_file(cucomplex_t *ff, int nqx, int nqy, int nqz,
 									char* filename, int axis, int slice);
@@ -79,12 +59,11 @@ namespace hig {
 	/**
 	 * Class for computing Form Factor across multiple nodes using MPI.
 	 */
-	//template<typename float_t, typename complex_t, typename cucomplex_t>
 	class NumericFormFactor {
 				// TODO: make the cpu and cpu version classes children of this class ...
 		public:
 
-			#ifdef FF_NUM_GPU	// use GPUs for numerical
+			#ifdef FF_NUM_GPU		// use GPUs for numerical
 				#ifdef FF_NUM_GPU_FUSED
 					NumericFormFactor(int block_cuda_y, int block_cuda_z):
 									block_cuda_t_(0),
@@ -99,9 +78,9 @@ namespace hig {
 				#else
 					NumericFormFactor(int block_cuda): block_cuda_(block_cuda), gff_(block_cuda) { }
 				#endif // KERNEL2
-			#elif defined USE_MIC
+			#elif defined USE_MIC	// use MICs for numerical
 				NumericFormFactor(): mff_() { }
-			#else				// use CPUs for numerical
+			#else					// use CPUs for numerical
 				NumericFormFactor(): cff_() { }
 			#endif	// FF_NUM_GPU
 
@@ -112,7 +91,7 @@ namespace hig {
 
 			bool compute(const char* filename, std::vector<complex_t>& ff,
 							vector3_t&, vector3_t&, vector3_t&,
-							MPI::Intracomm& world_comm);
+							MultiNode& world_comm);
 	
 		private:
 

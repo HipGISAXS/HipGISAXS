@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_sim.cpp
  *  Created: Dec 06, 2012
- *  Modified: Tue 16 Jul 2013 01:42:43 PM PDT
+ *  Modified: Mon 16 Sep 2013 02:44:39 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -46,7 +46,7 @@ int main(int narg, char** args) {
 	} // if
 
 	/* initialize MPI */
-	MPI::Init(narg, args);
+	/*MPI::Init(narg, args);
 	int mpi_rank = MPI::COMM_WORLD.Get_rank();
 	int mpi_num_procs = MPI::COMM_WORLD.Get_size();
 
@@ -58,23 +58,28 @@ int main(int narg, char** args) {
 					<< std::endl
 					<< "********************************************************************************"
 					<< std::endl << std::endl;
-	} // if
+	} // if*/
 
 	woo::BoostChronoTimer maintimer, readtimer; //, computetimer;
+	
 	maintimer.start();
 	readtimer.start();
+
 	/* read input file and construct input structures */
 	hig::HipGISAXS my_gisaxs;
-	if(mpi_rank == 0) std::cout << "**                HiG input file: " << args[1] << std::endl;
+	
+	//if(mpi_rank == 0) std::cout << "**                HiG input file: " << args[1] << std::endl;
 	if(!my_gisaxs.construct_input(args[1])) {
-		if(mpi_rank == 0) std::cerr << "error: failed to construct input containers" << std::endl;
-		MPI::Finalize();
+		//if(mpi_rank == 0)
+		std::cerr << "error: failed to construct input containers" << std::endl;
+		//MPI::Finalize();
 		return 1;
 	} // if
 	//hig::HiGInput::instance().print_all();	// for testing
 	readtimer.stop();
-	if(mpi_rank == 0)
-		std::cout << "**       Input construction time: " << readtimer.elapsed_msec() << " ms." << std::endl;
+	//if(mpi_rank == 0)
+	//	std::cout << "**       Input construction time: " << readtimer.elapsed_msec() << " ms."
+	//				<< std::endl;
 
 	//computetimer.start();
 	/* run the simulation */
@@ -82,18 +87,20 @@ int main(int narg, char** args) {
 		std::cerr << "error: could not run the simulation - some error occured" << std::endl;
 		//computetimer.stop();
 		maintimer.stop();
-		MPI::Finalize();
+		//MPI::Finalize();
 		return 1;
 	} // if
 	//computetimer.stop();
 	maintimer.stop();
-	if(mpi_rank == 0) {
+	//if(mpi_rank == 0) {
 		//std::cout << "**         Total simulation time: " << computetimer.elapsed_msec() << " ms."
 		//				<< std::endl;
-		std::cout << "**                    Total time: " << maintimer.elapsed_msec() << " ms." << std::endl;
+		std::cout << "**                    Total time: " << maintimer.elapsed_msec() << " ms."
+					<< std::endl;
 		std::cout << std::endl;
-	} // if
+	//} // if
 
-	MPI::Finalize();
+	//MPI::Finalize();
+
 	return 0;
 } // main()
