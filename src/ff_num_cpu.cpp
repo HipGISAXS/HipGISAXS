@@ -3,7 +3,7 @@
  *
  *  File: ff_num_cpu.hpp
  *  Created: Nov 05, 2011
- *  Modified: Sun 15 Sep 2013 02:33:49 PM PDT
+ *  Modified: Sun 15 Sep 2013 05:25:17 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -386,14 +386,16 @@ namespace hig {
 	#ifndef FF_NUM_CPU_FUSED
 
 	/**
-	 * the main Form Factor kernel function - for one hyperblock.
+	 * the Form Factor kernel function - for one hyperblock.
 	 * needs reduction kernel after this.
+	 * DO NOT USE THIS. IT IS ANCIENT AND DOES NOT HAVE ROTATION!
 	 */
 	void NumericFormFactorC::form_factor_kernel(float_t* qx, float_t* qy, complex_t* qz,
 					float_vec_t& shape_def,
 					unsigned int curr_nqx, unsigned int curr_nqy, unsigned int curr_nqz,
 					unsigned int curr_num_triangles,
-					unsigned int b_nqx, unsigned int b_nqy, unsigned int b_nqz, unsigned int b_num_triangles,
+					unsigned int b_nqx, unsigned int b_nqy, unsigned int b_nqz,
+					unsigned int b_num_triangles,
 					unsigned int ib_x, unsigned int ib_y, unsigned int ib_z, unsigned int ib_t,
 					complex_t* fq_buffer) {
 		if(fq_buffer == NULL || qx == NULL || qy == NULL || qz == NULL) return;
@@ -451,7 +453,8 @@ namespace hig {
 	
 	
 	/**
-	 * Reduction kernel
+	 * Reduction kernel (to be used with the above kernel)
+	 * DO NOT USE THIS. IT IS ANCIENT.
 	 */
 	void NumericFormFactorC::reduction_kernel(
 			unsigned int curr_b_nqx, unsigned int curr_b_nqy, unsigned int curr_b_nqz,
@@ -534,23 +537,30 @@ namespace hig {
 							float_t y = shape_def[shape_off + 5];
 							float_t z = shape_def[shape_off + 6];
 	
-							complex_t temp_z = qz[start_z + i_z];
+							complex_t temp_qz = qz[start_z + i_z];
+							float_t temp_qy = qy[start_y + i_y];
+							float_t temp_qx = qx[start_x + i_x];
+
+							complex_t temp_x = rot[0] * temp_qx + rot[1] * temp_qy + rot[2] * temp_qz;
+							complex_t temp_y = rot[3] * temp_qx + rot[4] * temp_qy + rot[5] * temp_qz;
+							complex_t temp_z = rot[6] * temp_qx + rot[7] * temp_qy + rot[8] * temp_qz;
+
 							complex_t qz2 = temp_z * temp_z;
 							complex_t qzn = temp_z * nz;
 							complex_t qzt = temp_z * z;
 	
-							float_t temp_y = qy[start_y + i_y];
-							float_t qy2 = temp_y * temp_y;
-							float_t qyn = temp_y * ny;
-							float_t qyt = temp_y * y;
+							complex_t qy2 = temp_y * temp_y;
+							complex_t qyn = temp_y * ny;
+							complex_t qyt = temp_y * y;
 	
-							float_t temp_x = qx[start_x + i_x];
 							complex_t q2 = temp_x * temp_x + qy2 + qz2;
 							complex_t qt = temp_x * x + qyt + qzt;
 							complex_t qn = (temp_x * nx + qyn + qzn) / q2;
 
-							unsigned long int super_i = (unsigned long int) nqx * nqy * (ib_z * b_nqz + i_z) +
-														nqx * (ib_y * b_nqy + i_y) + ib_x * b_nqx + i_x;
+							unsigned long int super_i = (unsigned long int) nqx * nqy *
+															(ib_z * b_nqz + i_z) +
+															nqx * (ib_y * b_nqy + i_y) +
+															ib_x * b_nqx + i_x;
 							ff[super_i] += compute_fq(s, qt, qn);
 						} // for t
 					} // for x

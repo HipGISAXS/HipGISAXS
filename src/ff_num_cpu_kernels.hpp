@@ -3,7 +3,7 @@
  *
  *  File: ff_num_cpu.hpp
  *  Created: Nov 05, 2011
- *  Modified: Sun 15 Sep 2013 02:35:12 PM PDT
+ *  Modified: Sun 15 Sep 2013 05:20:57 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -735,7 +735,8 @@
 
 	#ifdef INTEL_SB_AVX
 
-		inline avx_m256c_t NumericFormFactorC::avx_compute_fq(avx_m256_t s, avx_m256c_t qt, avx_m256c_t qn) {
+		inline avx_m256c_t NumericFormFactorC::avx_compute_fq(avx_m256_t s,
+												avx_m256c_t qt, avx_m256c_t qn) {
 			avx_m256c_t temp;
 			//temp.xvec = avx_cos_rps(qt.xvec);
 			//temp.yvec = avx_sin_rps(qt.xvec);
@@ -747,7 +748,8 @@
 
 	#elif defined __SSE3__
 
-		inline sse_m128c_t NumericFormFactorC::sse_compute_fq(sse_m128_t s, sse_m128c_t qt, sse_m128c_t qn) {
+		inline sse_m128c_t NumericFormFactorC::sse_compute_fq(sse_m128_t s,
+												sse_m128c_t qt, sse_m128c_t qn) {
 			sse_m128c_t temp;
 			//temp.xvec = sse_cos_rps(qt.xvec);
 			//temp.yvec = sse_sin_rps(qt.xvec);
@@ -766,7 +768,8 @@
 	/**
 	 * special case of nqx == 1 of Form Factor kernel with fused reduction, and loop unrolling
 	 */
-	void NumericFormFactorC::form_factor_kernel_fused_nqx1_unroll4(float_t* qx, float_t* qy, complex_t* qz,
+	void NumericFormFactorC::form_factor_kernel_fused_nqx1_unroll4(
+					float_t* qx, float_t* qy, complex_t* qz,
 					float_vec_t& shape_def,
 					unsigned int curr_nqx, unsigned int curr_nqy, unsigned int curr_nqz,
 					unsigned int curr_num_triangles,
@@ -799,11 +802,17 @@
 				for(int i_y = 0; i_y < curr_nqy; ++ i_y) {
 					unsigned long int super_i = (unsigned long int) nqy * (ib_z * b_nqz + i_z) +
 													(ib_y * b_nqy + i_y);
-					complex_t temp_z = qz[start_z + i_z];
-					float_t temp_y = qy[start_y + i_y];
-					float_t temp_x = qx[0];
+					complex_t temp_qz = qz[start_z + i_z];
+					float_t temp_qy = qy[start_y + i_y];
+					float_t temp_qx = qx[0];
+
+					// compute rotation stuff ... FIXME double check transposition etc ...
+					complex_t temp_x = rot[0] * temp_qx + rot[1] * temp_qy + rot[2] * temp_qz;
+					complex_t temp_y = rot[3] * temp_qx + rot[4] * temp_qy + rot[5] * temp_qz;
+					complex_t temp_z = rot[6] * temp_qx + rot[7] * temp_qy + rot[8] * temp_qz;
+
 					complex_t qz2 = temp_z * temp_z;
-					float_t qy2 = temp_y * temp_y;
+					complex_t qy2 = temp_y * temp_y;
 					complex_t q2 = temp_x * temp_x + qy2 + qz2;
 					complex_t q2_inv = ((float_t) 1.0) / q2;
 
@@ -852,14 +861,14 @@
 						complex_t qzn4 = temp_z * nz4;
 						complex_t qzt4 = temp_z * z4;
 
-						float_t qyn1 = temp_y * ny1;
-						float_t qyt1 = temp_y * y1;
-						float_t qyn2 = temp_y * ny2;
-						float_t qyt2 = temp_y * y2;
-						float_t qyn3 = temp_y * ny3;
-						float_t qyt3 = temp_y * y3;
-						float_t qyn4 = temp_y * ny4;
-						float_t qyt4 = temp_y * y4;
+						complex_t qyn1 = temp_y * ny1;
+						complex_t qyt1 = temp_y * y1;
+						complex_t qyn2 = temp_y * ny2;
+						complex_t qyt2 = temp_y * y2;
+						complex_t qyn3 = temp_y * ny3;
+						complex_t qyt3 = temp_y * y3;
+						complex_t qyn4 = temp_y * ny4;
+						complex_t qyt4 = temp_y * y4;
 
 						complex_t qt1 = temp_x * x1 + qyt1 + qzt1;
 						complex_t qn1 = (temp_x * nx1 + qyn1 + qzn1) * q2_inv;
