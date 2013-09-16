@@ -3,7 +3,7 @@
  *
  *  File: ff_num_mic.hpp
  *  Created: Apr 02, 2013
- *  Modified: Tue 16 Jul 2013 11:50:42 AM PDT
+ *  Modified: Sun 15 Sep 2013 08:39:55 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -119,6 +119,7 @@ namespace hig {
 
 			unsigned int compute_form_factor(int, float_vec_t&, complex_t*&,
 									float_t*, int, float_t*, int, complex_t* qz, int,
+									float_t*,
 									float_t&, float_t&, float_t&
 									#ifdef FINDBLOCK
 										, const int, const int, const int, const int
@@ -126,6 +127,7 @@ namespace hig {
 									);
 			unsigned int compute_form_factor_db(int, float_vec_t&, complex_t*&,
 									float_t*, int, float_t*, int, complex_t* qz, int,
+									float_t*,
 									float_t&, float_t&, float_t&
 									#ifdef FINDBLOCK
 										, const int, const int, const int, const int
@@ -133,6 +135,7 @@ namespace hig {
 									);
 			unsigned int compute_form_factor_kb(int, float_t*, unsigned int, complex_t*&,
 									float_t*, int, float_t*, int, complex_t* qz, int, int,
+									float_t*,
 									float_t&, float_t&, float_t&
 									#ifdef FINDBLOCK
 										, const int, const int, const int, const int

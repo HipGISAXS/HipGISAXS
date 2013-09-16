@@ -3,7 +3,7 @@
  *
  *  File: ff_num_mic.cpp
  *  Created: Apr 02, 2013
- *  Modified: Tue 16 Jul 2013 11:50:41 AM PDT
+ *  Modified: Mon 16 Sep 2013 08:46:43 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -70,10 +70,12 @@ namespace hig {
 
 	/**
 	 * The main host function called from outside, as part of the API for a single node.
+	 * DO NOT USE THIS!!! IT DOES NOT HAVE ROTATION IN IT, AND HAS SEPARATED KERNELS!
 	 */
 	unsigned int NumericFormFactorM::compute_form_factor(int rank,
 						float_vec_t &shape_def_vec, complex_t* &ff,
 						float_t* qx, int nqx, float_t* qy, int nqy, complex_t* qz, int nqz,
+						float_t* rot,
 						float_t& pass_kernel_time, float_t& red_time, float_t& mem_time
 						#ifdef FINDBLOCK
 							, const int block_x, const int block_y, const int block_z, const int block_t
@@ -455,6 +457,7 @@ namespace hig {
 	unsigned int NumericFormFactorM::compute_form_factor_db(int rank,
 						float_vec_t &shape_def_vec, complex_t* &ff,
 						float_t* qx, int nqx, float_t* qy, int nqy, complex_t* qz, int nqz,
+						float_t* rot,
 						float_t& pass_kernel_time, float_t& red_time, float_t& mem_time
 						#ifdef FINDBLOCK
 							, const int block_x, const int block_y, const int block_z, const int block_t
@@ -524,6 +527,7 @@ namespace hig {
 								in(qy: length(nqy) MIC_ALLOC) \
 								in(qz_flat: length(nqz) MIC_ALLOC) \
 								in(shape_def: length(7 * num_triangles) MIC_ALLOC) \
+								in(rot: length(9) MIC_ALLOC \
 								signal(shape_def)
 		
 		unsigned long int target_mem_usage = ((unsigned int) nqx + nqy) * sizeof(float_t) +
@@ -736,7 +740,9 @@ namespace hig {
 										nqx, nqy, nqz,
 										ib_x, ib_y, ib_z, ib_t,
 										fq_buffer0, ff_buffer0);
-							#else
+
+							#else	// FF_MIC_OPT
+
 								#ifdef MIC_PADDING
 									#ifndef FF_NUM_MIC_SWAP
 										#pragma offload target(mic:0) signal(ff_buffer0) \
@@ -744,6 +750,7 @@ namespace hig {
 											in(b_nqx, b_nqy, b_nqz, num_triangles) \
 											in(nqx, nqy, nqz, ib_x, ib_y, ib_z, ib_t) \
 											in(shape_def: length(0) MIC_REUSE) \
+											in(rot: length(0) MIC_REUSE) \
 											in(qx: length(0) MIC_REUSE) \
 											in(qy: length(0) MIC_REUSE) \
 											in(qz_flat: length(0) MIC_REUSE) \
@@ -755,6 +762,7 @@ namespace hig {
 											in(b_nqx, b_nqy, b_nqz, num_triangles) \
 											in(nqx, nqy, nqz, ib_x, ib_y, ib_z, ib_t) \
 											in(shape_def: length(0) MIC_REUSE) \
+											in(rot: length(0) MIC_REUSE) \
 											in(qx: length(0) MIC_REUSE) \
 											in(qy: length(0) MIC_REUSE) \
 											in(qz_flat: length(0) MIC_REUSE) \
@@ -767,6 +775,7 @@ namespace hig {
 											in(b_nqx, b_nqy, b_nqz, num_triangles) \
 											in(nqx, nqy, nqz, ib_x, ib_y, ib_z, ib_t) \
 											in(shape_def: length(0) MIC_REUSE) \
+											in(rot: length(0) MIC_REUSE) \
 											in(qx: length(0) MIC_REUSE) \
 											in(qy: length(0) MIC_REUSE) \
 											in(qz_flat: length(0) MIC_REUSE) \
@@ -778,6 +787,7 @@ namespace hig {
 											in(b_nqx, b_nqy, b_nqz, num_triangles) \
 											in(nqx, nqy, nqz, ib_x, ib_y, ib_z, ib_t) \
 											in(shape_def: length(0) MIC_REUSE) \
+											in(rot: length(0) MIC_REUSE) \
 											in(qx: length(0) MIC_REUSE) \
 											in(qy: length(0) MIC_REUSE) \
 											in(qz_flat: length(0) MIC_REUSE) \
@@ -789,6 +799,7 @@ namespace hig {
 											curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles,
 											b_nqx, b_nqy, b_nqz, b_num_triangles,
 											ib_x, ib_y, ib_z, ib_t,
+											rot,
 											fq_buffer0, ff_buffer0);
 								#else
 									form_factor_kernel_loopswap(qx, qy, qz_flat, shape_def,
@@ -796,6 +807,7 @@ namespace hig {
 											b_nqx, b_nqy, b_nqz, b_num_triangles,
 											nqx, nqy, nqz, num_triangles,
 											ib_x, ib_y, ib_z, ib_t,
+											rot,
 											ff_buffer0);
 								#endif
 							#endif
@@ -849,7 +861,9 @@ namespace hig {
 										nqx, nqy, nqz,
 										ib_x, ib_y, ib_z, ib_t,
 										fq_buffer1, ff_buffer1);
-							#else
+
+							#else	// FF_MIC_OPT
+
 								#ifdef MIC_PADDING
 									#ifndef FF_NUM_MIC_SWAP
 										#pragma offload target(mic:0) signal(ff_buffer1) \
@@ -857,6 +871,7 @@ namespace hig {
 											in(b_nqx, b_nqy, b_nqz, num_triangles) \
 											in(nqx, nqy, nqz, ib_x, ib_y, ib_z, ib_t) \
 											in(shape_def: length(0) MIC_REUSE) \
+											in(rot: length(0) MIC_REUSE) \
 											in(qx: length(0) MIC_REUSE) \
 											in(qy: length(0) MIC_REUSE) \
 											in(qz_flat: length(0) MIC_REUSE) \
@@ -868,6 +883,7 @@ namespace hig {
 											in(b_nqx, b_nqy, b_nqz, num_triangles) \
 											in(nqx, nqy, nqz, ib_x, ib_y, ib_z, ib_t) \
 											in(shape_def: length(0) MIC_REUSE) \
+											in(rot: length(0) MIC_REUSE) \
 											in(qx: length(0) MIC_REUSE) \
 											in(qy: length(0) MIC_REUSE) \
 											in(qz_flat: length(0) MIC_REUSE) \
@@ -880,6 +896,7 @@ namespace hig {
 											in(b_nqx, b_nqy, b_nqz, num_triangles) \
 											in(nqx, nqy, nqz, ib_x, ib_y, ib_z, ib_t) \
 											in(shape_def: length(0) MIC_REUSE) \
+											in(rot: length(0) MIC_REUSE) \
 											in(qx: length(0) MIC_REUSE) \
 											in(qy: length(0) MIC_REUSE) \
 											in(qz_flat: length(0) MIC_REUSE) \
@@ -891,6 +908,7 @@ namespace hig {
 											in(b_nqx, b_nqy, b_nqz, num_triangles) \
 											in(nqx, nqy, nqz, ib_x, ib_y, ib_z, ib_t) \
 											in(shape_def: length(0) MIC_REUSE) \
+											in(rot: length(0) MIC_REUSE) \
 											in(qx: length(0) MIC_REUSE) \
 											in(qy: length(0) MIC_REUSE) \
 											in(qz_flat: length(0) MIC_REUSE) \
@@ -902,6 +920,7 @@ namespace hig {
 											curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles,
 											b_nqx, b_nqy, b_nqz, b_num_triangles,
 											ib_x, ib_y, ib_z, ib_t,
+											rot,
 											fq_buffer1, ff_buffer1);
 								#else
 									form_factor_kernel_loopswap(qx, qy, qz_flat, shape_def,
@@ -909,6 +928,7 @@ namespace hig {
 											b_nqx, b_nqy, b_nqz, b_num_triangles,
 											nqx, nqy, nqz, num_triangles,
 											ib_x, ib_y, ib_z, ib_t,
+											rot,
 											ff_buffer1);
 								#endif
 							#endif
@@ -991,6 +1011,7 @@ namespace hig {
 
 		#pragma offload_transfer target(mic:0) \
 				nocopy(shape_def: length(0) MIC_FREE) \
+				nocopy(rot: length(0) MIC_FREE) \
 				nocopy(qx: length(0) MIC_FREE) \
 				nocopy(qy: length(0) MIC_FREE) \
 				nocopy(qz_flat: length(0) MIC_FREE)
@@ -1015,6 +1036,7 @@ namespace hig {
 	unsigned int NumericFormFactorM::compute_form_factor_kb(int rank,
 						float_t* shape_def, unsigned int num_triangles, complex_t* &ff,
 						float_t* qx, int nqx, float_t* qy, int nqy, complex_t* qz, int nqz, int k,
+						float_t* rot,
 						float_t& kernel_time, float_t& red_time, float_t& mem_time
 						#ifdef FINDBLOCK
 							, const int block_x, const int block_y, const int block_z, const int block_t
@@ -1086,6 +1108,7 @@ namespace hig {
 								in(qx: length(nqx) MIC_ALLOC) \
 								in(qy: length(nqy) MIC_ALLOC) \
 								in(qz_flat: length(nqz) MIC_ALLOC) \
+								in(rot: length(9) MIC_ALLOC \
 								in(shape_def: length(shape_size) MIC_ALLOC) \
 								signal(shape_def)
 
@@ -1137,6 +1160,7 @@ namespace hig {
 								in(b_nqx, b_nqy, b_nqz, num_triangles) \
 								in(nqx, nqy, nqz) \
 								in(shape_def: length(0) MIC_REUSE) \
+								in(rot: length(0) MIC_REUSE) \
 								in(qx: length(0) MIC_REUSE) \
 								in(qy: length(0) MIC_REUSE) \
 								in(qz_flat: length(0) MIC_REUSE) \
@@ -1146,6 +1170,7 @@ namespace hig {
 									b_nqx, b_nqy, b_nqz, b_num_triangles,
 									nqx, nqy, nqz, num_triangles,
 									0, 0, 0, 0,
+									rot,
 									ff_temp);
 	
 							at_kernel_timer.stop();
@@ -1335,6 +1360,7 @@ namespace hig {
 										in(b_nqx, b_nqy, b_nqz, num_triangles) \
 										in(nqx, nqy, nqz, ib_x, ib_y, ib_z, ib_t) \
 										in(shape_def: length(0) MIC_REUSE) \
+										in(rot: length(0) MIC_REUSE) \
 										in(qx: length(0) MIC_REUSE) \
 										in(qy: length(0) MIC_REUSE) \
 										in(qz_flat: length(0) MIC_REUSE) \
@@ -1345,6 +1371,7 @@ namespace hig {
 										in(b_nqx, b_nqy, b_nqz, num_triangles) \
 										in(nqx, nqy, nqz, ib_x, ib_y, ib_z, ib_t) \
 										in(shape_def: length(0) MIC_REUSE) \
+										in(rot: length(0) MIC_REUSE) \
 										in(qx: length(0) MIC_REUSE) \
 										in(qy: length(0) MIC_REUSE) \
 										in(qz_flat: length(0) MIC_REUSE) \
@@ -1355,6 +1382,7 @@ namespace hig {
 										b_nqx, b_nqy, b_nqz, b_num_triangles,
 										nqx, nqy, nqz, num_triangles,
 										ib_x, ib_y, ib_z, ib_t,
+										rot,
 										ff_buffer0);
 	
 								if(hblock_counter > k - 2) {
@@ -1378,6 +1406,7 @@ namespace hig {
 										in(b_nqx, b_nqy, b_nqz, num_triangles) \
 										in(nqx, nqy, nqz, ib_x, ib_y, ib_z, ib_t) \
 										in(shape_def: length(0) MIC_REUSE) \
+										in(rot: length(0) MIC_REUSE) \
 										in(qx: length(0) MIC_REUSE) \
 										in(qy: length(0) MIC_REUSE) \
 										in(qz_flat: length(0) MIC_REUSE) \
@@ -1388,6 +1417,7 @@ namespace hig {
 										in(b_nqx, b_nqy, b_nqz, num_triangles) \
 										in(nqx, nqy, nqz, ib_x, ib_y, ib_z, ib_t) \
 										in(shape_def: length(0) MIC_REUSE) \
+										in(rot: length(0) MIC_REUSE) \
 										in(qx: length(0) MIC_REUSE) \
 										in(qy: length(0) MIC_REUSE) \
 										in(qz_flat: length(0) MIC_REUSE) \
@@ -1398,6 +1428,7 @@ namespace hig {
 										b_nqx, b_nqy, b_nqz, b_num_triangles,
 										nqx, nqy, nqz, num_triangles,
 										ib_x, ib_y, ib_z, ib_t,
+										rot,
 										ff_buffer1);
 
 								if(hblock_counter > k - 2) {
@@ -1421,6 +1452,7 @@ namespace hig {
 										in(b_nqx, b_nqy, b_nqz, num_triangles) \
 										in(nqx, nqy, nqz, ib_x, ib_y, ib_z, ib_t) \
 										in(shape_def: length(0) MIC_REUSE) \
+										in(rot: length(0) MIC_REUSE) \
 										in(qx: length(0) MIC_REUSE) \
 										in(qy: length(0) MIC_REUSE) \
 										in(qz_flat: length(0) MIC_REUSE) \
@@ -1431,6 +1463,7 @@ namespace hig {
 										in(b_nqx, b_nqy, b_nqz, num_triangles) \
 										in(nqx, nqy, nqz, ib_x, ib_y, ib_z, ib_t) \
 										in(shape_def: length(0) MIC_REUSE) \
+										in(rot: length(0) MIC_REUSE) \
 										in(qx: length(0) MIC_REUSE) \
 										in(qy: length(0) MIC_REUSE) \
 										in(qz_flat: length(0) MIC_REUSE) \
@@ -1441,6 +1474,7 @@ namespace hig {
 										b_nqx, b_nqy, b_nqz, b_num_triangles,
 										nqx, nqy, nqz, num_triangles,
 										ib_x, ib_y, ib_z, ib_t,
+										rot,
 										ff_buffer2);
 
 								if(hblock_counter > k - 2) {
@@ -1585,6 +1619,7 @@ namespace hig {
 
 		#pragma offload_transfer target(mic:0) \
 				nocopy(shape_def: length(0) MIC_FREE) \
+				nocopy(rot: length(0) MIC_FREE) \
 				nocopy(qx: length(0) MIC_FREE) \
 				nocopy(qy: length(0) MIC_FREE) \
 				nocopy(qz_flat: length(0) MIC_FREE)
@@ -1847,6 +1882,7 @@ namespace hig {
 					unsigned int b_nqx, unsigned int b_nqy, unsigned int b_nqz, unsigned int b_num_triangles,
 					unsigned int nqx, unsigned int nqy, unsigned int nqz, unsigned int num_triangles,
 					unsigned int ib_x, unsigned int ib_y, unsigned int ib_z, unsigned int ib_t,
+					float_t* rot,
 					scomplex_t* ff_buffer) {
 
 		if(nqx == 1) {	// call the optimized special case
@@ -1856,6 +1892,7 @@ namespace hig {
 											b_nqx, b_nqy, b_nqz, b_num_triangles,
 											nqx, nqy, nqz, num_triangles,
 											ib_x, ib_y, ib_z, ib_t,
+											rot,
 											ff_buffer);
 			#else
 				form_factor_kernel_loopswap_nqx1(qx, qy, qz_flat, shape_def,
@@ -1863,6 +1900,7 @@ namespace hig {
 											b_nqx, b_nqy, b_nqz, b_num_triangles,
 											nqx, nqy, nqz, num_triangles,
 											ib_x, ib_y, ib_z, ib_t,
+											rot,
 											ff_buffer);
 			#endif
 			return;
@@ -1904,17 +1942,22 @@ namespace hig {
 							float_t y = shape_def[shape_off + 5];
 							float_t z = shape_def[shape_off + 6];
 
-							scomplex_t temp_z = qz_flat[global_i_z];
+							scomplex_t temp_qz = qz_flat[global_i_z];
+							float_t temp_qy = qy[global_i_y];
+							float_t temp_qx = qx[global_i_x];
+
+							scomplex_t temp_x = rot[0] * temp_qx + rot[1] * temp_qy + rot[2] * temp_qz;
+							scomplex_t temp_y = rot[3] * temp_qx + rot[4] * temp_qy + rot[5] * temp_qz;
+							scomplex_t temp_z = rot[6] * temp_qx + rot[7] * temp_qy + rot[8] * temp_qz;
+
 							scomplex_t qz2 = temp_z * temp_z;
 							scomplex_t qzn = temp_z * nz;
 							scomplex_t qzt = temp_z * z;
 
-							float_t temp_y = qy[global_i_y];
-							float_t qy2 = temp_y * temp_y;
-							float_t qyn = temp_y * ny;
-							float_t qyt = temp_y * y;
+							scomplex_t qy2 = temp_y * temp_y;
+							scomplex_t qyn = temp_y * ny;
+							scomplex_t qyt = temp_y * y;
 
-							float_t temp_x = qx[global_i_x];
 							scomplex_t q2 = temp_x * temp_x + qy2 + qz2;
 							scomplex_t qt = temp_x * x + qyt + qzt;
 							scomplex_t qn = (temp_x * nx + qyn + qzn) / q2;

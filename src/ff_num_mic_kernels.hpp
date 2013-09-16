@@ -3,7 +3,7 @@
  *
  *  File: ff_num_mic_kernels.hpp
  *  Created: Apr 22, 2013
- *  Modified: Tue 16 Jul 2013 11:50:43 AM PDT
+ *  Modified: Mon 16 Sep 2013 08:46:47 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -33,6 +33,7 @@
 					unsigned int b_nqx, unsigned int b_nqy, unsigned int b_nqz, unsigned int b_num_triangles,
 					unsigned int nqx, unsigned int nqy, unsigned int nqz, unsigned int num_triangles,
 					unsigned int ib_x, unsigned int ib_y, unsigned int ib_z, unsigned int ib_t,
+					float_t* rot,
 					scomplex_t* ff_buffer) {
 
 		const unsigned int start_z = b_nqz * ib_z;
@@ -50,13 +51,17 @@
 			for(int i_z = 0; i_z < curr_nqz; ++ i_z) {
 				for(int i_y = 0; i_y < curr_nqy; ++ i_y) {
 
-					scomplex_t temp_z = qz_flat[start_z + i_z];
-					float_t temp_y = qy[start_y + i_y];
-					float_t temp_x = qx[0];
+					scomplex_t temp_qz = qz_flat[start_z + i_z];
+					float_t temp_qy = qy[start_y + i_y];
+					float_t temp_qx = qx[0];
+
+					scomplex_t temp_x = rot[0] * temp_qx + rot[1] * temp_qy + rot[2] * temp_qz;
+					scomplex_t temp_y = rot[3] * temp_qx + rot[4] * temp_qy + rot[5] * temp_qz;
+					scomplex_t temp_z = rot[6] * temp_qx + rot[7] * temp_qy + rot[8] * temp_qz;
 
 					scomplex_t qz2 = temp_z * temp_z;
-					float_t qy2 = temp_y * temp_y;
-					float_t qx2 = temp_x * temp_x;
+					scomplex_t qy2 = temp_y * temp_y;
+					scomplex_t qx2 = temp_x * temp_x;
 
 					scomplex_t q2 = qx2 + qy2 + qz2;
 					scomplex_t q2_inv = (float_t) 1.0 / q2;
@@ -82,10 +87,10 @@
 
 						scomplex_t qzn = temp_z * nz;
 						scomplex_t qzt = temp_z * z;
-						float_t qyn = temp_y * ny;
-						float_t qyt = temp_y * y;
-						float_t qxn = temp_x * nx;
-						float_t qxt = temp_x * x;
+						scomplex_t qyn = temp_y * ny;
+						scomplex_t qyt = temp_y * y;
+						scomplex_t qxn = temp_x * nx;
+						scomplex_t qxt = temp_x * x;
 						scomplex_t qt = qxt + qyt + qzt;
 						scomplex_t qn = (qxn + qyn + qzn) * q2_inv;
 
@@ -120,6 +125,7 @@
 					unsigned int b_nqx, unsigned int b_nqy, unsigned int b_nqz, unsigned int b_num_triangles,
 					unsigned int nqx, unsigned int nqy, unsigned int nqz, unsigned int num_triangles,
 					unsigned int ib_x, unsigned int ib_y, unsigned int ib_z, unsigned int ib_t,
+					float_t* rot,
 					scomplex_t* ff_buffer) {
 
 		const unsigned int start_z = b_nqz * ib_z;
@@ -218,15 +224,23 @@
 					// s = single-precision,	d = double-precision
 					// //////////////////////////////////////////////////////////
 
-					mic_m512c_t temp_z = mic_set1_cps(qz_flat[start_z + i_z]);
-					mic_m512_t temp_y = mic_set1_rps(qy[start_y + i_y]);
-					mic_m512_t temp_x = mic_set1_rps(qx[0]);
+					// TODO: optimize rot computation ... 
+					scomplex_t temp_qz = qz_flat[start_z + i_z];
+					float_t temp_qy = qy[start_y + i_y];
+					float_t temp_qx = qx[0];
+					scomplex_t temp_sx = rot[0] * temp_qx + rot[1] * temp_qy + rot[2] * temp_qz;
+					scomplex_t temp_sy = rot[3] * temp_qx + rot[4] * temp_qy + rot[5] * temp_qz;
+					scomplex_t temp_sz = rot[6] * temp_qx + rot[7] * temp_qy + rot[8] * temp_qz;
+
+					mic_m512c_t temp_z = mic_set1_cps(temp_sz);
+					mic_m512c_t temp_y = mic_set1_cps(temp_sy);
+					mic_m512c_t temp_x = mic_set1_cps(temp_sx);
 
 					mic_m512c_t qz2 = mic_mul_ccps(temp_z, temp_z);
-					mic_m512_t qy2 = mic_mul_rrps(temp_y, temp_y);
-					mic_m512_t qx2 = mic_mul_rrps(temp_x, temp_x);
+					mic_m512c_t qy2 = mic_mul_ccps(temp_y, temp_y);
+					mic_m512c_t qx2 = mic_mul_ccps(temp_x, temp_x);
 
-					mic_m512c_t q2 = mic_add_rcps(mic_add_rrps(qx2, qy2), qz2);
+					mic_m512c_t q2 = mic_add_ccps(mic_add_ccps(qx2, qy2), qz2);
 					mic_m512c_t q2_inv = mic_rcp_cps(q2);
 
 					mic_m512c_t total1 = mic_setzero_cps();
@@ -262,18 +276,18 @@
 						mic_m512c_t qzn2 = mic_mul_crps(temp_z, nz2);
 						mic_m512c_t qzt1 = mic_mul_crps(temp_z, z1);
 						mic_m512c_t qzt2 = mic_mul_crps(temp_z, z2);
-						mic_m512_t qyn1 = mic_mul_rrps(temp_y, ny1);
-						mic_m512_t qyn2 = mic_mul_rrps(temp_y, ny2);
-						mic_m512_t qyt1 = mic_mul_rrps(temp_y, y1);
-						mic_m512_t qyt2 = mic_mul_rrps(temp_y, y2);
-						mic_m512_t qxn1 = mic_mul_rrps(temp_x, nx1);
-						mic_m512_t qxn2 = mic_mul_rrps(temp_x, nx2);
-						mic_m512_t qxt1 = mic_mul_rrps(temp_x, x1);
-						mic_m512_t qxt2 = mic_mul_rrps(temp_x, x2);
-						mic_m512c_t qt1 = mic_add_rcps(mic_add_rrps(qxt1, qyt1), qzt1);
-						mic_m512c_t qt2 = mic_add_rcps(mic_add_rrps(qxt2, qyt2), qzt2);
-						mic_m512c_t temp_qn1 = mic_add_rcps(mic_add_rrps(qxn1, qyn1), qzn1);
-						mic_m512c_t temp_qn2 = mic_add_rcps(mic_add_rrps(qxn2, qyn2), qzn2);
+						mic_m512c_t qyn1 = mic_mul_crps(temp_y, ny1);
+						mic_m512c_t qyn2 = mic_mul_crps(temp_y, ny2);
+						mic_m512c_t qyt1 = mic_mul_crps(temp_y, y1);
+						mic_m512c_t qyt2 = mic_mul_crps(temp_y, y2);
+						mic_m512c_t qxn1 = mic_mul_crps(temp_x, nx1);
+						mic_m512c_t qxn2 = mic_mul_crps(temp_x, nx2);
+						mic_m512c_t qxt1 = mic_mul_crps(temp_x, x1);
+						mic_m512c_t qxt2 = mic_mul_crps(temp_x, x2);
+						mic_m512c_t qt1 = mic_add_ccps(mic_add_ccps(qxt1, qyt1), qzt1);
+						mic_m512c_t qt2 = mic_add_ccps(mic_add_ccps(qxt2, qyt2), qzt2);
+						mic_m512c_t temp_qn1 = mic_add_ccps(mic_add_ccps(qxn1, qyn1), qzn1);
+						mic_m512c_t temp_qn2 = mic_add_ccps(mic_add_ccps(qxn2, qyn2), qzn2);
 						mic_m512c_t qn1 = mic_mul_ccps(temp_qn1, q2_inv);
 						mic_m512c_t qn2 = mic_mul_ccps(temp_qn2, q2_inv);
 
