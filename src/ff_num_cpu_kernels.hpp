@@ -3,7 +3,7 @@
  *
  *  File: ff_num_cpu.hpp
  *  Created: Nov 05, 2011
- *  Modified: Sun 15 Sep 2013 05:20:57 PM PDT
+ *  Modified: Sun 15 Sep 2013 05:30:01 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -777,6 +777,7 @@
 					unsigned int b_num_triangles,
 					unsigned int nqx, unsigned int nqy, unsigned int nqz, unsigned int num_triangles,
 					unsigned int ib_x, unsigned int ib_y, unsigned int ib_z, unsigned int ib_t,
+					float_t* rot,
 					complex_t* ff) {
 		if(ff == NULL || qx == NULL || qy == NULL || qz == NULL) return;
 

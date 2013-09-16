@@ -3,7 +3,7 @@
  *
  *  File: ff_num_cpu.hpp
  *  Created: Nov 05, 2011
- *  Modified: Sun 15 Sep 2013 02:34:16 PM PDT
+ *  Modified: Sun 15 Sep 2013 05:30:31 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -68,6 +68,7 @@ namespace hig {
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
+									float_t*,
 									complex_t*);
 				#ifndef __SSE3__
 					void form_factor_kernel_fused_unroll4(float_t*, float_t*, complex_t*,
@@ -106,6 +107,7 @@ namespace hig {
 										unsigned int, unsigned int, unsigned int,
 									#endif
 									unsigned int, unsigned int, unsigned int, unsigned int,
+									float_t*,
 									complex_t*);
 
 			#endif // FF_NUM_CPU_FUSED

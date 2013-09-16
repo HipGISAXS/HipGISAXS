@@ -3,7 +3,7 @@
  *
  *  File: ff_num_cpu.hpp
  *  Created: Nov 05, 2011
- *  Modified: Sun 15 Sep 2013 05:25:17 PM PDT
+ *  Modified: Sun 15 Sep 2013 05:29:13 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -153,6 +153,7 @@ namespace hig {
 									b_nqx_i, b_nqy_i, b_nqz_i, b_nt_i,
 									nqx, nqy, nqz, num_triangles,
 									0, 0, 0, 0,
+									rot,
 									ff);
 
 							at_kernel_timer.stop();
@@ -307,7 +308,7 @@ namespace hig {
 						#endif
 
 						// call the main kernel
-						#ifndef FF_NUM_CPU_FUSED
+						#ifndef FF_NUM_CPU_FUSED // DO NOT USE THIS
 							form_factor_kernel(qx, qy, qz, shape_def,
 									curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles,
 									b_nqx, b_nqy, b_nqz, b_num_triangles,
@@ -339,7 +340,7 @@ namespace hig {
 							} // if-else
 						#endif
 
-						#ifndef FF_NUM_CPU_FUSED
+						#ifndef FF_NUM_CPU_FUSED // DO NOT USE THIS
 							// call the reduction kernel
 							reduction_kernel(curr_b_nqx, curr_b_nqy, curr_b_nqz,
 									curr_b_num_triangles, blocked_matrix_size,
@@ -513,6 +514,7 @@ namespace hig {
 					unsigned int b_nqx, unsigned int b_nqy, unsigned int b_nqz, unsigned int b_num_triangles,
 					unsigned int nqx, unsigned int nqy, unsigned int nqz, unsigned int num_triangles,
 					unsigned int ib_x, unsigned int ib_y, unsigned int ib_z, unsigned int ib_t,
+					float_t* rot,
 					complex_t* ff) {
 		if(ff == NULL || qx == NULL || qy == NULL || qz == NULL) return;
 	
