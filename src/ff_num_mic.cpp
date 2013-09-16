@@ -3,7 +3,7 @@
  *
  *  File: ff_num_mic.cpp
  *  Created: Apr 02, 2013
- *  Modified: Mon 16 Sep 2013 08:46:43 AM PDT
+ *  Modified: Mon 16 Sep 2013 10:44:19 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -527,7 +527,7 @@ namespace hig {
 								in(qy: length(nqy) MIC_ALLOC) \
 								in(qz_flat: length(nqz) MIC_ALLOC) \
 								in(shape_def: length(7 * num_triangles) MIC_ALLOC) \
-								in(rot: length(9) MIC_ALLOC \
+								in(rot: length(9) MIC_ALLOC) \
 								signal(shape_def)
 		
 		unsigned long int target_mem_usage = ((unsigned int) nqx + nqy) * sizeof(float_t) +
@@ -1108,7 +1108,7 @@ namespace hig {
 								in(qx: length(nqx) MIC_ALLOC) \
 								in(qy: length(nqy) MIC_ALLOC) \
 								in(qz_flat: length(nqz) MIC_ALLOC) \
-								in(rot: length(9) MIC_ALLOC \
+								in(rot: length(9) MIC_ALLOC) \
 								in(shape_def: length(shape_size) MIC_ALLOC) \
 								signal(shape_def)
 
@@ -1527,7 +1527,7 @@ namespace hig {
 							double intpart, fracpart;
 							fracpart = modf(progress, &intpart);
 							if(((unsigned int)intpart) % progress_delta == 0 && fracpart < 100.0 / num_blocks)
-								std::cout << intpart << "% ";
+								std::cout << intpart << "% " << std::flush;
 						} // if
 					} // for ib_t
 				} // for ib_z

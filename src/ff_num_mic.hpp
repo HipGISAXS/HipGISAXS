@@ -3,7 +3,7 @@
  *
  *  File: ff_num_mic.hpp
  *  Created: Apr 02, 2013
- *  Modified: Sun 15 Sep 2013 08:39:55 PM PDT
+ *  Modified: Mon 16 Sep 2013 10:40:07 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -65,6 +65,7 @@ namespace hig {
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
+									float_t*,
 									scomplex_t*);
 			__attribute__((target(mic:0)))
 			void form_factor_kernel_loopswap_nqx1(float_t*, float_t*, scomplex_t*, float_t*,
@@ -72,6 +73,7 @@ namespace hig {
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
+									float_t*,
 									scomplex_t*);
 			__attribute__((target(mic:0)))
 			void form_factor_kernel_loopswap_vec_nqx1(float_t*, float_t*, scomplex_t*, float_t*,
@@ -79,6 +81,7 @@ namespace hig {
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
+									float_t*,
 									scomplex_t*);
 
 			__attribute__((target(mic:0))) float2_t compute_fq_nqx1(float, float2_t, float2_t);
