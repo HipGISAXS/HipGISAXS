@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_main.cpp
  *  Created: Jun 14, 2012
- *  Modified: Mon 16 Sep 2013 12:28:17 PM PDT
+ *  Modified: Mon 16 Sep 2013 02:03:50 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -350,7 +350,8 @@ namespace hig {
 
 					float_t* final_data = NULL;
 					if(!run_gisaxs(alpha_i, alphai, phi_rad, tilt_rad, final_data, world_comm, 0)) {
-						if(mpi_rank == 0) std::cerr << "error: could not finish successfully" << std::endl;
+						if(mpi_rank == 0)
+							std::cerr << "error: could not finish successfully" << std::endl;
 						return false;
 					} // if
 
