@@ -3,7 +3,7 @@
  *
  *  File: utilities.hpp
  *  Created: Jun 25, 2012
- *  Modified: Tue 16 Jul 2013 11:52:29 AM PDT
+ *  Modified: Mon 16 Sep 2013 12:11:24 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -208,6 +208,9 @@ namespace hig {
 
 	extern complex_t integral_e(float_t, float_t, complex_t);
 	extern complex_t integral_xe(float_t, float_t, float_t, float_t, complex_t);
+
+	// adding two data sets into one
+	extern bool add_data_elements(float_t* &dst, const float_t* src1, const float* src2, int size);
 
 } // namespace hig
 

@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_main.cpp
  *  Created: Jun 14, 2012
- *  Modified: Mon 16 Sep 2013 11:29:43 AM PDT
+ *  Modified: Mon 16 Sep 2013 12:28:17 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -328,12 +328,15 @@ namespace hig {
 		// loop over all alphai, phi, and tilt
 		for(int i = 0; i < num_alphai; i ++, alpha_i += alphai_step) {
 			float_t alphai = alpha_i * PI_ / 180;
+
+			float_t* averaged_data = NULL;		// to hold summation of all (if needed)
+
 			float_t phi = phi_min;
 			for(int j = 0; j < num_phi; j ++, phi += phi_step) {
 				float_t phi_rad = phi * PI_ / 180;
-
 				float_t tilt = tilt_min;
 				for(int k = 0; k < num_tilt; k ++, tilt += tilt_step) {
+					float_t tilt_rad = tilt * PI_ / 180;
 
 					if(mpi_rank == 0) {
 						std::cout << "-- Computing GISAXS "
@@ -346,7 +349,7 @@ namespace hig {
 					/* run a gisaxs simulation */
 
 					float_t* final_data = NULL;
-					if(!run_gisaxs(alpha_i, alphai, phi_rad, tilt, final_data, world_comm, 0)) {
+					if(!run_gisaxs(alpha_i, alphai, phi_rad, tilt_rad, final_data, world_comm, 0)) {
 						if(mpi_rank == 0) std::cerr << "error: could not finish successfully" << std::endl;
 						return false;
 					} // if
@@ -415,12 +418,53 @@ namespace hig {
 						 //} for x */
 					} // if
 
+					// also compute averaged values over phi and tilt
+					if(mpi_rank == 0) {
+						if(num_phi > 1 || num_tilt > 1) {
+							if(averaged_data == NULL) {
+								averaged_data = new (std::nothrow) float_t[nqx_ * nqy_ * nqz_];
+								memset(averaged_data, 0, nqx_ * nqy_ * nqz_ * sizeof(float_t));
+							} // if
+							add_data_elements(averaged_data, final_data, averaged_data,
+												nqx_ * nqy_ * nqz_);
+						} // if
+					} // if
+
 					delete[] final_data;
 
 					// synchronize all procs after each run
 					world_comm.Barrier();
 				} // for tilt
 			} // for phi
+
+			if(mpi_rank == 0) {
+				if(averaged_data != NULL) {
+					Image img(nqx_, nqy_, nqz_);
+					img.construct_image(averaged_data, 0); // slice x = 0
+
+					// define output filename
+					std::stringstream alphai_b;
+					std::string alphai_s;
+					alphai_b << alpha_i; alphai_s = alphai_b.str();
+					std::string output(HiGInput::instance().param_pathprefix() +
+										"/" + HiGInput::instance().runname() +
+										"/img_ai=" + alphai_s + "_averaged.tif");
+					std::cout << "-- Saving averaged image in " << output << " ... " << std::flush;
+					img.save(output);
+					std::cout << "done." << std::endl;
+
+					// save the actual data into a file also
+					std::string data_file(HiGInput::instance().param_pathprefix() +
+									"/" + HiGInput::instance().runname() +
+									"/gisaxs_ai=" + alphai_s + "_averaged.out");
+					std::cout << "-- Saving averaged raw data in " << data_file << " ... " << std::flush;
+					save_gisaxs(averaged_data, data_file);
+					std::cout << "done." << std::endl;
+
+					delete[] averaged_data;
+				} // if
+			}
+
 		} // for alphai
 
 		sim_timer.stop();

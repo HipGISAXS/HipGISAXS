@@ -3,7 +3,7 @@
  *
  *  File: utilities.cpp
  *  Created: Jun 25, 2012
- *  Modified: Tue 16 Jul 2013 11:52:28 AM PDT
+ *  Modified: Mon 16 Sep 2013 12:11:41 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -676,6 +676,16 @@ namespace hig {
 		/* // boost
 		return boost::math::cyl_bessel_j(j, m);
 	}*/
+
+	// adding two data sets into one
+	bool add_data_elements(float_t* &dst, const float_t* src1, const float_t* src2, int size) {
+		if(dst == NULL || src1 == NULL || src2 == NULL) {
+			std::cerr << "error: null pointer in adding data elements." << std::endl;
+			return false;
+		} // if
+		#pragma omp parallel for
+		for(int i = 0; i < size; ++ i) dst[i] = src1[i] + src2[i];
+	} // add_data_elements()
 
 
 	int count_naninfs(int nx, int ny, int nz, const complex_t* arr) {
