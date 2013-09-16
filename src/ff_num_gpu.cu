@@ -3,7 +3,7 @@
  *
  *  File: ff_num_gpu.cu
  *  Created: Aug 25, 2012
- *  Modified: Sat 14 Sep 2013 08:28:20 AM PDT
+ *  Modified: Sun 15 Sep 2013 06:31:54 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -49,43 +49,41 @@ namespace hig {
 	 */
 
 	/* K1: default kernel, with t decompostion, no shared memory */
-	//template<typename float_t, typename complex_t>
 	__global__ void form_factor_kernel(float_t*, float_t*, cucomplex_t*, float_t*, short int*,
 										unsigned int, unsigned int, unsigned int, unsigned int,
 										unsigned int, unsigned int, unsigned int, unsigned int,
 										unsigned int, unsigned int, unsigned int, unsigned int,
+										float_t*,
 										cucomplex_t*);
 	/* K2: kernel with t, y, z decomposition, no shared memory */
-	//template<typename float_t, typename complex_t>
 	__global__ void form_factor_kernel_new(float_t*, float_t*, cucomplex_t*, float_t*, short int*,
 										unsigned int, unsigned int, unsigned int, unsigned int,
 										unsigned int, unsigned int, unsigned int, unsigned int,
 										unsigned int, unsigned int, unsigned int, unsigned int,
+										float_t*,
 										cucomplex_t*);
 	/* K3: kernel with t, y, z decomposition, static shared mem for input */
-	//template<typename float_t, typename complex_t>
 	__global__ void form_factor_kernel_new_shared(float_t*, float_t*, cucomplex_t*, float_t*, short int*,
 										unsigned int, unsigned int, unsigned int, unsigned int,
 										unsigned int, unsigned int, unsigned int, unsigned int,
 										unsigned int, unsigned int, unsigned int, unsigned int,
+										float_t*,
 										cucomplex_t*);
 	/* K4: kernel with t, y, z decomposition, dynamic shared mem for input, static for output */
-	//template<typename float_t, typename complex_t>
 	__global__ void form_factor_kernel_new_shared2(const float_t*, const float_t*, const cucomplex_t*,
-							const float_t*, const short int*,
-							const unsigned int, const unsigned int, const unsigned int, const unsigned int,
-							const unsigned int, const unsigned int, const unsigned int, const unsigned int,
-							const unsigned int, const unsigned int, const unsigned int, const unsigned int,
-							cucomplex_t*);
+						const float_t*, const short int*,
+						const unsigned int, const unsigned int, const unsigned int, const unsigned int,
+						const unsigned int, const unsigned int, const unsigned int, const unsigned int,
+						const unsigned int, const unsigned int, const unsigned int, const unsigned int,
+						const float_t*,
+						cucomplex_t*);
 	/* K5: kernel with t, y, z decomposition, dynamic shared mem for input, static for output, memopt? ... */
-	//template<typename float_t, typename complex_t>
 	__global__ void form_factor_kernel_new_shared2_mem(float_t*, float_t*, cucomplex_t*, float_t*, short int*,
 										unsigned int, unsigned int, unsigned int, unsigned int,
 										unsigned int, unsigned int, unsigned int, unsigned int,
 										unsigned int, unsigned int, unsigned int, unsigned int,
 										cucomplex_t*);
 	/* K6: kernel with K3 and blocked y, z (probably incomplete ...) */
-	//template<typename float_t, typename complex_t>
 	__global__ void form_factor_kernel_new_shared_subblock(float_t*, float_t*, cucomplex_t*, float_t*,
 										short int*,
 										unsigned int, unsigned int, unsigned int, unsigned int,
@@ -93,41 +91,43 @@ namespace hig {
 										unsigned int, unsigned int, unsigned int, unsigned int,
 										cucomplex_t*);
 	/* K7: kernel with K1 (?) and blocked y, z (incomplete ...) */
-	//template<typename float_t, typename complex_t>
 	__global__ void form_factor_kernel_new_2(float_t*, float_t*, cucomplex_t*, float_t*, short int*,
 										unsigned int, unsigned int, unsigned int, unsigned int,
 										unsigned int, unsigned int, unsigned int, unsigned int,
 										unsigned int, unsigned int, unsigned int, unsigned int,
 										cucomplex_t*);
 	/* K8: K4 with reduction combined in it */
-	//template<typename float_t, typename complex_t>
 	__global__ void form_factor_kernel_new_shared2_red(const float_t*, const float_t*, const cucomplex_t*,
-							const float_t*, const short int*,
-							const unsigned int, const unsigned int, const unsigned int, const unsigned int,
-							const unsigned int, const unsigned int, const unsigned int, const unsigned int,
-							const unsigned int, const unsigned int, const unsigned int, const unsigned int,
-							cucomplex_t*,	cucomplex_t*);
+						const float_t*, const short int*,
+						const unsigned int, const unsigned int, const unsigned int, const unsigned int,
+						const unsigned int, const unsigned int, const unsigned int, const unsigned int,
+						const unsigned int, const unsigned int, const unsigned int, const unsigned int,
+						const float_t*,
+						cucomplex_t*,	cucomplex_t*);
 	/* K9: combines ff K4 with reduction */
 	__global__ void form_factor_kernel_fused(const float_t*, const float_t*, const cucomplex_t*,
-							const float_t*, const short int*,
-							const unsigned int, const unsigned int, const unsigned int, const unsigned int,
-							const unsigned int, const unsigned int, const unsigned int, const unsigned int,
-							const unsigned int, const unsigned int, const unsigned int, const unsigned int,
-							cucomplex_t*);
+						const float_t*, const short int*,
+						const unsigned int, const unsigned int, const unsigned int, const unsigned int,
+						const unsigned int, const unsigned int, const unsigned int, const unsigned int,
+						const unsigned int, const unsigned int, const unsigned int, const unsigned int,
+						const float_t*,
+						cucomplex_t*);
 	/* K9-1: special case of K9 when curr_nqx == 1 */
 	__global__ void form_factor_kernel_fused_nqx1(const float_t*, const float_t*, const cucomplex_t*,
-							const float_t*, const short int*,
-							const unsigned int, const unsigned int, const unsigned int, const unsigned int,
-							const unsigned int, const unsigned int, const unsigned int, const unsigned int,
-							const unsigned int, const unsigned int, const unsigned int, const unsigned int,
-							cucomplex_t*);
+						const float_t*, const short int*,
+						const unsigned int, const unsigned int, const unsigned int, const unsigned int,
+						const unsigned int, const unsigned int, const unsigned int, const unsigned int,
+						const unsigned int, const unsigned int, const unsigned int, const unsigned int,
+						const float_t*,
+						cucomplex_t*);
 	/* K9-2: special case of K9 when curr_nqx == 1, with dynamic parallelism */
 	__global__ void form_factor_kernel_fused_dyn_nqx1(const float_t*, const float_t*, const cucomplex_t*,
-							const float_t*, const short int*,
-							const unsigned int, const unsigned int, const unsigned int, const unsigned int,
-							const unsigned int, const unsigned int, const unsigned int, const unsigned int,
-							const unsigned int, const unsigned int, const unsigned int, const unsigned int,
-							cucomplex_t*, cucomplex_t*);
+						const float_t*, const short int*,
+						const unsigned int, const unsigned int, const unsigned int, const unsigned int,
+						const unsigned int, const unsigned int, const unsigned int, const unsigned int,
+						const unsigned int, const unsigned int, const unsigned int, const unsigned int,
+						const float_t*,
+						cucomplex_t*, cucomplex_t*);
 	/* K9-2: the child kernel */
 	__global__ void form_factor_kernel_innermost(const float_t*, const float_t*, const cucomplex_t*, const float_t*, cucomplex_t*);
 
@@ -143,11 +143,13 @@ namespace hig {
 				cuFloatComplex& qz2, cuFloatComplex& qzn, cuFloatComplex& qzt);
 	__device__ void compute_z(cuDoubleComplex temp_z, double nz, double z,
 				cuDoubleComplex& qz2, cuDoubleComplex& qzn, cuDoubleComplex& qzt);
-	__device__ void compute_x(float temp_x, float qy2, cuFloatComplex qz2, float nx, float qyn,
-				cuFloatComplex qzn, float x, float qyt,	cuFloatComplex qzt,
+	__device__ void compute_x(cuFloatComplex temp_x, cuFloatComplex qy2, cuFloatComplex qz2,
+				float nx, cuFloatComplex qyn,
+				cuFloatComplex qzn, float x, cuFloatComplex qyt, cuFloatComplex qzt,
 				cuFloatComplex& qn_d, cuFloatComplex& qt_d);
-	__device__ void compute_x(double temp_x, double qy2, cuDoubleComplex qz2, double nx, double qyn,
-				cuDoubleComplex qzn, double x, double qyt, cuDoubleComplex qzt,
+	__device__ void compute_x(cuDoubleComplex temp_x, cuDoubleComplex qy2, cuDoubleComplex qz2,
+				double nx, cuDoubleComplex qyn,
+				cuDoubleComplex qzn, double x, cuDoubleComplex qyt, cuDoubleComplex qzt,
 				cuDoubleComplex& qn_d, cuDoubleComplex& qt_d);
 
 
@@ -251,6 +253,7 @@ namespace hig {
 						float_t* &qx_h, int nqx,
 						float_t* &qy_h, int nqy,
 						cucomplex_t* &qz_h, int nqz,
+						float_t* &rot,
 						float_t& pass_kernel_time, float_t& red_time, float_t& mem_time
 	#ifdef FINDBLOCK
 						, const int block_x, const int block_y, const int block_z, const int block_t
@@ -344,6 +347,21 @@ namespace hig {
 		cudaMemcpy(shape_def_d, shape_def_h, T_PROP_SIZE_ * num_triangles * sizeof(float_t),
 					cudaMemcpyHostToDevice);
 #endif // KERNEL2
+
+		// copy the rotation matrix to device mem
+		float_t* rot_d;
+		err = cudaMalloc((void **) &rot_d, 9 * sizeof(float_t));
+		if(err != cudaSuccess) {
+			std::cerr << "Device memory allocation failed for rot_d. "
+						<< "Size = " << 9 * sizeof(float_t) << " B" << std::endl;
+			cudaFree(shape_def_d);
+			cudaFree(qz_d);
+			cudaFree(qy_d);
+			cudaFree(qx_d);
+			delete[] ff;
+			return 0;
+		} // if
+		cudaMemcpy(rot_d, rot, 9 * sizeof(float_t), cudaMemcpyHostToDevice);
 
 		short int *axes_h = &axes[0];
 		short int *axes_d;
@@ -504,13 +522,13 @@ namespace hig {
 									unsigned int cuda_num_blocks =
 										(unsigned int) ceil((float) curr_b_num_triangles / cuda_block_size);
 
-									//form_factor_kernel<float_t>
 									form_factor_kernel
 										<<< cuda_num_blocks, cuda_block_size >>> (
 											qx_d, qy_d, qz_d, shape_def_d, axes_d,
 											curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles,
 											b_nqx, b_nqy, b_nqz, b_num_triangles,
 											ib_x, ib_y, ib_z, ib_t,
+											rot_d,
 											fq_d);
 	#else // KERNEL2
 									// Kernel 4
@@ -541,13 +559,13 @@ namespace hig {
 										exit(1);
 									} // if
 
-									//form_factor_kernel_new_shared2<float_t>
 									form_factor_kernel_new_shared2
 										<<< ff_grid_size, ff_block_size, dyn_shared_mem_size >>> (
 											qx_d, qy_d, qz_d, shape_def_d, axes_d,
 											curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles,
 											b_nqx, b_nqy, b_nqz, b_num_triangles,
 											ib_x, ib_y, ib_z, ib_t,
+											rot_d,
 											fq_d);
 	#endif // KERNEL2
 									cudaThreadSynchronize();
@@ -707,6 +725,7 @@ namespace hig {
 						float_t* &qx_h, int nqx,
 						float_t* &qy_h, int nqy,
 						cucomplex_t* &qz_h, int nqz,
+						float_t* &rot,
 						float_t& pass_kernel_time, float_t& red_time, float_t& mem_time
 	#ifdef FINDBLOCK
 						, const int block_x, const int block_y, const int block_z, const int block_t
@@ -804,10 +823,25 @@ namespace hig {
 						cudaMemcpyHostToDevice);
 	#endif // KERNEL2
 
+		// copy the rotation matrix to device mem
+		float_t* rot_d;
+		err = cudaMalloc((void **) &rot_d, 9 * sizeof(float_t));
+		if(err != cudaSuccess) {
+			std::cerr << "Device memory allocation failed for rot_d. "
+						<< "Size = " << 9 * sizeof(float_t) << " B" << std::endl;
+			cudaFree(shape_def_d);
+			cudaFree(qz_d);
+			cudaFree(qy_d);
+			cudaFree(qx_d);
+			delete[] ff;
+			return 0;
+		} // if
+		cudaMemcpyAsync(rot_d, rot, 9 * sizeof(float_t), cudaMemcpyHostToDevice);
+
 		short int *axes_h = &axes[0];
 		short int *axes_d;
 		err = cudaMalloc((void**) &axes_d, 3 * sizeof(short int));
-		cudaMemcpy(axes_d, axes_h, 3 * sizeof(short int), cudaMemcpyHostToDevice);
+		cudaMemcpyAsync(axes_d, axes_h, 3 * sizeof(short int), cudaMemcpyHostToDevice);
 		
 		unsigned long int matrix_size = (unsigned long int) nqx * nqy * nqz * num_triangles;
 		
@@ -992,13 +1026,13 @@ namespace hig {
 										exit(1);
 									} // if
 
-									//form_factor_kernel<float_t>
 									form_factor_kernel
 									<<< cuda_num_blocks, cuda_block_size, 0, stream[active] >>> (
 										qx_d, qy_d, qz_d, shape_def_d, axes_d,
 										curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles,
 										b_nqx, b_nqy, b_nqz, b_num_triangles,
 										ib_x, ib_y, ib_z, ib_t,
+										rot_d,
 										fq_double_d[active]);
 	#else // KERNEL2
 									// Kernel 4
@@ -1036,6 +1070,7 @@ namespace hig {
 											curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles,
 											b_nqx, b_nqy, b_nqz, b_num_triangles,
 											ib_x, ib_y, ib_z, ib_t,
+											rot_d,
 											fq_double_d[active]);
 	#endif // KERNEL2
 									cudaEventRecord(stop, 0);
@@ -1225,6 +1260,7 @@ namespace hig {
 						float_t* &qx_h, int nqx,
 						float_t* &qy_h, int nqy,
 						cucomplex_t* &qz_h, int nqz,
+						float_t* &rot,
 						float_t& pass_kernel_time, float_t& red_time, float_t& mem_time
 						#ifdef FINDBLOCK
 							, const int block_x, const int block_y, const int block_z, const int block_t
@@ -1322,10 +1358,25 @@ namespace hig {
 							cudaMemcpyHostToDevice);
 		#endif // KERNEL2
 
+		// copy the rotation matrix to device mem
+		float_t* rot_d;
+		err = cudaMalloc((void **) &rot_d, 9 * sizeof(float_t));
+		if(err != cudaSuccess) {
+			std::cerr << "Device memory allocation failed for rot_d. "
+						<< "Size = " << 9 * sizeof(float_t) << " B" << std::endl;
+			cudaFree(shape_def_d);
+			cudaFree(qz_d);
+			cudaFree(qy_d);
+			cudaFree(qx_d);
+			delete[] ff;
+			return 0;
+		} // if
+		cudaMemcpyAsync(rot_d, rot, 9 * sizeof(float_t), cudaMemcpyHostToDevice);
+
 		short int *axes_h = &axes[0];
 		short int *axes_d;
 		err = cudaMalloc((void**) &axes_d, 3 * sizeof(short int));
-		cudaMemcpy(axes_d, axes_h, 3 * sizeof(short int), cudaMemcpyHostToDevice);
+		cudaMemcpyAsync(axes_d, axes_h, 3 * sizeof(short int), cudaMemcpyHostToDevice);
 		
 		unsigned long int matrix_size = (unsigned long int) nqx * nqy * nqz * num_triangles;
 		
@@ -1513,6 +1564,7 @@ namespace hig {
 											curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles,
 											b_nqx, b_nqy, b_nqz, b_num_triangles,
 											ib_x, ib_y, ib_z, ib_t,
+											rot_d,
 											ff_double_d[active]);
 								}
 								#pragma omp section
@@ -1594,6 +1646,7 @@ namespace hig {
 						float_t* &qy_h, int nqy,
 						cucomplex_t* &qz_h, int nqz,
 						int k,
+						float_t* &rot,
 						float_t& kernel_time, float_t& red_time, float_t& mem_time
 						#ifdef FINDBLOCK
 							, const int block_x, const int block_y, const int block_z, const int block_t
@@ -1680,6 +1733,21 @@ namespace hig {
 		cudaMemcpyAsync(shape_def_d, shape_def_h, T_PROP_SIZE_ * num_triangles * sizeof(float_t),
 						cudaMemcpyHostToDevice);
 
+		// copy the rotation matrix to device mem
+		float_t* rot_d;
+		err = cudaMalloc((void **) &rot_d, 9 * sizeof(float_t));
+		if(err != cudaSuccess) {
+			std::cerr << "Device memory allocation failed for rot_d. "
+						<< "Size = " << 9 * sizeof(float_t) << " B" << std::endl;
+			cudaFree(shape_def_d);
+			cudaFree(qz_d);
+			cudaFree(qy_d);
+			cudaFree(qx_d);
+			delete[] ff;
+			return 0;
+		} // if
+		cudaMemcpyAsync(rot_d, rot, 9 * sizeof(float_t), cudaMemcpyHostToDevice);
+
 		short int *axes_h = &axes[0];
 		short int *axes_d;
 		err = cudaMalloc((void**) &axes_d, k * sizeof(short int));
@@ -1761,7 +1829,7 @@ namespace hig {
 									qx_d, qy_d, qz_d, shape_def_d, axes_d,
 									b_nqx_i, b_nqy_i, b_nqz_i, b_nt_i,
 									b_nqx_i, b_nqy_i, b_nqz_i, b_nt_i,
-									0, 0, 0, 0, ff_temp);
+									0, 0, 0, 0, rot_d, ff_temp);
 
 							at_kernel_timer.stop();
 							double curr_time = at_kernel_timer.elapsed_msec();
@@ -1884,7 +1952,7 @@ namespace hig {
 									qx_d, qy_d, qz_d, shape_def_d, axes_d,
 									b_nqx, b_nqy, b_nqz, b_num_triangles,
 									b_nqx, b_nqy, b_nqz, b_num_triangles,
-									0, 0, 0, 0, ff_double_d[0]);
+									0, 0, 0, 0, rot_d, ff_double_d[0]);
 
 							at_kernel_timer.stop();
 							double curr_time = at_kernel_timer.elapsed_msec();
@@ -1992,13 +2060,13 @@ namespace hig {
 								if(b_nqx == 1) {
 									#ifdef FF_NUM_GPU_DYNAMICP
 										cucomplex_t* fq;
-										//form_factor_kernel_fused_nqx1
 										form_factor_kernel_fused_dyn_nqx1
 										<<< ff_grid_size, ff_block_size, dyna_shmem_size, stream[active] >>> (
 												qx_d, qy_d, qz_d, shape_def_d, axes_d,
 												curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles,
 												b_nqx, b_nqy, b_nqz, b_num_triangles,
 												ib_x, ib_y, ib_z, ib_t,
+												rot_d,
 												ff_double_d[active], fq);
 									#else
 										form_factor_kernel_fused_nqx1
@@ -2007,6 +2075,7 @@ namespace hig {
 												curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles,
 												b_nqx, b_nqy, b_nqz, b_num_triangles,
 												ib_x, ib_y, ib_z, ib_t,
+												rot_d,
 												ff_double_d[active]);
 									#endif
 								} else {
@@ -2016,6 +2085,7 @@ namespace hig {
 											curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles,
 											b_nqx, b_nqy, b_nqz, b_num_triangles,
 											ib_x, ib_y, ib_z, ib_t,
+											rot_d,
 											ff_double_d[active]);
 								} // if-else
 
@@ -2236,10 +2306,9 @@ namespace hig {
 	 * the main Form Factor kernel functions called from host.
 	 */
 
-	/* K1:
+	/* K1:	DO NOT USE THIS!!! IT IS ANCIENT!!!
 	 * original kernel, with 1D decompostion along t; no shared memory
 	 */
-	//template<typename float_t, typename complex_t>
 	__global__ void form_factor_kernel(
 					float_t* qx_d, float_t* qy_d, cucomplex_t* qz_d,
 					float_t* shape_def_d, short int* axes,
@@ -2249,9 +2318,10 @@ namespace hig {
 					unsigned int b_nqz, unsigned int b_num_triangles,
 					unsigned int ib_x, unsigned int ib_y,
 					unsigned int ib_z, unsigned int ib_t,
+					float_t* rot_d,
 					cucomplex_t* fq_d) {
 		// each thread is responsible for a different triangle
-		unsigned int i = threadIdx.x + blockDim.x * blockIdx.x;
+		/*unsigned int i = threadIdx.x + blockDim.x * blockIdx.x;
 
 		if(i < curr_num_triangles) {
 			unsigned int shape_off = (ib_t * b_num_triangles + i) * 7;
@@ -2292,23 +2362,26 @@ namespace hig {
 					} // for z
 				} // for y
 			} // for x
-		} // if
+		} // if*/
 	} // NumericFormFactorG::form_factor_kernel()
 
-	/* K2:
+
+	/* K2.5:
 	 * kernel with 3D decomposition along t, y, z; no shared memory
 	 */
-	//template<typename float_t, typename cucomplex_t>
 	__global__ void form_factor_kernel_new(
 						float_t*, float_t*, cucomplex_t*, float_t*, short int*,
 						unsigned int, unsigned int, unsigned int, unsigned int,
 						unsigned int, unsigned int, unsigned int, unsigned int,
 						unsigned int, unsigned int, unsigned int, unsigned int,
+						float_t*,
 						cucomplex_t*) {
 		// TODO ...
+		//
 	} // form_factor_kernel_new()
 
-	/* K3:
+
+	/* K3.5:
 	 * kernel with 3D decomposition along t, y, z; static shared mem for input
 	 */
 	//template<typename float_t, typename cucomplex_t>
@@ -2317,8 +2390,10 @@ namespace hig {
 						unsigned int, unsigned int, unsigned int, unsigned int,
 						unsigned int, unsigned int, unsigned int, unsigned int,
 						unsigned int, unsigned int, unsigned int, unsigned int,
+						float_t*,
 						cucomplex_t*) {
 		// TODO ...
+		//
 	} // form_factor_kernel_new_shared()
 
 
@@ -2327,7 +2402,6 @@ namespace hig {
 	/* K4: default kernel
 	 * kernel with 3D decomposition along t, y, z; dynamic shared mem for input, none/static for output
 	 */
-	//template<typename float_t, typename cucomplex_t>
 	__global__ void form_factor_kernel_new_shared2(
 						const float_t* qx, const float_t* qy, const cucomplex_t* qz,
 						const float_t* shape_def, const short int* axes,
@@ -2337,6 +2411,7 @@ namespace hig {
 						const unsigned int b_nqz, const unsigned int b_num_triangles,
 						const unsigned int ib_x, const unsigned int ib_y,
 						const unsigned int ib_z, const unsigned int ib_t,
+						const float_t* rot,
 						cucomplex_t* fq) {
 		unsigned int i_t = blockDim.x * blockIdx.x + threadIdx.x;
 		unsigned int i_y = blockDim.y * blockIdx.y + threadIdx.y;
@@ -2392,6 +2467,44 @@ namespace hig {
 		//__shared__ cucomplex_t shared_fq[(FQ_COPY_SIZE_ + BANK_OFF_) * MAX_NUM_THREADS_];
 
 		if(i_t < curr_num_triangles && i_y < curr_nqy && i_z < curr_nqz) {
+			unsigned int shape_off = T_PROP_SIZE_ * threadIdx.x;
+			// this may be improved by making all accesses contiguous by reorganizing shared mem data ...
+			float_t s = shared_shape_def[shape_off];
+			float_t nx = shared_shape_def[shape_off + 1];
+			float_t ny = shared_shape_def[shape_off + 2];
+			float_t nz = shared_shape_def[shape_off + 3];
+			float_t x = shared_shape_def[shape_off + 4];
+			float_t y = shared_shape_def[shape_off + 5];
+			float_t z = shared_shape_def[shape_off + 6];
+
+			float_t temp_qy = shared_qy[threadIdx.y];
+			cucomplex_t temp_qz = shared_qz[threadIdx.z];
+
+			unsigned int fq_base = curr_nqx * curr_nqy * curr_nqz * i_t +
+									curr_nqx * curr_nqy * i_z +	curr_nqx * i_y;
+			for(unsigned int i_x = 0; i_x < curr_nqx; ++ i_x) {
+				float_t temp_qx = shared_qx[i_x];
+
+				// TODO: optimize this ... put rot in shared mem
+				cucomplex_t temp_x = rot[0] * temp_qx + rot[1] * temp_qy + rot[2] * temp_qz;
+				cucomplex_t temp_y = rot[3] * temp_qx + rot[4] * temp_qy + rot[5] * temp_qz;
+				cucomplex_t temp_z = rot[6] * temp_qx + rot[7] * temp_qy + rot[8] * temp_qz;
+
+				cucomplex_t qy2 = temp_y * temp_y;
+				cucomplex_t qyn = temp_y * ny;
+				cucomplex_t qyt = temp_y * y;
+				cucomplex_t qz2, qzn, qzt;
+				compute_z(temp_z, nz, z, qz2, qzn, qzt);
+
+				cucomplex_t qn_d, qt_d;
+				compute_x(temp_x, qy2, qz2, nx, qyn, qzn, x, qyt, qzt, qn_d, qt_d);
+				cucomplex_t fq_temp = compute_fq(s, qt_d, qn_d);
+				unsigned int fq_index = fq_base + i_x;
+				fq[fq_index] = fq_temp;
+			} // for
+
+			// this is the original one. the one above has loop interchange to include rotation.
+		/*if(i_t < curr_num_triangles && i_y < curr_nqy && i_z < curr_nqz) {
 			unsigned int shape_off = T_PROP_SIZE_ * threadIdx.x;
 			// this may be improved by making all accesses contiguous by reorganizing shared mem data ...
 			float_t s = shared_shape_def[shape_off];
@@ -2485,6 +2598,7 @@ namespace hig {
 						const unsigned int b_nqz, const unsigned int b_num_triangles,
 						const unsigned int ib_x, const unsigned int ib_y,
 						const unsigned int ib_z, const unsigned int ib_t,
+						const float_t* rot,
 						cucomplex_t* ff) {
 		unsigned int i_y = blockDim.x * blockIdx.x + threadIdx.x;
 		unsigned int i_z = blockDim.y * blockIdx.y + threadIdx.y;
@@ -2534,12 +2648,18 @@ namespace hig {
 
 		cucomplex_t ff_tot = make_cuC((float_t) 0.0, (float_t) 0.0);
 		if(i_y < curr_nqy && i_z < curr_nqz) {
-			float_t temp_y = shared_qy[threadIdx.x];
-			float_t qy2 = temp_y * temp_y;
-			cucomplex_t temp_z = shared_qz[threadIdx.y];
+			float_t temp_qy = shared_qy[threadIdx.x];
+			cucomplex_t temp_qz = shared_qz[threadIdx.y];
 
 			for(int i_x = 0; i_x < curr_nqx; ++ i_x) {
-				float_t temp_x = shared_qx[i_x];
+				float_t temp_qx = shared_qx[i_x];
+
+				// optimize this ... rot should go to shared memory
+				cucomplex_t temp_x = rot[0] * temp_qx + rot[1] * temp_qy + rot[2] * temp_qz;
+				cucomplex_t temp_y = rot[3] * temp_qx + rot[4] * temp_qy + rot[5] * temp_qz;
+				cucomplex_t temp_z = rot[6] * temp_qx + rot[7] * temp_qy + rot[8] * temp_qz;
+
+				cucomplex_t qy2 = temp_y * temp_y;
 
 				for(int i_t = 0; i_t < curr_num_triangles; ++ i_t) {
 					unsigned int shape_off = T_PROP_SIZE_ * i_t;
@@ -2551,8 +2671,8 @@ namespace hig {
 					float_t y = shared_shape_def[shape_off + 5];
 					float_t z = shared_shape_def[shape_off + 6];
 
-					float_t qyn = temp_y * ny;
-					float_t qyt = temp_y * y;
+					cucomplex_t qyn = temp_y * ny;
+					cucomplex_t qyt = temp_y * y;
 					cucomplex_t qz2, qzn, qzt;
 					compute_z(temp_z, nz, z, qz2, qzn, qzt);
 
@@ -2569,7 +2689,7 @@ namespace hig {
 
 	#include "ff_num_gpu_kernels.cuh"
 
-	/* K8:
+	/* K8:	DO NOT USE THIS !!!!!!!!!!!!!!!!
 	 * kernel with 3D decomposition along t, y, z; dynamic shared mem for input, none for output (K4)
 	 * and includes reduction
 	 * INCOMPLETE CANNOT DO IT YET !!!!
@@ -2584,8 +2704,9 @@ namespace hig {
 						const unsigned int b_nqz, const unsigned int b_num_triangles,
 						const unsigned int ib_x, const unsigned int ib_y,
 						const unsigned int ib_z, const unsigned int ib_t,
+						const float_t* rot,
 						cucomplex_t* fq, cucomplex_t* ff) {
-		unsigned int i_t = blockDim.x * blockIdx.x + threadIdx.x;
+		/*unsigned int i_t = blockDim.x * blockIdx.x + threadIdx.x;
 		unsigned int i_y = blockDim.y * blockIdx.y + threadIdx.y;
 		unsigned int i_z = blockDim.z * blockIdx.z + threadIdx.z;
 		unsigned int i_thread = blockDim.x * blockDim.y * threadIdx.z +
@@ -2664,14 +2785,13 @@ namespace hig {
 				//// following should be atomic
 				//ff[ff_index] = atomicAdd(ff[ff_index], fq_temp);
 			} // for
-		} // if
+		} // if*/
 	} // form_factor_kernel_new_shared2_red()
 
 	/* K5:
 	 * kernel with 3D decomposition along t, y, z; dynamic shared mem for input, static for output
 	 * and some memopt? ...
 	 */
-	//template<typename float_t, typename cucomplex_t>
 	__global__ void form_factor_kernel_new_shared2_mem(float_t*, float_t*, cucomplex_t*, float_t*, short int*,
 										unsigned int, unsigned int, unsigned int, unsigned int,
 										unsigned int, unsigned int, unsigned int, unsigned int,
@@ -2682,7 +2802,6 @@ namespace hig {
 	 * kernel with K3 and blocked along y, z
 	 * INCOMPLETE ...
 	 */
-	//template<typename float_t, typename cucomplex_t>
 	__global__ void form_factor_kernel_new_shared_subblock(float_t*, float_t*, cucomplex_t*, float_t*,
 										short int*,
 										unsigned int, unsigned int, unsigned int, unsigned int,
@@ -2694,7 +2813,6 @@ namespace hig {
 	 * kernel with K1 (?) and blocked along y, z
 	 * INCOMPLETE ...
 	 */
-	//template<typename float_t, typename complex_t>
 	__global__ void form_factor_kernel_new_2(float_t*, float_t*, cucomplex_t*, float_t*, short int*,
 										unsigned int, unsigned int, unsigned int, unsigned int,
 										unsigned int, unsigned int, unsigned int, unsigned int,

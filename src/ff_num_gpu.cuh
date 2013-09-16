@@ -3,7 +3,7 @@
  *
  *  File: ff_num_gpu.cuh
  *  Created: Nov 05, 2011
- *  Modified: Tue 16 Jul 2013 11:50:37 AM PDT
+ *  Modified: Sun 15 Sep 2013 06:06:39 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -64,6 +64,7 @@ namespace hig {
 					float_t* &qx_h, int nqx,
 					float_t* &qy_h, int nqy,
 					cucomplex_t* &qz_h, int nqz,
+					float_t* &rot,
 					float_t&, float_t&, float_t&
 					#ifdef FINDBLOCK
 						, const int, const int, const int, const int
@@ -77,6 +78,7 @@ namespace hig {
 					float_t* &qx_h, int nqx,
 					float_t* &qy_h, int nqy,
 					cucomplex_t* &qz_h, int nqz,
+					float_t* &rot,
 					float_t&, float_t&, float_t&
 					#ifdef FINDBLOCK
 						, const int, const int, const int, const int
@@ -90,6 +92,7 @@ namespace hig {
 					float_t* &qx_h, int nqx,
 					float_t* &qy_h, int nqy,
 					cucomplex_t* &qz_h, int nqz,
+					float_t* &rot,
 					float_t&, float_t&, float_t&
 					#ifdef FINDBLOCK
 						, const int, const int, const int, const int
@@ -103,6 +106,7 @@ namespace hig {
 					float_t* &qx_h, int nqx,
 					float_t* &qy_h, int nqy,
 					cucomplex_t* &qz_h, int nqz, int k,
+					float_t* &rot,
 					float_t&, float_t&, float_t&
 					#ifdef FINDBLOCK
 						, const int, const int, const int, const int
@@ -116,6 +120,7 @@ namespace hig {
 					float_t* &qx_h, int nqx,
 					float_t* &qy_h, int nqy,
 					cucomplex_t* &qz_h, int nqz,
+					float_t* &rot,
 					float_t&, float_t&, float_t&
 					#ifdef FINDBLOCK
 						, const int, const int, const int, const int

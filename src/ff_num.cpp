@@ -3,7 +3,7 @@
  *
  *  File: ff_num.cpp
  *  Created: Jul 18, 2012
- *  Modified: Sat 14 Sep 2013 08:30:09 AM PDT
+ *  Modified: Sun 15 Sep 2013 06:07:23 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -256,6 +256,7 @@ namespace hig {
 				#ifdef FF_NUM_GPU_FUSED
 					ret_nt = gff_.compute_form_factor_kb_fused(rank, shape_def, axes, p_ff,
 												qx, p_nqx, p_qy, p_nqy, p_qz, p_nqz, 3,
+												rot_,
 												kernel_time, red_time, temp_mem_time
 												#ifdef FINDBLOCK
 													, block_x, block_y, block_z, block_t
@@ -264,6 +265,7 @@ namespace hig {
 				#else
 					ret_nt = gff_.compute_form_factor_db(rank, shape_def, axes, p_ff,
 												qx, p_nqx, p_qy, p_nqy, p_qz, p_nqz,
+												rot_,
 												kernel_time, red_time, temp_mem_time
 												#ifdef FINDBLOCK
 													, block_x, block_y, block_z, block_t
@@ -274,6 +276,7 @@ namespace hig {
 				#ifndef FF_NUM_MIC_KB
 					ret_nt = mff_.compute_form_factor_db(rank, shape_def, p_ff,
 												qx, p_nqx, p_qy, p_nqy, p_qz, p_nqz,
+												rot_,
 												kernel_time, red_time, temp_mem_time
 												#ifdef FINDBLOCK
 													, block_x, block_y, block_z, block_t
@@ -284,6 +287,7 @@ namespace hig {
 												num_triangles,
 												p_ff,
 												qx, p_nqx, p_qy, p_nqy, p_qz, p_nqz, 3,
+												rot_,
 												kernel_time, red_time, temp_mem_time
 												#ifdef FINDBLOCK
 													, block_x, block_y, block_z, block_t

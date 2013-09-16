@@ -3,7 +3,7 @@
  *
  *  File: ff_num_gpu_kernels.cuh
  *  Created: Apr 11, 2013
- *  Modified: Tue 16 Jul 2013 11:50:38 AM PDT
+ *  Modified: Sun 15 Sep 2013 06:38:34 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -34,6 +34,7 @@
 						const unsigned int b_nqz, const unsigned int b_num_triangles,
 						const unsigned int ib_x, const unsigned int ib_y,
 						const unsigned int ib_z, const unsigned int ib_t,
+						const float_t* __restrict__ rot,
 						cucomplex_t* __restrict__ ff) {
 		unsigned int i_y = blockDim.x * blockIdx.x + threadIdx.x;
 		unsigned int i_z = blockDim.y * blockIdx.y + threadIdx.y;
@@ -88,12 +89,17 @@
 
 		cucomplex_t ff_tot = make_cuC((float_t) 0.0, (float_t) 0.0);
 		if(i_y < curr_nqy && i_z < curr_nqz) {
-			float_t temp_x = shared_qx[0];
-			float_t temp_y = shared_qy[threadIdx.x];
-			float_t qy2 = temp_y * temp_y;
-			cucomplex_t temp_z = shared_qz[threadIdx.y];
+			float_t temp_qx = shared_qx[0];
+			float_t temp_qy = shared_qy[threadIdx.x];
+			cucomplex_t temp_qz = shared_qz[threadIdx.y];
 
-			float_t qxy2 = fmaf(temp_x, temp_x, qy2);
+			// TODO: optimize this ... please ...
+			cucomplex_t temp_x = rot[0] * temp_qx + rot[1] * temp_qy + rot[2] * temp_qz;
+			cucomplex_t temp_y = rot[3] * temp_qx + rot[4] * temp_qy + rot[5] * temp_qz;
+			cucomplex_t temp_z = rot[6] * temp_qx + rot[7] * temp_qy + rot[8] * temp_qz;
+
+			cucomplex_t qy2 = temp_y * temp_y;
+			cucomplex_t qxy2 = temp_x * temp_x + qy2;
 			cucomplex_t q2 = cuCsqr(temp_z) + qxy2;
 			cucomplex_t q2_inv = cuCdivf(make_cuC((float_t) 1.0, (float_t) 0.0), q2);
 			//cucomplex_t q2_inv = cuCrcpf(q2);
@@ -170,13 +176,13 @@
 				   );
 				#endif*/
 
-				float_t qyn = temp_y * ny;
-				float_t qyt = temp_y * y;
+				cucomplex_t qyn = temp_y * ny;
+				cucomplex_t qyt = temp_y * y;
 				cucomplex_t qzn = temp_z * nz;
 				cucomplex_t qzt = temp_z * z;
 
-				cucomplex_t qt_d = fmaf(temp_x, x, qyt) + qzt;
-				cucomplex_t qn_d = cuCmulf((fmaf(temp_x, nx, qyn) + qzn), q2_inv);
+				cucomplex_t qt_d = temp_x * x + qyt + qzt;
+				cucomplex_t qn_d = cuCmulf(temp_x * nx + qyn + qzn, q2_inv);
 
 				ff_tot = ff_tot + compute_fq(s, qt_d, qn_d);
 			} // for
@@ -198,6 +204,7 @@
 						const unsigned int b_nqz, const unsigned int b_num_triangles,
 						const unsigned int ib_x, const unsigned int ib_y,
 						const unsigned int ib_z, const unsigned int ib_t,
+						const float_t* __restrict__ rot,
 						cucomplex_t* __restrict__ ff, cucomplex_t* fq) {
 /*		unsigned int i_y = blockDim.x * blockIdx.x + threadIdx.x;
 		unsigned int i_z = blockDim.y * blockIdx.y + threadIdx.y;
@@ -304,16 +311,20 @@
 	} // compute_z()
 
 
-	__device__ __inline__ void compute_x(float temp_x, float qy2, cuFloatComplex qz2, float nx, float qyn,
-				cuFloatComplex qzn, float x, float qyt,	cuFloatComplex qzt,
+	__device__ __inline__ void compute_x(cuFloatComplex temp_x, cuFloatComplex qy2,
+				cuFloatComplex qz2, float nx, cuFloatComplex qyn,
+				cuFloatComplex qzn, float x, cuFloatComplex qyt, cuFloatComplex qzt,
 				cuFloatComplex& qn_d, cuFloatComplex& qt_d) {
 		//cuFloatComplex q2 = cuCaddf(make_cuFloatComplex(fmaf(temp_x, temp_x, qy2), 0.0f), qz2);
 		//qn_d = cuCdivf(cuCaddf(make_cuFloatComplex(temp_x * nx, 0.0f),
 		//						cuCaddf(make_cuFloatComplex(qyn, 0.0f), qzn)), q2);
 		//qt_d = cuCaddf(make_cuFloatComplex(fmaf(temp_x, x, qyt), 0.0f), qzt);
-		cuFloatComplex q2 = fmaf(temp_x, temp_x, qy2) + qz2;
+		/*cuFloatComplex q2 = fmaf(temp_x, temp_x, qy2) + qz2;
 		qt_d = fmaf(temp_x, x, qyt) + qzt;
-		qn_d = cuCdivf((fmaf(temp_x, nx, qyn) + qzn), q2);
+		qn_d = cuCdivf((fmaf(temp_x, nx, qyn) + qzn), q2);*/
+		cuFloatComplex q2 = cuCaddf(cuCaddf(cuCmulf(temp_x, temp_x), qy2), qz2);
+		qt_d = cuCaddf(cuCaddf(cuCmulf(temp_x, make_cuFloatComplex(x, 0.0f)), qyt), qzt);
+		qn_d = cuCdivf(cuCaddf(cuCaddf(cuCmulf(temp_x, make_cuFloatComplex(nx, 0.0f)), qyn), qzn), q2);
 	} // compute_x()
 
 
@@ -348,16 +359,20 @@
 	} // compute_z()
 
 
-	__device__ __inline__ void compute_x(double temp_x, double qy2, cuDoubleComplex qz2, double nx, double qyn,
-				cuDoubleComplex qzn, double x, double qyt,	cuDoubleComplex qzt,
+	__device__ __inline__ void compute_x(cuDoubleComplex temp_x, cuDoubleComplex qy2,
+				cuDoubleComplex qz2, double nx, cuDoubleComplex qyn,
+				cuDoubleComplex qzn, double x, cuDoubleComplex qyt,	cuDoubleComplex qzt,
 				cuDoubleComplex& qn_d, cuDoubleComplex& qt_d) {
 		//cuDoubleComplex q2 = cuCadd(make_cuDoubleComplex(fma(temp_x, temp_x, qy2), 0.0), qz2);
 		//qn_d = cuCdiv(cuCadd(make_cuDoubleComplex(temp_x * nx, 0.0),
 		//						cuCadd(make_cuDoubleComplex(qyn, 0.0), qzn)), q2);
 		//qt_d = cuCadd(make_cuDoubleComplex(fma(temp_x, x, qyt), 0.0), qzt);
-		cuDoubleComplex q2 = fma(temp_x, temp_x, qy2) + qz2;
+		/*cuDoubleComplex q2 = fma(temp_x, temp_x, qy2) + qz2;
 		qt_d = fma(temp_x, x, qyt) + qzt;
-		qn_d = cuCdiv((fma(temp_x, nx, qyn) + qzn), q2);
+		qn_d = cuCdiv((fma(temp_x, nx, qyn) + qzn), q2);*/
+		cuDoubleComplex q2 = cuCadd(cuCadd(cuCmul(temp_x, temp_x), qy2), qz2);
+		qt_d = cuCadd(cuCadd(cuCmul(temp_x, make_cuDoubleComplex(x, 0.0f)), qyt), qzt);
+		qn_d = cuCdiv(cuCadd(cuCadd(cuCmul(temp_x, make_cuDoubleComplex(nx, 0.0f)), qyn), qzn), q2);
 	} // compute_x()
 
 
