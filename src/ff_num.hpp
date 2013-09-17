@@ -3,7 +3,7 @@
  *
  *  File: ff_num.hpp
  *  Created: Nov 05, 2011
- *  Modified: Tue 17 Sep 2013 03:47:38 PM PDT
+ *  Modified: Tue 17 Sep 2013 04:55:56 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -146,12 +146,12 @@ namespace hig {
 									woo::MultiNode&,
 								#endif
 								float_t&, float_t&);
-			void gather_all(std::complex<float> *cast_p_ff, unsigned long int local_qpoints,
-								std::complex<float> *cast_ff,
-								int *recv_counts, int *displacements, MPI::Comm &comm);
-			void gather_all(std::complex<double> *cast_p_ff, unsigned long int local_qpoints,
-								std::complex<double> *cast_ff,
-								int *recv_counts, int *displacements, MPI::Comm &comm);
+			//void gather_all(std::complex<float> *cast_p_ff, unsigned long int local_qpoints,
+			//					std::complex<float> *cast_ff,
+			//					int *recv_counts, int *displacements, MPI::Comm &comm);
+			//void gather_all(std::complex<double> *cast_p_ff, unsigned long int local_qpoints,
+			//					std::complex<double> *cast_ff,
+			//					int *recv_counts, int *displacements, MPI::Comm &comm);
 
 	}; // class NumericFormFactor
 	
