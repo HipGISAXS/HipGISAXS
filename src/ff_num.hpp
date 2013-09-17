@@ -3,7 +3,7 @@
  *
  *  File: ff_num.hpp
  *  Created: Nov 05, 2011
- *  Modified: Mon 16 Sep 2013 04:02:42 PM PDT
+ *  Modified: Tue 17 Sep 2013 03:47:38 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -32,6 +32,10 @@
 #include <cstring>
 
 #include "woo/timer/woo_boostchronotimers.hpp"
+
+#ifdef USE_MPI
+#include "woo/comm/multi_node_comm.hpp"
+#endif
 
 #include "parameters.hpp"
 #include "object2hdf5.h"
@@ -91,7 +95,7 @@ namespace hig {
 
 			bool compute(const char* filename, std::vector<complex_t>& ff,
 							vector3_t&, vector3_t&, vector3_t&,
-							MultiNode& world_comm);
+							woo::MultiNode& world_comm);
 	
 		private:
 
@@ -119,19 +123,17 @@ namespace hig {
 			unsigned int read_shape_surface_file(const char* filename, float_vec_t& shape_def);
 			unsigned int read_shapes_hdf5(const char* filename,
 										#ifndef __SSE3__
-											float_vec_t& shape_def,
+											float_vec_t& shape_def
 										#else
 											#ifdef USE_GPU
-												float_vec_t &shape_def,
+												float_vec_t &shape_def
 											#else
-												float_t* &shape_def,
+												float_t* &shape_def
 											#endif
 										#endif
-										MPI::Intracomm& comm);
+										);
 			void find_axes_orientation(std::vector<float_t> &shape_def, std::vector<short int> &axes);
-			void construct_ff(int rank, int num_procs, MPI::Comm &comm,
-								MPI::Comm &col_comm, MPI::Comm &row_comm,
-								int p_nqx, int p_nqy, int p_nqz,
+			bool construct_ff(int p_nqx, int p_nqy, int p_nqz,
 								int nqx, int nqy, int nqz,
 								int p_y, int p_z,
 								#ifdef FF_NUM_GPU
@@ -139,7 +141,10 @@ namespace hig {
 								#else
 									complex_t* p_ff,
 								#endif
-								std::vector<complex_t>& ff,
+								complex_vec_t& ff,
+								#ifdef USE_MPI
+									woo::MultiNode&,
+								#endif
 								float_t&, float_t&);
 			void gather_all(std::complex<float> *cast_p_ff, unsigned long int local_qpoints,
 								std::complex<float> *cast_ff,

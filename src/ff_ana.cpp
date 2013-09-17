@@ -3,7 +3,7 @@
  *
  *  File: ff_ana.cpp
  *  Created: Jul 12, 2012
- *  Modified: Mon 16 Sep 2013 03:59:50 PM PDT
+ *  Modified: Tue 17 Sep 2013 03:34:46 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -68,11 +68,18 @@ namespace hig {
 	} // AnalyticFormFactor::clear()
 
 
-	bool AnalyticFormFactor::compute(ShapeName shape, float_t tau, float_t eta, vector3_t transvec,
+	#ifdef USE_MPI
+		bool AnalyticFormFactor::compute(ShapeName shape, float_t tau, float_t eta, vector3_t transvec,
 									std::vector<complex_t>& ff,
 									shape_param_list_t& params, float_t single_layer_thickness,
 									vector3_t rot1, vector3_t rot2, vector3_t rot3,
-									MultiNode& world_comm) {
+									woo::MultiNode& world_comm) {
+	#else
+		bool AnalyticFormFactor::compute(ShapeName shape, float_t tau, float_t eta, vector3_t transvec,
+									std::vector<complex_t>& ff,
+									shape_param_list_t& params, float_t single_layer_thickness,
+									vector3_t rot1, vector3_t rot2, vector3_t rot3) {
+	#endif // USE_MPI
 
 		std::cout << "-- Computing form factor analytically ... " << std::endl;
 		#ifdef TIME_DETAIL_1

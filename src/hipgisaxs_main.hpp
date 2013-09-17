@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_main.hpp
  *  Created: Jun 11, 2012
- *  Modified: Mon 16 Sep 2013 02:52:19 PM PDT
+ *  Modified: Tue 17 Sep 2013 04:06:09 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -81,25 +81,22 @@ namespace hig {
 			StructureFactor sf_;		/* structure factor object */
 
 			#ifdef USE_MPI
-				woo::MultiNodeComm multi_node_;	/* for multi node communication */
+				woo::MultiNode multi_node_;	/* for multi node communication */
 			#endif
 
-			bool init(MPI::Intracomm&);	/* global initialization for all runs */
-			bool init_steepest_fit(MPI::Intracomm&, float_t);	/* init for steepest descent fitting */
-			bool run_init(float_t, float_t, float_t, MPI::Intracomm&); 	/* init for a single run */
-			bool run_gisaxs(float_t, float_t, float_t, float_t, float_t*&, MPI::Intracomm&, int c = 0);
+			bool init();	/* global initialization for all runs */
+			bool init_steepest_fit(float_t);	/* init for steepest descent fitting */
+			bool run_init(float_t, float_t, float_t); 	/* init for a single run */
+			bool run_gisaxs(float_t, float_t, float_t, float_t, float_t*&, int c = 0);
 										/* a single GISAXS run */
 
 			/* wrapper over sf function */
 			bool structure_factor(std::string, vector3_t&, Lattice*&, vector3_t&,
-									vector3_t&, vector3_t&, vector3_t&,
-									MPI::Intracomm&);
+									vector3_t&, vector3_t&, vector3_t&);
 
 			/* wrapper over ff function */
-			//template <typename float_t, typename complex_t>
 			bool form_factor(ShapeName, std::string, shape_param_list_t&, vector3_t&,
-							float_t, float_t, vector3_t&, vector3_t&, vector3_t&,
-							MPI::Intracomm&);
+							float_t, float_t, vector3_t&, vector3_t&, vector3_t&);
 
 			bool layer_qgrid_qz(float_t, complex_t);
 			bool compute_propagation_coefficients(float_t, complex_t*&, complex_t*&,
@@ -159,7 +156,7 @@ namespace hig {
 			} // construct_input()
 
 			/* loops over all configs and computes GISAXS for each */
-			bool run_all_gisaxs(MPI::Intracomm&, int = 0, int = 0, int = 0);
+			bool run_all_gisaxs(int = 0, int = 0, int = 0);
 
 			/* does the initial 1D fitting */
 			bool fit_steepest_descent(float_t, float_t, float_t, float_t,

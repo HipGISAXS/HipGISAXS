@@ -3,7 +3,7 @@
  *
  *  File: ff_ana.hpp
  *  Created: Jul 12, 2012
- *  Modified: Mon 16 Sep 2013 03:58:42 PM PDT
+ *  Modified: Tue 17 Sep 2013 03:33:20 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -24,12 +24,17 @@
 #define _FF_ANA_HPP_
 
 #include <vector>
-#include <mpi.h>
+
+#ifdef USE_MPI
+	#include <mpi.h>
+	#include "woo/comm/multi_node_comm.hpp"
+#endif
 
 #include "typedefs.hpp"
 #include "globals.hpp"
 #include "enums.hpp"
 #include "shape.hpp"
+
 #ifdef USE_GPU
 	#include "ff_ana_gpu.cuh"
 #endif
@@ -59,12 +64,12 @@ namespace hig {
 				bool compute(ShapeName shape, float_t tau, float_t eta, vector3_t transvec,
 							std::vector<complex_t>&,
 							shape_param_list_t& params, float_t single_layer_thickness_,
-							vector3_t rot1, vector3_t rot2, vector3_t rot3, MultiNode& multi_node);
+							vector3_t rot1, vector3_t rot2, vector3_t rot3, woo::MultiNode& multi_node);
 			#else
 				bool compute(ShapeName shape, float_t tau, float_t eta, vector3_t transvec,
 							std::vector<complex_t>&,
 							shape_param_list_t& params, float_t single_layer_thickness_,
-							vector3_t rot1, vector3_t rot2, vector3_t rot3, MultiNode& multi_node);
+							vector3_t rot1, vector3_t rot2, vector3_t rot3);
 			#endif
 
 		private:

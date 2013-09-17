@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_main.cpp
  *  Created: Jun 14, 2012
- *  Modified: Mon 16 Sep 2013 03:45:34 PM PDT
+ *  Modified: Tue 17 Sep 2013 04:38:48 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -95,6 +95,14 @@ namespace hig {
 			bool master = true;
 		#endif
 
+		if(master) {
+			std::cout << std::endl
+					<< "*******************************************************************" << std::endl
+					<< "*********************** HipGISAXS v0.9b ***************************" << std::endl
+					<< "*******************************************************************" << std::endl
+					<< std::endl;
+		} // if
+
 		//photon conversion
 		float_t photon = 0.0;
 		std::string unit;
@@ -145,7 +153,9 @@ namespace hig {
 		#endif
 
 		#if defined USE_GPU || defined FF_ANA_GPU || defined FF_NUM_GPU
+			if(master) std::cout << "-- Waking up GPU(s) ..." << std::flush;
 			init_gpu();
+			if(master) std::cout << " it woke up!" << std::endl;
 		#elif defined USE_MIC
 			if(master) std::cout << "-- Waking up MIC(s) ..." << std::flush;
 			init_mic();
@@ -368,7 +378,7 @@ namespace hig {
 					/* run a gisaxs simulation */
 
 					float_t* final_data = NULL;
-					if(!run_gisaxs(alpha_i, alphai, phi_rad, tilt_rad, final_data, world_comm, 0)) {
+					if(!run_gisaxs(alpha_i, alphai, phi_rad, tilt_rad, final_data, 0)) {
 						if(master)
 							std::cerr << "error: could not finish successfully" << std::endl;
 						return false;
@@ -615,7 +625,7 @@ namespace hig {
 										// this can be reduced on the fly to reduce mem usage ...
 			id = new (std::nothrow) complex_t[num_grains * nqx_ * nqy_ * nqz_];
 			if(id == NULL) {
-				if(mpi_rank == 0) std::cerr << "error: could not allocate memory for 'id'" << std::endl;
+				if(master) std::cerr << "error: could not allocate memory for 'id'" << std::endl;
 				return false;
 			} // if
 			memset(id, 0 , num_grains * nqx_ * nqy_ * nqz_ * sizeof(complex_t));	// initialize to 0
@@ -1094,10 +1104,18 @@ namespace hig {
 									vector3_t& r_tot2, vector3_t& r_tot3) {
 #ifndef GPUSF
 		return sf_.compute_structure_factor(expt, center, curr_lattice, grain_repeats,
-											r_tot1, r_tot2, r_tot3);
+											r_tot1, r_tot2, r_tot3
+											#ifdef USE_MPI
+												, multi_node_
+											#endif
+											);
 #else
 		return sf_.compute_structure_factor_gpu(expt, center, curr_lattice, grain_repeats,
-												r_tot1, r_tot2, r_tot3);
+											r_tot1, r_tot2, r_tot3
+											#ifdef USE_MPI
+												, multi_node_
+											#endif
+											);
 #endif
 	} // HipGISAXS::structure_factor()
 
@@ -1112,8 +1130,8 @@ namespace hig {
 										multi_node_);
 #else
 		return ff_.compute_form_factor_gpu(shape_name, shape_file, shape_params, single_layer_thickness_,
-											curr_transvec, shp_tau, shp_eta, r_tot1, r_tot2, r_tot3,
-											multi_node_);
+										curr_transvec, shp_tau, shp_eta, r_tot1, r_tot2, r_tot3,
+										multi_node_);
 #endif
 	} // HipGISAXS::form_factor()
 

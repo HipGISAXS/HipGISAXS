@@ -3,7 +3,7 @@
   *
   *  File: multi_node_comm.hpp
   *  Created: Mar 18, 2013
-  *  Modified: Mon 16 Sep 2013 02:50:31 PM PDT
+  *  Modified: Tue 17 Sep 2013 03:58:11 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -14,6 +14,7 @@
 #ifdef USE_MPI
 
 #include <mpi.h>
+#include <complex>
 
 namespace woo {
 
@@ -121,6 +122,36 @@ namespace woo {
 				return true;
 			} // broadcast()
 
+			inline bool scan_sum(unsigned int in, unsigned int& out) {
+				if(MPI_Scan(&in, &out, 1, MPI_UNSIGNED, MPI_SUM, world_) != MPI_SUCCESS)
+					return false;
+				return true;
+			} // scan_sum()
+
+			inline bool gather(int* sbuf, int scount, int* rbuf, int rcount) {
+				MPI_Gather(sbuf, scount, MPI_INT, rbuf, rcount, MPI_INT, master_rank_, world_);
+				return true;
+			} // gather()
+
+			inline bool allgather(int* sbuf, int scount, int* rbuf, int rcount) {
+				MPI_Allgather(sbuf, scount, MPI_INT, rbuf, rcount, MPI_INT, world_);
+				return true;
+			} // allgather()
+
+			inline bool gatherv(std::complex<float>* sbuf, int scount,
+									std::complex<float>* rbuf, int* rcount, int* displs) {
+				MPI_Gatherv(sbuf, scount, MPI_COMPLEX, rbuf, rcount, displs, MPI_COMPLEX,
+							master_rank_, world_);
+				return true;
+			} // gatherv()
+
+			inline bool gatherv(std::complex<double>* sbuf, int scount,
+									std::complex<double>* rbuf, int* rcount, int* displs) {
+				MPI_Gatherv(sbuf, scount, MPI_DOUBLE_COMPLEX,
+								rbuf, rcount, displs, MPI_DOUBLE_COMPLEX, master_rank_, world_);
+				return true;
+			} // gatherv()
+
 			inline bool barrier() {
 				MPI_Barrier(world_);
 				return true;
@@ -182,6 +213,10 @@ namespace woo {
 			// number of communicators including the world
 			inline int num_comms() const { return comms_.size(); }
 
+			/**
+			 * Create new communicators
+			 */
+
 			bool split(const char* new_key, const char* key, int color) {
 				comms_[new_key] = comms_[key].split(color);
 				return true;
@@ -191,6 +226,10 @@ namespace woo {
 				comms_[new_key] = comms_[key].dup();
 				return true;
 			} // dup()
+
+			/**
+			 * Broadcasts
+			 */
 
 			bool broadcast(const char* key, float* data, int size) {
 				return comms_[key].broadcast(data, size);
@@ -203,6 +242,44 @@ namespace woo {
 			bool broadcast(const char* key, unsigned int* data, int size) {
 				return comms_[key].broadcast(data, size);
 			} // send_broadcast()
+
+			/**
+			 * Scans
+			 */
+
+			bool scan_sum(const char* key, unsigned int in, unsigned int& out) {
+				return comms_[key].scan_sum(in, out);
+			} // scan_sum()
+
+			/**
+			 * Gathers
+			 */
+
+			bool allgather(const char* key, int* sbuf, int scount, int* rbuf, int rcount) {
+				return comms_[key].allgather(sbuf, scount, rbuf, rcount);
+			} // allgather()
+
+			inline bool gather(const char* key, int* sbuf, int scount, int* rbuf, int rcount) {
+				return comms_[key].gather(sbuf, scount, rbuf, rcount);
+			} // gather()
+
+			inline bool gatherv(const char* key, std::complex<float>* sbuf, int scount,
+									std::complex<float>* rbuf, int* rcount, int* displs) {
+				return comms_[key].gatherv(sbuf, scount, rbuf, rcount, displs);
+			} // gatherv()
+
+			inline bool gatherv(const char* key, std::complex<double>* sbuf, int scount,
+									std::complex<double>* rbuf, int* rcount, int* displs) {
+				return comms_[key].gatherv(sbuf, scount, rbuf, rcount, displs);
+			} // gatherv()
+
+			/**
+			 * Barrier
+			 */
+
+			bool barrier() {
+				return comms_["world"].barrier();
+			} // barrier()
 
 			bool barrier(const char* key) {
 				return comms_[key].barrier();

@@ -3,7 +3,7 @@
  *
  *  File: sf.hpp
  *  Created: Jun 18, 2012
- *  Modified: Tue 16 Jul 2013 11:52:02 AM PDT
+ *  Modified: Tue 17 Sep 2013 04:35:52 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -23,7 +23,10 @@
 #ifndef _SF_HPP_
 #define _SF_HPP_
 
+#ifdef USE_MPI
 #include <mpi.h>
+#include "woo/comm/multi_node_comm.hpp"
+#endif // USE_MPI
 
 #include "typedefs.hpp"
 #include "globals.hpp"
@@ -44,9 +47,17 @@ namespace hig {
 
 			void clear(void);
 			bool compute_structure_factor(std::string, vector3_t, Lattice*, vector3_t,
-											vector3_t, vector3_t, vector3_t, MPI::Intracomm&);
+											vector3_t, vector3_t, vector3_t
+											#ifdef USE_MPI
+												, woo::MultiNode&
+											#endif
+											);
 			bool compute_structure_factor_gpu(std::string, vector3_t, Lattice*, vector3_t,
-												vector3_t, vector3_t, vector3_t, MPI::Intracomm&);
+											vector3_t, vector3_t, vector3_t
+											#ifdef USE_MPI
+												, woo::MultiNode&
+											#endif
+											);
 			complex_t operator[](unsigned int i) const { return sf_[i]; }
 			void save_sf(unsigned int nqx, unsigned int nqy, unsigned int nqz, const char* filename);
 

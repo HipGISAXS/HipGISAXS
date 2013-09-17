@@ -3,7 +3,7 @@
  *
  *  File: ff.cpp
  *  Created: Jul 17, 2012
- *  Modified: Mon 16 Sep 2013 03:55:35 PM PDT
+ *  Modified: Tue 17 Sep 2013 03:56:45 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -39,7 +39,7 @@ namespace hig {
 										shape_param_list_t& params, float_t single_thickness,
 										vector3_t& transvec, float_t shp_tau, float_t shp_eta,
 										vector3_t& rot1, vector3_t& rot2, vector3_t& rot3,
-										MultiNodeComm& multi_node) {
+										woo::MultiNode& multi_node) {
 		if(shape == shape_custom) {
 			/* compute numerically */
 			is_analytic_ = false;
