@@ -12,6 +12,7 @@ USE_GPU = y
 USE_ANA_GPU = y
 USE_NUM_GPU = y
 USE_MIC = n
+USE_MPI = y
 
 ## base directories
 BOOST_DIR = /usr/local/boost_1_49_0
@@ -135,6 +136,11 @@ endif
 
 ## CPU related flags
 #MISC_FLAGS += -DFF_NUM_CPU_AUTOTUNE_HB
+
+## for MPI
+ifeq ($(USE_MPI), y)
+MISC_FLAGS += -DUSE_MPI
+endif
 
 MISC_FLAGS += -DTIME_DETAIL_1 -DTIME_DETAIL_2
 
