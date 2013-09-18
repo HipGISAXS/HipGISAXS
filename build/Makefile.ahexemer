@@ -12,6 +12,7 @@ USE_GPU = y
 USE_ANA_GPU = y
 USE_NUM_GPU = y
 USE_MIC = n
+USE_MPI = y
 
 ## base directories
 BOOST_DIR = /Users/abhinav/temp/boost_1_49_0
@@ -107,13 +108,44 @@ endif
 ## MIC related flags
 ifeq ($(USE_MIC), y)
 MISC_FLAGS += -DUSE_MIC -DFF_MIC_OPT
+MISC_FLAGS += -DFF_NUM_MIC_SWAP
+MISC_FLAGS += -DFF_NUM_MIC_KB
+#MISC_FLAGS += -DMIC_PADDING    ## goes out of memory on target
+endif
+
+## CPU related flags
+#MISC_FLAGS += -DFF_NUM_CPU_AUTOTUNE_HB
+
+## for MPI
+ifeq ($(USE_MPI), y)
+MISC_FLAGS += -DUSE_MPI
 endif
 
 MISC_FLAGS += -DTIME_DETAIL_1 -DTIME_DETAIL_2
 
 ## choose optimization levels, debug flags, gprof flag, etc
-#OPT_FLAGS = -g -DDEBUG #-v #-G #-pg
-OPT_FLAGS = -O3 -DNDEBUG #-v
+#OPT_FLAGS = -g -DDEBUG #-v #-pg
+OPT_FLAGS += -O3 -DNDEBUG #-v
+
+## stuff for AMD x86_64
+#OPT_FLAGS += -march=barcelona -ffast-math -Ofast #-funroll-all-loops
+#OPT_FLAGS += -msse4a
+#OPT_FLAGS += -U__SSE3__
+
+
+## stuff for Intel x86_64
+#OPT_FLAGS += -mavx -Ofast -falign-functions -align -fma -fp-model fast=2 -parallel -funroll-loops -axAVX -xavx
+
+## for carver CPU
+#OPT_FLAGS += -msse4a -ffast-math -Ofast
+
+## for other cpus
+ifneq ($(USE_GPU), y)
+ifneq ($(USE_MIC), y)
+#OPT_FLAGS += -msse  -msse2 -msse3 -mssse3 -msse4.1 -msse4.2 -msse4 -mavx -mavx2 -mfma -msse4a
+#OPT_FLAGS += -mavx -msse4.1 -msse4.2 -mssse3
+endif
+endif
 
 ## choose single or double precision here
 PREC_FLAG =			# leave empty for single precision
@@ -141,18 +173,18 @@ OBJECTS_MAIN = utilities.o numeric_utils.o compute_params.o hig_input.o \
 		  ff_ana.o ff_num.o ff.o shape.o structure.o object2hdf5.o hipgisaxs_main.o \
 		  ff_ana_sphere.o ff_ana_box.o ff_ana_cylinder.o ff_ana_hcylinder.o ff_ana_prism3x.o \
 		  ff_ana_prism6.o ff_ana_prism.o ff_ana_pyramid.o ff_ana_rand_cylinder.o \
-		  ff_ana_sawtooth_down.o ff_ana_sawtooth_up.o ff_ana_trunc_cone.o ff_ana_trunc_pyramid.o \
-		  ff_num_cpu.o
+		  ff_ana_sawtooth_down.o ff_ana_sawtooth_up.o ff_ana_trunc_cone.o ff_ana_trunc_pyramid.o
 
 ifeq ($(USE_GPU), y)
 NV_OBJECTS_MAIN = reduction.o ff_num_gpu.o ff_ana_gpu.o ff_ana_sphere_gpu.o ff_ana_box_gpu.o \
 				ff_ana_cylinder_gpu.o ff_ana_hcylinder_gpu.o ff_ana_prism6_gpu.o \
 				ff_ana_prism_gpu.o ff_ana_rand_cylinder_gpu.o
 OBJECTS_MAIN += nv_hipgisaxs.o $(NV_OBJECTS_MAIN)
-endif
-
+else 
 ifeq ($(USE_MIC), y)
 OBJECTS_MAIN += ff_num_mic.o
+else
+OBJECTS_MAIN += ff_num_cpu.o
 endif
 
 #ifneq ($(USE_GPU), y)
@@ -222,6 +254,7 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cu $(DEPS_NV)
 
 $(OBJ_DIR)/nv_hipgisaxs.o: $(NV_OBJ_BIN_SIM)
 	$(NVCC) $^ -o $@ $(NVLINK_FLAGS)
+
 endif
 
 ## hdf5-parallel compilation
@@ -353,7 +386,7 @@ $(OBJ_DIR)/object2shape%.o: $(SRC_DIR)/object2shape%.cpp
 
 OBJECTS_S2H = shape2hdf5.o shape2hdf5_main.o object2hdf5.o
 shape2hdf5: $(patsubst %,$(OBJ_DIR)/%,$(OBJECTS_S2H))
-	$(CXX) -o $(BIN_DIR)/$@ $^ $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(MISC_FLAGS) $(ALL_LIBS)
+	$(CXX) -o $(BINs_DIR)/$@ $^ $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(MISC_FLAGS) $(ALL_LIBS)
 $(OBJ_DIR)/shape2hdf5%.o: $(SRC_DIR)/shape2hdf5%.cpp
 	$(CXX) -c $< -o $@ $(OPT_FLAGS) $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) $(MISC_FLAGS)
 
