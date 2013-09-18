@@ -3,7 +3,7 @@
  *
  *  File: sf.cpp
  *  Created: Jun 18, 2012
- *  Modified: Tue 17 Sep 2013 04:43:11 PM PDT
+ *  Modified: Wed 18 Sep 2013 11:34:19 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -57,7 +57,7 @@ namespace hig {
 							Lattice* lattice, vector3_t repet,
 							vector3_t rotation_1, vector3_t rotation_2, vector3_t rotation_3
 							#ifdef USE_MPI
-								, woo::MultiNode& world_comm
+								, woo::MultiNode& world_comm, const char* comm_key
 							#endif
 							) {
 		#ifdef USE_MPI

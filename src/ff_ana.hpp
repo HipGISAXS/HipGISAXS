@@ -3,7 +3,7 @@
  *
  *  File: ff_ana.hpp
  *  Created: Jul 12, 2012
- *  Modified: Tue 17 Sep 2013 03:33:20 PM PDT
+ *  Modified: Wed 18 Sep 2013 11:40:19 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -60,17 +60,14 @@ namespace hig {
 			bool init(vector3_t&, vector3_t&, vector3_t&, std::vector<complex_t> &ff);
 			void clear();
 
-			#ifdef USE_MPI
-				bool compute(ShapeName shape, float_t tau, float_t eta, vector3_t transvec,
-							std::vector<complex_t>&,
-							shape_param_list_t& params, float_t single_layer_thickness_,
-							vector3_t rot1, vector3_t rot2, vector3_t rot3, woo::MultiNode& multi_node);
-			#else
-				bool compute(ShapeName shape, float_t tau, float_t eta, vector3_t transvec,
-							std::vector<complex_t>&,
-							shape_param_list_t& params, float_t single_layer_thickness_,
-							vector3_t rot1, vector3_t rot2, vector3_t rot3);
-			#endif
+			bool compute(ShapeName shape, float_t tau, float_t eta, vector3_t transvec,
+						std::vector<complex_t>&,
+						shape_param_list_t& params, float_t single_layer_thickness_,
+						vector3_t rot1, vector3_t rot2, vector3_t rot3
+						#ifdef USE_MPI
+							, woo::MultiNode& multi_node, const char* comm_key
+						#endif
+						);
 
 		private:
 			/* compute ff for various shapes */

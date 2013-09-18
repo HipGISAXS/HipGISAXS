@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_main.hpp
  *  Created: Jun 11, 2012
- *  Modified: Tue 17 Sep 2013 04:06:09 PM PDT
+ *  Modified: Wed 18 Sep 2013 11:23:44 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -92,11 +92,19 @@ namespace hig {
 
 			/* wrapper over sf function */
 			bool structure_factor(std::string, vector3_t&, Lattice*&, vector3_t&,
-									vector3_t&, vector3_t&, vector3_t&);
+									vector3_t&, vector3_t&, vector3_t&
+									#ifdef USE_MPI
+										, const char*
+									#endif
+									);
 
 			/* wrapper over ff function */
 			bool form_factor(ShapeName, std::string, shape_param_list_t&, vector3_t&,
-							float_t, float_t, vector3_t&, vector3_t&, vector3_t&);
+									float_t, float_t, vector3_t&, vector3_t&, vector3_t&
+									#ifdef USE_MPI
+										, const char*
+									#endif
+									);
 
 			bool layer_qgrid_qz(float_t, complex_t);
 			bool compute_propagation_coefficients(float_t, complex_t*&, complex_t*&,

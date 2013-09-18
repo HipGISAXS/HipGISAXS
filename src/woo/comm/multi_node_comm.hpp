@@ -3,7 +3,7 @@
   *
   *  File: multi_node_comm.hpp
   *  Created: Mar 18, 2013
-  *  Modified: Tue 17 Sep 2013 03:58:11 PM PDT
+  *  Modified: Tue 17 Sep 2013 05:54:23 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -15,6 +15,7 @@
 
 #include <mpi.h>
 #include <complex>
+#include <map>
 
 namespace woo {
 

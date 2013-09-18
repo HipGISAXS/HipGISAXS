@@ -3,7 +3,7 @@
  *
  *  File: ff.hpp
  *  Created: Jul 18, 2012
- *  Modified: Tue 17 Sep 2013 03:57:25 PM PDT
+ *  Modified: Wed 18 Sep 2013 11:33:29 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -72,8 +72,11 @@ namespace hig {
 									shape_param_list_t& params,
 									float_t single_thickness,
 									vector3_t& transvec, float_t shp_tau, float_t shp_eta,
-									vector3_t& rot1, vector3_t& rot2, vector3_t& rot3,
-									woo::MultiNode&);
+									vector3_t& rot1, vector3_t& rot2, vector3_t& rot3
+									#ifdef USE_MPI
+										, woo::MultiNode&, const char*
+									#endif
+									);
 
 			complex_t operator[](unsigned int i) const { return ff_[i]; }
 

@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_main.cpp
  *  Created: Jun 14, 2012
- *  Modified: Tue 17 Sep 2013 04:38:48 PM PDT
+ *  Modified: Wed 18 Sep 2013 11:28:31 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -542,14 +542,18 @@ namespace hig {
 	} // HipGISAXS::printfc()
  
 
+	/**
+	 * run an experiment configuration
+	 * called for each configuration
+	 */
 	/* all the real juice is here */
 	bool HipGISAXS::run_gisaxs(float_t alpha_i, float_t alphai, float_t phi, float_t tilt,
-								float_t* &img3d, int corr_doms) {
+								float_t* &img3d, int corr_doms, const char* comm_key) {
 
 		if(!run_init(alphai, phi, tilt)) return false;
 
 		#ifdef USE_MPI
-			bool master = multi_node_.is_master();
+			bool master = multi_node_.is_master(comm_key);
 		#else
 			bool master = true;
 		#endif
@@ -568,8 +572,10 @@ namespace hig {
 		complex_t* c_struct_intensity = new (std::nothrow) complex_t[num_structures_ * size];
 
 		/* loop over all structures and grains/grains */
-		// these are also a level of parallelism for dynamicity ...
+		// TODO: these are also a level of parallelism for dynamicity ...
 		int s_num = 0;
+		const char* struct_comm = "structure";
+		// split comm_key into "structure"s ...
 		for(structure_iterator_t s = HiGInput::instance().structure_begin();
 				s != HiGInput::instance().structure_end(); ++ s, ++ s_num) {
 			// get all repetitions of the structure in the volume
@@ -634,7 +640,8 @@ namespace hig {
 			if(HiGInput::instance().param_nslices() <= 1) {
 				curr_transvec[2] = curr_transvec[2] - single_layer_thickness_;
 			} else {
-				curr_transvec[2] = curr_transvec[2]; // TODO/FIXME... for more than 1 layers ... incomplete
+				curr_transvec[2] = curr_transvec[2]; // TODO/FIXME... for more than 1 layers ... 
+													 // ... incomplete
 			} // if-else
 			ShapeName shape_name = HiGInput::instance().shape_name((*s).second);
 			float_t shape_tau = HiGInput::instance().shape_tau((*s).second);
@@ -644,26 +651,35 @@ namespace hig {
 
 			/* computing dwba ff for each grain in structure (*s) with
 			 * ensemble containing num_grains grains */
-			for(int j = 0; j < num_grains; j ++) {	// or distributions
+			// TODO: parallelize ...
+			const char* grain_comm = "grain";
+			// split "structure" into "grain"s ...
+			for(int grain_i = 0; grain_i < num_grains; grain_i ++) {	// or distributions
 
 				if(master) {
-					std::cout << "-- Processing grain " << j + 1 << " / " << num_grains << " ..."
+					std::cout << "-- Processing grain " << grain_i + 1 << " / " << num_grains << " ..."
 								<< std::endl;
 				} // if
+
+				////////////////////////////////////////////////////////
+				// for parallelization
+				// /////////////////////////////////////////////////////
+				FormFactor ff;		// TODO ... init
+				StructureFactor sf;	// TODO ... init
 
 				// define r_norm (grain orientation by tau and eta)
 				// define full grain rotation matrix r_total = r_phi * r_norm
 				// TODO: ... i think these tau eta zeta can be computed on the fly to save memory ...
-				//float_t tau = nn[0 * num_nn + j];
-				//float_t eta = nn[1 * num_nn + j];
-				//float_t zeta = nn[2 * num_nn + j];
+				//float_t tau = nn[0 * num_nn + grain_i];
+				//float_t eta = nn[1 * num_nn + grain_i];
+				//float_t zeta = nn[2 * num_nn + grain_i];
 				//vector3_t z1, z2, z3, e1, e2, e3, t1, t2, t3;
 				//compute_rotation_matrix_z(zeta, z1, z2, z3);
 				//compute_rotation_matrix_y(eta, e1, e2, e3);
 				//compute_rotation_matrix_x(tau, t1, t2, t3);
-				float_t rot1 = nn[0 * num_nn + j];
-				float_t rot2 = nn[1 * num_nn + j];
-				float_t rot3 = nn[2 * num_nn + j];
+				float_t rot1 = nn[0 * num_nn + grain_i];
+				float_t rot2 = nn[1 * num_nn + grain_i];
+				float_t rot3 = nn[2 * num_nn + grain_i];
 				vector3_t z1, z2, z3, e1, e2, e3, t1, t2, t3;
 				switch(r1axis) {
 					case 0:
@@ -718,8 +734,8 @@ namespace hig {
 							r_norm1, r_norm2, r_norm3, r_tot1, r_tot2, r_tot3);
 
 				/* center of unit cell replica */
-				//vector3_t curr_dd_vec(dd[3 * j + 0], dd[3 * j + 1], dd[3 * j + 2]);
-				vector3_t curr_dd_vec(dd[j + 0], dd[j + num_grains], dd[j + 2 * num_grains]);
+				//vector3_t curr_dd_vec(dd[3 * grain_i + 0], dd[3 * grain_i + 1], dd[3 * grain_i + 2]);
+				vector3_t curr_dd_vec(dd[grain_i + 0], dd[grain_i + num_grains], dd[grain_i + 2 * num_grains]);
 				vector3_t result(0.0, 0.0, 0.0);
 				//std::cerr << "============ dd: " << curr_dd_vec[0] << ","
 				//			<< curr_dd_vec[1] << "," << curr_dd_vec[2] << std::endl;
@@ -739,9 +755,14 @@ namespace hig {
 				std::cout << center[0] << "\t" << center[1] << "\t" << center[2] << std::endl;*/
 
 				/* compute structure factor and form factor */
+				// TODO: parallel tasks ...
 
 				structure_factor(HiGInput::instance().experiment(), center, curr_lattice,
-									grain_repeats, r_tot1, r_tot2, r_tot3);
+									grain_repeats, r_tot1, r_tot2, r_tot3
+									#ifdef USE_MPI
+										, grain_comm
+									#endif
+									);
 				//sf_.printsf();
 
 /*				if(master) {
@@ -761,7 +782,11 @@ namespace hig {
 */
 				//read_form_factor("curr_ff.out");
 				form_factor(shape_name, shape_file, shape_params, curr_transvec,
-							shape_tau, shape_eta, r_tot1, r_tot2, r_tot3);
+							shape_tau, shape_eta, r_tot1, r_tot2, r_tot3
+							#ifdef USE_MPI
+								, grain_comm
+							#endif
+							);
 				//ff_.print_ff(nqx_, nqy_, nqz_extended_);
 				//ff_.printff(nqx_, nqy_, nqz_extended_);
 
@@ -782,9 +807,9 @@ namespace hig {
 				} // if*/
 
 				/* compute intensities using sf and ff */
-				// processing of sf and ff is being done by just one processor ... parallelize ...
+				// TODO: parallelize ...
 				if(master) {
-					complex_t* base_id = id + j * nqx_ * nqy_ * nqz_;
+					complex_t* base_id = id + grain_i * nqx_ * nqy_ * nqz_;
 
 					unsigned int nslices = HiGInput::instance().param_nslices();
 					if(nslices <= 1) {
@@ -874,6 +899,9 @@ namespace hig {
 				// clean everything before going to next
 				ff_.clear();
 				sf_.clear();
+				//////////////// new stuff ///////////////////////// TODO ...
+				ff.clear();
+				sf.clear();
 
 			} // for num_grains
 
@@ -992,14 +1020,14 @@ namespace hig {
 						std::cerr << "error: unknown correlation type." << std::endl;
 						return false;
 				} // switch
-			} // if mpi_rank == 0
+			} // if
 
 			delete[] id;
 		} // for num_structs
 		int num_structs = s_num;
 
 		#ifdef USE_MPI
-			multi_node_.barrier();
+			multi_node_.barrier(comm_key);
 		#endif
 
 		if(master) {
@@ -1101,19 +1129,20 @@ namespace hig {
 
 	bool HipGISAXS::structure_factor(std::string expt, vector3_t& center, Lattice* &curr_lattice,
 									vector3_t& grain_repeats, vector3_t& r_tot1,
-									vector3_t& r_tot2, vector3_t& r_tot3) {
+									vector3_t& r_tot2, vector3_t& r_tot3,
+									const char* comm_key) {
 #ifndef GPUSF
 		return sf_.compute_structure_factor(expt, center, curr_lattice, grain_repeats,
 											r_tot1, r_tot2, r_tot3
 											#ifdef USE_MPI
-												, multi_node_
+												, multi_node_, comm_key
 											#endif
 											);
 #else
 		return sf_.compute_structure_factor_gpu(expt, center, curr_lattice, grain_repeats,
 											r_tot1, r_tot2, r_tot3
 											#ifdef USE_MPI
-												, multi_node_
+												, multi_node_, comm_key
 											#endif
 											);
 #endif
@@ -1123,15 +1152,16 @@ namespace hig {
 	bool HipGISAXS::form_factor(ShapeName shape_name, std::string shape_file,
 								shape_param_list_t& shape_params, vector3_t &curr_transvec,
 								float_t shp_tau, float_t shp_eta,
-								vector3_t &r_tot1, vector3_t &r_tot2, vector3_t &r_tot3) {
+								vector3_t &r_tot1, vector3_t &r_tot2, vector3_t &r_tot3,
+								const char* comm_key) {
 #ifndef GPUSF
 		return ff_.compute_form_factor(shape_name, shape_file, shape_params, single_layer_thickness_,
 										curr_transvec, shp_tau, shp_eta, r_tot1, r_tot2, r_tot3,
-										multi_node_);
+										multi_node_, comm_key);
 #else
 		return ff_.compute_form_factor_gpu(shape_name, shape_file, shape_params, single_layer_thickness_,
 										curr_transvec, shp_tau, shp_eta, r_tot1, r_tot2, r_tot3,
-										multi_node_);
+										multi_node_, comm_key);
 #endif
 	} // HipGISAXS::form_factor()
 

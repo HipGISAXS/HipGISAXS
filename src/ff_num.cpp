@@ -3,7 +3,7 @@
  *
  *  File: ff_num.cpp
  *  Created: Jul 18, 2012
- *  Modified: Tue 17 Sep 2013 04:19:05 PM PDT
+ *  Modified: Wed 18 Sep 2013 11:50:00 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -61,14 +61,12 @@ namespace hig {
 	/**
 	 * main host function
 	 */
-	#ifdef USE_MPI
 	bool NumericFormFactor::compute(const char* filename, complex_vec_t& ff,
-									vector3_t& rot1, vector3_t& rot2, vector3_t& rot3,
-									woo::MultiNode& world_comm) {
-	#else
-	bool NumericFormFactor::compute(const char* filename, complex_vec_t& ff,
-									vector3_t& rot1, vector3_t& rot2, vector3_t& rot3) {
-	#endif // USE_MPI
+									vector3_t& rot1, vector3_t& rot2, vector3_t& rot3
+									#ifdef USE_MPI
+										, woo::MultiNode& world_comm, const char* comm_key
+									#endif
+									) {
 		float_t comp_start = 0.0, comp_end = 0.0, comm_start = 0.0, comm_end = 0.0;
 		float_t mem_start = 0.0, mem_end = 0.0;
 		float_t comp_time = 0.0, comm_time = 0.0, mem_time = 0.0, kernel_time = 0.0, red_time = 0.0;
@@ -82,13 +80,13 @@ namespace hig {
 		unsigned int nqz = QGrid::instance().nqz_extended();
 
 		#ifdef USE_MPI
-			bool master = world_comm.is_master();
+			bool master = world_comm.is_master(comm_key);
 		#else
 			bool master = true;
 		#endif
 
 		commtimer.start();
-		world_comm.barrier();
+		world_comm.barrier(comm_key);
 		commtimer.stop();
 		comm_time += commtimer.elapsed_msec();
 	
@@ -118,8 +116,8 @@ namespace hig {
 		#endif
 
 		#ifdef USE_MPI
-			int num_procs = world_comm.size();
-			int rank = world_comm.rank();
+			int num_procs = world_comm.size(comm_key);
+			int rank = world_comm.rank(comm_key);
 		#endif
 
 		if(master) {
@@ -151,8 +149,8 @@ namespace hig {
 			commtimer.start();
 
 			int idle = 0;
-			if(world_comm.rank() >= p_y * p_z) idle = 1;
-			world_comm.split("real_world", "world", idle);
+			if(world_comm.rank(comm_key) >= p_y * p_z) idle = 1;
+			world_comm.split("real_world", comm_key, idle);
 
 			commtimer.stop();
 			comm_time += commtimer.elapsed_msec();
@@ -341,7 +339,7 @@ namespace hig {
 				float_t temp_mem_time = 0.0, temp_comm_time = 0.0;
 				construct_ff(p_nqx, p_nqy, p_nqz, nqx, nqy, nqz, p_y, p_z, p_ff, ff,
 								#ifdef USE_MPI
-									world_comm,
+									world_comm, comm_key,
 								#endif
 								temp_mem_time, temp_comm_time);
 				mem_time += temp_mem_time;
@@ -436,7 +434,7 @@ namespace hig {
 											#endif
 											complex_vec_t& ff,
 											#ifdef USE_MPI
-												woo::MultiNode& world_comm,
+												woo::MultiNode& world_comm, const char* comm_key,
 											#endif
 											float_t& mem_time, float_t& comm_time) {
 		float_t mem_start = 0, mem_end = 0, comm_start = 0, comm_end = 0;
