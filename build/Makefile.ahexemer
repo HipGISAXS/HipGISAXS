@@ -186,6 +186,7 @@ OBJECTS_MAIN += ff_num_mic.o
 else
 OBJECTS_MAIN += ff_num_cpu.o
 endif
+endif
 
 #ifneq ($(USE_GPU), y)
 #ifneq ($(USE_MIC), y)
