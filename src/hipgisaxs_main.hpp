@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_main.hpp
  *  Created: Jun 11, 2012
- *  Modified: Wed 18 Sep 2013 11:23:44 AM PDT
+ *  Modified: Fri 20 Sep 2013 11:58:13 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -69,16 +69,16 @@ namespace hig {
 						r2_(0.0, 0.0, 0.0),
 						r3_(0.0, 0.0, 0.0) {
 					} //SampleRotation()
-			} rotation_matrix_;
+			}; // rotation_matrix_;
 
 			unsigned int nqx_;			/* number of q-points along x */
 			unsigned int nqy_;			/* number of q-points along y */
 			unsigned int nqz_;			/* number of q-points along z */
 			unsigned int nqz_extended_;	/* number of q-points along z in case of gisaxs */
 
-			complex_t* fc_;				/* fresnel coefficients */
-			FormFactor ff_;				/* form factor object */
-			StructureFactor sf_;		/* structure factor object */
+//			complex_t* fc_;				/* fresnel coefficients */
+//			FormFactor ff_;				/* form factor object */
+//			StructureFactor sf_;		/* structure factor object */
 
 			#ifdef USE_MPI
 				woo::MultiNode multi_node_;	/* for multi node communication */
@@ -91,7 +91,7 @@ namespace hig {
 										/* a single GISAXS run */
 
 			/* wrapper over sf function */
-			bool structure_factor(std::string, vector3_t&, Lattice*&, vector3_t&,
+			bool structure_factor(StructureFactor&, std::string, vector3_t&, Lattice*&, vector3_t&,
 									vector3_t&, vector3_t&, vector3_t&
 									#ifdef USE_MPI
 										, const char*
@@ -99,7 +99,7 @@ namespace hig {
 									);
 
 			/* wrapper over ff function */
-			bool form_factor(ShapeName, std::string, shape_param_list_t&, vector3_t&,
+			bool form_factor(FormFactor&, ShapeName, std::string, shape_param_list_t&, vector3_t&,
 									float_t, float_t, vector3_t&, vector3_t&, vector3_t&
 									#ifdef USE_MPI
 										, const char*
@@ -109,9 +109,10 @@ namespace hig {
 			bool layer_qgrid_qz(float_t, complex_t);
 			bool compute_propagation_coefficients(float_t, complex_t*&, complex_t*&,
 									complex_t*&, complex_t*&, complex_t*&, complex_t*&,
-									complex_t*&, complex_t*&, complex_t*&);
-			bool compute_fresnel_coefficients_embedded(float_t);
-			bool compute_fresnel_coefficients_top_buried(float_t);
+									complex_t*&, complex_t*&, complex_t*&, complex_t*&);
+			bool compute_fresnel_coefficients_embedded(float_t, complex_t*&);
+			bool compute_fresnel_coefficients_top_buried(float_t, complex_t*&);
+
 			bool compute_rotation_matrix_x(float_t, vector3_t&, vector3_t&, vector3_t&);
 			bool compute_rotation_matrix_y(float_t, vector3_t&, vector3_t&, vector3_t&);
 			bool compute_rotation_matrix_z(float_t, vector3_t&, vector3_t&, vector3_t&);
@@ -132,33 +133,6 @@ namespace hig {
 			HipGISAXS(int, char**);
 			~HipGISAXS();
 
-			// TODO: improve and clean the constructors - for gpu/cpu etc. unify ...
-			/*HipGISAXS(): freq_(0.0), k0_(0.0),
-						num_layers_(0), num_structures_(0),
-						nqx_(0), nqy_(0), nqz_(0), nqz_extended_(0), 
-						#ifdef FF_NUM_GPU	// use GPU
-							#ifdef KERNEL2
-								ff_(2, 4, 4)
-							#else
-								ff_(64)
-							#endif // KERNEL2
-						#else	// use CPU
-							ff_()
-						#endif
-							{
-				single_layer_refindex_.delta(0.0);
-				single_layer_refindex_.beta(0.0);
-				single_layer_thickness_ = 0.0;
-				HiGInput::instance();
-				QGrid::instance();
-				//MPI::Init();
-			} // HipGISAXS()
-
-
-			~HipGISAXS() {
-				//MPI::Finalize();
-			} // ~HipGISAXS()*/
-
 			bool construct_input(char* filename) {
 				return HiGInput::instance().construct_input_config(filename);
 			} // construct_input()
@@ -166,7 +140,7 @@ namespace hig {
 			/* loops over all configs and computes GISAXS for each */
 			bool run_all_gisaxs(int = 0, int = 0, int = 0);
 
-			/* does the initial 1D fitting */
+			/* temporary: does the initial 1D fitting */
 			bool fit_steepest_descent(float_t, float_t, float_t, float_t,
 										float_t, float_t, float_t, unsigned int,
 										MPI::Intracomm&, int = 0, int = 0, int = 0);

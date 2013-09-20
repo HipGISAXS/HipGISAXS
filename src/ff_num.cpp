@@ -3,7 +3,7 @@
  *
  *  File: ff_num.cpp
  *  Created: Jul 18, 2012
- *  Modified: Wed 18 Sep 2013 11:50:00 AM PDT
+ *  Modified: Wed 18 Sep 2013 04:30:56 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -150,7 +150,8 @@ namespace hig {
 
 			int idle = 0;
 			if(world_comm.rank(comm_key) >= p_y * p_z) idle = 1;
-			world_comm.split("real_world", comm_key, idle);
+			const char* real_world = "real_world";
+			world_comm.split(real_world, comm_key, idle);
 
 			commtimer.stop();
 			comm_time += commtimer.elapsed_msec();
@@ -176,23 +177,23 @@ namespace hig {
 
 		#ifdef USE_MPI
 		if(world_comm.rank() < p_y * p_z) {		// only the non-idle processors
-			bool master = world_comm.is_master("real_world");
+			bool master = world_comm.is_master(real_world);
 			if(master) {
 				std::cout << "++  Number of MPI processes used: "
-							<< world_comm.size("real_world") << std::endl
+							<< world_comm.size(real_world) << std::endl
 							<< "++                 MPI grid size: 1 x " << p_y << " x " << p_z
 							<< std::endl << std::flush;
 			} // if
 
 			commtimer.start();
 
-			int rank = world_comm.rank("real_world");
-			int size = world_comm.size("real_world");
+			int rank = world_comm.rank(real_world);
+			int size = world_comm.size(real_world);
 
 			// create row-wise and column-wise communicators
 			int row = rank / p_z, col = rank % p_z;
-			world_comm.split("row_comm", "real_world", row);
-			world_comm.split("col_comm", "real_world", col);
+			world_comm.split("row_comm", real_world, row);
+			world_comm.split("col_comm", real_world, col);
 
 			// perform MPI scan operation to compute y_offset and z_offset
 
@@ -352,7 +353,7 @@ namespace hig {
 			} // if*/
 	
 			#ifdef USE_MPI
-				world_comm.barrier("real_world");
+				world_comm.barrier(real_world);
 			#endif
 	
 			memtimer.start();
@@ -442,9 +443,9 @@ namespace hig {
 		mem_time = 0; comm_time = 0;
 
 		#ifdef USE_MPI
-			bool master = world_comm.is_master("real_world");
-			int size = world_comm.size("real_world");
-			int rank = world_comm.rank("real_world");
+			bool master = world_comm.is_master(comm_key);
+			int size = world_comm.size(comm_key);
+			int rank = world_comm.rank(comm_key);
 		#else
 			bool master = true;
 			int size = 1;
@@ -498,7 +499,7 @@ namespace hig {
 			commtimer.start();
 
 			//comm.Allgather(&local_qpoints, 1, MPI::INT, recv_counts, 1, MPI::INT);
-			world_comm.allgather("real_world", &local_qpoints, 1, recv_counts, 1);
+			world_comm.allgather(comm_key, &local_qpoints, 1, recv_counts, 1);
 
 			commtimer.stop();
 			comm_time += commtimer.elapsed_msec();
@@ -522,7 +523,7 @@ namespace hig {
 	
 			commtimer.start();
 
-			world_comm.gatherv("real_world", cast_p_ff, local_qpoints, cast_ff, recv_counts, displs);
+			world_comm.gatherv(comm_key, cast_p_ff, local_qpoints, cast_ff, recv_counts, displs);
 	
 			world_comm.gather("col_comm", &p_nqy, 1, recv_p_nqy, 1);
 		
