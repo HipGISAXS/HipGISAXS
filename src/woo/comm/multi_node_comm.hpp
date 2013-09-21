@@ -3,7 +3,7 @@
   *
   *  File: multi_node_comm.hpp
   *  Created: Mar 18, 2013
-  *  Modified: Tue 17 Sep 2013 05:54:23 PM PDT
+  *  Modified: Sat 21 Sep 2013 04:00:20 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -139,6 +139,18 @@ namespace woo {
 				return true;
 			} // allgather()
 
+			inline bool gatherv(float* sbuf, int scount, float* rbuf, int* rcount, int* displs) {
+				MPI_Gatherv(sbuf, scount, MPI_FLOAT, rbuf, rcount, displs, MPI_FLOAT,
+							master_rank_, world_);
+				return true;
+			} // gatherv()
+
+			inline bool gatherv(double* sbuf, int scount, double* rbuf, int* rcount, int* displs) {
+				MPI_Gatherv(sbuf, scount, MPI_DOUBLE, rbuf, rcount, displs, MPI_DOUBLE,
+							master_rank_, world_);
+				return true;
+			} // gatherv()
+
 			inline bool gatherv(std::complex<float>* sbuf, int scount,
 									std::complex<float>* rbuf, int* rcount, int* displs) {
 				MPI_Gatherv(sbuf, scount, MPI_COMPLEX, rbuf, rcount, displs, MPI_COMPLEX,
@@ -263,6 +275,16 @@ namespace woo {
 			inline bool gather(const char* key, int* sbuf, int scount, int* rbuf, int rcount) {
 				return comms_[key].gather(sbuf, scount, rbuf, rcount);
 			} // gather()
+
+			inline bool gatherv(const char* key, float* sbuf, int scount,
+									float* rbuf, int* rcount, int* displs) {
+				return comms_[key].gatherv(sbuf, scount, rbuf, rcount, displs);
+			} // gatherv()
+
+			inline bool gatherv(const char* key, double* sbuf, int scount,
+									double* rbuf, int* rcount, int* displs) {
+				return comms_[key].gatherv(sbuf, scount, rbuf, rcount, displs);
+			} // gatherv()
 
 			inline bool gatherv(const char* key, std::complex<float>* sbuf, int scount,
 									std::complex<float>* rbuf, int* rcount, int* displs) {

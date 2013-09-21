@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_main.cpp
  *  Created: Jun 14, 2012
- *  Modified: Sat 21 Sep 2013 08:49:44 AM PDT
+ *  Modified: Sat 21 Sep 2013 04:05:02 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -608,24 +608,14 @@ namespace hig {
 			return false;
 		} // if
 
-		// initialize memory for struct_intensity
-		// TODO: improve ... !!!!!!!!!!!!!!!!!!!!!
-		unsigned int size = nqx_ * nqy_ * nqz_;
-		float_t* struct_intensity = NULL;
-		complex_t* c_struct_intensity = NULL;
-		if(master) {
-			struct_intensity = new (std::nothrow) float_t[num_structures_ * size];
-			c_struct_intensity = new (std::nothrow) complex_t[num_structures_ * size];
-		} // master
-
 		/* loop over all structures and grains/grains */
 		structure_iterator_t s = HiGInput::instance().structure_begin();
+		int num_structs = num_structures_;
 		#ifdef USE_MPI
 			// divide among processors
 			int num_procs = multi_node_.size(comm_key);
 			int rank = multi_node_.rank(comm_key);
 			int struct_color = 0;
-			int num_structs = num_structures_;
 			if(num_procs > num_structs) {
 				struct_color = rank % num_structs;
 				s += struct_color;
@@ -637,9 +627,26 @@ namespace hig {
 			} // if-else
 			const char* struct_comm = "structure";
 			multi_node_.split(struct_comm, comm_key, struct_color);
+
+			bool smaster = multi_node_.is_master(struct_comm);
+			int temp_gmaster = smaster;
+			int *smasters = new (std::nothrow) int[multi_node_.size(comm_key)];
+			// all grain masters tell the structure master about who they are
+			multi_node_.gather(comm_key, &temp_smaster, 1, smasters, 1);
+		#else
+			bool master = true;
 		#endif // USE_MPI
 
-		int s_num = 0;
+		// initialize memory for struct_intensity
+		unsigned int size = nqx_ * nqy_ * nqz_;
+		float_t* struct_intensity = NULL;
+		complex_t* c_struct_intensity = NULL;
+		if(smaster) {
+			struct_intensity = new (std::nothrow) float_t[num_structs * size];
+			c_struct_intensity = new (std::nothrow) complex_t[num_structs * size];
+		} // master
+
+		// loop over structures
 		for(int s_num = 0; s_num < num_structs && s != HiGInput::instance().structure_end();
 				++ s, ++ s_num) {
 			// get all repetitions of the structure in the volume
@@ -652,13 +659,7 @@ namespace hig {
 			// get the shape
 			// compute t, lattice, ndoms, dd, nn, id etc.
 
-			#ifdef USE_MPI
-				bool master = multi_node_.is_master(struct_comm);
-			#else
-				bool master = true;
-			#endif
-
-			if(master) {
+			if(smaster) {
 				std::cout << "-- Processing structure " << s_num + 1 << " ..." << std::endl;
 			} // if
 
@@ -669,8 +670,6 @@ namespace hig {
 
 			vector3_t grain_repeats = (*s).second.grain_repetition();
 
-			int num_grains = 0;
-			int num_nn = 0;
 			float_t *dd = NULL, *nn = NULL;		// come back to this ...
 												// these structures can be improved ...
 			float_t tz = 0;
@@ -679,14 +678,13 @@ namespace hig {
 			// compute dd and nn
 			spatial_distribution(s, tz, num_dimen, ndx, ndy, dd);
 			orientation_distribution(s, dd, ndx, ndy, nn);
-			num_nn = ndx;
-			num_grains = num_nn;
+			int num_grains = ndx;
 
 			int r1axis = (int) (*s).second.rotation_rot1()[0];
 			int r2axis = (int) (*s).second.rotation_rot2()[0];
 			int r3axis = (int) (*s).second.rotation_rot3()[0];
 
-			if(master) {
+			if(smaster) {
 				std::cout << "-- Grains: " << num_grains << std::endl;
 			} // if
 
@@ -695,19 +693,6 @@ namespace hig {
 			//	std::cerr << dd[d] << "\t" << dd[num_grains + d] << "\t" << dd[num_grains * 2 + d]
 			//				<< std::endl;
 			//} // for*/
-
-			complex_t *id = NULL;		// TODO: come back and improve ...
-										// eliminate id for each grain ...
-										// this can be reduced on the fly to reduce mem usage ...
-			if(master) {		// only the master needs this
-				id = new (std::nothrow) complex_t[num_grains * nqx_ * nqy_ * nqz_];
-				if(id == NULL) {
-					std::cerr << "error: could not allocate memory for 'id'" << std::endl;
-					return false;
-				} // if
-				// initialize to 0
-				memset(id, 0 , num_grains * nqx_ * nqy_ * nqz_ * sizeof(complex_t));
-			} // if
 
 			vector3_t curr_transvec = (*s).second.grain_transvec();
 			if(HiGInput::instance().param_nslices() <= 1) {
@@ -738,26 +723,40 @@ namespace hig {
 					grain_color = rank % num_gr;
 					grain_min = grain_color;
 					num_gr = 1;
-					grain_max = grain_min + num_gr;
 				} else {
 					grain_color = rank;
 					grain_min = (floor(num_gr / num_procs) * rank + min(rank, num_gr % num_procs));
 					num_gr = floor(num_gr / num_procs) + (rank < num_gr % num_procs);
-					grain_max = grain_min + num_gr;
 				} // if-else
+				grain_max = grain_min + num_gr;
 				const char* grain_comm = "grain";
 				multi_node_.split(grain_comm, struct_comm, grain_color);
+
+				bool gmaster = multi_node_.is_master(grain_comm);
+				int temp_gmaster = gmaster;
+				int *gmasters = new (std::nothrow) int[multi_node_.size(struct_comm)];
+				// all grain masters tell the structure master about who they are
+				multi_node_.gather(struct_comm, &temp_gmaster, 1, gmasters, 1);
+			#else
+				bool gmaster = true;
 			#endif // USE_MPI
 
+			complex_t *grain_ids = NULL;
+			if(gmaster) {		// only the structure master needs this
+				grain_ids = new (std::nothrow) complex_t[num_gr * nqx_ * nqy_ * nqz_];
+				if(grain_ids == NULL) {
+					std::cerr << "error: could not allocate memory for 'id'" << std::endl;
+					return false;
+				} // if
+				// initialize to 0
+				memset(grain_ids, 0 , num_gr * nqx_ * nqy_ * nqz_ * sizeof(complex_t));
+			} // if
+
+
+			// loop over grains - each process processes num_gr grains
 			for(int grain_i = grain_min; grain_i < grain_max; grain_i ++) {	// or distributions
 
-				#ifdef USE_MPI
-					bool master = multi_node_.is_master(grain_comm);
-				#else
-					bool master = true;
-				#endif
-
-				if(master) {
+				if(gmaster) {
 					std::cout << "-- Processing grain " << grain_i + 1 << " / " << num_grains << " ..."
 								<< std::endl;
 				} // if
@@ -765,16 +764,9 @@ namespace hig {
 				// define r_norm (grain orientation by tau and eta)
 				// define full grain rotation matrix r_total = r_phi * r_norm
 				// TODO: ... i think these tau eta zeta can be computed on the fly to save memory ...
-				//float_t tau = nn[0 * num_nn + grain_i];
-				//float_t eta = nn[1 * num_nn + grain_i];
-				//float_t zeta = nn[2 * num_nn + grain_i];
-				//vector3_t z1, z2, z3, e1, e2, e3, t1, t2, t3;
-				//compute_rotation_matrix_z(zeta, z1, z2, z3);
-				//compute_rotation_matrix_y(eta, e1, e2, e3);
-				//compute_rotation_matrix_x(tau, t1, t2, t3);
-				float_t rot1 = nn[0 * num_nn + grain_i];
-				float_t rot2 = nn[1 * num_nn + grain_i];
-				float_t rot3 = nn[2 * num_nn + grain_i];
+				float_t rot1 = nn[0 * num_gr + grain_i];
+				float_t rot2 = nn[1 * num_gr + grain_i];
+				float_t rot3 = nn[2 * num_gr + grain_i];
 				vector3_t z1, z2, z3, e1, e2, e3, t1, t2, t3;
 				switch(r1axis) {
 					case 0:
@@ -904,8 +896,8 @@ namespace hig {
 
 				/* compute intensities using sf and ff */
 				// TODO: parallelize ...
-				if(master) {
-					complex_t* base_id = id + grain_i * nqx_ * nqy_ * nqz_;
+				if(gmaster) {	// grain master
+					complex_t* base_id = grain_ids + grain_i * nqx_ * nqy_ * nqz_;
 
 					unsigned int nslices = HiGInput::instance().param_nslices();
 					if(nslices <= 1) {
@@ -978,7 +970,7 @@ namespace hig {
 								} // for y
 							} // for z
 						} else {
-							if(master)
+							if(gmaster)
 								std::cerr << "error: unable to determine sample structure. "
 											<< "make sure the layer order is correct" << std::endl;
 							return false;
@@ -990,7 +982,7 @@ namespace hig {
 									<< std::endl;
 						return false;
 					} // if-else
-				} // if master
+				} // if gmaster
 
 				// clean everything before going to next
 				//ff_.clear();
@@ -1000,10 +992,39 @@ namespace hig {
 
 			} // for num_gr
 
+			complex_t* id = NULL;
+			#ifdef USE_MPI
+				if(multi_node_.size(struct_comm).size() > 1) {
+					// collect grain_ids from all procs in struct_comm
+					if(smaster) {
+						id = new (std::nothrow) complex_t[num_grains * nqx_ * nqy_ * nqz_];
+					} // if
+					int *proc_sizes = new (std::nothrow) int[multi_node_.size(struct_comm)];
+					int *proc_displacements = new (std::nothrow) int[multi_node_.size(struct_comm)];
+					multi_node_.gather(struct_comm, &num_gr, 1, proc_sizes, 1);
+					if(smaster) {
+						// make sure you get data only from the gmasters
+						for(int i = 0; i < multi_node_.size(struct_comm); ++ i)
+							proc_sizes[i] *= (gmasters[i] * nqx_ * nqy_ * nqz_);
+						proc_displacements[0] = 0;
+						for(int i = 1; i < multi_node_.size(struct_comm); ++ i)
+							proc_displacements[i] = proc_displacements[i - 1] + proc_sizes[i - 1];
+					} // if
+					multi_node_.gatherv(struct_comm, grain_ids, num_gr * nqx_ * nqy_ * nqz_,
+										id, proc_sizes, proc_displacements);
+					delete[] proc_displacements;
+					delete[] proc_sizes;
+				} else {
+					id = grain_ids;
+				} // if-else
+			#else
+				id = grain_ids;
+			#endif
+
 			delete[] nn;
 			delete[] dd;
 
-			if(master) {
+			if(smaster) {
 				// FIXME: double check the following correlation stuff ...
 				// new stuff for grain/ensemble correlation
 				unsigned int soffset = 0;
@@ -1083,7 +1104,51 @@ namespace hig {
 
 				delete[] id;
 			} // if master
+
 		} // for num_structs
+
+		float_t* all_struct_intensity = NULL;
+		complex_t* all_c_struct_intensity = NULL;
+		#ifdef USE_MPI
+			if(multi_node_.size(comm_key).size() > 1) {
+				// collect struct_intensity from all procs in comm_key
+				if(master) {
+					if(HiGInput::instance().param_structcorrelation() == structcorr_GE) {
+						all_c_struct_intensity =
+								new (std::nothrow) complex_t[num_structures_ * nqx_ * nqy_ * nqz_];
+					} else {
+						all_struct_intensity =
+								new (std::nothrow) float_t[num_structures_ * nqx_ * nqy_ * nqz_];
+					} // if-else
+				} // if
+				int *proc_sizes = new (std::nothrow) int[multi_node_.size(comm_key)];
+				int *proc_displacements = new (std::nothrow) int[multi_node_.size(comm_key)];
+				multi_node_.gather(comm_key, &num_structs, 1, proc_sizes, 1);
+				if(master) {
+					// make sure you get data only from the smasters
+					for(int i = 0; i < multi_node_.size(comm_key); ++ i)
+						proc_sizes[i] *= (smasters[i] * nqx_ * nqy_ * nqz_);
+					proc_displacements[0] = 0;
+					for(int i = 1; i < multi_node_.size(comm_key); ++ i)
+						proc_displacements[i] = proc_displacements[i - 1] + proc_sizes[i - 1];
+				} // if
+				if(HiGInput::instance().param_structcorrelation() == structcorr_GE) {
+					multi_node_.gatherv(comm_key, c_struct_intensity, num_structs * nqx_ * nqy_ * nqz_,
+										all_c_struct_intensity, proc_sizes, proc_displacements);
+				} else {
+					multi_node_.gatherv(comm_key, struct_intensity, num_structs * nqx_ * nqy_ * nqz_,
+										all_struct_intensity, proc_sizes, proc_displacements);
+				} // if-else
+				delete[] proc_displacements;
+				delete[] proc_sizes;
+			} else {
+				all_struct_intensity = struct_intensity;
+				all_c_struct_intensity = c_struct_intensity;
+			} // if-else
+		#else
+			all_struct_intensity = struct_intensity;
+			all_c_struct_intensity = c_struct_intensity;
+		#endif
 
 		#ifdef USE_MPI
 			multi_node_.barrier(comm_key);
@@ -1106,7 +1171,7 @@ namespace hig {
 								float_t sum = 0.0;
 								for(int s = 0; s < num_structures_; ++ s) {
 									unsigned int index = s * nqx_ * nqy_ * nqz_ + curr_index;
-									sum += struct_intensity[index];
+									sum += all_struct_intensity[index];
 								} // for d
 								img3d[curr_index] = sum;
 							} // for x
@@ -1132,7 +1197,7 @@ namespace hig {
 								float_t sum = 0.0;
 								for(int s = 0; s < num_structures_; ++ s) {
 									unsigned int index = s * nqx_ * nqy_ * nqz_ + curr_index;
-									sum += struct_intensity[index];
+									sum += all_struct_intensity[index];
 								} // for d
 								img3d[curr_index] = sum;
 							} // for x
@@ -1150,7 +1215,7 @@ namespace hig {
 								complex_t sum = 0.0;
 								for(int s = 0; s < num_structures_; ++ s) {
 									unsigned int index = s * nqx_ * nqy_ * nqz_ + curr_index;
-									sum += c_struct_intensity[index];
+									sum += all_c_struct_intensity[index];
 								} // for d
 								img3d[curr_index] = sum.real() * sum.real() + sum.imag() * sum.imag();
 							} // for x
@@ -1163,8 +1228,8 @@ namespace hig {
 					return false;
 			} // switch
 
-			delete[] c_struct_intensity;
-			delete[] struct_intensity;
+			delete[] all_c_struct_intensity;
+			delete[] all_struct_intensity;
 		} // if master
 
 		delete[] fc;
