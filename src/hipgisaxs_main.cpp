@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_main.cpp
  *  Created: Jun 14, 2012
- *  Modified: Fri 20 Sep 2013 03:04:23 PM PDT
+ *  Modified: Sat 21 Sep 2013 08:49:44 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -619,12 +619,29 @@ namespace hig {
 		} // master
 
 		/* loop over all structures and grains/grains */
-		// TODO MPI PARALLELISM LEVEL ...
+		structure_iterator_t s = HiGInput::instance().structure_begin();
+		#ifdef USE_MPI
+			// divide among processors
+			int num_procs = multi_node_.size(comm_key);
+			int rank = multi_node_.rank(comm_key);
+			int struct_color = 0;
+			int num_structs = num_structures_;
+			if(num_procs > num_structs) {
+				struct_color = rank % num_structs;
+				s += struct_color;
+				num_structs = 1;
+			} else {
+				struct_color = rank;
+				s += (floor(num_structs / num_procs) * rank + min(rank, num_structs % num_procs));
+				num_structs = floor(num_structs / num_procs) + (rank < num_structs % num_procs);
+			} // if-else
+			const char* struct_comm = "structure";
+			multi_node_.split(struct_comm, comm_key, struct_color);
+		#endif // USE_MPI
+
 		int s_num = 0;
-		const char* struct_comm = "structure";
-		// split comm_key into "structure"s ...
-		for(structure_iterator_t s = HiGInput::instance().structure_begin();
-				s != HiGInput::instance().structure_end(); ++ s, ++ s_num) {
+		for(int s_num = 0; s_num < num_structs && s != HiGInput::instance().structure_end();
+				++ s, ++ s_num) {
 			// get all repetitions of the structure in the volume
 			// with position dr and orientation (tau, eta)
 			// i.e. compute matrix that defines all num_grains grains inside the volume
@@ -634,6 +651,12 @@ namespace hig {
 
 			// get the shape
 			// compute t, lattice, ndoms, dd, nn, id etc.
+
+			#ifdef USE_MPI
+				bool master = multi_node_.is_master(struct_comm);
+			#else
+				bool master = true;
+			#endif
 
 			if(master) {
 				std::cout << "-- Processing structure " << s_num + 1 << " ..." << std::endl;
@@ -676,7 +699,7 @@ namespace hig {
 			complex_t *id = NULL;		// TODO: come back and improve ...
 										// eliminate id for each grain ...
 										// this can be reduced on the fly to reduce mem usage ...
-			if(master) {			// only the master needs this
+			if(master) {		// only the master needs this
 				id = new (std::nothrow) complex_t[num_grains * nqx_ * nqy_ * nqz_];
 				if(id == NULL) {
 					std::cerr << "error: could not allocate memory for 'id'" << std::endl;
@@ -701,10 +724,38 @@ namespace hig {
 
 			/* computing dwba ff for each grain in structure (*s) with
 			 * ensemble containing num_grains grains */
-			// TODO MPI PARALLELISM LEVEL ...
-			const char* grain_comm = "grain";
-			// split "structure" into "grain"s ...
-			for(int grain_i = 0; grain_i < num_grains; grain_i ++) {	// or distributions
+
+			int grain_min = 0;
+			int num_gr = num_grains;
+			int grain_max = num_gr;
+
+			#ifdef USE_MPI
+				// divide among processors
+				int num_procs = multi_node_.size(struct_comm);
+				int rank = multi_node_.rank(struct_comm);
+				int grain_color = 0;
+				if(num_procs > num_gr) {
+					grain_color = rank % num_gr;
+					grain_min = grain_color;
+					num_gr = 1;
+					grain_max = grain_min + num_gr;
+				} else {
+					grain_color = rank;
+					grain_min = (floor(num_gr / num_procs) * rank + min(rank, num_gr % num_procs));
+					num_gr = floor(num_gr / num_procs) + (rank < num_gr % num_procs);
+					grain_max = grain_min + num_gr;
+				} // if-else
+				const char* grain_comm = "grain";
+				multi_node_.split(grain_comm, struct_comm, grain_color);
+			#endif // USE_MPI
+
+			for(int grain_i = grain_min; grain_i < grain_max; grain_i ++) {	// or distributions
+
+				#ifdef USE_MPI
+					bool master = multi_node_.is_master(grain_comm);
+				#else
+					bool master = true;
+				#endif
 
 				if(master) {
 					std::cout << "-- Processing grain " << grain_i + 1 << " / " << num_grains << " ..."
@@ -778,28 +829,15 @@ namespace hig {
 							r_norm1, r_norm2, r_norm3, r_tot1, r_tot2, r_tot3);
 
 				/* center of unit cell replica */
-				//vector3_t curr_dd_vec(dd[3 * grain_i + 0], dd[3 * grain_i + 1], dd[3 * grain_i + 2]);
-				vector3_t curr_dd_vec(dd[grain_i + 0], dd[grain_i + num_grains],
-										dd[grain_i + 2 * num_grains]);
+				vector3_t curr_dd_vec(dd[grain_i + 0], dd[grain_i + num_gr], dd[grain_i + 2 * num_gr]);
 				vector3_t result(0.0, 0.0, 0.0);
-				//std::cerr << "============ dd: " << curr_dd_vec[0] << ","
-				//			<< curr_dd_vec[1] << "," << curr_dd_vec[2] << std::endl;
 
 				mat_mul_3x1(rotation_matrix.r1_, rotation_matrix.r2_, rotation_matrix.r3_,
 							curr_dd_vec, result);
-				//std::cerr << "::::::::::::::::: " << result[0] << "," << result[1] << "," << result[2]
-				//			<< " ::::::: " << curr_transvec[0] << "," << curr_transvec[1] << ","
-				//			<< curr_transvec[2] << std::endl;
 				vector3_t center = result + curr_transvec;
 
-				/*std::cout << "ROT MAT: " << std::endl;
-				std::cout << r_tot1[0] << "\t" << r_tot1[1] << "\t" << r_tot1[2] << std::endl;
-				std::cout << r_tot2[0] << "\t" << r_tot2[1] << "\t" << r_tot2[2] << std::endl;
-				std::cout << r_tot3[0] << "\t" << r_tot3[1] << "\t" << r_tot3[2] << std::endl;
-				std::cout << "CENTER: " << std::endl;
-				std::cout << center[0] << "\t" << center[1] << "\t" << center[2] << std::endl;*/
-
 				/* compute structure factor and form factor */
+
 				StructureFactor sf;
 				#ifdef FF_NUM_GPU   // use GPU
 					#ifdef FF_NUM_GPU_FUSED
@@ -823,7 +861,7 @@ namespace hig {
 									);
 				//sf.printsf();
 
-/*				if(master) {
+				/*if(master) {
 					std::stringstream alphai_b, phi_b, tilt_b;
 					std::string alphai_s, phi_s, tilt_s;
 					alphai_b << alpha_i; alphai_s = alphai_b.str();
@@ -836,8 +874,8 @@ namespace hig {
 					std::cout << "-- Saving structure factor in " << sf_output << " ... " << std::flush;
 					sf.save_sf(nqx_, nqy_, nqz_extended_, sf_output.c_str());
 					std::cout << "done." << std::endl;
-				} // if
-*/
+				} // if*/
+
 				//read_form_factor("curr_ff.out");
 				form_factor(ff, shape_name, shape_file, shape_params, curr_transvec,
 							shape_tau, shape_eta, r_tot1, r_tot2, r_tot3
@@ -960,48 +998,13 @@ namespace hig {
 				ff.clear();
 				sf.clear();
 
-			} // for num_grains
+			} // for num_gr
 
 			delete[] nn;
 			delete[] dd;
 
 			if(master) {
-				/*if(corr_doms == 1) {		// note: currently this is hardcoded as 0
-					unsigned int soffset = s_num * nqx_ * nqy_ * nqz_;
-					for(unsigned int z = 0; z < nqz_; ++ z) {
-						for(unsigned int y = 0; y < nqy_; ++ y) {
-							for(unsigned int x = 0; x < nqx_; ++ x) {
-								unsigned int curr_index = nqx_ * nqy_ * z + nqx_ * y + x;
-								complex_t sum(0.0, 0.0);
-								for(int d = 0; d < num_grains; ++ d) {
-									unsigned int id_index = d * nqx_ * nqy_ * nqz_ + curr_index;
-									sum += id[id_index];
-								} // for d
-								struct_intensity[soffset + curr_index] = sum.real() * sum.real() +
-																			sum.imag() * sum.imag();
-							} // for x
-						} // for y
-					} // for z
-				} else {					// incl. corr_dims == 0
-					unsigned int soffset = s_num * nqx_ * nqy_ * nqz_;
-					for(unsigned int z = 0; z < nqz_; ++ z) {
-						for(unsigned int y = 0; y < nqy_; ++ y) {
-							for(unsigned int x = 0; x < nqx_; ++ x) {
-								unsigned int curr_index = nqx_ * nqy_ * z + nqx_ * y + x;
-								float_t sum = 0.0;
-								for(int d = 0; d < num_grains; ++ d) {
-									unsigned int id_index = d * nqx_ * nqy_ * nqz_ + curr_index;
-									sum += id[id_index].real() * id[id_index].real() +
-											id[id_index].imag() * id[id_index].imag();
-								} // for d
-								struct_intensity[soffset + curr_index] = sum;
-							} // for x
-						} // for y
-					} // for z
-				} // if-else*/
-
-
-				// FIXME: double check the following correlation stuff
+				// FIXME: double check the following correlation stuff ...
 				// new stuff for grain/ensemble correlation
 				unsigned int soffset = 0;
 				switch(HiGInput::instance().param_structcorrelation()) {
@@ -1089,19 +1092,6 @@ namespace hig {
 		if(master) {
 			img3d = new (std::nothrow) float_t[nqx_ * nqy_ * nqz_];
 			// sum of all struct_intensity into intensity
-			/*for(unsigned int z = 0; z < nqz_; ++ z) {
-				for(unsigned int y = 0; y < nqy_; ++ y) {
-					for(unsigned int x = 0; x < nqx_; ++ x) {
-						unsigned int curr_index = nqx_ * nqy_ * z + nqx_ * y + x;
-						float_t sum = 0.0;
-						for(int s = 0; s < num_structures_; ++ s) {
-							unsigned int index = s * nqx_ * nqy_ * nqz_ + curr_index;
-							sum += struct_intensity[index];
-						} // for d
-						img3d[curr_index] = sum;
-					} // for x
-				} // for y
-			} // for z*/
 
 			// new stuff for correlation
 			switch(HiGInput::instance().param_structcorrelation()) {
