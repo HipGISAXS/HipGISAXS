@@ -3,7 +3,7 @@
  *
  *  File: ff_num.cpp
  *  Created: Jul 18, 2012
- *  Modified: Sun 22 Sep 2013 08:39:11 AM PDT
+ *  Modified: Sun 22 Sep 2013 09:06:55 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -157,6 +157,9 @@ namespace hig {
 			comm_time += commtimer.elapsed_msec();
 		#else
 			int p_y = 1, p_z = 1;
+			int p_nqx = nqx;
+			int p_nqy = nqy;
+			int p_nqz = nqz;
 		#endif // USE_MPI
 	
 		#ifdef FINDBLOCK
@@ -207,7 +210,7 @@ namespace hig {
 			y_offset -= p_nqy;
 			z_offset -= p_nqz;
 		#else
-			bool master = true;
+			master = true;
 			unsigned int y_offset = 0, z_offset = 0;
 			int rank = 0;
 			int size = 1;
@@ -239,22 +242,31 @@ namespace hig {
 				#endif
 			} // for
 			
-			// create p_ff buffers	<----- TODO: IMPROVE for all procs!!!
-			float_t *p_qy = NULL;
-			p_qy = new (std::nothrow) float_t[p_nqy]();
-			if(p_qy == NULL) { return 0; }
-			memcpy(p_qy, (void*) (qy + y_offset), p_nqy * sizeof(float_t));
-			#ifdef FF_NUM_GPU
-				cucomplex_t *p_qz = NULL;
-				p_qz = new (std::nothrow) cucomplex_t[p_nqz]();
-				if(p_qz == NULL) { delete[] p_qy; return 0; }
-				memcpy(p_qz, (void*) (qz + z_offset), p_nqz * sizeof(cucomplex_t));
-			#else // TODO: avoid the following ...
-				complex_t *p_qz = NULL;
-				p_qz = new (std::nothrow) complex_t[p_nqz]();
-				if(p_qz == NULL) { delete[] p_qy; return 0; }
-				memcpy(p_qz, (void*) (qz + z_offset), p_nqz * sizeof(complex_t));
-			#endif
+			#ifdef USE_MPI
+				// create p_ff buffers	<----- TODO: IMPROVE for all procs!!!
+				float_t *p_qy = NULL;
+				p_qy = new (std::nothrow) float_t[p_nqy]();
+				if(p_qy == NULL) { return 0; }
+				memcpy(p_qy, (void*) (qy + y_offset), p_nqy * sizeof(float_t));
+				#ifdef FF_NUM_GPU
+					cucomplex_t *p_qz = NULL;
+					p_qz = new (std::nothrow) cucomplex_t[p_nqz]();
+					if(p_qz == NULL) { delete[] p_qy; return 0; }
+					memcpy(p_qz, (void*) (qz + z_offset), p_nqz * sizeof(cucomplex_t));
+				#else // TODO: avoid the following ...
+					complex_t *p_qz = NULL;
+					p_qz = new (std::nothrow) complex_t[p_nqz]();
+					if(p_qz == NULL) { delete[] p_qy; return 0; }
+					memcpy(p_qz, (void*) (qz + z_offset), p_nqz * sizeof(complex_t));
+				#endif	// FF_NUM_GPU
+			#else	// no MPI
+				float_t *p_qy = qy;
+				#ifdef FF_NUM_GPU
+					cucomplex_t *p_qz = qz;
+				#else
+					complex_t *p_qz = qz;
+				#endif // FF_NUM_GPU
+			#endif	// USE_MPI
 	
 			memtimer.stop();
 			mem_time += memtimer.elapsed_msec();
@@ -362,8 +374,10 @@ namespace hig {
 				ff.clear();
 			#endif
 			if(p_ff != NULL) delete[] p_ff;
-			delete[] p_qz;
-			delete[] p_qy;
+			#ifdef USE_MPI
+				delete[] p_qz;
+				delete[] p_qy;
+			#endif
 			delete[] qz;
 			delete[] qy;
 			delete[] qx;
@@ -533,6 +547,12 @@ namespace hig {
 			comm_time += commtimer.elapsed_msec();
 
 			for(int i = 1; i < p_y; ++ i) off_p_nqy[i] = off_p_nqy[i - 1] + recv_p_nqy[i - 1];
+		#else
+			#ifdef FF_NUM_GPU
+				memcpy(ff_buffer, p_ff, total_qpoints * sizeof(cucomplex_t));
+			#else
+				memcpy(ff_buffer, p_ff, total_qpoints * sizeof(complex_t));
+			#endif
 		#endif // USE_MPI
 	
 		memtimer.start();
@@ -564,8 +584,10 @@ namespace hig {
 		} // if
 	
 		delete[] ff_buffer;
-		delete[] displs;
-		delete[] recv_counts;
+		#ifdef USE_MPI
+			delete[] displs;
+			delete[] recv_counts;
+		#endif
 		delete[] off_p_nqy;
 		delete[] recv_p_nqy;
 		delete[] all_ff;

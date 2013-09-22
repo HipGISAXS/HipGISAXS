@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_main.cpp
  *  Created: Jun 14, 2012
- *  Modified: Sun 22 Sep 2013 08:27:00 AM PDT
+ *  Modified: Sun 22 Sep 2013 08:53:49 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -95,6 +95,7 @@ namespace hig {
 			int mpi_rank = multi_node_.rank();
 			bool master = multi_node_.is_master();
 		#else
+			int mpi_rank = 0;
 			bool master = true;
 		#endif
 
@@ -131,7 +132,9 @@ namespace hig {
 			} // if
 		} // if
 
-		multi_node_.barrier();
+		#ifdef USE_MPI
+			multi_node_.barrier();
+		#endif
 
 		// create Q-grid
 		float_t min_alphai = HiGInput::instance().scattering_min_alpha_i() * PI_ / 180;
@@ -262,7 +265,9 @@ namespace hig {
 			} // if
 		} // if
 
-		multi_node_.barrier();
+		#ifdef USE_MPI
+			multi_node_.barrier();
+		#endif
 
 		// create Q-grid
 		float_t min_alphai = HiGInput::instance().scattering_min_alpha_i() * PI_ / 180;
@@ -447,7 +452,11 @@ namespace hig {
 					/* run a gisaxs simulation */
 
 					float_t* final_data = NULL;
-					if(!run_gisaxs(alpha_i, alphai, phi_rad, tilt_rad, final_data, tilt_comm, 0)) {
+					if(!run_gisaxs(alpha_i, alphai, phi_rad, tilt_rad, final_data,
+								#ifdef USE_MPI
+									tilt_comm,
+								#endif
+								0)) {
 						if(master)
 							std::cerr << "error: could not finish successfully" << std::endl;
 						return false;
@@ -636,7 +645,7 @@ namespace hig {
 			// all grain masters tell the structure master about who they are
 			multi_node_.gather(comm_key, &temp_smaster, 1, smasters, 1);
 		#else
-			bool master = true;
+			bool smaster = true;
 		#endif // USE_MPI
 
 		// initialize memory for struct_intensity
@@ -1247,8 +1256,11 @@ namespace hig {
 	bool HipGISAXS::structure_factor(StructureFactor& sf,
 									std::string expt, vector3_t& center, Lattice* &curr_lattice,
 									vector3_t& grain_repeats, vector3_t& r_tot1,
-									vector3_t& r_tot2, vector3_t& r_tot3,
-									const char* comm_key) {
+									vector3_t& r_tot2, vector3_t& r_tot3
+									#ifdef USE_MPI
+										, const char* comm_key
+									#endif
+									) {
 		#ifndef GPUSF
 			return sf.compute_structure_factor(expt, center, curr_lattice, grain_repeats,
 											r_tot1, r_tot2, r_tot3
@@ -1271,8 +1283,11 @@ namespace hig {
 								ShapeName shape_name, std::string shape_file,
 								shape_param_list_t& shape_params, vector3_t &curr_transvec,
 								float_t shp_tau, float_t shp_eta,
-								vector3_t &r_tot1, vector3_t &r_tot2, vector3_t &r_tot3,
-								const char* comm_key) {
+								vector3_t &r_tot1, vector3_t &r_tot2, vector3_t &r_tot3
+								#ifdef USE_MPI
+									, const char* comm_key
+								#endif
+								) {
 		#ifndef GPUSF
 			return ff.compute_form_factor(shape_name, shape_file, shape_params,
 											single_layer_thickness_,
