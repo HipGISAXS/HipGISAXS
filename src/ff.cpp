@@ -3,7 +3,7 @@
  *
  *  File: ff.cpp
  *  Created: Jul 17, 2012
- *  Modified: Wed 18 Sep 2013 11:36:35 AM PDT
+ *  Modified: Sat 21 Sep 2013 04:09:40 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -40,7 +40,7 @@ namespace hig {
 										vector3_t& transvec, float_t shp_tau, float_t shp_eta,
 										vector3_t& rot1, vector3_t& rot2, vector3_t& rot3
 										#ifdef USE_MPI
-											, woo::MultiNode& multi_node, const char comm_key
+											, woo::MultiNode& multi_node, const char* comm_key
 										#endif
 										) {
 		if(shape == shape_custom) {

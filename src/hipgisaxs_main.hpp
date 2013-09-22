@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_main.hpp
  *  Created: Jun 11, 2012
- *  Modified: Fri 20 Sep 2013 11:58:13 AM PDT
+ *  Modified: Sat 21 Sep 2013 04:16:21 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -86,8 +86,8 @@ namespace hig {
 
 			bool init();	/* global initialization for all runs */
 			bool init_steepest_fit(float_t);	/* init for steepest descent fitting */
-			bool run_init(float_t, float_t, float_t); 	/* init for a single run */
-			bool run_gisaxs(float_t, float_t, float_t, float_t, float_t*&, int c = 0);
+			bool run_init(float_t, float_t, float_t, SampleRotation&); 	/* init for a single run */
+			bool run_gisaxs(float_t, float_t, float_t, float_t, float_t*&, const char*, int c = 0);
 										/* a single GISAXS run */
 
 			/* wrapper over sf function */
@@ -125,7 +125,7 @@ namespace hig {
 
 			/* some functions just for testing and debugging */
 			bool write_qgrid(char* filename);
-			bool read_form_factor(const char* filename);
+			bool read_form_factor(FormFactor&, const char* filename);
 			void printfc(const char*, complex_t*, unsigned int);
 			void printfr(const char*, float_t*, unsigned int);
 

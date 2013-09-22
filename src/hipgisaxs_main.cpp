@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_main.cpp
  *  Created: Jun 14, 2012
- *  Modified: Sat 21 Sep 2013 04:05:02 PM PDT
+ *  Modified: Sun 22 Sep 2013 08:27:00 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -371,8 +371,8 @@ namespace hig {
 			} else {
 				alphai_color = rank;
 				alphai_min = alphai_min + alphai_step *
-							(floor(num_alphai / num_procs) * rank + min(rank, num_alphai % num_procs));
-				num_alphai = floor(num_alphai / num_procs) + (rank < num_alphai % num_procs);
+							((num_alphai / num_procs) * rank + min(rank, num_alphai % num_procs));
+				num_alphai = (num_alphai / num_procs) + (rank < num_alphai % num_procs);
 			} // if-else
 			const char* alphai_comm = "alphai";
 			multi_node_.split(alphai_comm, world_comm, alphai_color);
@@ -396,8 +396,8 @@ namespace hig {
 				} else {
 					phi_color = rank;
 					phi_min = phi_min + phi_step *
-								(floor(num_phi / num_procs) * rank + min(rank, num_phi % num_procs));
-					num_phi = floor(num_phi / num_procs) + (rank < num_phi % num_procs);
+								((num_phi / num_procs) * rank + min(rank, num_phi % num_procs));
+					num_phi = (num_phi / num_procs) + (rank < num_phi % num_procs);
 				} // if-else
 				const char* phi_comm = "phi";
 				multi_node_.split(phi_comm, alphai_comm, phi_color);
@@ -419,8 +419,8 @@ namespace hig {
 					} else {
 						tilt_color = rank;
 						tilt_min = tilt_min + tilt_step *
-								(floor(num_tilt / num_procs) * rank + min(rank, num_tilt % num_procs));
-						num_tilt = floor(num_tilt / num_procs) + (rank < num_tilt % num_procs);
+								((num_tilt / num_procs) * rank + min(rank, num_tilt % num_procs));
+						num_tilt = (num_tilt / num_procs) + (rank < num_tilt % num_procs);
 					} // if-else
 					const char* tilt_comm = "tilt";
 					multi_node_.split(tilt_comm, phi_comm, tilt_color);
@@ -447,7 +447,7 @@ namespace hig {
 					/* run a gisaxs simulation */
 
 					float_t* final_data = NULL;
-					if(!run_gisaxs(alpha_i, alphai, phi_rad, tilt_rad, final_data, 0, tilt_comm)) {
+					if(!run_gisaxs(alpha_i, alphai, phi_rad, tilt_rad, final_data, tilt_comm, 0)) {
 						if(master)
 							std::cerr << "error: could not finish successfully" << std::endl;
 						return false;
@@ -585,7 +585,7 @@ namespace hig {
 	 */
 	/* all the real juice is here */
 	bool HipGISAXS::run_gisaxs(float_t alpha_i, float_t alphai, float_t phi, float_t tilt,
-								float_t* &img3d, int corr_doms, const char* comm_key) {
+								float_t* &img3d, const char* comm_key, int corr_doms) {
 
 		SampleRotation rotation_matrix;
 		if(!run_init(alphai, phi, tilt, rotation_matrix)) return false;
@@ -616,20 +616,22 @@ namespace hig {
 			int num_procs = multi_node_.size(comm_key);
 			int rank = multi_node_.rank(comm_key);
 			int struct_color = 0;
+			int soffset = 0;
 			if(num_procs > num_structs) {
 				struct_color = rank % num_structs;
-				s += struct_color;
+				soffset = struct_color;
 				num_structs = 1;
 			} else {
 				struct_color = rank;
-				s += (floor(num_structs / num_procs) * rank + min(rank, num_structs % num_procs));
-				num_structs = floor(num_structs / num_procs) + (rank < num_structs % num_procs);
+				soffset = ((num_structs / num_procs) * rank + min(rank, num_structs % num_procs));
+				num_structs = (num_structs / num_procs) + (rank < num_structs % num_procs);
 			} // if-else
 			const char* struct_comm = "structure";
 			multi_node_.split(struct_comm, comm_key, struct_color);
+			for(int i = 0; i < soffset; ++ i) ++ s;
 
 			bool smaster = multi_node_.is_master(struct_comm);
-			int temp_gmaster = smaster;
+			int temp_smaster = smaster;
 			int *smasters = new (std::nothrow) int[multi_node_.size(comm_key)];
 			// all grain masters tell the structure master about who they are
 			multi_node_.gather(comm_key, &temp_smaster, 1, smasters, 1);
@@ -725,8 +727,8 @@ namespace hig {
 					num_gr = 1;
 				} else {
 					grain_color = rank;
-					grain_min = (floor(num_gr / num_procs) * rank + min(rank, num_gr % num_procs));
-					num_gr = floor(num_gr / num_procs) + (rank < num_gr % num_procs);
+					grain_min = ((num_gr / num_procs) * rank + min(rank, num_gr % num_procs));
+					num_gr = (num_gr / num_procs) + (rank < num_gr % num_procs);
 				} // if-else
 				grain_max = grain_min + num_gr;
 				const char* grain_comm = "grain";
@@ -840,7 +842,7 @@ namespace hig {
 						FormFactor ff(64);
 					#endif
 				#else   // use CPU or MIC
-					FormFactor ff();
+					FormFactor ff;
 				#endif
 
 				// TODO: parallel tasks ...
@@ -994,7 +996,7 @@ namespace hig {
 
 			complex_t* id = NULL;
 			#ifdef USE_MPI
-				if(multi_node_.size(struct_comm).size() > 1) {
+				if(multi_node_.size(struct_comm) > 1) {
 					// collect grain_ids from all procs in struct_comm
 					if(smaster) {
 						id = new (std::nothrow) complex_t[num_grains * nqx_ * nqy_ * nqz_];
@@ -1010,13 +1012,15 @@ namespace hig {
 						for(int i = 1; i < multi_node_.size(struct_comm); ++ i)
 							proc_displacements[i] = proc_displacements[i - 1] + proc_sizes[i - 1];
 					} // if
-					multi_node_.gatherv(struct_comm, grain_ids, num_gr * nqx_ * nqy_ * nqz_,
+					multi_node_.gatherv(struct_comm, grain_ids, gmaster * num_gr * nqx_ * nqy_ * nqz_,
 										id, proc_sizes, proc_displacements);
 					delete[] proc_displacements;
 					delete[] proc_sizes;
 				} else {
 					id = grain_ids;
 				} // if-else
+
+				delete[] gmasters;
 			#else
 				id = grain_ids;
 			#endif
@@ -1110,7 +1114,7 @@ namespace hig {
 		float_t* all_struct_intensity = NULL;
 		complex_t* all_c_struct_intensity = NULL;
 		#ifdef USE_MPI
-			if(multi_node_.size(comm_key).size() > 1) {
+			if(multi_node_.size(comm_key) > 1) {
 				// collect struct_intensity from all procs in comm_key
 				if(master) {
 					if(HiGInput::instance().param_structcorrelation() == structcorr_GE) {
@@ -1133,10 +1137,12 @@ namespace hig {
 						proc_displacements[i] = proc_displacements[i - 1] + proc_sizes[i - 1];
 				} // if
 				if(HiGInput::instance().param_structcorrelation() == structcorr_GE) {
-					multi_node_.gatherv(comm_key, c_struct_intensity, num_structs * nqx_ * nqy_ * nqz_,
+					multi_node_.gatherv(comm_key, c_struct_intensity,
+										smaster * num_structs * nqx_ * nqy_ * nqz_,
 										all_c_struct_intensity, proc_sizes, proc_displacements);
 				} else {
-					multi_node_.gatherv(comm_key, struct_intensity, num_structs * nqx_ * nqy_ * nqz_,
+					multi_node_.gatherv(comm_key, struct_intensity,
+										smaster * num_structs * nqx_ * nqy_ * nqz_,
 										all_struct_intensity, proc_sizes, proc_displacements);
 				} // if-else
 				delete[] proc_displacements;

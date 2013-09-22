@@ -3,7 +3,7 @@
  *
  *  File: ff_num.cpp
  *  Created: Jul 18, 2012
- *  Modified: Wed 18 Sep 2013 04:30:56 PM PDT
+ *  Modified: Sun 22 Sep 2013 08:39:11 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -81,14 +81,14 @@ namespace hig {
 
 		#ifdef USE_MPI
 			bool master = world_comm.is_master(comm_key);
+			commtimer.start();
+			world_comm.barrier(comm_key);
+			commtimer.stop();
+			comm_time += commtimer.elapsed_msec();
 		#else
 			bool master = true;
 		#endif
 
-		commtimer.start();
-		world_comm.barrier(comm_key);
-		commtimer.stop();
-		comm_time += commtimer.elapsed_msec();
 	
 		// warning: all procs read the shape file!!!!
 		// TODO: improve to parallel IO, or one proc reading and sending to all ...
@@ -150,7 +150,7 @@ namespace hig {
 
 			int idle = 0;
 			if(world_comm.rank(comm_key) >= p_y * p_z) idle = 1;
-			const char* real_world = "real_world";
+			const char* real_world = "ff_num_real_world";
 			world_comm.split(real_world, comm_key, idle);
 
 			commtimer.stop();
@@ -176,7 +176,7 @@ namespace hig {
 		maintimer.start();
 
 		#ifdef USE_MPI
-		if(world_comm.rank() < p_y * p_z) {		// only the non-idle processors
+		if(world_comm.rank(comm_key) < p_y * p_z) {		// only the non-idle processors
 			bool master = world_comm.is_master(real_world);
 			if(master) {
 				std::cout << "++  Number of MPI processes used: "
@@ -192,14 +192,14 @@ namespace hig {
 
 			// create row-wise and column-wise communicators
 			int row = rank / p_z, col = rank % p_z;
-			world_comm.split("row_comm", real_world, row);
-			world_comm.split("col_comm", real_world, col);
+			world_comm.split("ff_num_row_comm", real_world, row);
+			world_comm.split("ff_num_col_comm", real_world, col);
 
 			// perform MPI scan operation to compute y_offset and z_offset
 
 			unsigned int y_offset = 0, z_offset = 0;
-			world_comm.scan_sum("col_comm", p_nqy, y_offset);
-			world_comm.scan_sum("row_comm", p_nqz, z_offset);
+			world_comm.scan_sum("ff_num_col_comm", p_nqy, y_offset);
+			world_comm.scan_sum("ff_num_row_comm", p_nqz, z_offset);
 
 			commtimer.stop();
 			comm_time += commtimer.elapsed_msec();
@@ -340,7 +340,7 @@ namespace hig {
 				float_t temp_mem_time = 0.0, temp_comm_time = 0.0;
 				construct_ff(p_nqx, p_nqy, p_nqz, nqx, nqy, nqz, p_y, p_z, p_ff, ff,
 								#ifdef USE_MPI
-									world_comm, comm_key,
+									world_comm, real_world,
 								#endif
 								temp_mem_time, temp_comm_time);
 				mem_time += temp_mem_time;
@@ -404,10 +404,12 @@ namespace hig {
 				gflops = mflop / kernel_time;
 				std::cout << "**            Kernel performance: " << gflops << " GFLOPS/s" << std::endl;
 			} // if
+		#ifdef USE_MPI
 		} // if
+		#endif
 
 		#ifdef USE_MPI
-			world_comm.barrier();
+			world_comm.barrier(comm_key);
 		#endif
 
 		#ifdef FINDBLOCK
@@ -525,7 +527,7 @@ namespace hig {
 
 			world_comm.gatherv(comm_key, cast_p_ff, local_qpoints, cast_ff, recv_counts, displs);
 	
-			world_comm.gather("col_comm", &p_nqy, 1, recv_p_nqy, 1);
+			world_comm.gather("ff_num_col_comm", &p_nqy, 1, recv_p_nqy, 1);
 		
 			commtimer.stop();
 			comm_time += commtimer.elapsed_msec();

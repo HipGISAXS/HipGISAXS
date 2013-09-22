@@ -3,7 +3,7 @@
  *
  *  File: ff.hpp
  *  Created: Jul 18, 2012
- *  Modified: Wed 18 Sep 2013 11:33:29 AM PDT
+ *  Modified: Sun 22 Sep 2013 08:17:22 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -60,7 +60,7 @@ namespace hig {
 					FormFactor(): numeric_ff_(64), is_analytic_(false) { } // default cuda block size
 					FormFactor(int s): numeric_ff_(s), is_analytic_(false) { }
 				#endif // KERNEL2
-			#else	// use CPU
+			#else	// use CPU or MIC
 				FormFactor(): numeric_ff_(), is_analytic_(false) { }
 			#endif
 
