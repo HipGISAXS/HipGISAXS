@@ -3,7 +3,7 @@
  *
  *  File: sf.cpp
  *  Created: Jun 18, 2012
- *  Modified: Tue 16 Jul 2013 11:52:00 AM PDT
+ *  Modified: Wed 18 Sep 2013 11:34:19 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -55,9 +55,16 @@ namespace hig {
 	 */
 	bool StructureFactor::compute_structure_factor(std::string expt, vector3_t center,
 							Lattice* lattice, vector3_t repet,
-							vector3_t rotation_1, vector3_t rotation_2, vector3_t rotation_3,
-							MPI::Intracomm& world_comm) {
-		int my_rank = world_comm.Get_rank();
+							vector3_t rotation_1, vector3_t rotation_2, vector3_t rotation_3
+							#ifdef USE_MPI
+								, woo::MultiNode& world_comm, const char* comm_key
+							#endif
+							) {
+		#ifdef USE_MPI
+			bool master = world_comm.is_master();
+		#else
+			bool master = true;
+		#endif
 
 		woo::BoostChronoTimer maintimer, computetimer;
 
@@ -88,12 +95,12 @@ namespace hig {
 		sf_ = NULL;
 		sf_ = new (std::nothrow) complex_t[nx_ * ny_ * nz_];
 		if(sf_ == NULL) {
-			if(my_rank == 0)
+			if(master)
 				std::cerr << "error: could not allocate memory for structure factor" << std::endl;
 			return false;
 		} // if
 
-		if(my_rank == 0) std::cout << "-- Computing structure factor ... " << std::flush;
+		if(master) std::cout << "-- Computing structure factor ... " << std::flush;
 
 		std::complex<float_t> unit_c(1, 0);
 		std::complex<float_t> unit_ci(0, 1);
@@ -263,7 +270,7 @@ namespace hig {
 		computetimer.stop();
 		maintimer.stop();
 
-		if(my_rank == 0) {
+		if(master) {
 			std::cout << "done. " << std::endl;
 			std::cout << "**               SF compute time: " << computetimer.elapsed_msec()  << " ms."
 						<< std::endl

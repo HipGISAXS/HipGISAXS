@@ -3,7 +3,7 @@
  *
  *  File: ff.cpp
  *  Created: Jul 17, 2012
- *  Modified: Fri 13 Sep 2013 04:16:10 PM PDT
+ *  Modified: Sat 21 Sep 2013 04:09:40 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -38,19 +38,30 @@ namespace hig {
 	bool FormFactor::compute_form_factor(ShapeName shape, std::string shape_filename,
 										shape_param_list_t& params, float_t single_thickness,
 										vector3_t& transvec, float_t shp_tau, float_t shp_eta,
-										vector3_t& rot1, vector3_t& rot2, vector3_t& rot3,
-										MPI::Intracomm& world_comm) {
+										vector3_t& rot1, vector3_t& rot2, vector3_t& rot3
+										#ifdef USE_MPI
+											, woo::MultiNode& multi_node, const char* comm_key
+										#endif
+										) {
 		if(shape == shape_custom) {
 			/* compute numerically */
 			is_analytic_ = false;
 			numeric_ff_.init(rot1, rot2, rot3, ff_);
-			numeric_ff_.compute(shape_filename.c_str(), ff_, rot1, rot2, rot3, world_comm);
+			numeric_ff_.compute(shape_filename.c_str(), ff_, rot1, rot2, rot3
+								#ifdef USE_MPI
+									, multi_node, comm_key
+								#endif
+								);
 		} else {
 			/* compute analytically */
 			is_analytic_ = true;
 			analytic_ff_.init(rot1, rot2, rot3, ff_);
 			analytic_ff_.compute(shape, shp_tau, shp_eta, transvec,
-								ff_, params, single_thickness, rot1, rot2, rot3, world_comm);
+									ff_, params, single_thickness, rot1, rot2, rot3
+									#ifdef USE_MPI
+										, multi_node, comm_key
+									#endif
+									);
 		} // if-else
 		return true;
 	} // FormFactor::compute_form_factor()
@@ -59,13 +70,12 @@ namespace hig {
 	/* temporaries */
 
 	bool FormFactor::read_form_factor(const char* filename,
-									unsigned int nqx, unsigned int nqy, unsigned int nqz) {
+										unsigned int nqx, unsigned int nqy, unsigned int nqz) {
 		std::ifstream f(filename);
 		ff_.clear();
 		for(unsigned int z = 0; z < nqz; ++ z) {
 			for(unsigned int y = 0; y < nqy; ++ y) {
 				for(unsigned int x = 0; x < nqx; ++ x) {
-					//unsigned int index = nqx * nqy * z + nqx * y + x;
 					float_t tempr, tempi;
 					f >> tempr; f >> tempi;
 					ff_.push_back(complex_t(tempr, tempi));
@@ -92,7 +102,8 @@ namespace hig {
 	} // FormFactor::print_ff()
 
 
-	void FormFactor::save_ff(unsigned int nqx, unsigned int nqy, unsigned int nqz, const char* filename) {
+	void FormFactor::save_ff(unsigned int nqx, unsigned int nqy, unsigned int nqz,
+								const char* filename) {
 		std::ofstream f(filename);
 		for(unsigned int z = 0; z < nqz; ++ z) {
 			for(unsigned int y = 0; y < nqy; ++ y) {

@@ -3,7 +3,7 @@
  *
  *  File: ff.hpp
  *  Created: Jul 18, 2012
- *  Modified: Tue 16 Jul 2013 11:50:23 AM PDT
+ *  Modified: Sun 22 Sep 2013 08:17:22 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -24,6 +24,10 @@
 #define _FF_HPP_
 
 #include <string>
+
+#ifdef USE_MPI
+#include "woo/comm/multi_node_comm.hpp"
+#endif
 
 #include "typedefs.hpp"
 #include "ff_ana.hpp"
@@ -56,7 +60,7 @@ namespace hig {
 					FormFactor(): numeric_ff_(64), is_analytic_(false) { } // default cuda block size
 					FormFactor(int s): numeric_ff_(s), is_analytic_(false) { }
 				#endif // KERNEL2
-			#else	// use CPU
+			#else	// use CPU or MIC
 				FormFactor(): numeric_ff_(), is_analytic_(false) { }
 			#endif
 
@@ -68,13 +72,17 @@ namespace hig {
 									shape_param_list_t& params,
 									float_t single_thickness,
 									vector3_t& transvec, float_t shp_tau, float_t shp_eta,
-									vector3_t& rot1, vector3_t& rot2, vector3_t& rot3,
-									MPI::Intracomm& world_comm);
+									vector3_t& rot1, vector3_t& rot2, vector3_t& rot3
+									#ifdef USE_MPI
+										, woo::MultiNode&, const char*
+									#endif
+									);
 
 			complex_t operator[](unsigned int i) const { return ff_[i]; }
 
 			// for testing only ... remove ...
-			bool read_form_factor(const char* filename, unsigned int nqx, unsigned int nqy, unsigned int nqz);
+			bool read_form_factor(const char* filename,
+									unsigned int nqx, unsigned int nqy, unsigned int nqz);
 			void print_ff(unsigned int nqx, unsigned int nqy, unsigned int nqz);
 			void save_ff(unsigned int nqx, unsigned int nqy, unsigned int nqz, const char* filename);
 			void printff(unsigned int nqx, unsigned int nqy, unsigned int nqz) {

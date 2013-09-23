@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_main.cpp
  *  Created: Jun 14, 2012
- *  Modified: Mon 16 Sep 2013 12:28:17 PM PDT
+ *  Modified: Mon 23 Sep 2013 03:00:05 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -47,22 +47,23 @@
 
 namespace hig {
 
-	// TODO: do MPI initialization earlier ...
-	// move all that stuff from FF to main hipgisaxs ...
-	HipGISAXS::HipGISAXS(): freq_(0.0), k0_(0.0),
+	HipGISAXS::HipGISAXS(int narg, char** args): freq_(0.0), k0_(0.0),
 				num_layers_(0), num_structures_(0),
-				nqx_(0), nqy_(0), nqz_(0), nqz_extended_(0),
-				#ifdef FF_NUM_GPU   // use GPU
-					#ifdef FF_NUM_GPU_FUSED
-						ff_(64, 8)
-					#elif defined KERNEL2
-						ff_(2, 4, 4)
-					#else
-						ff_(64)
-					#endif
-				#else   // use CPU
-					ff_()
+				nqx_(0), nqy_(0), nqz_(0), nqz_extended_(0)
+				#ifdef USE_MPI
+					, multi_node_(narg, args)
 				#endif
+				//#ifdef FF_NUM_GPU   // use GPU
+				//	#ifdef FF_NUM_GPU_FUSED
+				//		ff_(64, 8)
+				//	#elif defined KERNEL2
+				//		ff_(2, 4, 4)
+				//	#else
+				//		ff_(64)
+				//	#endif
+				//#else   // use CPU
+				//	ff_()
+				//#endif
 					{
 		single_layer_refindex_.delta(0.0);
 		single_layer_refindex_.beta(0.0);
@@ -73,21 +74,38 @@ namespace hig {
 
 
 	HipGISAXS::~HipGISAXS() {
-		//MPI::Finalize();
+		// nothing to do here yet ...
 	} // HipGISAXS::~HipGISAXS()
 
 
-	bool HipGISAXS::init(MPI::Intracomm& world_comm) {
+	bool HipGISAXS::init() {
 						// is called at the beginning of the runs (after input is read)
 						// it does the following:
 						// 	+ set detector/system stuff
 						// 	+ initialize output dir
 						// 	+ create q-grid
 						// 	+ construct layer profile
+						// 	+ get layer profile data
+						// 	+ get structure info
+						// 	+ construct lattice vectors
+						// 	+ compute cell size
+		// TODO first check if the input has been constructed ...
 
-		// first check if the input has been constructed ...
+		#ifdef USE_MPI
+			int mpi_rank = multi_node_.rank();
+			bool master = multi_node_.is_master();
+		#else
+			int mpi_rank = 0;
+			bool master = true;
+		#endif
 
-		int mpi_rank = world_comm.Get_rank();
+		if(master) {
+			std::cout << std::endl
+					<< "*******************************************************************" << std::endl
+					<< "*********************** HipGISAXS v0.9b ***************************" << std::endl
+					<< "*******************************************************************" << std::endl
+					<< std::endl;
+		} // if
 
 		//photon conversion
 		float_t photon = 0.0;
@@ -99,14 +117,14 @@ namespace hig {
 			photon = photon / 1000;		// in keV
 			freq_ = 1e-9 * photon * 1.60217646e-19 * 1000 / 6.626068e-34;
 		} else { /* do something else ? ... */
-			if(mpi_rank == 0) std::cerr << "error: photon energy is not given in 'ev'" << std::endl;
+			if(master) std::cerr << "error: photon energy is not given in 'ev'" << std::endl;
 			return false;
 		} // if-else
 
 		k0_ = 2 * PI_ * freq_ / LIGHT_SPEED_;
 
 		// create output directory
-		if(mpi_rank == 0) {		// this is not quite good for mpi ... improve ...
+		if(master) {		// this is not quite good for mpi ... improve ...
 			const std::string p = HiGInput::instance().path() + "/" + HiGInput::instance().runname();
 			if(!boost::filesystem::create_directory(p)) {
 				std::cerr << "error: could not create output directory " << p << std::endl;
@@ -114,12 +132,14 @@ namespace hig {
 			} // if
 		} // if
 
-		world_comm.Barrier();
+		#ifdef USE_MPI
+			multi_node_.barrier();
+		#endif
 
 		// create Q-grid
 		float_t min_alphai = HiGInput::instance().scattering_min_alpha_i() * PI_ / 180;
 		if(!QGrid::instance().create(freq_, min_alphai, k0_, mpi_rank)) {
-			if(mpi_rank == 0) std::cerr << "error: could not create Q-grid" << std::endl;
+			if(master) std::cerr << "error: could not create Q-grid" << std::endl;
 			return false;
 		} // if
 
@@ -129,95 +149,9 @@ namespace hig {
 
 		/* construct layer profile */
 		if(!HiGInput::instance().construct_layer_profile()) {	// also can be done at input reading ...
-			if(mpi_rank == 0) std::cerr << "error: could not construct layer profile" << std::endl;
+			if(master) std::cerr << "error: could not construct layer profile" << std::endl;
 			return false;
 		} // if
-
-		#ifdef _OPENMP
-		if(mpi_rank == 0)
-			std::cout << "++ Number of host OpenMP threads: " << omp_get_max_threads() << std::endl;
-		#endif
-
-		#if defined USE_GPU || defined FF_ANA_GPU || defined FF_NUM_GPU
-			init_gpu();
-		#elif defined USE_MIC
-			if(mpi_rank == 0) std::cout << "-- Waking up MIC(s) ..." << std::flush;
-			init_mic();
-			if(mpi_rank == 0) std::cout << " done." << std::endl;
-		#endif
-
-		return true;
-	} // HipGISAXS::init()
-
-
-	// this is temporary, for newton's fit method
-	bool HipGISAXS::init_steepest_fit(MPI::Intracomm& world_comm, float_t qzcut) {
-						// is called at the beginning of the runs (after input is read)
-		// first check if the input has been constructed ...
-
-		int mpi_rank = world_comm.Get_rank();
-
-		//photon conversion
-		float_t photon = 0.0;
-		std::string unit;
-		freq_ = 0; k0_ = 0;
-		HiGInput::instance().photon_energy(photon, unit);
-		if(unit == "ev") {
-		//	freq_ = photon * 1.60217646e9 / 6.626068;
-			photon = photon / 1000;		// in keV
-			freq_ = 1e-9 * photon * 1.60217646e-19 * 1000 / 6.626068e-34;
-		} else { /* do something else ? ... */
-			if(mpi_rank == 0) std::cerr << "error: photon energy is not given in 'ev'" << std::endl;
-			return false;
-		} // if-else
-
-		k0_ = 2 * PI_ * freq_ / LIGHT_SPEED_;
-
-		// create output directory
-		if(mpi_rank == 0) {		// this is not quite good for mpi ... improve ...
-			const std::string p = HiGInput::instance().path() + "/" + HiGInput::instance().runname();
-			if(!boost::filesystem::create_directory(p)) {
-				std::cerr << "error: could not create output directory " << p << std::endl;
-				return false;
-			} // if
-		} // if
-
-		world_comm.Barrier();
-
-		// create Q-grid
-		float_t min_alphai = HiGInput::instance().scattering_min_alpha_i() * PI_ / 180;
-		if(!QGrid::instance().create_z_cut(freq_, min_alphai, k0_, qzcut)) {
-			if(mpi_rank == 0) std::cerr << "error: could not create Q-grid" << std::endl;
-			return false;
-		} // if
-
-		nqx_ = QGrid::instance().nqx();
-		nqy_ = QGrid::instance().nqy();
-		nqz_ = QGrid::instance().nqz();
-
-		/* construct layer profile */
-		if(!HiGInput::instance().construct_layer_profile()) {	// also can be done at input reading ...
-			if(mpi_rank == 0) std::cerr << "error: could not construct layer profile" << std::endl;
-			return false;
-		} // if
-
-		return true;
-	} // HipGISAXS::init()
-
-
-	bool HipGISAXS::run_init(float_t alphai, float_t phi, float_t tilt, MPI::Intracomm& world_comm) {
-					// this is called for each config-run during the main run
-					// it does the following:
-					// 	+ get layer profile data
-					// 	+ get structure info
-					// 	+ construct lattice vectors
-					// 	+ construct the illuminated volume
-					// 	+ compute grain size
-					//	+ construct rotation matrices
-
-		int mpi_rank = world_comm.Get_rank();
-		// get all the variable values from the input structures	(can't we do some of this in init()?)
-		// TODO: see what can be moved to init() ...
 
 		/* get initialization data from layers */
 
@@ -244,21 +178,17 @@ namespace hig {
 		
 		num_structures_ = HiGInput::instance().num_structures();
 		/* construct lattice vectors in each structure, if needed */
-		if(!HiGInput::instance().construct_lattice_vectors()) {	// this can also be done at input reading ...
-			if(mpi_rank == 0) std::cerr << "error: could not construct lattice vectors" << std::endl;
-			return false;
-		} // if
-		if(!illuminated_volume(alphai, HiGInput::instance().scattering_spot_area(),
-				HiGInput::instance().min_layer_order(), HiGInput::instance().substrate_refindex())) {
-			if(mpi_rank == 0) std::cerr << "error: something went wrong in illuminatedvolume()" << std::endl;
+		// TODO: this can also be done at input reading ...
+		if(!HiGInput::instance().construct_lattice_vectors()) {
+			if(master) std::cerr << "error: could not construct lattice vectors" << std::endl;
 			return false;
 		} // if
 
-		/* grain cell size */
+		/* domain size */
 		vector3_t min_vec(0.0, 0.0, 0.0), max_vec(0.0, 0.0, 0.0);
 		float_t z_min_0 = 0.0, z_max_0 = 0.0;
-		if(!HiGInput::instance().compute_domain_size(min_vec, max_vec, z_min_0, z_max_0, mpi_rank)) {
-			if(mpi_rank == 0) std::cerr << "error: could not construct grain sizes" << std::endl;
+		if(!HiGInput::instance().compute_domain_size(min_vec, max_vec, z_min_0, z_max_0)) {
+			if(master) std::cerr << "error: could not compute domain size" << std::endl;
 			return false;
 		} // if
 //		std::cout << "++ Domain min point: " << min_vec[0] << ", " << min_vec[1]
@@ -271,10 +201,112 @@ namespace hig {
 //					<< max_vec[2] - min_vec[2] << " ("
 //					<< z_max_0 - z_min_0 << ")" << std::endl;
 
-		// min_vec and max_vec are the grain
+		// cell size ... check ... FIXME
 		cell_[0] = fabs(max_vec[0] - min_vec[0]);
 		cell_[1] = fabs(max_vec[1] - min_vec[1]);
 		cell_[2] = fabs(z_max_0 - z_min_0);
+
+
+		#ifdef _OPENMP
+			if(master)
+				std::cout << "++ Number of host OpenMP threads: "
+							<< omp_get_max_threads() << std::endl;
+		#endif
+
+		#if defined USE_GPU || defined FF_ANA_GPU || defined FF_NUM_GPU
+			if(master) std::cout << "-- Waking up GPU(s) ..." << std::flush;
+			init_gpu();
+			if(master) std::cout << " it woke up!" << std::endl;
+		#elif defined USE_MIC
+			if(master) std::cout << "-- Waking up MIC(s) ..." << std::flush;
+			init_mic();
+			if(master) std::cout << " done." << std::endl;
+		#else
+			if(master) std::cout << "-- Not set up to use any accelerator!" << std::endl;
+		#endif
+
+		return true;
+	} // HipGISAXS::init()
+
+
+	// this is temporary, for newton's fit method
+	bool HipGISAXS::init_steepest_fit(float_t qzcut) {
+						// is called at the beginning of the runs (after input is read)
+		// first check if the input has been constructed ...
+
+		#ifdef USE_MPI
+			int mpi_rank = multi_node_.rank();
+			bool master = multi_node_.is_master();
+		#else
+			bool master = true;
+		#endif
+
+		//photon conversion
+		float_t photon = 0.0;
+		std::string unit;
+		freq_ = 0; k0_ = 0;
+		HiGInput::instance().photon_energy(photon, unit);
+		if(unit == "ev") {
+			photon = photon / 1000;		// in keV
+			freq_ = 1e-9 * photon * 1.60217646e-19 * 1000 / 6.626068e-34;
+		} else { /* do something else ? ... */
+			if(master) std::cerr << "error: photon energy is not given in 'ev'" << std::endl;
+			return false;
+		} // if-else
+
+		k0_ = 2 * PI_ * freq_ / LIGHT_SPEED_;
+
+		// create output directory
+		if(master) {		// this is not quite good for mpi ... improve ...
+			const std::string p = HiGInput::instance().path() + "/" + HiGInput::instance().runname();
+			if(!boost::filesystem::create_directory(p)) {
+				std::cerr << "error: could not create output directory " << p << std::endl;
+				return false;
+			} // if
+		} // if
+
+		#ifdef USE_MPI
+			multi_node_.barrier();
+		#endif
+
+		// create Q-grid
+		float_t min_alphai = HiGInput::instance().scattering_min_alpha_i() * PI_ / 180;
+		if(!QGrid::instance().create_z_cut(freq_, min_alphai, k0_, qzcut)) {
+			if(master) std::cerr << "error: could not create Q-grid" << std::endl;
+			return false;
+		} // if
+
+		nqx_ = QGrid::instance().nqx();
+		nqy_ = QGrid::instance().nqy();
+		nqz_ = QGrid::instance().nqz();
+
+		/* construct layer profile */
+		if(!HiGInput::instance().construct_layer_profile()) {	// also can be done at input reading ...
+			if(master) std::cerr << "error: could not construct layer profile" << std::endl;
+			return false;
+		} // if
+
+		return true;
+	} // HipGISAXS::init_steepest_fit()
+
+
+	bool HipGISAXS::run_init(float_t alphai, float_t phi, float_t tilt, SampleRotation& rot_matrix) {
+					// this is called for each config-run during the main run
+					// it does the following:
+					// 	+ construct the illuminated volume
+					//	+ construct rotation matrices
+
+		#ifdef USE_MPI
+			bool master = multi_node_.is_master();
+		#else
+			bool master = true;
+		#endif
+
+		if(!illuminated_volume(alphai, HiGInput::instance().scattering_spot_area(),
+				HiGInput::instance().min_layer_order(), HiGInput::instance().substrate_refindex())) {
+			if(master) std::cerr << "error: something went wrong in illuminated_volume()" << std::endl;
+			return false;
+		} // if
 
 		/* rotation matrices */
 		// compute r_phi = sample rotation by phi
@@ -282,19 +314,26 @@ namespace hig {
 		vector3_t rt1(0.0, 0.0, 0.0), rt2(0.0, 0.0, 0.0), rt3(0.0, 0.0, 0.0);
 		compute_rotation_matrix_z(phi, rp1, rp2, rp3);
 		compute_rotation_matrix_x(tilt, rt1, rt2, rt3);
-		mat_mul_3x3(rp1, rp2, rp3, rt1, rt2, rt3,
-				rotation_matrix_.r1_, rotation_matrix_.r2_, rotation_matrix_.r3_);
+		mat_mul_3x3(rp1, rp2, rp3, rt1, rt2, rt3, rot_matrix.r1_, rot_matrix.r2_, rot_matrix.r3_);
 
 		return true;
 	} // HipGISAXS::run_init()
 
 
-	bool HipGISAXS::run_all_gisaxs(MPI::Intracomm& world_comm,
-									//int x_min = 0, int x_max = 0, int x_step = 0) {
-									int x_min, int x_max, int x_step) {
-		int mpi_rank = world_comm.Get_rank();
+	/**
+	 * This is the main function called from outside
+	 * It loops over all configurations and calls the simulation routine
+	 */
+	bool HipGISAXS::run_all_gisaxs(int x_min, int x_max, int x_step) {
+		#ifdef USE_MPI
+			// this is for the whole comm world
+			const char* world_comm = "world";
+			bool master = multi_node_.is_master(world_comm);
+		#else
+			bool master = true;
+		#endif
 
-		if(!init(world_comm)) return false;
+		if(!init()) return false;
 
 		woo::BoostChronoTimer sim_timer;
 		sim_timer.start();
@@ -317,48 +356,135 @@ namespace hig {
 		if(tilt_step == 0) num_tilt = 1;
 		else num_tilt = (tilt_max - tilt_min) / tilt_step + 1;
 
-		if(mpi_rank == 0) {
+		if(master) {
 			std::cout << "**                  Num alphai: " << num_alphai << std::endl
 						<< "**                     Num phi: " << num_phi << std::endl
 						<< "**                    Num tilt: " << num_tilt << std::endl;
 		} // if
 
-		float_t alpha_i = alphai_min;
-		// high level of parallelism here (alphai, phi, tilt) for dynamicity ...
 		// loop over all alphai, phi, and tilt
+
+		#ifdef USE_MPI
+			// divide among processors
+			int num_procs = multi_node_.size(world_comm);
+			int rank = multi_node_.rank(world_comm);
+			int alphai_color = 0;
+			if(num_procs > num_alphai) {
+				alphai_color = rank % num_alphai;
+				alphai_min = alphai_min + alphai_step * alphai_color;
+				num_alphai = 1;
+			} else {
+				alphai_color = rank;
+				alphai_min = alphai_min + alphai_step *
+							((num_alphai / num_procs) * rank + min(rank, num_alphai % num_procs));
+				num_alphai = (num_alphai / num_procs) + (rank < num_alphai % num_procs);
+			} // if-else
+			const char* alphai_comm = "alphai";
+			multi_node_.split(alphai_comm, world_comm, alphai_color);
+
+			bool amaster = multi_node_.is_master(alphai_comm);
+			int temp_amaster = amaster;
+			int *amasters = new (std::nothrow) int[multi_node_.size(world_comm)];
+			// all alphai masters tell the world master about who they are
+			multi_node_.gather(world_comm, &temp_amaster, 1, amasters, 1);
+		#else
+			bool amaster = true;
+		#endif // USE_MPI
+
+		float_t alpha_i = alphai_min;
 		for(int i = 0; i < num_alphai; i ++, alpha_i += alphai_step) {
 			float_t alphai = alpha_i * PI_ / 180;
 
 			float_t* averaged_data = NULL;		// to hold summation of all (if needed)
 
+			#ifdef USE_MPI
+				// divide among processors
+				int num_procs = multi_node_.size(alphai_comm);
+				int rank = multi_node_.rank(alphai_comm);
+				int phi_color = 0;
+				if(num_procs > num_phi) {
+					phi_color = rank % num_phi;
+					phi_min = phi_min + phi_step * phi_color;
+					num_phi = 1;
+				} else {
+					phi_color = rank;
+					phi_min = phi_min + phi_step *
+								((num_phi / num_procs) * rank + min(rank, num_phi % num_procs));
+					num_phi = (num_phi / num_procs) + (rank < num_phi % num_procs);
+				} // if-else
+				const char* phi_comm = "phi";
+				multi_node_.split(phi_comm, alphai_comm, phi_color);
+
+				bool pmaster = multi_node_.is_master(phi_comm);
+				int temp_pmaster = pmaster;
+				int *pmasters = new (std::nothrow) int[multi_node_.size(alphai_comm)];
+				// all phi masters tell the alphai master about who they are
+				multi_node_.gather(alphai_comm, &temp_pmaster, 1, pmasters, 1);
+			#else
+				bool pmaster = true;
+			#endif // USE_MPI
+
 			float_t phi = phi_min;
 			for(int j = 0; j < num_phi; j ++, phi += phi_step) {
 				float_t phi_rad = phi * PI_ / 180;
+
+				#ifdef USE_MPI
+					// divide among processors
+					int num_procs = multi_node_.size(phi_comm);
+					int rank = multi_node_.rank(phi_comm);
+					int tilt_color = 0;
+					if(num_procs > num_tilt) {
+						tilt_color = rank % num_tilt;
+						tilt_min = tilt_min + tilt_step * tilt_color;
+						num_tilt = 1;
+					} else {
+						tilt_color = rank;
+						tilt_min = tilt_min + tilt_step *
+								((num_tilt / num_procs) * rank + min(rank, num_tilt % num_procs));
+						num_tilt = (num_tilt / num_procs) + (rank < num_tilt % num_procs);
+					} // if-else
+					const char* tilt_comm = "tilt";
+					multi_node_.split(tilt_comm, phi_comm, tilt_color);
+
+					bool tmaster = multi_node_.is_master(tilt_comm);
+					int temp_tmaster = tmaster;
+					int *tmasters = new (std::nothrow) int[multi_node_.size(phi_comm)];
+					// all tilt masters tell the phi master about who they are
+					multi_node_.gather(phi_comm, &temp_tmaster, 1, tmasters, 1);
+				#else
+					bool tmaster = true;
+				#endif // USE_MPI
+
 				float_t tilt = tilt_min;
 				for(int k = 0; k < num_tilt; k ++, tilt += tilt_step) {
 					float_t tilt_rad = tilt * PI_ / 180;
 
-					if(mpi_rank == 0) {
+					if(tmaster) {
 						std::cout << "-- Computing GISAXS "
 									<< i * num_phi * num_tilt + j * num_tilt + k + 1 << " / "
 									<< num_alphai * num_phi * num_tilt
 									<< " [alphai = " << alpha_i << ", phi = " << phi
-									<< ", tilt = " << tilt << "] ..." << std::endl;
+									<< ", tilt = " << tilt << "] ..." << std::endl << std::flush;
 					} // if
 
 					/* run a gisaxs simulation */
 
 					float_t* final_data = NULL;
-					if(!run_gisaxs(alpha_i, alphai, phi_rad, tilt_rad, final_data, world_comm, 0)) {
-						if(mpi_rank == 0) std::cerr << "error: could not finish successfully" << std::endl;
+					if(!run_gisaxs(alpha_i, alphai, phi_rad, tilt_rad, final_data,
+								#ifdef USE_MPI
+									tilt_comm,
+								#endif
+								0)) {
+						if(tmaster)
+							std::cerr << "error: could not finish successfully" << std::endl;
 						return false;
 					} // if
 
 					// for future - 3d image ...
 					//Image img3d(nqx_, nqy_, nqz_);
-					//if(!run_gisaxs(alphai, phi, tilt, img3d)) {
+					//if(!run_gisaxs(alphai, phi, tilt, img3d))
 					
-					if(mpi_rank == 0) {
+					if(tmaster) {
 						// note that final_data stores 3d info
 						// for 2d, just take a slice of the data
 						std::cout << "-- Constructing GISAXS image ... " << std::flush;
@@ -419,25 +545,93 @@ namespace hig {
 					} // if
 
 					// also compute averaged values over phi and tilt
-					if(mpi_rank == 0) {
-						if(num_phi > 1 || num_tilt > 1) {
+					if(num_phi > 1 || num_tilt > 1) {
+						if(tmaster) {
 							if(averaged_data == NULL) {
 								averaged_data = new (std::nothrow) float_t[nqx_ * nqy_ * nqz_];
 								memset(averaged_data, 0, nqx_ * nqy_ * nqz_ * sizeof(float_t));
 							} // if
+							int i = 0;
 							add_data_elements(averaged_data, final_data, averaged_data,
 												nqx_ * nqy_ * nqz_);
 						} // if
-					} // if
+						delete[] final_data;
+					} else {
+						averaged_data = final_data;
+					} // if-else
 
-					delete[] final_data;
-
-					// synchronize all procs after each run
-					world_comm.Barrier();
 				} // for tilt
-			} // for phi
+				#ifdef USE_MPI
+					multi_node_.free(tilt_comm);
 
-			if(mpi_rank == 0) {
+//					if(num_phi > 1 || num_tilt > 1) {
+						// get data from all other phi_comm processors which were tmasters
+						int psize = multi_node_.size(phi_comm);
+						float_t* temp_data = NULL;
+						if(psize > 1) {
+							if(pmaster) {
+								temp_data = new (std::nothrow) float_t[psize * nqx_ * nqy_ * nqz_];
+							} // if
+							int *proc_sizes = new (std::nothrow) int[psize];
+							int *proc_displacements = new (std::nothrow) int[psize];
+							for(int i = 0; i < psize; ++ i) {
+								proc_sizes[i] = tmasters[i] * nqx_ * nqy_ * nqz_;
+							} // for
+							proc_displacements[0] = 0;
+							for(int i = 1; i < psize; ++ i) {
+								proc_displacements[i] = proc_displacements[i - 1] + proc_sizes[i - 1];
+							} // for
+							multi_node_.gatherv(phi_comm, averaged_data, nqx_ * nqy_ * nqz_,
+												temp_data, proc_sizes, proc_displacements);
+							delete[] proc_displacements;
+							delete[] proc_sizes;
+							if(pmaster) {
+								for(int i = 1; i < psize; ++ i) {
+									add_data_elements(averaged_data, temp_data + i * nqx_ * nqy_ * nqz_,
+														averaged_data, nqx_ * nqy_ * nqz_);
+								} // for
+								delete[] temp_data;
+							} // if
+						} // if
+//					} // if
+				#endif
+			} // for phi
+			#ifdef USE_MPI
+				multi_node_.free(phi_comm);
+
+//				if(num_phi > 1 || num_tilt > 1) {
+					// get data from all other phi_comm processors which were tmasters
+					int asize = multi_node_.size(alphai_comm);
+					float_t* temp_data = NULL;
+					if(asize > 1) {
+						if(amaster) {
+							temp_data = new (std::nothrow) float_t[asize * nqx_ * nqy_ * nqz_];
+						} // if
+						int *proc_sizes = new (std::nothrow) int[asize];
+						int *proc_displacements = new (std::nothrow) int[asize];
+						for(int i = 0; i < asize; ++ i) {
+							proc_sizes[i] = pmasters[i] * nqx_ * nqy_ * nqz_;
+						} // for
+						proc_displacements[0] = 0;
+						for(int i = 1; i < asize; ++ i) {
+							proc_displacements[i] = proc_displacements[i - 1] + proc_sizes[i - 1];
+						} // for
+						multi_node_.gatherv(alphai_comm, averaged_data, nqx_ * nqy_ * nqz_,
+											temp_data, proc_sizes, proc_displacements);
+						delete[] proc_displacements;
+						delete[] proc_sizes;
+						if(amaster) {
+							for(int i = 1; i < asize; ++ i) {
+								add_data_elements(averaged_data, temp_data + i * nqx_ * nqy_ * nqz_,
+													averaged_data, nqx_ * nqy_ * nqz_);
+							} // for
+							delete[] temp_data;
+						} // if
+					} // if
+//				} // if
+			#endif
+
+			if(amaster && (num_phi > 1 || num_tilt > 1)) {
 				if(averaged_data != NULL) {
 					Image img(nqx_, nqy_, nqz_);
 					img.construct_image(averaged_data, 0); // slice x = 0
@@ -463,12 +657,15 @@ namespace hig {
 
 					delete[] averaged_data;
 				} // if
-			}
+			} // if
 
 		} // for alphai
+		#ifdef USE_MPI
+			multi_node_.free(alphai_comm);
+		#endif
 
 		sim_timer.stop();
-		if(mpi_rank == 0) {
+		if(master) {
 			std::cout << "**         Total simulation time: " << sim_timer.elapsed_msec() << " ms."
 						<< std::endl;
 		} // if
@@ -477,66 +674,78 @@ namespace hig {
 	} // HipGISAXS::run_all_gisaxs()
 
 	
-	void HipGISAXS::save_gisaxs(float_t *final_data, std::string output) {
-		std::ofstream f(output.c_str());
-		//std::cout << "NQY x NQZ: " << nqy_ << " x " << nqz_ << std::endl;
-		for(unsigned int z = 0; z < nqz_; ++ z) {
-			for(unsigned int y = 0; y < nqy_; ++ y) {
-				unsigned int index = nqy_ * z + y;
-				f << final_data[index] << "\t";
-			} // for
-			f << std::endl;
-		} // for
-		f.close();
-	} // HipGISAXS::save_gisaxs()
-	
-	
-	void HipGISAXS::printfr(const char* name, float_t* arr, unsigned int size) {
-		std::cout << name << ":" << std::endl;
-		if(arr == NULL) { std::cout << "NULL" << std::endl; return; }
-		for(unsigned int i = 0; i < size; ++ i) {
-			std::cout << arr[i] << "\t";
-		} // for
-		std::cout << std::endl;
-	} // HipGISAXS::printfc()
- 
-
-	void HipGISAXS::printfc(const char* name, complex_t* arr, unsigned int size) {
-		std::cout << name << ":" << std::endl;
-		if(arr == NULL) { std::cout << "NULL" << std::endl; return; }
-		for(unsigned int i = 0; i < size; ++ i) {
-			std::cout << arr[i].real() << "," << arr[i].imag() << "\t";
-		} // for
-		std::cout << std::endl;
-	} // HipGISAXS::printfc()
- 
-
+	/**
+	 * run an experiment configuration
+	 * called for each configuration
+	 */
 	/* all the real juice is here */
 	bool HipGISAXS::run_gisaxs(float_t alpha_i, float_t alphai, float_t phi, float_t tilt,
-								float_t* &img3d,
-								MPI::Intracomm& world_comm, int corr_doms) {
+								float_t* &img3d, const char* comm_key, int corr_doms) {
 
-		if(!run_init(alphai, phi, tilt, world_comm)) return false;
+		SampleRotation rotation_matrix;
+		if(!run_init(alphai, phi, tilt, rotation_matrix)) return false;
 
-		int mpi_rank = world_comm.Get_rank();
+		#ifdef USE_MPI
+			bool master = multi_node_.is_master(comm_key);
+		#else
+			bool master = true;
+		#endif
 
 		// compute propagation coefficients/fresnel coefficients
 		// this can also go into run_init() ...
 		complex_t *amm = NULL, *apm = NULL, *amp = NULL, *app = NULL;
 		complex_t *rk1 = NULL, *rk2 = NULL, *rk1rk2 = NULL, *tk1tk2 = NULL, *h0 = NULL;
+		// TODO : where is fc used ?????????? ....................
+		complex_t* fc = NULL;
 		if(!compute_propagation_coefficients(alphai, amm, apm, amp, app,
-											rk1, rk2, rk1rk2, tk1tk2, h0)) return false;
-
-		// initialize memory for struct_intensity, ff and sf
-		// TODO: improve ...
-		float_t* struct_intensity = new (std::nothrow) float_t[num_structures_ * nqx_ * nqy_ * nqz_];
-		complex_t* c_struct_intensity = new (std::nothrow) complex_t[num_structures_ * nqx_ * nqy_ * nqz_];
+												rk1, rk2, rk1rk2, tk1tk2, h0, fc)) {
+			if(master) std::cerr << "error: failed to compute propogation coefficients" << std::endl;
+			return false;
+		} // if
 
 		/* loop over all structures and grains/grains */
-		// these are also a level of parallelism for dynamicity ...
-		int s_num = 0;
-		for(structure_iterator_t s = HiGInput::instance().structure_begin();
-				s != HiGInput::instance().structure_end(); ++ s, ++ s_num) {
+		structure_iterator_t s = HiGInput::instance().structure_begin();
+		int num_structs = num_structures_;
+		#ifdef USE_MPI
+			// divide among processors
+			int num_procs = multi_node_.size(comm_key);
+			int rank = multi_node_.rank(comm_key);
+			int struct_color = 0;
+			int soffset = 0;
+			if(num_procs > num_structs) {
+				struct_color = rank % num_structs;
+				soffset = struct_color;
+				num_structs = 1;
+			} else {
+				struct_color = rank;
+				soffset = ((num_structs / num_procs) * rank + min(rank, num_structs % num_procs));
+				num_structs = (num_structs / num_procs) + (rank < num_structs % num_procs);
+			} // if-else
+			const char* struct_comm = "structure";
+			multi_node_.split(struct_comm, comm_key, struct_color);
+			for(int i = 0; i < soffset; ++ i) ++ s;
+
+			bool smaster = multi_node_.is_master(struct_comm);
+			int temp_smaster = smaster;
+			int *smasters = new (std::nothrow) int[multi_node_.size(comm_key)];
+			// all grain masters tell the structure master about who they are
+			multi_node_.gather(comm_key, &temp_smaster, 1, smasters, 1);
+		#else
+			bool smaster = true;
+		#endif // USE_MPI
+
+		// initialize memory for struct_intensity
+		unsigned int size = nqx_ * nqy_ * nqz_;
+		float_t* struct_intensity = NULL;
+		complex_t* c_struct_intensity = NULL;
+		if(smaster) {
+			struct_intensity = new (std::nothrow) float_t[num_structs * size];
+			c_struct_intensity = new (std::nothrow) complex_t[num_structs * size];
+		} // master
+
+		// loop over structures
+		for(int s_num = 0; s_num < num_structs && s != HiGInput::instance().structure_end();
+				++ s, ++ s_num) {
 			// get all repetitions of the structure in the volume
 			// with position dr and orientation (tau, eta)
 			// i.e. compute matrix that defines all num_grains grains inside the volume
@@ -547,7 +756,7 @@ namespace hig {
 			// get the shape
 			// compute t, lattice, ndoms, dd, nn, id etc.
 
-			if(mpi_rank == 0) {
+			if(smaster) {
 				std::cout << "-- Processing structure " << s_num + 1 << " ..." << std::endl;
 			} // if
 
@@ -558,8 +767,6 @@ namespace hig {
 
 			vector3_t grain_repeats = (*s).second.grain_repetition();
 
-			int num_grains = 0;
-			int num_nn = 0;
 			float_t *dd = NULL, *nn = NULL;		// come back to this ...
 												// these structures can be improved ...
 			float_t tz = 0;
@@ -568,14 +775,13 @@ namespace hig {
 			// compute dd and nn
 			spatial_distribution(s, tz, num_dimen, ndx, ndy, dd);
 			orientation_distribution(s, dd, ndx, ndy, nn);
-			num_nn = ndx;
-			num_grains = num_nn;
+			int num_grains = ndx;
 
 			int r1axis = (int) (*s).second.rotation_rot1()[0];
 			int r2axis = (int) (*s).second.rotation_rot2()[0];
 			int r3axis = (int) (*s).second.rotation_rot3()[0];
 
-			if(mpi_rank == 0) {
+			if(smaster) {
 				std::cout << "-- Grains: " << num_grains << std::endl;
 			} // if
 
@@ -585,21 +791,12 @@ namespace hig {
 			//				<< std::endl;
 			//} // for*/
 
-			complex_t *id = NULL;		// TODO: come back and improve ...
-										// eliminate id for each grain ...
-										// this can be reduced on the fly to reduce mem usage ...
-			id = new (std::nothrow) complex_t[num_grains * nqx_ * nqy_ * nqz_];
-			if(id == NULL) {
-				if(mpi_rank == 0) std::cerr << "error: could not allocate memory for 'id'" << std::endl;
-				return false;
-			} // if
-			memset(id, 0 , num_grains * nqx_ * nqy_ * nqz_ * sizeof(complex_t));	// initialize to 0
-
 			vector3_t curr_transvec = (*s).second.grain_transvec();
 			if(HiGInput::instance().param_nslices() <= 1) {
 				curr_transvec[2] = curr_transvec[2] - single_layer_thickness_;
 			} else {
-				curr_transvec[2] = curr_transvec[2]; // TODO/FIXME... for more than 1 layers ... incomplete
+				curr_transvec[2] = curr_transvec[2]; // TODO/FIXME... for more than 1 layers ... 
+													 // ... incomplete
 			} // if-else
 			ShapeName shape_name = HiGInput::instance().shape_name((*s).second);
 			float_t shape_tau = HiGInput::instance().shape_tau((*s).second);
@@ -609,26 +806,64 @@ namespace hig {
 
 			/* computing dwba ff for each grain in structure (*s) with
 			 * ensemble containing num_grains grains */
-			for(int j = 0; j < num_grains; j ++) {	// or distributions
 
-				if(mpi_rank == 0) {
-					std::cout << "-- Processing grain " << j + 1 << " / " << num_grains << " ..."
+			int grain_min = 0;
+			int num_gr = num_grains;
+			int grain_max = num_gr;
+
+			#ifdef USE_MPI
+				// divide among processors
+				int num_procs = multi_node_.size(struct_comm);
+				int rank = multi_node_.rank(struct_comm);
+				int grain_color = 0;
+				if(num_procs > num_gr) {
+					grain_color = rank % num_gr;
+					grain_min = grain_color;
+					num_gr = 1;
+				} else {
+					grain_color = rank;
+					grain_min = ((num_gr / num_procs) * rank + min(rank, num_gr % num_procs));
+					num_gr = (num_gr / num_procs) + (rank < num_gr % num_procs);
+				} // if-else
+				grain_max = grain_min + num_gr;
+				const char* grain_comm = "grain";
+				multi_node_.split(grain_comm, struct_comm, grain_color);
+
+				bool gmaster = multi_node_.is_master(grain_comm);
+				int temp_gmaster = gmaster;
+				int *gmasters = new (std::nothrow) int[multi_node_.size(struct_comm)];
+				// all grain masters tell the structure master about who they are
+				multi_node_.gather(struct_comm, &temp_gmaster, 1, gmasters, 1);
+			#else
+				bool gmaster = true;
+			#endif // USE_MPI
+
+			complex_t *grain_ids = NULL;
+			if(gmaster) {		// only the structure master needs this
+				grain_ids = new (std::nothrow) complex_t[num_gr * nqx_ * nqy_ * nqz_];
+				if(grain_ids == NULL) {
+					std::cerr << "error: could not allocate memory for 'id'" << std::endl;
+					return false;
+				} // if
+				// initialize to 0
+				memset(grain_ids, 0 , num_gr * nqx_ * nqy_ * nqz_ * sizeof(complex_t));
+			} // if
+
+
+			// loop over grains - each process processes num_gr grains
+			for(int grain_i = grain_min; grain_i < grain_max; grain_i ++) {	// or distributions
+
+				if(gmaster) {
+					std::cout << "-- Processing grain " << grain_i + 1 << " / " << num_grains << " ..."
 								<< std::endl;
 				} // if
 
 				// define r_norm (grain orientation by tau and eta)
 				// define full grain rotation matrix r_total = r_phi * r_norm
 				// TODO: ... i think these tau eta zeta can be computed on the fly to save memory ...
-				//float_t tau = nn[0 * num_nn + j];
-				//float_t eta = nn[1 * num_nn + j];
-				//float_t zeta = nn[2 * num_nn + j];
-				//vector3_t z1, z2, z3, e1, e2, e3, t1, t2, t3;
-				//compute_rotation_matrix_z(zeta, z1, z2, z3);
-				//compute_rotation_matrix_y(eta, e1, e2, e3);
-				//compute_rotation_matrix_x(tau, t1, t2, t3);
-				float_t rot1 = nn[0 * num_nn + j];
-				float_t rot2 = nn[1 * num_nn + j];
-				float_t rot3 = nn[2 * num_nn + j];
+				float_t rot1 = nn[0 * num_gr + grain_i];
+				float_t rot2 = nn[1 * num_gr + grain_i];
+				float_t rot3 = nn[2 * num_gr + grain_i];
 				vector3_t z1, z2, z3, e1, e2, e3, t1, t2, t3;
 				switch(r1axis) {
 					case 0:
@@ -679,37 +914,43 @@ namespace hig {
 				mat_mul_3x3(temp1, temp2, temp3, t1, t2, t3, r_norm1, r_norm2, r_norm3);
 
 				vector3_t r_tot1, r_tot2, r_tot3;
-				mat_mul_3x3(rotation_matrix_.r1_, rotation_matrix_.r2_, rotation_matrix_.r3_,
+				mat_mul_3x3(rotation_matrix.r1_, rotation_matrix.r2_, rotation_matrix.r3_,
 							r_norm1, r_norm2, r_norm3, r_tot1, r_tot2, r_tot3);
 
 				/* center of unit cell replica */
-				//vector3_t curr_dd_vec(dd[3 * j + 0], dd[3 * j + 1], dd[3 * j + 2]);
-				vector3_t curr_dd_vec(dd[j + 0], dd[j + num_grains], dd[j + 2 * num_grains]);
+				vector3_t curr_dd_vec(dd[grain_i + 0], dd[grain_i + num_gr], dd[grain_i + 2 * num_gr]);
 				vector3_t result(0.0, 0.0, 0.0);
-				//std::cerr << "============ dd: " << curr_dd_vec[0] << ","
-				//			<< curr_dd_vec[1] << "," << curr_dd_vec[2] << std::endl;
 
-				mat_mul_3x1(rotation_matrix_.r1_, rotation_matrix_.r2_, rotation_matrix_.r3_,
+				mat_mul_3x1(rotation_matrix.r1_, rotation_matrix.r2_, rotation_matrix.r3_,
 							curr_dd_vec, result);
-				//std::cerr << "::::::::::::::::: " << result[0] << "," << result[1] << "," << result[2]
-				//			<< " ::::::: " << curr_transvec[0] << "," << curr_transvec[1] << ","
-				//			<< curr_transvec[2] << std::endl;
 				vector3_t center = result + curr_transvec;
-
-				/*std::cout << "ROT MAT: " << std::endl;
-				std::cout << r_tot1[0] << "\t" << r_tot1[1] << "\t" << r_tot1[2] << std::endl;
-				std::cout << r_tot2[0] << "\t" << r_tot2[1] << "\t" << r_tot2[2] << std::endl;
-				std::cout << r_tot3[0] << "\t" << r_tot3[1] << "\t" << r_tot3[2] << std::endl;
-				std::cout << "CENTER: " << std::endl;
-				std::cout << center[0] << "\t" << center[1] << "\t" << center[2] << std::endl;*/
 
 				/* compute structure factor and form factor */
 
-				structure_factor(HiGInput::instance().experiment(), center, curr_lattice,
-									grain_repeats, r_tot1, r_tot2, r_tot3, world_comm);
-				//sf_.printsf();
+				StructureFactor sf;
+				#ifdef FF_NUM_GPU   // use GPU
+					#ifdef FF_NUM_GPU_FUSED
+						FormFactor ff(64, 8);
+					#elif defined KERNEL2
+						FormFactor ff(2, 4, 4);
+					#else
+						FormFactor ff(64);
+					#endif
+				#else   // use CPU or MIC
+					FormFactor ff;
+				#endif
 
-/*				if(mpi_rank == 0) {
+				// TODO: parallel tasks ...
+
+				structure_factor(sf, HiGInput::instance().experiment(), center, curr_lattice,
+									grain_repeats, r_tot1, r_tot2, r_tot3
+									#ifdef USE_MPI
+										, grain_comm
+									#endif
+									);
+				//sf.printsf();
+
+				/*if(master) {
 					std::stringstream alphai_b, phi_b, tilt_b;
 					std::string alphai_s, phi_s, tilt_s;
 					alphai_b << alpha_i; alphai_s = alphai_b.str();
@@ -720,18 +961,22 @@ namespace hig {
 									"/sf_ai=" + alphai_s + "_rot=" + phi_s +
 									"_tilt=" + tilt_s + ".out");
 					std::cout << "-- Saving structure factor in " << sf_output << " ... " << std::flush;
-					sf_.save_sf(nqx_, nqy_, nqz_extended_, sf_output.c_str());
+					sf.save_sf(nqx_, nqy_, nqz_extended_, sf_output.c_str());
 					std::cout << "done." << std::endl;
-				} // if
-*/
+				} // if*/
+
 				//read_form_factor("curr_ff.out");
-				form_factor(shape_name, shape_file, shape_params, curr_transvec,
-							shape_tau, shape_eta, r_tot1, r_tot2, r_tot3, world_comm);
-				//ff_.print_ff(nqx_, nqy_, nqz_extended_);
-				//ff_.printff(nqx_, nqy_, nqz_extended_);
+				form_factor(ff, shape_name, shape_file, shape_params, curr_transvec,
+							shape_tau, shape_eta, r_tot1, r_tot2, r_tot3
+							#ifdef USE_MPI
+								, grain_comm
+							#endif
+							);
+				//ff.print_ff(nqx_, nqy_, nqz_extended_);
+				//ff.printff(nqx_, nqy_, nqz_extended_);
 
 				// save form factor data on disk
-				/*if(mpi_rank == 0) {
+				/*if(master) {
 					std::stringstream alphai_b, phi_b, tilt_b;
 					std::string alphai_s, phi_s, tilt_s;
 					alphai_b << alpha_i; alphai_s = alphai_b.str();
@@ -742,21 +987,21 @@ namespace hig {
 									"/ff_ai=" + alphai_s + "_rot=" + phi_s +
 									"_tilt=" + tilt_s + ".out");
 					std::cout << "-- Saving form factor in " << ff_output << " ... " << std::flush;
-					ff_.save_ff(nqx_, nqy_, nqz_extended_, ff_output.c_str());
+					ff.save_ff(nqx_, nqy_, nqz_extended_, ff_output.c_str());
 					std::cout << "done." << std::endl;
 				} // if*/
 
 				/* compute intensities using sf and ff */
-				// processing of sf and ff is being done by just one processor ... parallelize ...
-				if(mpi_rank == 0) {
-					complex_t* base_id = id + j * nqx_ * nqy_ * nqz_;
+				// TODO: parallelize ...
+				if(gmaster) {	// grain master
+					complex_t* base_id = grain_ids + grain_i * nqx_ * nqy_ * nqz_;
 
 					unsigned int nslices = HiGInput::instance().param_nslices();
 					if(nslices <= 1) {
 						/* without slicing */
 						if(struct_in_layer &&
 								HiGInput::instance().structure_layer_order((*s).second) == 1) {
-														// structure is inside a layer, on top of substrate
+													// structure is inside a layer, on top of substrate
 							if(single_layer_refindex_.delta() < 0 || single_layer_refindex_.beta() < 0) {
 								// this should never happen
 								std::cerr << "error: single layer information not correctly set"
@@ -778,10 +1023,10 @@ namespace hig {
 										unsigned int curr_index_3 = 3 * nqx_ * nqy_ * nqz_ + curr_index;
 
 										base_id[curr_index] = dn2 *
-											(amm[curr_index] * sf_[curr_index_0] * ff_[curr_index_0] +
-											amp[curr_index] * sf_[curr_index_1] * ff_[curr_index_1] +
-											apm[curr_index] * sf_[curr_index_2] * ff_[curr_index_2] +
-											app[curr_index] * sf_[curr_index_3] * ff_[curr_index_3]);
+											(amm[curr_index] * sf[curr_index_0] * ff[curr_index_0] +
+											amp[curr_index] * sf[curr_index_1] * ff[curr_index_1] +
+											apm[curr_index] * sf[curr_index_2] * ff[curr_index_2] +
+											app[curr_index] * sf[curr_index_3] * ff[curr_index_3]);
 									} // for x
 								} // for y
 							} // for z
@@ -796,7 +1041,7 @@ namespace hig {
 								for(unsigned int y = 0; y < nqy_; ++ y) {
 									for(unsigned int x = 0; x < nqx_; ++ x) {
 										unsigned int curr_index = nqx_ * nqy_ * z + nqx_ * y + x;
-										base_id[curr_index] = dn2 * sf_[curr_index] * ff_[curr_index];
+										base_id[curr_index] = dn2 * sf[curr_index] * ff[curr_index];
 									} // for x
 								} // for y
 							} // for z
@@ -814,16 +1059,17 @@ namespace hig {
 										unsigned int curr_index_2 = 2 * nqx_ * nqy_ * nqz_ + curr_index;
 										unsigned int curr_index_3 = 3 * nqx_ * nqy_ * nqz_ + curr_index;
 										base_id[curr_index] = dn2 *
-											(h0[curr_index] * sf_[curr_index_0] * ff_[curr_index_0] +
-											rk2[curr_index] * sf_[curr_index_1] * ff_[curr_index_1] +
-											rk1[curr_index] * sf_[curr_index_2] * ff_[curr_index_2] +
-											rk1rk2[curr_index] * sf_[curr_index_3] * ff_[curr_index_3]);
+											(h0[curr_index] * sf[curr_index_0] * ff[curr_index_0] +
+											rk2[curr_index] * sf[curr_index_1] * ff[curr_index_1] +
+											rk1[curr_index] * sf[curr_index_2] * ff[curr_index_2] +
+											rk1rk2[curr_index] * sf[curr_index_3] * ff[curr_index_3]);
 									} // for x
 								} // for y
 							} // for z
 						} else {
-							std::cerr << "error: unable to determine sample structure. "
-										<< "make sure the layer order is correct" << std::endl;
+							if(gmaster)
+								std::cerr << "error: unable to determine sample structure. "
+											<< "make sure the layer order is correct" << std::endl;
 							return false;
 						} // if-else
 					} else {
@@ -833,51 +1079,53 @@ namespace hig {
 									<< std::endl;
 						return false;
 					} // if-else
-				} // if mpi_rank == 0
+				} // if gmaster
 
-				ff_.clear();
-				sf_.clear();
-			} // for num_grains
+				// clean everything before going to next
+				//ff_.clear();
+				//sf_.clear();
+				ff.clear();
+				sf.clear();
+
+			} // for num_gr
+
+			complex_t* id = NULL;
+			#ifdef USE_MPI
+				if(multi_node_.size(struct_comm) > 1) {
+					// collect grain_ids from all procs in struct_comm
+					if(smaster) {
+						id = new (std::nothrow) complex_t[num_grains * nqx_ * nqy_ * nqz_];
+					} // if
+					int *proc_sizes = new (std::nothrow) int[multi_node_.size(struct_comm)];
+					int *proc_displacements = new (std::nothrow) int[multi_node_.size(struct_comm)];
+					multi_node_.gather(struct_comm, &num_gr, 1, proc_sizes, 1);
+					if(smaster) {
+						// make sure you get data only from the gmasters
+						for(int i = 0; i < multi_node_.size(struct_comm); ++ i)
+							proc_sizes[i] *= (gmasters[i] * nqx_ * nqy_ * nqz_);
+						proc_displacements[0] = 0;
+						for(int i = 1; i < multi_node_.size(struct_comm); ++ i)
+							proc_displacements[i] = proc_displacements[i - 1] + proc_sizes[i - 1];
+					} // if
+					multi_node_.gatherv(struct_comm, grain_ids, gmaster * num_gr * nqx_ * nqy_ * nqz_,
+										id, proc_sizes, proc_displacements);
+					delete[] proc_displacements;
+					delete[] proc_sizes;
+				} else {
+					id = grain_ids;
+				} // if-else
+
+				delete[] gmasters;
+				multi_node_.free(grain_comm);
+			#else
+				id = grain_ids;
+			#endif
 
 			delete[] nn;
 			delete[] dd;
 
-			if(mpi_rank == 0) {
-				/*if(corr_doms == 1) {		// note: currently this is hardcoded as 0
-					unsigned int soffset = s_num * nqx_ * nqy_ * nqz_;
-					for(unsigned int z = 0; z < nqz_; ++ z) {
-						for(unsigned int y = 0; y < nqy_; ++ y) {
-							for(unsigned int x = 0; x < nqx_; ++ x) {
-								unsigned int curr_index = nqx_ * nqy_ * z + nqx_ * y + x;
-								complex_t sum(0.0, 0.0);
-								for(int d = 0; d < num_grains; ++ d) {
-									unsigned int id_index = d * nqx_ * nqy_ * nqz_ + curr_index;
-									sum += id[id_index];
-								} // for d
-								struct_intensity[soffset + curr_index] = sum.real() * sum.real() +
-																			sum.imag() * sum.imag();
-							} // for x
-						} // for y
-					} // for z
-				} else {					// incl. corr_dims == 0
-					unsigned int soffset = s_num * nqx_ * nqy_ * nqz_;
-					for(unsigned int z = 0; z < nqz_; ++ z) {
-						for(unsigned int y = 0; y < nqy_; ++ y) {
-							for(unsigned int x = 0; x < nqx_; ++ x) {
-								unsigned int curr_index = nqx_ * nqy_ * z + nqx_ * y + x;
-								float_t sum = 0.0;
-								for(int d = 0; d < num_grains; ++ d) {
-									unsigned int id_index = d * nqx_ * nqy_ * nqz_ + curr_index;
-									sum += id[id_index].real() * id[id_index].real() +
-											id[id_index].imag() * id[id_index].imag();
-								} // for d
-								struct_intensity[soffset + curr_index] = sum;
-							} // for x
-						} // for y
-					} // for z
-				} // if-else*/
-
-
+			if(smaster) {
+				// FIXME: double check the following correlation stuff ...
 				// new stuff for grain/ensemble correlation
 				unsigned int soffset = 0;
 				switch(HiGInput::instance().param_structcorrelation()) {
@@ -953,28 +1201,65 @@ namespace hig {
 						std::cerr << "error: unknown correlation type." << std::endl;
 						return false;
 				} // switch
-			} // if mpi_rank == 0
 
-			delete[] id;
+				delete[] id;
+			} // if master
+
 		} // for num_structs
-		int num_structs = s_num;
 
-		if(mpi_rank == 0) {
+		float_t* all_struct_intensity = NULL;
+		complex_t* all_c_struct_intensity = NULL;
+		#ifdef USE_MPI
+			if(multi_node_.size(comm_key) > 1) {
+				// collect struct_intensity from all procs in comm_key
+				if(master) {
+					if(HiGInput::instance().param_structcorrelation() == structcorr_GE) {
+						all_c_struct_intensity =
+								new (std::nothrow) complex_t[num_structures_ * nqx_ * nqy_ * nqz_];
+					} else {
+						all_struct_intensity =
+								new (std::nothrow) float_t[num_structures_ * nqx_ * nqy_ * nqz_];
+					} // if-else
+				} // if
+				int *proc_sizes = new (std::nothrow) int[multi_node_.size(comm_key)];
+				int *proc_displacements = new (std::nothrow) int[multi_node_.size(comm_key)];
+				multi_node_.gather(comm_key, &num_structs, 1, proc_sizes, 1);
+				if(master) {
+					// make sure you get data only from the smasters
+					for(int i = 0; i < multi_node_.size(comm_key); ++ i)
+						proc_sizes[i] *= (smasters[i] * nqx_ * nqy_ * nqz_);
+					proc_displacements[0] = 0;
+					for(int i = 1; i < multi_node_.size(comm_key); ++ i)
+						proc_displacements[i] = proc_displacements[i - 1] + proc_sizes[i - 1];
+				} // if
+				if(HiGInput::instance().param_structcorrelation() == structcorr_GE) {
+					multi_node_.gatherv(comm_key, c_struct_intensity,
+										smaster * num_structs * nqx_ * nqy_ * nqz_,
+										all_c_struct_intensity, proc_sizes, proc_displacements);
+				} else {
+					multi_node_.gatherv(comm_key, struct_intensity,
+										smaster * num_structs * nqx_ * nqy_ * nqz_,
+										all_struct_intensity, proc_sizes, proc_displacements);
+				} // if-else
+				delete[] proc_displacements;
+				delete[] proc_sizes;
+			} else {
+				all_struct_intensity = struct_intensity;
+				all_c_struct_intensity = c_struct_intensity;
+			} // if-else
+		#else
+			all_struct_intensity = struct_intensity;
+			all_c_struct_intensity = c_struct_intensity;
+		#endif
+
+		#ifdef USE_MPI
+			multi_node_.free(struct_comm);
+			multi_node_.barrier(comm_key);
+		#endif
+
+		if(master) {
 			img3d = new (std::nothrow) float_t[nqx_ * nqy_ * nqz_];
 			// sum of all struct_intensity into intensity
-			/*for(unsigned int z = 0; z < nqz_; ++ z) {
-				for(unsigned int y = 0; y < nqy_; ++ y) {
-					for(unsigned int x = 0; x < nqx_; ++ x) {
-						unsigned int curr_index = nqx_ * nqy_ * z + nqx_ * y + x;
-						float_t sum = 0.0;
-						for(int s = 0; s < num_structs; ++ s) {
-							unsigned int index = s * nqx_ * nqy_ * nqz_ + curr_index;
-							sum += struct_intensity[index];
-						} // for d
-						img3d[curr_index] = sum;
-					} // for x
-				} // for y
-			} // for z*/
 
 			// new stuff for correlation
 			switch(HiGInput::instance().param_structcorrelation()) {
@@ -987,9 +1272,9 @@ namespace hig {
 							for(unsigned int x = 0; x < nqx_; ++ x) {
 								unsigned int curr_index = nqx_ * nqy_ * z + nqx_ * y + x;
 								float_t sum = 0.0;
-								for(int s = 0; s < num_structs; ++ s) {
+								for(int s = 0; s < num_structures_; ++ s) {
 									unsigned int index = s * nqx_ * nqy_ * nqz_ + curr_index;
-									sum += struct_intensity[index];
+									sum += all_struct_intensity[index];
 								} // for d
 								img3d[curr_index] = sum;
 							} // for x
@@ -1013,9 +1298,9 @@ namespace hig {
 							for(unsigned int x = 0; x < nqx_; ++ x) {
 								unsigned int curr_index = nqx_ * nqy_ * z + nqx_ * y + x;
 								float_t sum = 0.0;
-								for(int s = 0; s < num_structs; ++ s) {
+								for(int s = 0; s < num_structures_; ++ s) {
 									unsigned int index = s * nqx_ * nqy_ * nqz_ + curr_index;
-									sum += struct_intensity[index];
+									sum += all_struct_intensity[index];
 								} // for d
 								img3d[curr_index] = sum;
 							} // for x
@@ -1031,9 +1316,9 @@ namespace hig {
 							for(unsigned int x = 0; x < nqx_; ++ x) {
 								unsigned int curr_index = nqx_ * nqy_ * z + nqx_ * y + x;
 								complex_t sum = 0.0;
-								for(int s = 0; s < num_structs; ++ s) {
+								for(int s = 0; s < num_structures_; ++ s) {
 									unsigned int index = s * nqx_ * nqy_ * nqz_ + curr_index;
-									sum += c_struct_intensity[index];
+									sum += all_c_struct_intensity[index];
 								} // for d
 								img3d[curr_index] = sum.real() * sum.real() + sum.imag() * sum.imag();
 							} // for x
@@ -1046,48 +1331,73 @@ namespace hig {
 					return false;
 			} // switch
 
-		} // if mpi_rank == 0
+			delete[] all_c_struct_intensity;
+			delete[] all_struct_intensity;
+		} // if master
 
-		delete[] c_struct_intensity;
-		delete[] struct_intensity;
-		delete[] fc_;
+		delete[] fc;
 
 		return true;
 	} // HipGISAXS::run_gisaxs()
 
 
-	bool HipGISAXS::structure_factor(std::string expt, vector3_t& center, Lattice* &curr_lattice,
+	bool HipGISAXS::structure_factor(StructureFactor& sf,
+									std::string expt, vector3_t& center, Lattice* &curr_lattice,
 									vector3_t& grain_repeats, vector3_t& r_tot1,
-									vector3_t& r_tot2, vector3_t& r_tot3,
-									MPI::Intracomm& world_comm) {
-#ifndef GPUSF
-		return sf_.compute_structure_factor(expt, center, curr_lattice, grain_repeats,
-											r_tot1, r_tot2, r_tot3, world_comm);
-#else
-		return sf_.compute_structure_factor_gpu(expt, center, curr_lattice, grain_repeats,
-												r_tot1, r_tot2, r_tot3, world_comm);
-#endif
+									vector3_t& r_tot2, vector3_t& r_tot3
+									#ifdef USE_MPI
+										, const char* comm_key
+									#endif
+									) {
+		#ifndef GPUSF
+			return sf.compute_structure_factor(expt, center, curr_lattice, grain_repeats,
+											r_tot1, r_tot2, r_tot3
+											#ifdef USE_MPI
+												, multi_node_, comm_key
+											#endif
+											);
+		#else
+			return sf.compute_structure_factor_gpu(expt, center, curr_lattice, grain_repeats,
+											r_tot1, r_tot2, r_tot3
+											#ifdef USE_MPI
+												, multi_node_, comm_key
+											#endif
+											);
+		#endif
 	} // HipGISAXS::structure_factor()
 
 
-	bool HipGISAXS::form_factor(ShapeName shape_name, std::string shape_file,
+	bool HipGISAXS::form_factor(FormFactor& ff,
+								ShapeName shape_name, std::string shape_file,
 								shape_param_list_t& shape_params, vector3_t &curr_transvec,
 								float_t shp_tau, float_t shp_eta,
-								vector3_t &r_tot1, vector3_t &r_tot2, vector3_t &r_tot3,
-								MPI::Intracomm& world_comm) {
-#ifndef GPUSF
-		return ff_.compute_form_factor(shape_name, shape_file, shape_params, single_layer_thickness_,
-										curr_transvec, shp_tau, shp_eta, r_tot1, r_tot2, r_tot3,
-										world_comm);
-#else
-		return ff_.compute_form_factor_gpu(shape_name, shape_file, shape_params, single_layer_thickness_,
-											curr_transvec, shp_tau, shp_eta, r_tot1, r_tot2, r_tot3,
-											world_comm);
-#endif
+								vector3_t &r_tot1, vector3_t &r_tot2, vector3_t &r_tot3
+								#ifdef USE_MPI
+									, const char* comm_key
+								#endif
+								) {
+		#ifndef GPUSF
+			return ff.compute_form_factor(shape_name, shape_file, shape_params,
+											single_layer_thickness_,
+											curr_transvec, shp_tau, shp_eta, r_tot1, r_tot2, r_tot3
+											#ifdef USE_MPI
+												, multi_node_, comm_key
+											#endif
+											);
+		#else
+			return ff.compute_form_factor_gpu(shape_name, shape_file, shape_params,
+											single_layer_thickness_,
+											curr_transvec, shp_tau, shp_eta, r_tot1, r_tot2, r_tot3
+											#ifdef USE_MPI
+												, multi_node_, comm_key
+											#endif
+											);
+		#endif
 	} // HipGISAXS::form_factor()
 
 
-	bool HipGISAXS::compute_rotation_matrix_z(float_t angle, vector3_t& r1, vector3_t& r2, vector3_t& r3) {
+	bool HipGISAXS::compute_rotation_matrix_z(float_t angle,
+												vector3_t& r1, vector3_t& r2, vector3_t& r3) {
 		float_t s = sin(angle);
 		float_t c = cos(angle);
 
@@ -1099,7 +1409,8 @@ namespace hig {
 	} // HipGISAXS::comptue_rotation_matrix_z()
 
 
-	bool HipGISAXS::compute_rotation_matrix_y(float_t angle, vector3_t& r1, vector3_t& r2, vector3_t& r3) {
+	bool HipGISAXS::compute_rotation_matrix_y(float_t angle,
+												vector3_t& r1, vector3_t& r2, vector3_t& r3) {
 		float_t s = sin(angle);
 		float_t c = cos(angle);
 
@@ -1108,10 +1419,11 @@ namespace hig {
 		r3[0] = s; r3[1] = 0.0; r3[2]  = c;
 
 		return true;
-	} // HipGISAXS::compute_rotation_matrix_x()
+	} // HipGISAXS::compute_rotation_matrix_y()
 
 
-	bool HipGISAXS::compute_rotation_matrix_x(float_t angle, vector3_t& r1, vector3_t& r2, vector3_t& r3) {
+	bool HipGISAXS::compute_rotation_matrix_x(float_t angle,
+												vector3_t& r1, vector3_t& r2, vector3_t& r3) {
 		float_t s = sin(angle);
 		float_t c = cos(angle);
 
@@ -1148,15 +1460,13 @@ namespace hig {
 			} else {
 				// the sample is described by 2 or more layers, slicing scheme will be applied
 				// NOTE: the case where a structure is implicitly in 2 different layers is
-				// not currently handled ...
+				// TODO: not currently handled ...
 				std::cerr << "uh-oh: this case (num_layers > 1) has not yet been implemented yet"
 							<< std::endl;
 				std::cerr << "go get yourself a nice cup of yummmy hot chocolate instead!" << std::endl;
 				return false;
 			} // if-else
 			vol_[0] = vol_[1] = spot_diameter;
-			//vol_[2] = std::real((penetration_depth_layer < c_max_depth) ?
-			//					penetration_depth_layer : c_max_depth);
 			vol_[2] = (penetration_depth_layer.real() < c_max_depth.real()) ?
 								penetration_depth_layer.real() : c_max_depth.real();
 		} else {
@@ -1172,7 +1482,7 @@ namespace hig {
 	bool HipGISAXS::compute_propagation_coefficients(float_t alpha_i,
 					complex_t* &amm, complex_t* &apm, complex_t* &amp, complex_t* &app,
 					complex_t* &rk1, complex_t* &rk2, complex_t* &rk1rk2, complex_t* &tk1tk2,
-					complex_t* &h0) {
+					complex_t* &h0, complex_t* &fc) {
 		amm = apm = amp = app = NULL;
 		rk1 = rk2 = rk1rk2 = tk1tk2 = NULL;
 		h0 = NULL;
@@ -1190,36 +1500,36 @@ namespace hig {
 			if(HiGInput::instance().struct_in_layer() && HiGInput::instance().num_layers() == 1) {
 				/* compute fresnel coefficients for a structure
 				 * embedded inside a layer on a substrate */
-				if(!compute_fresnel_coefficients_embedded(alpha_i)) {
+				if(!compute_fresnel_coefficients_embedded(alpha_i, fc)) {
 					std::cerr << "error: could not compute fresnel coefficients" << std::endl;
 					return false;
 				} // if
 				// set aliases
-				amm = fc_;
-				apm = fc_ + nqx_ * nqy_ * nqz_;
-				amp = fc_ + 2 * nqx_ * nqy_ * nqz_;
-				app = fc_ + 3 * nqx_ * nqy_ * nqz_;
-				h0 = fc_ + 4 * nqx_ * nqy_ * nqz_;
+				amm = fc;
+				apm = fc + nqx_ * nqy_ * nqz_;
+				amp = fc + 2 * nqx_ * nqy_ * nqz_;
+				app = fc + 3 * nqx_ * nqy_ * nqz_;
+				h0 = fc + 4 * nqx_ * nqy_ * nqz_;
 			} else if(HiGInput::instance().num_layers() == 1 || HiGInput::instance().num_layers() == 0) {
 				/* compute fresnel coefficients for a structure
 				 * on top of or buried inside a substrate */
-				if(!compute_fresnel_coefficients_top_buried(alpha_i)) {
+				if(!compute_fresnel_coefficients_top_buried(alpha_i, fc)) {
 					std::cerr << "error: could not compute fresnel coefficients" << std::endl;
 					return false;
 				} // if
 				// set aliases
-				rk1 = fc_;							// re-check these ...
-				rk2 = fc_ + nqx_ * nqy_ * nqz_;
-				rk1rk2 = fc_ + 2 * nqx_ * nqy_ * nqz_;
-				tk1tk2 = fc_ + 3 * nqx_ * nqy_ * nqz_;
-				h0 = fc_ + 4 * nqx_ * nqy_ * nqz_;
+				rk1 = fc;							// re-check these ...
+				rk2 = fc + nqx_ * nqy_ * nqz_;
+				rk1rk2 = fc + 2 * nqx_ * nqy_ * nqz_;
+				tk1tk2 = fc + 3 * nqx_ * nqy_ * nqz_;
+				h0 = fc + 4 * nqx_ * nqy_ * nqz_;
 			} else {
 				std::cerr << "error: invalid number of layers in non-slicing scheme" << std::endl;
 				return false;
 			} // if-else
 		} else {
 			/* computing using the sample slicing scheme */
-			// not yet implemented ...
+			// TODO: not yet implemented ...
 			std::cerr << "uh-oh: you hit a slicing part that has not been implemented yet" << std::endl;
 			return false;
 		} // if
@@ -1242,8 +1552,8 @@ namespace hig {
 	} // HipGISAXS::layer_qgrid_qz()
 
 
-	// optimize this later ...
-	bool HipGISAXS::compute_fresnel_coefficients_embedded(float_t alpha_i) {
+	// TODO optimize this later ...
+	bool HipGISAXS::compute_fresnel_coefficients_embedded(float_t alpha_i, complex_t* &fc) {
 		RefractiveIndex nl = single_layer_refindex_;
 		RefractiveIndex ns = substrate_refindex_;
 		float_t lt = single_layer_thickness_;
@@ -1287,8 +1597,8 @@ namespace hig {
 		} // for
 
 		// allocate fc memory
-		fc_ = new (std::nothrow) complex_t[5 * nqx_ * nqy_ * nqz_];	// 5 sets
-		if(fc_ == NULL) {
+		fc = new (std::nothrow) complex_t[5 * nqx_ * nqy_ * nqz_];	// 5 sets
+		if(fc == NULL) {
 			std::cerr << "error: failed to allocate memory for fc" << std::endl;
 			return false;
 		} // if
@@ -1309,7 +1619,7 @@ namespace hig {
 				for(unsigned int y = 0; y < nqy_; y ++) {
 					unsigned int temp2 = temp1 + nqx_ * y;
 					for(unsigned int x = 0; x < nqx_; x ++) {
-						fc_[temp2 + x] = complex_t(0.0, 0.0);
+						fc[temp2 + x] = complex_t(0.0, 0.0);
 					} // for x
 				} // for y
 			} else {	// kfz0 >= 0
@@ -1334,7 +1644,7 @@ namespace hig {
 				for(unsigned int y = 0; y < nqy_; y ++) {
 					unsigned int temp2 = temp1 + nqx_ * y;
 					for(unsigned int x = 0; x < nqx_; x ++) {
-						fc_[temp2 + x] = complex_t(1.0, 0.0);
+						fc[temp2 + x] = complex_t(1.0, 0.0);
 					} // for x
 				} // for y
 			} // if-else
@@ -1352,13 +1662,13 @@ namespace hig {
 		for(unsigned int z = 0; z < nqz_; z ++) {
 			for(unsigned int y = 0; y < nqy_; y ++) {
 				for(unsigned int x = 0; x < nqx_; x ++) {
-					fc_[0 * nqx_ * nqy_ * nqz_ + z * nqx_ * nqy_ + y * nqx_ + x] =
+					fc[0 * nqx_ * nqy_ * nqz_ + z * nqx_ * nqy_ + y * nqx_ + x] =
 						a1mi[z * nqx_ * nqy_ + y * nqx_ + x] * a1mf[z * nqx_ * nqy_ + y * nqx_ + x];
-					fc_[1 * nqx_ * nqy_ * nqz_ + z * nqx_ * nqy_ + y * nqx_ + x] =
+					fc[1 * nqx_ * nqy_ * nqz_ + z * nqx_ * nqy_ + y * nqx_ + x] =
 						a1pi[z * nqx_ * nqy_ + y * nqx_ + x] * a1mf[z * nqx_ * nqy_ + y * nqx_ + x];
-					fc_[2 * nqx_ * nqy_ * nqz_ + z * nqx_ * nqy_ + y * nqx_ + x] =
+					fc[2 * nqx_ * nqy_ * nqz_ + z * nqx_ * nqy_ + y * nqx_ + x] =
 						a1mi[z * nqx_ * nqy_ + y * nqx_ + x] * a1pf[z * nqx_ * nqy_ + y * nqx_ + x];
-					fc_[3 * nqx_ * nqy_ * nqz_ + z * nqx_ * nqy_ + y * nqx_ + x] =
+					fc[3 * nqx_ * nqy_ * nqz_ + z * nqx_ * nqy_ + y * nqx_ + x] =
 						a1pi[z * nqx_ * nqy_ + y * nqx_ + x] * a1pf[z * nqx_ * nqy_ + y * nqx_ + x];
 				} // for x
 			} // for y
@@ -1374,29 +1684,29 @@ namespace hig {
 
 
 	// optimize ...
-	bool HipGISAXS::compute_fresnel_coefficients_top_buried(float_t alpha_i) {
+	bool HipGISAXS::compute_fresnel_coefficients_top_buried(float_t alpha_i, complex_t* &fc) {
 		//complex_t tk1 = ((float_t) 2.0 * sin(alpha_i)) / ((float_t)sin(alpha_i) +
 		//										sqrt((float_t)pow(sin(alpha_i), 2) - dns2_));
 		complex_t tk1 = ((float_t) (2.0 * sin(alpha_i))) /
 						((float_t) sin(alpha_i) + sqrt((float_t)pow(sin(alpha_i), 2) - dns2_));
 		complex_t rk1 = tk1 - complex_t(1.0, 0.0);
 
-		fc_ = new (std::nothrow) complex_t[5 * nqx_ * nqy_ * nqz_];
-		if(fc_ == NULL) {
+		fc = new (std::nothrow) complex_t[5 * nqx_ * nqy_ * nqz_];
+		if(fc == NULL) {
 			std::cerr << "error: failed to allocate memory for fc" << std::endl;
 			return false;
 		} // if
 		for(unsigned int z = 0; z < nqz_; z ++) {
 			for(unsigned int y = 0; y < nqy_; y ++) {
 				for(unsigned int x = 0; x < nqx_; x ++) {
-					fc_[z * nqy_ * nqx_ + y * nqx_ + x] = rk1;
+					fc[z * nqy_ * nqx_ + y * nqx_ + x] = rk1;
 				} // for x
 			} // for y
 		} // for z
 
 		float_t k1z = -1.0 * k0_ * sin(alpha_i);
 		complex_t tk2, rk2;
-		//for(unsigned int z = nqz_ - 1; z >= 0; -- z) {
+		unsigned long int nqxyz = nqx_ * nqy_ * nqz_;
 		for(unsigned int z = 0; z < nqz_; ++ z) {
 			complex_t k2z = QGrid::instance().qz(z) + k1z;
 			if(k2z < 0) {
@@ -1404,8 +1714,8 @@ namespace hig {
 				rk2 = complex_t(0.0, 0.0);
 				for(unsigned int y = 0; y < nqy_; ++ y) {
 					for(unsigned int x = 0; x < nqx_; ++ x) {
-						fc_[0 * nqx_ * nqy_ * nqz_ + z * nqx_ * nqy_ + y * nqx_ + x] = complex_t(0.0, 0.0);
-						fc_[4 * nqx_ * nqy_ * nqz_ + z * nqx_ * nqy_ + y * nqx_ + x] = complex_t(0.0, 0.0);
+						fc[0 * nqxyz + z * nqx_ * nqy_ + y * nqx_ + x] = complex_t(0.0, 0.0);
+						fc[4 * nqxyz + z * nqx_ * nqy_ + y * nqx_ + x] = complex_t(0.0, 0.0);
 					} // for x
 				} // for y
 			} else {
@@ -1414,16 +1724,16 @@ namespace hig {
 				rk2 = tk2 - (float_t) 1.0;
 				for(unsigned int y = 0; y < nqy_; y ++) {
 					for(unsigned int x = 0; x < nqx_; x ++) {
-						fc_[4 * nqx_ * nqy_ * nqz_ + z * nqx_ * nqy_ + y * nqx_ + x] = complex_t(1.0, 0.0);
+						fc[4 * nqxyz + z * nqx_ * nqy_ + y * nqx_ + x] = complex_t(1.0, 0.0);
 					} // for x
 				} // for y
 			} // if-else
 
 			for(unsigned int y = 0; y < nqy_; y ++) {
 				for(unsigned int x = 0; x < nqx_; x ++) {
-					fc_[1 * nqx_ * nqy_ * nqz_ + z * nqx_ * nqy_ + y * nqx_ + x] = rk2;
-					fc_[2 * nqx_ * nqy_ * nqz_ + z * nqx_ * nqy_ + y * nqx_ + x] = rk1 * rk2;
-					fc_[3 * nqx_ * nqy_ * nqz_ + z * nqx_ * nqy_ + y * nqx_ + x] = tk1 * tk2;
+					fc[1 * nqxyz + z * nqx_ * nqy_ + y * nqx_ + x] = rk2;
+					fc[2 * nqxyz + z * nqx_ * nqy_ + y * nqx_ + x] = rk1 * rk2;
+					fc[3 * nqxyz + z * nqx_ * nqy_ + y * nqx_ + x] = tk1 * tk2;
 				} // for x
 			} // for y
 		} // for z
@@ -1446,13 +1756,15 @@ namespace hig {
 			if(dim == 3) {
 				// find max density - number of grains in vol
 				vector3_t max_density = min(floor(vol_ / spaced_cell) + 1, maxgrains);
-				rand_dim_x = max(1, (int)std::floor(max_density[0] * max_density[1] * max_density[2] / 4.0));
+				rand_dim_x = max(1,
+							(int)std::floor(max_density[0] * max_density[1] * max_density[2] / 4.0));
 				rand_dim_y = 3;
 
 				// construct random matrix
 				float_t *d_rand = new (std::nothrow) float_t[rand_dim_x * rand_dim_y];
 				srand(time(NULL));
-				for(int i = 0; i < rand_dim_x * rand_dim_y; ++ i) d_rand[i] = ((float_t)rand() / RAND_MAX);
+				for(int i = 0; i < rand_dim_x * rand_dim_y; ++ i)
+					d_rand[i] = ((float_t)rand() / RAND_MAX);
 
 				d = new (std::nothrow) float_t[rand_dim_x * rand_dim_y * 4];
 
@@ -1602,8 +1914,8 @@ namespace hig {
 		vector3_t rot3 = (*s).second.rotation_rot3();
 
 		nn = new (std::nothrow) float_t[ndx * ndy];
-												// i believe constructing nn may not be needed ...
-		if(distribution == "single") {			// single
+											// TODO i believe constructing nn may not be needed ...
+		if(distribution == "single") {		// single
 			for(int x = 0; x < ndx; ++ x) {
 				//nn[x] = tau[0] * PI_ / 180;
 				nn[x] = rot1[1] * PI_ / 180;
@@ -1645,7 +1957,7 @@ namespace hig {
 			} // for x
 			for(int x = 0; x < 2 * ndx; ++ x) nn[ndx + x] = 0;*/
 		} else {
-			// read .ori file ...
+			// TODO read .ori file ...
 			std::cerr << "uh-oh: I guess you wanted to read orientations from a file" << std::endl;
 			std::cerr << "too bad, its not implemented yet" << std::endl;
 			return false;
@@ -1654,6 +1966,39 @@ namespace hig {
 		return true;
 	} // HipGISAXS::orientation_distribution()
 
+
+	void HipGISAXS::save_gisaxs(float_t *final_data, std::string output) {
+		std::ofstream f(output.c_str());
+		for(unsigned int z = 0; z < nqz_; ++ z) {
+			for(unsigned int y = 0; y < nqy_; ++ y) {
+				unsigned int index = nqy_ * z + y;
+				f << final_data[index] << "\t";
+			} // for
+			f << std::endl;
+		} // for
+		f.close();
+	} // HipGISAXS::save_gisaxs()
+	
+	
+	void HipGISAXS::printfr(const char* name, float_t* arr, unsigned int size) {
+		std::cout << name << ":" << std::endl;
+		if(arr == NULL) { std::cout << "NULL" << std::endl; return; }
+		for(unsigned int i = 0; i < size; ++ i) {
+			std::cout << arr[i] << "\t";
+		} // for
+		std::cout << std::endl;
+	} // HipGISAXS::printfr()
+ 
+
+	void HipGISAXS::printfc(const char* name, complex_t* arr, unsigned int size) {
+		std::cout << name << ":" << std::endl;
+		if(arr == NULL) { std::cout << "NULL" << std::endl; return; }
+		for(unsigned int i = 0; i < size; ++ i) {
+			std::cout << arr[i].real() << "," << arr[i].imag() << "\t";
+		} // for
+		std::cout << std::endl;
+	} // HipGISAXS::printfc()
+ 
 
 	// for testing
 	bool HipGISAXS::write_qgrid(char* filename) {
@@ -1679,8 +2024,8 @@ namespace hig {
 	} // HipGISAXS::write_qgrid()
 
 
-	bool HipGISAXS::read_form_factor(const char* filename) {
-		return ff_.read_form_factor(filename, nqx_, nqy_, nqz_extended_);
+	bool HipGISAXS::read_form_factor(FormFactor& ff, const char* filename) {
+		return ff.read_form_factor(filename, nqx_, nqy_, nqz_extended_);
 	} // HipGISAXS::read_form_factor()
 
 } // namespace hig

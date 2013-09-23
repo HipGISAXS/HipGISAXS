@@ -3,7 +3,7 @@
  *
  *  File: ff_num.hpp
  *  Created: Nov 05, 2011
- *  Modified: Fri 13 Sep 2013 04:23:46 PM PDT
+ *  Modified: Wed 18 Sep 2013 11:44:57 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -33,6 +33,10 @@
 
 #include "woo/timer/woo_boostchronotimers.hpp"
 
+#ifdef USE_MPI
+#include "woo/comm/multi_node_comm.hpp"
+#endif
+
 #include "parameters.hpp"
 #include "object2hdf5.h"
 #include "qgrid.hpp"
@@ -40,7 +44,7 @@
 #ifdef FF_NUM_GPU
 	#include "ff_num_gpu.cuh"	// for gpu version
 #elif defined USE_MIC
-	#include "ff_num_mic.hpp"	// for mic version -- TODO: merge it with cpu version ...
+	#include "ff_num_mic.hpp"	// for mic version
 #else
 	#include "ff_num_cpu.hpp"	// for cpu version
 #endif // FF_NUM_GPU
@@ -50,26 +54,6 @@ namespace hig {
 	/**
 	 * Some declarations.
 	 */
-	// for gpu version
-	//template<typename float_t, typename complex_t>
-/*	extern unsigned int compute_form_factor_gpu(int rank,
-							std::vector<float_t> &shape_def, unsigned int num_triangles,
-							std::vector<short int> &axes,
-							float_t* &qx_h, int nqx,
-							float_t* &qy_h, int nqy,
-							cucomplex_t* &qz_h, int nqz,
-							cucomplex_t* &ff,
-							float_t& kernel_time, float_t& red_time, float_t& mem_time
-	#ifdef FINDBLOCK
-							, const int block_x, const int block_y, const int block_z, const int block_t
-	#endif
-	#ifdef KERNEL2
-							, unsigned int cuda_t, unsigned int cuda_y, unsigned int cuda_z
-	#else // default kernel
-							, unsigned int cuda_t
-	#endif
-							);
-*/	
 	#ifdef FF_NUM_GPU
 		void write_slice_to_file(cucomplex_t *ff, int nqx, int nqy, int nqz,
 									char* filename, int axis, int slice);
@@ -79,12 +63,11 @@ namespace hig {
 	/**
 	 * Class for computing Form Factor across multiple nodes using MPI.
 	 */
-	//template<typename float_t, typename complex_t, typename cucomplex_t>
 	class NumericFormFactor {
 				// TODO: make the cpu and cpu version classes children of this class ...
 		public:
 
-			#ifdef FF_NUM_GPU	// use GPUs for numerical
+			#ifdef FF_NUM_GPU		// use GPUs for numerical
 				#ifdef FF_NUM_GPU_FUSED
 					NumericFormFactor(int block_cuda_y, int block_cuda_z):
 									block_cuda_t_(0),
@@ -99,9 +82,9 @@ namespace hig {
 				#else
 					NumericFormFactor(int block_cuda): block_cuda_(block_cuda), gff_(block_cuda) { }
 				#endif // KERNEL2
-			#elif defined USE_MIC
+			#elif defined USE_MIC	// use MICs for numerical
 				NumericFormFactor(): mff_() { }
-			#else				// use CPUs for numerical
+			#else					// use CPUs for numerical
 				NumericFormFactor(): cff_() { }
 			#endif	// FF_NUM_GPU
 
@@ -111,8 +94,11 @@ namespace hig {
 			void clear() { }				// TODO ...
 
 			bool compute(const char* filename, std::vector<complex_t>& ff,
-							vector3_t&, vector3_t&, vector3_t&,
-							MPI::Intracomm& world_comm);
+							vector3_t&, vector3_t&, vector3_t&
+							#ifdef USE_MPI
+								, woo::MultiNode&, const char*
+							#endif
+							);
 	
 		private:
 
@@ -140,19 +126,17 @@ namespace hig {
 			unsigned int read_shape_surface_file(const char* filename, float_vec_t& shape_def);
 			unsigned int read_shapes_hdf5(const char* filename,
 										#ifndef __SSE3__
-											float_vec_t& shape_def,
+											float_vec_t& shape_def
 										#else
 											#ifdef USE_GPU
-												float_vec_t &shape_def,
+												float_vec_t &shape_def
 											#else
-												float_t* &shape_def,
+												float_t* &shape_def
 											#endif
 										#endif
-										MPI::Intracomm& comm);
+										);
 			void find_axes_orientation(std::vector<float_t> &shape_def, std::vector<short int> &axes);
-			void construct_ff(int rank, int num_procs, MPI::Comm &comm,
-								MPI::Comm &col_comm, MPI::Comm &row_comm,
-								int p_nqx, int p_nqy, int p_nqz,
+			bool construct_ff(int p_nqx, int p_nqy, int p_nqz,
 								int nqx, int nqy, int nqz,
 								int p_y, int p_z,
 								#ifdef FF_NUM_GPU
@@ -160,14 +144,17 @@ namespace hig {
 								#else
 									complex_t* p_ff,
 								#endif
-								std::vector<complex_t>& ff,
+								complex_vec_t& ff,
+								#ifdef USE_MPI
+									woo::MultiNode&, const char*,
+								#endif
 								float_t&, float_t&);
-			void gather_all(std::complex<float> *cast_p_ff, unsigned long int local_qpoints,
-								std::complex<float> *cast_ff,
-								int *recv_counts, int *displacements, MPI::Comm &comm);
-			void gather_all(std::complex<double> *cast_p_ff, unsigned long int local_qpoints,
-								std::complex<double> *cast_ff,
-								int *recv_counts, int *displacements, MPI::Comm &comm);
+			//void gather_all(std::complex<float> *cast_p_ff, unsigned long int local_qpoints,
+			//					std::complex<float> *cast_ff,
+			//					int *recv_counts, int *displacements, MPI::Comm &comm);
+			//void gather_all(std::complex<double> *cast_p_ff, unsigned long int local_qpoints,
+			//					std::complex<double> *cast_ff,
+			//					int *recv_counts, int *displacements, MPI::Comm &comm);
 
 	}; // class NumericFormFactor
 	

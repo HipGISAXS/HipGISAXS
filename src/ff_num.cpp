@@ -3,7 +3,7 @@
  *
  *  File: ff_num.cpp
  *  Created: Jul 18, 2012
- *  Modified: Sun 15 Sep 2013 08:35:44 PM PDT
+ *  Modified: Sun 22 Sep 2013 06:15:43 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -62,31 +62,35 @@ namespace hig {
 	 * main host function
 	 */
 	bool NumericFormFactor::compute(const char* filename, complex_vec_t& ff,
-									vector3_t& rot1, vector3_t& rot2, vector3_t& rot3,
-									MPI::Intracomm& world_comm) {
+									vector3_t& rot1, vector3_t& rot2, vector3_t& rot3
+									#ifdef USE_MPI
+										, woo::MultiNode& world_comm, const char* comm_key
+									#endif
+									) {
 		float_t comp_start = 0.0, comp_end = 0.0, comm_start = 0.0, comm_end = 0.0;
 		float_t mem_start = 0.0, mem_end = 0.0;
 		float_t comp_time = 0.0, comm_time = 0.0, mem_time = 0.0, kernel_time = 0.0, red_time = 0.0;
 		float_t total_start = 0.0, total_end = 0.0, total_time = 0.0;
 
 		woo::BoostChronoTimer maintimer, computetimer;
+		woo::BoostChronoTimer commtimer, memtimer;
 
 		unsigned int nqx = QGrid::instance().nqx();
 		unsigned int nqy = QGrid::instance().nqy();
 		unsigned int nqz = QGrid::instance().nqz_extended();
-		
-		comm_start = MPI::Wtime();
+
+		#ifdef USE_MPI
+			bool master = world_comm.is_master(comm_key);
+			commtimer.start();
+			world_comm.barrier(comm_key);
+			commtimer.stop();
+			comm_time += commtimer.elapsed_msec();
+		#else
+			bool master = true;
+		#endif
+
 	
-		world_comm.Barrier();	
-		int rank = world_comm.Get_rank();
-		int num_procs = world_comm.Get_size();
-		
-		comm_end = MPI::Wtime();
-		comm_time += comm_end - comm_start;
-	
-		mem_start = MPI::Wtime();
-	
-		// all procs read the shape file
+		// warning: all procs read the shape file!!!!
 		// TODO: improve to parallel IO, or one proc reading and sending to all ...
 		#ifndef __SSE3__
 			float_vec_t shape_def;
@@ -98,7 +102,7 @@ namespace hig {
 			#endif
 		#endif
 		// use the new file reader instead ...
-		unsigned int num_triangles = read_shapes_hdf5(filename, shape_def, world_comm);
+		unsigned int num_triangles = read_shapes_hdf5(filename, shape_def);
 						// TODO ... <--- sadly all procs read this! IMPROVE!!!
 	
 		// TODO: temporary ... remove ...
@@ -111,46 +115,52 @@ namespace hig {
 			find_axes_orientation(shape_def, axes);
 		#endif
 
-		if(rank == 0) {
+		#ifdef USE_MPI
+			int num_procs = world_comm.size(comm_key);
+			int rank = world_comm.rank(comm_key);
+		#endif
+
+		if(master) {
 			std::cout << "-- Numerical form factor computation ..." << std::endl
 						<< "**        Using input shape file: " << filename << std::endl
 						<< "**     Number of input triangles: " << num_triangles << std::endl
 						<< "**  Q-grid resolution (q-points): " << nqx * nqy * nqz << std::endl
 			            << "**               NQX x NQY x NQZ: "
 						<< nqx << " x " << nqy << " x " << nqz << std::endl
-						<< "** Number of processes requested: " << num_procs << std::endl << std::flush;
+						#ifdef USE_MPI
+							<< "** Number of processes requested: " << num_procs << std::endl
+						#endif
+						<< std::flush;
 		} // if
 		if(num_triangles < 1) {
 			std::cerr << "error: no triangles found in specified definition file" << std::endl;
 			return false;
 		} // if
 	
-		// decompose along y and z directions into blocks
-		int p_y = std::floor(sqrt((float_t) num_procs));	// some procs may be idle ...
-		int p_z = num_procs / p_y;
+		#ifdef USE_MPI
+			// decompose along y and z directions into blocks
+			int p_y = std::floor(sqrt((float_t) num_procs));	// some procs may be idle ...
+			int p_z = num_procs / p_y;
 		
-		int p_nqx = nqx;
-		int p_nqy = nqy / p_y + (((rank / p_z) < (int)nqy % p_y) ? 1 : 0);
-		int p_nqz = nqz / p_z + (((rank % p_z) < (int)nqz % p_z) ? 1 : 0);
-	
-		mem_end = MPI::Wtime();
-		mem_time += mem_end - mem_start;
-		
-		// create row-wise and column-wise communicators
-		comm_start = MPI::Wtime();
-		MPI::Intracomm row_comm, col_comm;
-		int row = rank / p_z, col = rank % p_z;
-		if(row >= p_y) col = p_z;	// idle processes
-		row_comm = world_comm.Split(row, rank);
-		col_comm = world_comm.Split(col, rank);
-	
-		// construct a communicator for procs with rank < p_y * p_z
-		// so that the idle procs do not participate at all
-		MPI::Intracomm main_comm; int idle = 0;
-		if(rank >= p_y * p_z) idle = 1;
-		main_comm = world_comm.Split(idle, rank);
-		comm_end = MPI::Wtime();
-		comm_time += comm_end - comm_start;
+			int p_nqx = nqx;
+			int p_nqy = nqy / p_y + (((rank / p_z) < (int)nqy % p_y) ? 1 : 0);
+			int p_nqz = nqz / p_z + (((rank % p_z) < (int)nqz % p_z) ? 1 : 0);
+
+			commtimer.start();
+
+			int idle = 0;
+			if(world_comm.rank(comm_key) >= p_y * p_z) idle = 1;
+			const char* real_world = "ff_num_real_world";
+			world_comm.split(real_world, comm_key, idle);
+
+			commtimer.stop();
+			comm_time += commtimer.elapsed_msec();
+		#else
+			int p_y = 1, p_z = 1;
+			int p_nqx = nqx;
+			int p_nqy = nqy;
+			int p_nqz = nqz;
+		#endif // USE_MPI
 	
 		#ifdef FINDBLOCK
 			int block_x = 0, block_y = 0, block_z = 0, block_t = 0;
@@ -168,30 +178,45 @@ namespace hig {
 		
 		maintimer.start();
 
-		if(rank < p_y * p_z) {
-			total_start = MPI::Wtime();
-	
-			int value = 1;
-			int nidle_num_procs = 0;
-	
-			comm_start = MPI::Wtime();
-			main_comm.Allreduce(&value, &nidle_num_procs, 1, MPI::INT, MPI::SUM);
-			if(rank == 0) {
-				std::cout << "++  Number of MPI processes used: " << nidle_num_procs << std::endl
-						  << "++                 MPI grid size: 1 x " << p_y << " x " << p_z
-						  << std::endl << std::flush;
+		#ifdef USE_MPI
+		if(world_comm.rank(comm_key) < p_y * p_z) {		// only the non-idle processors
+			bool master = world_comm.is_master(real_world);
+			if(master) {
+				std::cout << "++  Number of MPI processes used: "
+							<< world_comm.size(real_world) << std::endl
+							<< "++                 MPI grid size: 1 x " << p_y << " x " << p_z
+							<< std::endl << std::flush;
 			} // if
-	
+
+			commtimer.start();
+
+			int rank = world_comm.rank(real_world);
+			int size = world_comm.size(real_world);
+
+			// create row-wise and column-wise communicators
+			int row = rank / p_z, col = rank % p_z;
+			world_comm.split("ff_num_row_comm", real_world, row);
+			world_comm.split("ff_num_col_comm", real_world, col);
+
 			// perform MPI scan operation to compute y_offset and z_offset
+
 			unsigned int y_offset = 0, z_offset = 0;
-			col_comm.Scan(&p_nqy, &y_offset, 1, MPI::INT, MPI::SUM);
-			row_comm.Scan(&p_nqz, &z_offset, 1, MPI::INT, MPI::SUM);
-			comm_end = MPI::Wtime();
-			comm_time += comm_end - comm_start;
+			world_comm.scan_sum("ff_num_col_comm", p_nqy, y_offset);
+			world_comm.scan_sum("ff_num_row_comm", p_nqz, z_offset);
+
+			commtimer.stop();
+			comm_time += commtimer.elapsed_msec();
 	
-			mem_start = MPI::Wtime();
 			y_offset -= p_nqy;
 			z_offset -= p_nqz;
+		#else
+			master = true;
+			unsigned int y_offset = 0, z_offset = 0;
+			int rank = 0;
+			int size = 1;
+		#endif // USE_MPI
+
+			memtimer.start();
 
 			// FIXME: this is a yucky temporary fix ... fix properly ...
 			float_t* qx = new (std::nothrow) float_t[nqx]();
@@ -217,29 +242,36 @@ namespace hig {
 				#endif
 			} // for
 			
-			// create p_ff buffers	<----- TODO: IMPROVE for all procs!!!
-			float_t *p_qy = NULL;
-			p_qy = new (std::nothrow) float_t[p_nqy]();
-			if(p_qy == NULL) { return 0; }
-			memcpy(p_qy, (void*) (qy + y_offset), p_nqy * sizeof(float_t));
-			#ifdef FF_NUM_GPU
-				cucomplex_t *p_qz = NULL;
-				p_qz = new (std::nothrow) cucomplex_t[p_nqz]();
-				if(p_qz == NULL) { delete[] p_qy; return 0; }
-				memcpy(p_qz, (void*) (qz + z_offset), p_nqz * sizeof(cucomplex_t));
-			#else // TODO: avoid the following ...
-				complex_t *p_qz = NULL;
-				p_qz = new (std::nothrow) complex_t[p_nqz]();
-				if(p_qz == NULL) { delete[] p_qy; return 0; }
-				memcpy(p_qz, (void*) (qz + z_offset), p_nqz * sizeof(complex_t));
-			#endif
+			#ifdef USE_MPI
+				// create p_ff buffers	<----- TODO: IMPROVE for all procs!!!
+				float_t *p_qy = NULL;
+				p_qy = new (std::nothrow) float_t[p_nqy]();
+				if(p_qy == NULL) { return 0; }
+				memcpy(p_qy, (void*) (qy + y_offset), p_nqy * sizeof(float_t));
+				#ifdef FF_NUM_GPU
+					cucomplex_t *p_qz = NULL;
+					p_qz = new (std::nothrow) cucomplex_t[p_nqz]();
+					if(p_qz == NULL) { delete[] p_qy; return 0; }
+					memcpy(p_qz, (void*) (qz + z_offset), p_nqz * sizeof(cucomplex_t));
+				#else // TODO: avoid the following ...
+					complex_t *p_qz = NULL;
+					p_qz = new (std::nothrow) complex_t[p_nqz]();
+					if(p_qz == NULL) { delete[] p_qy; return 0; }
+					memcpy(p_qz, (void*) (qz + z_offset), p_nqz * sizeof(complex_t));
+				#endif	// FF_NUM_GPU
+			#else	// no MPI
+				float_t *p_qy = qy;
+				#ifdef FF_NUM_GPU
+					cucomplex_t *p_qz = qz;
+				#else
+					complex_t *p_qz = qz;
+				#endif // FF_NUM_GPU
+			#endif	// USE_MPI
 	
-			mem_end = MPI::Wtime();
-			mem_time += mem_end - mem_start;
+			memtimer.stop();
+			mem_time += memtimer.elapsed_msec();
 		
 			// compute local
-			comp_start = MPI::Wtime();
-			float_t temp_mem_time = 0.0, temp_comm_time = 0.0;
 
 			#ifdef FF_NUM_GPU
 				cucomplex_t *p_ff = NULL;
@@ -250,11 +282,13 @@ namespace hig {
 			computetimer.reset();
 			computetimer.start();
 
-			unsigned int ret_nt = 0;
+			unsigned int ret_numtriangles = 0;
+
+			float_t temp_mem_time = 0.0;
 
 			#ifdef FF_NUM_GPU	// use GPU
 				#ifdef FF_NUM_GPU_FUSED
-					ret_nt = gff_.compute_form_factor_kb_fused(rank, shape_def, axes, p_ff,
+					ret_numtriangles = gff_.compute_form_factor_kb_fused(rank, shape_def, axes, p_ff,
 												qx, p_nqx, p_qy, p_nqy, p_qz, p_nqz, 3,
 												rot_,
 												kernel_time, red_time, temp_mem_time
@@ -263,7 +297,7 @@ namespace hig {
 												#endif
 												);
 				#else
-					ret_nt = gff_.compute_form_factor_db(rank, shape_def, axes, p_ff,
+					ret_numtriangles = gff_.compute_form_factor_db(rank, shape_def, axes, p_ff,
 												qx, p_nqx, p_qy, p_nqy, p_qz, p_nqz,
 												rot_,
 												kernel_time, red_time, temp_mem_time
@@ -274,7 +308,7 @@ namespace hig {
 				#endif
 			#elif defined USE_MIC	// use MIC
 				#ifndef FF_NUM_MIC_KB
-					ret_nt = mff_.compute_form_factor_db(rank, shape_def, p_ff,
+					ret_numtriangles = mff_.compute_form_factor_db(rank, shape_def, p_ff,
 												qx, p_nqx, p_qy, p_nqy, p_qz, p_nqz,
 												rot_,
 												kernel_time, red_time, temp_mem_time
@@ -283,7 +317,7 @@ namespace hig {
 												#endif
 												);
 				#else
-					ret_nt = mff_.compute_form_factor_kb(rank, shape_def,
+					ret_numtriangles = mff_.compute_form_factor_kb(rank, shape_def,
 												num_triangles,
 												p_ff,
 												qx, p_nqx, p_qy, p_nqy, p_qz, p_nqz, 3,
@@ -295,7 +329,7 @@ namespace hig {
 												);
 				#endif
 			#else	// use only CPU
-				ret_nt = cff_.compute_form_factor(rank, shape_def,
+				ret_numtriangles = cff_.compute_form_factor(rank, shape_def,
 												#ifdef __SSE3__
 													num_triangles,
 												#endif
@@ -310,17 +344,17 @@ namespace hig {
 			#endif
 
 			computetimer.stop();
-
+			comp_time += computetimer.elapsed_msec();
 			mem_time += (temp_mem_time / 1000);
-			comp_end = MPI::Wtime();
-			comp_time += comp_end - comp_start;
 	
 			// gather everything on proc 0
-			if(ret_nt > 0) {
-				temp_mem_time = 0.0; temp_comm_time = 0.0;
-				construct_ff(rank, nidle_num_procs, main_comm, col_comm, row_comm,
-						p_nqx, p_nqy, p_nqz, nqx, nqy, nqz, p_y, p_z, p_ff, ff,
-						temp_mem_time, temp_comm_time);
+			if(ret_numtriangles > 0) {
+				float_t temp_mem_time = 0.0, temp_comm_time = 0.0;
+				construct_ff(p_nqx, p_nqy, p_nqz, nqx, nqy, nqz, p_y, p_z, p_ff, ff,
+								#ifdef USE_MPI
+									world_comm, real_world,
+								#endif
+								temp_mem_time, temp_comm_time);
 				mem_time += temp_mem_time;
 				comm_time += temp_comm_time;
 			} // if
@@ -330,31 +364,31 @@ namespace hig {
 														// only slice along x implemented for now
 			} // if*/
 	
-			comm_start = MPI::Wtime();
-			main_comm.Barrier();
-			comm_end = MPI::Wtime();
-			comm_time += comm_end - comm_start;
+			#ifdef USE_MPI
+				world_comm.barrier(real_world);
+			#endif
 	
-			mem_start = MPI::Wtime();
+			memtimer.start();
+			
 			#ifdef FINDBLOCK
-				//if(ff != NULL) delete[] ff;
 				ff.clear();
 			#endif
 			if(p_ff != NULL) delete[] p_ff;
-			delete[] p_qz;
-			delete[] p_qy;
+			#ifdef USE_MPI
+				delete[] p_qz;
+				delete[] p_qy;
+			#endif
 			delete[] qz;
 			delete[] qy;
 			delete[] qx;
 
+			memtimer.stop();
 			maintimer.stop();
 	
-			total_end = MPI::Wtime();
-			total_time = total_end - total_start;
-			mem_end = MPI::Wtime();
-			mem_time += mem_end - mem_start;
+			total_time = maintimer.elapsed_msec();
+			mem_time += memtimer.elapsed_msec();
 	
-			if(rank == 0) {
+			if(master) {
 				std::cout
 						<< "**                FF kernel time: " << kernel_time << " ms." << std::endl
 						<< "**               FF compute time: " << computetimer.elapsed_msec() << " ms."
@@ -384,17 +418,16 @@ namespace hig {
 				gflops = mflop / kernel_time;
 				std::cout << "**            Kernel performance: " << gflops << " GFLOPS/s" << std::endl;
 			} // if
+		#ifdef USE_MPI
+			world_comm.free("ff_num_row_comm");
+			world_comm.free("ff_num_col_comm");
 		} // if
-
-		#ifndef FINDBLOCK
-			if(rank == 0) {
-				//int naninfs = count_naninfs((int)nqx, (int)nqy, (int)nqz, ff);
-				//std::cout << " ------ " << naninfs << " / " << nqx * nqy * nqz
-				//			<< " nans or infs" << std::endl;
-			} // if
 		#endif
-	
-		world_comm.Barrier();
+
+		#ifdef USE_MPI
+			world_comm.barrier(comm_key);
+			world_comm.free(real_world);
+		#endif
 
 		#ifdef FINDBLOCK
 			} // block_t
@@ -411,9 +444,7 @@ namespace hig {
 	 * Function to gather partial FF arrays from all processes to construct the final FF.
 	 * This is a bottleneck for large num procs ...
 	 */
-	void NumericFormFactor::construct_ff(int rank, int num_procs,
-											MPI::Comm &comm, MPI::Comm &col_comm, MPI::Comm &row_comm,
-											int p_nqx, int p_nqy, int p_nqz,
+	bool NumericFormFactor::construct_ff(int p_nqx, int p_nqy, int p_nqz,
 											int nqx, int nqy, int nqz,
 											int p_y, int p_z,
 											#ifdef FF_NUM_GPU
@@ -421,26 +452,38 @@ namespace hig {
 											#else
 												complex_t* p_ff,
 											#endif
-											//complex_t* &ff,
 											complex_vec_t& ff,
+											#ifdef USE_MPI
+												woo::MultiNode& world_comm, const char* comm_key,
+											#endif
 											float_t& mem_time, float_t& comm_time) {
 		float_t mem_start = 0, mem_end = 0, comm_start = 0, comm_end = 0;
+		woo::BoostChronoTimer memtimer, commtimer;
 		mem_time = 0; comm_time = 0;
+
+		#ifdef USE_MPI
+			bool master = world_comm.is_master(comm_key);
+			int size = world_comm.size(comm_key);
+			int rank = world_comm.rank(comm_key);
+		#else
+			bool master = true;
+			int size = 1;
+			int rank = 0;
+		#endif
+
+		memtimer.start();
 	
-		mem_start = MPI::Wtime();
-	
-		unsigned long int local_qpoints = p_nqx * p_nqy * p_nqz;
+		int local_qpoints = p_nqx * p_nqy * p_nqz;
 		unsigned long int total_qpoints = nqx * nqy * nqz;
 	
 		// process 0 creates the main ff, and collects computed p_ff from all others (just use gather)
-//		if(rank == 0) ff = new (std::nothrow) cucomplex_t[total_qpoints];
 		ff.clear();
 		#ifdef FF_NUM_GPU
 			cucomplex_t* all_ff = NULL;		// TODO: improve this ...
 		#else
 			complex_t* all_ff = NULL;
 		#endif
-		if(rank == 0) {
+		if(master) {
 			ff.reserve(total_qpoints);
 			ff.assign(total_qpoints, complex_t(0.0, 0.0));
 			#ifdef FF_NUM_GPU
@@ -450,62 +493,80 @@ namespace hig {
 			#endif
 		} // if
 	
-		// construct stuff for gatherv
-		int *recv_counts = new (std::nothrow) int[num_procs]();
-		int *displacements = new (std::nothrow) int[num_procs]();
-		mem_end = MPI::Wtime();
-		mem_time += mem_end - mem_start;
-		comm_start = MPI::Wtime();
-		comm.Allgather(&local_qpoints, 1, MPI::INT, recv_counts, 1, MPI::INT);
-		comm_end = MPI::Wtime();
-		comm_time += comm_end - comm_start;
-	
-		mem_start = MPI::Wtime();
-		displacements[0] = 0;
-		for(int i = 1; i < num_procs; ++ i) {
-			displacements[i] = displacements[i - 1] + recv_counts[i - 1];
-		} // for
+		mem_time += memtimer.elapsed_msec();
+
+		int *recv_p_nqy = new (std::nothrow) int[p_y]();
+		recv_p_nqy[0] = p_nqy;
+		int *off_p_nqy = new (std::nothrow) int[p_y]();
+		off_p_nqy[0] = 0;
+
 		#ifdef FF_NUM_GPU
 			cucomplex_t *ff_buffer = new (std::nothrow) cucomplex_t[total_qpoints];
 		#else
 			complex_t *ff_buffer = new (std::nothrow) complex_t[total_qpoints];
 		#endif
 		if(ff_buffer == NULL) {
-			std::cerr << "Error allocating memory for ff buffer" << std::endl;
-			return;
+			std::cerr << "error: failed to allocate memory for ff buffer" << std::endl;
+			return false;
 		} // if
-		complex_t *cast_p_ff, *cast_ff;
-		#ifdef FF_NUM_GPU
-			cast_p_ff = reinterpret_cast<complex_t*>(p_ff);
-			cast_ff = reinterpret_cast<complex_t*>(ff_buffer);
+
+		#ifdef USE_MPI
+			// construct stuff for gatherv
+			int *recv_counts = new (std::nothrow) int[size]();
+			int *displs = new (std::nothrow) int[size]();
+
+			commtimer.start();
+
+			//comm.Allgather(&local_qpoints, 1, MPI::INT, recv_counts, 1, MPI::INT);
+			world_comm.allgather(comm_key, &local_qpoints, 1, recv_counts, 1);
+
+			commtimer.stop();
+			comm_time += commtimer.elapsed_msec();
+			memtimer.start();
+
+			displs[0] = 0;
+			for(int i = 1; i < size; ++ i) {
+				displs[i] = displs[i - 1] + recv_counts[i - 1];
+			} // for
+			complex_t *cast_p_ff, *cast_ff;
+			#ifdef FF_NUM_GPU
+				cast_p_ff = reinterpret_cast<complex_t*>(p_ff);
+				cast_ff = reinterpret_cast<complex_t*>(ff_buffer);
+			#else
+				cast_p_ff = p_ff;
+				cast_ff = ff_buffer;
+			#endif
+
+			memtimer.stop();
+			mem_time += memtimer.elapsed_msec();
+	
+			commtimer.start();
+
+			world_comm.gatherv(comm_key, cast_p_ff, local_qpoints, cast_ff, recv_counts, displs);
+	
+			world_comm.gather("ff_num_col_comm", &p_nqy, 1, recv_p_nqy, 1);
+		
+			commtimer.stop();
+			comm_time += commtimer.elapsed_msec();
+
+			for(int i = 1; i < p_y; ++ i) off_p_nqy[i] = off_p_nqy[i - 1] + recv_p_nqy[i - 1];
 		#else
-			cast_p_ff = p_ff;
-			cast_ff = ff_buffer;
-		#endif
-		mem_end = MPI::Wtime();
-		mem_time += mem_end - mem_start;
+			#ifdef FF_NUM_GPU
+				memcpy(ff_buffer, p_ff, total_qpoints * sizeof(cucomplex_t));
+			#else
+				memcpy(ff_buffer, p_ff, total_qpoints * sizeof(complex_t));
+			#endif
+		#endif // USE_MPI
 	
-		comm_start = MPI::Wtime();
-		gather_all(cast_p_ff, local_qpoints,
-					cast_ff, recv_counts, displacements,
-					comm);
-	
-		int *recv_p_nqy = new (std::nothrow) int[p_y]();
-		col_comm.Gather(&p_nqy, 1, MPI::INT, recv_p_nqy, 1, MPI::INT, 0);
-		comm_end = MPI::Wtime();
-		comm_time += comm_end - comm_start;
-	
-		mem_start = MPI::Wtime();
-		int *off_p_nqy = new (std::nothrow) int[p_y]();
-		off_p_nqy[0] = 0;
-		for(int i = 1; i < p_y; ++ i) off_p_nqy[i] = off_p_nqy[i - 1] + recv_p_nqy[i - 1];
-	
+		memtimer.start();
+
 		// move all the data to correct places
 		if(rank == 0) {
 			unsigned long int ff_index = 0;
 			for(int i_nqz = 0; i_nqz < nqz; ++ i_nqz) {
 				for(int i_py = 0; i_py < p_y; ++ i_py) {
-					unsigned long int ffb_index = nqx * (i_nqz * recv_p_nqy[i_py] + nqz * off_p_nqy[i_py]);
+					unsigned long int ffb_index = nqx * (i_nqz * recv_p_nqy[i_py] +
+															nqz * off_p_nqy[i_py]);
 					#ifdef FF_NUM_GPU
 						memcpy(&all_ff[ff_index], &ff_buffer[ffb_index],
 								nqx * recv_p_nqy[i_py] * sizeof(cucomplex_t));
@@ -525,18 +586,23 @@ namespace hig {
 			#endif
 		} // if
 	
+		delete[] ff_buffer;
+		#ifdef USE_MPI
+			delete[] displs;
+			delete[] recv_counts;
+		#endif
 		delete[] off_p_nqy;
 		delete[] recv_p_nqy;
-		delete[] ff_buffer;
-		delete[] displacements;
-		delete[] recv_counts;
 		delete[] all_ff;
-		mem_end = MPI::Wtime();
-		mem_time += mem_end - mem_start;
+
+		memtimer.stop();
+		mem_time += memtimer.elapsed_msec();
+
+		return true;
 	} // NumericFormFactor::construct_ff()
 	
 	
-	void NumericFormFactor::gather_all(std::complex<float> *cast_p_ff,
+	/*void NumericFormFactor::gather_all(std::complex<float> *cast_p_ff,
 			unsigned long int local_qpoints,
 			std::complex<float> *cast_ff, int *recv_counts, int *displacements, MPI::Comm &comm) {
 		comm.Gatherv(cast_p_ff, local_qpoints, MPI::COMPLEX, cast_ff, recv_counts,
@@ -550,7 +616,7 @@ namespace hig {
 		comm.Gatherv(cast_p_ff, local_qpoints, MPI::DOUBLE_COMPLEX, cast_ff, recv_counts,
 					displacements, MPI::DOUBLE_COMPLEX, 0);
 	} // NumericFormFactor::gather_all()
-	
+	*/
 	
 	/**
 	 * Function to read the input shape file.
@@ -652,19 +718,19 @@ namespace hig {
 	 */
 	unsigned int NumericFormFactor::read_shapes_hdf5(const char* filename,
 													#ifndef __SSE3__
-														float_vec_t &shape_def,
+														float_vec_t &shape_def
 													#else
 														#ifdef USE_GPU
-															float_vec_t &shape_def,
+															float_vec_t &shape_def
 														#else
-															float_t* &shape_def,
+															float_t* &shape_def
 														#endif
 													#endif
-													MPI::Intracomm& comm) {
+													) {
 		unsigned int num_triangles = 0;
 		double* temp_shape_def = NULL;
 	
-		h5_shape_reader(filename, &temp_shape_def, &num_triangles/*, comm*/);
+		h5_shape_reader(filename, &temp_shape_def, &num_triangles);
 		#ifdef FF_NUM_GPU
 			#ifndef KERNEL2
 				for(unsigned int i = 0; i < num_triangles * 7; ++ i)
@@ -731,7 +797,8 @@ namespace hig {
 					unsigned int shape_size = (num_triangles + padding) * 7;
 					shape_def = (float_t*) _mm_malloc(shape_size * sizeof(float_t), 64);
 					if(shape_def == NULL) {
-						std::cerr << "error: failed to allocate aligned memory for shape_def" << std::endl;
+						std::cerr << "error: failed to allocate aligned memory for shape_def"
+									<< std::endl;
 						return 0;
 					} // if
 					memset(shape_def, 0, shape_size * sizeof(float_t));
@@ -754,7 +821,7 @@ namespace hig {
 	    /**
     	 * Write a slice to output file
 	     */
-    	void write_slice_to_file(cucomplex_t *ff, int nqx, int nqy, int nqz,
+    	/*void write_slice_to_file(cucomplex_t *ff, int nqx, int nqy, int nqz,
 									char* filename, int axis, int slice) {
         	if(ff == NULL) return;
 
@@ -774,7 +841,7 @@ namespace hig {
     	    std::ofstream slice_file;
 	        //char* outfilename = "output_ff.dat";
         	char outfilename[50];
-    	    sprintf(outfilename, "ff_p%d.dat", MPI::COMM_WORLD.Get_size());
+    	    sprintf(outfilename, "ff_p%d.dat", world_comm.rank());
 	        std::cout << " " << outfilename << " ";
         	slice_file.open(outfilename);
     	    if(!slice_file.is_open()) {
@@ -791,7 +858,7 @@ namespace hig {
 	        } // for y
         	slice_file.close();
     	    std::cout << " done." << std::endl;
-	    } // write_slice_to_file()
+	    } // write_slice_to_file()*/
 	#endif
 
 

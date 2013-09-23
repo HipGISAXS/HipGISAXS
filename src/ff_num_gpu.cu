@@ -3,7 +3,7 @@
  *
  *  File: ff_num_gpu.cu
  *  Created: Aug 25, 2012
- *  Modified: Sun 15 Sep 2013 06:31:54 PM PDT
+ *  Modified: Tue 17 Sep 2013 04:56:47 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -2004,7 +2004,6 @@ namespace hig {
 				curr_b_nqx = b_nqx;
 
 				woo::CUDATimer ff_move_timer;
-				double ff_move_time = 0.0;
 
 				for(unsigned int ib_x = 0; ib_x < nb_x; ++ ib_x) {
 					if(ib_x == nb_x - 1) curr_b_nqx = nqx - b_nqx * ib_x;
