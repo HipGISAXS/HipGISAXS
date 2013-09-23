@@ -3,7 +3,7 @@
   *
   *  File: multi_node_comm.hpp
   *  Created: Mar 18, 2013
-  *  Modified: Sun 22 Sep 2013 08:34:52 PM PDT
+  *  Modified: Mon 23 Sep 2013 12:37:21 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -137,6 +137,16 @@ namespace woo {
 
 			inline bool gather(int* sbuf, int scount, int* rbuf, int rcount) {
 				MPI_Gather(sbuf, scount, MPI_INT, rbuf, rcount, MPI_INT, master_rank_, world_);
+				return true;
+			} // gather()
+
+			inline bool gather(float* sbuf, int scount, float* rbuf, int rcount) {
+				MPI_Gather(sbuf, scount, MPI_FLOAT, rbuf, rcount, MPI_FLOAT, master_rank_, world_);
+				return true;
+			} // gather()
+
+			inline bool gather(double* sbuf, int scount, double* rbuf, int rcount) {
+				MPI_Gather(sbuf, scount, MPI_DOUBLE, rbuf, rcount, MPI_DOUBLE, master_rank_, world_);
 				return true;
 			} // gather()
 
@@ -285,6 +295,14 @@ namespace woo {
 			} // allgather()
 
 			inline bool gather(const char* key, int* sbuf, int scount, int* rbuf, int rcount) {
+				return comms_[key].gather(sbuf, scount, rbuf, rcount);
+			} // gather()
+
+			inline bool gather(const char* key, float* sbuf, int scount, float* rbuf, int rcount) {
+				return comms_[key].gather(sbuf, scount, rbuf, rcount);
+			} // gather()
+
+			inline bool gather(const char* key, double* sbuf, int scount, double* rbuf, int rcount) {
 				return comms_[key].gather(sbuf, scount, rbuf, rcount);
 			} // gather()
 

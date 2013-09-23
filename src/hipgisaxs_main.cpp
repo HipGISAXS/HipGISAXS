@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_main.cpp
  *  Created: Jun 14, 2012
- *  Modified: Sun 22 Sep 2013 05:57:26 PM PDT
+ *  Modified: Mon 23 Sep 2013 02:42:56 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -381,6 +381,14 @@ namespace hig {
 			} // if-else
 			const char* alphai_comm = "alphai";
 			multi_node_.split(alphai_comm, world_comm, alphai_color);
+
+			bool amaster = multi_node_.is_master(alphai_comm);
+			int temp_amaster = amaster;
+			int *amasters = new (std::nothrow) int[multi_node_.size(world_comm)];
+			// all alphai masters tell the world master about who they are
+			multi_node_.gather(world_comm, &temp_amaster, 1, amasters, 1);
+		#else
+			bool amaster = true;
 		#endif // USE_MPI
 
 		float_t alpha_i = alphai_min;
@@ -406,6 +414,14 @@ namespace hig {
 				} // if-else
 				const char* phi_comm = "phi";
 				multi_node_.split(phi_comm, alphai_comm, phi_color);
+
+				bool pmaster = multi_node_.is_master(phi_comm);
+				int temp_pmaster = pmaster;
+				int *pmasters = new (std::nothrow) int[multi_node_.size(alphai_comm)];
+				// all phi masters tell the alphai master about who they are
+				multi_node_.gather(alphai_comm, &temp_pmaster, 1, pmasters, 1);
+			#else
+				bool pmaster = true;
 			#endif // USE_MPI
 
 			float_t phi = phi_min;
@@ -429,19 +445,21 @@ namespace hig {
 					} // if-else
 					const char* tilt_comm = "tilt";
 					multi_node_.split(tilt_comm, phi_comm, tilt_color);
-				#endif // USE_MPI
 
-				#ifdef USE_MPI
-					bool master = multi_node_.is_master(tilt_comm);
+					bool tmaster = multi_node_.is_master(tilt_comm);
+					int temp_tmaster = tmaster;
+					int *tmasters = new (std::nothrow) int[multi_node_.size(phi_comm)];
+					// all tilt masters tell the phi master about who they are
+					multi_node_.gather(phi_comm, &temp_tmaster, 1, tmasters, 1);
 				#else
-					bool master = true;
-				#endif
+					bool tmaster = true;
+				#endif // USE_MPI
 
 				float_t tilt = tilt_min;
 				for(int k = 0; k < num_tilt; k ++, tilt += tilt_step) {
 					float_t tilt_rad = tilt * PI_ / 180;
 
-					if(master) {
+					if(tmaster) {
 						std::cout << "-- Computing GISAXS "
 									<< i * num_phi * num_tilt + j * num_tilt + k + 1 << " / "
 									<< num_alphai * num_phi * num_tilt
@@ -457,7 +475,7 @@ namespace hig {
 									tilt_comm,
 								#endif
 								0)) {
-						if(master)
+						if(tmaster)
 							std::cerr << "error: could not finish successfully" << std::endl;
 						return false;
 					} // if
@@ -466,7 +484,7 @@ namespace hig {
 					//Image img3d(nqx_, nqy_, nqz_);
 					//if(!run_gisaxs(alphai, phi, tilt, img3d))
 					
-					if(master) {
+					if(tmaster) {
 						// note that final_data stores 3d info
 						// for 2d, just take a slice of the data
 						std::cout << "-- Constructing GISAXS image ... " << std::flush;
@@ -527,34 +545,89 @@ namespace hig {
 					} // if
 
 					// also compute averaged values over phi and tilt
-					if(master) {
-						// TODO: get data from other procs ...
-						if(num_phi > 1 || num_tilt > 1) {
+					if(num_phi > 1 || num_tilt > 1) {
+						if(tmaster) {
 							if(averaged_data == NULL) {
 								averaged_data = new (std::nothrow) float_t[nqx_ * nqy_ * nqz_];
 								memset(averaged_data, 0, nqx_ * nqy_ * nqz_ * sizeof(float_t));
 							} // if
+							int i = 0;
 							add_data_elements(averaged_data, final_data, averaged_data,
 												nqx_ * nqy_ * nqz_);
 						} // if
-					} // if
+						delete[] final_data;
+					} else {
+						averaged_data = final_data;
+					} // if-else
 
-					delete[] final_data;
-
-					#ifdef USE_MPI
-						// synchronize all procs after each run -- not really needed
-						multi_node_.barrier(tilt_comm);
-					#endif
 				} // for tilt
 				#ifdef USE_MPI
 					multi_node_.free(tilt_comm);
+
+					// get data from all other phi_comm processors which were tmasters
+					int psize = multi_node_.size(phi_comm);
+					float_t* temp_data = NULL;
+					if(psize > 1) {
+						if(pmaster) {
+							temp_data = new (std::nothrow) float_t[psize * nqx_ * nqy_ * nqz_];
+						} // if
+						int *proc_sizes = new (std::nothrow) int[psize];
+						int *proc_displacements = new (std::nothrow) int[psize];
+						for(int i = 0; i < psize; ++ i) {
+							proc_sizes[i] = tmasters[i] * nqx_ * nqy_ * nqz_;
+						} // for
+						proc_displacements[0] = 0;
+						for(int i = 1; i < psize; ++ i) {
+							proc_displacements[i] = proc_displacements[i - 1] + proc_sizes[i - 1];
+						} // for
+						multi_node_.gatherv(phi_comm, averaged_data, nqx_ * nqy_ * nqz_,
+											temp_data, proc_sizes, proc_displacements);
+						delete[] proc_displacements;
+						delete[] proc_sizes;
+						if(pmaster) {
+							for(int i = 1; i < psize; ++ i) {
+								add_data_elements(averaged_data, temp_data + i * nqx_ * nqy_ * nqz_,
+													averaged_data, nqx_ * nqy_ * nqz_);
+							} // for
+							delete[] temp_data;
+						} // if
+					} // if
 				#endif
 			} // for phi
 			#ifdef USE_MPI
 				multi_node_.free(phi_comm);
+
+				// get data from all other phi_comm processors which were tmasters
+				int asize = multi_node_.size(alphai_comm);
+				float_t* temp_data = NULL;
+				if(asize > 1) {
+					if(amaster) {
+						temp_data = new (std::nothrow) float_t[asize * nqx_ * nqy_ * nqz_];
+					} // if
+					int *proc_sizes = new (std::nothrow) int[asize];
+					int *proc_displacements = new (std::nothrow) int[asize];
+					for(int i = 0; i < asize; ++ i) {
+						proc_sizes[i] = pmasters[i] * nqx_ * nqy_ * nqz_;
+					} // for
+					proc_displacements[0] = 0;
+					for(int i = 1; i < asize; ++ i) {
+						proc_displacements[i] = proc_displacements[i - 1] + proc_sizes[i - 1];
+					} // for
+					multi_node_.gatherv(alphai_comm, averaged_data, nqx_ * nqy_ * nqz_,
+										temp_data, proc_sizes, proc_displacements);
+					delete[] proc_displacements;
+					delete[] proc_sizes;
+					if(amaster) {
+						for(int i = 1; i < asize; ++ i) {
+							add_data_elements(averaged_data, temp_data + i * nqx_ * nqy_ * nqz_,
+												averaged_data, nqx_ * nqy_ * nqz_);
+						} // for
+						delete[] temp_data;
+					} // if
+				} // if
 			#endif
 
-			if(master) {	// TODO: this master is different ...
+			if(amaster) {
 				if(averaged_data != NULL) {
 					Image img(nqx_, nqy_, nqz_);
 					img.construct_image(averaged_data, 0); // slice x = 0
@@ -580,13 +653,12 @@ namespace hig {
 
 					delete[] averaged_data;
 				} // if
-			}
+			} // if
 
 		} // for alphai
 		#ifdef USE_MPI
 			multi_node_.free(alphai_comm);
 		#endif
-
 
 		sim_timer.stop();
 		if(master) {
