@@ -3,7 +3,7 @@
  *
  *  File: ff_num.cpp
  *  Created: Jul 18, 2012
- *  Modified: Sun 22 Sep 2013 09:06:55 AM PDT
+ *  Modified: Sun 22 Sep 2013 06:15:43 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -419,11 +419,14 @@ namespace hig {
 				std::cout << "**            Kernel performance: " << gflops << " GFLOPS/s" << std::endl;
 			} // if
 		#ifdef USE_MPI
+			world_comm.free("ff_num_row_comm");
+			world_comm.free("ff_num_col_comm");
 		} // if
 		#endif
 
 		#ifdef USE_MPI
 			world_comm.barrier(comm_key);
+			world_comm.free(real_world);
 		#endif
 
 		#ifdef FINDBLOCK

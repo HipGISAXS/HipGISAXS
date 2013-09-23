@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_main.cpp
  *  Created: Jun 14, 2012
- *  Modified: Sun 22 Sep 2013 08:53:49 AM PDT
+ *  Modified: Sun 22 Sep 2013 05:57:26 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -464,7 +464,7 @@ namespace hig {
 
 					// for future - 3d image ...
 					//Image img3d(nqx_, nqy_, nqz_);
-					//if(!run_gisaxs(alphai, phi, tilt, img3d)) {
+					//if(!run_gisaxs(alphai, phi, tilt, img3d))
 					
 					if(master) {
 						// note that final_data stores 3d info
@@ -546,7 +546,13 @@ namespace hig {
 						multi_node_.barrier(tilt_comm);
 					#endif
 				} // for tilt
+				#ifdef USE_MPI
+					multi_node_.free(tilt_comm);
+				#endif
 			} // for phi
+			#ifdef USE_MPI
+				multi_node_.free(phi_comm);
+			#endif
 
 			if(master) {	// TODO: this master is different ...
 				if(averaged_data != NULL) {
@@ -577,6 +583,10 @@ namespace hig {
 			}
 
 		} // for alphai
+		#ifdef USE_MPI
+			multi_node_.free(alphai_comm);
+		#endif
+
 
 		sim_timer.stop();
 		if(master) {
@@ -1030,6 +1040,7 @@ namespace hig {
 				} // if-else
 
 				delete[] gmasters;
+				multi_node_.free(grain_comm);
 			#else
 				id = grain_ids;
 			#endif
@@ -1166,6 +1177,7 @@ namespace hig {
 		#endif
 
 		#ifdef USE_MPI
+			multi_node_.free(struct_comm);
 			multi_node_.barrier(comm_key);
 		#endif
 
