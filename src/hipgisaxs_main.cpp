@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_main.cpp
  *  Created: Jun 14, 2012
- *  Modified: Mon 23 Sep 2013 02:42:56 PM PDT
+ *  Modified: Mon 23 Sep 2013 03:00:05 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -564,70 +564,74 @@ namespace hig {
 				#ifdef USE_MPI
 					multi_node_.free(tilt_comm);
 
-					// get data from all other phi_comm processors which were tmasters
-					int psize = multi_node_.size(phi_comm);
-					float_t* temp_data = NULL;
-					if(psize > 1) {
-						if(pmaster) {
-							temp_data = new (std::nothrow) float_t[psize * nqx_ * nqy_ * nqz_];
+//					if(num_phi > 1 || num_tilt > 1) {
+						// get data from all other phi_comm processors which were tmasters
+						int psize = multi_node_.size(phi_comm);
+						float_t* temp_data = NULL;
+						if(psize > 1) {
+							if(pmaster) {
+								temp_data = new (std::nothrow) float_t[psize * nqx_ * nqy_ * nqz_];
+							} // if
+							int *proc_sizes = new (std::nothrow) int[psize];
+							int *proc_displacements = new (std::nothrow) int[psize];
+							for(int i = 0; i < psize; ++ i) {
+								proc_sizes[i] = tmasters[i] * nqx_ * nqy_ * nqz_;
+							} // for
+							proc_displacements[0] = 0;
+							for(int i = 1; i < psize; ++ i) {
+								proc_displacements[i] = proc_displacements[i - 1] + proc_sizes[i - 1];
+							} // for
+							multi_node_.gatherv(phi_comm, averaged_data, nqx_ * nqy_ * nqz_,
+												temp_data, proc_sizes, proc_displacements);
+							delete[] proc_displacements;
+							delete[] proc_sizes;
+							if(pmaster) {
+								for(int i = 1; i < psize; ++ i) {
+									add_data_elements(averaged_data, temp_data + i * nqx_ * nqy_ * nqz_,
+														averaged_data, nqx_ * nqy_ * nqz_);
+								} // for
+								delete[] temp_data;
+							} // if
 						} // if
-						int *proc_sizes = new (std::nothrow) int[psize];
-						int *proc_displacements = new (std::nothrow) int[psize];
-						for(int i = 0; i < psize; ++ i) {
-							proc_sizes[i] = tmasters[i] * nqx_ * nqy_ * nqz_;
+//					} // if
+				#endif
+			} // for phi
+			#ifdef USE_MPI
+				multi_node_.free(phi_comm);
+
+//				if(num_phi > 1 || num_tilt > 1) {
+					// get data from all other phi_comm processors which were tmasters
+					int asize = multi_node_.size(alphai_comm);
+					float_t* temp_data = NULL;
+					if(asize > 1) {
+						if(amaster) {
+							temp_data = new (std::nothrow) float_t[asize * nqx_ * nqy_ * nqz_];
+						} // if
+						int *proc_sizes = new (std::nothrow) int[asize];
+						int *proc_displacements = new (std::nothrow) int[asize];
+						for(int i = 0; i < asize; ++ i) {
+							proc_sizes[i] = pmasters[i] * nqx_ * nqy_ * nqz_;
 						} // for
 						proc_displacements[0] = 0;
-						for(int i = 1; i < psize; ++ i) {
+						for(int i = 1; i < asize; ++ i) {
 							proc_displacements[i] = proc_displacements[i - 1] + proc_sizes[i - 1];
 						} // for
-						multi_node_.gatherv(phi_comm, averaged_data, nqx_ * nqy_ * nqz_,
+						multi_node_.gatherv(alphai_comm, averaged_data, nqx_ * nqy_ * nqz_,
 											temp_data, proc_sizes, proc_displacements);
 						delete[] proc_displacements;
 						delete[] proc_sizes;
-						if(pmaster) {
-							for(int i = 1; i < psize; ++ i) {
+						if(amaster) {
+							for(int i = 1; i < asize; ++ i) {
 								add_data_elements(averaged_data, temp_data + i * nqx_ * nqy_ * nqz_,
 													averaged_data, nqx_ * nqy_ * nqz_);
 							} // for
 							delete[] temp_data;
 						} // if
 					} // if
-				#endif
-			} // for phi
-			#ifdef USE_MPI
-				multi_node_.free(phi_comm);
-
-				// get data from all other phi_comm processors which were tmasters
-				int asize = multi_node_.size(alphai_comm);
-				float_t* temp_data = NULL;
-				if(asize > 1) {
-					if(amaster) {
-						temp_data = new (std::nothrow) float_t[asize * nqx_ * nqy_ * nqz_];
-					} // if
-					int *proc_sizes = new (std::nothrow) int[asize];
-					int *proc_displacements = new (std::nothrow) int[asize];
-					for(int i = 0; i < asize; ++ i) {
-						proc_sizes[i] = pmasters[i] * nqx_ * nqy_ * nqz_;
-					} // for
-					proc_displacements[0] = 0;
-					for(int i = 1; i < asize; ++ i) {
-						proc_displacements[i] = proc_displacements[i - 1] + proc_sizes[i - 1];
-					} // for
-					multi_node_.gatherv(alphai_comm, averaged_data, nqx_ * nqy_ * nqz_,
-										temp_data, proc_sizes, proc_displacements);
-					delete[] proc_displacements;
-					delete[] proc_sizes;
-					if(amaster) {
-						for(int i = 1; i < asize; ++ i) {
-							add_data_elements(averaged_data, temp_data + i * nqx_ * nqy_ * nqz_,
-												averaged_data, nqx_ * nqy_ * nqz_);
-						} // for
-						delete[] temp_data;
-					} // if
-				} // if
+//				} // if
 			#endif
 
-			if(amaster) {
+			if(amaster && (num_phi > 1 || num_tilt > 1)) {
 				if(averaged_data != NULL) {
 					Image img(nqx_, nqy_, nqz_);
 					img.construct_image(averaged_data, 0); // slice x = 0
