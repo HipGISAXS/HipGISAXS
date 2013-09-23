@@ -3,7 +3,7 @@
   *
   *  File: multi_node_comm.hpp
   *  Created: Mar 18, 2013
-  *  Modified: Sun 22 Sep 2013 06:12:00 PM PDT
+  *  Modified: Sun 22 Sep 2013 08:34:52 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -237,7 +237,6 @@ namespace woo {
 			 */
 
 			bool split(const char* new_key, const char* key, int color) {
-				std::cout << "SSSSSSSSSSSSSSSSSSSSSSSSSSSSSplitting " << key << " -> " << new_key << std::endl;
 				comms_[new_key] = comms_[key].split(color);
 				return true;
 			} // split()
@@ -250,7 +249,6 @@ namespace woo {
 			bool free(const char* key) {
 				comms_[key].free();
 				comms_.erase(key);
-				std::cout << "EEEEEEEEEEEEEEEEEEEEEEEEEEEErased " << key << std::endl;
 				return true;
 			} // free
 
