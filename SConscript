@@ -497,13 +497,14 @@ Export("env")
 
 objs, nvobjs = env.SConscript('src/SConscript', duplicate = False)
 
-gpuenv = env.Clone(CC = 'nvcc')
-gpuenv.Tool('cuda')
-gpuenv.Append(LINKFLAGS = ['-Xlinker', '-lgomp', '-arch=sm_35', '-dlink'])
-gpuenv.Append(LINKFLAGS = ['-Xlinker', '-Wl,-rpath', '-Xlinker', '-Wl,$CUDA_TOOLKIT_PATH/lib64'])
-nvlibobj = gpuenv.Program('nv_hipgisaxs.o', nvobjs)
+if using_cuda:
+	gpuenv = env.Clone(CC = 'nvcc')
+	gpuenv.Tool('cuda')
+	gpuenv.Append(LINKFLAGS = ['-Xlinker', '-lgomp', '-arch=sm_35', '-dlink'])
+	gpuenv.Append(LINKFLAGS = ['-Xlinker', '-Wl,-rpath', '-Xlinker', '-Wl,$CUDA_TOOLKIT_PATH/lib64'])
+	nvlibobj = gpuenv.Program('nv_hipgisaxs.o', nvobjs)
 
-objs += nvlibobj + nvobjs
+	objs += nvlibobj + nvobjs
 
 #env.Library('hipgisaxs', objs)
 env.Program('hipgisaxs', objs)
