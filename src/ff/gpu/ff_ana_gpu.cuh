@@ -3,7 +3,7 @@
  *
  *  File: ff_ana_gpu.cuh
  *  Created: Oct 16, 2012
- *  Modified: Tue 16 Jul 2013 11:49:55 AM PDT
+ *  Modified: Thu 26 Sep 2013 10:22:31 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -25,8 +25,8 @@
 
 #include <vector>
 
-#include "typedefs.hpp"
-#include "constants.hpp"
+#include "../../common/typedefs.hpp"
+#include "../../common/constants.hpp"
 
 namespace hig {
 

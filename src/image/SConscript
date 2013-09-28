@@ -1,0 +1,7 @@
+Import('env')
+
+objs = [ ]
+sources = ['image.cpp']
+objs += env.Object(sources)
+
+Return('objs')

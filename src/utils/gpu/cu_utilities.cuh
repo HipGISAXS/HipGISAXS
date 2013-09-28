@@ -3,7 +3,7 @@
  *
  *  File: cu_utilities.cuh
  *  Created: Feb 19, 2013
- *  Modified: Tue 16 Jul 2013 11:49:41 AM PDT
+ *  Modified: Thu 26 Sep 2013 11:07:03 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -23,8 +23,8 @@
 #ifndef __CU_UTILITIES_CUH__
 #define __CU_UTILITIES_CUH__
 
-#include "typedefs.hpp"
-#include "cu_complex_numeric.cuh"
+#include "../../common/typedefs.hpp"
+#include "../../numerics/gpu/cu_complex_numeric.cuh"
 
 namespace hig {
 

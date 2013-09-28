@@ -3,7 +3,7 @@
  *
  *  File: ff_ana.hpp
  *  Created: Jul 12, 2012
- *  Modified: Wed 18 Sep 2013 11:40:19 AM PDT
+ *  Modified: Thu 26 Sep 2013 11:54:14 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -27,16 +27,16 @@
 
 #ifdef USE_MPI
 	#include <mpi.h>
-	#include "woo/comm/multi_node_comm.hpp"
+	#include "../woo/comm/multi_node_comm.hpp"
 #endif
 
-#include "typedefs.hpp"
-#include "globals.hpp"
-#include "enums.hpp"
-#include "shape.hpp"
+#include "../common/typedefs.hpp"
+#include "../common/globals.hpp"
+#include "../common/enums.hpp"
+#include "../model/shape.hpp"
 
 #ifdef USE_GPU
-	#include "ff_ana_gpu.cuh"
+	#include "gpu/ff_ana_gpu.cuh"
 #endif
 
 namespace hig {

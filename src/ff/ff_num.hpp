@@ -3,7 +3,7 @@
  *
  *  File: ff_num.hpp
  *  Created: Nov 05, 2011
- *  Modified: Wed 18 Sep 2013 11:44:57 AM PDT
+ *  Modified: Sat 28 Sep 2013 09:57:41 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -26,27 +26,27 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include <mpi.h>
 #include <cmath>
 #include <complex>
 #include <cstring>
 
-#include "woo/timer/woo_boostchronotimers.hpp"
+#include "../woo/timer/woo_boostchronotimers.hpp"
 
 #ifdef USE_MPI
-#include "woo/comm/multi_node_comm.hpp"
+#include <mpi.h>
+#include "../woo/comm/multi_node_comm.hpp"
 #endif
 
-#include "parameters.hpp"
-#include "object2hdf5.h"
-#include "qgrid.hpp"
-#include "utilities.hpp"
+#include "../common/parameters.hpp"
+#include "../file/hdf5shape_reader.h"
+#include "../model/qgrid.hpp"
+#include "../utils/utilities.hpp"
 #ifdef FF_NUM_GPU
-	#include "ff_num_gpu.cuh"	// for gpu version
+	#include "gpu/ff_num_gpu.cuh"	// for gpu version
 #elif defined USE_MIC
-	#include "ff_num_mic.hpp"	// for mic version
+	#include "mic/ff_num_mic.hpp"	// for mic version
 #else
-	#include "ff_num_cpu.hpp"	// for cpu version
+	#include "cpu/ff_num_cpu.hpp"	// for cpu version
 #endif // FF_NUM_GPU
 
 namespace hig {

@@ -3,7 +3,7 @@
  *
  *  File: sf.cpp
  *  Created: Jun 18, 2012
- *  Modified: Wed 18 Sep 2013 11:34:19 AM PDT
+ *  Modified: Sat 28 Sep 2013 10:01:06 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -25,11 +25,11 @@
 #include <cmath>
 #include <boost/math/special_functions/fpclassify.hpp>
 
-#include "woo/timer/woo_boostchronotimers.hpp"
+#include "../woo/timer/woo_boostchronotimers.hpp"
 
 #include "sf.hpp"
-#include "qgrid.hpp"
-#include "utilities.hpp"
+#include "../model/qgrid.hpp"
+#include "../utils/utilities.hpp"
 
 namespace hig {
 

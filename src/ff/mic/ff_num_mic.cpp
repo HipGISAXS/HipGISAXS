@@ -3,7 +3,7 @@
  *
  *  File: ff_num_mic.cpp
  *  Created: Apr 02, 2013
- *  Modified: Mon 16 Sep 2013 10:44:19 AM PDT
+ *  Modified: Thu 26 Sep 2013 10:28:59 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -34,16 +34,16 @@
 // for mkl vml functions
 //#include <mkl_vml.h>
 
-#include "woo/timer/woo_boostchronotimers.hpp"
+#include "../../woo/timer/woo_boostchronotimers.hpp"
 
-#include "constants.hpp"
-#include "parameters.hpp"
-#include "parameters_mic.hpp"
-#include "definitions_mic.hpp"
-#include "mic_complex_numeric.hpp"
+#include "../../common/constants.hpp"
+#include "../../common/parameters.hpp"
+#include "../../common/mic/parameters_mic.hpp"
+#include "../../common/mic/definitions_mic.hpp"
+#include "../../numerics/mic/mic_complex_numeric.hpp"
 
 // only for mic intrinsics
-#include "mic_avx_numerics.hpp"
+#include "../../numerics/mic/mic_avx_numerics.hpp"
 
 #include "ff_num_mic.hpp"
 	

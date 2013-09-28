@@ -1,9 +1,9 @@
 /**
  *  Project: HipGISAXS (High-Performance GISAXS)
  *
- *  File: numeric_utils.hpp
+ *  File: numeric_utils.cpp
  *  Created: Oct 08, 2012
- *  Modified: Tue 16 Jul 2013 11:51:17 AM PDT
+ *  Modified: Sat 28 Sep 2013 11:11:11 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -21,7 +21,6 @@
  */
 
 #include "numeric_utils.hpp"
-#include "typedefs.hpp"
 
 namespace hig {
 

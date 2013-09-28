@@ -3,7 +3,7 @@
  *
  *  File: sf.hpp
  *  Created: Jun 18, 2012
- *  Modified: Wed 18 Sep 2013 11:33:52 AM PDT
+ *  Modified: Thu 26 Sep 2013 01:03:53 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -25,12 +25,12 @@
 
 #ifdef USE_MPI
 #include <mpi.h>
-#include "woo/comm/multi_node_comm.hpp"
+#include "../woo/comm/multi_node_comm.hpp"
 #endif // USE_MPI
 
-#include "typedefs.hpp"
-#include "globals.hpp"
-#include "structure.hpp"
+#include "../common/typedefs.hpp"
+#include "../common/globals.hpp"
+#include "../model/structure.hpp"
 
 namespace hig {
 	

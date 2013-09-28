@@ -3,7 +3,7 @@
  *
  *  File: object2hdf5.h
  *  Created: Aug 25, 2012
- *  Modified: Tue 16 Jul 2013 12:15:51 PM PDT
+ *  Modified: Fri 27 Sep 2013 09:02:30 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -23,7 +23,6 @@
 #ifndef _OBJECT2HDF5_H_
 #define _OBJECT2HDF5_H_
 
-//#include <mpi.h>
 #include <hdf5.h>
 
 #ifdef __cplusplus
@@ -33,8 +32,7 @@ extern "C" {
 #include <stdio.h>
 #include <stdlib.h>
 
-//void s2h_converter(double** shape_def, unsigned int num_triangles, char* hdf5_filename, MPI_Comm comm);
-void h5_shape_reader(const char* hdf5_filename, double** shape_def, unsigned int* num_triangles/*, MPI_Comm comm*/);
+void h5_shape_reader(const char* hdf5_filename, double** shape_def, unsigned int* num_triangles);
 
 #ifdef __cplusplus
 }

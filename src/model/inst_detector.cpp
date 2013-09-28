@@ -3,7 +3,7 @@
  *
  *  File: inst_detector.cpp
  *  Created: Jun 12, 2012
- *  Modified: Tue 16 Jul 2013 11:51:07 AM PDT
+ *  Modified: Thu 26 Sep 2013 10:57:51 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -21,7 +21,7 @@
  */
 
 #include "inst_detector.hpp"
-#include "default_values.hpp"
+#include "../common/default_values.hpp"
 
 namespace hig {
 

@@ -3,7 +3,7 @@
  *
  *  File: reduction.cu
  *  Created: Aug 25, 2012
- *  Modified: Tue 16 Jul 2013 12:18:03 PM PDT
+ *  Modified: Thu 26 Sep 2013 10:27:48 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -25,7 +25,7 @@
 #include <cuComplex.h>
 
 #include "reduction.cuh"
-#include "parameters.hpp"
+#include "../../common/parameters.hpp"
 
 namespace hig {
 

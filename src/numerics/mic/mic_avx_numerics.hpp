@@ -3,7 +3,7 @@
  *
  *  File: mic_avx_numerics.hpp
  *  Created: Apr 23, 2013
- *  Modified: Tue 16 Jul 2013 11:51:15 AM PDT
+ *  Modified: Sat 28 Sep 2013 10:02:21 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -34,7 +34,7 @@ extern "C" {
 }
 #endif*/
 
-#include "typedefs.hpp"
+#include "../../common/typedefs.hpp"
 
 namespace hig {
 

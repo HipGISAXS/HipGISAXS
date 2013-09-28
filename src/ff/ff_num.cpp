@@ -3,7 +3,7 @@
  *
  *  File: ff_num.cpp
  *  Created: Jul 18, 2012
- *  Modified: Sun 22 Sep 2013 06:15:43 PM PDT
+ *  Modified: Sat 28 Sep 2013 10:00:25 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -22,22 +22,19 @@
 
 #include <iostream>
 #include <fstream>
-#include <mpi.h>
 #include <cmath>
 #include <cstring>
 #if (defined(__SSE3__) || defined(INTEL_SB_AVX)) && !defined(USE_GPU)
 	#include <malloc.h>
 #endif
 
-#include "woo/timer/woo_boostchronotimers.hpp"
-
-#include "parameters.hpp"
-#include "parameters_cpu.hpp"
-#include "object2hdf5.h"
-#include "qgrid.hpp"
-#include "utilities.hpp"
+#include "../woo/timer/woo_boostchronotimers.hpp"
 
 #include "ff_num.hpp"
+#include "../common/parameters.hpp"
+#include "../common/cpu/parameters_cpu.hpp"
+#include "../model/qgrid.hpp"
+#include "../utils/utilities.hpp"
 
 namespace hig {
 

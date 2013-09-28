@@ -3,7 +3,7 @@
  *
  *  File: distributions.hpp
  *  Created: Jul 02, 2012
- *  Modified: Tue 16 Jul 2013 11:49:45 AM PDT
+ *  Modified: Thu 26 Sep 2013 10:59:18 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -26,8 +26,8 @@
 #include <cmath>
 #include <vector>
 
-#include "globals.hpp"
-#include "typedefs.hpp"
+#include "../common/globals.hpp"
+#include "../common/typedefs.hpp"
 
 namespace hig {
 

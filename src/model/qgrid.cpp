@@ -3,7 +3,7 @@
  *
  *  File: qgrid.cpp
  *  Created: Jun 17, 2012
- *  Modified: Tue 16 Jul 2013 11:51:47 AM PDT
+ *  Modified: Sat 28 Sep 2013 10:00:56 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -20,10 +20,10 @@
  *  NON-COMMERCIAL END USER LICENSE AGREEMENT.
  */
 
-#include "constants.hpp"
+#include "../common/constants.hpp"
 #include "qgrid.hpp"
-#include "hig_input.hpp"
-#include "utilities.hpp"
+#include "../config/hig_input.hpp"
+#include "../utils/utilities.hpp"
 
 namespace hig {
 

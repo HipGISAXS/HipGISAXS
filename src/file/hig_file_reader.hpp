@@ -3,7 +3,7 @@
  *
  *  File: hig_file_reader.hpp
  *  Created: Jul 11, 2012
- *  Modified: Tue 16 Jul 2013 11:50:50 AM PDT
+ *  Modified: Fri 27 Sep 2013 08:42:45 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -25,8 +25,8 @@
 
 #include <fstream>
 
-#include "typedefs.hpp"
-#include "object2hdf5.h"
+#include "../common/typedefs.hpp"
+#include "hdf5shape_reader.h"
 
 
 namespace hig {

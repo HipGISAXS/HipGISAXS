@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_sim.cpp
  *  Created: Dec 06, 2012
- *  Modified: Tue 17 Sep 2013 04:34:43 PM PDT
+ *  Modified: Sat 28 Sep 2013 10:01:19 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -31,11 +31,11 @@
 #include <mpi.h>
 #endif
 
-#include "woo/timer/woo_boostchronotimers.hpp"
+#include "../woo/timer/woo_boostchronotimers.hpp"
 
 #include "hipgisaxs_main.hpp"
-#include "typedefs.hpp"
-#include "utilities.hpp"
+#include "../common/typedefs.hpp"
+#include "../utils/utilities.hpp"
 
 
 /* The main for HipGISAXS Simulation

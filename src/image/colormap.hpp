@@ -3,7 +3,7 @@
  *
  *  File: colormap.hpp
  *  Created: Jul 02, 2012
- *  Modified: Tue 16 Jul 2013 11:49:12 AM PDT
+ *  Modified: Thu 26 Sep 2013 10:33:31 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -26,8 +26,8 @@
 #include <cmath>
 #include <boost/array.hpp>
 
-#include "globals.hpp"
-#include "constants.hpp"
+#include "../common/globals.hpp"
+#include "../common/constants.hpp"
 
 namespace hig {
 

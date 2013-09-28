@@ -3,7 +3,7 @@
  *
  *  File: numeric_utils.hpp
  *  Created: Oct 08, 2012
- *  Modified: Tue 16 Jul 2013 11:51:18 AM PDT
+ *  Modified: Sat 28 Sep 2013 11:09:43 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -23,7 +23,7 @@
 #include <complex>
 #include <cmath>
 
-#include "typedefs.hpp"
+#include "../common/typedefs.hpp"
 
 namespace hig {
 

@@ -3,7 +3,7 @@
  *
  *  File: reduction.hpp
  *  Created: Aug 25, 2012
- *  Modified: Tue 16 Jul 2013 12:18:14 PM PDT
+ *  Modified: Thu 26 Sep 2013 08:18:58 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>

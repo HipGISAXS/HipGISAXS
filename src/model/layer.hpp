@@ -3,7 +3,7 @@
  *
  *  File: layer.hpp
  *  Created: Jun 13, 2012
- *  Modified: Tue 16 Jul 2013 11:51:12 AM PDT
+ *  Modified: Thu 26 Sep 2013 10:37:13 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -27,7 +27,7 @@
 #include <map>
 #include <unordered_map>
 
-#include "typedefs.hpp"
+#include "../common/typedefs.hpp"
 #include "common.hpp"
 
 namespace hig {

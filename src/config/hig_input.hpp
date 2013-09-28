@@ -3,7 +3,7 @@
  *
  *  File: hig_input.hpp
  *  Created: Jun 11, 2012
- *  Modified: Fri 20 Sep 2013 12:14:12 PM PDT
+ *  Modified: Wed 25 Sep 2013 09:03:14 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -28,16 +28,16 @@
 #include <unordered_map>
 #include <string>
 
-#include "globals.hpp"
+#include "../common/globals.hpp"
 #include "tokens.hpp"
 #include "token_mapper.hpp"
-#include "shape.hpp"
-#include "layer.hpp"
-#include "structure.hpp"
-#include "inst_scattering.hpp"
-#include "inst_detector.hpp"
-#include "compute_params.hpp"
-#include "read_oo_input.hpp"
+#include "../model/shape.hpp"
+#include "../model/layer.hpp"
+#include "../model/structure.hpp"
+#include "../model/inst_scattering.hpp"
+#include "../model/inst_detector.hpp"
+#include "../model/compute_params.hpp"
+#include "../file/read_oo_input.hpp"
 
 namespace hig {
 

@@ -3,7 +3,7 @@
  *
  *  File: utilities.hpp
  *  Created: Jun 25, 2012
- *  Modified: Mon 16 Sep 2013 12:11:24 PM PDT
+ *  Modified: Sat 28 Sep 2013 10:03:34 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -24,8 +24,8 @@
 #define _UTILITIES_HPP_
 
 
-#include "globals.hpp"
-#include "typedefs.hpp"
+#include "../common/globals.hpp"
+#include "../common/typedefs.hpp"
 
 namespace hig {
 

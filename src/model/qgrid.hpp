@@ -3,7 +3,7 @@
  *
  *  File: qgrid.hpp
  *  Created: Jun 17, 2012
- *  Modified: Tue 16 Jul 2013 11:51:48 AM PDT
+ *  Modified: Thu 26 Sep 2013 10:37:34 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -25,8 +25,7 @@
 
 #include <vector>
 
-//#include "hig_input.hpp"
-#include "globals.hpp"
+#include "../common/globals.hpp"
 
 namespace hig {
 

@@ -3,7 +3,7 @@
  *
  *  File: ff.hpp
  *  Created: Jul 18, 2012
- *  Modified: Sun 22 Sep 2013 08:17:22 AM PDT
+ *  Modified: Thu 26 Sep 2013 08:05:03 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -26,10 +26,10 @@
 #include <string>
 
 #ifdef USE_MPI
-#include "woo/comm/multi_node_comm.hpp"
+#include "../woo/comm/multi_node_comm.hpp"
 #endif
 
-#include "typedefs.hpp"
+#include "../common/typedefs.hpp"
 #include "ff_ana.hpp"
 #include "ff_num.hpp"
 

@@ -3,7 +3,7 @@
  *
  *  File: token_mapper.hpp
  *  Created: Jun 05, 2012
- *  Modified: Tue 16 Jul 2013 11:52:25 AM PDT
+ *  Modified: Thu 26 Sep 2013 08:02:41 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -27,7 +27,7 @@
 #include <string>
 
 #include "tokens.hpp"
-#include "enums.hpp"
+#include "../common/enums.hpp"
 
 namespace hig {
 

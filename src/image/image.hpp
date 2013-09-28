@@ -3,7 +3,7 @@
  *
  *  File: image.hpp
  *  Created: Jun 18, 2012
- *  Modified: Tue 16 Jul 2013 11:51:02 AM PDT
+ *  Modified: Thu 26 Sep 2013 10:34:12 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -26,9 +26,9 @@
 #include <boost/gil/gil_all.hpp>
 #include <boost/gil/extension/numeric/affine.hpp>
 
-#include "globals.hpp"
+#include "../common/globals.hpp"
 #include "colormap.hpp"
-#include "typedefs.hpp"
+#include "../common/typedefs.hpp"
 
 namespace hig {
 

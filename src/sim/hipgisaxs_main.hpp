@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_main.hpp
  *  Created: Jun 11, 2012
- *  Modified: Sat 21 Sep 2013 04:16:21 PM PDT
+ *  Modified: Fri 27 Sep 2013 08:40:09 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -24,17 +24,19 @@
 #define _HIPGISAXS_MAIN_HPP_
 
 #include <complex>
+#ifdef USE_MPI
 #include <mpi.h>
-#include "woo/comm/multi_node_comm.hpp"
+#include "../woo/comm/multi_node_comm.hpp"
+#endif
 
-#include "typedefs.hpp"
-#include "globals.hpp"
-#include "hig_input.hpp"
-#include "common.hpp"
-#include "qgrid.hpp"
-#include "ff.hpp"
-#include "sf.hpp"
-#include "image.hpp"
+#include "../common/typedefs.hpp"
+#include "../common/globals.hpp"
+#include "../config/hig_input.hpp"
+#include "../model/common.hpp"
+#include "../model/qgrid.hpp"
+#include "../ff/ff.hpp"
+#include "../sf/sf.hpp"
+#include "../image/image.hpp"
 
 namespace hig {
 

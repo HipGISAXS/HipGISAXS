@@ -3,7 +3,7 @@
  *
  *  File: convolutions.hpp
  *  Created: Jul 03, 2012
- *  Modified: Tue 16 Jul 2013 11:49:35 AM PDT
+ *  Modified: Sat 28 Sep 2013 09:58:21 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -26,7 +26,7 @@
 #include <cmath>
 #include <omp.h>
 
-#include "utilities.hpp"
+#include "../utils/utilities.hpp"
 
 // use some other library like mkl or gsl or scsl or boost
 // ...

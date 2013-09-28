@@ -3,7 +3,7 @@
  *
  *  File: ff_ana_trunc_cone.cpp
  *  Created: Jul 12, 2012
- *  Modified: Tue 16 Jul 2013 11:50:17 AM PDT
+ *  Modified: Sat 28 Sep 2013 11:07:44 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -22,15 +22,15 @@
 
 #include <boost/math/special_functions/fpclassify.hpp>
 
-#include "woo/timer/woo_boostchronotimers.hpp"
+#include "../woo/timer/woo_boostchronotimers.hpp"
 
-#include "constants.hpp"
 #include "ff_ana.hpp"
-#include "shape.hpp"
-#include "enums.hpp"
-#include "qgrid.hpp"
-#include "utilities.hpp"
-#include "numeric_utils.hpp"
+#include "../common/constants.hpp"
+#include "../common/enums.hpp"
+#include "../model/shape.hpp"
+#include "../model/qgrid.hpp"
+#include "../utils/utilities.hpp"
+#include "../numerics/numeric_utils.hpp"
 
 namespace hig {
 

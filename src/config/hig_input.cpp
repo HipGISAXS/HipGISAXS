@@ -3,7 +3,7 @@
  *
  *  File: hig_input.cpp
  *  Created: Jun 11, 2012
- *  Modified: Fri 20 Sep 2013 12:13:21 PM PDT
+ *  Modified: Sat 28 Sep 2013 09:57:03 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -23,9 +23,9 @@
 #include <cfloat>
 
 #include "hig_input.hpp"
-#include "utilities.hpp"
-#include "parameters.hpp"
-#include "hig_file_reader.hpp"
+#include "../utils/utilities.hpp"
+#include "../common/parameters.hpp"
+#include "../file/hig_file_reader.hpp"
 //#include "object2hdf5.h"
 
 

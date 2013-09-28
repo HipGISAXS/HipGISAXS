@@ -3,7 +3,7 @@
  *
  *  File: ff_num_gpu.cu
  *  Created: Aug 25, 2012
- *  Modified: Tue 17 Sep 2013 04:56:47 PM PDT
+ *  Modified: Thu 26 Sep 2013 10:26:48 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -32,15 +32,15 @@
 //#include <nvToolsExt.h>
 #include <cuda_profiler_api.h>
 
-#include "woo/timer/woo_cudatimers.hpp"
+#include "../../woo/timer/woo_cudatimers.hpp"
 
-#include "typedefs.hpp"
-#include "constants.hpp"
-#include "parameters.hpp"
+#include "../../common/typedefs.hpp"
+#include "../../common/constants.hpp"
+#include "../../common/parameters.hpp"
 #include "reduction.cuh"
 
 #include "ff_num_gpu.cuh"
-#include "cu_complex_numeric.cuh"
+#include "../../numerics/gpu/cu_complex_numeric.cuh"
 
 namespace hig {
 

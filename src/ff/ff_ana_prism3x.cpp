@@ -3,7 +3,7 @@
  *
  *  File: ff_ana_prism3x.cpp
  *  Created: Jul 12, 2012
- *  Modified: Tue 16 Jul 2013 11:50:01 AM PDT
+ *  Modified: Sat 28 Sep 2013 11:07:09 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -22,14 +22,14 @@
 
 #include <boost/math/special_functions/fpclassify.hpp>
 
-#include "woo/timer/woo_boostchronotimers.hpp"
+#include "../woo/timer/woo_boostchronotimers.hpp"
 
 #include "ff_ana.hpp"
-#include "shape.hpp"
-#include "enums.hpp"
-#include "qgrid.hpp"
-#include "utilities.hpp"
-#include "numeric_utils.hpp"
+#include "../common/enums.hpp"
+#include "../model/shape.hpp"
+#include "../model/qgrid.hpp"
+#include "../utils/utilities.hpp"
+#include "../numerics/numeric_utils.hpp"
 
 namespace hig {
 

@@ -3,7 +3,7 @@
  *
  *  File: read_oo_output.hpp
  *  Created: Jun 09, 2012
- *  Modified: Tue 16 Jul 2013 11:51:51 AM PDT
+ *  Modified: Thu 26 Sep 2013 10:32:23 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -28,8 +28,8 @@
 #include <string>
 #include <stack>
 
-#include "globals.hpp"
-#include "token_mapper.hpp"
+#include "../common/globals.hpp"
+#include "../config/token_mapper.hpp"
 
 namespace hig {
 

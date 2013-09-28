@@ -3,7 +3,7 @@
  *
  *  File: ff_num_cpu.hpp
  *  Created: Nov 05, 2011
- *  Modified: Sun 15 Sep 2013 05:30:31 PM PDT
+ *  Modified: Thu 26 Sep 2013 11:51:20 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -23,18 +23,7 @@
 #ifndef __NUMERIC_FF_CPU_HPP__
 #define __NUMERIC_FF_CPU_HPP__
 	
-//#include <iostream>
-//#include <vector>
-//#include <cmath>
-//#include <complex>
-//#ifdef _OPENMP
-//#include <omp.h>
-//#endif
-
-//#include "constants.hpp"
-//#include "parameters_cpu.hpp"
-
-#include "typedefs.hpp"
+#include "../../common/typedefs.hpp"
 	
 namespace hig {
 	

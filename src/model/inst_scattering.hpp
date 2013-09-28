@@ -3,7 +3,7 @@
  *
  *  File: inst_scattering.hpp
  *  Created: Jun 05, 2012
- *  Modified: Tue 16 Jul 2013 11:51:10 AM PDT
+ *  Modified: Thu 26 Sep 2013 10:37:03 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -26,7 +26,7 @@
 #include <iostream>
 #include <string>
 
-#include "globals.hpp"
+#include "../common/globals.hpp"
 
 namespace hig {
 

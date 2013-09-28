@@ -3,7 +3,7 @@
  *
  *  File: ff_ana_rand_cylinder_gpu.cu
  *  Created: Oct 16, 2012
- *  Modified: Tue 16 Jul 2013 11:50:11 AM PDT
+ *  Modified: Thu 26 Sep 2013 10:25:21 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -25,9 +25,9 @@
 #include <cuComplex.h>
 
 #include "ff_ana_gpu.cuh"
-#include "enums.hpp"
-#include "cu_complex_numeric.cuh"
-#include "cu_utilities.cuh"
+#include "../../common/enums.hpp"
+#include "../../numerics/gpu/cu_complex_numeric.cuh"
+#include "../../utils/gpu/cu_utilities.cuh"
 
 namespace hig {
 

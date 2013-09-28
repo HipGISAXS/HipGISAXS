@@ -1,0 +1,10 @@
+Import('env')
+
+objs = [ ]
+sources = ['hig_input.cpp']
+
+objs += env.Object(sources)
+print "---------------------------------------------------------------"
+print objs
+
+Return('objs')

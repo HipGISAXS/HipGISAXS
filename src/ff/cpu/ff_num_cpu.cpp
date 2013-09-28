@@ -3,7 +3,7 @@
  *
  *  File: ff_num_cpu.hpp
  *  Created: Nov 05, 2011
- *  Modified: Sun 15 Sep 2013 05:29:13 PM PDT
+ *  Modified: Thu 26 Sep 2013 06:53:52 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -33,16 +33,16 @@
 #endif
 
 #ifdef INTEL_SB_AVX
-#include "avx_numerics.hpp"
+#include "../../numerics/cpu/avx_numerics.hpp"
 #elif defined __SSE3__
-#include "sse3_numerics.hpp"
+#include "../../numerics/cpu/sse3_numerics.hpp"
 #endif
 
-#include "woo/timer/woo_boostchronotimers.hpp"
+#include "../../woo/timer/woo_boostchronotimers.hpp"
 
-#include "constants.hpp"
-#include "parameters.hpp"
-#include "parameters_cpu.hpp"
+#include "../../common/constants.hpp"
+#include "../../common/parameters.hpp"
+#include "../../common/cpu/parameters_cpu.hpp"
 
 #include "ff_num_cpu.hpp"
 	

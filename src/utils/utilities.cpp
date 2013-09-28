@@ -3,7 +3,7 @@
  *
  *  File: utilities.cpp
  *  Created: Jun 25, 2012
- *  Modified: Mon 16 Sep 2013 12:11:41 PM PDT
+ *  Modified: Sat 28 Sep 2013 11:08:42 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -27,7 +27,7 @@
 //#include <pari/pari.h>	// for bessel functions
 
 #include "utilities.hpp"
-#include "numeric_utils.hpp"
+#include "../numerics/numeric_utils.hpp"
 
 namespace hig {
 

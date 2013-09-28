@@ -3,7 +3,7 @@
  *
  *  File: structure.hpp
  *  Created: Jun 09, 2012
- *  Modified: Tue 16 Jul 2013 11:52:15 AM PDT
+ *  Modified: Thu 26 Sep 2013 10:38:09 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -26,8 +26,8 @@
 #include <string>
 #include <unordered_map>
 
-#include "globals.hpp"
-#include "enums.hpp"
+#include "../common/globals.hpp"
+#include "../common/enums.hpp"
 #include "common.hpp"
 
 namespace hig {

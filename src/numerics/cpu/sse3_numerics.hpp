@@ -3,7 +3,7 @@
  *
  *  File: sse3_numerics.hpp
  *  Created: Apr 19, 2013
- *  Modified: Tue 16 Jul 2013 11:52:11 AM PDT
+ *  Modified: Thu 26 Sep 2013 11:01:07 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -33,7 +33,7 @@ extern "C" {
 }
 #endif*/
 
-#include "typedefs.hpp"
+#include "../../common/typedefs.hpp"
 #include "sse_mathfun.h"
 
 namespace hig {

@@ -3,7 +3,7 @@
  *
  *  File: ff_num_gpu.cuh
  *  Created: Nov 05, 2011
- *  Modified: Sun 15 Sep 2013 06:06:39 PM PDT
+ *  Modified: Thu 26 Sep 2013 10:27:16 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -23,15 +23,9 @@
 #ifndef __FF_NUM_GPU_CUH__
 #define __FF_NUM_GPU_CUH__
 
-//#include <iostream>
-//#include <fstream>
 #include <vector>
-//#include <complex>
-//#include <cuComplex.h>
 
-#include "typedefs.hpp"
-//#include "constants.hpp"
-//#include "parameters.hpp"
+#include "../../common/typedefs.hpp"
 
 namespace hig {
 

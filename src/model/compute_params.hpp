@@ -3,7 +3,7 @@
  *
  *  File: compute_params.hpp
  *  Created: Jun 05, 2012
- *  Modified: Tue 16 Jul 2013 11:49:31 AM PDT
+ *  Modified: Thu 26 Sep 2013 10:36:46 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -26,8 +26,8 @@
 #include <iostream>
 #include <string>
 
-#include "globals.hpp"
-#include "enums.hpp"
+#include "../common/globals.hpp"
+#include "../common/enums.hpp"
 
 namespace hig {
 

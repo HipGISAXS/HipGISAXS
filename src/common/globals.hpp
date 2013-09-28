@@ -3,7 +3,7 @@
  *
  *  File: globals.hpp
  *  Created: Jun 05, 2012
- *  Modified: Tue 16 Jul 2013 11:50:49 AM PDT
+ *  Modified: Thu 26 Sep 2013 08:00:51 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -24,11 +24,10 @@
 #define _GLOBALS_HPP_
 
 #include <boost/array.hpp>
-//#include <unordered_map>
 #include <vector>
 #include <cmath>
 
-#include "tokens.hpp"
+//#include "../config/tokens.hpp"
 #include "typedefs.hpp"
 
 

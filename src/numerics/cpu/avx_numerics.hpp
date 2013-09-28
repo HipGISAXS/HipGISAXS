@@ -3,7 +3,7 @@
  *
  *  File: sse3_numerics.hpp
  *  Created: Apr 19, 2013
- *  Modified: Tue 16 Jul 2013 11:49:04 AM PDT
+ *  Modified: Thu 26 Sep 2013 10:59:58 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -27,7 +27,7 @@
 
 #include <immintrin.h>
 
-#include "typedefs.hpp"
+#include "../../common/typedefs.hpp"
 #include "avx_mathfun.hpp"
 
 namespace hig {
