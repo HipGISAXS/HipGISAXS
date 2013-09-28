@@ -3,8 +3,8 @@ Import('env')
 gpuenv = env.Clone()
 gpuenv.Tool('cuda')
 
-for item in sorted(gpuenv.Dictionary().items()):
-	print "++ '%s', value = '%s'" % item
+#for item in sorted(gpuenv.Dictionary().items()):
+#	print "++ '%s', value = '%s'" % item
 
 #CUDA_INCL = -I$(CUDA_DIR)/include
 #CUDA_LIBS = -L$(CUDA_DIR)/lib64 -lcudart -lcufft -lcudadevrt #-lnvToolsExt

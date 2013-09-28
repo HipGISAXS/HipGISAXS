@@ -90,7 +90,7 @@ def add_paths(s):
 		env.Append(LIBPATH = [x + "/lib"])
 		path = env['ENV']['PATH'] + ":" + x + "/bin"
 		env['ENV']['PATH'] = path
-		print path
+		#print path
 
 def add_libs(s):
 	for x in s.split(","):
@@ -131,7 +131,6 @@ def setup_configuration_tests(conf):
 								""")
 				}
 		print_tuple = (lang_name, context.env[compiler_var], toolchain)
-		print(print_tuple)
 		context.Message('Checking if %s compiler "%s" is %s ... ' % print_tuple)
 		# Strip indentation from the test body to ensure that the newline at the end of the
 		# endif is the last character in the file (rather than a line of spaces with no
@@ -201,7 +200,7 @@ def do_configure(myenv):
 		cloned.Append(**test_mutation)
 
 		cloned.Append(CCFLAGS = ['-Werror'])
-		conf = Configure(cloned, help = False, custom_tests = {
+		conf = Configure(cloned, help = False, clean = False, custom_tests = {
 						'CheckFlag': lambda(ctx): check_flag_test(ctx, tool, extension, flag)
 			})
 		available = conf.CheckFlag()
@@ -221,7 +220,7 @@ def do_configure(myenv):
 	
 	## configure
 
-	conf = Configure(myenv, help = False, custom_tests = {
+	conf = Configure(myenv, help = False, clean = False, custom_tests = {
 	#										'check_for_toolchain': check_for_toolchain,
 	#										'FindSysLibDep': FindSysLibDep
 											})
@@ -241,6 +240,7 @@ def do_configure(myenv):
 		if conf.check_for_toolchain(candidate, "C++", "CXX", ".cpp"):
 			toolchain = candidate
 			break
+	#if not get_option('clean'):
 	if not have_toolchain():
 		print("error: could not identify toolchain on your system")
 		Exit(1)
@@ -387,6 +387,8 @@ env = Environment(BUILD_DIR=variant_dir,
 					DIST_ARCHIVE_SUFFIX = '.tar',
 					TARGET_ARCH = msarch,
 					PYSYSPLATFORM = os.sys.platform)
+SCONSIGN_FILE = ".scons-signatures"
+env.SConsignFile(SCONSIGN_FILE)
 
 ## the decider
 env.Decider('MD5-timestamp')
@@ -445,6 +447,8 @@ if using_papi:
 env.Append(LIBS = all_libs)
 env.Append(CPPDEFINES = all_flags)
 env['ACCELERATOR_TYPE'] = using_accelerator
+if using_accelerator != None:
+	print("Enabling use of accelerator: %s" % using_accelerator)
 
 if "uname" in dir(os):
 	processor = os.uname()[4]
@@ -484,18 +488,6 @@ else:
 #for item in sorted(env.Dictionary().items()):
 #	print "++ '%s', value = '%s'" % item
 print("Platform: %s" % sys.platform)
-print("@@@@@ ENV:")
-print env['ENV']
-#print("@@@@@ LIBPATH:")
-#print env['LIBPATH']
-#print("@@@@@ CPPPATH:")
-#print env['CPPPATH']
-#print("@@@@@ CCFLAGS:")
-#print env['CCFLAGS']
-#print("@@@@@ LIBS:")
-#print env['LIBS']
-#print("@@@@@ CPPDEFINES:")
-#print env['CPPDEFINES']
 
 ## call configure
 if not get_option('clean'):
@@ -503,7 +495,7 @@ if not get_option('clean'):
 
 Export("env")
 
-objs, nvobjs = env.SConscript('src/SConscript', variant_dir = '$BUILD_DIR', duplicate = False)
+objs, nvobjs = env.SConscript('src/SConscript', duplicate = False)
 
 gpuenv = env.Clone(CC = 'nvcc')
 gpuenv.Tool('cuda')
@@ -515,3 +507,9 @@ objs += nvlibobj + nvobjs
 
 #env.Library('hipgisaxs', objs)
 env.Program('hipgisaxs', objs)
+
+## to clean everything
+Clean('.', '#/' + env['BUILD_DIR'])
+Clean('.', env['CONFIGUREDIR'])
+Clean('.', env['CONFIGURELOG'])
+Clean('.', '#/' + SCONSIGN_FILE + ".dblite")

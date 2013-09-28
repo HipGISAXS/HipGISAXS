@@ -14,3 +14,6 @@ data/*.hd5
 data/*.dat
 data/obj
 bin/*
+.build
+.scon*
+config.log
