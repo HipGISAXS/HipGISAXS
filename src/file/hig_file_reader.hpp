@@ -3,7 +3,7 @@
  *
  *  File: hig_file_reader.hpp
  *  Created: Jul 11, 2012
- *  Modified: Fri 27 Sep 2013 08:42:45 AM PDT
+ *  Modified: Sun 29 Sep 2013 11:08:09 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -91,6 +91,13 @@ extern "C" {
 				num_triangles = shape_def.size() / 7;
 				return num_triangles;
 			} // shape_shape_reader()
+
+			unsigned int obj_shape_reader(const char* filename,
+										std::vector<float_t> &shape_def, unsigned int &num_triangles) {
+				ObjectShapeReader obj(filename, shape_def);
+				num_triangles = shape_def.size() / 7;
+				return num_triangles;
+			} // obj_shape_reader()
 
 			// ...
 
