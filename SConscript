@@ -371,7 +371,8 @@ if using_cuda and using_mic:
 	print("error: currently GPU and MIC are not supported simultaneously. select one of them.")
 	Exit(1)
 
-variant_dir = ".build"
+#variant_dir = ".build"
+variant_dir = "obj"
 
 #########################
 ## set the environment ##
@@ -495,7 +496,7 @@ if not get_option('clean'):
 
 Export("env")
 
-objs, nvobjs = env.SConscript('src/SConscript', duplicate = False)
+objs, nvobjs, mainobjs = env.SConscript('src/SConscript', duplicate = False)
 
 if using_cuda:
 	gpuenv = env.Clone(CC = 'nvcc')
@@ -503,11 +504,12 @@ if using_cuda:
 	gpuenv.Append(LINKFLAGS = ['-Xlinker', '-lgomp', '-arch=sm_35', '-dlink'])
 	gpuenv.Append(LINKFLAGS = ['-Xlinker', '-Wl,-rpath', '-Xlinker', '-Wl,$CUDA_TOOLKIT_PATH/lib64'])
 	nvlibobj = gpuenv.Program('nv_hipgisaxs.o', nvobjs)
-
 	objs += nvlibobj + nvobjs
 
-#env.Library('hipgisaxs', objs)
-env.Program('hipgisaxs', objs)
+env.Library('hipgisaxs', objs)
+env.Program('hipgisaxs', objs + mainobjs)
+env.Install('#/bin', source = 'hipgisaxs')
+env.Install('#/lib', source = 'libhipgisaxs.a')
 
 ## to clean everything
 Clean('.', '#/' + env['BUILD_DIR'])

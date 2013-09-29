@@ -8,7 +8,7 @@ profile.*
 profiles
 Makefile
 Makefile*
-obj/*.o
+obj
 inputs/*.hig
 data/*.hd5
 data/*.dat
