@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_main.cpp
  *  Created: Jun 14, 2012
- *  Modified: Sat 28 Sep 2013 10:01:12 AM PDT
+ *  Modified: Sun 29 Sep 2013 09:39:39 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -385,7 +385,7 @@ namespace hig {
 			int temp_amaster = amaster;
 			int *amasters = new (std::nothrow) int[multi_node_.size(world_comm)];
 			// all alphai masters tell the world master about who they are
-			multi_node_.gather(world_comm, &temp_amaster, 1, amasters, 1);
+			multi_node_.allgather(world_comm, &temp_amaster, 1, amasters, 1);
 		#else
 			bool amaster = true;
 		#endif // USE_MPI
@@ -418,7 +418,7 @@ namespace hig {
 				int temp_pmaster = pmaster;
 				int *pmasters = new (std::nothrow) int[multi_node_.size(alphai_comm)];
 				// all phi masters tell the alphai master about who they are
-				multi_node_.gather(alphai_comm, &temp_pmaster, 1, pmasters, 1);
+				multi_node_.allgather(alphai_comm, &temp_pmaster, 1, pmasters, 1);
 			#else
 				bool pmaster = true;
 			#endif // USE_MPI
@@ -449,7 +449,7 @@ namespace hig {
 					int temp_tmaster = tmaster;
 					int *tmasters = new (std::nothrow) int[multi_node_.size(phi_comm)];
 					// all tilt masters tell the phi master about who they are
-					multi_node_.gather(phi_comm, &temp_tmaster, 1, tmasters, 1);
+					multi_node_.allgather(phi_comm, &temp_tmaster, 1, tmasters, 1);
 				#else
 					bool tmaster = true;
 				#endif // USE_MPI
@@ -559,6 +559,8 @@ namespace hig {
 						averaged_data = final_data;
 					} // if-else
 
+					multi_node_.barrier(tilt_comm);
+
 				} // for tilt
 				#ifdef USE_MPI
 					multi_node_.free(tilt_comm);
@@ -568,11 +570,11 @@ namespace hig {
 						int psize = multi_node_.size(phi_comm);
 						float_t* temp_data = NULL;
 						if(psize > 1) {
+							int *proc_sizes = new (std::nothrow) int[psize];
+							int *proc_displacements = new (std::nothrow) int[psize];
 							if(pmaster) {
 								temp_data = new (std::nothrow) float_t[psize * nqx_ * nqy_ * nqz_];
 							} // if
-							int *proc_sizes = new (std::nothrow) int[psize];
-							int *proc_displacements = new (std::nothrow) int[psize];
 							for(int i = 0; i < psize; ++ i) {
 								proc_sizes[i] = tmasters[i] * nqx_ * nqy_ * nqz_;
 							} // for
@@ -580,19 +582,23 @@ namespace hig {
 							for(int i = 1; i < psize; ++ i) {
 								proc_displacements[i] = proc_displacements[i - 1] + proc_sizes[i - 1];
 							} // for
-							multi_node_.gatherv(phi_comm, averaged_data, nqx_ * nqy_ * nqz_,
+							int prank = multi_node_.rank(phi_comm);
+							multi_node_.gatherv(phi_comm, averaged_data, proc_sizes[prank],
 												temp_data, proc_sizes, proc_displacements);
-							delete[] proc_displacements;
-							delete[] proc_sizes;
 							if(pmaster) {
 								for(int i = 1; i < psize; ++ i) {
-									add_data_elements(averaged_data, temp_data + i * nqx_ * nqy_ * nqz_,
-														averaged_data, nqx_ * nqy_ * nqz_);
+									add_data_elements(averaged_data, temp_data + proc_displacements[i],
+														averaged_data, proc_sizes[i]);
 								} // for
 								delete[] temp_data;
 							} // if
+							delete[] proc_displacements;
+							delete[] proc_sizes;
 						} // if
 //					} // if
+
+					multi_node_.barrier(phi_comm);
+
 				#endif
 			} // for phi
 			#ifdef USE_MPI
@@ -603,11 +609,11 @@ namespace hig {
 					int asize = multi_node_.size(alphai_comm);
 					float_t* temp_data = NULL;
 					if(asize > 1) {
+						int *proc_sizes = new (std::nothrow) int[asize];
+						int *proc_displacements = new (std::nothrow) int[asize];
 						if(amaster) {
 							temp_data = new (std::nothrow) float_t[asize * nqx_ * nqy_ * nqz_];
 						} // if
-						int *proc_sizes = new (std::nothrow) int[asize];
-						int *proc_displacements = new (std::nothrow) int[asize];
 						for(int i = 0; i < asize; ++ i) {
 							proc_sizes[i] = pmasters[i] * nqx_ * nqy_ * nqz_;
 						} // for
@@ -615,19 +621,23 @@ namespace hig {
 						for(int i = 1; i < asize; ++ i) {
 							proc_displacements[i] = proc_displacements[i - 1] + proc_sizes[i - 1];
 						} // for
-						multi_node_.gatherv(alphai_comm, averaged_data, nqx_ * nqy_ * nqz_,
+						int arank = multi_node_.rank(alphai_comm);
+						multi_node_.gatherv(alphai_comm, averaged_data, proc_sizes[arank],
 											temp_data, proc_sizes, proc_displacements);
-						delete[] proc_displacements;
-						delete[] proc_sizes;
 						if(amaster) {
 							for(int i = 1; i < asize; ++ i) {
-								add_data_elements(averaged_data, temp_data + i * nqx_ * nqy_ * nqz_,
+								add_data_elements(averaged_data, temp_data + proc_displacements[i],
 													averaged_data, nqx_ * nqy_ * nqz_);
 							} // for
 							delete[] temp_data;
 						} // if
+						delete[] proc_displacements;
+						delete[] proc_sizes;
 					} // if
 //				} // if
+
+				multi_node_.barrier(alphai_comm);
+
 			#endif
 
 			if(amaster && (num_phi > 1 || num_tilt > 1)) {
