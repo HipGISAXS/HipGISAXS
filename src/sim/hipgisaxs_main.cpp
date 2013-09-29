@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_main.cpp
  *  Created: Jun 14, 2012
- *  Modified: Sun 29 Sep 2013 09:39:39 AM PDT
+ *  Modified: Sun 29 Sep 2013 10:46:32 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -559,7 +559,9 @@ namespace hig {
 						averaged_data = final_data;
 					} // if-else
 
-					multi_node_.barrier(tilt_comm);
+					#ifdef USE_MPI
+						multi_node_.barrier(tilt_comm);
+					#endif
 
 				} // for tilt
 				#ifdef USE_MPI
