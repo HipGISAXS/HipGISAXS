@@ -413,13 +413,14 @@ if _has_option("extralib"):
 using_accelerator = None
 ## required libs
 boost_libs = ["boost_system", "boost_filesystem", "boost_timer", "boost_chrono"]
-hdf5_libs = ["hdf5", "z"]
+hdf5_libs = ["hdf5", "z", "sz"]
 tiff_libs = ["tiff"]
 other_libs = ["m", "gomp"]
 all_libs = boost_libs + hdf5_libs + tiff_libs + other_libs
 ## optional libs
 mpi_libs = ["mpi_cxx", "mpi"]
-gpu_libs = ["cudart", "cufft", "cudadevrt", "nvToolsExt"]
+#gpu_libs = ["cudart", "cufft", "cudadevrt", "nvToolsExt"]
+gpu_libs = ["cudart"]
 papi_libs = ["papi"]
 ## required flags
 detail_flags = ['TIME_DETAIL_1', 'TIME_DETAIL_2']
@@ -501,7 +502,8 @@ objs, nvobjs, mainobjs = env.SConscript('src/SConscript', duplicate = False)
 if using_cuda:
 	gpuenv = env.Clone(CC = 'nvcc')
 	gpuenv.Tool('cuda')
-	gpuenv.Append(LINKFLAGS = ['-Xlinker', '-lgomp', '-arch=sm_35', '-dlink'])
+	#gpuenv.Append(LINKFLAGS = ['-Xlinker', '-lgomp', '-arch=sm_35', '-dlink'])
+	gpuenv.Append(LINKFLAGS = ['-Xlinker', '-lgomp', '-arch=sm_21', '-dlink'])
 	gpuenv.Append(LINKFLAGS = ['-Xlinker', '-Wl,-rpath', '-Xlinker', '-Wl,$CUDA_TOOLKIT_PATH/lib64'])
 	nvlibobj = gpuenv.Program('nv_hipgisaxs.o', nvobjs)
 	objs += nvlibobj + nvobjs
