@@ -3,7 +3,7 @@
  *
  *  File: init_gpu.cuh
  *  Created: Feb 22, 2013
- *  Modified: Tue 17 Sep 2013 04:23:24 PM PDT
+ *  Modified: Sun 29 Sep 2013 08:50:08 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -29,7 +29,7 @@
 namespace hig {
 
 	void init_gpu() {
-		cudaSetDevice(3);
+		//cudaSetDevice(1);
 		cudaDeviceSetCacheConfig(cudaFuncCachePreferShared);
 		#ifdef FF_NUM_GPU_DYNAMICP
 			cudaDeviceSetLimit(cudaLimitMallocHeapSize, 4 * sizeof(cucomplex_t));
