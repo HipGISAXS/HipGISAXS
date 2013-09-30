@@ -3,7 +3,7 @@
  *
  *  File: hig_input.hpp
  *  Created: Jun 11, 2012
- *  Modified: Wed 25 Sep 2013 09:03:14 PM PDT
+ *  Modified: Sun 29 Sep 2013 04:49:37 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -215,7 +215,7 @@ namespace hig {
 				return shapes_[s.grain_shape_key()].param_list(); }
 			bool struct_in_layer() { return struct_in_layer_; }
 
-			unsigned int read_shape_file_shape(const char*);
+			unsigned int read_shape_file_data(const char*);
 			unsigned int read_shape_file_hdf5(const char*);
 			unsigned int read_shape_file_object(const char*);
 

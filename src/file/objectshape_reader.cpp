@@ -3,7 +3,7 @@
  *
  *  File: objectshape_reader.cpp
  *  Created: Aug 25, 2013
- *  Modified: Sun 29 Sep 2013 11:27:26 AM PDT
+ *  Modified: Sun 29 Sep 2013 04:59:53 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -30,7 +30,8 @@ namespace hig {
 	/**
 	 * constructor: read input object file, convert to shape
 	 */
-	ObjectShapeReader::ObjectShapeReader(const char* filename, std::vector<float_t>& shape_def) {
+	ObjectShapeReader::ObjectShapeReader(const char* filename, double* &shape_def,
+											unsigned int& num_triangles) {
 		std::vector<vertex_t> vertices;
 		//std::vector<poly_index_t> Vn3, Vn4, F3, F4;
 		std::vector<std::vector<int> > face_list_3v, face_list_4v;
@@ -43,7 +44,11 @@ namespace hig {
 
 		if(face_list_4v.size() > 0)
 			std::cerr << "warning: ignoring faces with four vertices. may be fix it later" << std::endl;
-		convert_to_shape(face_list_3v, vertices);
+		std::vector<float_t> temp_shape_def;
+		convert_to_shape(face_list_3v, vertices, temp_shape_def);
+		num_triangles = temp_shape_def.size() / 7;
+		shape_def = new (std::nothrow) double[temp_shape_def.size()];
+		for(int i = 0; i < temp_shape_def.size(); ++ i) shape_def[i] = temp_shape_def[i];
 	} // o2s_converter()
 
 
@@ -60,7 +65,7 @@ namespace hig {
 		std::ifstream input(filename);
 		if(!input.is_open()) {
 			std::cout << "Unable to open file " << filename << std::endl;
-			return;
+			return false;
 		} // if
 
 		int num_texture = 0, num_normal = 0;
@@ -210,7 +215,7 @@ namespace hig {
 						if(iter2 != tokens2.end()) {
 							std::cerr << "error: could not understand the input line '"
 									<< temp_string << "'" << std::endl;
-							return;
+							return false;
 						} // if-else
 					} // for
 					if(face_vi.size() == 3) {

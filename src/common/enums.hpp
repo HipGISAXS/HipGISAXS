@@ -3,7 +3,7 @@
  *
  *  File: enums.hpp
  *  Created: Jun 11, 2012
- *  Modified: Tue 16 Jul 2013 11:49:46 AM PDT
+ *  Modified: Sun 29 Sep 2013 04:14:08 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -94,9 +94,9 @@ namespace hig {
 	enum ShapeFileType {
 		shape_file_null,
 		shape_file_error,
-		shape_file_shape,		/* shape file format */
+		shape_file_data,		/* shape file format .dat */
 		shape_file_hdf5,		/* shape file in HDF5 format */
-		shape_file_object		/* raw object file (e.g. from maya) */
+		shape_file_object		/* wavefront OBJ object file (e.g. from maya) */
 	}; // enum ShapeFileType
 
 	enum StructCorrelationType {

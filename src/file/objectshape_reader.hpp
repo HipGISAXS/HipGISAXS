@@ -3,7 +3,7 @@
  *
  *  File: objectshape_reader.hpp
  *  Created: Aug 25, 2013
- *  Modified: Sun 29 Sep 2013 11:26:59 AM PDT
+ *  Modified: Sun 29 Sep 2013 05:00:11 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -66,15 +66,15 @@ namespace hig {
 
 	class ObjectShapeReader {
 		public:
-			ObjectShapeReader(const char* filename, std::vector<float_t>& shape_def);
+			ObjectShapeReader(const char*, double*&, unsigned int&);
 			~ObjectShapeReader() { }
 
 		private:
 			bool load_object(const char* filename, std::vector<vertex_t> &vertices,
 								std::vector<std::vector<int> > &face_list_3v,
 								std::vector<std::vector<int> > &face_list_4v);
-			float_t* convert_to_shape(std::vector<std::vector<int> > face_list_3v,
-								std::vector<vertex_t> vertices);
+			bool convert_to_shape(std::vector<std::vector<int> > face_list_3v,
+								std::vector<vertex_t> vertices, std::vector<float_t>&);
 	
 			bool get_triangle_params(vertex_t v1, vertex_t v2, vertex_t v3,
 								float_t &s_area, vertex_t &normal, vertex_t &center);

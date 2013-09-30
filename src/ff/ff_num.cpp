@@ -3,7 +3,7 @@
  *
  *  File: ff_num.cpp
  *  Created: Jul 18, 2012
- *  Modified: Sun 29 Sep 2013 11:30:18 AM PDT
+ *  Modified: Sun 29 Sep 2013 05:21:38 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -24,6 +24,7 @@
 #include <fstream>
 #include <cmath>
 #include <cstring>
+#include <sstream>
 #if (defined(__SSE3__) || defined(INTEL_SB_AVX)) && !defined(USE_GPU)
 	#include <malloc.h>
 #endif
@@ -35,6 +36,7 @@
 #include "../common/cpu/parameters_cpu.hpp"
 #include "../model/qgrid.hpp"
 #include "../utils/utilities.hpp"
+#include "../file/objectshape_reader.hpp"
 
 namespace hig {
 
@@ -99,7 +101,7 @@ namespace hig {
 			#endif
 		#endif
 		// use the new file reader instead ...
-		unsigned int num_triangles = read_shapes_hdf5(filename, shape_def);
+		unsigned int num_triangles = read_shapes_file(filename, shape_def);
 						// TODO ... <--- sadly all procs read this! IMPROVE!!!
 	
 		// TODO: temporary ... remove ...
@@ -618,7 +620,7 @@ namespace hig {
 	/**
 	 * Function to read the input shape file.
 	 */
-	unsigned int NumericFormFactor::read_shape_surface_file(const char* filename, float_vec_t &shape_def) {
+	unsigned int NumericFormFactor::read_shapes_file_dat(const char* filename, float_vec_t &shape_def) {
 		std::ifstream f(filename);
 		if(!f.is_open()) {
 			std::cout << "Cannot open file " << filename << std::endl;
@@ -642,7 +644,7 @@ namespace hig {
 	
 		f.close();
 		return shape_def.size() / 7;
-	} // NumericFormFactor::read_shape_surface_file()
+	} // NumericFormFactor::read_shapes_file_dat()
 	
 	
 	void NumericFormFactor::find_axes_orientation(float_vec_t &shape_def, std::vector<short int> &axes) {
@@ -708,12 +710,33 @@ namespace hig {
 					<< fabs(max_point[1] - min_point[1]) << " x "
 					<< fabs(max_point[2] - min_point[2]) << std::endl;
 	} // NumericFormFactor::find_axes_orientation()
+
+
+	ShapeFileType NumericFormFactor::get_shapes_file_format(const char* filename) {
+		std::istringstream file(filename);
+		std::string s;    
+		while(std::getline(file, s, '.'))// std::cout << s << std::endl;
+		if(s.compare("") == 0) return shape_file_null;
+		if(s.compare("dat") == 0) return shape_file_data;
+		if(s.compare("Dat") == 0) return shape_file_data;
+		if(s.compare("DAT") == 0) return shape_file_data;
+		if(s.compare("hd5") == 0) return shape_file_hdf5;
+		if(s.compare("Hd5") == 0) return shape_file_hdf5;
+		if(s.compare("HD5") == 0) return shape_file_hdf5;
+		if(s.compare("hdf5") == 0) return shape_file_hdf5;
+		if(s.compare("Hdf5") == 0) return shape_file_hdf5;
+		if(s.compare("HDF5") == 0) return shape_file_hdf5;
+		if(s.compare("obj") == 0) return shape_file_object;
+		if(s.compare("Obj") == 0) return shape_file_object;
+		if(s.compare("OBJ") == 0) return shape_file_object;
+		return shape_file_error;
+	} // NumericFormFactor::get_shape_file_format()
 	
 	
 	/**
 	 * Function to read the shape definition input file in HDF5 format.
 	 */
-	unsigned int NumericFormFactor::read_shapes_hdf5(const char* filename,
+	unsigned int NumericFormFactor::read_shapes_file(const char* filename,
 													#ifndef __SSE3__
 														float_vec_t &shape_def
 													#else
@@ -727,7 +750,25 @@ namespace hig {
 		unsigned int num_triangles = 0;
 		double* temp_shape_def = NULL;
 	
-		h5_shape_reader(filename, &temp_shape_def, &num_triangles);
+		// TODO: shape definition is already in HigInput ...
+		// utilize ...
+		ShapeFileType type = get_shapes_file_format(filename);
+		if(type == shape_file_data);
+		else if(type == shape_file_object)
+			ObjectShapeReader temp(filename, temp_shape_def, num_triangles);
+		else if(type == shape_file_hdf5)
+			h5_shape_reader(filename, &temp_shape_def, &num_triangles);
+		else if(type == shape_file_null) {
+			std::cerr << "error: shape definition file extension is null" << std::endl;
+			return 0;
+		} else if(type == shape_file_error) {
+			std::cerr << "error: shape definition file format unknown" << std::endl;
+			return 0;
+		} else {
+			std::cerr << "error: shape definition file format unknown" << std::endl;
+			return 0;
+		} // if-else
+
 		#ifdef FF_NUM_GPU
 			#ifndef KERNEL2
 				for(unsigned int i = 0; i < num_triangles * 7; ++ i)
@@ -811,7 +852,7 @@ namespace hig {
 		#endif // FF_NUM_GPU
 
 		return num_triangles;
-	} // NumericFormFactor::read_shapes_hdf5()
+	} // NumericFormFactor::read_shapes_file()
 	
 
 	#ifdef FF_NUM_GPU

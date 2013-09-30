@@ -3,7 +3,7 @@
  *
  *  File: ff_num.hpp
  *  Created: Nov 05, 2011
- *  Modified: Sat 28 Sep 2013 09:57:41 AM PDT
+ *  Modified: Sun 29 Sep 2013 04:58:25 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -38,6 +38,7 @@
 #endif
 
 #include "../common/parameters.hpp"
+#include "../common/enums.hpp"
 #include "../file/hdf5shape_reader.h"
 #include "../model/qgrid.hpp"
 #include "../utils/utilities.hpp"
@@ -123,8 +124,9 @@ namespace hig {
 
 			float_t* rot_;
 	
-			unsigned int read_shape_surface_file(const char* filename, float_vec_t& shape_def);
-			unsigned int read_shapes_hdf5(const char* filename,
+			ShapeFileType get_shapes_file_format(const char*);
+			unsigned int read_shapes_file_dat(const char* filename, float_vec_t& shape_def);
+			unsigned int read_shapes_file(const char* filename,
 										#ifndef __SSE3__
 											float_vec_t& shape_def
 										#else

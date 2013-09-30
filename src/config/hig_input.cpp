@@ -3,7 +3,7 @@
  *
  *  File: hig_input.cpp
  *  Created: Jun 11, 2012
- *  Modified: Sat 28 Sep 2013 09:57:03 AM PDT
+ *  Modified: Sun 29 Sep 2013 05:20:57 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -1607,8 +1607,8 @@ namespace hig {
 	unsigned int HiGInput::read_shape_definition(const char* shape_file) {
 		ShapeFileType file_type = shape_filetype(shape_file);
 
-		if(file_type == shape_file_shape) {
-			return read_shape_file_shape(shape_file);
+		if(file_type == shape_file_data) {
+			return read_shape_file_data(shape_file);
 		} else if(file_type == shape_file_hdf5) {
 			return read_shape_file_hdf5(shape_file);
 		} else if(file_type == shape_file_object) {
@@ -1624,20 +1624,64 @@ namespace hig {
 
 	ShapeFileType HiGInput::shape_filetype(const char* filename) {
 
-		// ... implement this later ...
-		return shape_file_hdf5;
-		return shape_file_shape;
+		//return shape_file_hdf5;
+		//return shape_file_data;
+
+		std::istringstream file(filename);
+		std::string s;
+		while(std::getline(file, s, '.'));// std::cout << s << std::endl;
+		if(s.compare("") == 0) return shape_file_null;
+		if(s.compare("dat") == 0) return shape_file_data;
+		if(s.compare("Dat") == 0) return shape_file_data;
+		if(s.compare("DAT") == 0) return shape_file_data;
+		if(s.compare("hd5") == 0) return shape_file_hdf5;
+		if(s.compare("Hd5") == 0) return shape_file_hdf5;
+		if(s.compare("HD5") == 0) return shape_file_hdf5;
+		if(s.compare("hdf5") == 0) return shape_file_hdf5;
+		if(s.compare("Hdf5") == 0) return shape_file_hdf5;
+		if(s.compare("HDF5") == 0) return shape_file_hdf5;
+		if(s.compare("obj") == 0) return shape_file_object;
+		if(s.compare("Obj") == 0) return shape_file_object;
+		if(s.compare("OBJ") == 0) return shape_file_object;
+		return shape_file_error;
 	} // HiGInput::shape_filetype()
 
 
 	unsigned int HiGInput::read_shape_file_object(const char* filename) {
+		//std::cerr << "uh-oh: given shape file type reader not yet implemented" << std::endl;
+		//return false;
+		unsigned int num_triangles = 0;
+		double* temp_shape_def;
 
-		// ... implement this later ...
-		std::cerr << "uh-oh: given shape file type reader not yet implemented" << std::endl;
-		return false;
-
-		return true;
-	} // HiGInput::read_shape_file_shape()
+		// ASSUMING THERE ARE 7 ENTRIES FOR EACH TRIANGLE ... IMPROVE/GENERALIZE ...
+		HiGFileReader::instance().object_shape_reader(filename, temp_shape_def, num_triangles);
+		shape_def_.clear();
+#ifndef KERNEL2
+		shape_def_.reserve(7 * num_triangles);
+		unsigned int max_size = shape_def_.max_size();
+		if(7 * num_triangles > max_size) {
+			std::cerr << "error: number of triangles more than what can be handled currently ["
+						<< max_size / 7 << "]" << std::endl;
+			return 0;
+		} // if
+		for(unsigned int i = 0; i < 7 * num_triangles; ++ i) {
+			shape_def_.push_back((float_t)temp_shape_def[i]);
+		} // for
+#else	// KERNEL2
+		shape_def_.reserve(T_PROP_SIZE_ * num_triangles);
+		unsigned int max_size = shape_def_.max_size();
+		if(T_PROP_SIZE_ * num_triangles > max_size) {
+			std::cerr << "error: number of triangles more than what can be handled currently ["
+						<< max_size / T_PROP_SIZE_ << "]" << std::endl;
+			return 0;
+		} // if
+		for(unsigned int i = 0, count = 0; i < T_PROP_SIZE_ * num_triangles; ++ i) {
+			if((i + 1) % T_PROP_SIZE_ == 0) shape_def_.push_back((float_t)0.0); // for padding
+			else shape_def_.push_back((float_t)temp_shape_def[count ++]);
+		} // for
+#endif // KERNEL2
+		return num_triangles;
+	} // HiGInput::read_shape_file_object()
 
 
 	unsigned int HiGInput::read_shape_file_hdf5(const char* filename) {
@@ -1672,10 +1716,10 @@ namespace hig {
 		} // for
 #endif // KERNEL2
 		return num_triangles;
-	} // HiGInput::read_shape_file_shape()
+	} // HiGInput::read_shape_file_hdf5()
 
 
-	unsigned int HiGInput::read_shape_file_shape(const char* filename) {
+	unsigned int HiGInput::read_shape_file_data(const char* filename) {
 		//std::cerr << "uh-oh: given shape file type reader not yet implemented" << std::endl;
 		//return false;
 
@@ -1683,7 +1727,7 @@ namespace hig {
 		HiGFileReader::instance().shape_shape_reader(filename, shape_def_, num_triangles);
 
 		return true;
-	} // HiGInput::read_shape_file_shape()
+	} // HiGInput::read_shape_file_data()
 
 
 	/* grains */
