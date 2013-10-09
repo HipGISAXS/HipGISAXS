@@ -90,11 +90,15 @@ def add_paths(s):
 		env.Append(LIBPATH = [x + "/lib"])
 		path = env['ENV']['PATH'] + ":" + x + "/bin"
 		env['ENV']['PATH'] = path
-		#print path
 
 def add_libs(s):
 	for x in s.split(","):
 		env.Append(LIBS = [x])
+
+def add_ld_library_path(env, s):
+	env['ENV']['LD_LIBRARY_PATH'] = s
+	for x in s.split(":"):
+		env.Append(LIBPATH = [x])
 
 ## setup configuration tests which can be done
 def setup_configuration_tests(conf):
@@ -218,6 +222,9 @@ def do_configure(myenv):
 	def add_to_cxxflags_if_supported(env, flag):
 		return add_flag_if_supported(env, 'C++', '.cpp', flag, CXXFLAGS = [flag])
 	
+	def add_to_linkflags_if_supported(env, flag):
+		return add_flag_if_supported(env, 'C', '.c', flag, LINKFLAGS = [flag])
+	
 	## configure
 
 	conf = Configure(myenv, help = False, clean = False, custom_tests = {
@@ -235,7 +242,7 @@ def do_configure(myenv):
 	using_gcc = lambda: toolchain == toolchain_gcc
 	using_intel = lambda: toolchain == toolchain_intel
 	using_pgi = lambda: toolchain == toolchain_pgi
-	toolchain_search_sequence = [toolchain_gcc, toolchain_intel, toolchain_pgi]
+	toolchain_search_sequence = [toolchain_intel, toolchain_pgi, toolchain_gcc]	## note GNU is last
 	for candidate in toolchain_search_sequence:
 		if conf.check_for_toolchain(candidate, "C++", "CXX", ".cpp"):
 			toolchain = candidate
@@ -286,10 +293,6 @@ def do_configure(myenv):
 	#	conf.FindSysLibDep(l, [l + boost_c + "-mt" + boost_v,
 	#							l + boost_c + boost_v ], language='C++')
 
-	## check for libraries
-	for libs in all_libs:
-		conf.FindSysLibDep(libs, [libs], language='C++')
-
 #	if not conf.CheckLib('cuda') or not conf.CheckLib('cudart'):
 #		print("warning: CUDA not found. proceeding without GPU support.")
 #	else:
@@ -314,8 +317,23 @@ def do_configure(myenv):
 		add_to_ccflags_if_supported(myenv, '-fopenmp')
 	if using_intel():
 		add_to_ccflags_if_supported(myenv, '-openmp')
+		add_to_linkflags_if_supported(myenv, '-openmp')
 
 	return myenv
+
+def do_post_configure(myenv):
+	conf = Configure(myenv, help = False, clean = False)
+
+	## setup configuration tests
+	setup_configuration_tests(conf)
+	
+	## check for libraries
+	for libs in all_libs:
+		conf.FindSysLibDep(libs, [libs], language='C++')
+
+	myenv = conf.Finish()
+	return myenv
+
 
 
 ################
@@ -383,6 +401,7 @@ CCCOMPILER = "mpicc"
 
 # initialize the environment with gathered stuff so far
 env = Environment(BUILD_DIR=variant_dir,
+					ENV = os.environ,
 					CC = CCCOMPILER,
 					CXX = CXXCOMPILER,
 					DIST_ARCHIVE_SUFFIX = '.tar',
@@ -404,11 +423,45 @@ if _has_option("mute"):
 	env.Append(SHLINKCOMSTR = env["LINKCOMSTR"])
 	env.Append(ARCOMSTR = "Generating library $TARGET")
 
+if "uname" in dir(os):
+	processor = os.uname()[4]
+else:
+	processor = "x86_64"
+env['PROCESSOR_ARCHITECTURE'] = processor
+print("Detected processor architecture: %s" % processor)
+env.Append(CCFLAGS = "-m64")
+
+install_dir = DEFAULT_INSTALL_DIR
+if _has_option("prefix"):
+	install_dir = get_option("prefix")
+env['INSTALL_DIR'] = install_dir
+
+nix_lib_prefix = "lib"
+if processor == "x86_64":
+	linux64 = True
+	nix_lib_prefix = "lib64"
+	env.Append(LIBPATH = ["/usr/lib64",
+							"/usr/lib",
+							"/lib64",
+							"/lib",
+							"/usr/local/lib64",
+							"/usr/local/lib"])
+env['NIX_LIB_DIR'] = nix_lib_prefix
+
 ## extra paths and libs
 if _has_option("extrapath"):
 	add_paths(get_option("extrapath"))
 if _has_option("extralib"):
 	add_libs(get_option("extralib"))
+
+#add_ld_library_path(env, os.environ['LD_LIBRARY_PATH'])
+
+#print env['LIBPATH']
+#print env['ENV']
+
+## call configure
+if not get_option('clean'):
+	env = do_configure(env)
 
 using_accelerator = None
 ## required libs
@@ -452,31 +505,6 @@ env['ACCELERATOR_TYPE'] = using_accelerator
 if using_accelerator != None:
 	print("Enabling use of accelerator: %s" % using_accelerator)
 
-if "uname" in dir(os):
-	processor = os.uname()[4]
-else:
-	processor = "x86_64"
-env['PROCESSOR_ARCHITECTURE'] = processor
-print("Detected processor architecture: %s" % processor)
-env.Append(CCFLAGS = "-m64")
-
-install_dir = DEFAULT_INSTALL_DIR
-if _has_option("prefix"):
-	install_dir = get_option("prefix")
-env['INSTALL_DIR'] = install_dir
-
-nix_lib_prefix = "lib"
-if processor == "x86_64":
-	linux64 = True
-	nix_lib_prefix = "lib64"
-	env.Append(LIBPATH = ["/usr/lib64",
-							"/usr/lib",
-							"/lib64",
-							"/lib",
-							"/usr/local/lib64",
-							"/usr/local/lib"])
-env['NIX_LIB_DIR'] = nix_lib_prefix
-
 #env.Append(CCFLAGS = ["-mavx -msse4.1 -msse4.2 -mssse3"])
 
 if using_debug:
@@ -491,9 +519,9 @@ else:
 #	print "++ '%s', value = '%s'" % item
 print("Platform: %s" % sys.platform)
 
-## call configure
+## call post configure
 if not get_option('clean'):
-	env = do_configure(env)
+	env = do_post_configure(env)
 
 Export("env")
 
@@ -502,9 +530,26 @@ objs, nvobjs, mainobjs = env.SConscript('src/SConscript', duplicate = False)
 if using_cuda:
 	gpuenv = env.Clone(CC = 'nvcc')
 	gpuenv.Tool('cuda')
-	#gpuenv.Append(LINKFLAGS = ['-Xlinker', '-lgomp', '-arch=sm_35', '-dlink'])
-	gpuenv.Append(LINKFLAGS = ['-Xlinker', '-lgomp', '-arch=sm_21', '-dlink'])
+	## remove openmp flag from CCFLAGS and LINKFLAGS
+	old_ccflags = gpuenv['CCFLAGS']
+	ccflags = []
+	flags_to_remove = ['-openmp']
+	for flag in old_ccflags:
+		if flag not in flags_to_remove:
+			ccflags += flag
+	gpuenv.Replace(CCFLAGS = ccflags)
+	old_linkflags = gpuenv['LINKFLAGS']
+	linkflags = []
+	for flag in old_linkflags:
+		if flag not in flags_to_remove:
+			linkflags += flag
+	gpuenv.Replace(LINKFLAGS = linkflags)
+	## add other flags
 	gpuenv.Append(LINKFLAGS = ['-Xlinker', '-Wl,-rpath', '-Xlinker', '-Wl,$CUDA_TOOLKIT_PATH/lib64'])
+	gpuenv.Append(LINKFLAGS = ['-Xlinker', '-lgomp'])
+	#gpuenv.Append(LINKFLAGS = ['-arch=sm_35'])
+	gpuenv.Append(LINKFLAGS = ['-arch=sm_21'])
+	gpuenv.Append(LINKFLAGS = ['-dlink'])
 	nvlibobj = gpuenv.Program('nv_hipgisaxs.o', nvobjs)
 	objs += nvlibobj + nvobjs
 
