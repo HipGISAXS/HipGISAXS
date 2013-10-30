@@ -3,7 +3,7 @@
  *
  *  File: structure.hpp
  *  Created: Jun 09, 2012
- *  Modified: Wed 30 Oct 2013 10:19:50 AM PDT
+ *  Modified: Wed 30 Oct 2013 10:57:46 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -314,9 +314,9 @@ namespace hig {
 
 			const Lattice* lattice() const { return &(grain_.lattice_); }
 			bool lattice_abc_set() { return grain_.lattice_abc_set(); }
-			vector3_t lattice_vec_a() const { return grain_.lattice_.a(); }
-			vector3_t lattice_vec_b() const { return grain_.lattice_.b(); }
-			vector3_t lattice_vec_c() const { return grain_.lattice_.c(); }
+			vector3_t lattice_vec_a() { return grain_.lattice_.a(); }
+			vector3_t lattice_vec_b() { return grain_.lattice_.b(); }
+			vector3_t lattice_vec_c() { return grain_.lattice_.c(); }
 
 			vector3_t grain_repetition() const { return grain_.repetition_; }
 			std::string grain_orientation() { return ensemble_.orientations_.stat(); }
@@ -358,7 +358,7 @@ namespace hig {
 
 			float_t absolute_z_val() const {
 				// TODO: ...
-				std::cout << "----> MISSING STUFF in struct" << std::endl;
+				//std::cout << "----> MISSING STUFF in struct" << std::endl;
 				return 0;
 			} // absolute_z_val()
 

@@ -3,7 +3,7 @@
  *
  *  File: globals.hpp
  *  Created: Jun 05, 2012
- *  Modified: Wed 30 Oct 2013 10:23:41 AM PDT
+ *  Modified: Wed 30 Oct 2013 10:52:14 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -23,9 +23,9 @@
 #ifndef _GLOBALS_HPP_
 #define _GLOBALS_HPP_
 
+#include <cmath>
 #include <boost/array.hpp>
 #include <vector>
-#include <cmath>
 
 //#include "../config/tokens.hpp"
 #include "typedefs.hpp"
@@ -139,7 +139,7 @@ namespace hig {
 
 		// TODO: improve the following ... ?
 
-		inline vector3_t fabs() const {
+		/*inline vector3_t fabs() const {
 			return vector3_t(fabs(vec_[0]), fabs(vec_[1]), fabs(vec_[2]);
 		} // fabs()
 
@@ -150,7 +150,7 @@ namespace hig {
 		inline float_t reduce_mul() const {
 			return vec_[0] * vec_[1] * vec_[2];
 		} // reduce_mul()
-
+*/
 	} vector3_t;
 
 

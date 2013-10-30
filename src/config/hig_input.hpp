@@ -3,7 +3,7 @@
  *
  *  File: hig_input.hpp
  *  Created: Jun 11, 2012
- *  Modified: Wed 30 Oct 2013 10:23:09 AM PDT
+ *  Modified: Wed 30 Oct 2013 11:06:19 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -37,6 +37,7 @@
 #include "../model/inst_scattering.hpp"
 #include "../model/inst_detector.hpp"
 #include "../model/compute_params.hpp"
+#include "../model/slicing.hpp"
 #include "../file/read_oo_input.hpp"
 
 namespace hig {
@@ -164,6 +165,7 @@ namespace hig {
 			bool construct_input_config(char* filename);
 			bool construct_lattice_vectors();
 			bool construct_layer_profile();
+			bool construct_slices();
 
 			bool compute_domain_size(vector3_t&, vector3_t&, float_t&, float_t&);
 
