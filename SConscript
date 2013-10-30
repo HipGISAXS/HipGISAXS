@@ -255,6 +255,10 @@ def do_configure(myenv):
 		print("error: C toolchain does not match the identified C++ toolchain")
 		Exit(1)
 
+	if not conf.CheckCHeader('assert.h'):
+		print("error: C header 'assert.h' missing in your compiler installation!")
+		Exit(1)
+
 	## check if compilers work
 	if 'CXX' in os.environ:
 		conf.env.Replace(CXX = os.environ['CXX'])
