@@ -8,9 +8,23 @@ profile.*
 profiles
 Makefile
 Makefile*
+<<<<<<< HEAD
 obj/*.o
+=======
+obj
+>>>>>>> devel
 inputs/*.hig
 data/*.hd5
 data/*.dat
 data/obj
 bin/*
+<<<<<<< HEAD
+=======
+lib/*
+.build
+.scon*
+config.log
+site_scons/site_tools/cuda.pyc
+*.sh
+*.swp
+>>>>>>> devel

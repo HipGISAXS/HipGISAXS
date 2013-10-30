@@ -12,6 +12,7 @@ USE_GPU = n
 USE_ANA_GPU = n
 USE_NUM_GPU = n
 USE_MIC = n
+USE_MPI = y
 
 ## base directories
 #BOOST_DIR = $(BOOST_DIR)
@@ -136,6 +137,11 @@ endif
 ## CPU related flags
 #MISC_FLAGS += -DFF_NUM_CPU_AUTOTUNE_HB
 
+## for MPI
+ifeq ($(USE_MPI), y)
+MISC_FLAGS += -DUSE_MPI
+endif
+
 MISC_FLAGS += -DTIME_DETAIL_1 -DTIME_DETAIL_2
 
 ## choose optimization levels, debug flags, gprof flag, etc
@@ -154,16 +160,24 @@ OPT_FLAGS += -msse4a
 ## for carver CPU
 #OPT_FLAGS += -msse4a -ffast-math -Ofast
 
+## for other cpus
+ifneq ($(USE_GPU), y)
+ifneq ($(USE_MIC), y)
+#OPT_FLAGS += -msse  -msse2 -msse3 -mssse3 -msse4.1 -msse4.2 -msse4 -mavx -mavx2 -mfma -msse4a
+#OPT_FLAGS += -mavx -msse4.1 -msse4.2 -mssse3
+endif
+endif
+
 ## choose single or double precision here
 PREC_FLAG =			# leave empty for single precision
 #PREC_FLAG = -DDOUBLEP	# define this for double precision
 
 
 ## all includes
-ALL_INCL = $(MPI_INCL) $(CUDA_INCL) $(BOOST_INCL) $(HDF5_INCL) $(TIFF_INCL) $(MISC_INCL) $(PAPI_INCL) $(MKL_INCL)
+ALL_INCL = $(MPI_INCL) $(CUDA_INCL) $(BOOST_INCL) $(HDF5_INCL) $(TIFF_INCL) $(MISC_INCL) $(PAPI_INCL)
 
 ## all libraries
-ALL_LIBS = $(BOOST_LIBS) $(MPI_LIBS) $(CUDA_LIBS) $(HDF5_LIBS) $(TIFF_LIBS) $(PAPI_LIBS) $(MKL_LIBS) $(IPM_GNU) #$(MKL)
+ALL_LIBS = $(BOOST_LIBS) $(MPI_LIBS) $(CUDA_LIBS) $(HDF5_LIBS) $(TIFF_LIBS) $(PAPI_LIBS)
 
 PREFIX = $(PWD)
 BINARY_SIM = hipgisaxs
@@ -180,18 +194,19 @@ OBJECTS_MAIN = utilities.o numeric_utils.o compute_params.o hig_input.o \
 		  ff_ana.o ff_num.o ff.o shape.o structure.o object2hdf5.o hipgisaxs_main.o \
 		  ff_ana_sphere.o ff_ana_box.o ff_ana_cylinder.o ff_ana_hcylinder.o ff_ana_prism3x.o \
 		  ff_ana_prism6.o ff_ana_prism.o ff_ana_pyramid.o ff_ana_rand_cylinder.o \
-		  ff_ana_sawtooth_down.o ff_ana_sawtooth_up.o ff_ana_trunc_cone.o ff_ana_trunc_pyramid.o \
-		  ff_num_cpu.o
+		  ff_ana_sawtooth_down.o ff_ana_sawtooth_up.o ff_ana_trunc_cone.o ff_ana_trunc_pyramid.o
 
 ifeq ($(USE_GPU), y)
 NV_OBJECTS_MAIN = reduction.o ff_num_gpu.o ff_ana_gpu.o ff_ana_sphere_gpu.o ff_ana_box_gpu.o \
 				ff_ana_cylinder_gpu.o ff_ana_hcylinder_gpu.o ff_ana_prism6_gpu.o \
 				ff_ana_prism_gpu.o ff_ana_rand_cylinder_gpu.o
 OBJECTS_MAIN += nv_hipgisaxs.o $(NV_OBJECTS_MAIN)
-endif
-
+else 
 ifeq ($(USE_MIC), y)
 OBJECTS_MAIN += ff_num_mic.o
+else
+OBJECTS_MAIN += ff_num_cpu.o
+endif
 endif
 
 OBJECTS_SIM = $(OBJECTS_MAIN) hipgisaxs_sim.o

@@ -1,0 +1,34 @@
+Import('env')
+
+Export('env')
+
+subdirs = ['common', 'config', 'file', 'image', 'init', 'model', 'numerics', 'sf', 'utils']
+acc_subdirs = ['ff']
+main_subdirs = ['sim']
+testsubdirs = ['test']
+
+objs = [ ]
+for subdir in subdirs:
+	objs += SConscript('%s/SConscript' % subdir)
+
+nvobjs = [ ]
+temp_objs = [ ]
+temp_nvobjs = [ ]
+for subdir in acc_subdirs:
+	temp_objs, temp_nvobjs = SConscript('%s/SConscript' % subdir)
+	objs += temp_objs
+	nvobjs += temp_nvobjs
+
+main_objs = [ ]
+temp_objs = [ ]
+for subdir in main_subdirs:
+	temp_objs, main_objs = SConscript('%s/SConscript' % subdir)
+	objs += temp_objs
+
+#print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+#print nvobjs
+#print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+#print objs
+#print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+
+Return('objs', 'nvobjs', 'main_objs')
