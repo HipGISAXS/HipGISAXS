@@ -3,7 +3,7 @@
  *
  *  File: ff_num_gpu.cu
  *  Created: Aug 25, 2012
- *  Modified: Thu 26 Sep 2013 10:26:48 AM PDT
+ *  Modified: Thu 26 Dec 2013 01:43:15 PM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -2588,6 +2588,8 @@ namespace hig {
 	} // form_factor_kernel_new_shared2()
 
 
+	// this is default, but needs lot of optimizations!!!!!
+	// operations are repeated in triangle loop redundantly
 	__global__ void form_factor_kernel_fused(
 						const float_t* qx, const float_t* qy, const cucomplex_t* qz,
 						const float_t* shape_def, const short int* axes,

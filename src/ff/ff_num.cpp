@@ -3,7 +3,7 @@
  *
  *  File: ff_num.cpp
  *  Created: Jul 18, 2012
- *  Modified: Sun 29 Sep 2013 05:21:38 PM PDT
+ *  Modified: Thu 26 Dec 2013 02:19:21 PM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -401,16 +401,19 @@ namespace hig {
 
 				#ifdef USE_GPU
 					// flop count for GPU
-					mflop = (double) nqx * nqy * nqz * (42 * num_triangles + 2) / 1000000;
+					//mflop = (double) nqx * nqy * nqz * (42 * num_triangles + 2) / 1000000;
+					mflop = (double) nqx * nqy * nqz * (69 * num_triangles + 52) / 1000000;
 				#elif defined USE_MIC
 					// flop count for MIC
-					mflop = (double) nqx * nqy * nqz * (78 * num_triangles + 18) / 1000000;
-					//mflop = (double) p_nqx * p_nqy * p_nqz * ( 78 * num_triangles + 18) / 1000000;
+					//mflop = (double) nqx * nqy * nqz * (78 * num_triangles + 18) / 1000000;
+					mflop = (double) nqx * nqy * nqz * (111 * num_triangles + 50) / 1000000;
 				#elif defined INTEL_SB_AVX
 					// flop count for Sandy Bridge with AVX
+					// TODO: recount flops ...
 					mflop = (double) nqx * nqy * nqz * (85 * num_triangles + 16) / 1000000;
 				#else
 					// flop count for SSE3 CPU (hopper)
+					// TODO: recount flops ...
 					mflop = (double) nqx * nqy * nqz * (68 * num_triangles + 20) / 1000000;
 				#endif
 				//gflops = nidle_num_procs * mflop / kernel_time;
