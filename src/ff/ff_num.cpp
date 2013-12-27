@@ -25,7 +25,7 @@
 #include <cmath>
 #include <cstring>
 #include <sstream>
-#if (defined(__SSE3__) || defined(INTEL_SB_AVX)) && !defined(USE_GPU)
+#if (defined(__SSE3__) || defined(INTEL_SB_AVX)) && !defined(USE_GPU) && !defined(__APPLE__)
 	#include <malloc.h>
 #endif
 
