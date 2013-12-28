@@ -6,13 +6,7 @@ output
 outputs
 profile.*
 profiles
-Makefile
-Makefile*
 obj
-inputs/*.hig
-data/*.hd5
-data/*.dat
-data/obj
 bin/*
 lib/*
 .build
