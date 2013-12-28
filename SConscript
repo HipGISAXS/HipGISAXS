@@ -551,8 +551,8 @@ if using_cuda:
 	## add other flags
 	gpuenv.Append(LINKFLAGS = ['-Xlinker', '-Wl,-rpath', '-Xlinker', '-Wl,$CUDA_TOOLKIT_PATH/lib64'])
 	gpuenv.Append(LINKFLAGS = ['-Xlinker', '-lgomp'])
-	#gpuenv.Append(LINKFLAGS = ['-arch=sm_35'])
-	gpuenv.Append(LINKFLAGS = ['-arch=sm_21'])
+	gpuenv.Append(LINKFLAGS = ['-arch=sm_35'])
+	#gpuenv.Append(LINKFLAGS = ['-arch=sm_21'])
 	gpuenv.Append(LINKFLAGS = ['-dlink'])
 	nvlibobj = gpuenv.Program('nv_hipgisaxs.o', nvobjs)
 	objs += nvlibobj + nvobjs
