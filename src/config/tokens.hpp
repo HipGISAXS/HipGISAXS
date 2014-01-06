@@ -3,7 +3,7 @@
  *
  *  File: tokens.hpp
  *  Created: Jun 05, 2012
- *  Modified: Tue 16 Jul 2013 11:52:26 AM PDT
+ *  Modified: Sat 28 Dec 2013 09:13:19 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -160,7 +160,14 @@ namespace hig {
 		instrument_detector_totpix_token,
 		instrument_detector_sdd_token,
 		instrument_detector_pixsize_token,
-		instrument_detector_dirbeam_token
+		instrument_detector_dirbeam_token,
+
+		/* fitting componenets */
+		fit_token,
+		fit_param_token,
+		fit_param_variable_token,
+		fit_param_range_token,
+		fit_param_init_token
 	}; // enum TokenType
 
 

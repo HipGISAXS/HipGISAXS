@@ -3,7 +3,7 @@
  *
  *  File: typedefs.hpp
  *  Created: Jul 08, 2012
- *  Modified: Tue 06 Aug 2013 04:59:02 PM PDT
+ *  Modified: Sat 28 Dec 2013 09:17:10 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -24,6 +24,7 @@
 #define _TYPEDEFS_HPP_
 
 #include <vector>
+#include <map>
 #include <complex>
 #ifdef USE_GPU
 	#include <cuComplex.h>
@@ -93,6 +94,8 @@ namespace hig {
 			__m512 yvec;
 		}									mic_m512c_t;
 	#endif
+
+	typedef std::map <std::string, float_t>	map_t;
 
 	// TODO: handle multiprecision? ...
 

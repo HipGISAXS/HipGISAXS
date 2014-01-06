@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_main.hpp
  *  Created: Jun 11, 2012
- *  Modified: Fri 27 Sep 2013 08:40:09 AM PDT
+ *  Modified: Sat 28 Dec 2013 09:17:29 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -141,6 +141,9 @@ namespace hig {
 
 			/* loops over all configs and computes GISAXS for each */
 			bool run_all_gisaxs(int = 0, int = 0, int = 0);
+
+			/* update parameters given a map:key->value */
+			bool update_params(const map_t&);
 
 			/* temporary: does the initial 1D fitting */
 			bool fit_steepest_descent(float_t, float_t, float_t, float_t,

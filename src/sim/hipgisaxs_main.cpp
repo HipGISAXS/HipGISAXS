@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_main.cpp
  *  Created: Jun 14, 2012
- *  Modified: Sun 29 Sep 2013 10:46:32 AM PDT
+ *  Modified: Sat 28 Dec 2013 09:25:44 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -1977,6 +1977,19 @@ namespace hig {
 		return true;
 	} // HipGISAXS::orientation_distribution()
 
+
+	/**
+	 * fitting related functions
+	 */
+
+	bool HipGISAXS::update_params(const map_t& params) {
+		return HiGInput::instance().update_params(params);
+	} // HipGISAXS::update_params()
+
+
+	/**
+	 * miscellaneous functions
+	 */
 
 	void HipGISAXS::save_gisaxs(float_t *final_data, std::string output) {
 		std::ofstream f(output.c_str());

@@ -3,7 +3,7 @@
  *
  *  File: hig_input.hpp
  *  Created: Jun 11, 2012
- *  Modified: Sun 29 Sep 2013 04:49:37 PM PDT
+ *  Modified: Sat 28 Dec 2013 09:40:03 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -77,6 +77,22 @@ namespace hig {
 			Layer curr_layer_;
 			Structure curr_structure_;
 			std::vector <float_t> curr_vector_;		// to store values in a vector while parsing it
+
+			/* fitting related */
+
+			class ParamSpace {
+				float_t min_;
+				float_t max_;
+				float_t step_;
+
+				ParamSpace(): min_(0), max_(0), step_(-1) { }
+				ParamSpace(float_t a, float_t b): min_(a), max_(b), step_(-1) { }
+				ParamSpace(float_t a, float_t b, float_t c): min_(a), max_(b), step_(c) { }
+				~ParamSpace() { }
+			}; // class ParamSpace
+
+			std::map <std::string, std::string> param_key_map_;			// maps keys to param strings
+			std::map <std::string, ParamSpace> param_space_key_map_;	// maps keys to param space
 
 
 			/**
@@ -240,6 +256,9 @@ namespace hig {
 			// implement better iterators for structures, shapes and layers ...
 			structure_iterator_t structure_begin() { return structures_.begin(); }
 			structure_iterator_t structure_end() { return structures_.end(); }
+
+			/* fitting related */
+			bool update_params(const map_t&);
 
 			/* printing for testing */
 			void print_all();

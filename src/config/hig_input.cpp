@@ -3,7 +3,7 @@
  *
  *  File: hig_input.cpp
  *  Created: Jun 11, 2012
- *  Modified: Sun 29 Sep 2013 05:20:57 PM PDT
+ *  Modified: Sat 28 Dec 2013 10:00:58 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -2037,6 +2037,25 @@ namespace hig {
 
 		return true;
 	} // HiGInput::construct_domain_size()
+
+
+	/**
+	 * fitting related functions
+	 */
+
+	bool HiGInput::update_params(const map_t& params) {
+		for(map_t::const_iterator p = params.begin(); p != params.end(); ++ p) {
+			std::string param = param_key_map_.at((*p).first);	// if not exist, exception!!
+			float_t new_val = (*p).second;
+			// check if new_val is within the param space
+			ParamSpace ps = param_space_key_map_.at((*p).first);
+			if(new_val < ps.min_ || new_val > ps.max_) {
+				std::cerr << "error: given parameter value out of range space" << std::endl;
+				return false;
+			} // if
+		} // for
+		return true;
+	} // HiGInput::update_params()
 
 
 	/** print functions for testing only
