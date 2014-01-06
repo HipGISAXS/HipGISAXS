@@ -9,9 +9,8 @@ profiles
 obj
 bin/*
 lib/*
-.build
 .scon*
 config.log
 site_scons/site_tools/cuda.pyc
-*.sh
 *.swp
+*.sh
