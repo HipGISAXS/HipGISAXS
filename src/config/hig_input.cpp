@@ -3,7 +3,7 @@
  *
  *  File: hig_input.cpp
  *  Created: Jun 11, 2012
- *  Modified: Sat 28 Dec 2013 10:00:58 AM PST
+ *  Modified: Wed 08 Jan 2014 12:13:21 PM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -24,9 +24,9 @@
 
 #include "hig_input.hpp"
 #include "../utils/utilities.hpp"
+#include "../utils/string_utils.hpp"
 #include "../common/parameters.hpp"
 #include "../file/hig_file_reader.hpp"
-//#include "object2hdf5.h"
 
 
 namespace hig {
@@ -2045,14 +2045,96 @@ namespace hig {
 
 	bool HiGInput::update_params(const map_t& params) {
 		for(map_t::const_iterator p = params.begin(); p != params.end(); ++ p) {
-			std::string param = param_key_map_.at((*p).first);	// if not exist, exception!!
 			float_t new_val = (*p).second;
 			// check if new_val is within the param space
-			ParamSpace ps = param_space_key_map_.at((*p).first);
+			ParamSpace ps = param_space_key_map_.at((*p).first);	// if not exist, exception!!
 			if(new_val < ps.min_ || new_val > ps.max_) {
-				std::cerr << "error: given parameter value out of range space" << std::endl;
-				return false;
+				std::cerr << "warning: given parameter value out of range space. resetting to limit."
+							<< std::endl;
+				new_val = std::max(std::min(new_val, ps.max_), ps.min_);
 			} // if
+			std::string param = param_key_map_.at((*p).first);	// if not exist, exception!!
+			// get first component from the string
+			std::string keyword, rem_param;
+			if(!extract_first_keyword(param, keyword, rem_param)) return false;
+			// get keyword name and key (if any)
+			std::string keyword_name, keyword_key;
+			if(!extract_keyword_name_and_key(keyword, keyword_name, keyword_key)) return false;
+			std::string rem_param2;
+			switch(TokenMapper::instance().get_keyword_token(keyword_name)) {
+				case shape_token:
+					if(!shapes_.at(keyword_key).update_param(rem_param, new_val)) {
+						std::cerr << "error: failed to update param '" << param << "'" << std::endl;
+						return false;
+					} // if
+					break;
+
+				case layer_token:
+					if(!layers_.at(layer_key_map_.at(keyword_key)).update_param(rem_param, new_val)) {
+						std::cerr << "error: failed to update param '" << param << "'" << std::endl;
+						return false;
+					} // if
+					break;
+
+				case struct_token:
+					if(!structures_.at(keyword_key).update_param(rem_param, new_val)) {
+						std::cerr << "error: failed to update param '" << param << "'" << std::endl;
+						return false;
+					} // if
+					break;
+
+				case instrument_token:
+					extract_first_keyword(rem_param, keyword, rem_param2);
+					switch(TokenMapper::instance().get_keyword_token(keyword)) {
+						case scattering_token:
+							if(!scattering_.update_param(rem_param2, new_val)) {
+								std::cerr << "error: failed to update param '" << param << "'"
+											<< std::endl;
+								return false;
+							} // if
+							break;
+
+						case detector_token:
+							if(!detector_.update_param(rem_param2, new_val)) {
+								std::cerr << "error: failed to update param '" << param << "'"
+											<< std::endl;
+								return false;
+							} // if
+							break;
+
+						case error_token:
+							std::cerr << "error: invalid keyword '" << keyword
+										<< "' in parameter variable name '" << param << "'"
+										<< std::endl;
+							return false;
+
+						default:
+							std::cerr << "error: misplaced keyword '" << keyword
+										<< "' in parameter variable name '" << param << "'"
+										<< std::endl;
+							return false;
+					} // switch
+					break;
+
+				case compute_token:
+					if(!compute_.update_param(rem_param, new_val)) {
+						std::cerr << "error: failed to update param '" << param << "'" << std::endl;
+						return false;
+					} // if
+					break;
+
+				case error_token:
+					std::cerr << "error: invalid keyword '" << keyword_name
+								<< "' in parameter variable name '" << param << "'"
+								<< std::endl;
+					return false;
+
+				default:
+					std::cerr << "error: misplaced keyword '" << keyword_name
+								<< "' in parameter variable name '" << param << "'"
+								<< std::endl;
+					return false;
+			} // switch
 		} // for
 		return true;
 	} // HiGInput::update_params()
