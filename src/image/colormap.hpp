@@ -3,7 +3,7 @@
  *
  *  File: colormap.hpp
  *  Created: Jul 02, 2012
- *  Modified: Thu 26 Sep 2013 10:33:31 AM PDT
+ *  Modified: Wed 08 Jan 2014 10:37:39 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -23,6 +23,7 @@
 #ifndef __COLORMAP_HPP__
 #define __COLORMAP_HPP__
 
+#include <iostream>
 #include <cmath>
 #include <boost/array.hpp>
 
