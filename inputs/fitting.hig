@@ -39,13 +39,13 @@ hipGisaxsInput = {
 		nslices = 0							# max number of slices for slicing algorithm
 	},
 	fitting = {
-		param = {
+		fitparam = {
 			key = "p1",
 			variable = "shape['s1']:param['height']:min",
 			range = { min = 1, max = 15, step = 1 },
 			init = 5
 		},
-		param = {
+		fitparam = {
 			key = "p2",
 			variable = "shape['s1']:param['radius']:min",
 			range = { min = 1, max = 10, step = 1 },

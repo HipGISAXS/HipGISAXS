@@ -3,7 +3,7 @@
  *
  *  File: token_mapper.hpp
  *  Created: Jun 05, 2012
- *  Modified: Thu 26 Sep 2013 08:02:41 AM PDT
+ *  Modified: Thu 09 Jan 2014 08:04:27 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -140,9 +140,12 @@ namespace hig {
 				KeyWords_[std::string("distribution")]		= struct_ensemble_distribution_token;
 				KeyWords_[std::string("ensemble")]			= struct_ensemble_token;
 				KeyWords_[std::string("expt")]				= instrument_scatter_expt_token;
+				KeyWords_[std::string("fitparam")]			= fit_param_token;
+				KeyWords_[std::string("fitting")]			= fit_token;
 				KeyWords_[std::string("grain")]				= struct_grain_token;
 				KeyWords_[std::string("hipGisaxsInput")]	= hipgisaxs_token;
 				KeyWords_[std::string("hkl")]				= struct_grain_lattice_hkl_token;
+				KeyWords_[std::string("init")]				= fir_param_init_token;
 				KeyWords_[std::string("inplanerot")]		= instrument_scatter_inplanerot_token;
 				KeyWords_[std::string("instrumentation")]	= instrument_token;
 				KeyWords_[std::string("key")]				= key_token;
@@ -170,6 +173,7 @@ namespace hig {
 				KeyWords_[std::string("photon")]			= instrument_scatter_photon_token;
 				KeyWords_[std::string("pixelsize")]			= instrument_detector_pixsize_token;
 				KeyWords_[std::string("polarization")]		= instrument_scatter_polarize_token;
+				KeyWords_[std::string("range")]				= fit_param_range_token;
 				KeyWords_[std::string("repetition")]		= struct_grain_repetition_token;
 				KeyWords_[std::string("refindex")]			= refindex_token;
 				KeyWords_[std::string("resolution")]		= compute_resolution_token;
@@ -197,6 +201,7 @@ namespace hig {
 				KeyWords_[std::string("type")]				= type_token;
 				KeyWords_[std::string("unit")]				= instrument_scatter_photon_unit_token;
 				KeyWords_[std::string("value")]				= instrument_scatter_photon_value_token;
+				KeyWords_[std::string("variable")]			= fit_param_variable_token;
 				KeyWords_[std::string("xyrotation")]		= shape_xyrot_token;
 				KeyWords_[std::string("ztilt")]				= shape_ztilt_token;
 			
