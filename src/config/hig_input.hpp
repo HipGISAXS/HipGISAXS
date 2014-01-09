@@ -3,7 +3,7 @@
  *
  *  File: hig_input.hpp
  *  Created: Jun 11, 2012
- *  Modified: Wed 08 Jan 2014 05:12:21 PM PST
+ *  Modified: Thu 09 Jan 2014 02:40:37 PM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -91,10 +91,28 @@ namespace hig {
 				ParamSpace(float_t a, float_t b): min_(a), max_(b), step_(-1) { }
 				ParamSpace(float_t a, float_t b, float_t c): min_(a), max_(b), step_(c) { }
 				~ParamSpace() { }
+				void clear() { min_ = 0; max_ = 0; step_ = -1; }
 			}; // class ParamSpace
 
 			std::map <std::string, std::string> param_key_map_;			// maps keys to param strings
 			std::map <std::string, ParamSpace> param_space_key_map_;	// maps keys to param space
+
+			/* helpers */
+
+			class FitParam {
+				public:
+
+				std::string key_;
+				std::string variable_;
+				ParamSpace range_;
+				float_t init_;
+
+				FitParam(): key_(""), variable_(""), range_(), init_(0) { }
+				~FitParam() { }
+				void clear() { key_ = ""; variable_ = ""; range_.clear(); init_ = 0; }
+			};
+
+			FitParam curr_fit_param_;
 
 
 			/**

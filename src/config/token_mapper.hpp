@@ -3,7 +3,7 @@
  *
  *  File: token_mapper.hpp
  *  Created: Jun 05, 2012
- *  Modified: Thu 09 Jan 2014 08:04:27 AM PST
+ *  Modified: Thu 09 Jan 2014 02:41:13 PM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -145,7 +145,7 @@ namespace hig {
 				KeyWords_[std::string("grain")]				= struct_grain_token;
 				KeyWords_[std::string("hipGisaxsInput")]	= hipgisaxs_token;
 				KeyWords_[std::string("hkl")]				= struct_grain_lattice_hkl_token;
-				KeyWords_[std::string("init")]				= fir_param_init_token;
+				KeyWords_[std::string("init")]				= fit_param_init_token;
 				KeyWords_[std::string("inplanerot")]		= instrument_scatter_inplanerot_token;
 				KeyWords_[std::string("instrumentation")]	= instrument_token;
 				KeyWords_[std::string("key")]				= key_token;

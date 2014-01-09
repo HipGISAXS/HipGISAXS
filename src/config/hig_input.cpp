@@ -3,7 +3,7 @@
  *
  *  File: hig_input.cpp
  *  Created: Jun 11, 2012
- *  Modified: Wed 08 Jan 2014 05:19:08 PM PST
+ *  Modified: Thu 09 Jan 2014 02:43:11 PM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -189,6 +189,27 @@ namespace hig {
 					case compute_token:	// nothing to do :-/
 					case compute_structcorr_token:	// nothing to do :-/
 					case hipgisaxs_token:	// nothing to do :-/
+						break;
+
+					case fit_token:
+					case fit_param_range_token:
+						// ... // nothing to do :-/
+						break;
+
+					case fit_param_token:
+						if(curr_fit_param_.key_.compare("") == 0 ||
+								curr_fit_param_.variable_.compare("") == 0) {
+							std::cerr << "error: incomplete fit parameter definition" << std::endl;
+							return false;
+						} // if
+						if(param_key_map_.count(curr_fit_param_.key_) > 0 ||
+								param_space_key_map_.count(curr_fit_param_.key_) > 0) {
+							std::cerr << "error: duplicate key found in fit parameters" << std::endl;
+							return false;
+						} // if
+						param_key_map_[curr_fit_param_.key_] = curr_fit_param_.variable_;
+						param_space_key_map_[curr_fit_param_.key_] = curr_fit_param_.range_;
+						curr_fit_param_.clear();
 						break;
 
 					default:
@@ -596,6 +617,13 @@ namespace hig {
 			case instrument_detector_dirbeam_token:
 				break;
 
+			case fit_token:
+			case fit_param_token:
+			case fit_param_variable_token:
+			case fit_param_range_token:
+			case fit_param_init_token:
+				break;
+
 			default:
 				std::cerr << "error: non keyword token in keyword's position"
 							<< std::endl;
@@ -650,6 +678,10 @@ namespace hig {
 						scattering_.tilt_min(num);
 						break;
 
+					case fit_param_range_token:
+						curr_fit_param_.range_.min_ = num;
+						break;
+
 					default:
 						std::cerr << "'min' token appears in wrong place" << std::endl;
 						return false;
@@ -677,6 +709,10 @@ namespace hig {
 						scattering_.tilt_max(num);
 						break;
 
+					case fit_param_range_token:
+						curr_fit_param_.range_.max_ = num;
+						break;
+
 					default:
 						std::cerr << "'max' token appears in wrong place" << std::endl;
 						return false;
@@ -696,6 +732,10 @@ namespace hig {
 
 					case instrument_scatter_tilt_token:
 						scattering_.tilt_step(num);
+						break;
+
+					case fit_param_range_token:
+						curr_fit_param_.range_.step_ = num;
 						break;
 
 					default:
@@ -935,6 +975,10 @@ namespace hig {
 				} // if
 				break;
 
+			case fit_param_init_token:
+				curr_fit_param_.init_ = num;
+				break;
+
 			default:
 				std::cerr << "fatal error: found a number '" << num
 							<< "' where it should not be" << std::endl;
@@ -965,6 +1009,10 @@ namespace hig {
 
 					case struct_token:
 						curr_structure_.key(str);
+						break;
+
+					case fit_param_token:
+						curr_fit_param_.key_ = str;
 						break;
 
 					default:
@@ -1096,6 +1144,10 @@ namespace hig {
 
 			case compute_structcorr_token:
 				compute_.structcorrelation(TokenMapper::instance().get_structcorr_type(str));
+				break;
+
+			case fit_param_variable_token:
+				curr_fit_param_.variable_ = str;
 				break;
 
 			default:
