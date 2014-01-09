@@ -3,7 +3,7 @@
  *
  *  File: inst_detector.cpp
  *  Created: Jun 12, 2012
- *  Modified: Wed 08 Jan 2014 04:58:46 PM PST
+ *  Modified: Wed 08 Jan 2014 05:16:15 PM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -22,6 +22,8 @@
 
 #include "inst_detector.hpp"
 #include "../common/default_values.hpp"
+#include "../utils/string_utils.hpp"
+#include "../config/token_mapper.hpp"
 
 namespace hig {
 
@@ -41,7 +43,7 @@ namespace hig {
 
 	bool DetectorParams::update_param(const std::string& str, float_t new_val) {
 		std::string keyword, rem_str;
-		if(!get_first_keyword(str, keyword, rem_str)) return false;
+		if(!extract_first_keyword(str, keyword, rem_str)) return false;
 		switch(TokenMapper::instance().get_keyword_token(keyword)) {
 			case instrument_detector_origin_token:
 			case instrument_detector_totpix_token:

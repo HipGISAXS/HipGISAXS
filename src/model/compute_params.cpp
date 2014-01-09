@@ -3,7 +3,7 @@
  *
  *  File: compute_params.cpp
  *  Created: Jun 05, 2012
- *  Modified: Wed 08 Jan 2014 05:04:47 PM PST
+ *  Modified: Wed 08 Jan 2014 05:16:00 PM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -21,6 +21,9 @@
  */
 
 #include "compute_params.hpp"
+#include "../utils/string_utils.hpp"
+#include "../config/token_mapper.hpp"
+
 
 namespace hig {
 
@@ -44,7 +47,7 @@ namespace hig {
 
 	bool ComputeParams::update_param(const std::string& str, float_t new_val) {
 		std::string keyword, rem_str;
-		if(!get_first_keyword(str, keyword, rem_str)) return false;
+		if(!extract_first_keyword(str, keyword, rem_str)) return false;
 		switch(TokenMapper::instance().get_keyword_token(keyword)) {
 			case compute_path_token:
 			case compute_runname_token:

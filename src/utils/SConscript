@@ -1,7 +1,7 @@
 Import('env')
 
 objs = [ ]
-sources = ['utilities.cpp']
+sources = ['utilities.cpp', 'string_utils.cpp']
 objs += env.Object(sources)
 
 Export('env')

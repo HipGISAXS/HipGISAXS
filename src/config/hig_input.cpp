@@ -3,7 +3,7 @@
  *
  *  File: hig_input.cpp
  *  Created: Jun 11, 2012
- *  Modified: Wed 08 Jan 2014 12:13:21 PM PST
+ *  Modified: Wed 08 Jan 2014 05:19:08 PM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -2086,7 +2086,7 @@ namespace hig {
 				case instrument_token:
 					extract_first_keyword(rem_param, keyword, rem_param2);
 					switch(TokenMapper::instance().get_keyword_token(keyword)) {
-						case scattering_token:
+						case instrument_scatter_token:
 							if(!scattering_.update_param(rem_param2, new_val)) {
 								std::cerr << "error: failed to update param '" << param << "'"
 											<< std::endl;
@@ -2094,7 +2094,7 @@ namespace hig {
 							} // if
 							break;
 
-						case detector_token:
+						case instrument_detector_token:
 							if(!detector_.update_param(rem_param2, new_val)) {
 								std::cerr << "error: failed to update param '" << param << "'"
 											<< std::endl;

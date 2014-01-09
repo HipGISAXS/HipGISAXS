@@ -3,7 +3,7 @@
  *
  *  File: structure.cpp
  *  Created: Jun 12, 2012
- *  Modified: Wed 08 Jan 2014 04:35:39 PM PST
+ *  Modified: Wed 08 Jan 2014 05:18:04 PM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -23,6 +23,9 @@
 #include <iostream>
 
 #include "structure.hpp"
+#include "../utils/string_utils.hpp"
+#include "../config/token_mapper.hpp"
+
 
 namespace hig {
 
@@ -302,7 +305,7 @@ namespace hig {
 
 	bool Structure::update_param(const std::string& str, float_t new_val) {
 		std::string keyword, rem_str;
-		if(!get_first_keyword(str, keyword, rem_str)) return false;
+		if(!extract_first_keyword(str, keyword, rem_str)) return false;
 		std::string keyword2, rem_str2;
 		std::string keyword3, rem_str3;
 		switch(TokenMapper::instance().get_keyword_token(keyword)) {
@@ -311,10 +314,10 @@ namespace hig {
 				break;
 
 			case struct_grain_token:
-				if(!get_first_keyword(rem_str, keyword2, rem_str2)) return false;
+				if(!extract_first_keyword(rem_str, keyword2, rem_str2)) return false;
 				switch(TokenMapper::instance().get_keyword_token(keyword2)) {
 					case refindex_token:
-						if(!get_first_keyword(rem_str2, keyword3, rem_str3)) return false;
+						if(!extract_first_keyword(rem_str2, keyword3, rem_str3)) return false;
 						switch(TokenMapper::instance().get_keyword_token(keyword3)) {
 							case refindex_delta_token:
 								grain_refindex_delta(new_val);
@@ -337,7 +340,7 @@ namespace hig {
 						break;
 
 					case struct_grain_lattice_token:
-						if(!get_first_keyword(rem_str2, keyword3, rem_str3)) return false;
+						if(!extract_first_keyword(rem_str2, keyword3, rem_str3)) return false;
 						switch(TokenMapper::instance().get_keyword_token(keyword3)) {
 							case struct_grain_lattice_a_token:
 							case struct_grain_lattice_b_token:
@@ -389,7 +392,7 @@ namespace hig {
 				break;
 
 			case struct_ensemble_token:
-				if(!get_first_keyword(rem_str, keyword2, rem_str2)) return false;
+				if(!extract_first_keyword(rem_str, keyword2, rem_str2)) return false;
 				switch(TokenMapper::instance().get_keyword_token(keyword2)) {
 					case struct_ensemble_spacing_token:
 					case struct_ensemble_maxgrains_token:

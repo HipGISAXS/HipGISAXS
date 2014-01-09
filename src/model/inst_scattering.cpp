@@ -3,7 +3,7 @@
  *
  *  File: inst_scattering.cpp
  *  Created: Jun 12, 2012
- *  Modified: Wed 08 Jan 2014 04:52:43 PM PST
+ *  Modified: Wed 08 Jan 2014 05:19:40 PM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -21,6 +21,9 @@
  */
 
 #include "inst_scattering.hpp"
+#include "../utils/string_utils.hpp"
+#include "../config/token_mapper.hpp"
+
 
 namespace hig {
 
@@ -42,7 +45,7 @@ namespace hig {
 
 	bool ScatteringParams::update_param(const std::string& str, float_t new_val) {
 		std::string keyword, rem_str;
-		if(!get_first_keyword(str, keyword, rem_str)) return false;
+		if(!extract_first_keyword(str, keyword, rem_str)) return false;
 		std::string keyword2, rem_str2;
 		switch(TokenMapper::instance().get_keyword_token(keyword)) {
 			case instrument_scatter_expt_token:
@@ -52,7 +55,7 @@ namespace hig {
 				break;
 
 			case instrument_scatter_alphai_token:
-				if(!get_first_keyword(rem_str, keyword2, rem_str2)) return false;
+				if(!extract_first_keyword(rem_str, keyword2, rem_str2)) return false;
 				switch(TokenMapper::instance().get_keyword_token(keyword2)) {
 					case min_token:
 						alphai_min(new_val);
@@ -77,7 +80,7 @@ namespace hig {
 				break;
 
 			case instrument_scatter_inplanerot_token:
-				if(!get_first_keyword(rem_str, keyword2, rem_str2)) return false;
+				if(!extract_first_keyword(rem_str, keyword2, rem_str2)) return false;
 				switch(TokenMapper::instance().get_keyword_token(keyword2)) {
 					case min_token:
 						inplane_rot_min(new_val);
@@ -102,18 +105,18 @@ namespace hig {
 				break;
 
 			case instrument_scatter_tilt_token:
-				if(!get_first_keyword(rem_str, keyword2, rem_str2)) return false;
+				if(!extract_first_keyword(rem_str, keyword2, rem_str2)) return false;
 				switch(TokenMapper::instance().get_keyword_token(keyword2)) {
 					case min_token:
-						tile_min(new_val);
+						tilt_min(new_val);
 						break;
 
 					case max_token:
-						tile_max(new_val);
+						tilt_max(new_val);
 						break;
 
 					case step_token:
-						tile_step(new_val);
+						tilt_step(new_val);
 						break;
 
 					case error_token:
@@ -127,10 +130,10 @@ namespace hig {
 				break;
 
 			case instrument_scatter_photon_token:
-				if(!get_first_keyword(rem_str, keyword2, rem_str2)) return false;
+				if(!extract_first_keyword(rem_str, keyword2, rem_str2)) return false;
 				switch(TokenMapper::instance().get_keyword_token(keyword2)) {
 					case instrument_scatter_photon_value_token:
-						photo_value(new_val);
+						photon_value(new_val);
 						break;
 
 					case instrument_scatter_photon_unit_token:

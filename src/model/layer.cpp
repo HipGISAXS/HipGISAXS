@@ -3,7 +3,7 @@
  *
  *  File: layer.cpp
  *  Created: Jun 13, 2012
- *  Modified: Wed 08 Jan 2014 01:14:00 PM PST
+ *  Modified: Wed 08 Jan 2014 05:15:36 PM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -24,6 +24,9 @@
 #include <iomanip>
 
 #include "layer.hpp"
+#include "../utils/string_utils.hpp"
+#include "../config/token_mapper.hpp"
+
 
 namespace hig {
 
@@ -43,7 +46,8 @@ namespace hig {
 
 	bool Layer::update_param(const std::string& str, float_t new_val) {
 		std::string keyword, rem_str;
-		if(!get_first_keyword(str, keyword, rem_str)) return false;
+		if(!extract_first_keyword(str, keyword, rem_str)) return false;
+			std::string keyword2, rem_str2;
 		switch(TokenMapper::instance().get_keyword_token(keyword)) {
 			case key_token:
 			case layer_order_token:
@@ -51,19 +55,18 @@ namespace hig {
 				break;
 
 			case layer_thickness_token:
-				thicknedd_ = new_val;
+				thickness_ = new_val;
 				break;
 
 			case refindex_token:
-				std::string keyword2, rem_str2;
-				if(!get_first_keyword(rem_str, keyword2, rem_str2)) return false;
+				if(!extract_first_keyword(rem_str, keyword2, rem_str2)) return false;
 				switch(TokenMapper::instance().get_keyword_token(keyword2)) {
 					case refindex_beta_token:
 						refindex_.beta(new_val);
 						break;
 
 					case refindex_delta_token:
-						refindex_.delta(new_val)l
+						refindex_.delta(new_val);
 							break;
 
 					case error_token:

@@ -3,7 +3,7 @@
  *
  *  File: string_utils.cpp
  *  Created: Jan 08, 2014
- *  Modified: Wed 08 Jan 2014 12:12:55 PM PST
+ *  Modified: Wed 08 Jan 2014 05:13:06 PM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -29,7 +29,7 @@ namespace hig {
 	bool extract_first_keyword(const std::string& str, std::string& keyword, std::string& rem_str) {
 		std::size_t pos = str.find_first_of(":");
 		if(pos == std::string::npos) {
-			std::cerr << "error: ill-formed parameter variable name '" << param << "'" << std::endl;
+			std::cerr << "error: ill-formed parameter variable name '" << str << "'" << std::endl;
 			return false;
 		} // if
 		keyword = str.substr(0, pos);

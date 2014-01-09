@@ -3,7 +3,7 @@
  *
  *  File: shape.cpp
  *  Created: Jun 05, 2012
- *  Modified: Wed 08 Jan 2014 12:56:49 PM PST
+ *  Modified: Wed 08 Jan 2014 05:17:35 PM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -23,6 +23,9 @@
 #include <iostream>
 
 #include "shape.hpp"
+#include "../utils/string_utils.hpp"
+#include "../config/token_mapper.hpp"
+
 
 namespace hig {
 
@@ -145,9 +148,9 @@ namespace hig {
 
 	bool ShapeParam::update_param(const std::string& str, float_t new_val) {
 		std::string keyword, rem_str;
-		if(!get_first_keyword(str, keyword, rem_str)) return false;
+		if(!extract_first_keyword(str, keyword, rem_str)) return false;
 		std::string keyword_name, key;
-		if(!get_keyword_name_and_key(keyword, keyword_name, key)) return false;
+		if(!extract_keyword_name_and_key(keyword, keyword_name, key)) return false;
 		switch(TokenMapper::instance().get_keyword_token(keyword_name)) {
 			case min_token:
 				min_ = new_val;
@@ -190,9 +193,9 @@ namespace hig {
 
 	bool Shape::update_param(const std::string& str, float_t new_val) {
 		std::string keyword, rem_str;
-		if(!get_first_keyword(str, keyword, rem_str)) return false;
+		if(!extract_first_keyword(str, keyword, rem_str)) return false;
 		std::string keyword_name, key;
-		if(!get_keyword_name_and_key(keyword, keyword_name, key)) return false;
+		if(!extract_keyword_name_and_key(keyword, keyword_name, key)) return false;
 		switch(TokenMapper::instance().get_keyword_token(keyword_name)) {
 			case key_token:
 			case shape_name_token:
