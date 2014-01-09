@@ -3,7 +3,7 @@
  *
  *  File: layer.hpp
  *  Created: Jun 13, 2012
- *  Modified: Thu 26 Sep 2013 10:37:13 AM PDT
+ *  Modified: Wed 08 Jan 2014 01:00:55 PM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -61,6 +61,9 @@ namespace hig {
 			void order(float_t d) { order_ = (int) d; }
 			void thickness(float_t d) { thickness_ = d; }
 			void z_val(float_t z) { z_val_ = z; }
+
+			/* modifiers (updat) */
+			bool update_param(const std::string&, float_t);
 
 			void print();
 

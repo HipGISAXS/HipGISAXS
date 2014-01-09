@@ -3,7 +3,7 @@
  *
  *  File: structure.cpp
  *  Created: Jun 12, 2012
- *  Modified: Tue 16 Jul 2013 11:52:13 AM PDT
+ *  Modified: Wed 08 Jan 2014 04:35:39 PM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -295,5 +295,131 @@ namespace hig {
 					<< ensemble_.orientations_.rot3().angles()[1] << "]" << std::endl
 					<< std::endl;
 	} // Structure::print()
+
+
+	/** fitting updates
+	 */
+
+	bool Structure::update_param(const std::string& str, float_t new_val) {
+		std::string keyword, rem_str;
+		if(!get_first_keyword(str, keyword, rem_str)) return false;
+		std::string keyword2, rem_str2;
+		std::string keyword3, rem_str3;
+		switch(TokenMapper::instance().get_keyword_token(keyword)) {
+			case key_token:
+				std::cerr << "warning: immutable param in '" << str << "'. ignoring." << std::endl;
+				break;
+
+			case struct_grain_token:
+				if(!get_first_keyword(rem_str, keyword2, rem_str2)) return false;
+				switch(TokenMapper::instance().get_keyword_token(keyword2)) {
+					case refindex_token:
+						if(!get_first_keyword(rem_str2, keyword3, rem_str3)) return false;
+						switch(TokenMapper::instance().get_keyword_token(keyword3)) {
+							case refindex_delta_token:
+								grain_refindex_delta(new_val);
+								break;
+
+							case refindex_beta_token:
+								grain_refindex_beta(new_val);
+								break;
+
+							case error_token:
+								std::cerr << "error: invalid keyword in '" << rem_str2
+											<< "'" << std::endl;
+								return false;
+
+							default:
+								std::cerr << "error: misplaced keyword in '" << rem_str2
+											<< "'" << std::endl;
+								return false;
+						} // switch
+						break;
+
+					case struct_grain_lattice_token:
+						if(!get_first_keyword(rem_str2, keyword3, rem_str3)) return false;
+						switch(TokenMapper::instance().get_keyword_token(keyword3)) {
+							case struct_grain_lattice_a_token:
+							case struct_grain_lattice_b_token:
+							case struct_grain_lattice_c_token:
+							case type_token:
+							case struct_grain_lattice_hkl_token:
+								std::cerr << "warning: immutable param in '" << rem_str2
+											<< "'. ignoring." << std::endl;
+								break;
+
+							case struct_grain_lattice_abangle_token:
+								lattice_abangle(new_val);
+								break;
+
+							case struct_grain_lattice_caratio_token:
+								lattice_caratio(new_val);
+								break;
+
+							case error_token:
+								std::cerr << "error: invalid keyword in '" << rem_str2
+											<< "'" << std::endl;
+								return false;
+
+							default:
+								std::cerr << "error: misplaced keyword in '" << rem_str2
+											<< "'" << std::endl;
+								return false;
+						} // switch()
+						break;
+
+					case struct_grain_scaling_token:
+						grain_scaling(new_val);
+						break;
+
+					case struct_grain_transvec_token:
+					case struct_grain_repetition_token:
+						std::cerr << "warning: immutable param in '" << rem_str
+									<< "'. ignoring." << std::endl;
+						break;
+
+					case error_token:
+						std::cerr << "error: invalid keyword in '" << rem_str << "'" << std::endl;
+						return false;
+		
+					default:
+						std::cerr << "error: misplaced keyword in '" << rem_str << "'" << std::endl;
+						return false;
+				} // switch
+				break;
+
+			case struct_ensemble_token:
+				if(!get_first_keyword(rem_str, keyword2, rem_str2)) return false;
+				switch(TokenMapper::instance().get_keyword_token(keyword2)) {
+					case struct_ensemble_spacing_token:
+					case struct_ensemble_maxgrains_token:
+					case struct_ensemble_distribution_token:
+					case struct_ensemble_orient_token:
+						std::cerr << "warning: immutable param in '" << rem_str
+									<< "'. ignoring." << std::endl;
+						break;
+
+					case error_token:
+						std::cerr << "error: invalid keyword in '" << rem_str << "'" << std::endl;
+						return false;
+		
+					default:
+						std::cerr << "error: misplaced keyword in '" << rem_str << "'" << std::endl;
+						return false;
+				} // switch
+				break;
+
+			case error_token:
+				std::cerr << "error: invalid keyword in '" << str << "'" << std::endl;
+				return false;
+
+			default:
+				std::cerr << "error: misplaced keyword in '" << str << "'" << std::endl;
+				return false;
+		} // switch
+
+		return true;
+	} // Structure::update_param()
+
 
 } // namespace hig

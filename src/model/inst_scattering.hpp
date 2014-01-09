@@ -3,7 +3,7 @@
  *
  *  File: inst_scattering.hpp
  *  Created: Jun 05, 2012
- *  Modified: Thu 26 Sep 2013 10:37:03 AM PDT
+ *  Modified: Wed 08 Jan 2014 04:36:25 PM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -85,6 +85,8 @@ namespace hig {
 
 			float_t spot_area() const { return spot_area_; }
 			Photon photon_energy() const { return photon_; }
+
+			bool update_param(const std::string&, float_t);
 
 
 			void print() {

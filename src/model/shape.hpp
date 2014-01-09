@@ -3,7 +3,7 @@
  *
  *  File: shape.hpp
  *  Created: Jun 05, 2012
- *  Modified: Thu 26 Sep 2013 10:37:50 AM PDT
+ *  Modified: Wed 08 Jan 2014 12:59:44 PM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -78,6 +78,9 @@ namespace hig {
 			void deviation(float_t d) { p2_ = d; }
 			void nvalues(float_t d) { nvalues_ = int(d); }
 
+			/* modifiers (update) */
+			bool update_param(const std::string&, float_t);
+
 			/* copy constructor */
 			ShapeParam& operator=(ShapeParam const& a) {
 				type_name_ = a.type_name_;
@@ -109,7 +112,7 @@ namespace hig {
 			std::string name_str_;		/* shape file name: used for custom shape only */
 			vector3_t originvec_;
 			float_t ztilt_;				/* shape tau */
-			float_t xyrotation_;			/* shape eta */
+			float_t xyrotation_;		/* shape eta */
 			shape_param_list_t params_;	// a map of all params (key is the type)
 
 			bool parse_param(const ShapeParam& param) const;
@@ -164,6 +167,9 @@ namespace hig {
 			shape_param_list_t& param_list() { return params_; }
 			shape_param_iterator_t param_begin() { return params_.begin(); }
 			shape_param_iterator_t param_end() { return params_.end(); }
+
+			/* modifiers (updates) */
+			bool update_param(const std::string&, float_t);
 
 			void print();
 

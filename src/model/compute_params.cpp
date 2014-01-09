@@ -3,7 +3,7 @@
  *
  *  File: compute_params.cpp
  *  Created: Jun 05, 2012
- *  Modified: Tue 16 Jul 2013 11:49:29 AM PDT
+ *  Modified: Wed 08 Jan 2014 05:04:47 PM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -40,6 +40,32 @@ namespace hig {
 		nslices_ = 0;
 		correlation_ = structcorr_null;
 	} // ComputeParams::init()
+
+
+	bool ComputeParams::update_param(const std::string& str, float_t new_val) {
+		std::string keyword, rem_str;
+		if(!get_first_keyword(str, keyword, rem_str)) return false;
+		switch(TokenMapper::instance().get_keyword_token(keyword)) {
+			case compute_path_token:
+			case compute_runname_token:
+			case compute_method_token:
+			case compute_outregion_token:
+			case compute_resolution_token:
+			case compute_nslices_token:
+				std::cerr << "earning: immutable param in '" << str << "'. ignoring." << std::endl;
+				break;
+
+			case error_token:
+				std::cerr << "error: invalid keyword in '" << str << "'" << std::endl;
+				return false;
+
+			default:
+				std::cerr << "error: misplaced keyword in '" << str << "'" << std::endl;
+				return false;
+		} // switch
+
+		return true;
+	} // ComputeParams::update_param()
 
 
 	std::string ComputeParams::timestamp() {	// make this an independent utility ...

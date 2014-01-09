@@ -3,7 +3,7 @@
  *
  *  File: inst_detector.cpp
  *  Created: Jun 12, 2012
- *  Modified: Thu 26 Sep 2013 10:57:51 AM PDT
+ *  Modified: Wed 08 Jan 2014 04:58:46 PM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -38,12 +38,34 @@ namespace hig {
 		direct_beam_[1] = DEFAULT_DIRECT_BEAM_Z_;	// should be center of the detector
 	} // init()
 
-	/*void DetectorParams::init() {	// fill default values
-		origin_ = "bl";
-		total_pixels_[0] = total_pixels_[1] = 1000;
-		pixel_size_ = 0.2;
-		sd_distance_ = 2000;
-		direct_beam_[0] = direct_beam_[1] = 0;	// should be center of detector
-	} // init()*/
+
+	bool DetectorParams::update_param(const std::string& str, float_t new_val) {
+		std::string keyword, rem_str;
+		if(!get_first_keyword(str, keyword, rem_str)) return false;
+		switch(TokenMapper::instance().get_keyword_token(keyword)) {
+			case instrument_detector_origin_token:
+			case instrument_detector_totpix_token:
+			case instrument_detector_dirbeam_token:
+				std::cerr << "earning: immutable param in '" << str << "'. ignoring." << std::endl;
+				break;
+
+			case instrument_detector_pixsize_token:
+				pixel_size(new_val);
+				break;
+
+			case instrument_detector_sdd_token:
+				sd_distance(new_val);
+				break;
+
+			case error_token:
+				std::cerr << "error: invalid keyword in '" << str << "'" << std::endl;
+				return false;
+
+			default:
+				std::cerr << "error: misplaced keyword in '" << str << "'" << std::endl;
+				return false;
+		} // switch
+		return true;
+	} // DetectorParams::update_param()
 
 } // namespace hig

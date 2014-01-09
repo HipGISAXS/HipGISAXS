@@ -3,7 +3,7 @@
  *
  *  File: inst_detector.hpp
  *  Created: Jun 05, 2012
- *  Modified: Thu 26 Sep 2013 10:36:56 AM PDT
+ *  Modified: Wed 08 Jan 2014 04:59:11 PM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -56,6 +56,8 @@ namespace hig {
 
 			void sd_distance(float_t d) { sd_distance_ = d; }
 			void pixel_size(float_t d) { pixel_size_ = d; }
+
+			bool update_param(const std::string&, float_t);
 
 			void print() {
 				std::cout << " origin_ = " << origin_ << std::endl

@@ -3,7 +3,7 @@
  *
  *  File: structure.hpp
  *  Created: Jun 09, 2012
- *  Modified: Thu 26 Sep 2013 10:38:09 AM PDT
+ *  Modified: Wed 08 Jan 2014 01:15:36 PM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -352,6 +352,9 @@ namespace hig {
 				return vector3_t((float_t) ((char)axis - 'x'), angs[0], angs[1]);
 				//return vector3_t((float_t) axis, angs[0], angs[1]);
 			} // rotation_rot3()
+
+			/* modifiers (updates) */
+			bool update_param(const std::string&, float_t);
 
 			/* testers */
 

@@ -3,7 +3,7 @@
  *
  *  File: shape.cpp
  *  Created: Jun 05, 2012
- *  Modified: Tue 16 Jul 2013 11:52:07 AM PDT
+ *  Modified: Wed 08 Jan 2014 12:56:49 PM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -136,5 +136,95 @@ namespace hig {
 		} // for
 		std::cout << std::endl;
 	} // Shape::print()
+
+
+	/**
+	 * updates for fitting
+	 */
+
+
+	bool ShapeParam::update_param(const std::string& str, float_t new_val) {
+		std::string keyword, rem_str;
+		if(!get_first_keyword(str, keyword, rem_str)) return false;
+		std::string keyword_name, key;
+		if(!get_keyword_name_and_key(keyword, keyword_name, key)) return false;
+		switch(TokenMapper::instance().get_keyword_token(keyword_name)) {
+			case min_token:
+				min_ = new_val;
+				break;
+
+			case max_token:
+				max_ = new_val;
+				break;
+
+			case shape_param_p1_token:
+				p1_ = new_val;
+				break;
+
+			case shape_param_p2_token:
+				p2_ = new_val;
+				break;
+
+			case shape_param_nvalues_token:
+				nvalues_ = int(new_val);
+				break;
+
+			case stat_token:
+				std::cerr << "warning: immutable param in '" << str << "'. ignoring." << std::endl;
+				break;
+
+			case error_token:
+				std::cerr << "error: invalid keyword '" << keyword_name
+							<< "' in param '" << str << "'" << std::endl;
+				return false;
+
+			default:
+				std::cerr << "error: misplaced keyword '" << keyword_name
+							<< "' in param '" << str << "'" << std::endl;
+				return false;
+		} // switch
+
+		return true;
+	} // ShapeParam::update_param()
+
+
+	bool Shape::update_param(const std::string& str, float_t new_val) {
+		std::string keyword, rem_str;
+		if(!get_first_keyword(str, keyword, rem_str)) return false;
+		std::string keyword_name, key;
+		if(!get_keyword_name_and_key(keyword, keyword_name, key)) return false;
+		switch(TokenMapper::instance().get_keyword_token(keyword_name)) {
+			case key_token:
+			case shape_name_token:
+			case shape_originvec_token:
+				std::cerr << "warning: immutable param in '" << str << "'. ignoring." << std::endl;
+				break;
+
+			case shape_ztilt_token:
+				ztilt_ = new_val;
+				break;
+
+			case shape_xyrot_token:
+				xyrotation_ = new_val;
+				break;
+
+			case shape_param_token:
+				if(!params_.at(key).update_param(rem_str, new_val)) return false;
+				break;
+
+			case error_token:
+				std::cerr << "error: invalid keyword '" << keyword_name
+							<< "' in param '" << str << "'" << std::endl;
+				return false;
+
+			default:
+				std::cerr << "error: misplaced keyword '" << keyword_name
+							<< "' in param '" << str << "'" << std::endl;
+				return false;
+		} // switch
+
+		return true;
+	} // Shape::update_param()
+
 
 } // namespace hig

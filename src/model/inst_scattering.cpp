@@ -3,7 +3,7 @@
  *
  *  File: inst_scattering.cpp
  *  Created: Jun 12, 2012
- *  Modified: Tue 16 Jul 2013 11:51:09 AM PDT
+ *  Modified: Wed 08 Jan 2014 04:52:43 PM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -38,6 +38,135 @@ namespace hig {
 		spot_area_ = 0.01; //0.001;
 		smearing_[0] = smearing_[1] = smearing_[2] = 1;
 	} // ScatteringParams::init()
+
+
+	bool ScatteringParams::update_param(const std::string& str, float_t new_val) {
+		std::string keyword, rem_str;
+		if(!get_first_keyword(str, keyword, rem_str)) return false;
+		std::string keyword2, rem_str2;
+		switch(TokenMapper::instance().get_keyword_token(keyword)) {
+			case instrument_scatter_expt_token:
+			case instrument_scatter_polarize_token:
+			case instrument_scatter_smearing_token:
+				std::cerr << "warning: immutable param in '" << str << "'. ignoring." << std::endl;
+				break;
+
+			case instrument_scatter_alphai_token:
+				if(!get_first_keyword(rem_str, keyword2, rem_str2)) return false;
+				switch(TokenMapper::instance().get_keyword_token(keyword2)) {
+					case min_token:
+						alphai_min(new_val);
+						break;
+
+					case max_token:
+						alphai_max(new_val);
+						break;
+
+					case step_token:
+						alphai_step(new_val);
+						break;
+
+					case error_token:
+						std::cerr << "error: invalid keyword in '" << rem_str << "'" << std::endl;
+						return false;
+
+					default:
+						std::cerr << "error: misplaced keyword in '" << rem_str << "'" << std::endl;
+						return false;
+				} // switch
+				break;
+
+			case instrument_scatter_inplanerot_token:
+				if(!get_first_keyword(rem_str, keyword2, rem_str2)) return false;
+				switch(TokenMapper::instance().get_keyword_token(keyword2)) {
+					case min_token:
+						inplane_rot_min(new_val);
+						break;
+
+					case max_token:
+						inplane_rot_max(new_val);
+						break;
+
+					case step_token:
+						inplane_rot_step(new_val);
+						break;
+
+					case error_token:
+						std::cerr << "error: invalid keyword in '" << rem_str << "'" << std::endl;
+						return false;
+
+					default:
+						std::cerr << "error: misplaced keyword in '" << rem_str << "'" << std::endl;
+						return false;
+				} // switch
+				break;
+
+			case instrument_scatter_tilt_token:
+				if(!get_first_keyword(rem_str, keyword2, rem_str2)) return false;
+				switch(TokenMapper::instance().get_keyword_token(keyword2)) {
+					case min_token:
+						tile_min(new_val);
+						break;
+
+					case max_token:
+						tile_max(new_val);
+						break;
+
+					case step_token:
+						tile_step(new_val);
+						break;
+
+					case error_token:
+						std::cerr << "error: invalid keyword in '" << rem_str << "'" << std::endl;
+						return false;
+
+					default:
+						std::cerr << "error: misplaced keyword in '" << rem_str << "'" << std::endl;
+						return false;
+				} // switch
+				break;
+
+			case instrument_scatter_photon_token:
+				if(!get_first_keyword(rem_str, keyword2, rem_str2)) return false;
+				switch(TokenMapper::instance().get_keyword_token(keyword2)) {
+					case instrument_scatter_photon_value_token:
+						photo_value(new_val);
+						break;
+
+					case instrument_scatter_photon_unit_token:
+						std::cerr << "warning: immutable param in '" << rem_str
+									<< "'. ignoring." << std::endl;
+						break;
+
+					case error_token:
+						std::cerr << "error: invalid keyword in '" << rem_str << "'" << std::endl;
+						return false;
+
+					default:
+						std::cerr << "error: misplaced keyword in '" << rem_str << "'" << std::endl;
+						return false;
+				} // switch
+				break;
+
+			case instrument_scatter_coherence_token:
+				coherence(new_val);
+				break;
+
+			case instrument_scatter_spotarea_token:
+				spot_area(new_val);
+				break;
+
+			case error_token:
+				std::cerr << "error: invalid keyword in '" << str << "'" << std::endl;
+				return false;
+
+			default:
+				std::cerr << "error: misplaced keyword in '" << str << "'" << std::endl;
+				return false;
+		} // switch
+
+		return true;
+	} // ScatteringParams::update_param()
 
 
 } // namespace hig

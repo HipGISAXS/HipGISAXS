@@ -3,7 +3,7 @@
  *
  *  File: compute_params.hpp
  *  Created: Jun 05, 2012
- *  Modified: Thu 26 Sep 2013 10:36:46 AM PDT
+ *  Modified: Wed 08 Jan 2014 05:00:04 PM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -79,6 +79,9 @@ namespace hig {
 
 			/* getters */
 			//OutputRegion output_region() { return output_region_; }
+
+			/* modifiers (updates) */
+			bool update_param(const std::string&, float_t);
 
 			void print() {
 				std::cout << " pathprefix_ = " << pathprefix_ << std::endl
