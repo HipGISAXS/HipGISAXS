@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_main.hpp
  *  Created: Jun 11, 2012
- *  Modified: Sat 28 Dec 2013 09:17:29 AM PST
+ *  Modified: Fri 10 Jan 2014 10:05:36 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -87,7 +87,7 @@ namespace hig {
 			#endif
 
 			bool init();	/* global initialization for all runs */
-			bool init_steepest_fit(float_t);	/* init for steepest descent fitting */
+			//bool init_steepest_fit(float_t);	/* init for steepest descent fitting */
 			bool run_init(float_t, float_t, float_t, SampleRotation&); 	/* init for a single run */
 			bool run_gisaxs(float_t, float_t, float_t, float_t, float_t*&, const char*, int c = 0);
 										/* a single GISAXS run */
@@ -142,14 +142,81 @@ namespace hig {
 			/* loops over all configs and computes GISAXS for each */
 			bool run_all_gisaxs(int = 0, int = 0, int = 0);
 
+			/* fitting related */
+
 			/* update parameters given a map:key->value */
 			bool update_params(const map_t&);
 
+			bool fit_init();
+			bool compute_gisaxs(float_t*&);
+			//template <typename ErrorFunction>
+			//float_t compute_gisaxs_error(const ErrorFunction&, float_t*);
+			/*template <typename ErrorFunction>
+			float_t compute_gisaxs_error(const ErrorFunction& err_func, float_t* ref_data) {
+				#ifdef USE_MPI
+					// this is for the whole comm world
+					const char* world_comm = "world";
+					bool master = multi_node_.is_master(world_comm);
+				#else
+					bool master = true;
+				#endif
+
+				if(!init()) return -1.0;
+				float_t error = -1.0;
+
+				int num_alphai = 0, num_phi = 0, num_tilt = 0;;
+				float_t alphai_min, alphai_max, alphai_step;
+				HiGInput::instance().scattering_alphai(alphai_min, alphai_max, alphai_step);
+				if(alphai_max < alphai_min) alphai_max = alphai_min;
+				if(alphai_min == alphai_max || alphai_step == 0) num_alphai = 1;
+				else num_alphai = (alphai_max - alphai_min) / alphai_step + 1;
+				float_t phi_min, phi_max, phi_step;
+				HiGInput::instance().scattering_inplanerot(phi_min, phi_max, phi_step);
+				if(phi_step == 0) num_phi = 1;
+				else num_phi = (phi_max - phi_min) / phi_step + 1;
+				float_t tilt_min, tilt_max, tilt_step;
+				HiGInput::instance().scattering_tilt(tilt_min, tilt_max, tilt_step);
+				if(tilt_step == 0) num_tilt = 1;
+				else num_tilt = (tilt_max - tilt_min) / tilt_step + 1;
+				if(num_alphai > 1 || num_phi > 1 || num_tilt > 1) {
+					if(master)
+						std::cerr << "error: currently you can simulate only for single "
+									<< "alpha_i, phi and tilt angles"
+									<< std::endl;
+					return -1.0;
+				} // if
+
+				woo::BoostChronoTimer sim_timer;
+				sim_timer.start();
+				float_t alpha_i = alphai_min;
+				float_t alphai = alpha_i * PI_ / 180;
+				float_t phi_rad = phi_min * PI_ / 180;
+				float_t tilt_rad = tilt_min * PI_ / 180;
+				if(master) std::cout << "-- Computing GISAXS ... " << std::flush;
+				float_t* final_data = NULL;
+				// run a gisaxs simulation
+				if(!run_gisaxs(alpha_i, alphai, phi_rad, tilt_rad, final_data,
+							#ifdef USE_MPI
+								world_comm,
+							#endif
+							0)) {
+					if(master) std::cerr << "error: could not finish successfully" << std::endl;
+					return -1.0;
+				} // if
+				if(master) std::cout << "error ... " << std::flush;
+				error = err_func(final_data, ref_data, nqx_, nqy_, nqz_);
+				sim_timer.stop();
+				if(master) std::cout << "[" << sim_timer.elapsed_msec() << " ms.]" << std::endl;
+
+				return error;
+			} // HipGISAXS::compute_gisaxs_error()*/
+
+
 			/* temporary: does the initial 1D fitting */
-			bool fit_steepest_descent(float_t, float_t, float_t, float_t,
-										float_t, float_t, float_t, unsigned int,
-										MPI::Intracomm&, int = 0, int = 0, int = 0);
-			float_t compute_cut_fit_error(float_t*, float_t*, float_t);
+			//bool fit_steepest_descent(float_t, float_t, float_t, float_t,
+			//							float_t, float_t, float_t, unsigned int,
+			//							MPI::Intracomm&, int = 0, int = 0, int = 0);
+			//float_t compute_cut_fit_error(float_t*, float_t*, float_t);
 
 	}; // class HipGISAXS
 

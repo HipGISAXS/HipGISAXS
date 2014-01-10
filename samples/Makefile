@@ -8,8 +8,8 @@
 ##
 
 ## location of all the required packages
-MPI_DIR = /usr/local/openmpi-1.6.4
-BOOST_DIR = /usr/local/boost_1_49_0
+MPI_DIR = /usr/local/openmpi
+BOOST_DIR = /usr/local/boost
 HDF5_DIR = /usr/local/hdf5-1.8.9
 SZ_DIR = /usr/local/szip-2.1
 ZLIB_DIR = /usr/local/zlib-1.2.7
@@ -21,13 +21,14 @@ HIPGISAXS_DIR = /home/asarje/hipgisaxs.git
 CXX = $(MPI_DIR)/bin/mpicxx
 
 ## name of the needed binary
-BINARY = test_hipgisaxs
+BINARY = hipgisaxs_fit
 
 ## some flags
 CXX_FLAGS = -m64 -fopenmp -std=c++0x
+CXX_FLAGS += -g
 
 ## hipgisaxs include and library linking flags
-HIPGISAXS_INCL = -I $(HIPGISAXS_DIR)/src
+HIPGISAXS_INCL = -I $(HIPGISAXS_DIR)/src/sim
 HIPGISAXS_LDFLAGS = -L $(HIPGISAXS_DIR)/lib
 HIPGISAXS_LIBS = -lhipgisaxs
 
@@ -57,7 +58,7 @@ ALL_LDFLAGS = $(HIPGISAXS_LDFLAGS) $(CUDA_LDFLAGS) $(BOOST_LDFLAGS) $(HDF5_LDFLA
 ALL_LIBS = $(HIPGISAXS_LIBS) $(CUDA_LIBS) $(BOOST_LIBS) $(HDF5_LIBS) $(TIFF_LIBS)
 
 ## generate the binary
-$(BINARY): test_hipgisaxs.cpp
+$(BINARY): hipgisaxs_fit.cpp
 	$(CXX) -o $@ $^ $(CXX_FLAGS) $(ALL_INCL) $(ALL_LDFLAGS) $(ALL_LIBS)
 
 .PHONY: clean

@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_main.cpp
  *  Created: Jun 14, 2012
- *  Modified: Sat 28 Dec 2013 09:25:44 AM PST
+ *  Modified: Fri 10 Jan 2014 10:05:30 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -228,6 +228,7 @@ namespace hig {
 	} // HipGISAXS::init()
 
 
+	/*
 	// this is temporary, for newton's fit method
 	bool HipGISAXS::init_steepest_fit(float_t qzcut) {
 						// is called at the beginning of the runs (after input is read)
@@ -248,7 +249,7 @@ namespace hig {
 		if(unit == "ev") {
 			photon = photon / 1000;		// in keV
 			freq_ = 1e-9 * photon * 1.60217646e-19 * 1000 / 6.626068e-34;
-		} else { /* do something else ? ... */
+		} else { // do something else ? ...
 			if(master) std::cerr << "error: photon energy is not given in 'ev'" << std::endl;
 			return false;
 		} // if-else
@@ -279,7 +280,7 @@ namespace hig {
 		nqy_ = QGrid::instance().nqy();
 		nqz_ = QGrid::instance().nqz();
 
-		/* construct layer profile */
+		// construct layer profile
 		if(!HiGInput::instance().construct_layer_profile()) {	// also can be done at input reading ...
 			if(master) std::cerr << "error: could not construct layer profile" << std::endl;
 			return false;
@@ -287,6 +288,7 @@ namespace hig {
 
 		return true;
 	} // HipGISAXS::init_steepest_fit()
+	*/
 
 
 	bool HipGISAXS::run_init(float_t alphai, float_t phi, float_t tilt, SampleRotation& rot_matrix) {
@@ -684,6 +686,66 @@ namespace hig {
 		return true;
 	} // HipGISAXS::run_all_gisaxs()
 
+
+	/**
+	 * used for fitting
+	 */
+	bool HipGISAXS::fit_init() { return init(); }
+	bool HipGISAXS::compute_gisaxs(float_t* &final_data) {
+		#ifdef USE_MPI
+			// this is for the whole comm world
+			const char* world_comm = "world";
+			bool master = multi_node_.is_master(world_comm);
+		#else
+			bool master = true;
+		#endif
+
+		int num_alphai = 0, num_phi = 0, num_tilt = 0;;
+		float_t alphai_min, alphai_max, alphai_step;
+		HiGInput::instance().scattering_alphai(alphai_min, alphai_max, alphai_step);
+		if(alphai_max < alphai_min) alphai_max = alphai_min;
+		if(alphai_min == alphai_max || alphai_step == 0) num_alphai = 1;
+		else num_alphai = (alphai_max - alphai_min) / alphai_step + 1;
+		float_t phi_min, phi_max, phi_step;
+		HiGInput::instance().scattering_inplanerot(phi_min, phi_max, phi_step);
+		if(phi_step == 0) num_phi = 1;
+		else num_phi = (phi_max - phi_min) / phi_step + 1;
+		float_t tilt_min, tilt_max, tilt_step;
+		HiGInput::instance().scattering_tilt(tilt_min, tilt_max, tilt_step);
+		if(tilt_step == 0) num_tilt = 1;
+		else num_tilt = (tilt_max - tilt_min) / tilt_step + 1;
+		if(num_alphai > 1 || num_phi > 1 || num_tilt > 1) {
+			if(master)
+				std::cerr << "error: currently you can simulate only for single "
+							<< "alpha_i, phi and tilt angles"
+							<< std::endl;
+			return -1.0;
+		} // if
+
+		woo::BoostChronoTimer sim_timer;
+		sim_timer.start();
+		float_t alpha_i = alphai_min;
+		float_t alphai = alpha_i * PI_ / 180;
+		float_t phi_rad = phi_min * PI_ / 180;
+		float_t tilt_rad = tilt_min * PI_ / 180;
+		if(master) std::cout << "-- Computing GISAXS ... " << std::endl << std::flush;
+		/* run a gisaxs simulation */
+		if(!run_gisaxs(alpha_i, alphai, phi_rad, tilt_rad, final_data,
+					#ifdef USE_MPI
+						world_comm,
+					#endif
+					0)) {
+			if(master) std::cerr << "error: could not finish successfully" << std::endl;
+			return -1.0;
+		} // if
+		sim_timer.stop();
+		if(master)
+			std::cout << "**        Total Simulation time: " << sim_timer.elapsed_msec()
+						<< " ms." << std::endl;
+
+		return true;
+	} // HipGISAXS::compute_gisaxs()
+
 	
 	/**
 	 * run an experiment configuration
@@ -698,6 +760,7 @@ namespace hig {
 
 		#ifdef USE_MPI
 			bool master = multi_node_.is_master(comm_key);
+			int ss = multi_node_.size(comm_key);
 		#else
 			bool master = true;
 		#endif
@@ -2051,5 +2114,6 @@ namespace hig {
 	bool HipGISAXS::read_form_factor(FormFactor& ff, const char* filename) {
 		return ff.read_form_factor(filename, nqx_, nqy_, nqz_extended_);
 	} // HipGISAXS::read_form_factor()
+
 
 } // namespace hig
