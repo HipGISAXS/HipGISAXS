@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_main.hpp
  *  Created: Jun 11, 2012
- *  Modified: Fri 10 Jan 2014 10:05:36 AM PST
+ *  Modified: Mon 13 Jan 2014 03:01:08 PM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -149,6 +149,19 @@ namespace hig {
 
 			bool fit_init();
 			bool compute_gisaxs(float_t*&);
+
+			// temporary fitting related ...
+			std::vector <std::string> get_fit_param_keys() const {
+				return HiGInput::instance().get_fit_param_keys();
+			} // get_fit_param_keys()
+			std::vector <std::pair <float_t, float_t> > get_fit_param_limits() const {
+				return HiGInput::instance().get_fit_param_limits();
+			} // get_fit_param_keys()
+			unsigned int nqx() const { return nqx_; }
+			unsigned int nqy() const { return nqy_; }
+			unsigned int nqz() const { return nqz_; }
+
+
 			//template <typename ErrorFunction>
 			//float_t compute_gisaxs_error(const ErrorFunction&, float_t*);
 			/*template <typename ErrorFunction>

@@ -3,7 +3,7 @@
  *
  *  File: hig_input.hpp
  *  Created: Jun 11, 2012
- *  Modified: Thu 09 Jan 2014 02:40:37 PM PST
+ *  Modified: Mon 13 Jan 2014 02:36:54 PM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -279,6 +279,20 @@ namespace hig {
 
 			/* fitting related */
 			bool update_params(const map_t&);
+			std::vector <std::string> get_fit_param_keys() const {
+				std::vector <std::string> key_list;
+				for(std::map <std::string, ParamSpace>::const_iterator i = param_space_key_map_.begin();
+						i != param_space_key_map_.end(); ++ i)
+					key_list.push_back((*i).first);
+				return key_list;
+			} // get_fit_param_keys()
+			std::vector <std::pair <float_t, float_t> > get_fit_param_limits() const {
+				std::vector <std::pair <float_t, float_t> > plimits;
+				for(std::map <std::string, ParamSpace>::const_iterator i = param_space_key_map_.begin();
+						i != param_space_key_map_.end(); ++ i)
+					plimits.push_back(std::pair<float_t, float_t>((*i).second.min_, (*i).second.max_));
+				return plimits;
+			} // get_fit_param_limits()
 
 			/* printing for testing */
 			void print_all();
