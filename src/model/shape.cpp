@@ -3,7 +3,7 @@
  *
  *  File: shape.cpp
  *  Created: Jun 05, 2012
- *  Modified: Wed 08 Jan 2014 05:17:35 PM PST
+ *  Modified: Sun 26 Jan 2014 10:38:55 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -22,9 +22,9 @@
 
 #include <iostream>
 
-#include "shape.hpp"
-#include "../utils/string_utils.hpp"
-#include "../config/token_mapper.hpp"
+#include <model/shape.hpp>
+#include <utils/string_utils.hpp>
+#include <config/token_mapper.hpp>
 
 
 namespace hig {

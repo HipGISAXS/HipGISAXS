@@ -453,6 +453,8 @@ if processor == "x86_64":
 env['NIX_LIB_DIR'] = nix_lib_prefix
 
 ## extra paths and libs
+working_dir = env['ENV']['PWD']
+env.Append(CPPPATH = [working_dir + "/include"])
 if _has_option("extrapath"):
 	add_paths(get_option("extrapath"))
 if _has_option("extralib"):

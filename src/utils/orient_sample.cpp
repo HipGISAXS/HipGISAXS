@@ -3,7 +3,7 @@
  *
  *  File: orient_sample.cpp
  *  Created: Sep 06, 2012
- *  Modified: Tue 16 Jul 2013 12:17:11 PM PDT
+ *  Modified: Sun 26 Jan 2014 10:42:12 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -23,7 +23,7 @@
 #include <iomanip>
 #include <cstdlib>
 
-#include "orient_sample.hpp"
+#include <utils/orient_sample.hpp>
 
 namespace hig {
 

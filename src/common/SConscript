@@ -1,12 +1,3 @@
-Import('env')
-
 objs = [ ]
-using_accelerator = env['ACCELERATOR_TYPE']
-if using_accelerator == 'gpu':
-	objs += SConscript('gpu/SConscript')
-elif using_accelerator == 'mic':
-	objs += SConscript('mic/SConscript')
-else:
-	objs += SConscript('cpu/SConscript')
 
 Return('objs')

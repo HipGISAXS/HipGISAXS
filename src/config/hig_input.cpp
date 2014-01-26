@@ -3,7 +3,7 @@
  *
  *  File: hig_input.cpp
  *  Created: Jun 11, 2012
- *  Modified: Thu 09 Jan 2014 02:43:11 PM PST
+ *  Modified: Sun 26 Jan 2014 10:19:29 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -22,11 +22,11 @@
 
 #include <cfloat>
 
-#include "hig_input.hpp"
-#include "../utils/utilities.hpp"
-#include "../utils/string_utils.hpp"
-#include "../common/parameters.hpp"
-#include "../file/hig_file_reader.hpp"
+#include <config/hig_input.hpp>
+#include <utils/utilities.hpp>
+#include <utils/string_utils.hpp>
+#include <common/parameters.hpp>
+#include <file/hig_file_reader.hpp>
 
 
 namespace hig {

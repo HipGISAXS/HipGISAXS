@@ -3,7 +3,7 @@
  *
  *  File: read_oo_input.cpp
  *  Created: Jul 04, 2012
- *  Modified: Tue 16 Jul 2013 11:51:50 AM PDT
+ *  Modified: Sun 26 Jan 2014 10:34:53 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -24,7 +24,7 @@
 #include <iostream>
 #include <fstream>
 
-#include "read_oo_input.hpp"
+#include <file/read_oo_input.hpp>
 
 namespace hig {
 

@@ -3,7 +3,7 @@
  *
  *  File: object2shape.cpp
  *  Created: Aug 25, 2012
- *  Modified: Tue 16 Jul 2013 12:16:20 PM PDT
+ *  Modified: Sun 26 Jan 2014 10:34:25 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -23,7 +23,7 @@
 #include <iomanip>
 #include <boost/lexical_cast.hpp>
 
-#include "object2shape.hpp"
+#include <file/object2shape.hpp>
 
 
 /**

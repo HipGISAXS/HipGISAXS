@@ -3,7 +3,7 @@
  *
  *  File: ff_ana_sphere_gpu.cu
  *  Created: Oct 16, 2012
- *  Modified: Thu 26 Sep 2013 10:25:56 AM PDT
+ *  Modified: Sun 26 Jan 2014 10:32:47 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -24,10 +24,10 @@
 #include <complex>
 #include <cuComplex.h>
 
-#include "ff_ana_gpu.cuh"
-#include "../../common/enums.hpp"
-#include "../../numerics/gpu/cu_complex_numeric.cuh"
-#include "../../utils/gpu/cu_utilities.cuh"
+#include <ff/gpu/ff_ana_gpu.cuh>
+#include <common/enums.hpp>
+#include <numerics/gpu/cu_complex_numeric.cuh>
+#include <utils/gpu/cu_utilities.cuh>
 
 namespace hig {
 

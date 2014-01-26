@@ -3,7 +3,7 @@
  *
  *  File: object2shape_main.cpp
  *  Created: Sep 12, 2012
- *  Modified: Tue 16 Jul 2013 12:16:43 PM PDT
+ *  Modified: Sun 26 Jan 2014 10:34:36 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -20,8 +20,8 @@
  *  NON-COMMERCIAL END USER LICENSE AGREEMENT.
  */
 
-#include "object2shape.hpp"
-#include "object2hdf5.h"
+#include <file/object2shape.hpp>
+#include <file/object2hdf5.h>
 
 #include <iomanip>
 

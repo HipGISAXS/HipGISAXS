@@ -3,7 +3,7 @@
  *
  *  File: ff.cpp
  *  Created: Jul 17, 2012
- *  Modified: Thu 26 Sep 2013 08:18:51 AM PDT
+ *  Modified: Sun 26 Jan 2014 10:25:52 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -23,7 +23,7 @@
 #include <iostream>
 #include <fstream>
 
-#include "ff.hpp"
+#include <ff/ff.hpp>
 
 namespace hig {
 

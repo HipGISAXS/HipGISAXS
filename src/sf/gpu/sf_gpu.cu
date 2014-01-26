@@ -3,7 +3,7 @@
  *
  *  File: sf_gpu.cu
  *  Created: Oct 15, 2012
- *  Modified: Thu 26 Sep 2013 11:02:50 AM PDT
+ *  Modified: Sun 26 Jan 2014 10:40:38 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -25,8 +25,8 @@
 #include <cuComplex.h>
 #include <omp.h>		// see if i need openmp somewhere
 
-#include "../../common/typedefs.hpp"
-#include "../../common/constants.hpp"
+#include <common/typedefs.hpp>
+#include <common/constants.hpp>
 
 namespace hig {
 

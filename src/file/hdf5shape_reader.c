@@ -3,7 +3,7 @@
  *
  *  File: object2hdf5.c
  *  Created: Aug 25, 2012
- *  Modified: Fri 27 Sep 2013 08:38:09 AM PDT
+ *  Modified: Sun 26 Jan 2014 10:34:13 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -22,7 +22,7 @@
 
 #include <string.h>
 
-#include "hdf5shape_reader.h"
+#include <file/hdf5shape_reader.h>
 
 /**
  * reads a hdf5 file and converts to shape def format

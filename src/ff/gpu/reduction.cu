@@ -3,7 +3,7 @@
  *
  *  File: reduction.cu
  *  Created: Aug 25, 2012
- *  Modified: Thu 26 Sep 2013 10:27:48 AM PDT
+ *  Modified: Sun 26 Jan 2014 10:33:15 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -24,8 +24,8 @@
 #include <omp.h>
 #include <cuComplex.h>
 
-#include "reduction.cuh"
-#include "../../common/parameters.hpp"
+#include <ff/gpu/reduction.cuh>
+#include <common/parameters.hpp>
 
 namespace hig {
 

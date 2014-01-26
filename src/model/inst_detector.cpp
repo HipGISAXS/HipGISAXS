@@ -3,7 +3,7 @@
  *
  *  File: inst_detector.cpp
  *  Created: Jun 12, 2012
- *  Modified: Wed 08 Jan 2014 05:16:15 PM PST
+ *  Modified: Sun 26 Jan 2014 10:37:46 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -20,10 +20,10 @@
  *  NON-COMMERCIAL END USER LICENSE AGREEMENT.
  */
 
-#include "inst_detector.hpp"
-#include "../common/default_values.hpp"
-#include "../utils/string_utils.hpp"
-#include "../config/token_mapper.hpp"
+#include <model/inst_detector.hpp>
+#include <common/default_values.hpp>
+#include <utils/string_utils.hpp>
+#include <config/token_mapper.hpp>
 
 namespace hig {
 

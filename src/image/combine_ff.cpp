@@ -3,7 +3,7 @@
  *
  *  File: combine_ff.cpp
  *  Created: Aug 22, 2012
- *  Modified: Tue 16 Jul 2013 11:49:17 AM PDT
+ *  Modified: Sun 26 Jan 2014 10:36:54 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -20,7 +20,7 @@
  *  NON-COMMERCIAL END USER LICENSE AGREEMENT.
  */
 
-#include "combine_ff.hpp"
+#include <image/combine_ff.hpp>
 
 int main(int narg, char** args) {
 

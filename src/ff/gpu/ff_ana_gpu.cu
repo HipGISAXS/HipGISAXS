@@ -3,7 +3,7 @@
  *
  *  File: ff_ana_gpu.cu
  *  Created: Oct 16, 2012
- *  Modified: Thu 26 Sep 2013 10:22:14 AM PDT
+ *  Modified: Sun 26 Jan 2014 10:31:50 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -26,9 +26,9 @@
 
 #include <boost/math/special_functions/fpclassify.hpp>
 
-#include "ff_ana_gpu.cuh"
-#include "../../model/qgrid.hpp"
-#include "../../common/enums.hpp"
+#include <ff/gpu/ff_ana_gpu.cuh>
+#include <model/qgrid.hpp>
+#include <common/enums.hpp>
 
 namespace hig {
 

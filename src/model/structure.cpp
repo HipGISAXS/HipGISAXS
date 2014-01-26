@@ -3,7 +3,7 @@
  *
  *  File: structure.cpp
  *  Created: Jun 12, 2012
- *  Modified: Wed 08 Jan 2014 05:18:04 PM PST
+ *  Modified: Sun 26 Jan 2014 10:39:13 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -22,9 +22,9 @@
 
 #include <iostream>
 
-#include "structure.hpp"
-#include "../utils/string_utils.hpp"
-#include "../config/token_mapper.hpp"
+#include <model/structure.hpp>
+#include <utils/string_utils.hpp>
+#include <config/token_mapper.hpp>
 
 
 namespace hig {

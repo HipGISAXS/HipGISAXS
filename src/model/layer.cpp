@@ -3,7 +3,7 @@
  *
  *  File: layer.cpp
  *  Created: Jun 13, 2012
- *  Modified: Wed 08 Jan 2014 05:15:36 PM PST
+ *  Modified: Sun 26 Jan 2014 10:38:22 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -23,9 +23,9 @@
 #include <iostream>
 #include <iomanip>
 
-#include "layer.hpp"
-#include "../utils/string_utils.hpp"
-#include "../config/token_mapper.hpp"
+#include <model/layer.hpp>
+#include <utils/string_utils.hpp>
+#include <config/token_mapper.hpp>
 
 
 namespace hig {

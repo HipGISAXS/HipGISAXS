@@ -3,7 +3,7 @@
  *
  *  File: numeric_utils.cpp
  *  Created: Oct 08, 2012
- *  Modified: Sat 28 Sep 2013 11:11:11 AM PDT
+ *  Modified: Sun 26 Jan 2014 10:39:34 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -20,7 +20,7 @@
  *  NON-COMMERCIAL END USER LICENSE AGREEMENT.
  */
 
-#include "numeric_utils.hpp"
+#include <numerics/numeric_utils.hpp>
 
 namespace hig {
 

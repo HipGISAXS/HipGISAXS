@@ -3,7 +3,7 @@
  *
  *  File: image.cpp
  *  Created: Jun 18, 2012
- *  Modified: Sat 28 Sep 2013 10:00:42 AM PDT
+ *  Modified: Sun 26 Jan 2014 10:36:36 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -26,10 +26,10 @@
 #include <boost/gil/extension/numeric/sampler.hpp>
 #include <boost/gil/extension/numeric/resample.hpp>
 
-#include "image.hpp"
-#include "../numerics/distributions.hpp"
-#include "../numerics/convolutions.hpp"
-#include "../utils/utilities.hpp"
+#include <image/image.hpp>
+#include <numerics/distributions.hpp>
+#include <numerics/convolutions.hpp>
+#include <utils/utilities.hpp>
 
 namespace hig {
 

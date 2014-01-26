@@ -3,7 +3,7 @@
  *
  *  File: shape2hdf5.cpp
  *  Created: Aug 25, 2012
- *  Modified: Tue 16 Jul 2013 12:18:42 PM PDT
+ *  Modified: Sun 26 Jan 2014 10:35:06 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -21,7 +21,7 @@
  */
 
 #include <iomanip>
-#include "shape2hdf5.hpp"
+#include <file/shape2hdf5.hpp>
 
 
 shape2hdf5_converter::shape2hdf5_converter(char* filename, char* outfilename, MPI_Comm comm) {

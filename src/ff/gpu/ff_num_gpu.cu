@@ -3,7 +3,7 @@
  *
  *  File: ff_num_gpu.cu
  *  Created: Aug 25, 2012
- *  Modified: Thu 26 Dec 2013 01:43:15 PM PST
+ *  Modified: Sun 26 Jan 2014 10:55:47 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -32,15 +32,15 @@
 //#include <nvToolsExt.h>
 #include <cuda_profiler_api.h>
 
-#include "../../woo/timer/woo_cudatimers.hpp"
+#include <woo/timer/woo_cudatimers.hpp>
 
-#include "../../common/typedefs.hpp"
-#include "../../common/constants.hpp"
-#include "../../common/parameters.hpp"
-#include "reduction.cuh"
+#include <common/typedefs.hpp>
+#include <common/constants.hpp>
+#include <common/parameters.hpp>
+#include <ff/gpu/reduction.cuh>
 
-#include "ff_num_gpu.cuh"
-#include "../../numerics/gpu/cu_complex_numeric.cuh"
+#include <ff/gpu/ff_num_gpu.cuh>
+#include <numerics/gpu/cu_complex_numeric.cuh>
 
 namespace hig {
 
@@ -2688,7 +2688,7 @@ namespace hig {
 		} // if
 	} // form_factor_kernel_fused()
 
-	#include "ff_num_gpu_kernels.cuh"
+	#include <ff/gpu/ff_num_gpu_kernels.cuh>
 
 	/* K8:	DO NOT USE THIS !!!!!!!!!!!!!!!!
 	 * kernel with 3D decomposition along t, y, z; dynamic shared mem for input, none for output (K4)

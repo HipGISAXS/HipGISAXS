@@ -3,7 +3,7 @@
  *
  *  File: compute_params.cpp
  *  Created: Jun 05, 2012
- *  Modified: Wed 08 Jan 2014 05:16:00 PM PST
+ *  Modified: Sun 26 Jan 2014 10:37:30 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -20,9 +20,9 @@
  *  NON-COMMERCIAL END USER LICENSE AGREEMENT.
  */
 
-#include "compute_params.hpp"
-#include "../utils/string_utils.hpp"
-#include "../config/token_mapper.hpp"
+#include <model/compute_params.hpp>
+#include <utils/string_utils.hpp>
+#include <config/token_mapper.hpp>
 
 
 namespace hig {

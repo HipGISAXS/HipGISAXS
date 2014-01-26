@@ -3,7 +3,7 @@
  *
  *  File: ff_num.cpp
  *  Created: Jul 18, 2012
- *  Modified: Thu 26 Dec 2013 02:19:21 PM PST
+ *  Modified: Sun 26 Jan 2014 10:26:15 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -29,14 +29,14 @@
 	#include <malloc.h>
 #endif
 
-#include "../woo/timer/woo_boostchronotimers.hpp"
+#include <woo/timer/woo_boostchronotimers.hpp>
 
-#include "ff_num.hpp"
-#include "../common/parameters.hpp"
-#include "../common/cpu/parameters_cpu.hpp"
-#include "../model/qgrid.hpp"
-#include "../utils/utilities.hpp"
-#include "../file/objectshape_reader.hpp"
+#include <ff/ff_num.hpp>
+#include <common/parameters.hpp>
+#include <common/cpu/parameters_cpu.hpp>
+#include <model/qgrid.hpp>
+#include <utils/utilities.hpp>
+#include <file/objectshape_reader.hpp>
 
 namespace hig {
 

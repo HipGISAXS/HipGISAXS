@@ -3,7 +3,7 @@
  *
  *  File: objectshape_reader.cpp
  *  Created: Aug 25, 2013
- *  Modified: Sun 29 Sep 2013 04:59:53 PM PDT
+ *  Modified: Sun 26 Jan 2014 10:34:45 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -23,7 +23,7 @@
 #include <iomanip>
 #include <boost/lexical_cast.hpp>
 
-#include "objectshape_reader.hpp"
+#include <file/objectshape_reader.hpp>
 
 namespace hig {
 

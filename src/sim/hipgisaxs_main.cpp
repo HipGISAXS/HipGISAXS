@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_main.cpp
  *  Created: Jun 14, 2012
- *  Modified: Fri 10 Jan 2014 10:05:30 AM PST
+ *  Modified: Sun 26 Jan 2014 10:41:17 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -31,16 +31,16 @@
 #include <omp.h>
 #endif // _OPENMP
 
-#include "../woo/timer/woo_boostchronotimers.hpp"
+#include <woo/timer/woo_boostchronotimers.hpp>
 
-#include "hipgisaxs_main.hpp"
-#include "../common/typedefs.hpp"
-#include "../utils/utilities.hpp"
+#include <sim/hipgisaxs_main.hpp>
+#include <common/typedefs.hpp>
+#include <utils/utilities.hpp>
 
 #if defined USE_GPU || defined FF_ANA_GPU || defined FF_NUM_GPU
-	#include "../init/gpu/init_gpu.cuh"
+	#include <init/gpu/init_gpu.cuh>
 #elif defined USE_MIC
-	#include "../init/mic/init_mic.hpp"
+	#include <init/mic/init_mic.hpp>
 #endif
 
 

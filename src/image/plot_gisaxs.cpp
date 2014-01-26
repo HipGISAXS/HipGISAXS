@@ -3,7 +3,7 @@
  *
  *  File: plot_gisaxs.cpp
  *  Created: Aug 22, 2012
- *  Modified: Tue 16 Jul 2013 11:51:43 AM PDT
+ *  Modified: Sun 26 Jan 2014 10:36:17 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -20,7 +20,7 @@
  *  NON-COMMERCIAL END USER LICENSE AGREEMENT.
  */
 
-#include "plot_gisaxs.hpp"
+#include <image/plot_gisaxs.hpp>
 
 int main(int narg, char** args) {
 

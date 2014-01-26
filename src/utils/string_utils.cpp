@@ -3,7 +3,7 @@
  *
  *  File: string_utils.cpp
  *  Created: Jan 08, 2014
- *  Modified: Fri 10 Jan 2014 09:45:49 AM PST
+ *  Modified: Sun 26 Jan 2014 10:42:22 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -22,7 +22,7 @@
 
 #include <iostream>
 
-#include "string_utils.hpp"
+#include <utils/string_utils.hpp>
 
 namespace hig {
 
