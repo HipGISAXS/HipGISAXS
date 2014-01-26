@@ -3,7 +3,7 @@
  *
  *  File: qgrid_test_create.cpp
  *  Created: Aug 01, 2012
- *  Modified: Tue 16 Jul 2013 11:51:49 AM PDT
+ *  Modified: Sun 26 Jan 2014 11:34:34 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -22,7 +22,7 @@
 
 #include <complex>
 
-#include "qgrid.hpp"
+#include <model/qgrid.hpp>
 
 namespace hig {
 

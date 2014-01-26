@@ -3,7 +3,7 @@
   *
   *  File: hipgisaxs_sim.cpp
   *  Created: Dec 06, 2012
-  *  Modified: Fri 05 Apr 2013 03:31:43 PM PDT
+  *  Modified: Sun 26 Jan 2014 11:33:37 AM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   *
@@ -12,7 +12,7 @@
 
 #include <mpi.h>
 
-#include <hipgisaxs_main.hpp>
+#include <hipgisaxs.hpp>
 
 
 /* The main for HipGISAXS Simulation

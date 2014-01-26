@@ -28,7 +28,7 @@ CXX_FLAGS = -m64 -fopenmp -std=c++0x
 CXX_FLAGS += -g
 
 ## hipgisaxs include and library linking flags
-HIPGISAXS_INCL = -I $(HIPGISAXS_DIR)/src/sim
+HIPGISAXS_INCL = -I $(HIPGISAXS_DIR)/include
 HIPGISAXS_LDFLAGS = -L $(HIPGISAXS_DIR)/lib
 HIPGISAXS_LIBS = -lhipgisaxs
 
