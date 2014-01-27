@@ -3,7 +3,7 @@
  *
  *  File: tokens.hpp
  *  Created: Jun 05, 2012
- *  Modified: Sat 28 Dec 2013 09:13:19 AM PST
+ *  Modified: Mon 27 Jan 2014 09:27:50 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -167,7 +167,22 @@ namespace hig {
 		fit_param_token,
 		fit_param_variable_token,
 		fit_param_range_token,
-		fit_param_init_token
+		fit_param_init_token,
+		fit_reference_data_token,
+		fit_reference_data_path_token,
+		fit_reference_data_region_token,
+		fit_reference_data_region_min_token,
+		fit_reference_data_region_max_token,
+		fit_reference_data_npoints_token,
+		fit_reference_data_npoints_parallel_token,
+		fit_reference_data_npoints_perpendicular_token,
+		fit_algorithm_token,
+		fit_algorithm_name_token,
+		fit_algorithm_order_token,
+		fit_algorithm_param_token,
+		fit_algorithm_param_value_token,
+		fit_algorithm_restart_token,
+		fit_algorithm_tolerance_token
 	}; // enum TokenType
 
 

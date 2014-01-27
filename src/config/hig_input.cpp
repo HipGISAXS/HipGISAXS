@@ -3,7 +3,7 @@
  *
  *  File: hig_input.cpp
  *  Created: Jun 11, 2012
- *  Modified: Sun 26 Jan 2014 10:19:29 AM PST
+ *  Modified: Mon 27 Jan 2014 10:22:11 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -212,6 +212,22 @@ namespace hig {
 						curr_fit_param_.clear();
 						break;
 
+					case fit_reference_data_token:			// nothing to do :-/
+					case fit_reference_data_region_token:	// nothing to do :-/
+					case fit_reference_data_npoints_token:	// nothing to do :-/
+						// TODO: check for completeness and validity of the values ...
+						break;
+
+					case fit_algorithm_token:
+						analysis_algos_.push_back(curr_fit_algo_);
+						curr_fit_algo_.clear();
+						break;
+
+					case fit_algorithm_param_token:
+						curr_fit_algo_.add_param(curr_fit_algo_param_);
+						curr_fit_algo_param_.clear();
+						break;
+
 					default:
 						std::cerr << "error: something is wrong with one of your objects"
 									<< std::endl;
@@ -406,6 +422,24 @@ namespace hig {
 							return false;
 						} // if
 						compute_.output_region_maxpoint(curr_vector_[0], curr_vector_[1]);
+						break;
+
+					case fit_reference_data_region_min_token:
+						if(curr_vector_.size() != 2) {
+							std::cerr << "error: reference data region min point vector size should be 2"
+										<< std::endl;
+							return false;
+						} // if
+						reference_data_.region_min(curr_vector_[0], curr_vector_[1]);
+						break;
+
+					case fit_reference_data_region_max_token:
+						if(curr_vector_.size() != 2) {
+							std::cerr << "error: reference data region max point vector size should be 2"
+										<< std::endl;
+							return false;
+						} // if
+						reference_data_.region_max(curr_vector_[0], curr_vector_[1]);
 						break;
 
 					default:
@@ -618,10 +652,40 @@ namespace hig {
 				break;
 
 			case fit_token:
+				break;
+
 			case fit_param_token:
+				curr_fit_param_.init();
+				break;
+
 			case fit_param_variable_token:
 			case fit_param_range_token:
 			case fit_param_init_token:
+			case fit_reference_data_token:
+			case fit_reference_data_path_token:
+			case fit_reference_data_region_token:
+			case fit_reference_data_region_min_token:
+			case fit_reference_data_region_max_token:
+			case fit_reference_data_npoints_token:
+			case fit_reference_data_npoints_parallel_token:
+			case fit_reference_data_npoints_perpendicular_token:
+				break;
+
+			case fit_algorithm_token:
+				curr_fit_algo_.init();
+				break;
+
+			case fit_algorithm_name_token:
+			case fit_algorithm_order_token:
+				break;
+
+			case fit_algorithm_param_token:
+				curr_fit_algo_param_.init();
+				break;
+
+			case fit_algorithm_param_value_token:
+			case fit_algorithm_restart_token:
+			case fit_algorithm_tolerance_token:
 				break;
 
 			default:
@@ -979,6 +1043,26 @@ namespace hig {
 				curr_fit_param_.init_ = num;
 				break;
 
+			case fit_reference_data_npoints_parallel_token:
+				reference_data_.npoints_parallel(num);
+				break;
+
+			case fit_reference_data_npoints_perpendicular_token:
+				reference_data_.npoints_perpendicular(num);
+				break;
+
+			case fit_algorithm_order_token:
+				curr_fit_algo_.order(num);
+				break;
+
+			case fit_algorithm_param_value_token:
+				curr_fit_algo_param_.value(num);
+				break;
+
+			case fit_algorithm_tolerance_token:
+				curr_fit_algo_.tolerance(num);
+				break;
+
 			default:
 				std::cerr << "fatal error: found a number '" << num
 							<< "' where it should not be" << std::endl;
@@ -1049,6 +1133,17 @@ namespace hig {
 					case compute_outregion_token:
 						compute_.output_region_type(
 								TokenMapper::instance().get_output_region_type(str));
+						break;
+
+					case fit_reference_data_region_token:
+						reference_data_.region_type(
+								TokenMapper::instance().get_reference_data_region_type(str));
+						break;
+
+					case fit_algorithm_param_token:
+						curr_fit_algo_param_.type(
+								TokenMapper::instance().get_fit_algorithm_param_token(str));
+						curr_fit_algo_param_.type_name(str);
 						break;
 
 					default:
@@ -1148,6 +1243,19 @@ namespace hig {
 
 			case fit_param_variable_token:
 				curr_fit_param_.variable_ = str;
+				break;
+
+			case fit_reference_data_path_token:
+				reference_data_.path(str);
+				break;
+
+			case fit_algorithm_name_token:
+				curr_fit_algo_.name(TokenMapper::instance().get_fit_algorithm_name(str));
+				curr_fit_algo_.name_str(str);
+				break;
+
+			case fit_algorithm_restart_token:
+				curr_fit_algo_.restart(TokenMapper::instance().get_boolean(str));
 				break;
 
 			default:

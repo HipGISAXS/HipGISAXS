@@ -3,7 +3,7 @@
  *
  *  File: token_mapper.hpp
  *  Created: Jun 05, 2012
- *  Modified: Sun 26 Jan 2014 09:39:13 AM PST
+ *  Modified: Mon 27 Jan 2014 09:27:25 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -40,6 +40,7 @@ namespace hig {
 			std::unordered_map <std::string, LatticeType> LatticeKeyWords_;
 			std::unordered_map <std::string, OutputRegionType> OutputRegionKeyWords_;
 			std::unordered_map <std::string, StructCorrelationType> StructCorrelationKeyWords_;
+			std::unordered_map <std::string, FittingAlgorithmName> FittingAlgorithmKeyWords_;
 
 		public:
 			static TokenMapper& instance() {
@@ -125,6 +126,10 @@ namespace hig {
 
 				KeyWords_[std::string("a")]					= struct_grain_lattice_a_token;
 				KeyWords_[std::string("abangle")]			= struct_grain_lattice_abangle_token;
+				KeyWords_[std::string("algorithm")]			= fit_algorithm_token;
+				KeyWords_[std::string("algoname")]			= fit_algorithm_name_token;
+				KeyWords_[std::string("algoorder")]			= fit_algorithm_order_token;
+				KeyWords_[std::string("algoparam")]			= fit_algorithm_param_token;
 				KeyWords_[std::string("alphai")]			= instrument_scatter_alphai_token;
 				KeyWords_[std::string("angles")]			= struct_ensemble_orient_rot_angles_token;
 				KeyWords_[std::string("axis")]				= struct_ensemble_orient_rot_axis_token;
@@ -141,6 +146,7 @@ namespace hig {
 				KeyWords_[std::string("ensemble")]			= struct_ensemble_token;
 				KeyWords_[std::string("expt")]				= instrument_scatter_expt_token;
 				KeyWords_[std::string("fitparam")]			= fit_param_token;
+				KeyWords_[std::string("fitregion")]			= fit_reference_data_region_token;
 				KeyWords_[std::string("fitting")]			= fit_token;
 				KeyWords_[std::string("grain")]				= struct_grain_token;
 				KeyWords_[std::string("hipGisaxsInput")]	= hipgisaxs_token;
@@ -159,6 +165,7 @@ namespace hig {
 				KeyWords_[std::string("min")]				= min_token;
 				KeyWords_[std::string("minpoint")]			= compute_outregion_minpoint_token;
 				KeyWords_[std::string("name")]				= shape_name_token;
+				KeyWords_[std::string("npoints")]			= fit_reference_data_npoints_token;
 				KeyWords_[std::string("nslices")]			= compute_nslices_token;
 				KeyWords_[std::string("nvalues")]			= shape_param_nvalues_token;
 				KeyWords_[std::string("order")]				= layer_order_token;
@@ -168,13 +175,21 @@ namespace hig {
 				KeyWords_[std::string("outputregion")]		= compute_outregion_token;
 				KeyWords_[std::string("p1")]				= shape_param_p1_token;		// mean
 				KeyWords_[std::string("p2")]				= shape_param_p2_token;		// std dev
+				KeyWords_[std::string("parallel")]			= fit_reference_data_npoints_parallel_token;
 				KeyWords_[std::string("param")]				= shape_param_token;
+				KeyWords_[std::string("path")]				= fit_reference_data_path_token;
 				KeyWords_[std::string("pathprefix")]		= compute_path_token;
+				KeyWords_[std::string("perpendicular")]		= fit_reference_data_npoints_perpendicular_token;
 				KeyWords_[std::string("photon")]			= instrument_scatter_photon_token;
 				KeyWords_[std::string("pixelsize")]			= instrument_detector_pixsize_token;
 				KeyWords_[std::string("polarization")]		= instrument_scatter_polarize_token;
+				KeyWords_[std::string("pvalue")]			= fit_algorithm_param_value_token;
 				KeyWords_[std::string("range")]				= fit_param_range_token;
+				KeyWords_[std::string("regmax")]			= fit_reference_data_region_max_token;
+				KeyWords_[std::string("regmin")]			= fit_reference_data_region_min_token;
 				KeyWords_[std::string("repetition")]		= struct_grain_repetition_token;
+				KeyWords_[std::string("restart")]			= fit_algorithm_restart_token;
+				KeyWords_[std::string("referencedata")]		= fit_reference_data_token;
 				KeyWords_[std::string("refindex")]			= refindex_token;
 				KeyWords_[std::string("resolution")]		= compute_resolution_token;
 				KeyWords_[std::string("rot")]				= rot_token;
@@ -196,6 +211,7 @@ namespace hig {
 				KeyWords_[std::string("structure")]			= struct_token;
 				KeyWords_[std::string("thickness")]			= layer_thickness_token;
 				KeyWords_[std::string("tilt")]				= instrument_scatter_tilt_token;
+				KeyWords_[std::string("tolerance")]			= fit_algorithm_tolerance_token;
 				KeyWords_[std::string("totalpixels")]		= instrument_detector_totpix_token;
 				KeyWords_[std::string("transvec")]			= struct_grain_transvec_token;
 				KeyWords_[std::string("type")]				= type_token;
@@ -257,6 +273,11 @@ namespace hig {
 				StructCorrelationKeyWords_[std::string("nGE")]	= structcorr_nGE;
 				StructCorrelationKeyWords_[std::string("GnE")]	= structcorr_GnE;
 				StructCorrelationKeyWords_[std::string("GE")]	= structcorr_GE;
+
+				/* fitting algorithm name keywords */
+
+				FittingAlgorithmKeyWords_[std::string("pounders")]	= algo_pounders;
+				FittingAlgorithmKeyWords_[std::string("pso")]		= algo_pso;
 
 		} // TokenMapper()
 

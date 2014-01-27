@@ -3,7 +3,7 @@
  *
  *  File: hig_input.hpp
  *  Created: Jun 11, 2012
- *  Modified: Sun 26 Jan 2014 10:43:22 AM PST
+ *  Modified: Mon 27 Jan 2014 10:22:51 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -80,7 +80,7 @@ namespace hig {
 
 			/* fitting related */
 
-			class ParamSpace {
+			class ParamSpace {						// TODO: move it out ...
 				public:
 
 				float_t min_;
@@ -96,23 +96,28 @@ namespace hig {
 
 			std::map <std::string, std::string> param_key_map_;			// maps keys to param strings
 			std::map <std::string, ParamSpace> param_space_key_map_;	// maps keys to param space
+			FitReferenceData reference_data_;							// data about the reference data
+			analysis_algo_list_t analysis_algos_;						// list of algorithms
 
 			/* helpers */
 
-			class FitParam {
+			class FitParam {						// TODO: move it out ...
 				public:
 
 				std::string key_;
 				std::string variable_;
 				ParamSpace range_;
-				float_t init_;
+				float_t init_;			// currently not used ...
 
 				FitParam(): key_(""), variable_(""), range_(), init_(0) { }
 				~FitParam() { }
 				void clear() { key_ = ""; variable_ = ""; range_.clear(); init_ = 0; }
+				void init() { clear(); }
 			};
 
 			FitParam curr_fit_param_;
+			AnalysisAlgorithm curr_fit_algo_;
+			AnalysisAlgorithmParam curr_fit_algo_param_;
 
 
 			/**
