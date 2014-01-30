@@ -3,7 +3,7 @@
  *
  *  File: AnaOutput.cpp
  *  Created: Dec 26, 2013
- *  Modified: Mon 27 Jan 2014 08:20:33 AM PST
+ *  Modified: Wed 29 Jan 2014 03:52:38 PM PST
  *
  *  Author: Slim Chourou <stchourou@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -21,7 +21,7 @@
 
 #include <analyzer/AnaOutput.hpp>
 
-namespace ana_hig{
+namespace hig{
 
 
 

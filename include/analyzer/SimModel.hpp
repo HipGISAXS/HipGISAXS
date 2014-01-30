@@ -3,7 +3,7 @@
  *
  *  File: SimModel.hpp
  *  Created: Dec 26, 2013
- *  Modified: Mon 27 Jan 2014 08:22:15 AM PST
+ *  Modified: Wed 29 Jan 2014 04:03:35 PM PST
  *  Description: Base class that computes a forward simulation model. Maybe HipGISAXS or other models.
  *
  *  Author: Slim Chourou <stchourou@lbl.gov>
@@ -24,6 +24,7 @@
 #define _SIMMODEL_HPP_
 
 #include <iostream>
+#include <map>
 #include <analyzer/ImageData.hpp>
 #include <analyzer/typedefs.hpp>
 
@@ -66,6 +67,11 @@ namespace hig{
 
     void print();
     void save(string_t filename);
+
+
+	virtual std::vector<std::string> get_fit_param_keys() = 0;
+	virtual bool update_params(std::map<std::string, float_t>) = 0;
+	virtual bool compute_gisaxs(float_t*) = 0;
 
   }; /* class SimModel */
 

@@ -3,7 +3,7 @@
  *
  *  File: AnaInput.cpp
  *  Created: Dec 26, 2013
- *  Modified: Mon 27 Jan 2014 08:20:20 AM PST
+ *  Modified: Wed 29 Jan 2014 03:52:25 PM PST
  *
  *  Author: Slim Chourou <stchourou@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -23,7 +23,7 @@
 #include <iostream>
 #include <analyzer/AnaInput.hpp>
 
-namespace ana_hig{
+namespace hig{
 
   StructVar AnaInput::get_var(string_t uid){
     /* Linear access, may improve to cst time with hash map  */

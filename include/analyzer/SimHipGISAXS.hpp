@@ -3,7 +3,7 @@
  *
  *  File: SimHipGISAXS.hpp
  *  Created: Dec 26, 2013
- *  Modified: Mon 27 Jan 2014 08:22:13 AM PST
+ *  Modified: Wed 29 Jan 2014 12:25:44 PM PST
  *  Description: Class that computes a forward HipGISAXS simulation model.
  *
  *  Author: Slim Chourou <stchourou@lbl.gov>
@@ -25,7 +25,7 @@
 
 #include <iostream>
 #include <analyzer/SimModel.hpp>
-//#include <hipgisaxs_main.hpp>
+#include <hipgisaxs.hpp>
 
 namespace hig{
 

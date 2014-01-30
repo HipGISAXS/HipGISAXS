@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_main.hpp
  *  Created: Jun 11, 2012
- *  Modified: Sun 26 Jan 2014 10:06:15 AM PST
+ *  Modified: Wed 29 Jan 2014 04:34:18 PM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -160,6 +160,10 @@ namespace hig {
 			unsigned int nqx() const { return nqx_; }
 			unsigned int nqy() const { return nqy_; }
 			unsigned int nqz() const { return nqz_; }
+
+			std::string reference_data_path() const { return HiGInput::instance().reference_data_path(); }
+			int get_num_fit_params() const { return HiGInput::instance().num_fit_params(); }
+			std::vector<float_t> fit_param_init_vector() const { return HiGInput::instance().fit_param_init_vector(); }
 
 
 			//template <typename ErrorFunction>

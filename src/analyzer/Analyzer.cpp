@@ -3,7 +3,7 @@
  *
  *  File: Analyzer.cpp
  *  Created: Dec 26, 2013
- *  Modified: Mon 27 Jan 2014 08:20:27 AM PST
+ *  Modified: Wed 29 Jan 2014 03:52:31 PM PST
  *
  *  Author: Slim Chourou <stchourou@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -22,7 +22,7 @@
 #include <iostream>
 #include <analyzer/Analyzer.hpp>
 
-namespace ana_hig{
+namespace hig{
 
   bool Analyzer::setup(){
     return false;

@@ -3,7 +3,7 @@
  *
  *  File: token_mapper.hpp
  *  Created: Jun 05, 2012
- *  Modified: Mon 27 Jan 2014 09:27:25 AM PST
+ *  Modified: Wed 29 Jan 2014 03:23:31 PM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -41,6 +41,8 @@ namespace hig {
 			std::unordered_map <std::string, OutputRegionType> OutputRegionKeyWords_;
 			std::unordered_map <std::string, StructCorrelationType> StructCorrelationKeyWords_;
 			std::unordered_map <std::string, FittingAlgorithmName> FittingAlgorithmKeyWords_;
+			std::unordered_map <std::string, FitAlgorithmParamType> FitAlgorithmParamKeyWords_;
+			std::unordered_map <std::string, bool> BooleanKeyWords_;
 
 		public:
 			static TokenMapper& instance() {
@@ -115,6 +117,30 @@ namespace hig {
 				while(i != KeyWords_.end()) { if((*i).second == token) return true; i ++; }
 				return false;
 			} // token_exists()
+
+
+			OutputRegionType get_reference_data_region_type(std::string str) {
+				if(OutputRegionKeyWords_.count(str) > 0) return OutputRegionKeyWords_[str];
+				else return region_error;
+			} // get_reference_data_region_type()
+
+
+			FitAlgorithmParamType get_fit_algorithm_param_token(std::string str) {
+				if(FitAlgorithmParamKeyWords_.count(str) > 0) return FitAlgorithmParamKeyWords_[str];
+				else return algo_param_error;
+			} // get_fit_algorithm_param_token()
+
+
+			FittingAlgorithmName get_fit_algorithm_name(std::string str) {
+				if(FittingAlgorithmKeyWords_.count(str) > 0) return FittingAlgorithmKeyWords_[str];
+				else return algo_error;
+			} // get_fit_algorithm_param_token()
+
+
+			bool get_boolean(std::string str) {
+				if(BooleanKeyWords_.count(str) > 0) return BooleanKeyWords_[str];
+				else return false;
+			} // get_boolean()
 
 
 		private:
@@ -279,6 +305,22 @@ namespace hig {
 				FittingAlgorithmKeyWords_[std::string("pounders")]	= algo_pounders;
 				FittingAlgorithmKeyWords_[std::string("pso")]		= algo_pso;
 
+				/* fitting algorithm parameter keywords */
+
+				FitAlgorithmParamKeyWords_[std::string("omega")]	= algo_pso_param_omega;
+				FitAlgorithmParamKeyWords_[std::string("phi1")]		= algo_pso_param_phi1;
+				FitAlgorithmParamKeyWords_[std::string("phi2")]		= algo_pso_param_phi2;
+
+				/* boolean keywords */
+
+				BooleanKeyWords_[std::string("true")]		= true;
+				BooleanKeyWords_[std::string("True")]		= true;
+				BooleanKeyWords_[std::string("TRUE")]		= true;
+				BooleanKeyWords_[std::string("yes")]		= true;
+				BooleanKeyWords_[std::string("false")]		= false;
+				BooleanKeyWords_[std::string("False")]		= false;
+				BooleanKeyWords_[std::string("FALSE")]		= false;
+				BooleanKeyWords_[std::string("no")]			= false;
 		} // TokenMapper()
 
 		// singleton

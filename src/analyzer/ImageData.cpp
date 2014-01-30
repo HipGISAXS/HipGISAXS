@@ -3,7 +3,7 @@
  *
  *  File: ImageData.cpp
  *  Created: Dec 26, 2013
- *  Modified: Mon 27 Jan 2014 08:20:44 AM PST
+ *  Modified: Wed 29 Jan 2014 03:52:51 PM PST
  *
  *  Author: Slim Chourou <stchourou@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -24,7 +24,7 @@
 #include <iterator>
 #include <analyzer/ImageData.hpp>
 
-namespace ana_hig{
+namespace hig{
 
   float ImageData::img_p(int iv, int ip) const {
     if (ip < 0 || ip >= n_par_ || iv < 0 || iv >= n_ver_ )
@@ -108,8 +108,21 @@ namespace ana_hig{
         file.close(); //closing the file
 	n_par_ = np;
 	n_ver_ = nv;
+	convert_data();
       }
     else std::cout << "Unable to open file\n"; //if the file is not open output
   }
+
+
+  // temporary .... -- abhinav
+  float_t* ImageData::convert_data() {
+	  data_ = new (std::nothrow) float_t[n_par_ * n_ver_];
+	  unsigned int i = 0;
+	  for(float_mat_t::iterator r = img_.begin(); r != img_.end(); ++ r) {
+		  for(float_vec_t::iterator c = (*r).begin(); c != (*r).end(); ++ c) {
+			  data_[i ++] = (*c);
+		  } // for
+	  } // for
+  } // ImageData::data()
 
 }

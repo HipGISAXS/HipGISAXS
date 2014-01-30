@@ -3,7 +3,7 @@
  *
  *  File: Dist.cpp
  *  Created: Dec 26, 2013
- *  Modified: Mon 27 Jan 2014 08:20:38 AM PST
+ *  Modified: Wed 29 Jan 2014 03:52:44 PM PST
  *  Description: Abstract class for gisaxs data
  *
  *  Author: Slim Chourou <stchourou@lbl.gov>
@@ -23,7 +23,7 @@
 #include <analyzer/Dist.hpp>
 #include <analyzer/ImageData.hpp>
 
-namespace ana_hig{
+namespace hig{
   /*
   float_t Dist::dist(const float_t** mat1, const float_t** mat2, frame_t frm){
     return 0;

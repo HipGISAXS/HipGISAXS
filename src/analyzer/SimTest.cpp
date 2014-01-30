@@ -3,7 +3,7 @@
  *
  *  File: SimTest.cpp
  *  Created: Dec 26, 2013
- *  Modified: Mon 27 Jan 2014 08:20:58 AM PST
+ *  Modified: Wed 29 Jan 2014 03:53:14 PM PST
  *
  *  Author: Slim Chourou <stchourou@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -23,7 +23,7 @@
 #include <math.h>
 #include <analyzer/SimTest.hpp>
 
-namespace ana_hig{
+namespace hig{
 
   float SimTest::sincard(float x){
     if( fabs(x) < 1e-10)

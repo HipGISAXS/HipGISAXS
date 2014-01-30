@@ -3,7 +3,7 @@
  *
  *  File: Workflow.cpp
  *  Created: Dec 26, 2013
- *  Modified: Mon 27 Jan 2014 08:21:04 AM PST
+ *  Modified: Wed 29 Jan 2014 03:53:21 PM PST
  *
  *  Author: Slim Chourou <stchourou@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -23,7 +23,7 @@
 #include <analyzer/Workflow.hpp>
 //#include "FitPOUNDERSAlgo.hpp"
 
-namespace ana_hig{
+namespace hig{
 
   Workflow::Workflow(string_t wf_str){
     clear();

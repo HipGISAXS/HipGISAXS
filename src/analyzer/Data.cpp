@@ -3,7 +3,7 @@
  *
  *  File: Data.cpp
  *  Created: Dec 26, 2013
- *  Modified: Mon 27 Jan 2014 08:20:36 AM PST
+ *  Modified: Wed 29 Jan 2014 03:52:41 PM PST
  *  Description: Abstract class for gisaxs data
  *
  *  Author: Slim Chourou <stchourou@lbl.gov>
@@ -23,7 +23,7 @@
 #include <iostream>
 #include <analyzer/Data.hpp>
 
-namespace ana_hig{
+namespace hig{
 
   float_vec_t Data::create_vec(float v0, float vN, float& stp, int& nv){
     float_vec_t v;

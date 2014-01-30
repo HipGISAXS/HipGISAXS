@@ -3,7 +3,7 @@
  *
  *  File: hig_input.hpp
  *  Created: Jun 11, 2012
- *  Modified: Mon 27 Jan 2014 10:22:51 AM PST
+ *  Modified: Wed 29 Jan 2014 04:37:01 PM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -38,6 +38,8 @@
 #include <model/inst_detector.hpp>
 #include <model/compute_params.hpp>
 #include <file/read_oo_input.hpp>
+
+#include <config/temp_helpers.hpp>
 
 namespace hig {
 
@@ -96,6 +98,7 @@ namespace hig {
 
 			std::map <std::string, std::string> param_key_map_;			// maps keys to param strings
 			std::map <std::string, ParamSpace> param_space_key_map_;	// maps keys to param space
+			// TODO: ...
 			FitReferenceData reference_data_;							// data about the reference data
 			analysis_algo_list_t analysis_algos_;						// list of algorithms
 
@@ -114,6 +117,8 @@ namespace hig {
 				void clear() { key_ = ""; variable_ = ""; range_.clear(); init_ = 0; }
 				void init() { clear(); }
 			};
+
+			std::map <std::string, FitParam> param_data_key_map_;	// temporary, to be merged above ...
 
 			FitParam curr_fit_param_;
 			AnalysisAlgorithm curr_fit_algo_;
@@ -298,6 +303,15 @@ namespace hig {
 					plimits.push_back(std::pair<float_t, float_t>((*i).second.min_, (*i).second.max_));
 				return plimits;
 			} // get_fit_param_limits()
+			std::string reference_data_path() const { return reference_data_.image_path(); }
+			int num_fit_params() const { return param_key_map_.size(); }
+			std::vector <float_t> fit_param_init_vector() const {
+				std::vector<float_t> init_vec;
+				for(std::map<std::string, FitParam>::const_iterator i = param_data_key_map_.begin();
+						i != param_data_key_map_.end(); ++ i)
+					init_vec.push_back((*i).second.init_);
+				return init_vec;
+			} // fit_param_init_vector()
 
 			/* printing for testing */
 			void print_all();

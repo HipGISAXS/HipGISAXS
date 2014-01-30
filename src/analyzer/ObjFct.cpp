@@ -3,7 +3,7 @@
  *
  *  File: ObjFct.cpp
  *  Created: Dec 26, 2013
- *  Modified: Mon 27 Jan 2014 08:20:50 AM PST
+ *  Modified: Wed 29 Jan 2014 04:41:18 PM PST
  *
  *  Author: Slim Chourou <stchourou@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -20,16 +20,17 @@
  */
 
 #include <iostream>
+#include <map>
 #include <analyzer/ObjFct.hpp>
 
-namespace ana_hig{
+namespace hig{
 
 
   PetscErrorCode EvaluateFunction(TaoSolver tao, Vec X, Vec F, void *ptr)
   {
     // Compute F(X)
     PetscFunctionBegin;
-    VecView(X, PETSC_VIEWER_STDOUT_WORLD);                                                                            \
+    VecView(X, PETSC_VIEWER_STDOUT_WORLD);
 
     PetscErrorCode ierr;
     PetscReal *x, *f;
@@ -77,13 +78,31 @@ namespace ana_hig{
     if(psim_)
       {
 	//if (is_valid_ && pdata_ref_){
-	psim_->update_vars(X);
-	psim_->compute();
+//	psim_->update_vars(X);
+//	psim_->compute();
 	//	pdata_sim_=psim_->get_data();
-	f_x_ = pdist_->dist( psim_->get_data()   , *pdata_ref_ );
+//	f_x_ = pdist_->dist( psim_->get_data()   , *pdata_ref_ );
 	return f_x_;
       }
   }
+
+	////// temporary .. for hipgisaxs -- abhinav
+	float_mat_t ObjFct::operator()(float_vec_t x) {
+		float_t *gisaxs_data = NULL;
+		// construct param_vals ...
+		std::vector <std::string> params = psim_->get_fit_param_keys();
+		std::map <std::string, float_t> param_vals;
+		for(int i = 0; i < x.size(); ++ i) {
+			param_vals[params[i]] = x[i];
+		} // for
+		psim_->update_params(param_vals);
+		psim_->compute_gisaxs(gisaxs_data);
+		float_t* ref_data = (*pdata_ref_).data();
+		float_t err = (*pdist_)(gisaxs_data, ref_data, (*pdata_ref_).size());
+		float_vec_t temp; temp.push_back(err);
+		f_x_.push_back(temp);
+		return f_x_;
+	} // ObjFct::operator()()
 
 
   float_mat_t ObjFct::compute_jacobian(float_vec_t X, int dim){
@@ -131,7 +150,8 @@ namespace ana_hig{
     }
 
     /* Compute F(x) */
-    compute(X);
+    //compute(X);
+    (*this)(X);
     /************** */
 
     int ix=0;

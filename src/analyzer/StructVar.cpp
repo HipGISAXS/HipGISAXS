@@ -3,7 +3,7 @@
  *
  *  File: StructVar.cpp
  *  Created: Dec 26, 2013
- *  Modified: Mon 27 Jan 2014 08:21:01 AM PST
+ *  Modified: Wed 29 Jan 2014 03:53:18 PM PST
  *
  *  Author: Slim Chourou <stchourou@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -22,7 +22,7 @@
 #include <iostream>
 #include <analyzer/StructVar.hpp>
 
-namespace ana_hig{
+namespace hig{
 
   StructVar::StructVar(float init_val, string_t uid, var_attr_t attr , var_fit_params_t params){
     init_val_=init_val;

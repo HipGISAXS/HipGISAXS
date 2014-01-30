@@ -3,7 +3,7 @@
  *
  *  File: SimModel.cpp
  *  Created: Dec 26, 2013
- *  Modified: Mon 27 Jan 2014 08:20:55 AM PST
+ *  Modified: Wed 29 Jan 2014 03:53:07 PM PST
  *
  *  Author: Slim Chourou <stchourou@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -21,7 +21,7 @@
 
 #include <analyzer/SimModel.hpp>
 
-namespace ana_hig{
+namespace hig{
 
   int SimModel::compute(){
 
