@@ -43,19 +43,19 @@ hipGisaxsInput = {
 			key = "p1",										# a unique key for this parameter
 			variable = "shape['s1']:param['height']:min",	# parameter definition
 			range = { min = 1, max = 15, step = 1 },		# parameter value range
-			init = 1										# currently ignored
+			init = 10										# currently ignored
 		},
 		fitparam = {
 			key = "p2",
 			variable = "shape['s1']:param['radius']:min",
 			range = { min = 1, max = 10, step = 1 },
-			init = 1
+			init = 10
 		},
 		referencedata = {
-			path = ".",										# path to reference data.
+			path = "/home/asarje/hipgisaxs-samples.git/outputs/01-cylinder/gisaxs_ai=0.14_rot=0_tilt=0.out",										# path to reference data.
 															# should include axes vectors
 			fitregion = { type = "qspace", regmin = [ -1 0 ], regmax = [ 1 2 ] },	# data space
-			npoints = { parallel = 50, perpendicular = 40 }	# number of image points to take inside
+			npoints = { parallel = 1500, perpendicular = 749 }	# number of image points to take inside
 															# the region. overrides simulation output
 															# region defined above
 		},
