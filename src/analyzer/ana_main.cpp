@@ -14,7 +14,7 @@
  */
 int main(int narg, char** args) {
 
-	if(narg != 2) {
+	if(narg > 4) {
 		std::cout << "usage: hipgisaxs <input_config>" << std::endl;
 		return 1;
 	} // if
@@ -40,9 +40,9 @@ int main(int narg, char** args) {
 	//inp.generate_random_vars(min,max,dim);
 
 	/* Define objective function */
-	AbsoluteDifferenceError err;
-	hig::ObjFct pobj_fct(&err, &img_data1, &psim, psim.get_num_fit_params());
-	//hig::ObjFct pobj_fct(new hig::Dist(), &img_data1, &psim, dim);
+	//AbsoluteDifferenceError err;
+	//hig::ObjFct pobj_fct(&err, &img_data1, &psim, psim.get_num_fit_params());
+	hig::ObjFct pobj_fct(new hig::Dist(), &img_data1, &psim, psim.fit_param_init_vector().size());
 
 	/* The algorithms to use for fitting  */
 	hig::FitPOUNDERSAlgo pounders;

@@ -3,7 +3,7 @@
  *
  *  File: ImageData.cpp
  *  Created: Dec 26, 2013
- *  Modified: Wed 29 Jan 2014 08:28:50 PM PST
+ *  Modified: Fri 31 Jan 2014 01:44:26 PM PST
  *
  *  Author: Slim Chourou <stchourou@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -30,7 +30,8 @@ namespace hig{
     if (ip < 0 || ip >= n_par_ || iv < 0 || iv >= n_ver_ )
       return 0;
     else{
-      return img_[iv][ip];
+      //return img_[iv][ip];
+      return img_[iv * n_par_ + ip];
     }
   }
 
@@ -44,7 +45,7 @@ namespace hig{
       {
 	for(int ip=0; ip<n_par_; ip++)
 	  {
-	    std::cout << img_[iv][ip] << "  ";
+	    std::cout << img_[iv * n_par_ + ip] << "  ";
 	  }
 	std::cout <<std::endl;
       }
@@ -58,7 +59,7 @@ namespace hig{
       {
         for(int ip=0; ip<n_par_; ip++)
           {
-	    file << img_[iv][ip] << "  ";
+	    file << img_[iv * n_par_ + ip] << "  ";
           }
 	file << "\n";
       }
@@ -103,7 +104,7 @@ namespace hig{
 	    float_vec_t img_z= read_string_values(line);
 	    if(nv==0)
 	      np= img_z.size();
-	    img_.push_back(img_z);
+	    img_.insert(img_.end(), img_z.begin(), img_z.end());
 	  }
         file.close(); //closing the file
 	n_par_ = np;
@@ -120,9 +121,9 @@ namespace hig{
 	  data_.clear();
 	  unsigned int i = 0;
 	  for(float_mat_t::iterator r = img_.begin(); r != img_.end(); ++ r) {
-		  for(float_vec_t::iterator c = (*r).begin(); c != (*r).end(); ++ c) {
-			  data_.push_back(*c);
-		  } // for
+		  //for(float_vec_t::iterator c = (*r).begin(); c != (*r).end(); ++ c) {
+			  data_.push_back(*r);
+		  //} // for
 	  } // for
   } // ImageData::data()
 

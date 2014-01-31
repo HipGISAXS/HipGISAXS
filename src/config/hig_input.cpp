@@ -3,7 +3,7 @@
  *
  *  File: hig_input.cpp
  *  Created: Jun 11, 2012
- *  Modified: Thu 30 Jan 2014 07:53:36 PM PST
+ *  Modified: Fri 31 Jan 2014 01:05:21 PM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -2213,6 +2213,7 @@ namespace hig {
 	 */
 
 	bool HiGInput::update_params(const map_t& params) {
+		//print_all();
 		for(map_t::const_iterator p = params.begin(); p != params.end(); ++ p) {
 			float_t new_val = (*p).second;
 			// check if new_val is within the param space

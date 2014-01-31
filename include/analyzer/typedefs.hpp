@@ -3,7 +3,7 @@
  *
  *  File: typdefs.hpp
  *  Created: Dec 26, 2013
- *  Modified: Mon 27 Jan 2014 08:22:24 AM PST
+ *  Modified: Fri 31 Jan 2014 01:31:23 PM PST
  *  Description: Defines the commom data types used.
  *
  *  Author: Slim Chourou <stchourou@lbl.gov>
@@ -58,7 +58,8 @@ namespace hig{
   typedef std::complex<float_t>                   complex_t;
   typedef std::vector<float_t>                    float_vec_t;
   typedef std::vector<complex_t>                  complex_vec_t;
-  typedef std::vector<float_vec_t>                float_mat_t;
+  //typedef std::vector<float_vec_t>                float_mat_t;
+  typedef float_vec_t                float_mat_t;
   /***************************************/
 
 } /* namespace hig */

@@ -3,7 +3,7 @@
  *
  *  File: ObjFct.cpp
  *  Created: Dec 26, 2013
- *  Modified: Thu 30 Jan 2014 08:51:57 PM PST
+ *  Modified: Fri 31 Jan 2014 01:57:15 PM PST
  *
  *  Author: Slim Chourou <stchourou@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -51,7 +51,7 @@ namespace hig{
     std::cout << "Eval X=\n" ;
     VecView(X, PETSC_VIEWER_STDOUT_WORLD);
     std::cout << " = \n" ;
-    VecView(F, PETSC_VIEWER_STDOUT_WORLD);
+    //VecView(F, PETSC_VIEWER_STDOUT_WORLD);
 
     PetscFunctionReturn(0);
     return 0;
@@ -98,11 +98,8 @@ namespace hig{
 		psim_->update_params(param_vals);
 		psim_->compute_gisaxs(gisaxs_data);
 		float_t* ref_data = (*pdata_ref_).data();
-		float_t err = (*pdist_)(gisaxs_data, ref_data, (*pdata_ref_).size());
-		std::cout << "@@ ERROR: " << err << std::endl;
-		f_x_.clear();
-		float_vec_t temp; temp.push_back(err);
-		f_x_.push_back(temp);
+		f_x_ = (*pdist_).dist(gisaxs_data, ref_data, (*pdata_ref_).size());
+		//std::cout << "@@ ERROR: " << err << std::endl;
 		return f_x_;
 	} // ObjFct::operator()()
 
@@ -134,9 +131,9 @@ namespace hig{
       float x0= X[0];
       float x1= X[1];
       float fx= exp(-( (x0- 0 )*(x0 - 0) + (x1 - 0)*(x1 - 0) )/ 2 );
-      float_vec_t v;
-      v.push_back(fx);
-      f_x_.push_back(v);
+      //float_vec_t v;
+      f_x_.push_back(fx);
+      //f_x_.push_back(v);
       return f_x_;
     }
   }
@@ -157,12 +154,12 @@ namespace hig{
     /************** */
 
     int ix=0;
-//    for(int iv=0; iv<n_ver_; iv++)
-//      for(int ip=0; ip<n_par_; ip++){
-//	pfx[ix] = f_x_[iv][ip];
-//	ix++;
-//      }
-	pfx[0] = f_x_[0][0];
+    for(int iv=0; iv<n_ver_; iv++)
+      for(int ip=0; ip<n_par_; ip++){
+	pfx[ix] = f_x_[ix];
+	ix++;
+      }
+//	pfx[0] = f_x_[0][0];
     return pfx;
   }
 

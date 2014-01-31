@@ -3,7 +3,7 @@
  *
  *  File: ObjFct.hpp
  *  Created: Dec 26, 2013
- *  Modified: Wed 29 Jan 2014 08:50:18 PM PST
+ *  Modified: Fri 31 Jan 2014 01:53:07 PM PST
  *  Description: Main class that computes the objective fct given the ref data, (forward) simulation model (HipGISAXS inp object)
  *  and a handle to error/distance computing class (e.g. L2-norm)
  *
@@ -40,8 +40,8 @@ namespace hig{
   class ObjFct{
 
   private :
-    //Dist* pdist_;
-	DistanceMeasure* pdist_;
+    Dist* pdist_;
+	//DistanceMeasure* pdist_;
     ImageData* pdata_ref_;
     //    ImageData* pdata_sim_; /* stores the computed sim. data */
     //SimModel* psim_;  /* stores the computed sim. data */
@@ -59,7 +59,8 @@ namespace hig{
   public:
     ObjFct() {deriv_stp_= 0.1;}
     //ObjFct(SimModel* psim): psim_(psim), is_valid_(false) {}
-    ObjFct(DistanceMeasure* pdist, ImageData* pref, HipGISAXS* psim, int dim){
+    //ObjFct(DistanceMeasure* pdist, ImageData* pref, HipGISAXS* psim, int dim){
+    ObjFct(Dist* pdist, ImageData* pref, HipGISAXS* psim, int dim){
     //ObjFct(Dist* pdist, ImageData* pref, SimModel* psim, int dim){
       pdist_ =pdist ;
       pdata_ref_ = pref;
@@ -78,8 +79,8 @@ namespace hig{
 
     /*  setters */
 //    void set_sim(SimModel* psim)  { psim_ = psim; is_valid_=true; psim_->init(); }
-    //void set_dist(Dist* pdist)  { pdist_ = pdist; is_valid_=true; }
-    void set_dist(DistanceMeasure* pdist)  { pdist_ = pdist; is_valid_=true; }
+    void set_dist(Dist* pdist)  { pdist_ = pdist; is_valid_=true; }
+    //void set_dist(DistanceMeasure* pdist)  { pdist_ = pdist; is_valid_=true; }
     void set_ref_data(ImageData* pdata_ref) { pdata_ref_ = pdata_ref; is_valid_=true; }
     void set_dim(int dim) { dim_ = dim;  }
 
@@ -87,8 +88,8 @@ namespace hig{
     float_mat_t get_f_x() {if(is_valid_) return f_x_; /* else return {0} ; */ }
 //    ImageData get_sim_data() {if(is_valid_) return psim_->get_data(); /* else return {0} ; */ }
     int get_dim(){ return dim_;}
-    //int get_nobs(){ return n_par_ * n_ver_;}
-    int get_nobs(){ return 1;}
+    int get_nobs(){ return n_par_ * n_ver_;}
+    //int get_nobs(){ return 1;}
 
     /* computer   */
     float_mat_t compute(); /* uses Dist member definition to compute error/distance value */

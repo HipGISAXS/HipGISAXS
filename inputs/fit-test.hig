@@ -43,13 +43,13 @@ hipGisaxsInput = {
 			key = "p1",										# a unique key for this parameter
 			variable = "shape['s1']:param['height']:min",	# parameter definition
 			range = { min = 1, max = 15, step = 1 },		# parameter value range
-			init = 10										# currently ignored
+			init = 6										# initial value
 		},
 		fitparam = {
 			key = "p2",
 			variable = "shape['s1']:param['radius']:min",
 			range = { min = 1, max = 10, step = 1 },
-			init = 10
+			init = 7
 		},
 		referencedata = {
 			path = "/home/asarje/hipgisaxs-samples.git/outputs/01-cylinder/gisaxs_ai=0.14_rot=0_tilt=0.out",										# path to reference data.
