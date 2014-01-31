@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_main.cpp
  *  Created: Jun 14, 2012
- *  Modified: Sun 26 Jan 2014 10:41:17 AM PST
+ *  Modified: Thu 30 Jan 2014 08:33:25 PM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -2046,6 +2046,11 @@ namespace hig {
 	 */
 
 	bool HipGISAXS::update_params(const map_t& params) {
+		std::cout << "Updating HipGISAXS parameters: ";
+		for(map_t::const_iterator i = params.begin(); i != params.end(); ++ i)
+			std::cout << (*i).first << " = " << (*i).second << "; ";
+		std::cout << std::endl;
+		//HiGInput::instance().print_all();
 		return HiGInput::instance().update_params(params);
 	} // HipGISAXS::update_params()
 

@@ -24,6 +24,10 @@ int main(int narg, char** args) {
 		std::cerr << "failed to construct input containers" << std::endl;
 		return 1;
 	} // if
+	if(!psim.fit_init()) {
+		std::cerr << "error: failed to initialize hipgisaxs for fitting" << std::endl;
+		return 1;
+	} // if
 
 	/////// TODO: all the following will go into the input construction ...
 
@@ -65,7 +69,7 @@ int main(int narg, char** args) {
 
 	//test.print();
 
-	ana.print_output();
+	//ana.print_output();
 
 	return 0;
 } // main()

@@ -3,7 +3,7 @@
  *
  *  File: hig_input.cpp
  *  Created: Jun 11, 2012
- *  Modified: Mon 27 Jan 2014 10:22:11 AM PST
+ *  Modified: Thu 30 Jan 2014 07:53:36 PM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -209,6 +209,7 @@ namespace hig {
 						} // if
 						param_key_map_[curr_fit_param_.key_] = curr_fit_param_.variable_;
 						param_space_key_map_[curr_fit_param_.key_] = curr_fit_param_.range_;
+						param_data_key_map_[curr_fit_param_.key_] = curr_fit_param_;
 						curr_fit_param_.clear();
 						break;
 
@@ -1041,6 +1042,14 @@ namespace hig {
 
 			case fit_param_init_token:
 				curr_fit_param_.init_ = num;
+				break;
+
+			case fit_reference_data_region_min_token:
+				curr_vector_.push_back(num);
+				break;
+
+			case fit_reference_data_region_max_token:
+				curr_vector_.push_back(num);
 				break;
 
 			case fit_reference_data_npoints_parallel_token:
@@ -2312,6 +2321,8 @@ namespace hig {
 		print_scattering_params();
 		print_detector_params();
 		print_compute_params();
+		print_fit_params();
+		print_ref_data();
 	} // HiGInput::print_all()
 
 
@@ -2352,6 +2363,22 @@ namespace hig {
 	void HiGInput::print_compute_params() {
 		compute_.print();
 	} // HiGInput::print_compute_params()
+
+	void HiGInput::print_fit_params() {
+		std::cout << "Fit Parameters: " << std::endl;
+		for(std::map <std::string, std::string>::const_iterator i = param_key_map_.begin();
+				i != param_key_map_.end(); ++ i) {
+			ParamSpace temp = param_space_key_map_.at((*i).first);
+			FitParam temp2 = param_data_key_map_.at((*i).first);
+			std::cout << "  " << (*i).first << ": [" << temp.min_ << " " << temp.max_ << "] "
+				<< temp2.key_ << " " << temp2.variable_ << " " << temp2.init_
+				<< " (" << (*i).second << ")" << std::endl;
+		} // for
+	} // HiGInput::print_fit_params()
+
+	void HiGInput::print_ref_data() {
+		reference_data_.print();
+	} // HiGInput::print_ref_data()
 
 } // namespace hig
 

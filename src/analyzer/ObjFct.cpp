@@ -3,7 +3,7 @@
  *
  *  File: ObjFct.cpp
  *  Created: Dec 26, 2013
- *  Modified: Wed 29 Jan 2014 04:41:18 PM PST
+ *  Modified: Thu 30 Jan 2014 08:51:57 PM PST
  *
  *  Author: Slim Chourou <stchourou@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -48,10 +48,10 @@ namespace hig{
     ierr = VecRestoreArray(X,&x); CHKERRQ(ierr);
     ierr = VecRestoreArray(F,&ff); CHKERRQ(ierr);
 
-    //std::cout << "Eval X=\n" ;
-    //VecView(X, PETSC_VIEWER_STDOUT_WORLD);
-    //std::cout << " = \n" ;
-    //VecView(F, PETSC_VIEWER_STDOUT_WORLD);
+    std::cout << "Eval X=\n" ;
+    VecView(X, PETSC_VIEWER_STDOUT_WORLD);
+    std::cout << " = \n" ;
+    VecView(F, PETSC_VIEWER_STDOUT_WORLD);
 
     PetscFunctionReturn(0);
     return 0;
@@ -99,6 +99,8 @@ namespace hig{
 		psim_->compute_gisaxs(gisaxs_data);
 		float_t* ref_data = (*pdata_ref_).data();
 		float_t err = (*pdist_)(gisaxs_data, ref_data, (*pdata_ref_).size());
+		std::cout << "@@ ERROR: " << err << std::endl;
+		f_x_.clear();
 		float_vec_t temp; temp.push_back(err);
 		f_x_.push_back(temp);
 		return f_x_;
@@ -155,11 +157,12 @@ namespace hig{
     /************** */
 
     int ix=0;
-    for(int iv=0; iv<n_ver_; iv++)
-      for(int ip=0; ip<n_par_; ip++){
-	pfx[ix] = f_x_[iv][ip];
-	ix++;
-      }
+//    for(int iv=0; iv<n_ver_; iv++)
+//      for(int ip=0; ip<n_par_; ip++){
+//	pfx[ix] = f_x_[iv][ip];
+//	ix++;
+//      }
+	pfx[0] = f_x_[0][0];
     return pfx;
   }
 

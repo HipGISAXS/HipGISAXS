@@ -3,7 +3,7 @@
  *
  *  File: AnaAlgorithm.cpp
  *  Created: Dec 26, 2013
- *  Modified: Wed 29 Jan 2014 03:52:48 PM PST
+ *  Modified: Thu 30 Jan 2014 08:59:32 PM PST
  *
  *  Author: Slim Chourou <stchourou@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -43,14 +43,14 @@ namespace hig{
     int        size,rank;     /* number of processes running */
     PetscInitialize(&argc,&argv,(char *)0,help);
     TaoInitialize(&argc,&argv,(char*)0,help);
-    ierr = MPI_Comm_size(PETSC_COMM_WORLD,&size);// CHKERRQ(ierr);
-    ierr = MPI_Comm_rank(PETSC_COMM_WORLD,&rank);// CHKERRQ(ierr);
-    if (size >1) {
-      if (rank == 0) {
-	PetscPrintf(PETSC_COMM_SELF,"This example is intended for single processor use!\n");
+//    ierr = MPI_Comm_size(PETSC_COMM_WORLD,&size);// CHKERRQ(ierr);
+//    ierr = MPI_Comm_rank(PETSC_COMM_WORLD,&rank);// CHKERRQ(ierr);
+//    if (size >1) {
+//      if (rank == 0) {
+//	PetscPrintf(PETSC_COMM_SELF,"This example is intended for single processor use!\n");
 	//SETERRQ(PETSC_COMM_SELF,1,"Incorrect number of processors");
-      }
-    }
+//      }
+//    }
 
     /* Variables to read from context   */
     int dim = pobj_fct_->get_dim();
@@ -114,7 +114,8 @@ namespace hig{
     TaoSetMaximumIterations( tao, max_iter_);
     //      TaoSetInitialTrustRegionRadius(tao,  tr_rad);
     TaoSetHistory(tao, hist, resid, 0, max_hist_, PETSC_TRUE);
-    TaoSetTolerances(tao, tol_ , tol_, tol_, PETSC_DEFAULT, PETSC_DEFAULT);
+    //TaoSetTolerances(tao, tol_ , tol_, tol_, PETSC_DEFAULT, PETSC_DEFAULT);
+    TaoSetTolerances(tao, tol_ , PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT);
     //TaoDefaultMonitor(tao, PETSC_NULL);
 
     /* Set initial vector  */
@@ -151,8 +152,11 @@ namespace hig{
       XN_.push_back( (float) y[0]  );
     }
 
-    std::cout << "Converged vector:\n";
-    VecView(x0, PETSC_VIEWER_STDOUT_WORLD);
+    std::cout << "Converged vector: ";
+  //  VecView(x0, PETSC_VIEWER_STDOUT_WORLD);
+	for(float_vec_t::iterator i = XN_.begin(); i != XN_.end(); ++ i)
+		std::cout << *i << " ";
+	std::cout << std::endl;
 
     /* Compose output analysis */
 

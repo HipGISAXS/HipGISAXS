@@ -3,7 +3,7 @@
  *
  *  File: ImageData.cpp
  *  Created: Dec 26, 2013
- *  Modified: Wed 29 Jan 2014 03:52:51 PM PST
+ *  Modified: Wed 29 Jan 2014 08:28:50 PM PST
  *
  *  Author: Slim Chourou <stchourou@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -116,11 +116,12 @@ namespace hig{
 
   // temporary .... -- abhinav
   float_t* ImageData::convert_data() {
-	  data_ = new (std::nothrow) float_t[n_par_ * n_ver_];
+	  std::cout << "ALLOCATING DATA MEMORY" << std::endl;
+	  data_.clear();
 	  unsigned int i = 0;
 	  for(float_mat_t::iterator r = img_.begin(); r != img_.end(); ++ r) {
 		  for(float_vec_t::iterator c = (*r).begin(); c != (*r).end(); ++ c) {
-			  data_[i ++] = (*c);
+			  data_.push_back(*c);
 		  } // for
 	  } // for
   } // ImageData::data()

@@ -3,7 +3,7 @@
  *
  *  File: FitPOUNDERSAlgo.hpp
  *  Created: Dec 26, 2013
- *  Modified: Mon 27 Jan 2014 08:22:04 AM PST
+ *  Modified: Thu 30 Jan 2014 08:43:39 PM PST
  *  Description: Defines the TAO POUNDERS Algorithm
  *
  *  Author: Slim Chourou <stchourou@lbl.gov>
@@ -41,7 +41,7 @@ namespace hig{
 
   public:
     FitPOUNDERSAlgo(){type_= fit_pounders; max_iter_=200; max_hist_=100; tol_=1e-4; }
-    FitPOUNDERSAlgo(float_t* params){type_= fit_pounders  ;params_= params;}
+    FitPOUNDERSAlgo(float_t* params){type_= fit_pounders  ;params_= params; max_iter_=200; max_hist_=100; tol_=1e-4;}
     ~FitPOUNDERSAlgo(){}
     virtual bool init(){return false;}
     virtual bool parse_params(){return false;}

@@ -3,7 +3,7 @@
  *
  *  File: ObjFct.hpp
  *  Created: Dec 26, 2013
- *  Modified: Wed 29 Jan 2014 04:18:20 PM PST
+ *  Modified: Wed 29 Jan 2014 08:50:18 PM PST
  *  Description: Main class that computes the objective fct given the ref data, (forward) simulation model (HipGISAXS inp object)
  *  and a handle to error/distance computing class (e.g. L2-norm)
  *

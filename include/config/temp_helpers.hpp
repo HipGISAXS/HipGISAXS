@@ -3,7 +3,7 @@
  *
  *  File: temp_helpers.hpp
  *  Created: Jan 29, 2014
- *  Modified: Wed 29 Jan 2014 03:28:59 PM PST
+ *  Modified: Thu 30 Jan 2014 08:00:56 PM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -36,6 +36,14 @@ namespace hig {
 
 			std::string image_path() const { return image_path_; }
 			OutputRegionType get_region_type() const { return region_type_; }
+
+			void print() {
+				std::cout << "Reference Data:" << std::endl;
+				std::cout << "  Image: " << image_path_ << std::endl;
+				std::cout << "  min: [" << x_min_ << " " << y_min_ << "]" << std::endl;
+				std::cout << "  max: [" << x_max_ << " " << y_max_ << "]" << std::endl;
+				std::cout << "  n: " << np_parallel_ << " x " << np_perpendicular_ << std::endl;
+			} // print()
 
 	}; // class FitReferenceData
 

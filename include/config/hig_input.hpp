@@ -3,7 +3,7 @@
  *
  *  File: hig_input.hpp
  *  Created: Jun 11, 2012
- *  Modified: Wed 29 Jan 2014 04:37:01 PM PST
+ *  Modified: Thu 30 Jan 2014 08:26:19 PM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -186,6 +186,9 @@ namespace hig {
 			void print_detector_params();
 			void print_compute_params();
 
+			void print_fit_params();
+			void print_ref_data();
+
 		public:
 			// TODO: ...
 			//typedef HiGIterators <Shape> shape_iterator_t;
@@ -307,9 +310,13 @@ namespace hig {
 			int num_fit_params() const { return param_key_map_.size(); }
 			std::vector <float_t> fit_param_init_vector() const {
 				std::vector<float_t> init_vec;
+				std::cout << "Initial Vector: ";
 				for(std::map<std::string, FitParam>::const_iterator i = param_data_key_map_.begin();
-						i != param_data_key_map_.end(); ++ i)
+						i != param_data_key_map_.end(); ++ i) {
 					init_vec.push_back((*i).second.init_);
+					std::cout << (*i).second.init_ << " ";
+				} // for
+				std::cout << std::endl;
 				return init_vec;
 			} // fit_param_init_vector()
 

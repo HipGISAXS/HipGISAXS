@@ -3,7 +3,7 @@
   *
   *  File: multi_node_comm.hpp
   *  Created: Mar 18, 2013
-  *  Modified: Mon 23 Sep 2013 12:37:21 PM PDT
+  *  Modified: Wed 29 Jan 2014 08:38:59 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -225,19 +225,19 @@ namespace woo {
 			} // init()
 
 			// number of procs in the world
-			inline int size() { return comms_["world"].size(); }
-			inline int rank() { return comms_["world"].rank(); }
-			inline bool is_master() { return (comms_["world"].rank() == comms_["world"].master()); }
-			inline bool is_idle() { return comms_["world"].is_idle(); }
-			inline int master() { return comms_["world"].master(); }
+			inline int size() { return comms_.at("world").size(); }
+			inline int rank() { return comms_.at("world").rank(); }
+			inline bool is_master() { return (comms_.at("world").rank() == comms_.at("world").master()); }
+			inline bool is_idle() { return comms_.at("world").is_idle(); }
+			inline int master() { return comms_.at("world").master(); }
 
-			inline int size(const char* key) { return comms_[key].size(); }
-			inline int rank(const char* key) { return comms_[key].rank(); }
-			inline bool is_master(const char* key) { return comms_[key].is_master(); }
-			inline bool is_idle(const char* key) { return comms_[key].is_idle(); }
-			inline int master(const char* key) { return comms_[key].master(); }
+			inline int size(const char* key) { return comms_.at(key).size(); }
+			inline int rank(const char* key) { return comms_.at(key).rank(); }
+			inline bool is_master(const char* key) { return comms_.at(key).is_master(); }
+			inline bool is_idle(const char* key) { return comms_.at(key).is_idle(); }
+			inline int master(const char* key) { return comms_.at(key).master(); }
 
-			inline void set_idle(const char* key) { comms_[key].set_idle(); }
+			inline void set_idle(const char* key) { comms_.at(key).set_idle(); }
 
 			// number of communicators including the world
 			inline int num_comms() const { return comms_.size(); }
