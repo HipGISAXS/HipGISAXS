@@ -85,3 +85,6 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp     ###$(DEPS_CXX)
 
 $(BINARY): $(APP_OBJS)
 	$(CXX)  $(CXX_FLAGS) -o $(BIN_DIR)/$@ $^ -Llib $(ALL_LDFLAGS) $(APP_LIBS) $(ALL_INCL) $(SRC_DIR)/ana_main.cpp  
+
+clean:
+	rm -f *.o $(BINARY)
