@@ -3,7 +3,7 @@
  *
  *  File: ObjFct.hpp
  *  Created: Dec 26, 2013
- *  Modified: Fri 31 Jan 2014 01:53:07 PM PST
+ *  Modified: Sun 02 Feb 2014 09:05:35 AM PST
  *  Description: Main class that computes the objective fct given the ref data, (forward) simulation model (HipGISAXS inp object)
  *  and a handle to error/distance computing class (e.g. L2-norm)
  *
@@ -64,8 +64,8 @@ namespace hig{
     //ObjFct(Dist* pdist, ImageData* pref, SimModel* psim, int dim){
       pdist_ =pdist ;
       pdata_ref_ = pref;
-      n_par_ = pdata_ref_->get_n_par();
-      n_ver_ = pdata_ref_->get_n_ver();
+      n_par_ = pdata_ref_->n_par();
+      n_ver_ = pdata_ref_->n_ver();
       dim_ = dim;
       psim_ = psim;
       is_valid_=true;

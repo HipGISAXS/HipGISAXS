@@ -3,7 +3,7 @@
  *
  *  File: SimTest.cpp
  *  Created: Dec 26, 2013
- *  Modified: Fri 31 Jan 2014 01:49:13 PM PST
+ *  Modified: Sun 02 Feb 2014 09:07:40 AM PST
  *
  *  Author: Slim Chourou <stchourou@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -83,7 +83,7 @@ namespace hig{
 	//img.push_back(img_z);
       }
 
-    data_sim_ =     ImageData(img, qy_, qz_, frm_);
+    data_sim_ =     ImageData(img, qy_, qz_, region_qspace);
     //data_sim_.set_img(img);
     return 0;
   }

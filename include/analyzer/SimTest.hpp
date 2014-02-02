@@ -3,7 +3,7 @@
  *
  *  File: SimTest.hpp
  *  Created: Dec 26, 2013
- *  Modified: Mon 27 Jan 2014 08:22:18 AM PST
+ *  Modified: Sun 02 Feb 2014 09:07:22 AM PST
  *  Description: Class that computes a forward simulation test model.
  *
  *  Author: Slim Chourou <stchourou@lbl.gov>
@@ -37,7 +37,6 @@ namespace hig{
 
     float_vec_t qy_;
     float_vec_t qz_;
-    frame_t frm_;
 
   public:
     SimTest() {}
