@@ -11,7 +11,6 @@ CUDA_DIR = /usr/local/cuda
 
 
 PREFIX = $(PWD)
-BINARY = analyze
 INCL_DIR =$(PREFIX)
 LIB_DIR = $(PREFIX)
 SRC_DIR = $(PREFIX)
@@ -65,25 +64,37 @@ ALL_LIBS = $(MPI_LIBS) $(TAO_LIBS) $(PETSC_LIBS) $(HIPGISAXS_LIBS) $(HDF5_LIBS) 
 #######################################
 
 ## all objs and libs                                                                                                                           
-ALL_INCL= -Iinclude $(TAO_INCL) $(PETSC_INCL) $(HDF5_INCL) $(TIFF_INCL) $(BOOST_INCL) $(HIPGISAXS_INCL)
-ALL_OBJ = ImageData.o FitPOUNDERSAlgo.o \
-	analysis_algorithm.o hipgisaxs_ana.o hipgisaxs_ana_main.o objective_func.o
+ALL_INCL= $(TAO_INCL) $(PETSC_INCL) $(HDF5_INCL) $(TIFF_INCL) $(BOOST_INCL) $(HIPGISAXS_INCL)
+#ALL_OBJ = ImageData.o FitPOUNDERSAlgo.o analysis_algorithm.o hipgisaxs_ana.o hipgisaxs_ana_main.o objective_func.o
+
+OBJECTS = ImageData.o FitPOUNDERSAlgo.o analysis_algorithm.o objective_func.o hipgisaxs_ana.o
+HIP_OBJS = hipgisaxs_ana_main.o
+F1_OBJS = objective_func_poly_one.o objective_func_poly_one_main.o
 
 #ALL_LIB = libData.a libImageData.o libImageDataProc.o libAnaAlgorithm.a libFitPOUNDERSAlgo.a libWorkflow.a libDist.a libStructVar.a libAnaInput.a \
 	libAnaOutput.a libAnalysis.a libAnalyzer.a libObjFct.a libSimModel.a libSimHipGISAXS.a
 
-APP_OBJS = $(patsubst %, $(OBJ_DIR)/%, $(ALL_OBJ))
+#APP_OBJS = $(patsubst %, $(OBJ_DIR)/%, $(ALL_OBJ))
 APP_LIBS = $(ALL_LIBS) # $(patsubst lib%.a, -l%, $(ALL_LIB))                                                                                               
+BINARY = analyze
+
+all: hipgisaxs
+
+hipgisaxs:
+	(make $(BINARY) \
+		"OBJECTS = $(OBJECTS) $(HIP_OBJS)")
+
+f1:
+	(make $(BINARY) \
+		"OBJECTS = $(OBJECTS) $(F1_OBJS)")
+
 
 ## c++ compilation                                                                                                                             
-_DEPS_CXX = $(HIPGISAXS_DIR)/include/analyzer/%.hpp
-DEPS_CXX = $(patsubst %,$(SRC_DIR)/%,$(_DEPS_CXX))
-
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp     ###$(DEPS_CXX)                                                                                            
+%.o: $(SRC_DIR)/%.cpp
 	$(CXX) -c $< -o $@  $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) 
 
 
-$(BINARY): $(APP_OBJS)
+$(BINARY): $(OBJECTS)
 	$(CXX)  $(CXX_FLAGS) -o $(BIN_DIR)/$@ $^ -Llib $(ALL_LDFLAGS) $(APP_LIBS)
 
 clean:
