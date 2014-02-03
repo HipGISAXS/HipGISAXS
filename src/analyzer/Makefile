@@ -19,7 +19,7 @@ BIN_DIR = $(PREFIX)
 OBJ_DIR = $(PREFIX)
 CXX = mpicxx
 CXX_FLAGS = -std=c++0x -fopenmp
-CXX_OPT_FLAGS = -g
+CXX_FLAGS += -g
 PREC_FLAG =
 
 ########EXTERNAL DEPENDENCIES###########
@@ -66,8 +66,8 @@ ALL_LIBS = $(MPI_LIBS) $(TAO_LIBS) $(PETSC_LIBS) $(HIPGISAXS_LIBS) $(HDF5_LIBS) 
 
 ## all objs and libs                                                                                                                           
 ALL_INCL= -Iinclude $(TAO_INCL) $(PETSC_INCL) $(HDF5_INCL) $(TIFF_INCL) $(BOOST_INCL) $(HIPGISAXS_INCL)
-ALL_OBJ = Data.o  ImageData.o ImageDataProc.o AnaAlgorithm.o  FitPOUNDERSAlgo.o Workflow.o Dist.o  StructVar.o AnaInput.o \
-	AnaOutput.o Analysis.o Analyzer.o ObjFct.o SimModel.o SimHipGISAXS.o SimTest.o
+ALL_OBJ = ImageData.o FitPOUNDERSAlgo.o \
+	analysis_algorithm.o hipgisaxs_ana.o hipgisaxs_ana_main.o objective_func.o
 
 #ALL_LIB = libData.a libImageData.o libImageDataProc.o libAnaAlgorithm.a libFitPOUNDERSAlgo.a libWorkflow.a libDist.a libStructVar.a libAnaInput.a \
 	libAnaOutput.a libAnalysis.a libAnalyzer.a libObjFct.a libSimModel.a libSimHipGISAXS.a
@@ -84,7 +84,7 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp     ###$(DEPS_CXX)
 
 
 $(BINARY): $(APP_OBJS)
-	$(CXX)  $(CXX_FLAGS) -o $(BIN_DIR)/$@ $^ -Llib $(ALL_LDFLAGS) $(APP_LIBS) $(ALL_INCL) $(SRC_DIR)/ana_main.cpp  
+	$(CXX)  $(CXX_FLAGS) -o $(BIN_DIR)/$@ $^ -Llib $(ALL_LDFLAGS) $(APP_LIBS)
 
 clean:
 	rm -f *.o $(BINARY)

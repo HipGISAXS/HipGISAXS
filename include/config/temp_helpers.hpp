@@ -3,7 +3,7 @@
  *
  *  File: temp_helpers.hpp
  *  Created: Jan 29, 2014
- *  Modified: Thu 30 Jan 2014 08:00:56 PM PST
+ *  Modified: Sun 02 Feb 2014 06:06:10 PM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -48,15 +48,15 @@ namespace hig {
 	}; // class FitReferenceData
 
 
-	class AnalysisAlgorithmParam {
+	class AnalysisAlgorithmParamData {
 		private:
 			float_t value_;
 			FitAlgorithmParamType type_;
 			std::string type_name_;
 
 		public:
-			AnalysisAlgorithmParam() { }
-			~AnalysisAlgorithmParam() { }
+			AnalysisAlgorithmParamData() { }
+			~AnalysisAlgorithmParamData() { }
 
 			bool init() { return clear(); }
 			bool clear() { return true; }
@@ -66,9 +66,9 @@ namespace hig {
 	}; // class AnalysisAlgorithmParam
 
 
-	class AnalysisAlgorithm {
+	class AnalysisAlgorithmData {
 		private:
-			std::vector <AnalysisAlgorithmParam> params_;
+			std::vector <AnalysisAlgorithmParamData> params_;
 			int order_;
 			float_t tolerance_;
 			FittingAlgorithmName name_;
@@ -76,12 +76,12 @@ namespace hig {
 			bool restart_;
 
 		public:
-			AnalysisAlgorithm() { }
-			~AnalysisAlgorithm() { }
+			AnalysisAlgorithmData() { }
+			~AnalysisAlgorithmData() { }
 
 			bool init() { return clear(); }
 			bool clear() { params_.clear(); return true; }
-			bool add_param(const AnalysisAlgorithmParam& p) { params_.push_back(p); return true; }
+			bool add_param(const AnalysisAlgorithmParamData& p) { params_.push_back(p); return true; }
 			bool order(int o) { order_ = o; return true; }
 			bool tolerance(float_t t) { tolerance_ = t; return true; }
 			bool name(FittingAlgorithmName n) { name_ = n; return true; }
@@ -89,7 +89,7 @@ namespace hig {
 			bool restart(bool r) { restart_ = r; return true; }
 	}; // class AnalysisAlgorithm
 
-	typedef std::vector <AnalysisAlgorithm> analysis_algo_list_t;
+	typedef std::vector <AnalysisAlgorithmData> analysis_algo_list_t;
 
 
 } // namespace hig

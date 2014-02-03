@@ -3,7 +3,7 @@
  *
  *  File: hig_input.hpp
  *  Created: Jun 11, 2012
- *  Modified: Thu 30 Jan 2014 08:26:19 PM PST
+ *  Modified: Sun 02 Feb 2014 06:02:08 PM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -99,7 +99,7 @@ namespace hig {
 			std::map <std::string, std::string> param_key_map_;			// maps keys to param strings
 			std::map <std::string, ParamSpace> param_space_key_map_;	// maps keys to param space
 			// TODO: ...
-			FitReferenceData reference_data_;							// data about the reference data
+			FitReferenceData reference_data_[1];		// TODO temp: data about the reference data
 			analysis_algo_list_t analysis_algos_;						// list of algorithms
 
 			/* helpers */
@@ -121,8 +121,9 @@ namespace hig {
 			std::map <std::string, FitParam> param_data_key_map_;	// temporary, to be merged above ...
 
 			FitParam curr_fit_param_;
-			AnalysisAlgorithm curr_fit_algo_;
-			AnalysisAlgorithmParam curr_fit_algo_param_;
+			AnalysisAlgorithmData curr_fit_algo_;
+			AnalysisAlgorithmParamData curr_fit_algo_param_;
+			FitReferenceData curr_ref_data_;
 
 
 			/**
@@ -292,23 +293,25 @@ namespace hig {
 
 			/* fitting related */
 			bool update_params(const map_t&);
-			std::vector <std::string> get_fit_param_keys() const {
+			std::vector <std::string> fit_param_keys() const {
 				std::vector <std::string> key_list;
 				for(std::map <std::string, ParamSpace>::const_iterator i = param_space_key_map_.begin();
 						i != param_space_key_map_.end(); ++ i)
 					key_list.push_back((*i).first);
 				return key_list;
 			} // get_fit_param_keys()
-			std::vector <std::pair <float_t, float_t> > get_fit_param_limits() const {
+			std::vector <std::pair <float_t, float_t> > fit_param_limits() const {
 				std::vector <std::pair <float_t, float_t> > plimits;
 				for(std::map <std::string, ParamSpace>::const_iterator i = param_space_key_map_.begin();
 						i != param_space_key_map_.end(); ++ i)
 					plimits.push_back(std::pair<float_t, float_t>((*i).second.min_, (*i).second.max_));
 				return plimits;
 			} // get_fit_param_limits()
-			std::string reference_data_path() const { return reference_data_.image_path(); }
+			//std::string reference_data_path() const { return reference_data_.image_path(); }
+			std::string reference_data_path(int i) const { return reference_data_[i].image_path(); }
+			int num_analysis_data() const { return 1; }		// temp
 			int num_fit_params() const { return param_key_map_.size(); }
-			std::vector <float_t> fit_param_init_vector() const {
+			std::vector <float_t> fit_param_init_values() const {
 				std::vector<float_t> init_vec;
 				std::cout << "Initial Vector: ";
 				for(std::map<std::string, FitParam>::const_iterator i = param_data_key_map_.begin();
