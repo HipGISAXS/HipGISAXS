@@ -31,23 +31,17 @@ int main(int narg, char** args) {
 
 	/////// TODO: all the following will go into the input construction ...
 
-	//hig::ImageData img_data1("testmodel0.dat");
 	hig::ImageData img_data1(psim.reference_data_path());
 	hig::ImageDataProc img_data_set;
 	img_data_set.push(img_data1);
 
-	//hig::AnaInput inp;
-	//inp.generate_random_vars(min,max,dim);
-
 	/* Define objective function */
-	//AbsoluteDifferenceError err;
-	//hig::ObjFct pobj_fct(&err, &img_data1, &psim, psim.get_num_fit_params());
-	hig::ObjFct pobj_fct(new hig::Dist(), &img_data1, &psim, psim.fit_param_init_vector().size());
+	ResidualVector err;
+	hig::ObjFct pobj_fct(&err, &img_data1, &psim, psim.get_num_fit_params());
 
 	/* The algorithms to use for fitting  */
 	hig::FitPOUNDERSAlgo pounders;
 	pounders.set_obj_fct(&pobj_fct);
-	//pounders.set_initial_vec(inp);
 	pounders.set_initial_vec(psim.fit_param_init_vector());
 
 	/* The worklow of algorithms to use for fitting  */
@@ -56,11 +50,8 @@ int main(int narg, char** args) {
 
 	std::cout << "Setting up analyzer...\n" ;
 	hig::Analyzer ana;
-	//ana.set_title(title);
 	ana.set_workflow(wf);
 	ana.set_data(img_data_set);
-	//ana.set_input(inp);
-//	ana.set_input(psim.fit_param_init_vector());
 	ana.set_obj_fct(&pobj_fct);
 
 	std::cout << "Starting Analysis:\n" ;

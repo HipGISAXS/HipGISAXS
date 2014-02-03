@@ -3,7 +3,7 @@
  *
  *  File: hig_input.cpp
  *  Created: Jun 11, 2012
- *  Modified: Fri 31 Jan 2014 01:05:21 PM PST
+ *  Modified: Sun 02 Feb 2014 03:13:29 PM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -431,7 +431,7 @@ namespace hig {
 										<< std::endl;
 							return false;
 						} // if
-						reference_data_.region_min(curr_vector_[0], curr_vector_[1]);
+						reference_data_[0].region_min(curr_vector_[0], curr_vector_[1]);
 						break;
 
 					case fit_reference_data_region_max_token:
@@ -440,7 +440,7 @@ namespace hig {
 										<< std::endl;
 							return false;
 						} // if
-						reference_data_.region_max(curr_vector_[0], curr_vector_[1]);
+						reference_data_[0].region_max(curr_vector_[0], curr_vector_[1]);
 						break;
 
 					default:
@@ -1053,11 +1053,11 @@ namespace hig {
 				break;
 
 			case fit_reference_data_npoints_parallel_token:
-				reference_data_.npoints_parallel(num);
+				reference_data_[0].npoints_parallel(num);
 				break;
 
 			case fit_reference_data_npoints_perpendicular_token:
-				reference_data_.npoints_perpendicular(num);
+				reference_data_[0].npoints_perpendicular(num);
 				break;
 
 			case fit_algorithm_order_token:
@@ -1145,7 +1145,7 @@ namespace hig {
 						break;
 
 					case fit_reference_data_region_token:
-						reference_data_.region_type(
+						reference_data_[0].region_type(
 								TokenMapper::instance().get_reference_data_region_type(str));
 						break;
 
@@ -1255,7 +1255,7 @@ namespace hig {
 				break;
 
 			case fit_reference_data_path_token:
-				reference_data_.path(str);
+				reference_data_[0].path(str);
 				break;
 
 			case fit_algorithm_name_token:
@@ -2378,7 +2378,7 @@ namespace hig {
 	} // HiGInput::print_fit_params()
 
 	void HiGInput::print_ref_data() {
-		reference_data_.print();
+		reference_data_[0].print();
 	} // HiGInput::print_ref_data()
 
 } // namespace hig

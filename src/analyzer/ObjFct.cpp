@@ -3,7 +3,7 @@
  *
  *  File: ObjFct.cpp
  *  Created: Dec 26, 2013
- *  Modified: Fri 31 Jan 2014 01:57:15 PM PST
+ *  Modified: Sun 02 Feb 2014 09:47:20 AM PST
  *
  *  Author: Slim Chourou <stchourou@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -86,8 +86,7 @@ namespace hig{
       }
   }
 
-	////// temporary .. for hipgisaxs -- abhinav
-	float_mat_t ObjFct::operator()(float_vec_t x) {
+	float_vec_t ObjFct::operator()(float_vec_t x) {
 		float_t *gisaxs_data = NULL;
 		// construct param_vals ...
 		std::vector <std::string> params = psim_->get_fit_param_keys();
@@ -98,32 +97,32 @@ namespace hig{
 		psim_->update_params(param_vals);
 		psim_->compute_gisaxs(gisaxs_data);
 		float_t* ref_data = (*pdata_ref_).data();
-		f_x_ = (*pdist_).dist(gisaxs_data, ref_data, (*pdata_ref_).size());
+		(*pdist_)(gisaxs_data, ref_data, (*pdata_ref_).size(), f_x_);
 		//std::cout << "@@ ERROR: " << err << std::endl;
 		return f_x_;
 	} // ObjFct::operator()()
 
 
-  float_mat_t ObjFct::compute_jacobian(float_vec_t X, int dim){
-    if(psim_)
-      {
+//  float_mat_t ObjFct::compute_jacobian(float_vec_t X, int dim){
+//    if(psim_)
+//      {
         //if (is_valid_ && pdata_ref_){
-	for (int n=0; n<dim; n++){
+//	for (int n=0; n<dim; n++){
 
 
 	  //f_xpdx_n = compute(X+DXn);
 
 
-	}
+//	}
 
 	/*	psim_->update_vars(X);
         psim_->compute();
         pdata_sim_=psim_->get_data();
         J_x_ = pdist_->dist(*pdata_sim_ , *pdata_ref_ );
 	*/
-	return J_x_;
-      }
-  }
+//	return J_x_;
+//      }
+//  }
 
   float_mat_t ObjFct::compute_test(float_vec_t X){
     if (X.size() == 2){
@@ -144,7 +143,7 @@ namespace hig{
     PetscReal* pfx = new PetscReal[get_nobs()];
     float_vec_t X;
 
-    for(int i=0; i<dim_; i++){
+    for(int i=0; i < num_params_; i++){
       X.push_back(x[i]);
     }
 
@@ -183,7 +182,7 @@ namespace hig{
     VecView(X, PETSC_VIEWER_STDOUT_WORLD);
 
     /* Compute J(x) */
-    compute_jacobian(x, dim);
+    //compute_jacobian(x, dim);
     /*   */
     /*
     ierr = VecGetArray(DX,&dx);

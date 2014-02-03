@@ -3,7 +3,7 @@
  *
  *  File: Dist.hpp
  *  Created: Dec 26, 2013
- *  Modified: Fri 31 Jan 2014 01:55:19 PM PST
+ *  Modified: Sun 02 Feb 2014 09:13:37 AM PST
  *  Description: Base class for computing residuals & distances between data, in various senses
  *
  *  Author: Slim Chourou <stchourou@lbl.gov>
@@ -35,7 +35,7 @@ namespace hig{
     ~Dist(){}
     //    virtual float_t dist(const float_t** mat1, const float_t** mat2, frame_t frm);
     //virtual float_mat_t dist(const ImageData& img1, const ImageData& img2);
-    virtual float_mat_t dist(float* img1, float* img2, unsigned int);
+    virtual float_vec_t dist(float* img1, float* img2, unsigned int);
     //float_t** residual(const float_t** mat1, const float_t** mat2);
   }; /* class Dist */
 

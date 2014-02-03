@@ -3,7 +3,7 @@
  *
  *  File: FitPOUNDERSAlgo.hpp
  *  Created: Dec 26, 2013
- *  Modified: Thu 30 Jan 2014 08:43:39 PM PST
+ *  Modified: Sun 02 Feb 2014 06:56:24 PM PST
  *  Description: Defines the TAO POUNDERS Algorithm
  *
  *  Author: Slim Chourou <stchourou@lbl.gov>
@@ -23,7 +23,7 @@
 #ifndef _FITPOUNDERSALGO_HPP_
 #define _FITPOUNDERSALGO_HPP_
 
-#include <analyzer/AnaAlgorithm.hpp>
+#include <analyzer/analysis_algorithm.hpp>
 
 /*
 f(X) - f(X*) (estimated)            <= fatol
@@ -35,19 +35,24 @@ f(X) - f(X*) (estimated)            <= fatol
 
 namespace hig{
 
-  class FitPOUNDERSAlgo : public AnaAlgorithm{
+  class FitPOUNDERSAlgo : public AnalysisAlgorithm {
   private:
+	  unsigned int num_obs_;
 
 
   public:
-    FitPOUNDERSAlgo(){type_= fit_pounders; max_iter_=200; max_hist_=100; tol_=1e-4; }
-    FitPOUNDERSAlgo(float_t* params){type_= fit_pounders  ;params_= params; max_iter_=200; max_hist_=100; tol_=1e-4;}
+    FitPOUNDERSAlgo() { name_= algo_pounders; max_iter_ = 200; max_hist_ = 100; tol_ = 1e-4; }
+    FitPOUNDERSAlgo(ObjectiveFunction* obj) {
+		name_= algo_pounders; obj_func_ = obj; max_iter_ = 200; max_hist_ = 100; tol_ = 1e-4;
+		num_obs_ = (*obj_func_).n_par() * (*obj_func_).n_ver();
+		num_params_ = (*obj_func_).num_fit_params();
+		x0_ = (*obj_func_).fit_param_init_values();
+	} // FitPOUNDERSAlgo()
+
     ~FitPOUNDERSAlgo(){}
-    virtual bool init(){return false;}
-    virtual bool parse_params(){return false;}
-    //virtual Analysis run();
-    virtual Analysis run(int argc,char **argv);
-    virtual void print();
+
+    bool run(int argc,char **argv, int);
+    void print();
 
   }; /* class FitPOUNDERSAlgo  */
 

@@ -3,7 +3,7 @@
  *
  *  File: AnaAlgorithm.cpp
  *  Created: Dec 26, 2013
- *  Modified: Fri 31 Jan 2014 01:02:21 PM PST
+ *  Modified: Sun 02 Feb 2014 06:12:13 PM PST
  *
  *  Author: Slim Chourou <stchourou@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -19,6 +19,7 @@
  *  NON-COMMERCIAL END USER LICENSE AGREEMENT.
  */
 #include <iostream>
+
 #include <analyzer/FitPOUNDERSAlgo.hpp>
 
 /*
@@ -31,10 +32,12 @@ f(X) - f(X*) (estimated)            <= fatol
 
 namespace hig{
 
-  Analysis FitPOUNDERSAlgo::run(int argc,char **argv){
+  bool FitPOUNDERSAlgo::run(int argc,char **argv, int img_num){
 
-    Analysis ana_out;
+    //Analysis ana_out;
     std::cout << "Running POUNDERS fitting..." <<std::endl;
+
+	(*obj_func_).set_reference_data(img_num);
 
     static  char help[]= "Running POUNDERS fitting...";
 
@@ -53,14 +56,12 @@ namespace hig{
 //    }
 
     /* Variables to read from context   */
-    int dim = pobj_fct_->get_dim();
-    int nobs = pobj_fct_->get_nobs();
     Vec x0;
 
     double y[1]= {0};
-    VecCreateSeq(PETSC_COMM_SELF, dim , &x0);
-    for(int i=0 ; i<dim ;i++){
-      y[0] =(double) X0_[i];
+    VecCreateSeq(PETSC_COMM_SELF, num_params_ , &x0);
+    for(int i=0 ; i<num_params_ ;i++){
+      y[0] =(double) x0_[i];
       VecSetValues(x0, 1, &i, y, INSERT_VALUES);
     }
     //VecView(x0, PETSC_VIEWER_STDOUT_WORLD);
@@ -99,7 +100,7 @@ namespace hig{
 	    */
 
     /* Allocate vectors for the solution, gradient, Hessian, etc. */
-    ierr = VecCreateSeq(PETSC_COMM_SELF, nobs ,&f);// CHKERRQ(ierr);
+    ierr = VecCreateSeq(PETSC_COMM_SELF, num_obs_ ,&f);// CHKERRQ(ierr);
 
     /* The TAO code begins here */
 
@@ -107,7 +108,7 @@ namespace hig{
     ierr = TaoCreate(PETSC_COMM_SELF,&tao);// CHKERRQ(ierr);
     ierr = TaoSetType(tao, "tao_pounders");// CHKERRQ(ierr);  // tao_nls
     /* Set routines for function, gradient, hessian evaluation */
-    ierr = TaoSetSeparableObjectiveRoutine(tao, f, EvaluateFunction, pobj_fct_);// CHKERRQ(ierr);
+    ierr = TaoSetSeparableObjectiveRoutine(tao, f, EvaluateFunction, obj_func_);// CHKERRQ(ierr);
 
     /* Check for TAO command line options */
     ierr = TaoSetFromOptions(tao); // CHKERRQ(ierr);
@@ -146,15 +147,15 @@ namespace hig{
     VecGetArray(x0,&x_cv);
 
     /*  Write to output vector    */
-    XN_.clear();
-    for(int j=0; j<dim; j++){
+    xn_.clear();
+    for(int j=0; j<num_params_; j++){
       VecGetValues(x0, 1 , &j , y);
-      XN_.push_back( (float) y[0]  );
+      xn_.push_back( (float) y[0]  );
     }
 
     std::cout << "Converged vector: ";
   //  VecView(x0, PETSC_VIEWER_STDOUT_WORLD);
-	for(float_vec_t::iterator i = XN_.begin(); i != XN_.end(); ++ i)
+	for(float_vec_t::iterator i = xn_.begin(); i != xn_.end(); ++ i)
 		std::cout << *i << " ";
 	std::cout << std::endl;
 
@@ -166,12 +167,12 @@ namespace hig{
     ierr = VecDestroy(&x0); //CHKERRQ(ierr);
     TaoFinalize();
 
-    return ana_out;
+    return true;
   }
 
 
   void FitPOUNDERSAlgo::print(){
-    std::cout << get_type_string() << " - Parameters: default." <<std::endl;
+    //std::cout << get_type_string() << " - Parameters: default." <<std::endl;
   }
 
 }
