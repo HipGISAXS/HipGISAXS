@@ -3,7 +3,7 @@
  *
  *	File: ImageData.hpp
  *	Created: Dec 26, 2013
- *	Modified: Sun 02 Feb 2014 09:04:22 AM PST
+ *	Modified: Mon 03 Feb 2014 12:20:31 PM PST
  *	Description: gisaxs image data and basic operations for img processing/analysis
  *
  *	Author: Slim Chourou <stchourou@lbl.gov>
@@ -78,7 +78,8 @@ namespace hig{
 
 		//float_t* convert_data();
 		float_t* data() { return &data_[0]; }	// TODO: remove this eventually ...
-		unsigned int size() { return n_par_ * n_ver_; }
+		//unsigned int size() { return n_par_ * n_ver_; }
+		unsigned int size() { return data_.size(); }
 
 		void print() const;
 	}; /* class ImageData */

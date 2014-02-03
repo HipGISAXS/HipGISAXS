@@ -3,7 +3,7 @@
  *
  *  File: objective_func.cpp
  *  Created: Feb 02, 2014
- *  Modified: Mon 03 Feb 2014 10:45:02 AM PST
+ *  Modified: Mon 03 Feb 2014 12:25:08 PM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -95,7 +95,7 @@ namespace hig{
 
 		std::cout << "Eval X =\n" ;
 		VecView(X, PETSC_VIEWER_STDOUT_WORLD);
-		//std::cout << " = \n" ;
+		//std::cout << "F = \n" ;
 		//VecView(F, PETSC_VIEWER_STDOUT_WORLD);
 
 		PetscFunctionReturn(0);
