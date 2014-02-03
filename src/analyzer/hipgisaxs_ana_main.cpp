@@ -10,7 +10,7 @@
  */
 int main(int narg, char** args) {
 
-	if(narg > 4) {
+	if(narg < 2 || narg > 4) {
 		std::cout << "usage: hipgisaxs <input_config>" << std::endl;
 		return 1;
 	} // if

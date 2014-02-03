@@ -70,6 +70,8 @@ ALL_INCL= $(TAO_INCL) $(PETSC_INCL) $(HDF5_INCL) $(TIFF_INCL) $(BOOST_INCL) $(HI
 OBJECTS = ImageData.o FitPOUNDERSAlgo.o analysis_algorithm.o objective_func.o hipgisaxs_ana.o
 HIP_OBJS = hipgisaxs_ana_main.o
 F1_OBJS = objective_func_poly_one.o objective_func_poly_one_main.o
+PSO_OBJS = hipgisaxs_fit_pso.o hipgisaxs_fit_pso_particle.o
+PSO_HIP_OBJS = $(PSO_OBJS) hipgisaxs_fit_pso_main.o
 
 #ALL_LIB = libData.a libImageData.o libImageDataProc.o libAnaAlgorithm.a libFitPOUNDERSAlgo.a libWorkflow.a libDist.a libStructVar.a libAnaInput.a \
 	libAnaOutput.a libAnalysis.a libAnalyzer.a libObjFct.a libSimModel.a libSimHipGISAXS.a
@@ -87,6 +89,10 @@ hipgisaxs:
 f1:
 	(make $(BINARY) \
 		"OBJECTS = $(OBJECTS) $(F1_OBJS)")
+
+pso:
+	(make $(BINARY) \
+		"OBJECTS = $(OBJECTS) $(PSO_HIP_OBJS)")
 
 
 ## c++ compilation                                                                                                                             

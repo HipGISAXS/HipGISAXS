@@ -3,7 +3,7 @@
   *
   *  File: distance_functions.hpp
   *  Created: May 17, 2013
-  *  Modified: Sun 02 Feb 2014 06:18:54 PM PST
+  *  Modified: Mon 03 Feb 2014 03:46:01 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -18,8 +18,8 @@
 class DistanceMeasure {
 	public:
 		virtual bool operator()(float*& ref, float*& data, unsigned int size,
-								std::vector<float>& err) const { }
-		virtual float operator()(float*& ref, float*& data, unsigned int size) const { }
+								std::vector<float>& err) const = 0;
+	//	virtual float operator()(float*& ref, float*& data, unsigned int size) const { }
 }; // class DistanceMeasure
 
 
@@ -30,7 +30,18 @@ class AbsoluteDifferenceError : public DistanceMeasure {
 		AbsoluteDifferenceError() { }
 		~AbsoluteDifferenceError() { }
 
-		float operator()(float*& ref, float*& data, unsigned int size) const {
+		bool operator()(float*& ref, float*& data, unsigned int size, std::vector<float>& err) const {
+			if(ref == NULL || data == NULL) return false;
+			double err_sum = 0.0;
+			for(int i = 0; i < size; ++ i) {
+				err_sum += fabs(ref[i] - data[i]);
+			} // for
+			err.clear();
+			err.push_back((float)err_sum);
+			return true;
+		} // operator()
+
+		/*float operator()(float*& ref, float*& data, unsigned int size) const {
 			if(ref == NULL || data == NULL) return 0;
 			double err_sum = 0.0;
 			for(int i = 0; i < size; ++ i) {
@@ -38,7 +49,7 @@ class AbsoluteDifferenceError : public DistanceMeasure {
 			} // for
 			return (float) err_sum;
 		} // operator()
-
+*/
 }; // class AbsoluteDifferenceError
 
 
