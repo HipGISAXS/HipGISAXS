@@ -3,7 +3,7 @@
  *
  *  File: objective_func.cpp
  *  Created: Feb 02, 2014
- *  Modified: Mon 03 Feb 2014 09:41:15 AM PST
+ *  Modified: Mon 03 Feb 2014 09:45:42 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -43,7 +43,6 @@ namespace hig{
 
 
 	bool HipGISAXSObjectiveFunction::set_reference_data(int i) {
-
 		if(ref_data_ != NULL) delete ref_data_;
 		ref_data_ = new ImageData(hipgisaxs_.reference_data_path(i));
 		return true;
@@ -83,12 +82,12 @@ namespace hig{
 		ierr = VecGetArray(F,&f);
 
 		// either ff or f can be eliminated ...
-		int data_size = ((HipGISAXSObjectiveFunction*) ptr)->data_size();
+		int data_size = ((ObjectiveFunction*) ptr)->data_size();
 		PetscReal* ff = new PetscReal[data_size];
 		float_vec_t params;
-		int num_params = ((HipGISAXSObjectiveFunction*) ptr)->num_fit_params();
+		int num_params = ((ObjectiveFunction*) ptr)->num_fit_params();
 		for(int i = 0; i < num_params; ++ i) params.push_back(x[i]);
-		float_vec_t temp = (*(HipGISAXSObjectiveFunction*) ptr)(params);
+		float_vec_t temp = (*(ObjectiveFunction*) ptr)(params);
 		for(int i = 0; i < data_size; ++ i) { ff[i] = temp[i]; f[i] = temp[i]; }
 
 		ierr = VecRestoreArray(X, &x); CHKERRQ(ierr);
