@@ -3,7 +3,7 @@
   *
   *  File: multi_node_comm.hpp
   *  Created: Mar 18, 2013
-  *  Modified: Wed 29 Jan 2014 08:38:59 PM PST
+  *  Modified: Wed 05 Feb 2014 10:51:55 AM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -16,6 +16,7 @@
 #include <mpi.h>
 #include <complex>
 #include <map>
+#include <string>
 
 namespace woo {
 
@@ -199,7 +200,8 @@ namespace woo {
 	}; // class MultiNodeComm
 
 
-	typedef std::map <const char*, MultiNodeComm> multi_node_comm_map_t;
+	//typedef std::map <const char*, MultiNodeComm> multi_node_comm_map_t;
+	typedef std::map <std::string, MultiNodeComm> multi_node_comm_map_t;
 
 	/**
 	 * For communication - TODO: make it singleton
