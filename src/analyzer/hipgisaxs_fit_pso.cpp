@@ -3,7 +3,7 @@
  *
  *  File: fit_pso.cpp
  *  Created: Jan 13, 2014
- *  Modified: Mon 03 Feb 2014 03:41:15 PM PST
+ *  Modified: Wed 05 Feb 2014 10:03:03 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -144,6 +144,8 @@ namespace hig {
 				std::cout << particles_[i].param_values_[j] << " ";
 			std::cout << "]\t";
 		} // for
+		std::cout << std::endl;
+		std::cout << "~~~~ Global best: ";
 		std::cout << "[ ";
 		for(int j = 0; j < num_params_; ++ j)
 			std::cout << best_values_[j] << " ";

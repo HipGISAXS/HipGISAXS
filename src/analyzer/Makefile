@@ -17,7 +17,7 @@ SRC_DIR = $(PREFIX)
 BIN_DIR = $(PREFIX)
 OBJ_DIR = $(PREFIX)
 CXX = mpicxx
-CXX_FLAGS = -std=c++0x -fopenmp
+CXX_FLAGS = -std=c++0x -fopenmp -DUSE_MPI
 CXX_FLAGS += -g
 PREC_FLAG =
 
