@@ -3,7 +3,7 @@
   *
   *  File: distance_functions.hpp
   *  Created: May 17, 2013
-  *  Modified: Mon 03 Feb 2014 03:46:01 PM PST
+  *  Modified: Wed 05 Feb 2014 10:25:33 AM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -14,7 +14,12 @@
 #include <vector>
 #include <cmath>
 
+/**
+ * Distance Functors
+ */
 
+
+// The base class used everywhere
 class DistanceMeasure {
 	public:
 		virtual bool operator()(float*& ref, float*& data, unsigned int size,
@@ -23,10 +28,9 @@ class DistanceMeasure {
 }; // class DistanceMeasure
 
 
+// sum of absolute differences
 class AbsoluteDifferenceError : public DistanceMeasure {
-
 	public:
-
 		AbsoluteDifferenceError() { }
 		~AbsoluteDifferenceError() { }
 
@@ -53,10 +57,9 @@ class AbsoluteDifferenceError : public DistanceMeasure {
 }; // class AbsoluteDifferenceError
 
 
+// vector of differences
 class ResidualVector : public DistanceMeasure {
-
 	public:
-
 		ResidualVector() { }
 		~ResidualVector() { }
 
@@ -79,6 +82,28 @@ class ResidualVector : public DistanceMeasure {
 		} // operator()
 		*/
 }; // class ResidualVector
+
+
+// normalized sum of absolute differences
+class AbsoluteDifferenceNorm : public DistanceMeasure {
+	public:
+		AbsoluteDifferenceNorm() { }
+		~AbsoluteDifferenceNorm() { }
+
+		bool operator()(float*& ref, float*& data, unsigned int size, std::vector<float>& err) const {
+			if(ref == NULL || data == NULL) return false;
+			double err_sum = 0.0;
+			double ref_sum = 0.0;
+			for(int i = 0; i < size; ++ i) {
+				err_sum += fabs(ref[i] - data[i]);
+				ref_sum += ref[i];
+			} // for
+			err_sum /= ref_sum;
+			err.clear();
+			err.push_back((float) err_sum);
+			return true;
+		} // operator()
+}; // class AbsoluteDifferenceNorm
 
 
 #endif // __DISTANCE_FUNCTIONS_HPP__
