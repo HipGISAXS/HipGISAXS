@@ -3,7 +3,7 @@
  *
  *  File: pso.cpp
  *  Created: Jan 13, 2014
- *  Modified: Wed 05 Feb 2014 10:24:45 AM PST
+ *  Modified: Wed 05 Feb 2014 10:29:25 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -29,13 +29,6 @@ int main(int narg, char** args) {
 	ana.add_analysis_algo(&my_pso);
 
 	ana.analyze(narg, args);
-
-//	my_pso.simulate();
-//	hig::parameter_map_t best = my_pso.get_best_values();
-//	std::cout << "@@@@ Best values = [ ";
-//	for(hig::parameter_map_t::iterator i = best.begin(); i != best.end(); ++ i)
-//		std::cout << (*i).first << ":" << (*i).second << " ";
-//	std::cout << "]" << std::endl;
 
 	return 0;
 } // main()

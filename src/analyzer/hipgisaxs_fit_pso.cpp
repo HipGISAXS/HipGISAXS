@@ -3,7 +3,7 @@
  *
  *  File: fit_pso.cpp
  *  Created: Jan 13, 2014
- *  Modified: Wed 05 Feb 2014 10:03:03 AM PST
+ *  Modified: Wed 05 Feb 2014 10:30:46 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -146,7 +146,7 @@ namespace hig {
 		} // for
 		std::cout << std::endl;
 		std::cout << "~~~~ Global best: ";
-		std::cout << "[ ";
+		std::cout << best_fitness_ << " [ ";
 		for(int j = 0; j < num_params_; ++ j)
 			std::cout << best_values_[j] << " ";
 		std::cout << "]\t";
