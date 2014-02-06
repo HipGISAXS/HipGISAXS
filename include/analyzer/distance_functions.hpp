@@ -3,7 +3,7 @@
   *
   *  File: distance_functions.hpp
   *  Created: May 17, 2013
-  *  Modified: Wed 05 Feb 2014 10:25:33 AM PST
+  *  Modified: Wed 05 Feb 2014 11:28:21 AM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -82,6 +82,49 @@ class ResidualVector : public DistanceMeasure {
 		} // operator()
 		*/
 }; // class ResidualVector
+
+
+// sum of squares of absolute differences
+class AbsoluteDifferenceSquare : public DistanceMeasure {
+	public:
+		AbsoluteDifferenceSquare() { }
+		~AbsoluteDifferenceSquare() { }
+
+		bool operator()(float*& ref, float*& data, unsigned int size, std::vector<float>& err) const {
+			if(ref == NULL || data == NULL) return false;
+			double err_sum = 0.0;
+			for(int i = 0; i < size; ++ i) {
+				double temp = fabs(ref[i] - data[i]);
+				err_sum += temp * temp;
+			} // for
+			err.clear();
+			err.push_back((float) err_sum);
+			return true;
+		} // operator()
+}; // class AbsoluteDifferenceNorm
+
+
+// normalized sum of squares of absolute differences
+class AbsoluteDifferenceSquareNorm : public DistanceMeasure {
+	public:
+		AbsoluteDifferenceSquareNorm() { }
+		~AbsoluteDifferenceSquareNorm() { }
+
+		bool operator()(float*& ref, float*& data, unsigned int size, std::vector<float>& err) const {
+			if(ref == NULL || data == NULL) return false;
+			double err_sum = 0.0;
+			double ref_sum = 0.0;
+			for(int i = 0; i < size; ++ i) {
+				double temp = fabs(ref[i] - data[i]);
+				err_sum += temp * temp;
+				ref_sum += ref[i] * ref[i];
+			} // for
+			err_sum /= ref_sum;
+			err.clear();
+			err.push_back((float) err_sum);
+			return true;
+		} // operator()
+}; // class AbsoluteDifferenceNorm
 
 
 // normalized sum of absolute differences

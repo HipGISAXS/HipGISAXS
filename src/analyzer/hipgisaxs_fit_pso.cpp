@@ -3,7 +3,7 @@
  *
  *  File: fit_pso.cpp
  *  Created: Jan 13, 2014
- *  Modified: Wed 05 Feb 2014 10:30:46 AM PST
+ *  Modified: Wed 05 Feb 2014 02:31:46 PM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -61,9 +61,9 @@ namespace hig {
 		constraints_.velocity_max_ = max_limits;
 
 		// get number of particles
-		num_particles_ = atoi(args[3]);
+		num_particles_ = atoi(args[2]);
 		// max number of generations
-		max_iter_ = atoi(args[2]);
+		max_iter_ = atoi(args[3]);
 
 		// initialize particles
 		particles_.clear();

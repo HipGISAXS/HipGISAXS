@@ -3,7 +3,7 @@
  *
  *  File: pso.cpp
  *  Created: Jan 13, 2014
- *  Modified: Wed 05 Feb 2014 10:29:25 AM PST
+ *  Modified: Wed 05 Feb 2014 11:27:33 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -21,7 +21,8 @@ int main(int narg, char** args) {
 	} // if
 
 	//AbsoluteDifferenceError err;
-	AbsoluteDifferenceNorm err;
+	//AbsoluteDifferenceNorm err;
+	AbsoluteDifferenceSquareNorm err;
 	hig::HipGISAXSObjectiveFunction hip_func(narg, args, &err);
 	hig::ParticleSwarmOptimization my_pso(narg, args, &hip_func);
 
