@@ -3,7 +3,7 @@
  *
  *  File: enums.hpp
  *  Created: Jun 11, 2012
- *  Modified: Wed 29 Jan 2014 04:07:28 PM PST
+ *  Modified: Fri 07 Feb 2014 10:01:59 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -112,7 +112,8 @@ namespace hig {
 		algo_error,				/* error type */
 		algo_null,				/* default, no algorithm */
 		algo_pounders,			/* pounders algorithm (from tao) */
-		algo_pso				/* particle swarm optimization algorithm */
+		algo_pso,				/* particle swarm optimization algorithm */
+		algo_bruteforce			/* brute force optimization */
 	}; // enum FittingAlgorithmName
 
 	enum FitAlgorithmParamType {

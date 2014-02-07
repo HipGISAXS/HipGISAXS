@@ -3,7 +3,7 @@
  *
  *  File: hig_input.hpp
  *  Created: Jun 11, 2012
- *  Modified: Sun 02 Feb 2014 06:02:08 PM PST
+ *  Modified: Fri 07 Feb 2014 10:27:20 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -82,6 +82,8 @@ namespace hig {
 
 			/* fitting related */
 
+			analysis_algo_list_t analysis_algos_;						// list of algorithms
+
 			class ParamSpace {						// TODO: move it out ...
 				public:
 
@@ -100,7 +102,6 @@ namespace hig {
 			std::map <std::string, ParamSpace> param_space_key_map_;	// maps keys to param space
 			// TODO: ...
 			FitReferenceData reference_data_[1];		// TODO temp: data about the reference data
-			analysis_algo_list_t analysis_algos_;						// list of algorithms
 
 			/* helpers */
 
@@ -110,7 +111,7 @@ namespace hig {
 				std::string key_;
 				std::string variable_;
 				ParamSpace range_;
-				float_t init_;			// currently not used ...
+				float_t init_;
 
 				FitParam(): key_(""), variable_(""), range_(), init_(0) { }
 				~FitParam() { }
@@ -293,6 +294,7 @@ namespace hig {
 
 			/* fitting related */
 			bool update_params(const map_t&);
+			// return list of parameter keys
 			std::vector <std::string> fit_param_keys() const {
 				std::vector <std::string> key_list;
 				for(std::map <std::string, ParamSpace>::const_iterator i = param_space_key_map_.begin();
@@ -300,6 +302,7 @@ namespace hig {
 					key_list.push_back((*i).first);
 				return key_list;
 			} // get_fit_param_keys()
+			// return list of min-max for all parameters
 			std::vector <std::pair <float_t, float_t> > fit_param_limits() const {
 				std::vector <std::pair <float_t, float_t> > plimits;
 				for(std::map <std::string, ParamSpace>::const_iterator i = param_space_key_map_.begin();
@@ -307,6 +310,14 @@ namespace hig {
 					plimits.push_back(std::pair<float_t, float_t>((*i).second.min_, (*i).second.max_));
 				return plimits;
 			} // get_fit_param_limits()
+			// return list of step values for all parameters
+			float_vec_t fit_param_step_values() const {
+				float_vec_t steps;
+				for(std::map <std::string, ParamSpace>::const_iterator i = param_space_key_map_.begin();
+						i != param_space_key_map_.end(); ++ i)
+					steps.push_back((*i).second.step_);
+				return steps;
+			} // fit_param_step_values()
 			//std::string reference_data_path() const { return reference_data_.image_path(); }
 			std::string reference_data_path(int i) const { return reference_data_[i].image_path(); }
 			int num_analysis_data() const { return 1; }		// temp

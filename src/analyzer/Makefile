@@ -72,6 +72,7 @@ HIP_OBJS = hipgisaxs_ana_main.o
 F1_OBJS = objective_func_poly_one.o objective_func_poly_one_main.o
 PSO_OBJS = hipgisaxs_fit_pso.o hipgisaxs_fit_pso_particle.o
 PSO_HIP_OBJS = $(PSO_OBJS) hipgisaxs_fit_pso_main.o
+BF_OBJS = hipgisaxs_fit_bruteforce.o hipgisaxs_fit_bruteforce_main.o
 
 #ALL_LIB = libData.a libImageData.o libImageDataProc.o libAnaAlgorithm.a libFitPOUNDERSAlgo.a libWorkflow.a libDist.a libStructVar.a libAnaInput.a \
 	libAnaOutput.a libAnalysis.a libAnalyzer.a libObjFct.a libSimModel.a libSimHipGISAXS.a
@@ -93,6 +94,10 @@ f1:
 pso:
 	(make $(BINARY) \
 		"OBJECTS = $(OBJECTS) $(PSO_HIP_OBJS)")
+
+bf:
+	(make $(BINARY) \
+		"OBJECTS = $(OBJECTS) $(BF_OBJS)")
 
 
 ## c++ compilation                                                                                                                             

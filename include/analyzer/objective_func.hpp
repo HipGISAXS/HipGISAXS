@@ -3,7 +3,7 @@
  *
  *  File: objective_func.hpp
  *  Created: Feb 02, 2014
- *  Modified: Mon 03 Feb 2014 10:48:26 AM PST
+ *  Modified: Fri 07 Feb 2014 10:21:14 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -31,6 +31,7 @@ namespace hig{
 			virtual int num_fit_params() const = 0;
 			virtual std::vector <std::string> fit_param_keys() const = 0;
 			virtual std::vector <float_pair_t> fit_param_limits() const = 0;
+			virtual std::vector <float_t> fit_param_step_values() const { }
 			virtual float_vec_t fit_param_init_values() const = 0;
 			virtual bool set_reference_data(int) = 0;
 			virtual bool set_reference_data(char*) = 0;
@@ -60,6 +61,7 @@ namespace hig{
 			unsigned int data_size() const { return n_par_ * n_ver_; }
 			std::vector <std::string> fit_param_keys() const { return hipgisaxs_.fit_param_keys(); }
 			std::vector <float_pair_t> fit_param_limits() const { return hipgisaxs_.fit_param_limits(); }
+			float_vec_t fit_param_step_values() const { return hipgisaxs_.fit_param_step_values(); }
 			float_vec_t fit_param_init_values() const { return hipgisaxs_.fit_param_init_values(); }
 	}; // class HipGISAXSObjectiveFunction
 

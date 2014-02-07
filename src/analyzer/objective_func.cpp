@@ -3,7 +3,7 @@
  *
  *  File: objective_func.cpp
  *  Created: Feb 02, 2014
- *  Modified: Mon 03 Feb 2014 12:25:08 PM PST
+ *  Modified: Fri 07 Feb 2014 10:32:23 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -56,6 +56,10 @@ namespace hig{
 		// TODO check if param values are within range ...
 		std::map <std::string, float_t> param_vals;
 		for(int i = 0; i < x.size(); ++ i) param_vals[params[i]] = x[i];
+
+		for(std::map<std::string, float_t>::iterator i = param_vals.begin(); i != param_vals.end(); ++ i)
+			std::cout << (*i).first << ": " << (*i).second << "  ";
+		std::cout << std::endl;
 
 		// update and compute gisaxs
 		hipgisaxs_.update_params(param_vals);

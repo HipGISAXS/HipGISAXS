@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_main.hpp
  *  Created: Jun 11, 2012
- *  Modified: Sun 02 Feb 2014 05:58:48 PM PST
+ *  Modified: Fri 07 Feb 2014 10:22:23 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -157,6 +157,9 @@ namespace hig {
 			std::vector <std::pair <float_t, float_t> > fit_param_limits() const {
 				return HiGInput::instance().fit_param_limits();
 			} // get_fit_param_keys()
+			float_vec_t fit_param_step_values() const {
+				return HiGInput::instance().fit_param_step_values();
+			} // fit_param_step_values()
 			unsigned int nqx() const { return nqx_; }
 			unsigned int nqy() const { return nqy_; }
 			unsigned int nqz() const { return nqz_; }

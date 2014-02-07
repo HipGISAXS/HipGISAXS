@@ -3,7 +3,7 @@
  *
  *  File: hig_input.cpp
  *  Created: Jun 11, 2012
- *  Modified: Sun 02 Feb 2014 03:13:29 PM PST
+ *  Modified: Fri 07 Feb 2014 10:14:40 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -49,6 +49,15 @@ namespace hig {
 		struct_in_layer_ = false;
 
 		shape_def_.clear();
+
+		analysis_algos_.clear();
+		param_key_map_.clear();
+		param_space_key_map_.clear();
+		param_data_key_map_.clear();
+
+		curr_fit_param_.clear();
+		curr_fit_algo_.clear();
+		curr_fit_algo_param_.clear();
 	} // init();
 
 
