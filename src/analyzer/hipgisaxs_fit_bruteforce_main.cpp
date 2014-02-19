@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_fit_bruteforce_main.cpp
  *  Created: Jan 13, 2014
- *  Modified: Fri 07 Feb 2014 11:27:19 AM PST
+ *  Modified: Fri 07 Feb 2014 12:09:14 PM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -19,8 +19,8 @@ int main(int narg, char** args) {
 	} // if
 
 	//AbsoluteDifferenceError err;
-	AbsoluteDifferenceNorm err;
-	//AbsoluteDifferenceSquareNorm err;
+	//AbsoluteDifferenceNorm err;
+	AbsoluteDifferenceSquareNorm err;
 	hig::HipGISAXSObjectiveFunction hip_func(narg, args, &err);
 	hig::BruteForceOptimization my_bfo(narg, args, &hip_func);
 
