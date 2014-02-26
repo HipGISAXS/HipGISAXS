@@ -3,7 +3,7 @@
  *
  *  File: hig_input.hpp
  *  Created: Jun 11, 2012
- *  Modified: Tue 25 Feb 2014 03:41:04 PM PST
+ *  Modified: Wed 26 Feb 2014 06:28:18 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -334,6 +334,8 @@ namespace hig {
 				std::cout << std::endl;
 				return init_vec;
 			} // fit_param_init_vector()
+			int num_analysis_algos() const { return analysis_algos_.size(); }
+			FittingAlgorithmName analysis_algo(int i) const { return analysis_algos_[i].name(); }
 
 			/* printing for testing */
 			void print_all();

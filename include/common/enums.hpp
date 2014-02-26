@@ -3,7 +3,7 @@
  *
  *  File: enums.hpp
  *  Created: Jun 11, 2012
- *  Modified: Fri 07 Feb 2014 10:01:59 AM PST
+ *  Modified: Wed 26 Feb 2014 06:49:24 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -119,6 +119,7 @@ namespace hig {
 	enum FitAlgorithmParamType {
 		algo_param_error,
 		algo_param_null,
+		algo_pounders_param_delta,
 		algo_pso_param_omega,
 		algo_pso_param_phi1,
 		algo_pso_param_phi2

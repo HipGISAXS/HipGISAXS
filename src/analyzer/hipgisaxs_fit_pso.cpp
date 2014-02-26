@@ -3,7 +3,7 @@
  *
  *  File: fit_pso.cpp
  *  Created: Jan 13, 2014
- *  Modified: Wed 05 Feb 2014 02:31:46 PM PST
+ *  Modified: Wed 26 Feb 2014 06:40:56 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -22,6 +22,12 @@ namespace hig {
 		name_ = algo_pso;
 		max_hist_ = 100;			// not used ...
 		tol_ = 1e-8;
+
+		if(narg < 7) {
+			std::cerr << "error: for PSO please specify <num_particles> <num_gen> "
+						<< "<omega> <phi1> <phi2>" << std::endl;
+			exit(1);
+		} // if
 
 		pso_omega_ = atof(args[4]);
 		pso_phi1_ = atof(args[5]);

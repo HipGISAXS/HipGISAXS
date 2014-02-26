@@ -3,7 +3,7 @@
  *
  *  File: token_mapper.hpp
  *  Created: Jun 05, 2012
- *  Modified: Wed 29 Jan 2014 03:23:31 PM PST
+ *  Modified: Wed 26 Feb 2014 06:47:57 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -302,14 +302,16 @@ namespace hig {
 
 				/* fitting algorithm name keywords */
 
-				FittingAlgorithmKeyWords_[std::string("pounders")]	= algo_pounders;
-				FittingAlgorithmKeyWords_[std::string("pso")]		= algo_pso;
+				FittingAlgorithmKeyWords_[std::string("pounders")]		= algo_pounders;
+				FittingAlgorithmKeyWords_[std::string("pso")]			= algo_pso;
+				FittingAlgorithmKeyWords_[std::string("bruteforce")]	= algo_bruteforce;
 
 				/* fitting algorithm parameter keywords */
 
-				FitAlgorithmParamKeyWords_[std::string("omega")]	= algo_pso_param_omega;
-				FitAlgorithmParamKeyWords_[std::string("phi1")]		= algo_pso_param_phi1;
-				FitAlgorithmParamKeyWords_[std::string("phi2")]		= algo_pso_param_phi2;
+				FitAlgorithmParamKeyWords_[std::string("pounders_delta")]	= algo_pounders_param_delta;
+				FitAlgorithmParamKeyWords_[std::string("pso_omega")]	= algo_pso_param_omega;
+				FitAlgorithmParamKeyWords_[std::string("pso_phi1")]		= algo_pso_param_phi1;
+				FitAlgorithmParamKeyWords_[std::string("pso_phi2")]		= algo_pso_param_phi2;
 
 				/* boolean keywords */
 

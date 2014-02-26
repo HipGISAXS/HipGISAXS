@@ -3,7 +3,7 @@
  *
  *  File: temp_helpers.hpp
  *  Created: Jan 29, 2014
- *  Modified: Tue 25 Feb 2014 03:40:40 PM PST
+ *  Modified: Wed 26 Feb 2014 06:27:12 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -89,6 +89,7 @@ namespace hig {
 			bool order(int o) { order_ = o; return true; }
 			bool tolerance(float_t t) { tolerance_ = t; return true; }
 			bool name(FittingAlgorithmName n) { name_ = n; return true; }
+			FittingAlgorithmName name() const { return name_; }
 			bool name_str(std::string n) { name_str_ = n; return true; }
 			bool restart(bool r) { restart_ = r; return true; }
 

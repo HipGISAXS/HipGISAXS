@@ -67,12 +67,21 @@ ALL_LIBS = $(MPI_LIBS) $(TAO_LIBS) $(PETSC_LIBS) $(HIPGISAXS_LIBS) $(HDF5_LIBS) 
 ALL_INCL= $(TAO_INCL) $(PETSC_INCL) $(HDF5_INCL) $(TIFF_INCL) $(BOOST_INCL) $(HIPGISAXS_INCL)
 #ALL_OBJ = ImageData.o FitPOUNDERSAlgo.o analysis_algorithm.o hipgisaxs_ana.o hipgisaxs_ana_main.o objective_func.o
 
-OBJECTS = ImageData.o hipgisaxs_fit_pounders.o analysis_algorithm.o objective_func.o hipgisaxs_ana.o
-POUND_HIP_OBJS = hipgisaxs_fit_pounders_main.o
-F1_OBJS = objective_func_poly_one.o objective_func_poly_one_main.o
+OBJECTS = ImageData.o analysis_algorithm.o objective_func.o hipgisaxs_ana.o
+
+POUND_OBJS = hipgisaxs_fit_pounders.o
+POUND_HIP_OBJS = $(POUND_HIP_OBJS) hipgisaxs_fit_pounders_main.o
+
+F1_OBJS = objective_func_poly_one.o
+F1_HIP_OBJS = $(F1_OBJS) objective_func_poly_one_main.o
+
 PSO_OBJS = hipgisaxs_fit_pso.o hipgisaxs_fit_pso_particle.o
 PSO_HIP_OBJS = $(PSO_OBJS) hipgisaxs_fit_pso_main.o
-BF_OBJS = hipgisaxs_fit_bruteforce.o hipgisaxs_fit_bruteforce_main.o
+
+BF_OBJS = hipgisaxs_fit_bruteforce.o
+BF_HIP_OBJS = $(BF_OBJS) hipgisaxs_fit_bruteforce_main.o
+
+HIP_OBJS = hipgisaxs_fit_main.o $(POUND_OBJS) $(PSO_OBJS) $(BF_OBJS)
 
 #ALL_LIB = libData.a libImageData.o libImageDataProc.o libAnaAlgorithm.a libFitPOUNDERSAlgo.a libWorkflow.a libDist.a libStructVar.a libAnaInput.a \
 	libAnaOutput.a libAnalysis.a libAnalyzer.a libObjFct.a libSimModel.a libSimHipGISAXS.a
@@ -85,11 +94,15 @@ all: hipgisaxs
 
 hipgisaxs:
 	(make $(BINARY) \
+		"OBJECTS = $(OBJECTS) $(HIP_OBJS)")
+
+pounders:
+	(make $(BINARY) \
 		"OBJECTS = $(OBJECTS) $(POUND_HIP_OBJS)")
 
 f1:
 	(make $(BINARY) \
-		"OBJECTS = $(OBJECTS) $(F1_OBJS)")
+		"OBJECTS = $(OBJECTS) $(F1_HIP_OBJS)")
 
 pso:
 	(make $(BINARY) \
@@ -97,7 +110,7 @@ pso:
 
 bf:
 	(make $(BINARY) \
-		"OBJECTS = $(OBJECTS) $(BF_OBJS)")
+		"OBJECTS = $(OBJECTS) $(BF_HIP_OBJS)")
 
 
 ## c++ compilation                                                                                                                             

@@ -3,7 +3,7 @@
  *
  *  File: objective_func.hpp
  *  Created: Feb 02, 2014
- *  Modified: Fri 07 Feb 2014 10:21:14 AM PST
+ *  Modified: Tue 25 Feb 2014 08:13:49 PM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -49,8 +49,10 @@ namespace hig{
 
 		public:
 			HipGISAXSObjectiveFunction(int, char**, DistanceMeasure*);
+			HipGISAXSObjectiveFunction(int, char**);
 			~HipGISAXSObjectiveFunction();
 
+			bool set_distance_measure(DistanceMeasure*);
 			bool set_reference_data(int);
 			bool set_reference_data(char*) { }
 			float_vec_t operator()(const float_vec_t&);

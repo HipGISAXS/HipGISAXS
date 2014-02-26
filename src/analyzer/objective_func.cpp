@@ -3,7 +3,7 @@
  *
  *  File: objective_func.cpp
  *  Created: Feb 02, 2014
- *  Modified: Fri 07 Feb 2014 10:32:23 AM PST
+ *  Modified: Tue 25 Feb 2014 08:16:14 PM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -37,9 +37,37 @@ namespace hig{
 	} // HipGISAXSObjectiveFunction::HipGISAXSObjectiveFunction()
 
 
+	HipGISAXSObjectiveFunction::HipGISAXSObjectiveFunction(int narg, char** args) :
+			hipgisaxs_(narg, args) {
+		if(!hipgisaxs_.construct_input(args[1])) {
+			std::cerr << "error: failed to construct HipGISAXS input containers" << std::endl;
+			exit(1);
+		} // if
+
+		if(!hipgisaxs_.fit_init()) {
+			std::cerr << "error: failed to initialize HipGISAXS for fitting" << std::endl;
+			exit(1);
+		} // if
+
+		n_par_ = hipgisaxs_.nqy();
+		n_ver_ = hipgisaxs_.nqz();
+
+		ref_data_ = NULL;
+		pdist_ = NULL;
+		curr_dist_.clear();
+
+	} // HipGISAXSObjectiveFunction::HipGISAXSObjectiveFunction()
+
+
 	HipGISAXSObjectiveFunction::~HipGISAXSObjectiveFunction() {
 		delete ref_data_;
 	} // HipGISAXSObjectiveFunction::~HipGISAXSObjectiveFunction()
+
+
+	bool HipGISAXSObjectiveFunction::set_distance_measure(DistanceMeasure* dist) {
+		pdist_ = dist;
+		return true;
+	} // HipGISAXSObjectiveFunction::set_distance_measure()
 
 
 	bool HipGISAXSObjectiveFunction::set_reference_data(int i) {
