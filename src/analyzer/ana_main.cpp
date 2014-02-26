@@ -10,7 +10,7 @@
 #include <analyzer/SimTest.hpp>
 
 
-/* The main for HipGISAXS Analyzer -- temporary ....
+/* The main for POUNDers HipGISAXS Analyzer -- temporary ....
  */
 int main(int narg, char** args) {
 

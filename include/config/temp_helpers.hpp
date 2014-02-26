@@ -3,7 +3,7 @@
  *
  *  File: temp_helpers.hpp
  *  Created: Jan 29, 2014
- *  Modified: Sun 02 Feb 2014 06:06:10 PM PST
+ *  Modified: Tue 25 Feb 2014 03:40:40 PM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -63,6 +63,10 @@ namespace hig {
 			bool value(float_t v) { value_ = v; return true; }
 			bool type(FitAlgorithmParamType t) { type_ = t; return true; }
 			bool type_name(std::string t) { type_name_ = t; return true; }
+
+			void print() const {
+				std::cout << "  " << type_name_ << " [" << type_ << "] = " << value_ << std::endl;
+			} // print()
 	}; // class AnalysisAlgorithmParam
 
 
@@ -87,6 +91,17 @@ namespace hig {
 			bool name(FittingAlgorithmName n) { name_ = n; return true; }
 			bool name_str(std::string n) { name_str_ = n; return true; }
 			bool restart(bool r) { restart_ = r; return true; }
+
+			void print() const {
+				std::cout << order_ << ": " << name_str_ << " [" << name_ << "]" << std::endl;
+				std::cout << "  Tolerance: " << tolerance_ << std::endl;
+				std::cout << "  Algorithm Parameters: " << std::endl;
+				for(std::vector <AnalysisAlgorithmParamData>::const_iterator i = params_.begin();
+						i != params_.end(); ++ i) {
+					std::cout << "  ";
+					(*i).print();
+				} // for
+			} // print()
 	}; // class AnalysisAlgorithm
 
 	typedef std::vector <AnalysisAlgorithmData> analysis_algo_list_t;

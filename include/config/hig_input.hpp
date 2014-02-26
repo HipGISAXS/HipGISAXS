@@ -3,7 +3,7 @@
  *
  *  File: hig_input.hpp
  *  Created: Jun 11, 2012
- *  Modified: Fri 07 Feb 2014 10:27:20 AM PST
+ *  Modified: Tue 25 Feb 2014 03:41:04 PM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -190,6 +190,7 @@ namespace hig {
 
 			void print_fit_params();
 			void print_ref_data();
+			void print_fit_algos();
 
 		public:
 			// TODO: ...

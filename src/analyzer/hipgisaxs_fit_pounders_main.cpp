@@ -1,12 +1,12 @@
 #include <iostream>
 
 #include <analyzer/distance_functions.hpp>
-#include <analyzer/FitPOUNDERSAlgo.hpp>
+#include <analyzer/hipgisaxs_fit_pounders.hpp>
 #include <analyzer/objective_func.hpp>
 #include <analyzer/hipgisaxs_ana.hpp>
 
 
-/* The main for HipGISAXS Analyzer
+/* The main for POUNDers HipGISAXS Analyzer
  */
 int main(int narg, char** args) {
 

@@ -3,7 +3,7 @@
  *
  *  File: AnaAlgorithm.cpp
  *  Created: Dec 26, 2013
- *  Modified: Sun 02 Feb 2014 06:12:13 PM PST
+ *  Modified: Tue 25 Feb 2014 03:52:21 PM PST
  *
  *  Author: Slim Chourou <stchourou@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -20,7 +20,7 @@
  */
 #include <iostream>
 
-#include <analyzer/FitPOUNDERSAlgo.hpp>
+#include <analyzer/hipgisaxs_fit_pounders.hpp>
 
 /*
 f(X) - f(X*) (estimated)            <= fatol

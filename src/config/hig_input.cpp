@@ -3,7 +3,7 @@
  *
  *  File: hig_input.cpp
  *  Created: Jun 11, 2012
- *  Modified: Fri 07 Feb 2014 10:14:40 AM PST
+ *  Modified: Tue 25 Feb 2014 03:45:08 PM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -84,6 +84,8 @@ namespace hig {
 			past_token_ = curr_token_;
 			curr_token_ = InputReader::instance().get_next_token();
 		} // while
+
+		print_all();
 
 		return true;
 	} // HiGInput::read_input_config()
@@ -2333,6 +2335,7 @@ namespace hig {
 		print_compute_params();
 		print_fit_params();
 		print_ref_data();
+		print_fit_algos();
 	} // HiGInput::print_all()
 
 
@@ -2389,6 +2392,14 @@ namespace hig {
 	void HiGInput::print_ref_data() {
 		reference_data_[0].print();
 	} // HiGInput::print_ref_data()
+
+	void HiGInput::print_fit_algos() {
+		std::cout << "Analysis Algorithms: " << std::endl;
+		for(analysis_algo_list_t::const_iterator i = analysis_algos_.begin();
+				i != analysis_algos_.end(); ++ i) {
+			(*i).print();
+		} // for
+	} // HiGInput::print_fit_algos()
 
 } // namespace hig
 
