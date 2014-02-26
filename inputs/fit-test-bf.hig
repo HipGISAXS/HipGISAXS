@@ -65,12 +65,11 @@ hipGisaxsInput = {
 															# region defined above
 		},
 		algorithm = {
-			algoname = "pounders",					# name of the analysis algorithm
+			algoname = "bruteforce",					# name of the analysis algorithm
 			algoorder = 1,							# execution order
-			algoparam = { type = "delta", pvalue = 10 },
 			restart = "yes",					# whether to restart from initial values or resume
 												# from previous run's final results
-			tolerance = 1e-2					# error tolerance for convergence
+			tolerance = 1e-8					# error tolerance for convergence
 		}
 		# more algorithms may come here
 	}

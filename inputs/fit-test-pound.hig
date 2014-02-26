@@ -70,7 +70,7 @@ hipGisaxsInput = {
 			algoparam = { type = "delta", pvalue = 10 },
 			restart = "yes",					# whether to restart from initial values or resume
 												# from previous run's final results
-			tolerance = 1e-2					# error tolerance for convergence
+			tolerance = 1e-8					# error tolerance for convergence
 		}
 		# more algorithms may come here
 	}
