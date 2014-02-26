@@ -3,7 +3,7 @@
  *
  *	File: ImageData.hpp
  *	Created: Dec 26, 2013
- *	Modified: Mon 03 Feb 2014 12:20:31 PM PST
+ *	Modified: Wed 26 Feb 2014 12:26:17 PM PST
  *	Description: gisaxs image data and basic operations for img processing/analysis
  *
  *	Author: Slim Chourou <stchourou@lbl.gov>
@@ -53,6 +53,11 @@ namespace hig{
 			n_par_ = axis_par_.size();
 			n_ver_ = axis_ver_.size();
 		} // ImageData()
+		ImageData(int npar, int nver) {
+			n_par_ = npar;
+			n_ver_ = nver;
+			data_.clear();
+		} // ImageData()
 
 		~ImageData() { }
 
@@ -61,6 +66,10 @@ namespace hig{
 
 		/* setters */
 		void set_data(const float_mat_t& data) { data_ = data; }
+		void set_data(const float* data) {
+			data_.clear();
+			for(unsigned int i = 0; i < n_par_ * n_ver_; ++ i) data_.push_back(data[i]);
+		} // set_data()
 
 		/* getters */
 		//float img_p (int iv, int ip) const;

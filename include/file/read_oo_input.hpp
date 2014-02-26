@@ -3,7 +3,7 @@
  *
  *  File: read_oo_output.hpp
  *  Created: Jun 09, 2012
- *  Modified: Sun 26 Jan 2014 09:55:06 AM PST
+ *  Modified: Wed 26 Feb 2014 10:06:24 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -64,7 +64,7 @@ namespace hig {
 				return reader;
 			} // instance()
 
-			bool read_input(char* filename);
+			bool read_input(const char* filename);
 			Token get_next_token();
 
 	}; // class InputReader

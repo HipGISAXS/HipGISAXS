@@ -83,6 +83,8 @@ BF_HIP_OBJS = $(BF_OBJS) hipgisaxs_fit_bruteforce_main.o
 
 HIP_OBJS = hipgisaxs_fit_main.o $(POUND_OBJS) $(PSO_OBJS) $(BF_OBJS)
 
+TEST_HIP_OBJS = hipgisaxs_fit_test.o $(POUND_OBJS) $(PSO_OBJS) $(BF_OBJS)
+
 #ALL_LIB = libData.a libImageData.o libImageDataProc.o libAnaAlgorithm.a libFitPOUNDERSAlgo.a libWorkflow.a libDist.a libStructVar.a libAnaInput.a \
 	libAnaOutput.a libAnalysis.a libAnalyzer.a libObjFct.a libSimModel.a libSimHipGISAXS.a
 
@@ -90,7 +92,11 @@ HIP_OBJS = hipgisaxs_fit_main.o $(POUND_OBJS) $(PSO_OBJS) $(BF_OBJS)
 APP_LIBS = $(ALL_LIBS) # $(patsubst lib%.a, -l%, $(ALL_LIB))                                                                                               
 BINARY = analyze
 
-all: hipgisaxs
+all: test
+
+test:
+	(make $(BINARY) \
+		"OBJECTS = $(OBJECTS) $(TEST_HIP_OBJS)")
 
 hipgisaxs:
 	(make $(BINARY) \

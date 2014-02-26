@@ -3,7 +3,7 @@
  *
  *  File: hig_input.hpp
  *  Created: Jun 11, 2012
- *  Modified: Wed 26 Feb 2014 06:28:18 AM PST
+ *  Modified: Wed 26 Feb 2014 10:04:58 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -203,7 +203,7 @@ namespace hig {
 				return hig_input;
 			} // instance()
 
-			bool construct_input_config(char* filename);
+			bool construct_input_config(const char* filename);
 			bool construct_lattice_vectors();
 			bool construct_layer_profile();
 

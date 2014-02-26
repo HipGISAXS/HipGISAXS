@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_main.hpp
  *  Created: Jun 11, 2012
- *  Modified: Fri 07 Feb 2014 10:22:23 AM PST
+ *  Modified: Wed 26 Feb 2014 10:04:36 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -135,7 +135,7 @@ namespace hig {
 			HipGISAXS(int, char**);
 			~HipGISAXS();
 
-			bool construct_input(char* filename) {
+			bool construct_input(const char* filename) {
 				return HiGInput::instance().construct_input_config(filename);
 			} // construct_input()
 

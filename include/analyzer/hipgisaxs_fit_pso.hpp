@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_fit_pso.hpp
  *  Created: Jan 13, 2014
- *  Modified: Mon 03 Feb 2014 03:34:00 PM PST
+ *  Modified: Wed 26 Feb 2014 11:54:59 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -88,7 +88,8 @@ namespace hig {
 			bool simulate_generation();					// simulate single generation
 
 		public:
-			ParticleSwarmOptimization(int, char**, ObjectiveFunction*);
+			ParticleSwarmOptimization(int, char**, ObjectiveFunction*,
+										float_t, float_t, float_t, int, int);
 			~ParticleSwarmOptimization();
 
 			bool run(int, char**, int);							// simulate

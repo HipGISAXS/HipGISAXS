@@ -3,7 +3,7 @@
  *
  *  File: hig_input.cpp
  *  Created: Jun 11, 2012
- *  Modified: Tue 25 Feb 2014 03:45:08 PM PST
+ *  Modified: Wed 26 Feb 2014 10:05:19 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -61,7 +61,7 @@ namespace hig {
 	} // init();
 
 
-	bool HiGInput::construct_input_config(char* filename) {
+	bool HiGInput::construct_input_config(const char* filename) {
 		if(!InputReader::instance().read_input(filename)) {
 			std::cerr << "fatal error: some error happened in opening or reading "
 						<< "input config file. aborting"

@@ -3,7 +3,7 @@
  *
  *  File: fit_pso.cpp
  *  Created: Jan 13, 2014
- *  Modified: Wed 26 Feb 2014 06:40:56 AM PST
+ *  Modified: Wed 26 Feb 2014 01:39:49 PM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -17,21 +17,26 @@
 
 namespace hig {
 
-	ParticleSwarmOptimization::ParticleSwarmOptimization(int narg, char** args, ObjectiveFunction* obj) :
+	//ParticleSwarmOptimization::ParticleSwarmOptimization(int narg, char** args, ObjectiveFunction* obj) :
+	ParticleSwarmOptimization::ParticleSwarmOptimization(int narg, char** args, ObjectiveFunction* obj,
+			float_t omega, float_t phi1, float_t phi2, int npart, int ngen) :
    			rand_(time(NULL))	{
 		name_ = algo_pso;
 		max_hist_ = 100;			// not used ...
 		tol_ = 1e-8;
 
-		if(narg < 7) {
-			std::cerr << "error: for PSO please specify <num_particles> <num_gen> "
-						<< "<omega> <phi1> <phi2>" << std::endl;
-			exit(1);
-		} // if
+		//if(narg < 7) {
+		//	std::cerr << "error: for PSO please specify <num_particles> <num_gen> "
+		//				<< "<omega> <phi1> <phi2>" << std::endl;
+		//	exit(1);
+		//} // if
 
-		pso_omega_ = atof(args[4]);
-		pso_phi1_ = atof(args[5]);
-		pso_phi2_ = atof(args[6]);
+		//pso_omega_ = atof(args[4]);
+		//pso_phi1_ = atof(args[5]);
+		//pso_phi2_ = atof(args[6]);
+		pso_omega_ = omega;
+		pso_phi1_ = phi1;
+		pso_phi2_ = phi2;
 		obj_func_ = obj;
 
 		std::cout << "** PSO Parameters: " << pso_omega_ << ", " << pso_phi1_ << ", " << pso_phi2_
@@ -67,9 +72,11 @@ namespace hig {
 		constraints_.velocity_max_ = max_limits;
 
 		// get number of particles
-		num_particles_ = atoi(args[2]);
+		//num_particles_ = atoi(args[2]);
+		num_particles_ = npart;
 		// max number of generations
-		max_iter_ = atoi(args[3]);
+		//max_iter_ = atoi(args[3]);
+		max_iter_ = ngen;
 
 		// initialize particles
 		particles_.clear();
@@ -157,6 +164,30 @@ namespace hig {
 			std::cout << best_values_[j] << " ";
 		std::cout << "]\t";
 		std::cout << std::endl;
+
+		// write out stuff to output files
+		std::string prefix(HiGInput::instance().param_pathprefix()+"/"+HiGInput::instance().runname());
+		for(int i = 0; i < num_particles_; ++ i) {
+			std::stringstream outss; outss << "/pso_params_particle_" << i << ".dat";
+			std::ofstream out(prefix + outss.str(), std::ios::app);
+			for(int j = 0; j < num_params_; ++ j)
+				out << particles_[i].param_values_[j] << "\t";
+			out << std::endl;
+			out.close();
+			std::stringstream out2ss; out2ss << "/pso_fitness_particle_" << i << ".dat";
+			std::ofstream out2(prefix + out2ss.str(), std::ios::app);
+			out2 << particles_[i].best_fitness_ << std::endl;
+			out2.close();
+		} // for
+		std::ofstream out(prefix + "/pso_params_best.dat", std::ios::app);
+		for(int j = 0; j < num_params_; ++ j)
+			out << best_values_[j] << "\t";
+		out << std::endl;
+		out.close();
+		std::ofstream out2(prefix + "/pso_fitness_best.dat", std::ios::app);
+		out2 << best_fitness_ << std::endl;
+		out2.close();
+
 		return true;
 	} // ParticleSwarmOptimization::simulate_generation()
 
