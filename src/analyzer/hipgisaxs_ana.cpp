@@ -3,7 +3,7 @@
  *
  *  File: Analyzer.cpp
  *  Created: Dec 26, 2013
- *  Modified: Sun 02 Feb 2014 06:16:51 PM PST
+ *  Modified: Thu 27 Feb 2014 11:00:47 AM PST
  *
  *  Author: Slim Chourou <stchourou@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -70,7 +70,7 @@ namespace hig{
     }
   }*/
 
-  int HipGISAXSAnalyzer::analyze(int argc, char **argv){
+  int HipGISAXSAnalyzer::analyze(int argc, char **argv, int flag){
     //img_data_vec_t img_data_set = data_.get_data();
     //float_vec_t XN;
     //for(img_data_vec_t::iterator it=img_data_set.begin(); it!=img_data_set.end(); it++){
@@ -90,7 +90,8 @@ namespace hig{
 		std::vector <float_vec_t> all_results;
 		for(int i = 0; i < HiGInput::instance().num_analysis_data(); ++ i) {
 			for(int j = 0; j < wf_.size(); ++ j) {
-				wf_[j]->run(argc, argv, i);
+				if(flag < 0) wf_[j]->run(argc, argv, -1);
+				else wf_[j]->run(argc, argv, i);
 				all_results.push_back(wf_[j]->get_param_values());
 			} // for
 		} // for

@@ -3,7 +3,7 @@
  *
  *  File: objective_func.cpp
  *  Created: Feb 02, 2014
- *  Modified: Wed 26 Feb 2014 01:40:59 PM PST
+ *  Modified: Thu 27 Feb 2014 11:01:33 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -72,8 +72,10 @@ namespace hig{
 
 
 	bool HipGISAXSObjectiveFunction::set_reference_data(int i) {
-		if(ref_data_ != NULL) delete ref_data_;
-		ref_data_ = new ImageData(hipgisaxs_.reference_data_path(i));
+		if(i > 0) {
+			if(ref_data_ != NULL) delete ref_data_;
+			ref_data_ = new ImageData(hipgisaxs_.reference_data_path(i));
+		} // if
 		return true;
 	} // HipGISAXSObjectiveFunction::set_reference_data()
 

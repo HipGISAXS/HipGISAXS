@@ -3,7 +3,7 @@
  *
  *  File: Analyzer.hpp
  *  Created: Dec 26, 2013
- *  Modified: Sun 02 Feb 2014 06:16:37 PM PST
+ *  Modified: Thu 27 Feb 2014 11:02:21 AM PST
  *  Description: The main analysis class that executes the workflows defined therein wrt
  *  the inputs (a priori structural info)  and datasets (expt. data) provided.
  *
@@ -65,7 +65,7 @@ namespace hig {
     //bool set_input(AnaInput inp);
 	bool add_analysis_algo(AnalysisAlgorithm* algo) { wf_.push_back(algo); return true; }
 
-    int analyze(int argc,char **argv);
+    int analyze(int argc,char **argv, int);
     //AnaOutput get_output(){return outputs_;}
     //void write_final_vec(float_vec_t XN);
 

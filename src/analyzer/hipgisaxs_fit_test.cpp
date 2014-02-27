@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_fit_test.cpp
  *  Created: Feb 23, 2014
- *  Modified: Wed 26 Feb 2014 12:44:06 PM PST
+ *  Modified: Thu 27 Feb 2014 10:59:37 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -118,7 +118,6 @@ int main(int narg, char** args) {
 														atof(arg_map.at("-pso_phi2")[0].c_str()),
 														atoi(arg_map.at("-pso_npart")[0].c_str()),
 														atoi(arg_map.at("-pso_ngen")[0].c_str()));
-		std::cout << "HEHEHEHEHEHEHEHEHEHEHEHE" << std::endl;
 	} else if(algo.compare("bruteforce") == 0) {
 		(*obj_func).set_distance_measure(new AbsoluteDifferenceSquareNorm());
 		ana_algo = new hig::BruteForceOptimization(narg, args, obj_func);
@@ -143,7 +142,7 @@ int main(int narg, char** args) {
 	hig_ana.add_analysis_algo(ana_algo);
 
 	// perform the analysis
-	hig_ana.analyze(narg, args);
+	hig_ana.analyze(narg, args, 0);
 
 	delete ana_algo;
 	delete obj_func;
