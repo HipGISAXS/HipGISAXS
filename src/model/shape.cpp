@@ -3,7 +3,7 @@
  *
  *  File: shape.cpp
  *  Created: Jun 05, 2012
- *  Modified: Sun 26 Jan 2014 10:38:55 AM PST
+ *  Modified: Sat 08 Mar 2014 07:13:15 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -192,15 +192,28 @@ namespace hig {
 
 
 	bool Shape::update_param(const std::string& str, float_t new_val) {
-		std::string keyword, rem_str;
+		std::string keyword, rem_str, rem_str2;
 		if(!extract_first_keyword(str, keyword, rem_str)) return false;
 		std::string keyword_name, key;
 		if(!extract_keyword_name_and_key(keyword, keyword_name, key)) return false;
+		std::string coord;
 		switch(TokenMapper::instance().get_keyword_token(keyword_name)) {
 			case key_token:
 			case shape_name_token:
 			case shape_originvec_token:
-				std::cerr << "warning: immutable param in '" << str << "'. ignoring." << std::endl;
+				//std::cerr << "warning: immutable param in '" << str << "'. ignoring." << std::endl;
+				if(!extract_first_keyword(rem_str, coord, rem_str2)) return false;
+				if(coord.compare("x") == 0 || coord.compare("0") == 0) {
+					originvec_[0] = new_val;
+				} else if(coord.compare("y") == 0 || coord.compare("1") == 0) {
+					originvec_[1] = new_val;
+				} else if(coord.compare("z") == 0 || coord.compare("2") == 0) {
+					originvec_[2] = new_val;
+				} else {
+					std::cerr << "error: invalid keyword '" << coord << "' in param '"
+								<< str << "'" << std::endl;
+					return false;
+				} // if-else
 				break;
 
 			case shape_ztilt_token:

@@ -15,7 +15,8 @@ hipGisaxsInput = {
 		key = "st1",
 		grain = {
 			shape:key = "s1",
-			refindex = { delta = 9.4E-06, beta = 3.37E-08 }
+			refindex = { delta = 9.4E-06, beta = 3.37E-08 },
+			scaling = 40
 		}
 	},
 	instrumentation = {
@@ -51,6 +52,30 @@ hipGisaxsInput = {
 			variable = "shape['s1']:param['radius']:min",
 			range = { min = 1, max = 10, step = 0.25 },
 			init = 9
+		},
+		fitparam = {
+			key = "p3",
+			variable = "structure['st1']:grain:scaling",
+			range = { min = 10, max = 50, step = 5 },
+			init = 40
+		},
+		fitparam = {
+			key = "p4",
+			variable = "shape['s1']:originvec:x",
+			range = { min = 0, max = 2, step = 0.1 },
+			init = 0
+		},
+		fitparam = {
+			key = "p5",
+			variable = "shape['s1']:originvec:y",
+			range = { min = 0, max = 2, step = 0.1 },
+			init = 0
+		},
+		fitparam = {
+			key = "p6",
+			variable = "shape['s1']:originvec:z",
+			range = { min = 0, max = 2, step = 0.1 },
+			init = 0
 		},
 		referencedata = {
 			path = "/home/asarje/hipgisaxs-samples.git/outputs/01-cylinder/gisaxs_ai=0.14_rot=0_tilt=0.out",										# path to reference data.

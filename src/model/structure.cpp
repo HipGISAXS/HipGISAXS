@@ -3,7 +3,7 @@
  *
  *  File: structure.cpp
  *  Created: Jun 12, 2012
- *  Modified: Sun 26 Jan 2014 10:39:13 AM PST
+ *  Modified: Sat 08 Mar 2014 08:25:41 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -178,6 +178,73 @@ namespace hig {
 	} // GrainOrientations::clear()
 
 
+	bool GrainOrientations::update_param(const std::string& str, float_t new_val) {
+		std::string keyword, rem_str;
+		if(!extract_first_keyword(str, keyword, rem_str)) return false;
+		std::string keyword_name, key;
+		if(!extract_keyword_name_and_key(keyword, keyword_name, key)) return false;
+		std::string keyword2, rem_str2;
+		switch(TokenMapper::instance().get_keyword_token(keyword_name)) {
+			case struct_ensemble_orient_rot1_token:
+				if(key.compare(std::string(1, rot1_.axis())) != 0) {
+					std::cerr << "error: invalid axis key given in param '" << str << "'" << std::endl;
+					return false;
+				} // if
+				if(!extract_first_keyword(rem_str, keyword2, rem_str2)) return false;
+				if(keyword2.compare("min") == 0 || keyword2.compare("0") == 0) {
+					rot1_.angles_min(new_val);
+				} else if(keyword2.compare("max") == 0 || keyword2.compare("1") == 0) {
+					rot1_.angles_max(new_val);
+				} else {
+					std::cerr << "error: invalid keyword '" << keyword2 << "' in param '"
+								<< str << "'" << std::endl;
+					return false;
+				} // if-else
+				break;
+
+			case struct_ensemble_orient_rot2_token:
+				if(key.compare(std::string(1, rot2_.axis())) != 0) {
+					std::cerr << "error: invalid axis key given in param '" << str << "'" << std::endl;
+					return false;
+				} // if
+				if(!extract_first_keyword(rem_str, keyword2, rem_str2)) return false;
+				if(keyword2.compare("min") == 0 || keyword2.compare("0") == 0) {
+					rot2_.angles_min(new_val);
+				} else if(keyword2.compare("max") == 0 || keyword2.compare("1") == 0) {
+					rot2_.angles_min(new_val);
+				} else {
+					std::cerr << "error: invalid keyword '" << keyword2 << "' in param '"
+								<< str << "'" << std::endl;
+					return false;
+				} // if-else
+				break;
+
+			case struct_ensemble_orient_rot3_token:
+				if(key.compare(std::string(1, rot3_.axis())) != 0) {
+					std::cerr << "error: invalid axis key given in param '" << str << "'" << std::endl;
+					return false;
+				} // if
+				if(!extract_first_keyword(rem_str, keyword2, rem_str2)) return false;
+				if(keyword2.compare("min") == 0 || keyword2.compare("0") == 0) {
+					rot3_.angles_min(new_val);
+				} else if(keyword2.compare("max") == 0 || keyword2.compare("1") == 0) {
+					rot3_.angles_max(new_val);
+				} else {
+					std::cerr << "error: invalid keyword '" << keyword2 << "' in param '"
+								<< str << "'" << std::endl;
+					return false;
+				} // if-else
+				break;
+
+			default:
+				std::cerr << "error: unknown keyword encountered in param '" << str << "'" << std::endl;
+				return false;
+		} // switch
+
+		return true;
+	} // GrainOrientations::update_param()
+
+
 
 	/** grain functions
 	 */
@@ -308,6 +375,7 @@ namespace hig {
 		if(!extract_first_keyword(str, keyword, rem_str)) return false;
 		std::string keyword2, rem_str2;
 		std::string keyword3, rem_str3;
+		std::string keyword4, rem_str4;
 		switch(TokenMapper::instance().get_keyword_token(keyword)) {
 			case key_token:
 				std::cerr << "warning: immutable param in '" << str << "'. ignoring." << std::endl;
@@ -343,8 +411,59 @@ namespace hig {
 						if(!extract_first_keyword(rem_str2, keyword3, rem_str3)) return false;
 						switch(TokenMapper::instance().get_keyword_token(keyword3)) {
 							case struct_grain_lattice_a_token:
+								if(!extract_first_keyword(rem_str3, keyword4, rem_str4)) return false;
+								if(keyword4.compare("x") == 0 || keyword4.compare("0") == 0) {
+									//grain_.lattice_.a_[0] = new_val;
+									grain_.lattice_.ax(new_val);
+								} else if(keyword4.compare("y") == 0 || keyword4.compare("1") == 0) {
+									//grain_.lattice_.a_[1] = new_val;
+									grain_.lattice_.ay(new_val);
+								} else if(keyword4.compare("z") == 0 || keyword4.compare("1") == 0) {
+									//grain_.lattice_.a_[2] = new_val;
+									grain_.lattice_.az(new_val);
+								} else {
+									std::cerr << "error: invalid keyword '" << keyword4 << "' in param '"
+												<< rem_str2 << "'" << std::endl;
+									return false;
+								} // if-else
+								break;
+
 							case struct_grain_lattice_b_token:
+								if(!extract_first_keyword(rem_str3, keyword4, rem_str4)) return false;
+								if(keyword4.compare("x") == 0 || keyword4.compare("0") == 0) {
+									//grain_.lattice_.b_[0] = new_val;
+									grain_.lattice_.bx(new_val);
+								} else if(keyword4.compare("y") == 0 || keyword4.compare("1") == 0) {
+									//grain_.lattice_.b_[1] = new_val;
+									grain_.lattice_.by(new_val);
+								} else if(keyword4.compare("z") == 0 || keyword4.compare("1") == 0) {
+									//grain_.lattice_.b_[2] = new_val;
+									grain_.lattice_.bz(new_val);
+								} else {
+									std::cerr << "error: invalid keyword '" << keyword4 << "' in param '"
+												<< rem_str2 << "'" << std::endl;
+									return false;
+								} // if-else
+								break;
+
 							case struct_grain_lattice_c_token:
+								if(!extract_first_keyword(rem_str3, keyword4, rem_str4)) return false;
+								if(keyword4.compare("x") == 0 || keyword4.compare("0") == 0) {
+									//grain_.lattice_.c_[0] = new_val;
+									grain_.lattice_.cx(new_val);
+								} else if(keyword4.compare("y") == 0 || keyword4.compare("1") == 0) {
+									//grain_.lattice_.c_[1] = new_val;
+									grain_.lattice_.cy(new_val);
+								} else if(keyword4.compare("z") == 0 || keyword4.compare("1") == 0) {
+									//grain_.lattice_.c_[2] = new_val;
+									grain_.lattice_.cz(new_val);
+								} else {
+									std::cerr << "error: invalid keyword '" << keyword4 << "' in param '"
+												<< rem_str2 << "'" << std::endl;
+									return false;
+								} // if-else
+								break;
+
 							case type_token:
 							case struct_grain_lattice_hkl_token:
 								std::cerr << "warning: immutable param in '" << rem_str2
@@ -376,9 +495,35 @@ namespace hig {
 						break;
 
 					case struct_grain_transvec_token:
+						if(!extract_first_keyword(rem_str2, keyword3, rem_str3)) return false;
+						if(keyword3.compare("x") == 0 || keyword3.compare("0") == 0) {
+							grain_.transvec_[0] = new_val;
+						} else if(keyword3.compare("y") == 0 || keyword3.compare("1") == 0) {
+							grain_.transvec_[1] = new_val;
+						} else if(keyword3.compare("z") == 0 || keyword3.compare("1") == 0) {
+							grain_.transvec_[2] = new_val;
+						} else {
+							std::cerr << "error: invalid keyword '" << keyword3 << "' in param '"
+										<< rem_str << "'" << std::endl;
+							return false;
+						} // if-else
+						break;
+
 					case struct_grain_repetition_token:
-						std::cerr << "warning: immutable param in '" << rem_str
-									<< "'. ignoring." << std::endl;
+						//std::cerr << "warning: immutable param in '" << rem_str
+						//			<< "'. ignoring." << std::endl;
+						if(!extract_first_keyword(rem_str2, keyword3, rem_str3)) return false;
+						if(keyword3.compare("x") == 0 || keyword3.compare("0") == 0) {
+							grain_.repetition_[0] = new_val;
+						} else if(keyword3.compare("y") == 0 || keyword3.compare("1") == 0) {
+							grain_.repetition_[1] = new_val;
+						} else if(keyword3.compare("z") == 0 || keyword3.compare("1") == 0) {
+							grain_.repetition_[2] = new_val;
+						} else {
+							std::cerr << "error: invalid keyword '" << keyword3 << "' in param '"
+										<< rem_str << "'" << std::endl;
+							return false;
+						} // if-else
 						break;
 
 					case error_token:
@@ -395,9 +540,40 @@ namespace hig {
 				if(!extract_first_keyword(rem_str, keyword2, rem_str2)) return false;
 				switch(TokenMapper::instance().get_keyword_token(keyword2)) {
 					case struct_ensemble_spacing_token:
+						if(!extract_first_keyword(rem_str2, keyword3, rem_str3)) return false;
+						if(keyword3.compare("x") == 0 || keyword3.compare("0") == 0) {
+							ensemble_.spacing_[0] = new_val;
+						} else if(keyword3.compare("y") == 0 || keyword3.compare("1") == 0) {
+							ensemble_.spacing_[1] = new_val;
+						} else if(keyword3.compare("z") == 0 || keyword3.compare("1") == 0) {
+							ensemble_.spacing_[2] = new_val;
+						} else {
+							std::cerr << "error: invalid keyword '" << keyword3 << "' in param '"
+										<< rem_str << "'" << std::endl;
+							return false;
+						} // if-else
+						break;
+
 					case struct_ensemble_maxgrains_token:
-					case struct_ensemble_distribution_token:
+						if(!extract_first_keyword(rem_str2, keyword3, rem_str3)) return false;
+						if(keyword3.compare("x") == 0 || keyword3.compare("0") == 0) {
+							ensemble_.maxgrains_[0] = new_val;
+						} else if(keyword3.compare("y") == 0 || keyword3.compare("1") == 0) {
+							ensemble_.maxgrains_[1] = new_val;
+						} else if(keyword3.compare("z") == 0 || keyword3.compare("1") == 0) {
+							ensemble_.maxgrains_[2] = new_val;
+						} else {
+							std::cerr << "error: invalid keyword '" << keyword3 << "' in param '"
+										<< rem_str << "'" << std::endl;
+							return false;
+						} // if-else
+						break;
+
 					case struct_ensemble_orient_token:
+						if(!ensemble_.orientations_.update_param(rem_str2, new_val)) return false;
+						break;
+
+					case struct_ensemble_distribution_token:
 						std::cerr << "warning: immutable param in '" << rem_str
 									<< "'. ignoring." << std::endl;
 						break;
