@@ -575,7 +575,7 @@ namespace hig {
 	/**
 	 * Include kernels with various optimizations.
 	 */
-	#include "ff_num_cpu_kernels.hpp"
+	#include <ff/cpu/ff_num_cpu_kernels.hpp>
 	
 	#endif // FF_NUM_CPU_FUSED
 	
