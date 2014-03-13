@@ -3,7 +3,7 @@
  *
  *  File: globals.hpp
  *  Created: Jun 05, 2012
- *  Modified: Sun 26 Jan 2014 09:40:47 AM PST
+ *  Modified: Thu 13 Mar 2014 04:40:43 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -123,6 +123,10 @@ namespace hig {
 		vector3_t operator-(vector3_t tosub) {
 			return vector3_t(vec_[0] - tosub[0], vec_[1] - tosub[1], vec_[2] - tosub[2]);
 		} // operator-()
+
+		vector3_t operator*(float_t tomul) {
+			return vector3_t(vec_[0] * tomul, vec_[1] * tomul, vec_[2] * tomul);
+		} // operator*()
 
 		vector3_t operator/(vector3_t todiv) {
 			return vector3_t(vec_[0] / todiv[0], vec_[1] / todiv[1], vec_[2] / todiv[2]);

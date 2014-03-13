@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_main.hpp
  *  Created: Jun 11, 2012
- *  Modified: Wed 26 Feb 2014 10:04:36 AM PST
+ *  Modified: Thu 13 Mar 2014 04:35:29 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -94,7 +94,7 @@ namespace hig {
 
 			/* wrapper over sf function */
 			bool structure_factor(StructureFactor&, std::string, vector3_t&, Lattice*&, vector3_t&,
-									vector3_t&, vector3_t&, vector3_t&
+									float_t, vector3_t&, vector3_t&, vector3_t&
 									#ifdef USE_MPI
 										, const char*
 									#endif

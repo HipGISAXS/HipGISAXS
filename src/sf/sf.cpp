@@ -3,7 +3,7 @@
  *
  *  File: sf.cpp
  *  Created: Jun 18, 2012
- *  Modified: Sun 26 Jan 2014 10:40:16 AM PST
+ *  Modified: Thu 13 Mar 2014 04:34:18 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -54,7 +54,7 @@ namespace hig {
 	 * compute structure factor sequentially on cpu
 	 */
 	bool StructureFactor::compute_structure_factor(std::string expt, vector3_t center,
-							Lattice* lattice, vector3_t repet,
+							Lattice* lattice, vector3_t repet, float_t scaling,
 							vector3_t rotation_1, vector3_t rotation_2, vector3_t rotation_3
 							#ifdef USE_MPI
 								, woo::MultiNode& world_comm, const char* comm_key
@@ -84,13 +84,15 @@ namespace hig {
 		if(repet[2] < 1) repet[2] = 1;
 
 		vector3_t arot(0, 0, 0), brot(0, 0, 0), crot(0, 0, 0);
-		vector3_t temp_la(lattice->a()), temp_lb(lattice->b()), temp_lc(lattice->c());
+		vector3_t temp_la(lattice->a() * scaling),
+				  temp_lb(lattice->b() * scaling),
+				  temp_lc(lattice->c() * scaling);
 		temp_la[2] = 0; temp_lb[2] = 0;
 		mat_mul_3x1(rotation_1, rotation_2, rotation_3, temp_la, arot);
 		mat_mul_3x1(rotation_1, rotation_2, rotation_3, temp_lb, brot);
 		mat_mul_3x1(rotation_1, rotation_2, rotation_3, temp_lc, crot);
 
-		vector3_t l_t = lattice->t();
+		vector3_t l_t = lattice->t() * scaling;
 
 		sf_ = NULL;
 		sf_ = new (std::nothrow) complex_t[nx_ * ny_ * nz_];

@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_main.cpp
  *  Created: Jun 14, 2012
- *  Modified: Wed 19 Feb 2014 07:03:17 AM PST
+ *  Modified: Thu 13 Mar 2014 04:41:20 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -840,6 +840,7 @@ namespace hig {
 			bool struct_in_layer = (*s).second.grain_in_layer();
 
 			vector3_t grain_repeats = (*s).second.grain_repetition();
+			float_t grain_scaling = (*s).second.grain_scaling();
 
 			float_t *dd = NULL, *nn = NULL;		// come back to this ...
 												// these structures can be improved ...
@@ -1017,7 +1018,7 @@ namespace hig {
 				// TODO: parallel tasks ...
 
 				structure_factor(sf, HiGInput::instance().experiment(), center, curr_lattice,
-									grain_repeats, r_tot1, r_tot2, r_tot3
+									grain_repeats, grain_scaling, r_tot1, r_tot2, r_tot3
 									#ifdef USE_MPI
 										, grain_comm
 									#endif
@@ -1417,14 +1418,15 @@ namespace hig {
 
 	bool HipGISAXS::structure_factor(StructureFactor& sf,
 									std::string expt, vector3_t& center, Lattice* &curr_lattice,
-									vector3_t& grain_repeats, vector3_t& r_tot1,
-									vector3_t& r_tot2, vector3_t& r_tot3
+									vector3_t& grain_repeats, float_t grain_scaling,
+									vector3_t& r_tot1, vector3_t& r_tot2, vector3_t& r_tot3
 									#ifdef USE_MPI
 										, const char* comm_key
 									#endif
 									) {
 		#ifndef GPUSF
 			return sf.compute_structure_factor(expt, center, curr_lattice, grain_repeats,
+											grain_scaling,
 											r_tot1, r_tot2, r_tot3
 											#ifdef USE_MPI
 												, multi_node_, comm_key
@@ -1432,6 +1434,7 @@ namespace hig {
 											);
 		#else
 			return sf.compute_structure_factor_gpu(expt, center, curr_lattice, grain_repeats,
+											grain_scaling,
 											r_tot1, r_tot2, r_tot3
 											#ifdef USE_MPI
 												, multi_node_, comm_key
