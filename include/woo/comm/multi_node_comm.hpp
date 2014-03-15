@@ -3,7 +3,7 @@
   *
   *  File: multi_node_comm.hpp
   *  Created: Mar 18, 2013
-  *  Modified: Mon 23 Sep 2013 12:37:21 PM PDT
+  *  Modified: Sat 15 Mar 2014 11:21:28 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -199,7 +199,8 @@ namespace woo {
 	}; // class MultiNodeComm
 
 
-	typedef std::map <const char*, MultiNodeComm> multi_node_comm_map_t;
+	//typedef std::map <const char*, MultiNodeComm> multi_node_comm_map_t;
+	typedef std::map <std::string, MultiNodeComm> multi_node_comm_map_t;
 
 	/**
 	 * For communication - TODO: make it singleton
