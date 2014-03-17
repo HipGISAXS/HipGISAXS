@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_main.cpp
  *  Created: Jun 14, 2012
- *  Modified: Thu 13 Mar 2014 04:41:20 PM PDT
+ *  Modified: Sat 15 Mar 2014 02:56:49 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -1069,7 +1069,7 @@ namespace hig {
 				/* compute intensities using sf and ff */
 				// TODO: parallelize ...
 				if(gmaster) {	// grain master
-					complex_t* base_id = grain_ids + grain_i * nqx_ * nqy_ * nqz_;
+					complex_t* base_id = grain_ids + (grain_i - grain_min) * nqx_ * nqy_ * nqz_;
 
 					unsigned int nslices = HiGInput::instance().param_nslices();
 					if(nslices <= 1) {
