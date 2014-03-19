@@ -157,32 +157,28 @@ $ ./bin/hipgisaxs inputs/01-cylinder.hig
 ```
 $ module unload pgi openmpi
 ```
-or,
-
-    $ scons --extrapath=<path1>,<path2>,<etc> --with-mpi
-
 2. Load the required modules:
-
-    $ module load openmpi-gnu gcc/4.5.2 cuda/4.2
-    $ module load szip zlib
-    $ module load hdf5-parallel/1.8.3-gnu
-
+```
+$ module load openmpi-gnu gcc/4.5.2 cuda/4.2
+$ module load szip zlib
+$ module load hdf5-parallel/1.8.3-gnu
+```
 3. Request an interactive GPU node:
-
-    $ qsub -I -V -q dirac_int -l nodes=1:ppn=8:fermi
-
+```
+$ qsub -I -V -q dirac_int -l nodes=1:ppn=8:fermi
+```
 4. Make sure loaded modules are correct. By default, PGI version of openMPI might be loaded, and needs to be unloaded:
-
-    $ module unload openmpi
-
+```
+$ module unload openmpi
+```
 5. Move to the work directory:
-
-    $ cd $PBS_O_WORKDIR
-
+```
+$ cd $PBS_O_WORKDIR
+```
 6. Execute on a single node:
-
-    $ ./bin/hipgisaxs inputs/01-cylinder.hig
-
+```
+$ ./bin/hipgisaxs inputs/01-cylinder.hig
+```
 NOTE: For details on running interactive jobs on Dirac, please refer to:
     http://www.nersc.gov/users/computational-systems/dirac/running-jobs/interactive
 
