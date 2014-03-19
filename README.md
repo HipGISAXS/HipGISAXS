@@ -1,5 +1,5 @@
 # HipGISAXS Version 1.0: QUICK STARTER GUIDE #
-Bug (what bug?) reporting: Email: bug-submit@saxs-waxs-gpu.dhcp.lbl.gov and asarje@lbl.gov
+Bug (what bug?) reporting: `Email: bug-submit@saxs-waxs-gpu.dhcp.lbl.gov` and `asarje@lbl.gov`
 
 ## TABLE OF CONTENTS ##
   1. LICENSING
@@ -127,9 +127,9 @@ To enable MPI support, use `--with-mpi` option:
     $ scons --extrapath=<path1>,<path2>,<etc> --with-gpu --with-mpi
 
 or,
-```Shell
-$ scons --extrapath=<path1>,<path2>,<etc> --with-mpi
-```
+
+    $ scons --extrapath=<path1>,<path2>,<etc> --with-mpi
+
 The generated binary, `hipgisaxs`, will be located in the `bin` directory.
 The generated static library, `libhipgisaxs.a`, will be located in the `lib` directory.
 
@@ -139,37 +139,58 @@ NOTE: See Appendix at the end of this file for more detailed and customized buil
 
 
 ## TO USE THE HIPGISAXS LIBRARY IN YOUR OWN APPLICATION
-   Please refer to the example provided in the "samples" directory.
-   It contains a simple code which uses the hipgisaxs library.
-   Its corresponsing Makefile is also provided.
+   Please refer to the examples provided in the `samples` directory.
+   It contains simple code which uses the HipGISAXS library.
+   The corresponsing Makefile is also provided as a reference.
 
 
-## TO RUN THE APPLICATION
+## TO RUN HIPGISAXS
    
-### A. Interactively on Dirac (NERSC)
+### A. On a Linux/OS X machine with or without GPU
+1. Make sure all the paths (data, output) and other variables are correctly set in the input HiG file.
+2. Execute the binary with the input file as an argument:
+
+    $ ./bin/hipgisaxs <input-file-in-HiG>
+
+   Example:
+
+    $ ./bin/hipgisaxs inputs/01-cylinder.hig
+
+### A. Interactively on the Dirac system at NERSC
 1. Unload the default PGI modules:
+
     $ module unload pgi openmpi
+
 2. Load the required modules:
+
     $ module load openmpi-gnu gcc/4.5.2 cuda/4.2
     $ module load szip zlib
     $ module load hdf5-parallel/1.8.3-gnu
-3. Request a GPU node:
+
+3. Request an interactive GPU node:
+
     $ qsub -I -V -q dirac_int -l nodes=1:ppn=8:fermi
-4. Make sure loaded modules are correct.
-   By default, PGI version of openMPI might be loaded, and needs to be unloaded:
+
+4. Make sure loaded modules are correct. By default, PGI version of openMPI might be loaded, and needs to be unloaded:
+
     $ module unload openmpi
-5. Move to code directory:
+
+5. Move to the work directory:
+
     $ cd $PBS_O_WORKDIR
+
 6. Execute on a single node:
-    Usage: ./bin/hipgisaxs <input-file-in-HiG>
-   Example:
-    $ ./bin/hipgisaxs inputs/test.27.hig
-7. For more details on running interactive jobs on Dirac, please refer to:
+
+    $ ./bin/hipgisaxs inputs/01-cylinder.hig
+
+NOTE: For details on running interactive jobs on Dirac, please refer to:
     http://www.nersc.gov/users/computational-systems/dirac/running-jobs/interactive
 
-### B. Submit batch job for multiple GPU nodes on Dirac (NERSC)
-1. Create a job script. Example:
+### B. Submit batch job to use multiple GPU nodes on the Dirac system at NERSC
+1. Create a job script. Example of such a file:
+
      $ cat script.pbs
+
      #PBS -q dirac_special
      #PBS -l nodes=12:ppn=1:fermi
      #PBS -l walltime=03:00:00
@@ -178,30 +199,32 @@ NOTE: See Appendix at the end of this file for more detailed and customized buil
      #PBS -e opv_new1.12.$PBS_JOBID.err
      #PBS -o opv_new1.12.$PBS_JOBID.out
      #PBS -V
+
      cd $PBS_O_WORKDIR
+
      module unload pgi openmpi
      module load openmpi-gnu/1.4.5 gcc/4.5.4 cuda/4.2
      module load szip zlib
      module load hdf5-parallel/1.8.3-gnu
+
      export PATH=/global/homes/a/asarje/local/tiff-4.0.2/bin:$PATH
      export LD_LIBRARY_PATH=/global/homes/a/asarje/local/tiff-4.0.2/lib:$LD_LIBRARY_PATH
-     mpirun -np 4 ./bin/hipgisaxs inputs/test.27.hig
-2. In the submission script:
-   Make sure the modules are loaded correctly (see example above.)
-   For the execution command, use:
-     mpitun -np <nodes> ./bin/hipgisaxs <input-file-in-HiG>
-   where, 'nodes' is number of GPU nodes.
-3. Submit the script:
-    $ qsub script.pbs
-4. For detailed information on writing and submitting job scripts for Dirac, please refer to:
-    http://www.nersc.gov/users/computational-systems/dirac/running-jobs/batch
 
-### C. Interactively on a generic Linux machine equipped with GPU (including saxs-waxs-gpu)
-1. Make sure all the paths (data, output) and other variables are correctly set in the input HiG file.
-2. Execute the binary:
-    Usage: ./bin/hipgisaxs <input-file-in-HiG>
-   Example:
-    $ ./bin/hipgisaxs inputs/test.27.hig
+     mpirun -np 4 ./bin/hipgisaxs inputs/10-flexrod.hig
+
+2. In the submission script, make sure the modules are loaded correctly (see example above.)
+   For the execution command, use:
+
+     mpirun -np <nodes> ./bin/hipgisaxs <input-file-in-HiG>
+
+   where, `<nodes>` is number of GPU nodes to use.
+ 
+3. Submit the job script to the queue:
+
+     $ qsub script.pbs
+
+4. For detailed information on writing and submitting job scripts on Dirac, please refer to:
+    http://www.nersc.gov/users/computational-systems/dirac/running-jobs/batch
 
 
 ## INPUTS
