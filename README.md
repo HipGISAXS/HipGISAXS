@@ -194,41 +194,44 @@ NOTE: See Appendix at the end of this file for more detailed and customized buil
     http://www.nersc.gov/users/computational-systems/dirac/running-jobs/interactive
 
 ### C. Submit batch job to use multiple GPU nodes on the Dirac system at NERSC
-1. Create a job script. Example of such a file:
+1. Create a job script. Example of such a file:  
+   ```
+   $ cat script.pbs
 
-     $ cat script.pbs
+   #PBS -q dirac_special
+   #PBS -l nodes=12:ppn=1:fermi
+   #PBS -l walltime=03:00:00
+   #PBS -A gpgpu
+   #PBS -N opv_new1.12
+   #PBS -e opv_new1.12.$PBS_JOBID.err
+   #PBS -o opv_new1.12.$PBS_JOBID.out
+   #PBS -V
 
-     #PBS -q dirac_special
-     #PBS -l nodes=12:ppn=1:fermi
-     #PBS -l walltime=03:00:00
-     #PBS -A gpgpu
-     #PBS -N opv_new1.12
-     #PBS -e opv_new1.12.$PBS_JOBID.err
-     #PBS -o opv_new1.12.$PBS_JOBID.out
-     #PBS -V
+   cd $PBS_O_WORKDIR
 
-     cd $PBS_O_WORKDIR
+   module unload pgi openmpi
+   module load openmpi-gnu/1.4.5 gcc/4.5.4 cuda/4.2
+   module load szip zlib
+   module load hdf5-parallel/1.8.3-gnu
 
-     module unload pgi openmpi
-     module load openmpi-gnu/1.4.5 gcc/4.5.4 cuda/4.2
-     module load szip zlib
-     module load hdf5-parallel/1.8.3-gnu
+   export PATH=/global/homes/a/asarje/local/tiff-4.0.2/bin:$PATH
+   export LD_LIBRARY_PATH=/global/homes/a/asarje/local/tiff-4.0.2/lib:$LD_LIBRARY_PATH
 
-     export PATH=/global/homes/a/asarje/local/tiff-4.0.2/bin:$PATH
-     export LD_LIBRARY_PATH=/global/homes/a/asarje/local/tiff-4.0.2/lib:$LD_LIBRARY_PATH
-
-     mpirun -np 4 ./bin/hipgisaxs inputs/10-flexrod.hig
-
+   mpirun -np 4 ./bin/hipgisaxs inputs/10-flexrod.hig
+   ```
 2. In the submission script, make sure the modules are loaded correctly (see example above.)
    For the execution command, use:
 
-     mpirun -np <nodes> ./bin/hipgisaxs <input-file-in-HiG>
-
+   ```
+   mpirun -np <nodes> ./bin/hipgisaxs <input-file-in-HiG>  
+   ```
    where, `<nodes>` is number of GPU nodes to use.
  
 3. Submit the job script to the queue:
 
-     $ qsub script.pbs
+   ```
+   $ qsub script.pbs
+   ```
 
 4. For detailed information on writing and submitting job scripts on Dirac, please refer to:
     http://www.nersc.gov/users/computational-systems/dirac/running-jobs/batch
