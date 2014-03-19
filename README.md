@@ -152,7 +152,7 @@ NOTE: See Appendix at the end of this file for more detailed and customized buil
 
     $ ./bin/hipgisaxs <input-file-in-HiG>
 
-   Example:
+  Example:
 
     $ ./bin/hipgisaxs inputs/01-cylinder.hig
 
