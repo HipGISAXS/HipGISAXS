@@ -65,6 +65,7 @@ HipGISAXS has been tested on, and supports, the following.
 This software uses several third-party libraries, and they need to be installed and available in order to compile and run HipGISAXS.
 For ease, if possible use the installations already available on your system, if any. Alternatively, download and install them yourself.
 The following are the dependencies of this software:
+
 1. GNU C/C++ compilers, version >= 4.3 and <= 4.7 (4.6 recommended), for CPU and GPU versions, OR
    Intel C/C++ compilers, version >= 13.1.0.146, necessary for MIC version. Can be used for other versions, but has not been tested. Intel compilers will work best with GNU compatibility 4.6.
 2. Nvidia CUDA version > 4.x. (>= 5.0 recommended).
