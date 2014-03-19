@@ -243,16 +243,21 @@ Please refer to detailed HipGISAXS documentation for details of the HiG format.
 A few sample input files are located in the directory "inputs", with extensions ".hig".
 Update the input file as needed.
 The main components in the input file to update are the following:
+
 1. Shape name defines the input filename containing triangulated shape data.
-   It should point to the correct location of the file (relative path):
+   It should point to the correct location of the file (relative path):  
+   ```
        ...
        shape = {
     	   ...
     	   name = "data/Shape_27.hd5"
        } ...
-   This file needs to be in HDF5 format.
+   ```
+   This file needs to be either in HDF5 format or the OBJ format.  
    Some sample shape files are provided in the directory "data", with extensions ".hd5".
+
 2. Output locatation needs to be defined as pathprefix and runname in the computation object:
+   ```
       ...
       computation = {
     	  ...
@@ -260,20 +265,22 @@ The main components in the input file to update are the following:
     	  runname = "27",
     	  ...
       } ...
-   The pathprefix is a relative path to a directory.
-   The runname is appended with a timestamp and a directory by this resulting name
-    is created in the directory specified by pathprefix.
-   All generated output files are stored in this directory.
+   ```
+   The `pathprefix` is a relative path to a directory.  
+   The `runname` is appended with a timestamp, and a directory by this resulting name is created in the directory specified by `pathprefix`.  
+   All generated output files are stored in this generated directory.  
+
 3. Resolution alters the final image resolution, and also affects the run time:
+   ```
       ...
       computation = {
     	  ...
     	  resolution = [ 0.5 0.5 ],
     	  ...
       } ...
-   Lower resolutions execute faster, and higher slower.
-   Modify it as needed.
-
+   ```
+   Obviously, simulations with lower resolutions finish faster.  
+   Modify the provided input file templates as needed.
 
 
 # APPENDIX
