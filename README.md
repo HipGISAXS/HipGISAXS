@@ -127,9 +127,9 @@ To enable MPI support, use `--with-mpi` option:
     $ scons --extrapath=<path1>,<path2>,<etc> --with-gpu --with-mpi
 
 or,
-
-    $ scons --extrapath=<path1>,<path2>,<etc> --with-mpi
-
+```Shell
+$ scons --extrapath=<path1>,<path2>,<etc> --with-mpi
+```
 The generated binary, `hipgisaxs`, will be located in the `bin` directory.
 The generated static library, `libhipgisaxs.a`, will be located in the `lib` directory.
 
