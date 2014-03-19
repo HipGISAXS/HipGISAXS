@@ -115,20 +115,16 @@ The following are the dependencies of this software:
 
 ## TO BUILD THE APPLICATION AND LIBRARY
 To build the HipGISAXS application binary and static library, use `scons`. Make sure you are passing paths to all the dependencies through `--extrapath=` option of scons:
-```shell
-$ scons --extrapath=<path1>,<path2>,<etc>
+    $ scons --extrapath=<path1>,<path2>,<etc>
 
 To enable GPU support, use `--with-cuda` option:
-```shell
-$ scons --extrapath=<path1>,<path2>,<etc> --with-gpu
+    $ scons --extrapath=<path1>,<path2>,<etc> --with-gpu
 
 To enable MPI support, use `--with-mpi` option:
-```shell
-$ scons --extrapath=<path1>,<path2>,<etc> --with-gpu --with-mpi
+    $ scons --extrapath=<path1>,<path2>,<etc> --with-gpu --with-mpi
 
 or,
-```shell
-$ scons --extrapath=<path1>,<path2>,<etc> --with-mpi
+    $ scons --extrapath=<path1>,<path2>,<etc> --with-mpi
 
 The generated binary, `hipgisaxs`, will be located in the `bin` directory.
 The generated static library, `libhipgisaxs.a`, will be located in the `lib` directory.
