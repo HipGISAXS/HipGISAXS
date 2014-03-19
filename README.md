@@ -158,6 +158,7 @@ NOTE: See Appendix at the end of this file for more detailed and customized buil
 
 ### B. Interactively on the Dirac system at NERSC
 1. Unload the default PGI modules:  
+
    ```
    $ module unload pgi openmpi
    ```
@@ -169,21 +170,26 @@ NOTE: See Appendix at the end of this file for more detailed and customized buil
    $ module load hdf5-parallel/1.8.3-gnu  
    ```
 3. Request an interactive GPU node:  
+
    ```
    $ qsub -I -V -q dirac_int -l nodes=1:ppn=8:fermi
    ```
 4. Make sure loaded modules are correct. By default, PGI version of openMPI might be loaded, and needs to be unloaded:  
+
    ```
    $ module unload openmpi
    ```
 5. Move to the work directory:  
+
    ```
    $ cd $PBS_O_WORKDIR
    ```
 6. Execute on a single node:  
+
    ```
    $ ./bin/hipgisaxs inputs/01-cylinder.hig  
    ```
+
    NOTE: For details on running interactive jobs on Dirac, please refer to:
     http://www.nersc.gov/users/computational-systems/dirac/running-jobs/interactive
 
