@@ -162,9 +162,10 @@ NOTE: See Appendix at the end of this file for more detailed and customized buil
    $ module unload pgi openmpi
    ```
 2. Load the required modules:  
+
    ```
-   $ module load openmpi-gnu gcc/4.5.2 cuda/4.2;  
-   $ module load szip zlib;  
+   $ module load openmpi-gnu gcc/4.5.2 cuda/4.2  
+   $ module load szip zlib  
    $ module load hdf5-parallel/1.8.3-gnu  
    ```
 3. Request an interactive GPU node:  
