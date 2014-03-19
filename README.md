@@ -1,5 +1,5 @@
-# HipGISAXS Version 1.0: QUICK STARTER GUIDE #
-Bug (what bug?) reporting: `Email: bug-submit@saxs-waxs-gpu.dhcp.lbl.gov` and `asarje@lbl.gov`
+# HipGISAXS: QUICK STARTER GUIDE #
+Bug (what bug?) reporting: Email: `bug-submit@saxs-waxs-gpu.dhcp.lbl.gov` and `asarje@lbl.gov`
 
 ## TABLE OF CONTENTS ##
   1. LICENSING
@@ -40,9 +40,9 @@ This licensing information is also provided as a PDF file along with the documen
 HipGISAXS has been tested on, and supports, the following.
 
 ### A. Operating System Platforms
-1. GNU/Linux x86\_64: Ubuntu, Red Hat Linux, SUSE Linux, Cray Linux Environment (XT5, XE5, XK6, XE6, XC30).
+1. GNU/Linux x86\_64: Ubuntu, Red Hat Linux, SUSE Linux, Cray Linux Environment (XT5, XE5, XK7, XE6, XC30).
 2. Darwin x86\_64: Mac OS X (Lion, Mountain Lion).
-3. You could try HipGISAXS on any UNIX based OS, but it may or may not support it.
+3. You could try HipGISAXS on any UNIX based OS, but it may or may not be supported.  
    Please let us know about your platform (except Windows!) so that we can include it in our list.
 
 ### B. System Hardware (Compute Environment)
@@ -116,7 +116,7 @@ The following are the dependencies of this software:
                       It contains many subdirectories.
 
 
-## TO BUILD THE APPLICATION AND LIBRARY
+## TO BUILD HIPGISAXS BINARY AND LIBRARY
 To build the HipGISAXS application binary and static library, use `scons`. Make sure you are passing paths to all the dependencies through `--extrapath=` option of scons:
 
     $ scons --extrapath=<path1>,<path2>,<etc>
@@ -156,11 +156,11 @@ NOTE: See Appendix at the end of this file for more detailed and customized buil
 $ ./bin/hipgisaxs inputs/01-cylinder.hig
 ```
 ### A. Interactively on the Dirac system at NERSC
-1. Unload the default PGI modules:
+1. Unload the default PGI modules:  
 ```
 $ module unload pgi openmpi
 ```
-2. Load the required modules:
+2. Load the required modules:  
 ```
 $ module load openmpi-gnu gcc/4.5.2 cuda/4.2
 $ module load szip zlib
