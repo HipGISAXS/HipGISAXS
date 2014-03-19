@@ -149,14 +149,14 @@ NOTE: See Appendix at the end of this file for more detailed and customized buil
 ### A. On a Linux/OS X machine with or without GPU
 1. Make sure all the paths (data, output) and other variables are correctly set in the input HiG file.
 2. Execute the binary with the input file as an argument. For example,
-
-    $ ./bin/hipgisaxs inputs/01-cylinder.hig
-
+```
+$ ./bin/hipgisaxs inputs/01-cylinder.hig
+```
 ### A. Interactively on the Dirac system at NERSC
 1. Unload the default PGI modules:
-
-    $ module unload pgi openmpi
-
+```
+$ module unload pgi openmpi
+```
 or,
 
     $ scons --extrapath=<path1>,<path2>,<etc> --with-mpi
