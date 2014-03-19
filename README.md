@@ -66,31 +66,32 @@ This software uses several third-party libraries, and they need to be installed 
 For ease, if possible use the installations already available on your system, if any. Alternatively, download and install them yourself.
 The following are the dependencies of this software:
 
-1. **GNU C/C++ compilers**, version >= 4.3 and <= 4.7 (4.6 recommended), for CPU and GPU versions, OR
-   **Intel C/C++ compilers**, version >= 13.1.0.146, necessary for MIC version. Can be used for other versions, but has not been tested. Intel compilers will work best with GNU compatibility 4.6.
-2. **Nvidia CUDA toolkit** version > 4.x. (>= 5.5 recommended).
-   CUDA can be obtained from: http://developer.nvidia.com/cuda/cuda-downloads
+1. **GNU C/C++ compilers**, version >= 4.3 and <= 4.7 (4.6 recommended), OR **Intel C/C++ compilers**, version >= 13.1.0.146.  
+   To compile with GPU support enabled, use GNU compilers.  
+   Intel compilers are necessary to enable Intel MIC version of HipGISAXS. Other versions of compilers may be used, but they have not been tested. Intel compilers will work best with GNU compatibility 4.6.
+2. **Nvidia CUDA toolkit** version > 4.x. (>= 5.5 recommended).  
+   CUDA can be obtained from: http://developer.nvidia.com/cuda/cuda-downloads  
    *NOTE: CUDA is NOT required if compiling for CPU-only or MIC versions.*
-3. GNU (or Intel depending on your compilers) compiled **OpenMPI** version > 1.4.4.
+3. **OpenMPI** compiled with GNU or Intel compilers which ever you are using to compile HipGISAXS. Version > 1.4.4.  
    OpenMPI can be obtained from: http://www.open-mpi.org/software
    *NOTE: Currently, even if you do not plan to use MPI, the compilation process still needs MPI.
-   		 This requirement will be removed in future.*
+   		 This requirement will be removed in future.*  
    Alternative implementations of MPI may also be used, such as MPICH2 and MVAPICH.
-4. **Boost** and **numeric extension to Boost GIL**.
-   Boost can be obtained from: http://www.boost.org
-   Numeric extension to Boost GIL can be obtained from the following (file name `numeric.zip`):
-     http://sourceforge.net/adobe/genimglib/wiki/Downloads
-     http://gil-contributions.googlecode.com/svn/trunk
-   After downloading, unzip the file, generating a directory named `numeric`.
+4. **Boost** and **numeric extension to Boost GIL**.  
+   Boost can be obtained from: http://www.boost.org  
+   Numeric extension to Boost GIL can be obtained from the following (file name `numeric.zip`):  
+     http://sourceforge.net/adobe/genimglib/wiki/Downloads  
+     http://gil-contributions.googlecode.com/svn/trunk  
+   After downloading, unzip the file, generating a directory named `numeric`.  
    Copy this directory under `boost/gil/extensions/` at your Boost installation location. If you do not have permissions to do that, you can specify an additional path to this library during the install process.
-5. **Parallel HDF5 library**.
-   HDF5 can be obtained from: http://www.hdfgroup.org/downloads
-   NOTE: HDF5 depends on zlib and szip libraries.
-   **zlib** can be obtained from: http://www.zlib.net
-   **szip** can be obtained from: http://www.hdfgroup.org/doc\_resource/SZIP
-6. **Tiff Library** (libtiff).
+5. **Parallel HDF5 library**.  
+   HDF5 can be obtained from: http://www.hdfgroup.org/downloads  
+   NOTE: HDF5 depends on the zlib and szip libraries.  
+   **zlib** can be obtained from: http://www.zlib.net  
+   **szip** can be obtained from: http://www.hdfgroup.org/doc\_resource/SZIP  
+6. **Tiff Library** (libtiff).  
    Tiff library can be obtained from: http://www.libtiff.org
-7. **Scons** version >= 2.0, for installation. It can be obtained from http://www.scons.org
+7. **Scons** version >= 2.0, for installation. It can be obtained from http://www.scons.org  
    *NOTE: Scons is based on the Python language, so you need to have Python installed too.*
 
 
