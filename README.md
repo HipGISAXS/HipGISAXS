@@ -151,38 +151,39 @@ NOTE: See Appendix at the end of this file for more detailed and customized buil
    
 ### A. On a Linux/OS X machine with or without GPU
 1. Make sure all the paths (data, output) and other variables are correctly set in the input HiG file.
-2. Execute the binary with the input file as an argument. For example,
+2. Execute the binary with the input file as an argument. For example,  
    ```
    $ ./bin/hipgisaxs inputs/01-cylinder.hig
    ```
+
 ### B. Interactively on the Dirac system at NERSC
-1. Unload the default PGI modules:
+1. Unload the default PGI modules:  
    ```
    $ module unload pgi openmpi
    ```
-2. Load the required modules:
+2. Load the required modules:  
    ```
    $ module load openmpi-gnu gcc/4.5.2 cuda/4.2
    $ module load szip zlib
    $ module load hdf5-parallel/1.8.3-gnu
    ```
-3. Request an interactive GPU node:
-```
-$ qsub -I -V -q dirac_int -l nodes=1:ppn=8:fermi
-```
-4. Make sure loaded modules are correct. By default, PGI version of openMPI might be loaded, and needs to be unloaded:
-```
-$ module unload openmpi
-```
-5. Move to the work directory:
-```
-$ cd $PBS_O_WORKDIR
-```
-6. Execute on a single node:
-```
-$ ./bin/hipgisaxs inputs/01-cylinder.hig
-```
-NOTE: For details on running interactive jobs on Dirac, please refer to:
+3. Request an interactive GPU node:  
+   ```
+   $ qsub -I -V -q dirac_int -l nodes=1:ppn=8:fermi
+   ```
+4. Make sure loaded modules are correct. By default, PGI version of openMPI might be loaded, and needs to be unloaded:  
+   ```
+   $ module unload openmpi
+   ```
+5. Move to the work directory:  
+   ```
+   $ cd $PBS_O_WORKDIR
+   ```
+6. Execute on a single node:  
+   ```
+   $ ./bin/hipgisaxs inputs/01-cylinder.hig
+   ```
+   NOTE: For details on running interactive jobs on Dirac, please refer to:
     http://www.nersc.gov/users/computational-systems/dirac/running-jobs/interactive
 
 ### C. Submit batch job to use multiple GPU nodes on the Dirac system at NERSC
