@@ -161,6 +161,10 @@ NOTE: See Appendix at the end of this file for more detailed and customized buil
 
     $ module unload pgi openmpi
 
+or,
+
+    $ scons --extrapath=<path1>,<path2>,<etc> --with-mpi
+
 2. Load the required modules:
 
     $ module load openmpi-gnu gcc/4.5.2 cuda/4.2
