@@ -86,12 +86,13 @@ The following are the dependencies of this software:
    Copy this directory under `boost/gil/extensions/` at your Boost installation location. If you do not have permissions to do that, you can specify an additional path to this library during the install process.
 5. **Parallel HDF5 library**.  
    HDF5 can be obtained from: http://www.hdfgroup.org/downloads  
-   NOTE: HDF5 depends on the zlib and szip libraries.  
+   *NOTE: HDF5 depends on the zlib and szip libraries.*  
    **zlib** can be obtained from: http://www.zlib.net  
    **szip** can be obtained from: http://www.hdfgroup.org/doc\_resource/SZIP  
 6. **Tiff Library** (libtiff).  
    Tiff library can be obtained from: http://www.libtiff.org
-7. **Scons** version >= 2.0, for installation. It can be obtained from http://www.scons.org  
+7. **Scons** version >= 2.0, for installation.  
+   It can be obtained from http://www.scons.org  
    *NOTE: Scons is based on the Python language, so you need to have Python installed too.*
 
 
