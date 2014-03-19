@@ -4,27 +4,27 @@ Bug (what bug?) reporting: Email: bug-submit@saxs-waxs-gpu.dhcp.lbl.gov and asar
 ## TABLE OF CONTENTS ##
   1. LICENSING
   2. SUPPORTED PLATFORMS
-    A. Operating System Platforms
-    B. System Hardware (Compute Environment)
-    C. System Hardware (Processor Architectures)
+    1. Operating System Platforms
+    2. System Hardware (Compute Environment)
+    3. System Hardware (Processor Architectures)
   3. SOFTWARE PRE-REQUISITES
   4. HipGISAXS DIRECTORY LAYOUT
   5. TO BUILD THE APPLICATION AND LIBRARY
   6. TO USE THE HIPGISAXS LIBRARY IN YOUR OWN APPLICATION
   7. TO RUN THE APPLICATION
-    A. Interactively on Dirac (NERSC)
-    B. Submit batch job for multiple GPU nodes on Dirac (NERSC)
-    C. Interactively on a generic Linux machine equipped with GPU
+    1. Interactively on Dirac (NERSC)
+    2. Submit batch job for multiple GPU nodes on Dirac (NERSC)
+    3. Interactively on a generic Linux machine equipped with GPU
   8. INPUTS
   9. APPENDIX
-    A. SPECIAL BUILD INSTRUCTIONS FOR SPECIFIC SYSTEMS
-      i. On Carver/Dirac at NERSC
-      ii. On Hopper/Edison at NERSC
-      iii. On Titan at OLCF
-      iv. On Stampede at TACC
-      v. On Mira at ALCF
-      vi. On a generic Linux system
-      vii. For certain users, on ALS GPU servers
+    1. SPECIAL BUILD INSTRUCTIONS FOR SPECIFIC SYSTEMS
+      1. On Carver/Dirac at NERSC
+      2. On Hopper/Edison at NERSC
+      3. On Titan at OLCF
+      4. On Stampede at TACC
+      5. On Mira at ALCF
+      6. On a generic Linux system
+      7. For certain users, on ALS GPU servers
 
 
 ## LICENSING ##
