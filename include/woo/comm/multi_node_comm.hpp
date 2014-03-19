@@ -3,7 +3,7 @@
   *
   *  File: multi_node_comm.hpp
   *  Created: Mar 18, 2013
-  *  Modified: Sat 15 Mar 2014 11:21:28 AM PDT
+  *  Modified: Mon 17 Mar 2014 06:50:30 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -16,11 +16,34 @@
 #include <mpi.h>
 #include <complex>
 #include <map>
+#include <vector>
 #include <string>
 
 namespace woo {
 
 	static const int MASTER_RANK = 0;
+
+	/**
+	 * Some enums
+	 */
+	namespace comm {
+
+		enum ReduceOp {
+			min,
+			max,
+			sum,
+			prod,
+			land,
+			band,
+			lor,
+			bor,
+			lxor,
+			bxor,
+			minloc,
+			maxloc
+		}; // enum CommOp
+
+	} // namespace comm
 
 	/**
 	 * Communicator
@@ -84,6 +107,24 @@ namespace woo {
 
 			inline void set_idle() { idle_ = true; }
 
+			inline MPI_Op reduce_op_map(comm::ReduceOp op) {
+				switch(op) {
+					case comm::min: return MPI_MIN;
+					case comm::max: return MPI_MAX;
+					case comm::sum: return MPI_SUM;
+					case comm::prod: return MPI_PROD;
+					case comm::land: return MPI_LAND;
+					case comm::band: return MPI_BAND;
+					case comm::lor: return MPI_LOR;
+					case comm::bor: return MPI_BOR;
+					case comm::lxor: return MPI_LXOR;
+					case comm::bxor: return MPI_BXOR;
+					case comm::minloc: return MPI_MINLOC;
+					case comm::maxloc: return MPI_MAXLOC;
+					default: return NULL;
+				} // switch
+			} // reduce_op_map()
+
 			inline MultiNodeComm split(int color) {
 				MPI_Comm new_comm;
 				MPI_Comm_split(world_, color, rank_, &new_comm);
@@ -129,6 +170,30 @@ namespace woo {
 				MPI_Bcast(&(*data), size, MPI_UNSIGNED, master_rank_, world_);
 				return true;
 			} // broadcast()
+
+			inline bool broadcast(float* data, int size, int root) {
+				if(MPI_Bcast(&(*data), size, MPI_FLOAT, root, world_) != MPI_SUCCESS) return false;
+				return true;
+			} // broadcast()
+
+			inline bool allreduce(float sendval, float& recvval, int& proc_rank, comm::ReduceOp op) {
+				if(op != comm::minloc && op != comm::maxloc) {
+					std::cerr << "error: invalid reduction operation" << std::endl;
+					return false;
+				} // if
+				MPI_Op mpi_op = reduce_op_map(op);
+				struct {
+					float val;
+					int rank;
+				} send, recv;
+				send.val = sendval;
+				send.rank = rank_;
+				if(MPI_Allreduce(&send, &recv, 1, MPI_FLOAT_INT, mpi_op, world_) != MPI_SUCCESS)
+					return false;
+				recvval = recv.val;
+				proc_rank = recv.rank;
+				return true;
+			} // allreduce()
 
 			inline bool scan_sum(unsigned int in, unsigned int& out) {
 				if(MPI_Scan(&in, &out, 1, MPI_UNSIGNED, MPI_SUM, world_) != MPI_SUCCESS)
@@ -279,6 +344,19 @@ namespace woo {
 			bool broadcast(const char* key, unsigned int* data, int size) {
 				return comms_[key].broadcast(data, size);
 			} // send_broadcast()
+
+			bool broadcast(const char* key, std::vector<float>& data, int rank) {
+				float* temp_data = new (std::nothrow) float[data.size()];
+				for(int i = 0; i < data.size(); ++ i) temp_data[i] = data[i];
+				bool success = comms_[key].broadcast(temp_data, data.size(), rank);
+				for(int i = 0; i < data.size(); ++ i) data[i] = temp_data[i];
+				delete[] temp_data;
+				return success;
+			} // broadcast()
+
+			bool allreduce(const char* key, float sendval, float& recvval, int& rank, comm::ReduceOp op) {
+				return comms_[key].allreduce(sendval, recvval, rank, op);
+			} // allreduce()
 
 			/**
 			 * Scans

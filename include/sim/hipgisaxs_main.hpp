@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_main.hpp
  *  Created: Jun 11, 2012
- *  Modified: Thu 13 Mar 2014 04:35:29 PM PDT
+ *  Modified: Mon 17 Mar 2014 03:54:15 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -169,6 +169,9 @@ namespace hig {
 			int num_fit_params() const { return HiGInput::instance().num_fit_params(); }
 			std::vector<float_t> fit_param_init_values() const { return HiGInput::instance().fit_param_init_values(); }
 
+			#ifdef USE_MPI
+				woo::MultiNode* multi_node_comm() { return &multi_node_; }
+			#endif
 
 			//template <typename ErrorFunction>
 			//float_t compute_gisaxs_error(const ErrorFunction&, float_t*);

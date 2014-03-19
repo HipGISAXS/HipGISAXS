@@ -3,7 +3,7 @@
  *
  *  File: objective_func.hpp
  *  Created: Feb 02, 2014
- *  Modified: Wed 26 Feb 2014 10:02:54 AM PST
+ *  Modified: Mon 17 Mar 2014 04:05:13 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -14,7 +14,8 @@
 #include <analyzer/ImageData.hpp>
 #include <analyzer/typedefs.hpp>
 #include <analyzer/distance_functions.hpp>
-#include <hipgisaxs.hpp>
+//#include <hipgisaxs.hpp>
+#include <woo/comm/multi_node_comm.hpp>
 
 #include <tao.h>
 
@@ -39,6 +40,9 @@ namespace hig{
 			virtual unsigned int data_size() const = 0;
 			//virtual unsigned int n_par() const { }
 			//virtual unsigned int n_ver() const { }
+			#ifdef USE_MPI
+				virtual woo::MultiNode* multi_node_comm() = 0;
+			#endif
 
 			// for testing
 			//virtual bool update_params(const float_vec_t&);
@@ -46,7 +50,7 @@ namespace hig{
 	}; // class ObjectiveFunction
 
 
-	class HipGISAXSObjectiveFunction : public ObjectiveFunction {
+/*	class HipGISAXSObjectiveFunction : public ObjectiveFunction {
 		private:
 			HipGISAXS hipgisaxs_;		// the hipgisaxs object
 			unsigned int n_par_;		// nqy
@@ -74,7 +78,7 @@ namespace hig{
 			// for testing
 			bool simulate_and_set_ref(const float_vec_t&);
 	}; // class HipGISAXSObjectiveFunction
-
+*/
 
 	PetscErrorCode EvaluateFunction(TaoSolver , Vec , Vec , void *);
 	PetscErrorCode EvaluateJacobian(TaoSolver , Vec , Mat *, Mat *, MatStructure*,void *);

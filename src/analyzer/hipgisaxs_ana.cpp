@@ -3,7 +3,7 @@
  *
  *  File: Analyzer.cpp
  *  Created: Dec 26, 2013
- *  Modified: Thu 27 Feb 2014 11:00:47 AM PST
+ *  Modified: Mon 17 Mar 2014 04:00:20 PM PDT
  *
  *  Author: Slim Chourou <stchourou@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -21,8 +21,9 @@
 
 #include <iostream>
 #include <analyzer/hipgisaxs_ana.hpp>
+#include <hipgisaxs.hpp>
 
-namespace hig{
+namespace hig {
 
 /*  bool Analyzer::setup(){
     return false;

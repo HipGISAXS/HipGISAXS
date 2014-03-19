@@ -3,7 +3,7 @@
  *
  *  File: fit_pso.cpp
  *  Created: Jan 13, 2014
- *  Modified: Wed 26 Feb 2014 01:39:49 PM PST
+ *  Modified: Mon 17 Mar 2014 07:02:14 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -14,6 +14,7 @@
 #include <ctime>
 
 #include <analyzer/hipgisaxs_fit_pso.hpp>
+#include <hipgisaxs.hpp>
 
 namespace hig {
 
@@ -25,15 +26,6 @@ namespace hig {
 		max_hist_ = 100;			// not used ...
 		tol_ = 1e-8;
 
-		//if(narg < 7) {
-		//	std::cerr << "error: for PSO please specify <num_particles> <num_gen> "
-		//				<< "<omega> <phi1> <phi2>" << std::endl;
-		//	exit(1);
-		//} // if
-
-		//pso_omega_ = atof(args[4]);
-		//pso_phi1_ = atof(args[5]);
-		//pso_phi2_ = atof(args[6]);
 		pso_omega_ = omega;
 		pso_phi1_ = phi1;
 		pso_phi2_ = phi2;
@@ -45,6 +37,11 @@ namespace hig {
 		params_ = (*obj_func_).fit_param_keys();
 		num_params_ = (*obj_func_).num_fit_params();
 		x0_ = (*obj_func_).fit_param_init_values();
+		#ifdef USE_MPI
+			multi_node_ = (*obj_func_).multi_node_comm();
+			std::cout << "** MPI Size: " << (*multi_node_).size();
+			std::cout << ", my rank: " << (*multi_node_).rank() << std::endl;
+		#endif
 
 		best_values_.resize(num_params_, 0.0);
 		best_fitness_ = std::numeric_limits<float_t>::max();
@@ -72,11 +69,22 @@ namespace hig {
 		constraints_.velocity_max_ = max_limits;
 
 		// get number of particles
-		//num_particles_ = atoi(args[2]);
 		num_particles_ = npart;
 		// max number of generations
-		//max_iter_ = atoi(args[3]);
 		max_iter_ = ngen;
+
+		#ifdef USE_MPI
+			const char* comm_key = "world";
+			int num_procs = (*multi_node_).size(comm_key);
+			int rank = (*multi_node_).rank(comm_key);
+			// two cases:	num_procs <= num_part (easy case)
+			// 				num_procs > num_part
+			if(num_procs <= num_particles_) {
+				num_particles_ = num_particles_ / num_procs +
+										(rank < (num_particles_ % num_procs) ? 1 : 0);
+			} else {
+			} // if-else
+		#endif
 
 		// initialize particles
 		particles_.clear();
@@ -119,6 +127,9 @@ namespace hig {
 
 
 	bool ParticleSwarmOptimization::simulate_generation() {
+		#ifdef USE_MPI
+			const char* comm_key = "world";
+		#endif
 		// for each particle, simulate
 		for(int i = 0; i < num_particles_; ++ i) {
 			// construct param map
@@ -129,28 +140,44 @@ namespace hig {
 				//curr_particle[params_[j]] = particles_[i].param_values_[j];
 			// compute the fitness
 			float_vec_t curr_fitness = (*obj_func_)(curr_particle);
+
+			std::cout << (*multi_node_).rank(comm_key) << ": IM HERE" << std::endl;
 			// update particle fitness
 			if(particles_[i].best_fitness_ > curr_fitness[0]) {
 				particles_[i].best_fitness_ = curr_fitness[0];
 				particles_[i].best_values_ = particles_[i].param_values_;
 			} // if
-			// update global best fitness
+			std::cout << (*multi_node_).rank(comm_key) << ": AND NOW HERE" << std::endl;
+			// update global best fitness locally
 			if(best_fitness_ > curr_fitness[0]) {
 				best_fitness_ = curr_fitness[0];
 				best_values_ = particles_[i].param_values_;
 			} // if
-			std::cout << "@@@@ " << i + 1 << ": " << curr_fitness[0] << " "
-				<< particles_[i].best_fitness_ << " [ ";
-			for(int j = 0; j < num_params_; ++ j) std::cout << particles_[i].param_values_[j] << " ";
-			std::cout << "]" << std::endl;
+			//std::cout << "@@@@ " << i + 1 << ": " << curr_fitness[0] << " "
+			//	<< particles_[i].best_fitness_ << " [ ";
+			//for(int j = 0; j < num_params_; ++ j) std::cout << particles_[i].param_values_[j] << " ";
+			//std::cout << "]" << std::endl;
+		} // for
 
+		#ifdef USE_MPI
+			// communicate and find globally best fitness
+			float_t new_best_fitness; int best_rank;
+			if(!(*multi_node_).allreduce(comm_key, best_fitness_, new_best_fitness, best_rank,
+											woo::comm::minloc))
+				return false;
+			if(!(*multi_node_).broadcast(comm_key, best_values_, best_rank)) return false;
+		#endif
+
+		// update each particle using new global best
+		for(int i = 0; i < num_particles_; ++ i) {
 			if(!particles_[i].update_particle(pso_omega_, pso_phi1_, pso_phi2_, best_values_,
 											constraints_, rand_)) {
 				std::cerr << "error: failed to update particle " << i << std::endl;
 				return false;
 			} // if
 		} // for
-		std::cout << "~~~~ Generation best: ";
+
+		/*std::cout << "~~~~ Generation best: ";
 		for(int i = 0; i < num_particles_; ++ i) {
 			std::cout << "[ ";
 			for(int j = 0; j < num_params_; ++ j)
@@ -163,10 +190,10 @@ namespace hig {
 		for(int j = 0; j < num_params_; ++ j)
 			std::cout << best_values_[j] << " ";
 		std::cout << "]\t";
-		std::cout << std::endl;
+		std::cout << std::endl;*/
 
 		// write out stuff to output files
-		std::string prefix(HiGInput::instance().param_pathprefix()+"/"+HiGInput::instance().runname());
+		/*std::string prefix(HiGInput::instance().param_pathprefix()+"/"+HiGInput::instance().runname());
 		for(int i = 0; i < num_particles_; ++ i) {
 			std::stringstream outss; outss << "/pso_params_particle_" << i << ".dat";
 			std::ofstream out(prefix + outss.str(), std::ios::app);
@@ -186,7 +213,7 @@ namespace hig {
 		out.close();
 		std::ofstream out2(prefix + "/pso_fitness_best.dat", std::ios::app);
 		out2 << best_fitness_ << std::endl;
-		out2.close();
+		out2.close();*/
 
 		return true;
 	} // ParticleSwarmOptimization::simulate_generation()

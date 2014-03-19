@@ -3,7 +3,7 @@
  *
  *  File: objective_func.cpp
  *  Created: Feb 02, 2014
- *  Modified: Mon 17 Mar 2014 03:49:50 PM PDT
+ *  Modified: Mon 17 Mar 2014 03:50:22 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -11,11 +11,11 @@
 #include <iostream>
 #include <map>
 
-#include <analyzer/objective_func.hpp>
+#include <analyzer/objective_func_hipgisaxs.hpp>
 
 namespace hig{
 
-/*	HipGISAXSObjectiveFunction::HipGISAXSObjectiveFunction(int narg, char** args, DistanceMeasure* d) :
+	HipGISAXSObjectiveFunction::HipGISAXSObjectiveFunction(int narg, char** args, DistanceMeasure* d) :
 			hipgisaxs_(narg, args) {
 		if(!hipgisaxs_.construct_input(args[1])) {
 			std::cerr << "error: failed to construct HipGISAXS input containers" << std::endl;
@@ -135,40 +135,5 @@ namespace hig{
 
 		return true;
 	} // ObjectiveFunction::operator()()
-*/
-
-	// from Slim's original code
-	PetscErrorCode EvaluateFunction(TaoSolver tao, Vec X, Vec F, void *ptr) {
-		// Compute F(X)
-		PetscFunctionBegin;
-		VecView(X, PETSC_VIEWER_STDOUT_WORLD);
-
-		PetscErrorCode ierr;
-		PetscReal *x, *f;
-
-		ierr = VecGetArray(X,&x);
-		ierr = VecGetArray(F,&f);
-
-		// either ff or f can be eliminated ...
-		int data_size = ((ObjectiveFunction*) ptr)->data_size();
-		PetscReal* ff = new PetscReal[data_size];
-		float_vec_t params;
-		int num_params = ((ObjectiveFunction*) ptr)->num_fit_params();
-		for(int i = 0; i < num_params; ++ i) params.push_back(x[i]);
-		float_vec_t temp = (*(ObjectiveFunction*) ptr)(params);
-		for(int i = 0; i < data_size; ++ i) { ff[i] = temp[i]; f[i] = temp[i]; }
-
-		ierr = VecRestoreArray(X, &x); CHKERRQ(ierr);
-		ierr = VecRestoreArray(F, &ff); CHKERRQ(ierr);
-
-		std::cout << "Eval X =\n" ;
-		VecView(X, PETSC_VIEWER_STDOUT_WORLD);
-		//std::cout << "F = \n" ;
-		//VecView(F, PETSC_VIEWER_STDOUT_WORLD);
-
-		PetscFunctionReturn(0);
-		return 0;
-	} // EvaluateFunction()
-
 
 } // namespace hig

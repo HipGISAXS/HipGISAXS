@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_fit_pso.hpp
  *  Created: Jan 13, 2014
- *  Modified: Wed 26 Feb 2014 11:54:59 AM PST
+ *  Modified: Mon 17 Mar 2014 03:44:49 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -14,6 +14,10 @@
 #include <analyzer/analysis_algorithm.hpp>
 #include <analyzer/hipgisaxs_fit_pso_typedefs.hpp>
 #include <woo/random/woo_mtrandom.hpp>
+
+#ifdef USE_MPI
+#include <woo/comm/multi_node_comm.hpp>
+#endif
 
 namespace hig {
 
@@ -84,6 +88,10 @@ namespace hig {
 
 			// helpers
 			woo::MTRandomNumberGenerator rand_;			// random number generator
+			#ifdef USE_MPI
+			// multinode communicator pointer
+				woo::MultiNode* multi_node_;
+			#endif
 
 			bool simulate_generation();					// simulate single generation
 
