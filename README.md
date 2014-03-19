@@ -148,11 +148,7 @@ NOTE: See Appendix at the end of this file for more detailed and customized buil
    
 ### A. On a Linux/OS X machine with or without GPU
 1. Make sure all the paths (data, output) and other variables are correctly set in the input HiG file.
-2. Execute the binary with the input file as an argument:
-
-    $ ./bin/hipgisaxs <input-file-in-HiG>
-
-  Example:
+2. Execute the binary with the input file as an argument. For example,
 
     $ ./bin/hipgisaxs inputs/01-cylinder.hig
 
