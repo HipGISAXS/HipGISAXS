@@ -2,7 +2,7 @@
 
 #include <analyzer/distance_functions.hpp>
 #include <analyzer/hipgisaxs_fit_pounders.hpp>
-#include <analyzer/objective_func.hpp>
+#include <analyzer/objective_func_hipgisaxs.hpp>
 #include <analyzer/hipgisaxs_ana.hpp>
 
 
@@ -23,7 +23,7 @@ int main(int narg, char** args) {
 	ana.add_analysis_algo(&pounders);								// add analysis algo
 																	// similarly add more if needed
 
-	ana.analyze(narg, args);										// perform the analysis
+	ana.analyze(narg, args, 1);										// perform the analysis
 
 	return 0;
 } // main()

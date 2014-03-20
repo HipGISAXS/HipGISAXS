@@ -3,7 +3,7 @@
  *
  *  File: sf.cpp
  *  Created: Jun 18, 2012
- *  Modified: Thu 13 Mar 2014 04:34:18 PM PDT
+ *  Modified: Wed 19 Mar 2014 01:52:39 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -57,11 +57,11 @@ namespace hig {
 							Lattice* lattice, vector3_t repet, float_t scaling,
 							vector3_t rotation_1, vector3_t rotation_2, vector3_t rotation_3
 							#ifdef USE_MPI
-								, woo::MultiNode& world_comm, const char* comm_key
+								, woo::MultiNode& world_comm, std::string comm_key
 							#endif
 							) {
 		#ifdef USE_MPI
-			bool master = world_comm.is_master();
+			bool master = world_comm.is_master(comm_key);
 		#else
 			bool master = true;
 		#endif

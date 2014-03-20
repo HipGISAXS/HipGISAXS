@@ -3,7 +3,7 @@
  *
  *  File: pso.cpp
  *  Created: Jan 13, 2014
- *  Modified: Mon 17 Mar 2014 04:06:03 PM PDT
+ *  Modified: Thu 20 Mar 2014 07:19:07 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -30,7 +30,13 @@ int main(int narg, char** args) {
 	hig::HipGISAXSAnalyzer ana;
 	ana.add_analysis_algo(&my_pso);
 
+	woo::BoostChronoTimer maintimer;
+
+	maintimer.start();
 	ana.analyze(narg, args, 1);
+	maintimer.stop();
+
+	std::cout << "** ** TOTAL ANALYSIS TIME: " << maintimer.elapsed_msec() << " ms. ** **" << std::endl;
 
 	return 0;
 } // main()

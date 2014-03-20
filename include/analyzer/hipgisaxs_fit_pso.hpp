@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_fit_pso.hpp
  *  Created: Jan 13, 2014
- *  Modified: Mon 17 Mar 2014 03:44:49 PM PDT
+ *  Modified: Wed 19 Mar 2014 01:22:32 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -88,10 +88,14 @@ namespace hig {
 
 			// helpers
 			woo::MTRandomNumberGenerator rand_;			// random number generator
+
+			// for multiple node usage
 			#ifdef USE_MPI
-			// multinode communicator pointer
+				// multinode communicator pointer
 				woo::MultiNode* multi_node_;
 			#endif
+			std::string root_comm_;
+			std::string particle_comm_;
 
 			bool simulate_generation();					// simulate single generation
 

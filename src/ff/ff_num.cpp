@@ -3,7 +3,7 @@
  *
  *  File: ff_num.cpp
  *  Created: Jul 18, 2012
- *  Modified: Sun 26 Jan 2014 10:26:15 AM PST
+ *  Modified: Wed 19 Mar 2014 04:45:11 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -63,7 +63,7 @@ namespace hig {
 	bool NumericFormFactor::compute(const char* filename, complex_vec_t& ff,
 									vector3_t& rot1, vector3_t& rot2, vector3_t& rot3
 									#ifdef USE_MPI
-										, woo::MultiNode& world_comm, const char* comm_key
+										, woo::MultiNode& world_comm, std::string comm_key
 									#endif
 									) {
 		float_t comp_start = 0.0, comp_end = 0.0, comm_start = 0.0, comm_end = 0.0;

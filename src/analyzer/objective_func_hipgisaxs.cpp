@@ -3,7 +3,7 @@
  *
  *  File: objective_func.cpp
  *  Created: Feb 02, 2014
- *  Modified: Mon 17 Mar 2014 03:50:22 PM PDT
+ *  Modified: Thu 20 Mar 2014 06:43:51 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -95,6 +95,11 @@ namespace hig{
 		// update and compute gisaxs
 		hipgisaxs_.update_params(param_vals);
 		hipgisaxs_.compute_gisaxs(gisaxs_data);
+		if(gisaxs_data == NULL) {
+			std::cerr << "error: something went wrong in compute_gisaxs. gisaxs_data == NULL."
+						<< std::endl;
+			exit(-1);
+		} // if
 
 		// compute error/distance
 		float_t* ref_data = (*ref_data_).data();

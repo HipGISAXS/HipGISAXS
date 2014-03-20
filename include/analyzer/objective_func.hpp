@@ -3,7 +3,7 @@
  *
  *  File: objective_func.hpp
  *  Created: Feb 02, 2014
- *  Modified: Mon 17 Mar 2014 04:05:13 PM PDT
+ *  Modified: Thu 20 Mar 2014 06:46:17 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -19,7 +19,7 @@
 
 #include <tao.h>
 
-namespace hig{
+namespace hig {
 
 	class ObjectiveFunction {
 		protected:
@@ -42,6 +42,7 @@ namespace hig{
 			//virtual unsigned int n_ver() const { }
 			#ifdef USE_MPI
 				virtual woo::MultiNode* multi_node_comm() = 0;
+				virtual bool update_sim_comm(std::string) { }
 			#endif
 
 			// for testing

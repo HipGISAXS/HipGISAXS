@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_main.hpp
  *  Created: Jun 11, 2012
- *  Modified: Mon 17 Mar 2014 03:54:15 PM PDT
+ *  Modified: Wed 19 Mar 2014 05:47:25 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -85,18 +85,20 @@ namespace hig {
 			#ifdef USE_MPI
 				woo::MultiNode multi_node_;	/* for multi node communication */
 			#endif
+			std::string root_comm_;		/* the universe */
+			std::string sim_comm_;		/* communicator for simulations */
 
 			bool init();	/* global initialization for all runs */
 			//bool init_steepest_fit(float_t);	/* init for steepest descent fitting */
 			bool run_init(float_t, float_t, float_t, SampleRotation&); 	/* init for a single run */
-			bool run_gisaxs(float_t, float_t, float_t, float_t, float_t*&, const char*, int c = 0);
+			bool run_gisaxs(float_t, float_t, float_t, float_t, float_t*&, std::string, int c = 0);
 										/* a single GISAXS run */
 
 			/* wrapper over sf function */
 			bool structure_factor(StructureFactor&, std::string, vector3_t&, Lattice*&, vector3_t&,
 									float_t, vector3_t&, vector3_t&, vector3_t&
 									#ifdef USE_MPI
-										, const char*
+										, std::string
 									#endif
 									);
 
@@ -104,7 +106,7 @@ namespace hig {
 			bool form_factor(FormFactor&, ShapeName, std::string, shape_param_list_t&, vector3_t&,
 									float_t, float_t, vector3_t&, vector3_t&, vector3_t&
 									#ifdef USE_MPI
-										, const char*
+										, std::string
 									#endif
 									);
 
@@ -148,7 +150,7 @@ namespace hig {
 			bool update_params(const map_t&);
 
 			bool fit_init();
-			bool compute_gisaxs(float_t*&);
+			bool compute_gisaxs(float_t*&, std::string = "");
 
 			// temporary fitting related ...
 			std::vector <std::string> fit_param_keys() const {
@@ -171,6 +173,7 @@ namespace hig {
 
 			#ifdef USE_MPI
 				woo::MultiNode* multi_node_comm() { return &multi_node_; }
+				bool update_sim_comm(std::string comm) { sim_comm_ = comm; return true; }
 			#endif
 
 			//template <typename ErrorFunction>

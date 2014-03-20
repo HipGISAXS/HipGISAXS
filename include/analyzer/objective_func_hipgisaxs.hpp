@@ -3,7 +3,7 @@
  *
  *  File: objective_func_hipgisaxs.hpp
  *  Created: Feb 02, 2014
- *  Modified: Mon 17 Mar 2014 04:05:03 PM PDT
+ *  Modified: Wed 19 Mar 2014 05:39:09 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -30,6 +30,7 @@ namespace hig {
 			bool set_distance_measure(DistanceMeasure*);
 			bool set_reference_data(int);
 			bool set_reference_data(char*) { }
+
 			float_vec_t operator()(const float_vec_t&);
 
 			int num_fit_params() const { return hipgisaxs_.num_fit_params(); }
@@ -43,6 +44,7 @@ namespace hig {
 
 			#ifdef USE_MPI
 				woo::MultiNode* multi_node_comm() { return hipgisaxs_.multi_node_comm(); }
+				bool update_sim_comm(std::string comm) { return hipgisaxs_.update_sim_comm(comm); }
 			#endif
 
 			// for testing

@@ -3,7 +3,7 @@
   *
   *  File: multi_node_comm.hpp
   *  Created: Mar 18, 2013
-  *  Modified: Mon 17 Mar 2014 06:50:30 PM PDT
+  *  Modified: Wed 19 Mar 2014 01:47:54 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -274,12 +274,20 @@ namespace woo {
 	class MultiNode {
 
 		public:
-			MultiNode(int narg, char** args) {
+			MultiNode(int narg, char** args): universe_key_("world") {
 				MPI_Init(&narg, &args);
 				comms_.clear();
 				MultiNodeComm universe(MPI_COMM_WORLD);
-				world_num_procs_ = universe.size();
-				comms_["world"] = universe;
+				universe_num_procs_ = universe.size();
+				comms_[universe_key_] = universe;
+			} // MultiNodeComm()
+
+			MultiNode(int narg, char** args, const std::string& univ_key): universe_key_(univ_key) {
+				MPI_Init(&narg, &args);
+				comms_.clear();
+				MultiNodeComm universe(MPI_COMM_WORLD);
+				universe_num_procs_ = universe.size();
+				comms_[universe_key_] = universe;
 			} // MultiNodeComm()
 
 			~MultiNode() {
@@ -292,19 +300,21 @@ namespace woo {
 			} // init()
 
 			// number of procs in the world
-			inline int size() { return comms_.at("world").size(); }
+			/*inline int size() { return comms_.at("world").size(); }
 			inline int rank() { return comms_.at("world").rank(); }
 			inline bool is_master() { return (comms_.at("world").rank() == comms_.at("world").master()); }
 			inline bool is_idle() { return comms_.at("world").is_idle(); }
-			inline int master() { return comms_.at("world").master(); }
+			inline int master() { return comms_.at("world").master(); }*/
 
-			inline int size(const char* key) { return comms_.at(key).size(); }
-			inline int rank(const char* key) { return comms_.at(key).rank(); }
-			inline bool is_master(const char* key) { return comms_.at(key).is_master(); }
-			inline bool is_idle(const char* key) { return comms_.at(key).is_idle(); }
-			inline int master(const char* key) { return comms_.at(key).master(); }
+			inline std::string universe_key() const { return universe_key_; }
 
-			inline void set_idle(const char* key) { comms_.at(key).set_idle(); }
+			inline int size(std::string key) { return comms_.at(key).size(); }
+			inline int rank(std::string key) { return comms_.at(key).rank(); }
+			inline bool is_master(std::string key) { return comms_.at(key).is_master(); }
+			inline bool is_idle(std::string key) { return comms_.at(key).is_idle(); }
+			inline int master(std::string key) { return comms_.at(key).master(); }
+
+			inline void set_idle(std::string key) { comms_.at(key).set_idle(); }
 
 			// number of communicators including the world
 			inline int num_comms() const { return comms_.size(); }
@@ -313,17 +323,17 @@ namespace woo {
 			 * Create new communicators
 			 */
 
-			bool split(const char* new_key, const char* key, int color) {
+			inline bool split(std::string new_key, std::string key, int color) {
 				comms_[new_key] = comms_[key].split(color);
 				return true;
 			} // split()
 
-			bool dup(const char* new_key, const char* key) {
+			inline bool dup(std::string new_key, std::string key) {
 				comms_[new_key] = comms_[key].dup();
 				return true;
 			} // dup()
 
-			bool free(const char* key) {
+			inline bool free(std::string key) {
 				comms_[key].free();
 				comms_.erase(key);
 				return true;
@@ -333,19 +343,19 @@ namespace woo {
 			 * Broadcasts
 			 */
 
-			bool broadcast(const char* key, float* data, int size) {
+			inline bool broadcast(std::string key, float* data, int size) {
 				return comms_[key].broadcast(data, size);
 			} // send_broadcast()
 
-			bool broadcast(const char* key, double* data, int size) {
+			inline bool broadcast(std::string key, double* data, int size) {
 				return comms_[key].broadcast(data, size);
 			} // send_broadcast()
 
-			bool broadcast(const char* key, unsigned int* data, int size) {
+			inline bool broadcast(std::string key, unsigned int* data, int size) {
 				return comms_[key].broadcast(data, size);
 			} // send_broadcast()
 
-			bool broadcast(const char* key, std::vector<float>& data, int rank) {
+			inline bool broadcast(std::string key, std::vector<float>& data, int rank) {
 				float* temp_data = new (std::nothrow) float[data.size()];
 				for(int i = 0; i < data.size(); ++ i) temp_data[i] = data[i];
 				bool success = comms_[key].broadcast(temp_data, data.size(), rank);
@@ -354,7 +364,8 @@ namespace woo {
 				return success;
 			} // broadcast()
 
-			bool allreduce(const char* key, float sendval, float& recvval, int& rank, comm::ReduceOp op) {
+			inline bool allreduce(std::string key, float sendval, float& recvval,
+									int& rank, comm::ReduceOp op) {
 				return comms_[key].allreduce(sendval, recvval, rank, op);
 			} // allreduce()
 
@@ -362,7 +373,7 @@ namespace woo {
 			 * Scans
 			 */
 
-			bool scan_sum(const char* key, unsigned int in, unsigned int& out) {
+			inline bool scan_sum(std::string key, unsigned int in, unsigned int& out) {
 				return comms_[key].scan_sum(in, out);
 			} // scan_sum()
 
@@ -370,38 +381,38 @@ namespace woo {
 			 * Gathers
 			 */
 
-			bool allgather(const char* key, int* sbuf, int scount, int* rbuf, int rcount) {
+			inline bool allgather(std::string key, int* sbuf, int scount, int* rbuf, int rcount) {
 				return comms_[key].allgather(sbuf, scount, rbuf, rcount);
 			} // allgather()
 
-			inline bool gather(const char* key, int* sbuf, int scount, int* rbuf, int rcount) {
+			inline bool gather(std::string key, int* sbuf, int scount, int* rbuf, int rcount) {
 				return comms_[key].gather(sbuf, scount, rbuf, rcount);
 			} // gather()
 
-			inline bool gather(const char* key, float* sbuf, int scount, float* rbuf, int rcount) {
+			inline bool gather(std::string key, float* sbuf, int scount, float* rbuf, int rcount) {
 				return comms_[key].gather(sbuf, scount, rbuf, rcount);
 			} // gather()
 
-			inline bool gather(const char* key, double* sbuf, int scount, double* rbuf, int rcount) {
+			inline bool gather(std::string key, double* sbuf, int scount, double* rbuf, int rcount) {
 				return comms_[key].gather(sbuf, scount, rbuf, rcount);
 			} // gather()
 
-			inline bool gatherv(const char* key, float* sbuf, int scount,
+			inline bool gatherv(std::string key, float* sbuf, int scount,
 									float* rbuf, int* rcount, int* displs) {
 				return comms_[key].gatherv(sbuf, scount, rbuf, rcount, displs);
 			} // gatherv()
 
-			inline bool gatherv(const char* key, double* sbuf, int scount,
+			inline bool gatherv(std::string key, double* sbuf, int scount,
 									double* rbuf, int* rcount, int* displs) {
 				return comms_[key].gatherv(sbuf, scount, rbuf, rcount, displs);
 			} // gatherv()
 
-			inline bool gatherv(const char* key, std::complex<float>* sbuf, int scount,
+			inline bool gatherv(std::string key, std::complex<float>* sbuf, int scount,
 									std::complex<float>* rbuf, int* rcount, int* displs) {
 				return comms_[key].gatherv(sbuf, scount, rbuf, rcount, displs);
 			} // gatherv()
 
-			inline bool gatherv(const char* key, std::complex<double>* sbuf, int scount,
+			inline bool gatherv(std::string key, std::complex<double>* sbuf, int scount,
 									std::complex<double>* rbuf, int* rcount, int* displs) {
 				return comms_[key].gatherv(sbuf, scount, rbuf, rcount, displs);
 			} // gatherv()
@@ -410,16 +421,17 @@ namespace woo {
 			 * Barrier
 			 */
 
-			bool barrier() {
+			/*bool barrier() {
 				return comms_["world"].barrier();
-			} // barrier()
+			} // barrier()*/
 
-			bool barrier(const char* key) {
+			bool barrier(std::string key) {
 				return comms_[key].barrier();
 			} // barrier()
 
 		private:
-			unsigned int world_num_procs_;		// total number of processes
+			unsigned int universe_num_procs_;		// total number of processes
+			std::string universe_key_;
 			multi_node_comm_map_t comms_;		// list of all communicators in the world
 
 	}; // class MultiNode
