@@ -3,7 +3,7 @@
  *
  *	File: ImageData.cpp
  *	Created: Dec 26, 2013
- *	Modified: Sun 02 Feb 2014 09:04:48 AM PST
+ *	Modified: Thu 20 Mar 2014 02:07:35 PM PDT
  *
  *	Author: Slim Chourou <stchourou@lbl.gov>
  *	Developers: Slim Chourou <stchourou@lbl.gov>
@@ -62,7 +62,7 @@ namespace hig {
 
 	void	ImageData::save(string_t filename) const {
 		std::ofstream file;
-		file.open (filename);
+		file.open(filename.c_str());
 
 		for(int iv=0; iv<n_ver_; iv++)
 			{
@@ -91,7 +91,7 @@ namespace hig {
 		int np = 0;
 		data_.clear();
 		std::string line;
-		std::ifstream file(filename);
+		std::ifstream file(filename.c_str());
 		if (file.is_open()) { //if the file is open
 			while (!file.eof()) { //while the end of file is NOT reached
 				getline(file,line); //get one line from the file

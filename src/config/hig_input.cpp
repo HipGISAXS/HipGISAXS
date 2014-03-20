@@ -3,7 +3,7 @@
  *
  *  File: hig_input.cpp
  *  Created: Jun 11, 2012
- *  Modified: Thu 20 Mar 2014 07:57:38 AM PDT
+ *  Modified: Thu 20 Mar 2014 01:40:35 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -2250,24 +2250,49 @@ namespace hig {
 			std::string rem_param2;
 			switch(TokenMapper::instance().get_keyword_token(keyword_name)) {
 				case shape_token:
-					if(!shapes_.at(keyword_key).update_param(rem_param, new_val)) {
-						std::cerr << "error: failed to update param '" << param << "'" << std::endl;
-						return false;
-					} // if
+					#ifdef __INTEL_COMPILER
+						if(shapes_.count(keyword_key) == 0 ||
+								!shapes_[keyword_key].update_param(rem_param, new_val)) {
+							std::cerr << "error: failed to update param '" << param << "'" << std::endl;
+							return false;
+						} // if
+					#else
+						if(!shapes_.at(keyword_key).update_param(rem_param, new_val)) {
+							std::cerr << "error: failed to update param '" << param << "'" << std::endl;
+							return false;
+						} // if
+					#endif // __INTEL_COMPILER
 					break;
 
 				case layer_token:
-					if(!layers_.at(layer_key_map_.at(keyword_key)).update_param(rem_param, new_val)) {
-						std::cerr << "error: failed to update param '" << param << "'" << std::endl;
-						return false;
-					} // if
+					#ifdef __INTEL_COMPILER
+						if(layer_key_map_.count(keyword_key) == 0 ||
+								layers_.count(layer_key_map_[keyword_key]) == 0 ||
+								!(layers_[layer_key_map_[keyword_key]]).update_param(rem_param, new_val)) {
+							std::cerr << "error: failed to update param '" << param << "'" << std::endl;
+							return false;
+						} // if
+					#else
+						if(!layers_.at(layer_key_map_.at(keyword_key)).update_param(rem_param, new_val)) {
+							std::cerr << "error: failed to update param '" << param << "'" << std::endl;
+							return false;
+						} // if
+					#endif
 					break;
 
 				case struct_token:
-					if(!structures_.at(keyword_key).update_param(rem_param, new_val)) {
-						std::cerr << "error: failed to update param '" << param << "'" << std::endl;
-						return false;
-					} // if
+					#ifdef __INTEL_COMPILER
+						if(structures_.count(keyword_key) == 0 ||
+								!structures_[keyword_key].update_param(rem_param, new_val)) {
+							std::cerr << "error: failed to update param '" << param << "'" << std::endl;
+							return false;
+						} // if
+					#else
+						if(!structures_.at(keyword_key).update_param(rem_param, new_val)) {
+							std::cerr << "error: failed to update param '" << param << "'" << std::endl;
+							return false;
+						} // if
+					#endif
 					break;
 
 				case instrument_token:

@@ -3,7 +3,7 @@
  *
  *  File: string_utils.cpp
  *  Created: Jan 08, 2014
- *  Modified: Sun 26 Jan 2014 10:42:22 AM PST
+ *  Modified: Thu 20 Mar 2014 01:09:47 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -39,6 +39,34 @@ namespace hig {
 	} // extract_first_keyword()
 
 
+	#ifdef __INTEL_COMPILER		// doesnt support the string c++11 things
+
+	bool extract_keyword_name_and_key(const std::string& keyword, std::string& name, std::string& key) {
+		std::size_t pos = keyword.find_first_of("[");
+		if(pos == std::string::npos) {
+			name = keyword;
+			key = "";
+		} else {
+			name = keyword.substr(0, pos);
+			std::string rem = keyword.substr(pos + 1);
+			if(rem[rem.length() - 1] != ']') {
+				std::cerr << "error: ending bracket missing in keyword '" << keyword << "'" << std::endl;
+				return false;
+			} // if
+			rem.erase(rem.length() - 1);
+			if(rem[0] != '\'' || rem[rem.length() - 1] != '\'') {
+				std::cerr << "error: keyword key not enclosed in single-quotes in '"
+							<< keyword << "'" << std::endl;
+				return false;
+			} // if
+			rem.erase(rem.length() - 1);
+			key = rem.substr(1);
+		} // if-else
+		return true;
+	} // extract_keyword_name_and_key()
+
+	#else
+
 	bool extract_keyword_name_and_key(const std::string& keyword, std::string& name, std::string& key) {
 		std::size_t pos = keyword.find_first_of("[");
 		if(pos == std::string::npos) {
@@ -62,5 +90,7 @@ namespace hig {
 		} // if-else
 		return true;
 	} // extract_keyword_name_and_key()
+
+	#endif // __INTEL_COMPILER
 
 } // namespace hig
