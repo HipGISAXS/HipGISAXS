@@ -3,7 +3,7 @@
  *
  *  File: pso.cpp
  *  Created: Jan 13, 2014
- *  Modified: Thu 20 Mar 2014 07:19:07 AM PDT
+ *  Modified: Thu 20 Mar 2014 07:33:50 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -36,7 +36,14 @@ int main(int narg, char** args) {
 	ana.analyze(narg, args, 1);
 	maintimer.stop();
 
-	std::cout << "** ** TOTAL ANALYSIS TIME: " << maintimer.elapsed_msec() << " ms. ** **" << std::endl;
+	hig::parameter_map_t result = my_pso.get_best_values();
+	if(my_pso.is_master()) {
+		std::cout << "** ** Final parameter values: " << std::endl;
+		for(hig::parameter_map_t::const_iterator i = result.begin(); i != result.end(); ++ i)
+			std::cout << "      ++ " << (*i).first << " = " << (*i).second << std::endl;
+		std::cout << "** ** TOTAL ANALYSIS TIME: " << maintimer.elapsed_msec() << " ms. ** **"
+					<< std::endl;
+	} // if
 
 	return 0;
 } // main()

@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_fit_pso.hpp
  *  Created: Jan 13, 2014
- *  Modified: Wed 19 Mar 2014 01:22:32 PM PDT
+ *  Modified: Thu 20 Mar 2014 07:33:15 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -106,6 +106,11 @@ namespace hig {
 
 			bool run(int, char**, int);							// simulate
 			parameter_map_t get_best_values() const;
+			#ifdef USE_MPI
+				bool is_master() const { return (*multi_node_).is_master(root_comm_); }
+			#else
+				bool is_master() const { return true; }
+			#endif
 	}; // class ParticleSwarmOptimization
 
 } // namespace hig
