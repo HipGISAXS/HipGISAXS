@@ -3,7 +3,7 @@
  *
  *  File: ff_num.cpp
  *  Created: Jul 18, 2012
- *  Modified: Wed 19 Mar 2014 04:45:11 PM PDT
+ *  Modified: Thu 20 Mar 2014 11:26:14 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -149,7 +149,7 @@ namespace hig {
 
 			int idle = 0;
 			if(world_comm.rank(comm_key) >= p_y * p_z) idle = 1;
-			const char* real_world = "ff_num_real_world";
+			std::string real_world("ff_num_real_world");
 			world_comm.split(real_world, comm_key, idle);
 
 			commtimer.stop();
@@ -456,7 +456,7 @@ namespace hig {
 											#endif
 											complex_vec_t& ff,
 											#ifdef USE_MPI
-												woo::MultiNode& world_comm, const char* comm_key,
+												woo::MultiNode& world_comm, std::string comm_key,
 											#endif
 											float_t& mem_time, float_t& comm_time) {
 		float_t mem_start = 0, mem_end = 0, comm_start = 0, comm_end = 0;

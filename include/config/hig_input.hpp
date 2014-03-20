@@ -3,7 +3,7 @@
  *
  *  File: hig_input.hpp
  *  Created: Jun 11, 2012
- *  Modified: Wed 26 Feb 2014 10:04:58 AM PST
+ *  Modified: Thu 20 Mar 2014 07:56:18 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -101,7 +101,9 @@ namespace hig {
 			std::map <std::string, std::string> param_key_map_;			// maps keys to param strings
 			std::map <std::string, ParamSpace> param_space_key_map_;	// maps keys to param space
 			// TODO: ...
-			FitReferenceData reference_data_[1];		// TODO temp: data about the reference data
+			//FitReferenceData reference_data_[1];		// TODO temp: data about the reference data
+			std::vector <FitReferenceData> reference_data_;
+			bool reference_data_set_;
 
 			/* helpers */
 

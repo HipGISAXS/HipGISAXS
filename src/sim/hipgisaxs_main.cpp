@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_main.cpp
  *  Created: Jun 14, 2012
- *  Modified: Wed 19 Mar 2014 05:47:57 PM PDT
+ *  Modified: Thu 20 Mar 2014 09:30:07 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -329,14 +329,14 @@ namespace hig {
 	 * It loops over all configurations and calls the simulation routine
 	 */
 	bool HipGISAXS::run_all_gisaxs(int x_min, int x_max, int x_step) {
+		if(!init()) return false;
+
 		#ifdef USE_MPI
 			// this is for the whole comm world
 			bool master = multi_node_.is_master(sim_comm_);
 		#else
 			bool master = true;
 		#endif
-
-		if(!init()) return false;
 
 		woo::BoostChronoTimer sim_timer;
 		sim_timer.start();

@@ -3,7 +3,7 @@
  *
  *  File: sf.cpp
  *  Created: Jun 18, 2012
- *  Modified: Wed 19 Mar 2014 01:52:39 PM PDT
+ *  Modified: Thu 20 Mar 2014 11:56:52 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -133,8 +133,8 @@ namespace hig {
 
 					temp1 = exp(unit_ci * (arot[0] * qx + arot[1] * qy + arot[2] * qz));
 					temp_x2 = unit_c - pow(temp1, repet[0]);
-					if(!((boost::math::isfinite)(temp_x2.real()) ||
-								(boost::math::isfinite)(temp_x2.imag()))) {
+					if(!(boost::math::isfinite)(temp_x2.real()) ||
+								!(boost::math::isfinite)(temp_x2.imag())) {
 						std::cerr << "error: here it is not finite (1) " << x << ", " << y << ", " << z
 									<<std::endl;
 					} // if
@@ -160,16 +160,16 @@ namespace hig {
 					//						(boost::math::isfinite)((unit_c / temp_x2).imag())));
 					//temp_x5 = temp_x2 + repet[0] * temp_f;
 					sa = pow(temp1, ((float_t) 1.0 - repet[0]) / (float_t) 2.0) * temp_y4 * temp_x5;
-					if(!((boost::math::isfinite)(sa.real()) ||
-								(boost::math::isfinite)(sa.imag()))) {
+					if(!(boost::math::isfinite)(sa.real()) ||
+								!(boost::math::isfinite)(sa.imag())) {
 						std::cerr << "error: here it is not finite (2) " << x << ", " << y << ", " << z
 									<<std::endl;
 					} // if
 
 					temp1 = exp(unit_ci * (brot[0] * qx + brot[1] * qy + brot[2] * qz));
 					temp_x2 = unit_c - pow(temp1, repet[1]);
-					if(!((boost::math::isfinite)(temp_x2.real()) ||
-								(boost::math::isfinite)(temp_x2.imag()))) {
+					if(!(boost::math::isfinite)(temp_x2.real()) ||
+								!(boost::math::isfinite)(temp_x2.imag())) {
 						std::cerr << "error: here it is not finite (3) " << x << ", " << y << ", " << z
 									<<std::endl;
 					} // if
@@ -196,16 +196,16 @@ namespace hig {
 					//						(boost::math::isfinite)((unit_c / temp_x2).imag())));
 					//temp_x5 = temp_x2 + repet[1] * temp_f;
 					sb = pow(temp1, ((float_t) 1.0 - repet[1]) / (float_t) 2.0) * temp_y4 * temp_x5;
-					if(!((boost::math::isfinite)(sb.real()) ||
-								(boost::math::isfinite)(sb.imag()))) {
+					if(!(boost::math::isfinite)(sb.real()) ||
+								!(boost::math::isfinite)(sb.imag())) {
 						std::cerr << "error: here it is not finite (4) " << x << ", " << y << ", " << z
 									<<std::endl;
 					} // if
 
 					temp1 = exp(unit_ci * (crot[0] * qx + crot[1] * qy + crot[2] * qz));
 					temp_x2 = unit_c - pow(temp1, repet[2]);
-					if(!((boost::math::isfinite)(temp_x2.real()) ||
-								(boost::math::isfinite)(temp_x2.imag()))) {
+					if(!(boost::math::isfinite)(temp_x2.real()) ||
+								!(boost::math::isfinite)(temp_x2.imag())) {
 						std::cerr << "error: here it is not finite (5) " << x << ", " << y << ", " << z
 									<<std::endl;
 					} // if
