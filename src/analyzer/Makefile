@@ -69,7 +69,7 @@ ALL_INCL= $(TAO_INCL) $(PETSC_INCL) $(HDF5_INCL) $(TIFF_INCL) $(BOOST_INCL) $(HI
 OBJECTS = ImageData.o analysis_algorithm.o objective_func.o hipgisaxs_ana.o
 
 POUND_OBJS = hipgisaxs_fit_pounders.o objective_func_hipgisaxs.o
-POUND_HIP_OBJS = $(POUND_HIP_OBJS) hipgisaxs_fit_pounders_main.o
+POUND_HIP_OBJS = $(POUND_OBJS) hipgisaxs_fit_pounders_main.o
 
 F1_OBJS = objective_func_poly_one.o
 F1_HIP_OBJS = $(F1_OBJS) objective_func_poly_one_main.o
