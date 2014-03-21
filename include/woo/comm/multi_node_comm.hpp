@@ -3,7 +3,7 @@
   *
   *  File: multi_node_comm.hpp
   *  Created: Mar 18, 2013
-  *  Modified: Wed 19 Mar 2014 01:47:54 PM PDT
+  *  Modified: Thu 20 Mar 2014 05:33:45 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -13,6 +13,7 @@
 
 #ifdef USE_MPI
 
+#include <iostream>
 #include <mpi.h>
 #include <complex>
 #include <map>

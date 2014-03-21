@@ -3,7 +3,7 @@
  *
  *  File: fit_pso.cpp
  *  Created: Jan 13, 2014
- *  Modified: Thu 20 Mar 2014 07:03:07 AM PDT
+ *  Modified: Fri 21 Mar 2014 07:20:16 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -15,6 +15,8 @@
 
 #include <analyzer/hipgisaxs_fit_pso.hpp>
 #include <hipgisaxs.hpp>
+
+#include <woo/timer/woo_boostchronotimers.hpp>
 
 namespace hig {
 
@@ -42,7 +44,7 @@ namespace hig {
 			root_comm_ = (*multi_node_).universe_key();
 			std::cout << "** MPI Size: " << (*multi_node_).size(root_comm_);
 			std::cout << ", my rank: " << (*multi_node_).rank(root_comm_) << std::endl;
-			rand_.reset((*multi_node_).rank(root_comm_));
+			rand_.reset(time(NULL) + (*multi_node_).rank(root_comm_));
 		#else
 			root_comm_ = "world";
 		#endif
@@ -126,12 +128,24 @@ namespace hig {
 
 		(*obj_func_).set_reference_data(img_num);
 
+		woo::BoostChronoTimer gen_timer;
+		double total_time = 0;
+
 		for(int gen = 0; gen < max_iter_; ++ gen) {
 			std::cout << (*multi_node_).rank(root_comm_) << ": Generation " << gen << std::endl;
+			gen_timer.start();
 			if(!simulate_generation()) {
 				std::cerr << "error: failed in generation " << gen << std::endl;
 				return false;
 			} // if
+			gen_timer.stop();
+			double elapsed = gen_timer.elapsed_msec();
+			total_time += elapsed;
+			#ifdef USE_MPI
+			if((*multi_node_).is_master(root_comm_))
+			#endif
+				std::cout << "###### Generation time: " << elapsed << " ms. [total: "
+							<< total_time << " ms." << std::endl;
 		} // for
 		
 		// set the final values
@@ -207,13 +221,20 @@ namespace hig {
 				std::cout << particles_[i].param_values_[j] << " ";
 			std::cout << "]\t";
 		} // for
-		std::cout << std::endl;
-		std::cout << "~~~~ Global best: ";
-		std::cout << best_fitness_ << " [ ";
-		for(int j = 0; j < num_params_; ++ j)
-			std::cout << best_values_[j] << " ";
-		std::cout << "]\t";
 		std::cout << std::endl;*/
+
+		#ifdef USE_MPI
+		if((*multi_node_).is_master(root_comm_)) {
+		#endif
+			std::cout << "~~~~ Global best: ";
+			std::cout << best_fitness_ << " [ ";
+			for(int j = 0; j < num_params_; ++ j)
+				std::cout << best_values_[j] << " ";
+			std::cout << "]\t";
+			std::cout << std::endl;
+		#ifdef USE_MPI
+		} // if
+		#endif
 
 		// write out stuff to output files
 		/*std::string prefix(HiGInput::instance().param_pathprefix()+"/"+HiGInput::instance().runname());
