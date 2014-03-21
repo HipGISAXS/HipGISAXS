@@ -3,7 +3,7 @@
  *
  *  File: fit_pso.cpp
  *  Created: Jan 13, 2014
- *  Modified: Fri 21 Mar 2014 07:20:16 AM PDT
+ *  Modified: Fri 21 Mar 2014 11:46:22 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -144,8 +144,8 @@ namespace hig {
 			#ifdef USE_MPI
 			if((*multi_node_).is_master(root_comm_))
 			#endif
-				std::cout << "###### Generation time: " << elapsed << " ms. [total: "
-							<< total_time << " ms." << std::endl;
+				std::cout << "@@@@@@ Generation time: " << elapsed << " ms. [total: "
+							<< total_time << " ms.]" << std::endl;
 		} // for
 		
 		// set the final values
@@ -226,7 +226,7 @@ namespace hig {
 		#ifdef USE_MPI
 		if((*multi_node_).is_master(root_comm_)) {
 		#endif
-			std::cout << "~~~~ Global best: ";
+			std::cout << "@@@@@@ Global best: ";
 			std::cout << best_fitness_ << " [ ";
 			for(int j = 0; j < num_params_; ++ j)
 				std::cout << best_values_[j] << " ";
