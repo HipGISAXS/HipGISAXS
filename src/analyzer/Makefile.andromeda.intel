@@ -1,7 +1,7 @@
 
 MPI_DIR = /usr/local/openmpi
 PETSC_DIR = /usr/local/petsc-3.4.3
-TAO_DIR = $(PETSC_DIR)
+TAO_DIR = /usr/local/tao-2.2.0/lib/python2.7/site-packages/tao
 HIPGISAXS_DIR = /home/asarje/hipgisaxs.git
 HDF5_DIR = /usr/local/hdf5-1.8.9-intel
 TIFF_DIR = /usr/local/tiff-4.0.2-intel
@@ -18,7 +18,7 @@ BIN_DIR = $(PREFIX)
 OBJ_DIR = $(PREFIX)
 CXX = mpicxx
 CXX_FLAGS = -std=c++0x -fopenmp -DUSE_MPI
-CXX_FLAGS += -g
+CXX_FLAGS += -O3 #-g
 PREC_FLAG =
 
 ########EXTERNAL DEPENDENCIES###########
@@ -46,7 +46,7 @@ HIPGISAXS_LIBS = -lhipgisaxs -lcudart
 
 HDF5_INCL = -I $(HDF5_DIR)/include
 HDF5_LDFLAGS = -L $(HDF5_DIR)/lib -L $(SZIP_DIR)/lib
-HDF5_LIBS = -lhdf5 -lz -lsz
+HDF5_LIBS = -lhdf5 -lz
 
 TIFF_INCL = -I $(TIFF_DIR)/include
 TIFF_LDFLAGS = -L $(TIFF_DIR)/lib
