@@ -3,7 +3,7 @@
  *
  *  File: ff_ana_cylinder_gpu.cu
  *  Created: Oct 16, 2012
- *  Modified: Sun 26 Jan 2014 10:31:37 AM PST
+ *  Modified: Sun 23 Mar 2014 08:27:35 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -107,6 +107,7 @@ namespace hig {
 	} // AnalyticFormFactorG::compute_box()
 
 
+	// TODO: optimize !!!
 	__global__ void form_factor_cylinder_kernel(unsigned int nqx, unsigned int nqy, unsigned int nqz,
 									float_t *qx, float_t *qy, cucomplex_t *qz,
 									float_t tau, float_t eta, float_t *rot,
@@ -117,7 +118,7 @@ namespace hig {
 		unsigned int i_z = blockDim.y * blockIdx.y + threadIdx.y;
 		unsigned int base_index = nqx * nqy * i_z + nqx * i_y;
 		if(i_y < nqy && i_z < nqz) {
-			for(unsigned int i_x = 0; i_x < nqx; ++ i_x) {
+			for(int i_x = 0; i_x < nqx; ++ i_x) {
 				cucomplex_t mqx, mqy, mqz;
 				compute_meshpoints(qx[i_x], qy[i_y], qz[i_z], rot, mqx, mqy, mqz);
 				cucomplex_t qpar = cuCsqrt(mqx * mqx + mqy * mqy);
@@ -125,8 +126,8 @@ namespace hig {
 				cucomplex_t temp2 = cos(eta) * mqy;
 				cucomplex_t temp_qm = mqz + tan(tau) * (temp1 + temp2);
 				cucomplex_t temp_ff = make_cuC((float_t) 0.0, (float_t) 0.0);
-				for(unsigned int p_r = 0; p_r < n_r; ++ p_r) {
-					for(unsigned int p_h = 0; p_h < n_h; ++ p_h) {
+				for(int p_r = 0; p_r < n_r; ++ p_r) {
+					for(int p_h = 0; p_h < n_h; ++ p_h) {
 						cucomplex_t temp3 = fq_inv(temp_qm, h[p_h]);
 						cucomplex_t temp4 = qpar * r[p_r];
 						cucomplex_t temp5;
