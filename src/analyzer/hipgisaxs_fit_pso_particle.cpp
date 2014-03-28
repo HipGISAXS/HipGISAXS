@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_fit_pso_particle.cpp
  *  Created: Jan 13, 2014
- *  Modified: Mon 03 Feb 2014 03:04:55 PM PST
+ *  Modified: Sun 23 Mar 2014 08:17:55 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -98,10 +98,30 @@ namespace hig {
 										constraints.param_values_min_[i]),
 										constraints.param_values_max_[i]);
 		} // for
-		//std::cout << "@@@@ Parameters updated to: [ ";
-		//for(int i = 0; i < num_parameters_; ++ i) std::cout << param_values_[i] << " ";
-		//std::cout << "] " << std::endl;
 		return true;
 	} // PSOParticle::update_particle()
+
+
+	bool PSOParticle::compute_and_set_values(const parameter_data_list_t& start_pos,
+										const parameter_data_list_t& start_vel,
+										float_t omega, float_t phi1, float_t phi2,
+										const parameter_data_list_t& global_best,
+										const PSOParticleConstraints& constraints,
+										woo::MTRandomNumberGenerator& rng) {
+		for(int i = 0; i < num_parameters_; ++ i) {
+			float_t r1 = rng.rand();
+			float_t r2 = rng.rand();
+			float_t new_vel = omega * start_vel[i] +
+								phi1 * r1 * (best_values_[i] - start_pos[i]) +
+								phi2 * r2 * (global_best[i] - start_pos[i]);
+			velocity_[i] = std::min(std::max(new_vel,
+										constraints.velocity_min_[i]),
+										constraints.velocity_max_[i]);
+			param_values_[i] = std::min(std::max(start_pos[i] + new_vel,
+										constraints.param_values_min_[i]),
+										constraints.param_values_max_[i]);
+		} // for
+		return true;
+	} // PSOParticle::compute_and_set_values()
 
 } // namespace hig

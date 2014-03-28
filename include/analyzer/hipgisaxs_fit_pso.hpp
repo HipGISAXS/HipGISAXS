@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_fit_pso.hpp
  *  Created: Jan 13, 2014
- *  Modified: Thu 20 Mar 2014 07:33:15 AM PDT
+ *  Modified: Sun 23 Mar 2014 12:32:46 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -60,6 +60,9 @@ namespace hig {
 						const PSOParticleConstraints&);
 			bool update_particle(float_t, float_t, float_t, const parameter_data_list_t&,
 						const PSOParticleConstraints&, woo::MTRandomNumberGenerator&);
+			bool compute_and_set_values(const parameter_data_list_t&, const parameter_data_list_t&,
+						float_t, float_t, float_t, const parameter_data_list_t&,
+						const PSOParticleConstraints&, woo::MTRandomNumberGenerator&);
 		public:
 			~PSOParticle();
 
@@ -86,6 +89,10 @@ namespace hig {
 			float_t pso_phi1_;
 			float_t pso_phi2_;
 
+			bool tune_omega_;							// whether to vary omega or keep constant
+			bool foresee_;
+			unsigned int foresee_num_;					// number of samples to choose from
+
 			// helpers
 			woo::MTRandomNumberGenerator rand_;			// random number generator
 
@@ -98,10 +105,11 @@ namespace hig {
 			std::string particle_comm_;
 
 			bool simulate_generation();					// simulate single generation
+			bool simulate_soothsayer_generation();		// simulate single generation with foresee
 
 		public:
 			ParticleSwarmOptimization(int, char**, ObjectiveFunction*,
-										float_t, float_t, float_t, int, int);
+										float_t, float_t, float_t, int, int, bool, bool);
 			~ParticleSwarmOptimization();
 
 			bool run(int, char**, int);							// simulate

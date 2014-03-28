@@ -472,7 +472,8 @@ if not get_option('clean'):
 using_accelerator = None
 ## required libs
 boost_libs = ["boost_system", "boost_filesystem", "boost_timer", "boost_chrono"]
-hdf5_libs = ["hdf5", "z", "sz"]
+#hdf5_libs = ["hdf5", "z", "sz"]
+hdf5_libs = ["hdf5", "z"]
 tiff_libs = ["tiff"]
 other_libs = ["m", "gomp"]
 all_libs = boost_libs + hdf5_libs + tiff_libs + other_libs

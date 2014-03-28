@@ -3,7 +3,7 @@
  *
  *  File: fit_pso.cpp
  *  Created: Jan 13, 2014
- *  Modified: Fri 21 Mar 2014 11:46:22 AM PDT
+ *  Modified: Sun 23 Mar 2014 12:42:07 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -22,16 +22,22 @@ namespace hig {
 
 	//ParticleSwarmOptimization::ParticleSwarmOptimization(int narg, char** args, ObjectiveFunction* obj) :
 	ParticleSwarmOptimization::ParticleSwarmOptimization(int narg, char** args, ObjectiveFunction* obj,
-			float_t omega, float_t phi1, float_t phi2, int npart, int ngen) :
+			float_t omega, float_t phi1, float_t phi2, int npart, int ngen,
+			bool tune_omega = false, bool foresee = false) :
    			rand_(time(NULL))	{
 		name_ = algo_pso;
 		max_hist_ = 100;			// not used ...
 		tol_ = 1e-8;
 
+		foresee_num_ = 5;			// TODO: make it modifiable
+
 		pso_omega_ = omega;
 		pso_phi1_ = phi1;
 		pso_phi2_ = phi2;
 		obj_func_ = obj;
+
+		tune_omega_ = tune_omega;
+		foresee_ = foresee;
 
 		std::cout << "** PSO Parameters: " << pso_omega_ << ", " << pso_phi1_ << ", " << pso_phi2_
 					<< std::endl;
@@ -134,10 +140,17 @@ namespace hig {
 		for(int gen = 0; gen < max_iter_; ++ gen) {
 			std::cout << (*multi_node_).rank(root_comm_) << ": Generation " << gen << std::endl;
 			gen_timer.start();
-			if(!simulate_generation()) {
-				std::cerr << "error: failed in generation " << gen << std::endl;
-				return false;
-			} // if
+			if(foresee_) {
+				if(!simulate_soothsayer_generation()) {
+					std::cerr << "error: failed in generation " << gen << std::endl;
+					return false;
+				} // if
+			} else {
+				if(!simulate_generation()) {
+					std::cerr << "error: failed in generation " << gen << std::endl;
+					return false;
+				} // if
+			} // if-else
 			gen_timer.stop();
 			double elapsed = gen_timer.elapsed_msec();
 			total_time += elapsed;
@@ -214,6 +227,9 @@ namespace hig {
 			} // if
 		} // for
 
+		if(tune_omega_) pso_omega_ /= 1.5;
+		std::cout << (*multi_node_).rank(root_comm_) << ": Omega = " << pso_omega_ << std::endl;
+
 		/*std::cout << "~~~~ Generation best: ";
 		for(int i = 0; i < num_particles_; ++ i) {
 			std::cout << "[ ";
@@ -261,6 +277,84 @@ namespace hig {
 
 		return true;
 	} // ParticleSwarmOptimization::simulate_generation()
+
+
+	bool ParticleSwarmOptimization::simulate_soothsayer_generation() {
+		// for each particle, simulate
+		for(int i = 0; i < num_particles_; ++ i) {
+			std::cout << (*multi_node_).rank(root_comm_) << ": Particle " << i << std::endl;
+			// first save the current state of the particle
+			parameter_data_list_t orig_param_vals = particles_[i].param_values_;
+			parameter_data_list_t orig_velocity = particles_[i].velocity_;
+			float_t foresee_best_fitness = std::numeric_limits<float_t>::max();
+			parameter_data_list_t foresee_best_params, foresee_best_velocity;
+			// for each forseeing step
+			for(int k = 0; k < foresee_num_; ++ k) {
+				// create a new position from the actual current position
+				particles_[i].compute_and_set_values(orig_param_vals, orig_velocity,
+														pso_omega_, pso_phi1_, pso_phi2_,
+														best_values_, constraints_, rand_);
+				// compute the fitness
+				float_vec_t curr_particle = particles_[i].param_values_;
+				(*obj_func_).update_sim_comm(particle_comm_);
+				float_vec_t curr_fitness = (*obj_func_)(curr_particle);
+
+				if(foresee_best_fitness > curr_fitness[0]) {
+					foresee_best_fitness = curr_fitness[0];
+					foresee_best_params = curr_particle;
+					foresee_best_velocity = particles_[i].velocity_;
+				} // if
+			} // if
+			// update particle
+			particles_[i].param_values_ = foresee_best_params;
+			particles_[i].velocity_ = foresee_best_velocity;
+			if(particles_[i].best_fitness_ > foresee_best_fitness) {
+				particles_[i].best_fitness_ = foresee_best_fitness;
+				particles_[i].best_values_ = foresee_best_params;
+			} // if
+			// update global best fitness locally
+			if(best_fitness_ > foresee_best_fitness) {
+				best_fitness_ = foresee_best_fitness;
+				best_values_ = foresee_best_params;
+			} // if
+		} // for
+
+		#ifdef USE_MPI
+			// communicate and find globally best fitness
+			float_t new_best_fitness; int best_rank;
+			if((*multi_node_).size("pso_particle") > 1 && num_particles_ == 1) {
+				// in the case when multiple procs work on one particle,
+				// only the master needs to communicate with other masters (for other particles)
+				// TODO ...
+				bool pmaster = (*multi_node_).is_master(particle_comm_);
+				std::cout << "error: this case has not been implemented yet" << std::endl;
+				return false;
+			} else {
+				if(!(*multi_node_).allreduce(root_comm_, best_fitness_, new_best_fitness, best_rank,
+												woo::comm::minloc))
+					return false;
+				best_fitness_ = new_best_fitness;
+			} // if-else
+			// the best rank proc broadcasts its best values to all others
+			if(!(*multi_node_).broadcast(root_comm_, best_values_, best_rank)) return false;
+		#endif
+
+		if(tune_omega_) pso_omega_ /= 2.0;
+		std::cout << (*multi_node_).rank(root_comm_) << ": Omega = " << pso_omega_ << std::endl;
+
+		#ifdef USE_MPI
+		if((*multi_node_).is_master(root_comm_)) {
+		#endif
+			std::cout << "@@@@@@ Global best:\t";
+			std::cout << best_fitness_ << "\t[ ";
+			for(int j = 0; j < num_params_; ++ j) std::cout << best_values_[j] << " ";
+			std::cout << "]" << std::endl;
+		#ifdef USE_MPI
+		} // if
+		#endif
+
+		return true;
+	} // ParticleSwarmOptimization::simulate_soothsayer_generation()
 
 
 } // namespace hig
