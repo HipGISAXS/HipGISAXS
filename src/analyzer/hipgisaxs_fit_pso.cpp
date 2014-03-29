@@ -3,7 +3,7 @@
  *
  *  File: fit_pso.cpp
  *  Created: Jan 13, 2014
- *  Modified: Sun 23 Mar 2014 12:42:07 PM PDT
+ *  Modified: Sat 29 Mar 2014 08:32:50 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -146,7 +146,8 @@ namespace hig {
 					return false;
 				} // if
 			} else {
-				if(!simulate_generation()) {
+				//if(!simulate_generation()) {
+				if(!simulate_fips_generation()) {
 					std::cerr << "error: failed in generation " << gen << std::endl;
 					return false;
 				} // if
@@ -277,6 +278,105 @@ namespace hig {
 
 		return true;
 	} // ParticleSwarmOptimization::simulate_generation()
+
+
+	bool ParticleSwarmOptimization::simulate_fips_generation() {
+		// for each particle, simulate
+		for(int i = 0; i < num_particles_; ++ i) {
+			std::cout << (*multi_node_).rank(root_comm_) << ": Particle " << i << std::endl;
+			// construct param map
+			//parameter_map_t curr_particle;
+			float_vec_t curr_particle;
+			for(int j = 0; j < num_params_; ++ j)
+				curr_particle.push_back(particles_[i].param_values_[j]);
+				//curr_particle[params_[j]] = particles_[i].param_values_[j];
+			// compute the fitness
+			(*obj_func_).update_sim_comm(particle_comm_);
+			float_vec_t curr_fitness = (*obj_func_)(curr_particle);
+
+			// update particle fitness
+			if(particles_[i].best_fitness_ > curr_fitness[0]) {
+				particles_[i].best_fitness_ = curr_fitness[0];
+				particles_[i].best_values_ = particles_[i].param_values_;
+			} // if
+			// update global best fitness locally
+			if(best_fitness_ > curr_fitness[0]) {
+				best_fitness_ = curr_fitness[0];
+				best_values_ = particles_[i].param_values_;
+			} // if
+		} // for
+
+		float_vec_t all_best_values;
+		#ifdef USE_MPI
+			// communicate with everyone to get their best (alltoall)
+			float_t new_best_fitness; int best_rank;
+			if((*multi_node_).size("pso_particle") > 1 && num_particles_ == 1) {
+				// TODO ...
+				bool pmaster = (*multi_node_).is_master(particle_comm_);
+				std::cout << "error: this case has not been implemented yet" << std::endl;
+				return false;
+			} else {
+				// communicate all the values to all
+				float_vec_t all_local_best_values(num_particles_ * num_params_);
+				for(int i = 0; i < num_particles_; ++ i)
+					for(int j = 0; j < num_params_; ++ j)
+						all_local_best_values[i * num_params_ + j] = particles_[i].best_values_[j];
+				if(!(*multi_node_).allgatherv(root_comm_, all_local_best_values, all_best_values))
+					return false;
+
+				// also keep track of global best
+				if(!(*multi_node_).allreduce(root_comm_, best_fitness_, new_best_fitness, best_rank,
+												woo::comm::minloc))
+					return false;
+				best_fitness_ = new_best_fitness;
+			} // if-else
+			// the best rank proc broadcasts its best values to all others
+			if(!(*multi_node_).broadcast(root_comm_, best_values_, best_rank)) return false;
+		#else
+			for(int i = 0; i < num_particles_; ++ i)
+				for(int j = 0; j < num_params_; ++ j)
+					all_best_values.push_back(particles_[i].best_values_[j]);
+		#endif
+
+		/*if((*multi_node_).is_master(root_comm_)) {
+			int tot_parts = all_best_values.size() / num_params_;
+			std::cout << "Number of particles: " << tot_parts << std::endl;
+			for(int i = 0; i < tot_parts; ++ i) {
+				std::cout << (*multi_node_).rank(root_comm_) << ": ";
+				for(int j = 0; j < num_params_; ++ j) {
+					std::cout << all_best_values[i * num_params_ + j] << " ";
+				} // for
+				std::cout << std::endl;
+			} // for
+		} // if*/
+
+		// update each particle using all best values
+		for(int i = 0; i < num_particles_; ++ i) {
+			if(!particles_[i].update_fips_particle(pso_omega_, pso_phi1_, pso_phi2_, all_best_values,
+											constraints_, rand_)) {
+				std::cerr << "error: failed to update particle " << i << std::endl;
+				return false;
+			} // if
+		} // for
+
+		if(tune_omega_) pso_omega_ /= 1.5;
+		std::cout << (*multi_node_).rank(root_comm_) << ": Omega = " << pso_omega_ << std::endl;
+
+		#ifdef USE_MPI
+		if((*multi_node_).is_master(root_comm_)) {
+		#endif
+			std::cout << "@@@@@@ Global best: ";
+			std::cout << best_fitness_ << " [ ";
+			for(int j = 0; j < num_params_; ++ j)
+				std::cout << best_values_[j] << " ";
+			std::cout << "]\t";
+			std::cout << std::endl;
+		#ifdef USE_MPI
+		} // if
+		#endif
+
+		return true;
+	} // ParticleSwarmOptimization::simulate_fips_generation()
 
 
 	bool ParticleSwarmOptimization::simulate_soothsayer_generation() {

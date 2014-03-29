@@ -3,7 +3,7 @@
   *
   *  File: multi_node_comm.hpp
   *  Created: Mar 18, 2013
-  *  Modified: Thu 20 Mar 2014 05:33:45 PM PDT
+  *  Modified: Sat 29 Mar 2014 08:17:46 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -222,6 +222,15 @@ namespace woo {
 				return true;
 			} // allgather()
 
+			inline bool allgatherv(float* sbuf, int scount, float* rbuf, int* rcount) {
+				int* displs = new (std::nothrow) int[num_procs_];
+				displs[0] = 0;
+				for(int i = 1; i < num_procs_; ++ i) displs[i] = displs[i - 1] + rcount[i - 1];
+				MPI_Allgatherv(sbuf, scount, MPI_FLOAT, rbuf, rcount, displs, MPI_FLOAT, world_);
+				delete[] displs;
+				return true;
+			} // allgatherv()
+
 			inline bool gatherv(float* sbuf, int scount, float* rbuf, int* rcount, int* displs) {
 				MPI_Gatherv(sbuf, scount, MPI_FLOAT, rbuf, rcount, displs, MPI_FLOAT,
 							master_rank_, world_);
@@ -384,6 +393,21 @@ namespace woo {
 
 			inline bool allgather(std::string key, int* sbuf, int scount, int* rbuf, int rcount) {
 				return comms_[key].allgather(sbuf, scount, rbuf, rcount);
+			} // allgather()
+
+			inline bool allgatherv(std::string key, std::vector<float>& sbuf,
+									std::vector<float>& rbuf) {
+				int size = sbuf.size();
+				int* rsize = new (std::nothrow) int[comms_[key].size()];
+				comms_[key].allgather(&size, 1, rsize, 1);
+				int recv_tot = 0; for(int i = 0; i < comms_[key].size(); ++ i) recv_tot += rsize[i];
+				float* temp_rbuf = new (std::nothrow) float[recv_tot];
+				rbuf.clear();
+				if(!comms_[key].allgatherv(&sbuf[0], size, temp_rbuf, rsize)) return false;
+				for(int i = 0; i < recv_tot; ++ i) rbuf.push_back(temp_rbuf[i]);
+				delete[] temp_rbuf;
+				delete[] rsize;
+				return true;
 			} // allgather()
 
 			inline bool gather(std::string key, int* sbuf, int scount, int* rbuf, int rcount) {

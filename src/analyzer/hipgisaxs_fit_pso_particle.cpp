@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_fit_pso_particle.cpp
  *  Created: Jan 13, 2014
- *  Modified: Sun 23 Mar 2014 08:17:55 AM PDT
+ *  Modified: Fri 28 Mar 2014 11:39:14 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -100,6 +100,30 @@ namespace hig {
 		} // for
 		return true;
 	} // PSOParticle::update_particle()
+
+
+	bool PSOParticle::update_fips_particle(float_t omega, float_t phi1, float_t phi2,
+										const float_vec_t& best_values,
+										const PSOParticleConstraints& constraints,
+										woo::MTRandomNumberGenerator& rng) {
+		int tot_num_parts = best_values.size() / num_parameters_;
+		for(int i = 0; i < num_parameters_; ++ i) {
+			float_t new_vel = omega * velocity_[i];
+			float_t sum = 0.0;
+			for(int j = 0; j < tot_num_parts; ++ j) {
+				float_t r1 = rng.rand();
+				sum += phi1 * r1 * (best_values[num_parameters_ * j + i] - param_values_[i]);
+			} // for
+			new_vel += sum / tot_num_parts;
+			velocity_[i] = std::min(std::max(new_vel,
+										constraints.velocity_min_[i]),
+										constraints.velocity_max_[i]);
+			param_values_[i] = std::min(std::max(param_values_[i] + velocity_[i],
+										constraints.param_values_min_[i]),
+										constraints.param_values_max_[i]);
+		} // for
+		return true;
+	} // PSOParticle::update_fips_particle()
 
 
 	bool PSOParticle::compute_and_set_values(const parameter_data_list_t& start_pos,
