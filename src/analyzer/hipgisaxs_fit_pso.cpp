@@ -3,7 +3,7 @@
  *
  *  File: fit_pso.cpp
  *  Created: Jan 13, 2014
- *  Modified: Sat 29 Mar 2014 08:32:50 AM PDT
+ *  Modified: Sat 29 Mar 2014 08:58:39 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -23,7 +23,7 @@ namespace hig {
 	//ParticleSwarmOptimization::ParticleSwarmOptimization(int narg, char** args, ObjectiveFunction* obj) :
 	ParticleSwarmOptimization::ParticleSwarmOptimization(int narg, char** args, ObjectiveFunction* obj,
 			float_t omega, float_t phi1, float_t phi2, int npart, int ngen,
-			bool tune_omega = false, bool foresee = false) :
+			bool tune_omega = false, int type = 0) :
    			rand_(time(NULL))	{
 		name_ = algo_pso;
 		max_hist_ = 100;			// not used ...
@@ -37,7 +37,7 @@ namespace hig {
 		obj_func_ = obj;
 
 		tune_omega_ = tune_omega;
-		foresee_ = foresee;
+		type_ = type;
 
 		std::cout << "** PSO Parameters: " << pso_omega_ << ", " << pso_phi1_ << ", " << pso_phi2_
 					<< std::endl;
@@ -140,14 +140,18 @@ namespace hig {
 		for(int gen = 0; gen < max_iter_; ++ gen) {
 			std::cout << (*multi_node_).rank(root_comm_) << ": Generation " << gen << std::endl;
 			gen_timer.start();
-			if(foresee_) {
+			if(type_ == 2) {				// soothsayer
 				if(!simulate_soothsayer_generation()) {
 					std::cerr << "error: failed in generation " << gen << std::endl;
 					return false;
 				} // if
-			} else {
-				//if(!simulate_generation()) {
+			} else if(type_ == 1) {		// fips
 				if(!simulate_fips_generation()) {
+					std::cerr << "error: failed in generation " << gen << std::endl;
+					return false;
+				} // if
+			} else if(type_ == 0) {		// base (inertia weight)
+				if(!simulate_generation()) {
 					std::cerr << "error: failed in generation " << gen << std::endl;
 					return false;
 				} // if
@@ -228,7 +232,7 @@ namespace hig {
 			} // if
 		} // for
 
-		if(tune_omega_) pso_omega_ /= 1.5;
+		if(tune_omega_) pso_omega_ /= 2.0;
 		std::cout << (*multi_node_).rank(root_comm_) << ": Omega = " << pso_omega_ << std::endl;
 
 		/*std::cout << "~~~~ Generation best: ";

@@ -3,7 +3,7 @@
  *
  *  File: pso.cpp
  *  Created: Jan 13, 2014
- *  Modified: Sun 23 Mar 2014 12:38:45 PM PDT
+ *  Modified: Sat 29 Mar 2014 08:52:03 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -15,15 +15,28 @@
 int main(int narg, char** args) {
 	if(narg < 7 || narg > 9) {
 		std::cout << "usage: hipgisaxs_pso <input_config> <num_particles> <num_generations> "
-			<< "<omega> <phi1> <phi2> [<tune omega>] [<foresee>]"
+			<< "<omega> <phi1> <phi2> [<tune omega>] [<type>]"
 			<< std::endl;
 		return 1;
 	} // if
 
 	bool tune_omega = false;
 	if(narg > 7) tune_omega = (atoi(args[7]) == 1);
-	bool foresee = false;
-	if(narg > 8) foresee = (atoi(args[8]) == 1);
+	int type = 0;
+	if(narg > 8) {
+		std::string type_str(args[8]);
+		if(type_str.compare("base") == 0) {
+			type = 0;
+		} else if(type_str.compare("fips") == 0) {
+			type = 1;
+		} else if(type_str.compare("foresee") == 0) {
+			type = 2;
+		} else {
+			type = -1;
+			std::cerr << "error: invalid type given. valid types are: base fips foresee" << std::endl;
+			return -1;
+		} // if-else
+	} // if
 
 	//AbsoluteDifferenceError err;
 	//AbsoluteDifferenceNorm err;
@@ -31,7 +44,7 @@ int main(int narg, char** args) {
 	hig::HipGISAXSObjectiveFunction hip_func(narg, args, &err);
 	hig::ParticleSwarmOptimization my_pso(narg, args, &hip_func,
 											atof(args[4]), atof(args[5]), atof(args[6]),
-											atoi(args[2]), atoi(args[3]), tune_omega, foresee);
+											atoi(args[2]), atoi(args[3]), tune_omega, type);
 	hig::HipGISAXSAnalyzer ana;
 	ana.add_analysis_algo(&my_pso);
 

@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_fit_pso.hpp
  *  Created: Jan 13, 2014
- *  Modified: Fri 28 Mar 2014 04:53:21 PM PDT
+ *  Modified: Sat 29 Mar 2014 08:50:33 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -92,7 +92,7 @@ namespace hig {
 			float_t pso_phi2_;
 
 			bool tune_omega_;							// whether to vary omega or keep constant
-			bool foresee_;
+			int type_;									// pso type
 			unsigned int foresee_num_;					// number of samples to choose from
 
 			// helpers
@@ -112,7 +112,7 @@ namespace hig {
 
 		public:
 			ParticleSwarmOptimization(int, char**, ObjectiveFunction*,
-										float_t, float_t, float_t, int, int, bool, bool);
+										float_t, float_t, float_t, int, int, bool, int);
 			~ParticleSwarmOptimization();
 
 			bool run(int, char**, int);							// simulate
