@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_main.cpp
  *  Created: Jun 14, 2012
- *  Modified: Tue 01 Apr 2014 04:30:00 PM PDT
+ *  Modified: Tue 01 Apr 2014 04:32:36 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -1422,16 +1422,20 @@ namespace hig {
 
 		delete[] fc;
 
-		// convolute/smear the computed intensities
-		float_t sigma = 2.0;	// TODO: to be read from input config
-		woo::BoostChronoTimer smear_timer;
-		std::cout << "-- Smearing the result ... " << std::flush;
-		smear_timer.start();
-		gaussian_smearing(img3d, sigma);
-		smear_timer.stop();
-		std::cout << "done." << std::endl;
-		std::cout << "**                 Smearing time: "
-					<< smear_timer.elapsed_msec() << " ms." << std::endl;
+		if(master) {
+			// convolute/smear the computed intensities
+			float_t sigma = 2.0;	// TODO: to be read from input config
+			if(sigma > 0.0) {
+				woo::BoostChronoTimer smear_timer;
+				std::cout << "-- Smearing the result ... " << std::flush;
+				smear_timer.start();
+				gaussian_smearing(img3d, sigma);
+				smear_timer.stop();
+				std::cout << "done." << std::endl;
+				std::cout << "**                 Smearing time: "
+							<< smear_timer.elapsed_msec() << " ms." << std::endl;
+			} // if
+		} // if master
 
 		return true;
 	} // HipGISAXS::run_gisaxs()
