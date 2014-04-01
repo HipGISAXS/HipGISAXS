@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_main.cpp
  *  Created: Jun 14, 2012
- *  Modified: Sat 15 Mar 2014 02:56:49 PM PDT
+ *  Modified: Tue 01 Apr 2014 04:30:00 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -486,6 +486,17 @@ namespace hig {
 					//if(!run_gisaxs(alphai, phi, tilt, img3d))
 					
 					if(tmaster) {
+						// convolute/smear the computed intensities
+						//float_t sigma = 5.0;	// TODO: to be read from input config
+						//woo::BoostChronoTimer smear_timer;
+						//std::cout << "-- Smearing the result ... " << std::flush;
+						//smear_timer.start();
+						//gaussian_smearing(final_data, sigma);
+						//smear_timer.stop();
+						//std::cout << "done." << std::endl;
+						//std::cout << "**                 Smearing time: "
+						//			<< smear_timer.elapsed_msec() << " ms." << std::endl;
+
 						// note that final_data stores 3d info
 						// for 2d, just take a slice of the data
 						std::cout << "-- Constructing GISAXS image ... " << std::flush;
@@ -1410,6 +1421,17 @@ namespace hig {
 		} // if master
 
 		delete[] fc;
+
+		// convolute/smear the computed intensities
+		float_t sigma = 2.0;	// TODO: to be read from input config
+		woo::BoostChronoTimer smear_timer;
+		std::cout << "-- Smearing the result ... " << std::flush;
+		smear_timer.start();
+		gaussian_smearing(img3d, sigma);
+		smear_timer.stop();
+		std::cout << "done." << std::endl;
+		std::cout << "**                 Smearing time: "
+					<< smear_timer.elapsed_msec() << " ms." << std::endl;
 
 		return true;
 	} // HipGISAXS::run_gisaxs()
