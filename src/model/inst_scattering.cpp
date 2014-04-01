@@ -3,7 +3,7 @@
  *
  *  File: inst_scattering.cpp
  *  Created: Jun 12, 2012
- *  Modified: Sun 26 Jan 2014 10:38:07 AM PST
+ *  Modified: Tue 01 Apr 2014 04:41:21 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -39,7 +39,8 @@ namespace hig {
 		polarization_ = "s";
 		coherence_ = 300;
 		spot_area_ = 0.01; //0.001;
-		smearing_[0] = smearing_[1] = smearing_[2] = 1;
+		//smearing_[0] = smearing_[1] = smearing_[2] = 1;
+		smearing_ = 1.0;
 	} // ScatteringParams::init()
 
 

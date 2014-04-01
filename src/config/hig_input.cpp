@@ -3,7 +3,7 @@
  *
  *  File: hig_input.cpp
  *  Created: Jun 11, 2012
- *  Modified: Sun 26 Jan 2014 10:19:29 AM PST
+ *  Modified: Tue 01 Apr 2014 04:45:13 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -354,14 +354,14 @@ namespace hig {
 						} // switch
 						break;
 
-					case instrument_scatter_smearing_token:
+					/*case instrument_scatter_smearing_token:
 						if(curr_vector_.size() != 3) {
 							std::cerr << "error: scattering smearing vector size should be 3"
 										<< std::endl;
 							return false;
 						} // if
 						scattering_.smearing(curr_vector_[0], curr_vector_[1], curr_vector_[2]);
-						break;
+						break;*/
 
 					case instrument_detector_totpix_token:
 						if(curr_vector_.size() != 2) {
@@ -944,11 +944,12 @@ namespace hig {
 				break;
 
 			case instrument_scatter_smearing_token:
-				curr_vector_.push_back(num);
-				if(curr_vector_.size() > 3) {
-					std::cerr << "error: more than 3 values in scatter smearing" << std::endl;
-					return false;
-				} // if
+				//curr_vector_.push_back(num);
+				//if(curr_vector_.size() > 3) {
+				//	std::cerr << "error: more than 3 values in scatter smearing" << std::endl;
+				//	return false;
+				//} // if
+				scattering_.smearing(num);
 				break;
 
 			case instrument_detector_totpix_token:

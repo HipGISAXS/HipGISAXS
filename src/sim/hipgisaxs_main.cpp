@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_main.cpp
  *  Created: Jun 14, 2012
- *  Modified: Tue 01 Apr 2014 04:32:36 PM PDT
+ *  Modified: Tue 01 Apr 2014 04:49:17 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -1424,10 +1424,11 @@ namespace hig {
 
 		if(master) {
 			// convolute/smear the computed intensities
-			float_t sigma = 2.0;	// TODO: to be read from input config
+			//float_t sigma = 2.0;	// TODO: to be read from input config
+			float_t sigma = HiGInput::instance().scattering_smearing();
 			if(sigma > 0.0) {
 				woo::BoostChronoTimer smear_timer;
-				std::cout << "-- Smearing the result ... " << std::flush;
+				std::cout << "-- Smearing the result with sigma = " << sigma << " ... " << std::flush;
 				smear_timer.start();
 				gaussian_smearing(img3d, sigma);
 				smear_timer.stop();
