@@ -3,7 +3,7 @@
  *
  *  File: inst_scattering.hpp
  *  Created: Jun 05, 2012
- *  Modified: Sun 26 Jan 2014 09:58:52 AM PST
+ *  Modified: Tue 01 Apr 2014 04:48:23 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -49,7 +49,8 @@ namespace hig {
 			std::string polarization_;	// takes values "s", "p", and "sp"
 			float_t coherence_;
 			float_t spot_area_;
-			vector3_t smearing_;
+			//vector3_t smearing_;
+			float_t smearing_;
 
 		public:
 			ScatteringParams();
@@ -63,9 +64,10 @@ namespace hig {
 			void coherence(float_t d) { coherence_ = d; }
 			void spot_area(float_t d) { spot_area_ = d; }
 
-			void smearing(vector3_t v) { smearing_ = v; }
-			void smearing(float_t v, float_t w, float_t x) {
-				smearing_[0] = v; smearing_[1] = w; smearing_[2] = x; }
+			//void smearing(vector3_t v) { smearing_ = v; }
+			//void smearing(float_t v, float_t w, float_t x) {
+			//	smearing_[0] = v; smearing_[1] = w; smearing_[2] = x; }
+			void smearing(float_t s) { smearing_ = s; }
 
 			void alphai_min(float_t d) { alpha_i_.min_ = d; }
 			void alphai_max(float_t d) { alpha_i_.max_ = d; }
@@ -102,8 +104,9 @@ namespace hig {
 							<< " polarization_ = " << polarization_ << std::endl
 							<< " coherence_ = " << coherence_ << std::endl
 							<< " spot_area_ = " << spot_area_ << std::endl
-							<< " smearing_ = [" << smearing_[0] << ", " << smearing_[1] << ", "
-							<< smearing_[2] << "]" << std::endl
+							<< " smearing_ = " << smearing_ << std::endl
+							//<< " smearing_ = [" << smearing_[0] << ", " << smearing_[1] << ", "
+							//<< smearing_[2] << "]" << std::endl
 							<< std::endl;
 			} // print()
 
