@@ -1,5 +1,5 @@
 # HipGISAXS: QUICK STARTER GUIDE #
-Bug (what bug?) reporting: Email: `bug-submit@saxs-waxs-gpu.dhcp.lbl.gov` and `asarje@lbl.gov`
+Bug (what bug..?) reporting: Email: `bug-submit@saxs-waxs-gpu.dhcp.lbl.gov` and `asarje@lbl.gov`
 
 ## TABLE OF CONTENTS ##
   1. LICENSING
