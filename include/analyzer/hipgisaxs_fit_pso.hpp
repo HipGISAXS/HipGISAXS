@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_fit_pso.hpp
  *  Created: Jan 13, 2014
- *  Modified: Sat 29 Mar 2014 08:50:33 AM PDT
+ *  Modified: Mon 14 Apr 2014 09:58:41 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -28,6 +28,7 @@ namespace hig {
 			parameter_data_list_t param_values_max_;	// maximum parameter values (inclusive)
 			parameter_data_list_t velocity_min_;		// minimum particle velocity components
 			parameter_data_list_t velocity_max_;		// maximum particle velocity components
+			// list of stepping values ...
 
 		protected:
 			PSOParticleConstraints() { }
@@ -41,9 +42,11 @@ namespace hig {
 	// class defining one particle
 	class PSOParticle {
 		private:
+			unsigned int index_;						// global index/id of this particle
 			unsigned int num_parameters_;				// number of parameters
 			parameter_data_list_t param_values_;		// list of all current parameter values
 			parameter_data_list_t velocity_;			// current particle velocity componenets
+			float_t fitness_;							// fitness for current parameter values
 			parameter_data_list_t best_values_;			// particle's best known parameter values
 			float_t best_fitness_;						// the fitness value for best parameter values
 
@@ -56,12 +59,15 @@ namespace hig {
 			bool init_single(const PSOParticleConstraints&);
 
 		protected:
-			PSOParticle(unsigned int, pso_parameter_dist_t, woo::MTRandomNumberGenerator&,
-						const PSOParticleConstraints&);
+			PSOParticle(unsigned int, unsigned int, pso_parameter_dist_t,
+						woo::MTRandomNumberGenerator&, const PSOParticleConstraints&);
 			bool update_particle(float_t, float_t, float_t, const parameter_data_list_t&,
 						const PSOParticleConstraints&, woo::MTRandomNumberGenerator&);
 			bool update_fips_particle(float_t, float_t, float_t, const parameter_data_list_t&,
 						const PSOParticleConstraints&, woo::MTRandomNumberGenerator&);
+			bool update_fdr_particle(float_t, float_t, float_t, const parameter_data_list_t&,
+						const float_vec_t&, const float_vec_t&, const PSOParticleConstraints&,
+						woo::MTRandomNumberGenerator&);
 			bool compute_and_set_values(const parameter_data_list_t&, const parameter_data_list_t&,
 						float_t, float_t, float_t, const parameter_data_list_t&,
 						const PSOParticleConstraints&, woo::MTRandomNumberGenerator&);
@@ -108,6 +114,7 @@ namespace hig {
 
 			bool simulate_generation();					// simulate single generation
 			bool simulate_fips_generation();			// simulate single generation
+			bool simulate_fdr_generation();			// simulate single generation
 			bool simulate_soothsayer_generation();		// simulate single generation with foresee
 
 		public:

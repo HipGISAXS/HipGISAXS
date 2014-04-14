@@ -3,7 +3,7 @@
  *
  *  File: fit_pso.cpp
  *  Created: Jan 13, 2014
- *  Modified: Sat 29 Mar 2014 08:58:39 AM PDT
+ *  Modified: Mon 14 Apr 2014 10:40:02 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -85,6 +85,7 @@ namespace hig {
 		// max number of generations
 		max_iter_ = ngen;
 
+		unsigned int index_offset = 0;
 		#ifdef USE_MPI
 			int num_procs = (*multi_node_).size(root_comm_);
 			int rank = (*multi_node_).rank(root_comm_);
@@ -104,6 +105,8 @@ namespace hig {
 				std::cout << "error: this case has not been implemented yet" << std::endl;
 				exit(-1);
 			} // if-else
+			(*multi_node_).scan_sum(root_comm_, num_particles_, index_offset);
+			index_offset -= num_particles_;
 		#else
 			particle_comm_ = root_comm_;
 		#endif
@@ -111,7 +114,8 @@ namespace hig {
 		// initialize particles
 		particles_.clear();
 		for(int i = 0; i < num_particles_; ++ i) {
-			particles_.push_back(PSOParticle(num_params_, PSO_UNIFORM, rand_, constraints_));
+			particles_.push_back(PSOParticle(index_offset + i, num_params_,
+												PSO_UNIFORM, rand_, constraints_));
 		} // for
 	} // ParticleSwarmOptimization::ParticleSwarmOptimization()
 
@@ -150,6 +154,11 @@ namespace hig {
 					std::cerr << "error: failed in generation " << gen << std::endl;
 					return false;
 				} // if
+			} else if(type_ == 3) {		// fdr
+				if(!simulate_fdr_generation()) {
+					std::cerr << "error: failed in generation " << gen << std::endl;
+					return false;
+				} // if
 			} else if(type_ == 0) {		// base (inertia weight)
 				if(!simulate_generation()) {
 					std::cerr << "error: failed in generation " << gen << std::endl;
@@ -173,6 +182,7 @@ namespace hig {
 	} // ParticleSwarmOptimization::run()
 
 
+	// Base case and with constriction coeff, tuned omega
 	bool ParticleSwarmOptimization::simulate_generation() {
 		// for each particle, simulate
 		for(int i = 0; i < num_particles_; ++ i) {
@@ -284,6 +294,103 @@ namespace hig {
 	} // ParticleSwarmOptimization::simulate_generation()
 
 
+	// FDR: Fitness Distance Ratio
+	// [ratio of difference in fitness of nearest neighbor to distance, in each dimension]
+	bool ParticleSwarmOptimization::simulate_fdr_generation() {
+		// for each particle, simulate
+		for(int i = 0; i < num_particles_; ++ i) {
+			std::cout << (*multi_node_).rank(root_comm_) << ": Particle " << i << std::endl;
+			// construct param map
+			//parameter_map_t curr_particle;
+			float_vec_t curr_particle;
+			for(int j = 0; j < num_params_; ++ j)
+				curr_particle.push_back(particles_[i].param_values_[j]);
+				//curr_particle[params_[j]] = particles_[i].param_values_[j];
+			// compute the fitness
+			(*obj_func_).update_sim_comm(particle_comm_);
+			float_vec_t curr_fitness = (*obj_func_)(curr_particle);
+			particles_[i].fitness_ = curr_fitness[0];		// in PSO we get only one fitness value
+
+			// update particle fitness
+			if(particles_[i].best_fitness_ > curr_fitness[0]) {
+				particles_[i].best_fitness_ = curr_fitness[0];
+				particles_[i].best_values_ = particles_[i].param_values_;
+			} // if
+			// update global best fitness locally
+			if(best_fitness_ > curr_fitness[0]) {
+				best_fitness_ = curr_fitness[0];
+				best_values_ = particles_[i].param_values_;
+			} // if
+		} // for
+
+		float_vec_t all_values, all_fitness;
+		#ifdef USE_MPI
+			// communicate with everyone to get their current fitness and params (alltoall)
+			float_t new_best_fitness; int best_rank;
+			if((*multi_node_).size("pso_particle") > 1 && num_particles_ == 1) {
+				// TODO ...
+				bool pmaster = (*multi_node_).is_master(particle_comm_);
+				std::cout << "error: this case has not been implemented yet" << std::endl;
+				return false;
+			} else {
+				// communicate all the values to all
+				// and the fitnesses
+				float_vec_t all_local_values(num_particles_ * num_params_);
+				float_vec_t all_local_fitness(num_particles_);
+				for(int i = 0; i < num_particles_; ++ i) {
+					for(int j = 0; j < num_params_; ++ j)
+						all_local_values[i * num_params_ + j] = particles_[i].param_values_[j];
+					all_local_fitness[i] = particles_[i].fitness_;
+				} // for
+				if(!(*multi_node_).allgatherv(root_comm_, all_local_values, all_values)) return false;
+				if(!(*multi_node_).allgatherv(root_comm_, all_local_fitness, all_fitness)) return false;
+
+				// also keep track of global best
+				if(!(*multi_node_).allreduce(root_comm_, best_fitness_, new_best_fitness, best_rank,
+												woo::comm::minloc)) return false;
+				best_fitness_ = new_best_fitness;
+			} // if-else
+			// the best rank proc broadcasts its best values to all others
+			if(!(*multi_node_).broadcast(root_comm_, best_values_, best_rank)) return false;
+		#else
+			for(int i = 0; i < num_particles_; ++ i) {
+				for(int j = 0; j < num_params_; ++ j)
+					all_values.push_back(particles_[i].param_values_[j]);
+				all_fitness.push_back(particles_[i].fitness_);
+			} // for
+		#endif
+
+		// update each particle using all best values
+		for(int i = 0; i < num_particles_; ++ i) {
+			if(!particles_[i].update_fdr_particle(pso_omega_, pso_phi1_, pso_phi2_, best_values_,
+													all_values, all_fitness,
+													constraints_, rand_)) {
+				std::cerr << "error: failed to update particle " << i << std::endl;
+				return false;
+			} // if
+		} // for
+
+		if(tune_omega_) pso_omega_ /= 1.5;
+		std::cout << (*multi_node_).rank(root_comm_) << ": Omega = " << pso_omega_ << std::endl;
+
+		#ifdef USE_MPI
+		if((*multi_node_).is_master(root_comm_)) {
+		#endif
+			std::cout << "@@@@@@ Global best: ";
+			std::cout << best_fitness_ << " [ ";
+			for(int j = 0; j < num_params_; ++ j)
+				std::cout << best_values_[j] << " ";
+			std::cout << "]\t";
+			std::cout << std::endl;
+		#ifdef USE_MPI
+		} // if
+		#endif
+
+		return true;
+	} // ParticleSwarmOptimization::simulate_fdr_generation()
+
+
+	// FIPS: Fully Informed Particle Swarm
 	bool ParticleSwarmOptimization::simulate_fips_generation() {
 		// for each particle, simulate
 		for(int i = 0; i < num_particles_; ++ i) {
@@ -329,6 +436,7 @@ namespace hig {
 					return false;
 
 				// also keep track of global best
+				// first find out who has the best one
 				if(!(*multi_node_).allreduce(root_comm_, best_fitness_, new_best_fitness, best_rank,
 												woo::comm::minloc))
 					return false;
@@ -342,19 +450,7 @@ namespace hig {
 					all_best_values.push_back(particles_[i].best_values_[j]);
 		#endif
 
-		/*if((*multi_node_).is_master(root_comm_)) {
-			int tot_parts = all_best_values.size() / num_params_;
-			std::cout << "Number of particles: " << tot_parts << std::endl;
-			for(int i = 0; i < tot_parts; ++ i) {
-				std::cout << (*multi_node_).rank(root_comm_) << ": ";
-				for(int j = 0; j < num_params_; ++ j) {
-					std::cout << all_best_values[i * num_params_ + j] << " ";
-				} // for
-				std::cout << std::endl;
-			} // for
-		} // if*/
-
-		// update each particle using all best values
+		// update each particle using all best values (from all particles)
 		for(int i = 0; i < num_particles_; ++ i) {
 			if(!particles_[i].update_fips_particle(pso_omega_, pso_phi1_, pso_phi2_, all_best_values,
 											constraints_, rand_)) {
@@ -366,6 +462,7 @@ namespace hig {
 		if(tune_omega_) pso_omega_ /= 1.5;
 		std::cout << (*multi_node_).rank(root_comm_) << ": Omega = " << pso_omega_ << std::endl;
 
+		// print current global best
 		#ifdef USE_MPI
 		if((*multi_node_).is_master(root_comm_)) {
 		#endif
@@ -383,6 +480,7 @@ namespace hig {
 	} // ParticleSwarmOptimization::simulate_fips_generation()
 
 
+	// Soothsayer: look ahead few possibilities and pick the best
 	bool ParticleSwarmOptimization::simulate_soothsayer_generation() {
 		// for each particle, simulate
 		for(int i = 0; i < num_particles_; ++ i) {
