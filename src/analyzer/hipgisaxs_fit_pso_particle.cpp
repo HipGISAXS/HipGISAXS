@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_fit_pso_particle.cpp
  *  Created: Jan 13, 2014
- *  Modified: Mon 14 Apr 2014 09:58:17 AM PDT
+ *  Modified: Mon 14 Apr 2014 05:19:40 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -12,6 +12,8 @@
 #include <analyzer/hipgisaxs_fit_pso.hpp>
 
 namespace hig {
+
+	const float_t PI_ = 3.14159;
 
 	PSOParticle::PSOParticle(unsigned int id, unsigned int num_param, pso_parameter_dist_t dist,
 							woo::MTRandomNumberGenerator& rng,
@@ -160,6 +162,23 @@ namespace hig {
 			param_values_[i] = std::min(std::max(param_values_[i] + velocity_[i],
 										constraints.param_values_min_[i]),
 										constraints.param_values_max_[i]);
+		} // for
+		return true;
+	} // PSOParticle::update_fdr_particle()
+
+
+	// Bare-bones -- is not completely right ...
+	bool PSOParticle::update_barebones_particle(const parameter_data_list_t& global_best,
+												const PSOParticleConstraints& constraints,
+												woo::MTRandomNumberGenerator& rng) {
+		for(int i = 0; i < num_parameters_; ++ i) {
+			// generate random number with levy distribution
+			float_t r1 = rng.rand();
+			float_t sigma = fabs(best_values_[i] - global_best[i]);
+			float_t alpha = 1.4;
+			float_t new_val = 1.0 / (exp(pow(r1 / sigma, alpha) / 2.0) * sigma * sqrt(2 * PI_));
+			param_values_[i] = constraints.param_values_min_[i] + new_val *
+								(constraints.param_values_max_[i] - constraints.param_values_min_[i]);
 		} // for
 		return true;
 	} // PSOParticle::update_fdr_particle()

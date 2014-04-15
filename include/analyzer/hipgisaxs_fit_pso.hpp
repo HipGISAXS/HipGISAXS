@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_fit_pso.hpp
  *  Created: Jan 13, 2014
- *  Modified: Mon 14 Apr 2014 09:58:41 AM PDT
+ *  Modified: Mon 14 Apr 2014 04:24:25 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -68,6 +68,8 @@ namespace hig {
 			bool update_fdr_particle(float_t, float_t, float_t, const parameter_data_list_t&,
 						const float_vec_t&, const float_vec_t&, const PSOParticleConstraints&,
 						woo::MTRandomNumberGenerator&);
+			bool update_barebones_particle(const parameter_data_list_t&, const PSOParticleConstraints&,
+						woo::MTRandomNumberGenerator&);
 			bool compute_and_set_values(const parameter_data_list_t&, const parameter_data_list_t&,
 						float_t, float_t, float_t, const parameter_data_list_t&,
 						const PSOParticleConstraints&, woo::MTRandomNumberGenerator&);
@@ -115,6 +117,7 @@ namespace hig {
 			bool simulate_generation();					// simulate single generation
 			bool simulate_fips_generation();			// simulate single generation
 			bool simulate_fdr_generation();			// simulate single generation
+			bool simulate_barebones_generation();			// simulate single generation
 			bool simulate_soothsayer_generation();		// simulate single generation with foresee
 
 		public:

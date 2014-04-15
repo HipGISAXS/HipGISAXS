@@ -3,7 +3,7 @@
  *
  *  File: fit_pso.cpp
  *  Created: Jan 13, 2014
- *  Modified: Mon 14 Apr 2014 10:40:02 AM PDT
+ *  Modified: Mon 14 Apr 2014 04:28:33 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -159,6 +159,11 @@ namespace hig {
 					std::cerr << "error: failed in generation " << gen << std::endl;
 					return false;
 				} // if
+			} else if(type_ == 4) {		// barebones
+				if(!simulate_barebones_generation()) {
+					std::cerr << "error: failed in generation " << gen << std::endl;
+					return false;
+				} // if
 			} else if(type_ == 0) {		// base (inertia weight)
 				if(!simulate_generation()) {
 					std::cerr << "error: failed in generation " << gen << std::endl;
@@ -292,6 +297,76 @@ namespace hig {
 
 		return true;
 	} // ParticleSwarmOptimization::simulate_generation()
+
+
+	// Bare-bones PSO
+	bool ParticleSwarmOptimization::simulate_barebones_generation() {
+		// for each particle, simulate
+		for(int i = 0; i < num_particles_; ++ i) {
+			std::cout << (*multi_node_).rank(root_comm_) << ": Particle " << i << std::endl;
+			// construct param map
+			float_vec_t curr_particle;
+			for(int j = 0; j < num_params_; ++ j)
+				curr_particle.push_back(particles_[i].param_values_[j]);
+			// compute the fitness
+			(*obj_func_).update_sim_comm(particle_comm_);
+			float_vec_t curr_fitness = (*obj_func_)(curr_particle);
+
+			// update particle fitness
+			if(particles_[i].best_fitness_ > curr_fitness[0]) {
+				particles_[i].best_fitness_ = curr_fitness[0];
+				particles_[i].best_values_ = particles_[i].param_values_;
+			} // if
+			// update global best fitness locally
+			if(best_fitness_ > curr_fitness[0]) {
+				best_fitness_ = curr_fitness[0];
+				best_values_ = particles_[i].param_values_;
+			} // if
+		} // for
+
+		#ifdef USE_MPI
+			// communicate and find globally best fitness
+			float_t new_best_fitness; int best_rank;
+			if((*multi_node_).size("pso_particle") > 1 && num_particles_ == 1) {
+				// in the case when multiple procs work on one particle,
+				// only the master needs to communicate with other masters (for other particles)
+				// TODO ...
+				bool pmaster = (*multi_node_).is_master(particle_comm_);
+				std::cout << "error: this case has not been implemented yet" << std::endl;
+				return false;
+			} else {
+				if(!(*multi_node_).allreduce(root_comm_, best_fitness_, new_best_fitness, best_rank,
+												woo::comm::minloc))
+					return false;
+				best_fitness_ = new_best_fitness;
+			} // if-else
+			// the best rank proc broadcasts its best values to all others
+			if(!(*multi_node_).broadcast(root_comm_, best_values_, best_rank)) return false;
+		#endif
+
+		// update each particle using new global best
+		for(int i = 0; i < num_particles_; ++ i) {
+			if(!particles_[i].update_barebones_particle(best_values_, constraints_, rand_)) {
+				std::cerr << "error: failed to update particle " << i << std::endl;
+				return false;
+			} // if
+		} // for
+
+		#ifdef USE_MPI
+		if((*multi_node_).is_master(root_comm_)) {
+		#endif
+			std::cout << "@@@@@@ Global best: ";
+			std::cout << best_fitness_ << " [ ";
+			for(int j = 0; j < num_params_; ++ j)
+				std::cout << best_values_[j] << " ";
+			std::cout << "]\t";
+			std::cout << std::endl;
+		#ifdef USE_MPI
+		} // if
+		#endif
+
+		return true;
+	} // ParticleSwarmOptimization::simulate_barebones_generation()
 
 
 	// FDR: Fitness Distance Ratio
