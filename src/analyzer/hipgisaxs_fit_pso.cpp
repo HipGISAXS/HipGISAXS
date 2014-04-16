@@ -3,7 +3,7 @@
  *
  *  File: fit_pso.cpp
  *  Created: Jan 13, 2014
- *  Modified: Wed 16 Apr 2014 12:26:37 PM PDT
+ *  Modified: Wed 16 Apr 2014 01:11:17 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -181,6 +181,7 @@ namespace hig {
 				// arrange particles in a 2d grid
 				x = sqrt(num_particles_global_);
 				y = num_particles_global_ / x;
+				std::cout << "======================= " << x << " x " << y << std::endl;
 				if(x * y != num_particles_global_) {
 					std::cerr << "error: number of particles is not compatible with specified topology"
 								<< std::endl;
