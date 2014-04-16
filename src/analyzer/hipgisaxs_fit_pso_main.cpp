@@ -3,7 +3,7 @@
  *
  *  File: pso.cpp
  *  Created: Jan 13, 2014
- *  Modified: Mon 14 Apr 2014 04:28:10 PM PDT
+ *  Modified: Wed 16 Apr 2014 09:43:00 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -34,7 +34,12 @@ int main(int narg, char** args) {
 		} else if(type_str.compare("fdr") == 0) {
 			type = 3;
 		} else if(type_str.compare("bb") == 0) {
+			std::cerr << "WARNING: barebones is not complete yet!" << std::endl;
 			type = 4;
+		} else if(type_str.compare("lbest") == 0) {
+			type = 5;
+		} else if(type_str.compare("von") == 0) {
+			type = 6;
 		} else {
 			type = -1;
 			std::cerr << "error: invalid type given. valid types are: base fips foresee" << std::endl;

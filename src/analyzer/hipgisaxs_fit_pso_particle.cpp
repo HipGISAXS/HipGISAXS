@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_fit_pso_particle.cpp
  *  Created: Jan 13, 2014
- *  Modified: Mon 14 Apr 2014 05:19:40 PM PDT
+ *  Modified: Wed 16 Apr 2014 09:22:54 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -35,6 +35,7 @@ namespace hig {
 		velocity_.clear();
 		best_values_.clear();
 		best_fitness_ = std::numeric_limits<float_t>::max();
+		best_fitness_global_ = best_fitness_;
 		switch(dist) {
 			case PSO_DEFAULT:
 			case PSO_UNIFORM:
@@ -66,6 +67,7 @@ namespace hig {
 			param_values_.push_back(val);
 			velocity_.push_back(vel);
 			best_values_.push_back(val);
+			best_values_global_.push_back(val);
 		} // for
 		return true;
 	} // PSOParticle::init_random_uniform()
@@ -82,6 +84,15 @@ namespace hig {
 		std::cerr << "error: init_single() is not currently implemented" << std::endl;
 		return false;
 	} // PSOParticle::init_single()
+
+
+	bool PSOParticle::insert_neighbor(unsigned int index, int proc) {
+		ParticleNeighbor n;
+		n.proc_ = proc;
+		n.index_ = index;
+		neighbors_.insert(n);
+		return true;
+	} // PSOParticle::insert_neighbor()
 
 
 	// basic

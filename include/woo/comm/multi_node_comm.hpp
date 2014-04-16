@@ -3,7 +3,7 @@
   *
   *  File: multi_node_comm.hpp
   *  Created: Mar 18, 2013
-  *  Modified: Sat 29 Mar 2014 08:17:46 AM PDT
+  *  Modified: Wed 16 Apr 2014 08:50:24 AM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -222,6 +222,11 @@ namespace woo {
 				return true;
 			} // allgather()
 
+			inline bool allgather(unsigned int* sbuf, int scount, unsigned int* rbuf, int rcount) {
+				MPI_Allgather(sbuf, scount, MPI_UNSIGNED, rbuf, rcount, MPI_UNSIGNED, world_);
+				return true;
+			} // allgather()
+
 			inline bool allgatherv(float* sbuf, int scount, float* rbuf, int* rcount) {
 				int* displs = new (std::nothrow) int[num_procs_];
 				displs[0] = 0;
@@ -261,6 +266,29 @@ namespace woo {
 				MPI_Barrier(world_);
 				return true;
 			} // barrier()
+
+			/**
+			 * Point-to-point
+			 */
+
+			bool isend(float* sbuf, int scount, int to, MPI_Request& req) {
+				if(MPI_Isend(sbuf, scount, MPI_FLOAT, to, rank_, world_, &req) != MPI_SUCCESS)
+					return false;
+				return true;
+			} // send()
+
+			bool irecv(float* rbuf, int rcount, int from, MPI_Request& req) {
+				if(MPI_Irecv(rbuf, rcount, MPI_FLOAT, from, from, world_, &req) != MPI_SUCCESS)
+					return false;
+				return true;
+			} // send()
+
+			bool waitall(int count, MPI_Request* req) {
+				MPI_Status* stats = new (std::nothrow) MPI_Status[count];
+				MPI_Waitall(count, req, stats);
+				delete[] stats;
+				return true;
+			} // waitall()
 
 		private:
 			unsigned int num_procs_;	// number of processes in this communicator
@@ -395,6 +423,11 @@ namespace woo {
 				return comms_[key].allgather(sbuf, scount, rbuf, rcount);
 			} // allgather()
 
+			inline bool allgather(std::string key, unsigned int* sbuf, int scount,
+									unsigned int* rbuf, int rcount) {
+				return comms_[key].allgather(sbuf, scount, rbuf, rcount);
+			} // allgather()
+
 			inline bool allgatherv(std::string key, std::vector<float>& sbuf,
 									std::vector<float>& rbuf) {
 				int size = sbuf.size();
@@ -453,6 +486,22 @@ namespace woo {
 			bool barrier(std::string key) {
 				return comms_[key].barrier();
 			} // barrier()
+
+			/**
+			 * Point-to-point
+			 */
+
+			bool isend(std::string key, float_t* sbuf, int scount, int to, MPI_Request& req) {
+				return comms_[key].isend(sbuf, scount, to, req);
+			} // send()
+
+			bool irecv(std::string key, float_t* rbuf, int rcount, int from, MPI_Request& req) {
+				return comms_[key].irecv(rbuf, rcount, from, req);
+			} // send()
+
+			bool waitall(std::string key, int count, MPI_Request* req) {
+				return comms_[key].waitall(count, req);
+			} // waitall()
 
 		private:
 			unsigned int universe_num_procs_;		// total number of processes

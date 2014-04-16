@@ -3,7 +3,7 @@
  *
  *  File: fit_pso.cpp
  *  Created: Jan 13, 2014
- *  Modified: Mon 14 Apr 2014 04:28:33 PM PDT
+ *  Modified: Wed 16 Apr 2014 12:26:37 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -24,7 +24,7 @@ namespace hig {
 	ParticleSwarmOptimization::ParticleSwarmOptimization(int narg, char** args, ObjectiveFunction* obj,
 			float_t omega, float_t phi1, float_t phi2, int npart, int ngen,
 			bool tune_omega = false, int type = 0) :
-   			rand_(time(NULL))	{
+				rand_(time(NULL)), type_(type) {
 		name_ = algo_pso;
 		max_hist_ = 100;			// not used ...
 		tol_ = 1e-8;
@@ -37,7 +37,6 @@ namespace hig {
 		obj_func_ = obj;
 
 		tune_omega_ = tune_omega;
-		type_ = type;
 
 		std::cout << "** PSO Parameters: " << pso_omega_ << ", " << pso_phi1_ << ", " << pso_phi2_
 					<< std::endl;
@@ -82,6 +81,7 @@ namespace hig {
 
 		// get number of particles
 		num_particles_ = npart;
+		num_particles_global_ = npart;
 		// max number of generations
 		max_iter_ = ngen;
 
@@ -92,10 +92,10 @@ namespace hig {
 			// two cases:	num_procs <= num_part (easy case)
 			// 				num_procs > num_part
 			particle_comm_ = "pso_particle";
-			if(num_procs <= num_particles_) {
+			if(num_procs <= num_particles_global_) {
 				// assign multiple particles per proc
-				num_particles_ = num_particles_ / num_procs +
-										(rank < (num_particles_ % num_procs) ? 1 : 0);
+				num_particles_ = num_particles_global_ / num_procs +
+										(rank < (num_particles_global_ % num_procs) ? 1 : 0);
 				// each proc will now be in its own new world
 				(*multi_node_).split(particle_comm_, root_comm_, rank);
 			} else {
@@ -107,8 +107,16 @@ namespace hig {
 			} // if-else
 			(*multi_node_).scan_sum(root_comm_, num_particles_, index_offset);
 			index_offset -= num_particles_;
+			start_particle_index_ = index_offset;
+			// allgather to collect the start indices for each proc
+			unsigned int * buff = new (std::nothrow) unsigned int[(*multi_node_).size(root_comm_)];
+			(*multi_node_).allgather(root_comm_, &start_particle_index_, 1, buff, 1);
+			for(int i = 0; i < (*multi_node_).size(root_comm_); ++ i)
+				start_indices_.push_back(buff[i]);
+			delete[] buff;
 		#else
 			particle_comm_ = root_comm_;
+			start_particle_index_ = 0;
 		#endif
 
 		// initialize particles
@@ -117,12 +125,126 @@ namespace hig {
 			particles_.push_back(PSOParticle(index_offset + i, num_params_,
 												PSO_UNIFORM, rand_, constraints_));
 		} // for
+
+		if(type_ > 4) {		// need to construct neighbor list (non-fully-connected topology)
+			if(!construct_neighbor_lists()) exit(2);
+		} // if
 	} // ParticleSwarmOptimization::ParticleSwarmOptimization()
 
 
 	ParticleSwarmOptimization::~ParticleSwarmOptimization() {
 
 	} // ParticleSwarmOptimization::~ParticleSwarmOptimization()
+
+
+	bool ParticleSwarmOptimization::construct_neighbor_lists() {
+		if((*multi_node_).is_master(root_comm_))
+			std::cout << "-- Constructing neighbor lists for each particle ..." << std::endl;
+		#ifdef USE_MPI
+			// easy way:
+			// find location of all particles through one allgatherv operation
+			unsigned int *start_indices = new unsigned int[(*multi_node_).size(root_comm_) + 1];
+			(*multi_node_).allgather(root_comm_, &start_particle_index_, 1, start_indices, 1);
+			start_indices[(*multi_node_).size(root_comm_)] = num_particles_global_;
+			std::map<unsigned int, int> proc_loc;
+			unsigned int i = 0;
+			for(int curr_proc = 0; curr_proc < (*multi_node_).size(root_comm_); ++ curr_proc) {
+				while(i < start_indices[curr_proc + 1]) proc_loc[i ++] = curr_proc;
+			} // while
+			delete [] start_indices;
+		#endif
+
+		int x = 0, y = 0;
+		switch(type_) {
+			case 5:			// lbest, K = 2
+				for(int i = 0; i < num_particles_; ++ i) {
+					unsigned int myid = particles_[i].index_;
+					unsigned int left;
+					if(myid == 0) left = num_particles_global_ - 1;		// wrap around
+					else left = myid - 1;
+					unsigned int right = (myid + 1) % num_particles_global_;
+					#ifdef USE_MPI
+						particles_[i].insert_neighbor(left, proc_loc[left]);
+						particles_[i].insert_neighbor(right, proc_loc[right]);
+						neighbor_send_lists_[proc_loc[left]].insert(myid);
+						neighbor_send_lists_[proc_loc[right]].insert(myid);
+						neighbor_recv_lists_[proc_loc[left]].insert(left);
+						neighbor_recv_lists_[proc_loc[right]].insert(right);
+					#else
+						particles_[i].insert_neighbor(left, 0);
+						particles_[i].insert_neighbor(right, 0);
+					#endif
+				} // for
+				break;
+
+			case 6:			// von Newmann. K = 4
+				// arrange particles in a 2d grid
+				x = sqrt(num_particles_global_);
+				y = num_particles_global_ / x;
+				if(x * y != num_particles_global_) {
+					std::cerr << "error: number of particles is not compatible with specified topology"
+								<< std::endl;
+					return false;
+				} // if
+				for(int i = 0; i < num_particles_; ++ i) {
+					unsigned int myid = particles_[i].index_;
+					int myx = myid % x;
+					int myy = myid / x;
+					int up = (myy - 1 < 0 ? y - 1 : myy - 1) * x + myx;
+					int down = ((myy + 1) % y) * x + myx;
+					int left = myy * x + (myx - 1 < 0 ? x - 1 : myx - 1);
+					int right = myy * x + (myx + 1) % x;
+					#ifdef USE_MPI
+						particles_[i].insert_neighbor(up, proc_loc[up]);
+						particles_[i].insert_neighbor(down, proc_loc[down]);
+						particles_[i].insert_neighbor(left, proc_loc[left]);
+						particles_[i].insert_neighbor(right, proc_loc[right]);
+						// send lists
+						neighbor_send_lists_[proc_loc[up]].insert(myid);
+						neighbor_send_lists_[proc_loc[down]].insert(myid);
+						neighbor_send_lists_[proc_loc[left]].insert(myid);
+						neighbor_send_lists_[proc_loc[right]].insert(myid);
+						// recv lists
+						neighbor_recv_lists_[proc_loc[up]].insert(up);
+						neighbor_recv_lists_[proc_loc[down]].insert(down);
+						neighbor_recv_lists_[proc_loc[left]].insert(left);
+						neighbor_recv_lists_[proc_loc[right]].insert(right);
+					#else
+						particles_[i].insert_neighbor(up, 0);
+						particles_[i].insert_neighbor(down, 0);
+						particles_[i].insert_neighbor(left, 0);
+						particles_[i].insert_neighbor(right, 0);
+					#endif
+				} // for
+				break;
+
+			default:
+				std::cerr << "error: given type is not custom topology" << std::endl;
+				return false;
+		} // switch
+
+		// once the particle neighbors are known, construct the neighbor processor communication lists
+		// TODO ...
+
+		for(int i = 0; i < num_particles_; ++ i) {
+			std::cout << (*multi_node_).rank(root_comm_) << ": Particle " << i << " -> ";
+			particles_[i].print_neighbors();
+		} // for
+		for(comm_list_iter_t i = neighbor_send_lists_.begin(); i != neighbor_send_lists_.end(); ++ i) {
+			std::cout << (*multi_node_).rank(root_comm_) << ": send list " << (*i).first << " -> ";
+			for(std::set<unsigned int>::iterator j = (*i).second.begin(); j != (*i).second.end(); ++ j)
+				std::cout << (*multi_node_).rank(root_comm_) << ":" << *j << " ";
+			std::cout << std::endl;
+		} // for
+		for(comm_list_iter_t i = neighbor_recv_lists_.begin(); i != neighbor_recv_lists_.end(); ++ i) {
+			std::cout << (*multi_node_).rank(root_comm_) << ": recv list " << (*i).first << " -> ";
+			for(std::set<unsigned int>::iterator j = (*i).second.begin(); j != (*i).second.end(); ++ j)
+				std::cout << (*multi_node_).rank(root_comm_) << ":" << *j << " ";
+			std::cout << std::endl;
+		} // for
+
+		return true;
+	} // ParticleSwarmOptimization::construct_neighbor_lists()
 
 
 	parameter_map_t ParticleSwarmOptimization::get_best_values() const {
@@ -161,6 +283,16 @@ namespace hig {
 				} // if
 			} else if(type_ == 4) {		// barebones
 				if(!simulate_barebones_generation()) {
+					std::cerr << "error: failed in generation " << gen << std::endl;
+					return false;
+				} // if
+			} else if(type_ == 5) {		// barebones
+				if(!simulate_lbest_generation()) {
+					std::cerr << "error: failed in generation " << gen << std::endl;
+					return false;
+				} // if
+			} else if(type_ == 6) {		// barebones
+				if(!simulate_vonnewmann_generation()) {
 					std::cerr << "error: failed in generation " << gen << std::endl;
 					return false;
 				} // if
@@ -632,6 +764,242 @@ namespace hig {
 
 		return true;
 	} // ParticleSwarmOptimization::simulate_soothsayer_generation()
+
+
+	// other topologies:
+
+	// TODO: optimize communication later ...
+	// for each proc in the send list, collect/pack data and send
+	// for each proc in the recv list, receive data and unpack
+	bool ParticleSwarmOptimization::neighbor_data_exchange() {
+		// Irecv
+		// first receive fitness values and parameter values
+		std::vector<MPI_Request> rreq;
+		std::vector<float_t*> recv_bufs;
+		int myrank = (*multi_node_).rank(root_comm_);
+		for(comm_list_iter_t r = neighbor_recv_lists_.begin(); r != neighbor_recv_lists_.end(); ++ r) {
+//			if(myrank == (*r).first || (*r).second.size() == 0) continue;
+			float_t * recv_fitness = new (std::nothrow) float_t[(*r).second.size()];
+			float_t * recv_values = new (std::nothrow) float_t[(*r).second.size() * num_params_];
+			recv_bufs.push_back(recv_fitness); recv_bufs.push_back(recv_values);
+			MPI_Request r1, r2;
+			(*multi_node_).irecv(root_comm_, recv_fitness, (*r).second.size(), (*r).first, r1);
+			(*multi_node_).irecv(root_comm_, recv_values, (*r).second.size() * num_params_,
+									(*r).first, r2);
+			rreq.push_back(r1); rreq.push_back(r2);
+		} // for
+
+		// Isend
+		// first send fitness values, then send parameter values
+		std::vector <MPI_Request> sreq;
+		std::vector<float_t*> send_bufs;
+		typedef std::map <int, std::set <unsigned int> >::const_iterator comm_list_iter;
+		for(comm_list_iter s = neighbor_send_lists_.begin(); s != neighbor_send_lists_.end(); ++ s) {
+//			if(myrank == (*s).first || (*s).second.size() == 0) continue;
+			float_t * send_fitness = new (std::nothrow) float_t[(*s).second.size()];
+			float_t * send_values = new (std::nothrow) float_t[(*s).second.size() * num_params_];
+			send_bufs.push_back(send_fitness); send_bufs.push_back(send_values);
+			std::set<unsigned int>::const_iterator iter = (*s).second.begin();
+			for(int i = 0; iter != (*s).second.end(); ++ i, ++ iter) {
+				unsigned int index = *iter - start_particle_index_;
+				send_fitness[i] = particles_[index].best_fitness_global_;
+				for(int j = 0; j < num_params_; ++ j) {
+					send_values[i * num_params_ + j] = particles_[index].best_values_global_[j];
+				} // for
+			} // for
+			MPI_Request s1, s2;
+			(*multi_node_).isend(root_comm_, send_fitness, (*s).second.size(), (*s).first, s1);
+			(*multi_node_).isend(root_comm_, send_values, (*s).second.size() * num_params_,
+									(*s).first, s2);
+			sreq.push_back(s1); sreq.push_back(s2);
+		} // for
+
+		// wait for all recvs to complete
+		(*multi_node_).waitall(root_comm_, rreq.size(), &rreq[0]);
+		// then wait for all sends to complete
+		(*multi_node_).waitall(root_comm_, sreq.size(), &sreq[0]);
+
+		// for each particle update data using received neighbor information
+		for(int i = 0; i < num_particles_; ++ i) {
+			std::cout << "--------------- Particle " << i << "(" << particles_[i].index_ << "): ";
+			// for each neighbor
+			//for(particle_neighbor_set_t::iterator n = particles_[i].neighbors_.begin();
+			for(std::set<PSOParticle::ParticleNeighbor>::iterator n = particles_[i].neighbors_.begin();
+					n != particles_[i].neighbors_.end(); ++ n) {
+				std::cout << "nbr " << (*n).index_ << " ";
+				bool found = false;
+				comm_list_iter_t r = neighbor_recv_lists_.begin();
+				for(int j = 0; r != neighbor_recv_lists_.end(); ++ r, ++ j) {
+					if((*r).first != (*n).proc_) continue;
+					std::set<unsigned int>::iterator f = (*r).second.begin();
+					for(int k = 0; f != (*r).second.end(); ++ k, ++ f) {
+						if((*n).index_ == *f) {		// this is what we are looking for
+							found = true;
+							std::cout << (*multi_node_).rank(root_comm_) << ": comparing "
+										<< particles_[i].best_fitness_global_ << " with "
+										<< recv_bufs[2 * j][k] << std::endl;
+							if(particles_[i].best_fitness_global_ > recv_bufs[2 * j][k]) {
+								particles_[i].best_fitness_global_ = recv_bufs[2 * j][k];
+								for(int l = 0; l < num_params_; ++ l)
+									particles_[i].best_values_global_[l] =
+															recv_bufs[2 * j + 1][k * num_params_ + l];
+							} // if
+							break;
+						} // if
+					} // for k
+					if(found) break;
+				} // for recv list
+			} // for neighbors
+		} // for particle
+
+		// free all buffers
+		for(std::vector<float_t*>::iterator i = recv_bufs.begin(); i != recv_bufs.end(); ++ i)
+			delete[] *i;
+		for(std::vector<float_t*>::iterator i = send_bufs.begin(); i != send_bufs.end(); ++ i)
+			delete[] *i;
+
+		return true;
+	} // ParticleSwarmOptimization::neighbor_data_exchange()
+
+
+	// lbest, with K = 2 in a ring
+	bool ParticleSwarmOptimization::simulate_lbest_generation() {
+		int k = 2;
+		if(k != 2) {
+			std::cout << "error: case k = " << k << " not implemented yet!" << std::endl;
+			return false;
+		} // if
+		// for each particle, simulate
+		for(int i = 0; i < num_particles_; ++ i) {
+			std::cout << (*multi_node_).rank(root_comm_) << ": Particle " << i << std::endl;
+			// construct param map
+			float_vec_t curr_particle;
+			for(int j = 0; j < num_params_; ++ j)
+				curr_particle.push_back(particles_[i].param_values_[j]);
+			// compute the fitness
+			(*obj_func_).update_sim_comm(particle_comm_);
+			float_vec_t curr_fitness = (*obj_func_)(curr_particle);
+			// update particle fitness
+			if(particles_[i].best_fitness_ > curr_fitness[0]) {
+				particles_[i].best_fitness_ = curr_fitness[0];
+				particles_[i].best_values_ = particles_[i].param_values_;
+			} // if
+			if(particles_[i].best_fitness_global_ > curr_fitness[0]) {
+				particles_[i].best_fitness_global_ = curr_fitness[0];
+				particles_[i].best_values_global_ = particles_[i].param_values_;
+			} // if
+			std::cout << (*multi_node_).rank(root_comm_) << ": " << curr_fitness[0] << " "
+						<< particles_[i].best_fitness_ << " " << particles_[i].best_fitness_global_
+						<< std::endl;
+		} // for
+
+		#ifdef USE_MPI
+			// exchange data between neighbors
+			if(!neighbor_data_exchange()) return false;
+		#else
+			// TODO ...
+			std::cerr << "error: this has not been implemented!!!" << std::endl;
+			return false;
+		#endif
+
+		// update each particle using new best values
+		for(int i = 0; i < num_particles_; ++ i) {
+			if(!particles_[i].update_particle(pso_omega_, pso_phi1_, pso_phi2_,
+												particles_[i].best_values_global_,
+												constraints_, rand_)) {
+				std::cerr << "error: failed to update particle " << i << std::endl;
+				return false;
+			} // if
+			// also keep track of global best :P -- not really needed ...
+			if(best_fitness_ > particles_[i].best_fitness_global_) {
+				best_fitness_ = particles_[i].best_fitness_global_;
+				best_values_ = particles_[i].best_values_global_;
+			} // if
+		} // for
+
+		if(tune_omega_) pso_omega_ /= 2.0;
+		std::cout << (*multi_node_).rank(root_comm_) << ": Omega = " << pso_omega_ << std::endl;
+
+		#ifdef USE_MPI
+		std::cout << (*multi_node_).rank(root_comm_) << " :: ";
+		#endif
+		std::cout << "@@@@@@ Global best: ";
+		std::cout << best_fitness_ << " [ ";
+		for(int j = 0; j < num_params_; ++ j) std::cout << best_values_[j] << " ";
+		std::cout << "]\t";
+		std::cout << std::endl;
+
+		return true;
+	} // ParticleSwarmOptimization::simulate_lbest_generation()
+
+
+	// vonnewmann, with K = 4 in a grid/torus
+	bool ParticleSwarmOptimization::simulate_vonnewmann_generation() {
+		int k = 2;
+		if(k != 2) {
+			std::cout << "error: case k = " << k << " not implemented yet!" << std::endl;
+			return false;
+		} // if
+		// for each particle, simulate
+		for(int i = 0; i < num_particles_; ++ i) {
+			std::cout << (*multi_node_).rank(root_comm_) << ": Particle " << i << std::endl;
+			// construct param map
+			float_vec_t curr_particle;
+			for(int j = 0; j < num_params_; ++ j)
+				curr_particle.push_back(particles_[i].param_values_[j]);
+			// compute the fitness
+			(*obj_func_).update_sim_comm(particle_comm_);
+			float_vec_t curr_fitness = (*obj_func_)(curr_particle);
+			// update particle fitness
+			if(particles_[i].best_fitness_ > curr_fitness[0]) {
+				particles_[i].best_fitness_ = curr_fitness[0];
+				particles_[i].best_values_ = particles_[i].param_values_;
+			} // if
+			if(particles_[i].best_fitness_global_ > curr_fitness[0]) {
+				particles_[i].best_fitness_global_ = curr_fitness[0];
+				particles_[i].best_values_global_ = particles_[i].param_values_;
+			} // if
+		} // for
+
+		#ifdef USE_MPI
+			// exchange data between neighbors
+			if(!neighbor_data_exchange()) return false;
+		#else
+			// TODO ...
+			std::cerr << "error: this has not been implemented!!!" << std::endl;
+			return false;
+		#endif
+
+		// update each particle using new best values
+		for(int i = 0; i < num_particles_; ++ i) {
+			if(!particles_[i].update_particle(pso_omega_, pso_phi1_, pso_phi2_,
+												particles_[i].best_values_global_,
+												constraints_, rand_)) {
+				std::cerr << "error: failed to update particle " << i << std::endl;
+				return false;
+			} // if
+			// also keep track of global best :P -- not really needed ...
+			if(best_fitness_ > particles_[i].best_fitness_global_) {
+				best_fitness_ = particles_[i].best_fitness_global_;
+				best_values_ = particles_[i].best_values_global_;
+			} // if
+		} // for
+
+		if(tune_omega_) pso_omega_ /= 2.0;
+		std::cout << (*multi_node_).rank(root_comm_) << ": Omega = " << pso_omega_ << std::endl;
+
+		#ifdef USE_MPI
+		std::cout << (*multi_node_).rank(root_comm_) << " :: ";
+		#endif
+		std::cout << "@@@@@@ Global best: ";
+		std::cout << best_fitness_ << " [ ";
+		for(int j = 0; j < num_params_; ++ j) std::cout << best_values_[j] << " ";
+		std::cout << "]\t";
+		std::cout << std::endl;
+
+		return true;
+	} // ParticleSwarmOptimization::simulate_vonnewmann_generation()
+
 
 
 } // namespace hig
