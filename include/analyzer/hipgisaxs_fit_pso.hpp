@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_fit_pso.hpp
  *  Created: Jan 13, 2014
- *  Modified: Wed 16 Apr 2014 01:00:00 PM PDT
+ *  Modified: Wed 16 Apr 2014 05:12:07 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -160,8 +160,9 @@ namespace hig {
 			bool simulate_soothsayer_generation();		// simulate single generation with foresee
 
 			// other static topologies
-			bool simulate_lbest_generation();		// lbest version with K = arg
+			bool simulate_lbest_generation();			// lbest version with K = 2
 			bool simulate_vonnewmann_generation();		// lbest grid/torus with K = 4
+			bool simulate_random_generation();			// random connectivity with degree k
 
 		public:
 			ParticleSwarmOptimization(int, char**, ObjectiveFunction*,

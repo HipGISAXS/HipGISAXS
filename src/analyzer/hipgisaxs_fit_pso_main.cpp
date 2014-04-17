@@ -3,7 +3,7 @@
  *
  *  File: pso.cpp
  *  Created: Jan 13, 2014
- *  Modified: Wed 16 Apr 2014 09:43:00 AM PDT
+ *  Modified: Wed 16 Apr 2014 05:20:40 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -40,6 +40,8 @@ int main(int narg, char** args) {
 			type = 5;
 		} else if(type_str.compare("von") == 0) {
 			type = 6;
+		} else if(type_str.compare("random") == 0) {
+			type = 7;
 		} else {
 			type = -1;
 			std::cerr << "error: invalid type given. valid types are: base fips foresee" << std::endl;

@@ -3,7 +3,7 @@
   *
   *  File: multi_node_comm.hpp
   *  Created: Mar 18, 2013
-  *  Modified: Wed 16 Apr 2014 08:50:24 AM PDT
+  *  Modified: Wed 16 Apr 2014 05:14:53 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -262,6 +262,16 @@ namespace woo {
 				return true;
 			} // gatherv()
 
+			inline bool scatter(int* sbuf, int scount, int* rbuf, int rcount) {
+				MPI_Scatter(sbuf, scount, MPI_INT, rbuf, rcount, MPI_INT, master_rank_, world_);
+				return true;
+			} // scatter()
+
+			inline bool scatterv(int* sbuf, int* scounts, int* displs, int* rbuf, int rcount) {
+				MPI_Scatterv(sbuf, scounts, displs, MPI_INT, rbuf, rcount, MPI_INT, master_rank_, world_);
+				return true;
+			} // scatterv()
+
 			inline bool barrier() {
 				MPI_Barrier(world_);
 				return true;
@@ -476,6 +486,19 @@ namespace woo {
 			} // gatherv()
 
 			/**
+			 * Scatters
+			 */
+
+			inline bool scatter(std::string key, int* sbuf, int scount, int* rbuf, int rcount) {
+				return comms_[key].scatter(sbuf, scount, rbuf, rcount);
+			} // scatter()
+
+			inline bool scatterv(std::string key, int* sbuf, int* scounts, int* displs,
+									int* rbuf, int rcount) {
+				return comms_[key].scatterv(sbuf, scounts, displs, rbuf, rcount);
+			} // scatterv()
+
+			/**
 			 * Barrier
 			 */
 
@@ -483,7 +506,7 @@ namespace woo {
 				return comms_["world"].barrier();
 			} // barrier()*/
 
-			bool barrier(std::string key) {
+			inline bool barrier(std::string key) {
 				return comms_[key].barrier();
 			} // barrier()
 
@@ -491,15 +514,15 @@ namespace woo {
 			 * Point-to-point
 			 */
 
-			bool isend(std::string key, float_t* sbuf, int scount, int to, MPI_Request& req) {
+			inline bool isend(std::string key, float_t* sbuf, int scount, int to, MPI_Request& req) {
 				return comms_[key].isend(sbuf, scount, to, req);
 			} // send()
 
-			bool irecv(std::string key, float_t* rbuf, int rcount, int from, MPI_Request& req) {
+			inline bool irecv(std::string key, float_t* rbuf, int rcount, int from, MPI_Request& req) {
 				return comms_[key].irecv(rbuf, rcount, from, req);
 			} // send()
 
-			bool waitall(std::string key, int count, MPI_Request* req) {
+			inline bool waitall(std::string key, int count, MPI_Request* req) {
 				return comms_[key].waitall(count, req);
 			} // waitall()
 
