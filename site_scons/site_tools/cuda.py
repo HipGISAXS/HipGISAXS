@@ -55,7 +55,7 @@ def generate(env):
         
         # find CUDA Toolkit path and set CUDA_TOOLKIT_PATH
         try:
-                cudaToolkitPath = env['CUDA_TOOLKIT_PATH']
+                cudaToolkitPath = env['ENV']['CUDA_TOOLKIT_PATH']
         except:
                 paths=[home + '/NVIDIA_CUDA_TOOLKIT',
                        home + '/Apps/NVIDIA_CUDA_TOOLKIT',
@@ -91,11 +91,11 @@ def generate(env):
                                 break
                 if not pathFound:
                         sys.exit("Cannot find the CUDA Toolkit path. Please modify your SConscript or add the path in cudaenv.py")
-        env['CUDA_TOOLKIT_PATH'] = cudaToolkitPath
+        env['ENV']['CUDA_TOOLKIT_PATH'] = cudaToolkitPath
 
         # find CUDA SDK path and set CUDA_SDK_PATH
         try:
-                cudaSDKPath = env['CUDA_SDK_PATH']
+                cudaSDKPath = env['ENV']['CUDA_SDK_PATH']
         except:
                 paths=[home + '/NVIDIA_CUDA_SDK', # i am just guessing here
                        home + '/Apps/NVIDIA_CUDA_SDK',
