@@ -113,6 +113,7 @@ def setup_configuration_tests(conf):
 				return context.Result(result)
 		context.env[var] = name
 		return context.Result(result)
+
 	conf.AddTest('FindSysLibDep', FindSysLibDep)
 
 	## identify the toolchain
@@ -144,6 +145,7 @@ def setup_configuration_tests(conf):
 		result = context.TryCompile(test_body, source_suffix)
 		context.Result(result)
 		return result
+
 	conf.AddTest('check_for_toolchain', check_for_toolchain)
 
 	#def check_for_accelerator(context, toolchain, lang_name, compiler_var, source_suffix):
@@ -283,7 +285,7 @@ def do_configure(myenv):
 		print "error: you need 'iostream' to build"
 		Exit(1)
 	if not conf.CheckCXXHeader('vector'):
-		print("error: you need 'vector' to build")
+		print("error: you need 'std::vector' to build")
 		Exit(1)
 	if not conf.CheckCHeader('hdf5.h'):
 		print("error: you need HDF5 header to build")
@@ -324,6 +326,7 @@ def do_configure(myenv):
 		add_to_linkflags_if_supported(myenv, '-openmp')
 
 	return myenv
+
 
 def do_post_configure(myenv):
 	conf = Configure(myenv, help = False, clean = False)
