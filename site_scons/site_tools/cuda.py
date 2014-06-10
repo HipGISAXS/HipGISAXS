@@ -66,7 +66,7 @@ def generate(env):
                            '/usr/local/CUDA_TOOLKIT',
                            '/usr/local/cuda_toolkit',
                            '/usr/local/CUDA',
-                           '/usr/local/cuda',
+		                   '/usr/local/cuda',
                            '/Developer/NVIDIA CUDA TOOLKIT',
                            '/Developer/CUDA TOOLKIT',
                            '/Developer/CUDA',
