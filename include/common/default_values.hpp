@@ -3,7 +3,7 @@
  *
  *  File: default_values.hpp
  *  Created: Jul 12, 2013
- *  Modified: Sun 26 Jan 2014 09:40:24 AM PST
+ *  Modified: Sun 15 Jun 2014 07:05:18 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -84,8 +84,8 @@ namespace hig {
 	 * detector parameters
 	 */
 	const std::string	DEFAULT_ORIGIN_("bottom-left");				// not yet implemented
-	const int			DEFAULT_TOTAL_PIXELS_Y_ 	= 1000;			// horizontal axis
-	const int			DEFAULT_TOTAL_PIXELS_Z_ 	= 1000;			// vertical axis
+	const int			DEFAULT_TOTAL_PIXELS_Y_ 	= 5000;			// horizontal axis
+	const int			DEFAULT_TOTAL_PIXELS_Z_ 	= 5000;			// vertical axis
 	const float_t		DEFAULT_PIXEL_SIZE_ 		= 0.172;		// the detector pixel size
 	const int			DEFAULT_SDD_ 				= 4000;			// not used currently
 	const float_t		DEFAULT_DIRECT_BEAM_Y_ 		= 0.0;			// direct beam coordinates on detector
