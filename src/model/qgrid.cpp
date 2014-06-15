@@ -3,7 +3,7 @@
  *
  *  File: qgrid.cpp
  *  Created: Jun 17, 2012
- *  Modified: Sun 26 Jan 2014 10:38:38 AM PST
+ *  Modified: Sun 15 Jun 2014 07:12:40 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -36,6 +36,11 @@ namespace hig {
 		vector2_t min_point = HiGInput::instance().param_output_minpoint();
 		vector2_t max_point = HiGInput::instance().param_output_maxpoint();
 		OutputRegionType type = HiGInput::instance().param_output_type();
+
+		//std::cout << "********* QGrid: tot_pix = " << total_pixels[0] << "x" << total_pixels[1]
+		//			<< ", min = " << min_point[0] << "," << min_point[1]
+		//			<< ", max = " << max_point[0] << "," << max_point[1]
+		//			<< ", type = " << type << std::endl;
 
 		// sanitize these values
 		if(min_point[0] < 0 || min_point[0] >= max_point[0] || min_point[0] > total_pixels[0])
