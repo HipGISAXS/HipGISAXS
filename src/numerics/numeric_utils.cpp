@@ -3,7 +3,7 @@
  *
  *  File: numeric_utils.cpp
  *  Created: Oct 08, 2012
- *  Modified: Sun 26 Jan 2014 10:39:34 AM PST
+ *  Modified: Sun 06 Jul 2014 01:19:02 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -21,6 +21,8 @@
  */
 
 #include <numerics/numeric_utils.hpp>
+
+#include <cmath>
 
 namespace hig {
 
@@ -49,22 +51,29 @@ namespace hig {
 	                        k=0  k! x Gamma(nu+k+1)
 		(nu must be >= 0). Here k=15.
 	---------------------------------------------------*/
-	complex_t cbessj(complex_t zz, int order) {
+/*	complex_t cbessj(complex_t zz, int order) {
 		std::complex<long double> z = zz;
 		std::complex<long double> temp1 = pow(z / (long double) 2.0, order);
 		std::complex<long double> z2 = - z * z / (long double) 4.0;
 		std::complex<long double> sum(0.0, 0.0);
 		long double factorial_k = 1.0;
 		std::complex<long double> pow_z2_k = 1.0;
-		for(int k = 0; k <= MAXK; ++ k, pow_z2_k *= z2) {
+		//for(int k = 0; k <= MAXK; ++ k, pow_z2_k *= z2) {
+		for(int k = 0; k <= 200; ++ k, pow_z2_k *= z2) {
 			if(k == 0) factorial_k = 1.0;	// base case
 			else factorial_k *= k;				// compute k!
 			std::complex<long double> temp2 =
-						pow_z2_k / (factorial_k * (long double) gamma((double) order + k));
+						pow_z2_k / (factorial_k * (long double) gamma((double) order + k + 1.0));
 			sum += temp2;
 		} // for
 		temp1 *= sum;
 		return complex_t((float_t) temp1.real(), (float_t) temp1.imag());
+	} // cbessj()
+*/
+
+	// temporary fix. assuming imaginary component is 0
+	complex_t cbessj(complex_t zz, int order) {
+		return complex_t(j1(zz.real()), 0.0);
 	} // cbessj()
 
 } // namespace hig

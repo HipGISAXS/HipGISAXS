@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_main.cpp
  *  Created: Jun 14, 2012
- *  Modified: Tue 01 Apr 2014 04:49:17 PM PDT
+ *  Modified: Sun 06 Jul 2014 01:31:47 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -1134,7 +1134,7 @@ namespace hig {
 															// structure on top of substrate
 							complex_t dn2(-2.0 * (*s).second.grain_refindex().delta(),
 											-2.0 * (*s).second.grain_refindex().beta());
-	
+
 							for(unsigned int z = 0; z < nqz_; ++ z) {
 								for(unsigned int y = 0; y < nqy_; ++ y) {
 									for(unsigned int x = 0; x < nqx_; ++ x) {
