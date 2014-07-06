@@ -3,7 +3,7 @@
  *
  *  File: cu_complex_numeric.cuh
  *  Created: Oct 17, 2012
- *  Modified: Tue 16 Jul 2013 11:49:39 AM PDT
+ *  Modified: Sun 06 Jul 2014 01:25:33 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -372,7 +372,7 @@ namespace hig {
 	const int MAXK = 20;
 
 	// bessel
-	__device__ static __inline__ cuDoubleComplex cuCcbessj(cuDoubleComplex zz, int order) {
+/*	__device__ static __inline__ cuDoubleComplex cuCcbessj(cuDoubleComplex zz, int order) {
 		cuDoubleComplex z = zz;
 		cuDoubleComplex temp_z = z / 2.0;
 		cuDoubleComplex temp1 = cuCpow(temp_z, order);
@@ -394,6 +394,15 @@ namespace hig {
 	__device__ static __inline__ cuFloatComplex cuCcbessj(cuFloatComplex zz, int order) {
 		cuDoubleComplex temp = cuCcbessj(make_cuDoubleComplex((double) zz.x, (double) zz.y), order);
 		return make_cuFloatComplex((float) temp.x, (float) temp.y);
+	} // cuCcbessj() */
+	
+	// temporary fix. assuming imaginary component is 0
+	__device__ static __inline__ cuDoubleComplex cuCcbessj(cuDoubleComplex zz, int order) {
+		return make_cuDoubleComplex(j1(zz.x), 0.0);
+	} // cuCcbessj()
+	
+	__device__ static __inline__ cuFloatComplex cuCcbessj(cuFloatComplex zz, int order) {
+		return make_cuFloatComplex(j1f(zz.x), (float) 0.0);
 	} // cuCcbessj()
 	
 } // namespace
