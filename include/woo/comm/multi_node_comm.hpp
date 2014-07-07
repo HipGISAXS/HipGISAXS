@@ -3,7 +3,6 @@
   *
   *  File: multi_node_comm.hpp
   *  Created: Mar 18, 2013
-  *  Modified: Wed 05 Feb 2014 10:51:55 AM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */

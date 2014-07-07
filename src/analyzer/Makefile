@@ -1,6 +1,6 @@
 
 MPI_DIR = /usr/local/openmpi
-TAO_DIR = /usr/local/petsc-3.4.3-gnu
+TAO_DIR = /usr/local/tao-2.2.0
 PETSC_DIR = /usr/local/petsc-3.4.3-gnu
 HIPGISAXS_DIR = /home/asarje/hipgisaxs.git
 HDF5_DIR = /usr/local/hdf5-1.8.9
@@ -65,12 +65,11 @@ ALL_LIBS = $(MPI_LIBS) $(TAO_LIBS) $(PETSC_LIBS) $(HIPGISAXS_LIBS) $(HDF5_LIBS) 
 
 ## all objs and libs                                                                                                                           
 ALL_INCL= $(TAO_INCL) $(PETSC_INCL) $(HDF5_INCL) $(TIFF_INCL) $(BOOST_INCL) $(HIPGISAXS_INCL)
-#ALL_OBJ = ImageData.o FitPOUNDERSAlgo.o analysis_algorithm.o hipgisaxs_ana.o hipgisaxs_ana_main.o objective_func.o
 
 OBJECTS = ImageData.o analysis_algorithm.o objective_func.o hipgisaxs_ana.o
 
 POUND_OBJS = hipgisaxs_fit_pounders.o
-POUND_HIP_OBJS = $(POUND_HIP_OBJS) hipgisaxs_fit_pounders_main.o
+POUND_HIP_OBJS = $(POUND_OBJS) hipgisaxs_fit_pounders_main.o
 
 F1_OBJS = objective_func_poly_one.o
 F1_HIP_OBJS = $(F1_OBJS) objective_func_poly_one_main.o

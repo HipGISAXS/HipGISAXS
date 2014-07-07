@@ -3,7 +3,6 @@
  *
  *  File: hig_input.hpp
  *  Created: Jun 11, 2012
- *  Modified: Wed 26 Feb 2014 10:04:58 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -244,6 +243,7 @@ namespace hig {
 				max = scattering_.tilt_.max_;
 				step = scattering_.tilt_.step_; }
 			std::string experiment() const { return scattering_.expt_; }
+			float_t scattering_smearing() const { return scattering_.smearing_; }
 			vector2_t detector_total_pixels() const { return detector_.total_pixels_; }
 			vector2_t detector_direct_beam() const { return detector_.direct_beam_; }
 			float_t detector_pixel_size() const { return detector_.pixel_size_; }

@@ -1,7 +1,7 @@
 Import('env')
 
 objs = [ ]
-sources = ['hipgisaxs_main.cpp']
+sources = ['hipgisaxs_main.cpp', 'hipgisaxs_helpers.cpp']
 objs += env.Object(sources)
 
 main_sources = ['hipgisaxs_sim.cpp']

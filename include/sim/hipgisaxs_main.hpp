@@ -3,7 +3,6 @@
  *
  *  File: hipgisaxs_main.hpp
  *  Created: Jun 11, 2012
- *  Modified: Wed 26 Feb 2014 10:04:36 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -120,6 +119,7 @@ namespace hig {
 			bool compute_rotation_matrix_z(float_t, vector3_t&, vector3_t&, vector3_t&);
 
 			void save_gisaxs(float_t *final_data, std::string output);
+			bool gaussian_smearing(float_t*&, float_t);
 
 			bool illuminated_volume(float_t, float_t, int, RefractiveIndex);
 			bool spatial_distribution(structure_iterator_t, float_t, int, int&, int&, float_t*&);

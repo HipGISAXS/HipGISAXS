@@ -440,6 +440,14 @@ if _has_option("prefix"):
 	install_dir = get_option("prefix")
 env['INSTALL_DIR'] = install_dir
 
+## extra paths and libs
+working_dir = env['ENV']['PWD']
+env.Append(CPPPATH = [working_dir + "/include"])
+if _has_option("extrapath"):
+	add_paths(get_option("extrapath"))
+if _has_option("extralib"):
+	add_libs(get_option("extralib"))
+
 nix_lib_prefix = "lib"
 if processor == "x86_64":
 	linux64 = True
@@ -451,14 +459,6 @@ if processor == "x86_64":
 							"/usr/local/lib64",
 							"/usr/local/lib"])
 env['NIX_LIB_DIR'] = nix_lib_prefix
-
-## extra paths and libs
-working_dir = env['ENV']['PWD']
-env.Append(CPPPATH = [working_dir + "/include"])
-if _has_option("extrapath"):
-	add_paths(get_option("extrapath"))
-if _has_option("extralib"):
-	add_libs(get_option("extralib"))
 
 #add_ld_library_path(env, os.environ['LD_LIBRARY_PATH'])
 
