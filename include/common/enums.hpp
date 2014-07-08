@@ -3,7 +3,7 @@
  *
  *  File: enums.hpp
  *  Created: Jun 11, 2012
- *  Modified: Sun 29 Sep 2013 04:14:08 PM PDT
+ *  Modified: Wed 26 Feb 2014 06:49:24 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -20,8 +20,8 @@
  *  NON-COMMERCIAL END USER LICENSE AGREEMENT.
  */
 
-#ifndef _ENUMS_HPP_
-#define _ENUMS_HPP_
+#ifndef __HIG_ENUMS_HPP__
+#define __HIG_ENUMS_HPP__
 
 namespace hig {
 
@@ -107,6 +107,23 @@ namespace hig {
 		structcorr_GnE,			/* corr grain, non-corr ensemble */
 		structcorr_GE,			/* both correlated */
 	}; // enum StructCorrelationType
+
+	enum FittingAlgorithmName {
+		algo_error,				/* error type */
+		algo_null,				/* default, no algorithm */
+		algo_pounders,			/* pounders algorithm (from tao) */
+		algo_pso,				/* particle swarm optimization algorithm */
+		algo_bruteforce			/* brute force optimization */
+	}; // enum FittingAlgorithmName
+
+	enum FitAlgorithmParamType {
+		algo_param_error,
+		algo_param_null,
+		algo_pounders_param_delta,
+		algo_pso_param_omega,
+		algo_pso_param_phi1,
+		algo_pso_param_phi2
+	}; // enum FitAlgorithmParamType
 
 } // namespace hig
 

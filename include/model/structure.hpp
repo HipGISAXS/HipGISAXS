@@ -3,7 +3,7 @@
  *
  *  File: structure.hpp
  *  Created: Jun 09, 2012
- *  Modified: Sun 26 Jan 2014 10:00:10 AM PST
+ *  Modified: Sat 08 Mar 2014 08:24:18 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -78,6 +78,15 @@ namespace hig {
 			void b(float_t x, float_t y, float_t z) { b_[0] = x; b_[1] = y; b_[2] = z; }
 			void c(float_t x, float_t y, float_t z) { c_[0] = x; c_[1] = y; c_[2] = z; }
 			void abc_set(bool v) { abc_set_ = v; }
+			void ax(float_t val) { a_[0] = val; }
+			void ay(float_t val) { a_[1] = val; }
+			void az(float_t val) { a_[2] = val; }
+			void bx(float_t val) { b_[0] = val; }
+			void by(float_t val) { b_[1] = val; }
+			void bz(float_t val) { b_[2] = val; }
+			void cx(float_t val) { c_[0] = val; }
+			void cy(float_t val) { c_[1] = val; }
+			void cz(float_t val) { c_[2] = val; }
 
 			void abangle(float_t d) { abangle_ = d; }
 			void caratio(float_t d) { caratio_ = d; }
@@ -105,6 +114,9 @@ namespace hig {
 				void axis(char c) { axis_ = c; }
 				void angles(vector2_t v) { angles_ = v; }
 				void angles(float_t a, float_t b) { angles_[0] = a; angles_[1] = b; }
+
+				void angles_min(float_t val) { angles_[0] = val; }
+				void angles_max(float_t val) { angles_[1] = val; }
 
 		}; // class Rotation
 
@@ -138,6 +150,8 @@ namespace hig {
 			void rot1_axis(char c) { rot1_.axis(c); }
 			void rot2_axis(char c) { rot2_.axis(c); }
 			void rot3_axis(char c) { rot3_.axis(c); }
+
+			bool update_param(const std::string&, float_t);
 
 			friend class Ensemble;
 
@@ -288,7 +302,8 @@ namespace hig {
 			void grain_refindex_delta(float_t d) { grain_.refindex_delta(d); }
 			void grain_refindex_beta(float_t d) { grain_.refindex_beta(d); }
 
-			void grain_scaling(float_t d) { grain_.scaling(d); }
+			//void grain_scaling(float_t d) { grain_.scaling(d); }
+			void grain_scaling(float_t d) { grain_.scaling_ = d; }
 
 			void ensemble_spacing(vector3_t v) { ensemble_.spacing(v); }
 			void ensemble_maxgrains(vector3_t v) { ensemble_.maxgrains(v); }

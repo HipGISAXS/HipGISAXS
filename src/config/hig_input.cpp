@@ -3,7 +3,6 @@
  *
  *  File: hig_input.cpp
  *  Created: Jun 11, 2012
- *  Modified: Tue 01 Apr 2014 04:45:13 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -49,10 +48,19 @@ namespace hig {
 		struct_in_layer_ = false;
 
 		shape_def_.clear();
+
+		analysis_algos_.clear();
+		param_key_map_.clear();
+		param_space_key_map_.clear();
+		param_data_key_map_.clear();
+
+		curr_fit_param_.clear();
+		curr_fit_algo_.clear();
+		curr_fit_algo_param_.clear();
 	} // init();
 
 
-	bool HiGInput::construct_input_config(char* filename) {
+	bool HiGInput::construct_input_config(const char* filename) {
 		if(!InputReader::instance().read_input(filename)) {
 			std::cerr << "fatal error: some error happened in opening or reading "
 						<< "input config file. aborting"
@@ -75,6 +83,8 @@ namespace hig {
 			past_token_ = curr_token_;
 			curr_token_ = InputReader::instance().get_next_token();
 		} // while
+
+		print_all();
 
 		return true;
 	} // HiGInput::read_input_config()
@@ -209,7 +219,24 @@ namespace hig {
 						} // if
 						param_key_map_[curr_fit_param_.key_] = curr_fit_param_.variable_;
 						param_space_key_map_[curr_fit_param_.key_] = curr_fit_param_.range_;
+						param_data_key_map_[curr_fit_param_.key_] = curr_fit_param_;
 						curr_fit_param_.clear();
+						break;
+
+					case fit_reference_data_token:			// nothing to do :-/
+					case fit_reference_data_region_token:	// nothing to do :-/
+					case fit_reference_data_npoints_token:	// nothing to do :-/
+						// TODO: check for completeness and validity of the values ...
+						break;
+
+					case fit_algorithm_token:
+						analysis_algos_.push_back(curr_fit_algo_);
+						curr_fit_algo_.clear();
+						break;
+
+					case fit_algorithm_param_token:
+						curr_fit_algo_.add_param(curr_fit_algo_param_);
+						curr_fit_algo_param_.clear();
 						break;
 
 					default:
@@ -406,6 +433,24 @@ namespace hig {
 							return false;
 						} // if
 						compute_.output_region_maxpoint(curr_vector_[0], curr_vector_[1]);
+						break;
+
+					case fit_reference_data_region_min_token:
+						if(curr_vector_.size() != 2) {
+							std::cerr << "error: reference data region min point vector size should be 2"
+										<< std::endl;
+							return false;
+						} // if
+						reference_data_[0].region_min(curr_vector_[0], curr_vector_[1]);
+						break;
+
+					case fit_reference_data_region_max_token:
+						if(curr_vector_.size() != 2) {
+							std::cerr << "error: reference data region max point vector size should be 2"
+										<< std::endl;
+							return false;
+						} // if
+						reference_data_[0].region_max(curr_vector_[0], curr_vector_[1]);
 						break;
 
 					default:
@@ -618,10 +663,40 @@ namespace hig {
 				break;
 
 			case fit_token:
+				break;
+
 			case fit_param_token:
+				curr_fit_param_.init();
+				break;
+
 			case fit_param_variable_token:
 			case fit_param_range_token:
 			case fit_param_init_token:
+			case fit_reference_data_token:
+			case fit_reference_data_path_token:
+			case fit_reference_data_region_token:
+			case fit_reference_data_region_min_token:
+			case fit_reference_data_region_max_token:
+			case fit_reference_data_npoints_token:
+			case fit_reference_data_npoints_parallel_token:
+			case fit_reference_data_npoints_perpendicular_token:
+				break;
+
+			case fit_algorithm_token:
+				curr_fit_algo_.init();
+				break;
+
+			case fit_algorithm_name_token:
+			case fit_algorithm_order_token:
+				break;
+
+			case fit_algorithm_param_token:
+				curr_fit_algo_param_.init();
+				break;
+
+			case fit_algorithm_param_value_token:
+			case fit_algorithm_restart_token:
+			case fit_algorithm_tolerance_token:
 				break;
 
 			default:
@@ -980,6 +1055,34 @@ namespace hig {
 				curr_fit_param_.init_ = num;
 				break;
 
+			case fit_reference_data_region_min_token:
+				curr_vector_.push_back(num);
+				break;
+
+			case fit_reference_data_region_max_token:
+				curr_vector_.push_back(num);
+				break;
+
+			case fit_reference_data_npoints_parallel_token:
+				reference_data_[0].npoints_parallel(num);
+				break;
+
+			case fit_reference_data_npoints_perpendicular_token:
+				reference_data_[0].npoints_perpendicular(num);
+				break;
+
+			case fit_algorithm_order_token:
+				curr_fit_algo_.order(num);
+				break;
+
+			case fit_algorithm_param_value_token:
+				curr_fit_algo_param_.value(num);
+				break;
+
+			case fit_algorithm_tolerance_token:
+				curr_fit_algo_.tolerance(num);
+				break;
+
 			default:
 				std::cerr << "fatal error: found a number '" << num
 							<< "' where it should not be" << std::endl;
@@ -1050,6 +1153,17 @@ namespace hig {
 					case compute_outregion_token:
 						compute_.output_region_type(
 								TokenMapper::instance().get_output_region_type(str));
+						break;
+
+					case fit_reference_data_region_token:
+						reference_data_[0].region_type(
+								TokenMapper::instance().get_reference_data_region_type(str));
+						break;
+
+					case fit_algorithm_param_token:
+						curr_fit_algo_param_.type(
+								TokenMapper::instance().get_fit_algorithm_param_token(str));
+						curr_fit_algo_param_.type_name(str);
 						break;
 
 					default:
@@ -1149,6 +1263,19 @@ namespace hig {
 
 			case fit_param_variable_token:
 				curr_fit_param_.variable_ = str;
+				break;
+
+			case fit_reference_data_path_token:
+				reference_data_[0].path(str);
+				break;
+
+			case fit_algorithm_name_token:
+				curr_fit_algo_.name(TokenMapper::instance().get_fit_algorithm_name(str));
+				curr_fit_algo_.name_str(str);
+				break;
+
+			case fit_algorithm_restart_token:
+				curr_fit_algo_.restart(TokenMapper::instance().get_boolean(str));
 				break;
 
 			default:
@@ -2097,6 +2224,7 @@ namespace hig {
 	 */
 
 	bool HiGInput::update_params(const map_t& params) {
+		//print_all();
 		for(map_t::const_iterator p = params.begin(); p != params.end(); ++ p) {
 			float_t new_val = (*p).second;
 			// check if new_val is within the param space
@@ -2205,6 +2333,9 @@ namespace hig {
 		print_scattering_params();
 		print_detector_params();
 		print_compute_params();
+		print_fit_params();
+		print_ref_data();
+		print_fit_algos();
 	} // HiGInput::print_all()
 
 
@@ -2245,6 +2376,30 @@ namespace hig {
 	void HiGInput::print_compute_params() {
 		compute_.print();
 	} // HiGInput::print_compute_params()
+
+	void HiGInput::print_fit_params() {
+		std::cout << "Fit Parameters: " << std::endl;
+		for(std::map <std::string, std::string>::const_iterator i = param_key_map_.begin();
+				i != param_key_map_.end(); ++ i) {
+			ParamSpace temp = param_space_key_map_.at((*i).first);
+			FitParam temp2 = param_data_key_map_.at((*i).first);
+			std::cout << "  " << (*i).first << ": [" << temp.min_ << " " << temp.max_ << "] "
+				<< temp2.key_ << " " << temp2.variable_ << " " << temp2.init_
+				<< " (" << (*i).second << ")" << std::endl;
+		} // for
+	} // HiGInput::print_fit_params()
+
+	void HiGInput::print_ref_data() {
+		reference_data_[0].print();
+	} // HiGInput::print_ref_data()
+
+	void HiGInput::print_fit_algos() {
+		std::cout << "Analysis Algorithms: " << std::endl;
+		for(analysis_algo_list_t::const_iterator i = analysis_algos_.begin();
+				i != analysis_algos_.end(); ++ i) {
+			(*i).print();
+		} // for
+	} // HiGInput::print_fit_algos()
 
 } // namespace hig
 

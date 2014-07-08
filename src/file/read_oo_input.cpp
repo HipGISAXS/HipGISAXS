@@ -3,7 +3,7 @@
  *
  *  File: read_oo_input.cpp
  *  Created: Jul 04, 2012
- *  Modified: Sun 26 Jan 2014 10:34:53 AM PST
+ *  Modified: Wed 26 Feb 2014 10:06:07 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -34,7 +34,7 @@ namespace hig {
 	} // InputReader::InputReader()
 
 
-	bool InputReader::read_input(char* filename) {
+	bool InputReader::read_input(const char* filename) {
 		std::ifstream f(filename);
 		if(!f.is_open()) {
 			std::cerr << "fatal error: could not open input file "

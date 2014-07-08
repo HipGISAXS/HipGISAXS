@@ -3,7 +3,6 @@
  *
  *  File: hipgisaxs_main.cpp
  *  Created: Jun 14, 2012
- *  Modified: Sun 06 Jul 2014 01:31:47 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -1733,14 +1732,14 @@ namespace hig {
 				complex_t t01_nkfz1 = 2.0 * (nkfz0 / (nkfz0 + nkfz1));
 
 				complex_t uniti = complex_t(0, 1);
-				complex_t temp0 = 2.0 * nkfz1 * lt;
-				float_t temp1 = exp(-1.0 * temp0.imag());
-				complex_t temp2 = exp(uniti * temp0.real());
-									//((float_t)cos(temp0.real()) + uniti * sin(temp0.real()));
-				complex_t temp = temp1 * temp2;
+				complex_t temp4 = 2.0 * nkfz1 * lt;
+				float_t temp3 = exp(-1.0 * temp4.imag());
+				complex_t temp5 = exp(uniti * temp4.real());
+									//((float_t)cos(temp4.real()) + uniti * sin(temp4.real()));
+				complex_t temp6 = temp3 * temp5;
 				a1m_nkfz1 = t01_nkfz1 /
-							((float_t) 1.0 + r01_nkfz1 * r12_nkfz1 * temp);
-				a1p_nkfz1 = a1m_nkfz1 * r12_nkfz1 * temp;
+							((float_t) 1.0 + r01_nkfz1 * r12_nkfz1 * temp6);
+				a1p_nkfz1 = a1m_nkfz1 * r12_nkfz1 * temp6;
 
 				for(unsigned int y = 0; y < nqy_; y ++) {
 					unsigned int temp2 = temp1 + nqx_ * y;
@@ -2073,6 +2072,11 @@ namespace hig {
 	 */
 
 	bool HipGISAXS::update_params(const map_t& params) {
+		std::cout << "Updating HipGISAXS parameters: ";
+		for(map_t::const_iterator i = params.begin(); i != params.end(); ++ i)
+			std::cout << (*i).first << " = " << (*i).second << "; ";
+		std::cout << std::endl;
+		//HiGInput::instance().print_all();
 		return HiGInput::instance().update_params(params);
 	} // HipGISAXS::update_params()
 

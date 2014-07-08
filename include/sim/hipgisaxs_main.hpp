@@ -3,7 +3,6 @@
  *
  *  File: hipgisaxs_main.hpp
  *  Created: Jun 11, 2012
- *  Modified: Tue 01 Apr 2014 02:17:28 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -136,7 +135,7 @@ namespace hig {
 			HipGISAXS(int, char**);
 			~HipGISAXS();
 
-			bool construct_input(char* filename) {
+			bool construct_input(const char* filename) {
 				return HiGInput::instance().construct_input_config(filename);
 			} // construct_input()
 
@@ -152,15 +151,23 @@ namespace hig {
 			bool compute_gisaxs(float_t*&);
 
 			// temporary fitting related ...
-			std::vector <std::string> get_fit_param_keys() const {
-				return HiGInput::instance().get_fit_param_keys();
+			std::vector <std::string> fit_param_keys() const {
+				return HiGInput::instance().fit_param_keys();
 			} // get_fit_param_keys()
-			std::vector <std::pair <float_t, float_t> > get_fit_param_limits() const {
-				return HiGInput::instance().get_fit_param_limits();
+			std::vector <std::pair <float_t, float_t> > fit_param_limits() const {
+				return HiGInput::instance().fit_param_limits();
 			} // get_fit_param_keys()
+			float_vec_t fit_param_step_values() const {
+				return HiGInput::instance().fit_param_step_values();
+			} // fit_param_step_values()
 			unsigned int nqx() const { return nqx_; }
 			unsigned int nqy() const { return nqy_; }
 			unsigned int nqz() const { return nqz_; }
+
+			//std::string reference_data_path() const { return HiGInput::instance().reference_data_path(); }
+			std::string reference_data_path(int i) const { return HiGInput::instance().reference_data_path(i); }
+			int num_fit_params() const { return HiGInput::instance().num_fit_params(); }
+			std::vector<float_t> fit_param_init_values() const { return HiGInput::instance().fit_param_init_values(); }
 
 
 			//template <typename ErrorFunction>
