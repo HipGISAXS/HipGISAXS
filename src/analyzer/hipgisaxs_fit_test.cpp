@@ -121,6 +121,9 @@ int main(int narg, char** args) {
 	} else if(algo.compare("bruteforce") == 0) {
 		(*obj_func).set_distance_measure(new AbsoluteDifferenceSquareNorm());
 		ana_algo = new hig::BruteForceOptimization(narg, args, obj_func);
+    } else if (algo.compare ("lmvm") == 0) {
+        (*obj_func).set_distance_measure(new AbsoluteDifferenceSquareNorm());
+        ana_algo = new hig::FitLMVMAlgo (obj_func);
 	} else {
 		std::cerr << "error: unknown analysis algorithm specified" << std::endl;
 		std::cerr << "valid values are: pounders, pso, bruteforce" << std::endl;

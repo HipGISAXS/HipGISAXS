@@ -141,34 +141,30 @@ namespace hig{
 	PetscErrorCode EvaluateFunction(TaoSolver tao, Vec X, Vec F, void *ptr) {
 		// Compute F(X)
 		PetscFunctionBegin;
-		VecView(X, PETSC_VIEWER_STDOUT_WORLD);
-
 		PetscErrorCode ierr;
-		PetscReal *x, *f;
+		PetscReal *x, *ff;
 
-		ierr = VecGetArray(X,&x);
-		ierr = VecGetArray(F,&f);
+		ierr = VecGetArray(X, &x);CHKERRQ(ierr);
+        ierr = VecGetArray(F, &ff);CHKERRQ(ierr);
 
-		// either ff or f can be eliminated ...
 		int data_size = ((ObjectiveFunction*) ptr)->data_size();
-		PetscReal* ff = new PetscReal[data_size];
+
 		float_vec_t params;
 		int num_params = ((ObjectiveFunction*) ptr)->num_fit_params();
 		for(int i = 0; i < num_params; ++ i) params.push_back(x[i]);
+
 		float_vec_t temp = (*(ObjectiveFunction*) ptr)(params);
-		for(int i = 0; i < data_size; ++ i) { ff[i] = temp[i]; f[i] = temp[i]; }
+		for(int i = 0; i < data_size; ++ i) { ff[i] = temp[i]; }
 
-		ierr = VecRestoreArray(X, &x); CHKERRQ(ierr);
 		ierr = VecRestoreArray(F, &ff); CHKERRQ(ierr);
-
-		std::cout << "Eval X =\n" ;
-		VecView(X, PETSC_VIEWER_STDOUT_WORLD);
-		//std::cout << "F = \n" ;
-		//VecView(F, PETSC_VIEWER_STDOUT_WORLD);
 
 		PetscFunctionReturn(0);
 		return 0;
 	} // EvaluateFunction()
 
-
+	PetscReal EvaluateFunction(TaoSolver tao, float_vec_t X, void *ptr) {
+		// Compute F(X)
+		float_vec_t temp  =  (*(ObjectiveFunction*) ptr)(X);
+        return  (PetscReal) temp[0];
+	} // EvaluateFunction()
 } // namespace hig

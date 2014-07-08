@@ -76,6 +76,7 @@ namespace hig{
 	}; // class HipGISAXSObjectiveFunction
 
 
+	PetscReal EvaluateFunction(TaoSolver , float_vec_t , void *);
 	PetscErrorCode EvaluateFunction(TaoSolver , Vec , Vec , void *);
 	PetscErrorCode EvaluateJacobian(TaoSolver , Vec , Mat *, Mat *, MatStructure*,void *);
 

@@ -113,6 +113,7 @@ namespace hig {
 		algo_null,				/* default, no algorithm */
 		algo_pounders,			/* pounders algorithm (from tao) */
 		algo_pso,				/* particle swarm optimization algorithm */
+        algo_lmvm,
 		algo_bruteforce			/* brute force optimization */
 	}; // enum FittingAlgorithmName
 

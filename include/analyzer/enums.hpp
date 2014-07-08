@@ -31,6 +31,7 @@ namespace hig{
     fit_pounders,
     fit_genetic,
     fit_swarm,
+    fit_lmvm,
     stat_baysian,
     stat_rmc,
     ml_cluster,
