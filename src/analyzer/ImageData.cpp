@@ -3,7 +3,7 @@
  *
  *	File: ImageData.cpp
  *	Created: Dec 26, 2013
- *	Modified: Sun 02 Feb 2014 09:04:48 AM PST
+ *	Modified: Wed 09 Jul 2014 12:25:31 PM PDT
  *
  *	Author: Slim Chourou <stchourou@lbl.gov>
  *	Developers: Slim Chourou <stchourou@lbl.gov>
@@ -60,7 +60,7 @@ namespace hig {
 			}
 	}
 
-	void	ImageData::save(string_t filename) const {
+	void ImageData::save(string_t filename) const {
 		std::ofstream file;
 		file.open (filename);
 
@@ -77,35 +77,38 @@ namespace hig {
 
 	float_vec_t ImageData::read_string_values(string_t line){
 		float_vec_t array;
-
 		std::stringstream ssin(line);
-		std::copy(	std::istream_iterator<float>(ssin),
-		std::istream_iterator<float>(),
-		std::back_inserter(array));
-
+		std::copy(std::istream_iterator<float_t>(ssin),
+					std::istream_iterator<float_t>(),
+					std::back_inserter(array));
 		return array;
-	}
+	} // ImageData::read_string_values()
 
-	void ImageData::read(string_t filename){
+	bool ImageData::read(string_t filename) {
 		int nv = -1;
 		int np = 0;
 		data_.clear();
-		std::string line;
+
 		std::ifstream file(filename);
-		if (file.is_open()) { //if the file is open
-			while (!file.eof()) { //while the end of file is NOT reached
-				getline(file,line); //get one line from the file
-				nv++;
-				float_vec_t img_z = read_string_values(line);
-				if(nv == 0) np = img_z.size();
-				data_.insert(data_.end(), img_z.begin(), img_z.end());
-			} // while
-			file.close(); //closing the file
-			n_par_ = np;
-			n_ver_ = nv;
-			//convert_data();
+		if(!file.is_open()) {
+			std::cerr << "error: unable to open file " << filename << std::endl;
+			return false;
 		} // if
-		else std::cerr << "error: unable to open file " << filename << std::endl;
+
+		std::string line;
+		while(!file.eof()) {
+			getline(file,line);
+			++ nv;
+			float_vec_t img_z = read_string_values(line);
+			if(nv == 0) np = img_z.size();
+			data_.insert(data_.end(), img_z.begin(), img_z.end());
+		} // while
+
+		file.close();
+		n_par_ = np;
+		n_ver_ = nv;
+
+		return true;
 	} // ImageData::read()
 
 

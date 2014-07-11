@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_fit_main.cpp
  *  Created: Feb 25, 2014
- *  Modified: Wed 26 Feb 2014 06:29:17 AM PST
+ *  Modified: Wed 09 Jul 2014 11:56:33 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -29,7 +29,7 @@ int main(int narg, char** args) {
 		return 1;
 	} // if
 
-	hig::HipGISAXSObjectiveFunction hip_func(narg, args);
+	hig::HipGISAXSObjectiveFunction hip_func(narg, args, args[1]);
 	hig::HipGISAXSAnalyzer ana;
 
 	for(int i = 0; i < hig::HiGInput::instance().num_analysis_algos(); ++ i) {
@@ -46,7 +46,7 @@ int main(int narg, char** args) {
 			ana.add_analysis_algo(new hig::FitPOUNDERSAlgo(&hip_func));
 		} else if(algo == hig::algo_pso) {
 			hip_func.set_distance_measure(new AbsoluteDifferenceSquareNorm());
-			ana.add_analysis_algo(new hig::ParticleSwarmOptimization(narg, args, &hip_func));
+			ana.add_analysis_algo(new hig::ParticleSwarmOptimization(narg, args, &hip_func, i));
 		} else if(algo == hig::algo_bruteforce) {
 			hip_func.set_distance_measure(new AbsoluteDifferenceSquareNorm());
 			ana.add_analysis_algo(new hig::BruteForceOptimization(narg, args, &hip_func));
@@ -60,7 +60,7 @@ int main(int narg, char** args) {
 
 	} // for
 
-	ana.analyze(narg, args);										// perform the analysis
+	ana.analyze(narg, args, 1);		// perform the analysis
 
 	return 0;
 } // main()

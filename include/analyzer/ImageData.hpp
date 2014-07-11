@@ -1,10 +1,8 @@
 /**
- *	Project: AnalyzeHipGISAXS (High-Performance GISAXS Data Analysis)
+ *	Project: HipGISAXS
  *
  *	File: ImageData.hpp
- *	Created: Dec 26, 2013
- *	Modified: Wed 26 Feb 2014 12:26:17 PM PST
- *	Description: gisaxs image data and basic operations for img processing/analysis
+ *	Created: December 26, 2013
  *
  *	Author: Slim Chourou <stchourou@lbl.gov>
  *	Developers: Slim Chourou <stchourou@lbl.gov>
@@ -23,6 +21,8 @@
 #ifndef _IMAGEDATA_HPP_
 #define _IMAGEDATA_HPP_
 
+#include <iostream>
+
 #include <common/enums.hpp>
 #include <analyzer/enums.hpp>
 #include <analyzer/Data.hpp>
@@ -32,27 +32,29 @@ namespace hig{
 	class ImageData : public Data {
 
 	private :
-		//bool is_valid_;
 		OutputRegionType mode_;
 		float_vec_t data_;
 		float_vec_t axis_par_;
 		float_vec_t axis_ver_;
 		unsigned int n_par_;
 		unsigned int n_ver_;
-		//frame_t frm_;
-		//ImgMode mode_;
 
 		float_vec_t read_string_values(string_t line);
 
 	public:
 		ImageData() { }
-		ImageData(std::string filename) { read(filename); }
+
+		ImageData(std::string filename) {
+			if(!read(filename)) exit(2);
+		} // ImageData()
+
 		ImageData(const float_vec_t& data, float_vec_t axis_par, float_vec_t axis_ver,
 				OutputRegionType type) :
 				data_(data), axis_par_(axis_par), axis_ver_(axis_ver), mode_(type) {
 			n_par_ = axis_par_.size();
 			n_ver_ = axis_ver_.size();
 		} // ImageData()
+
 		ImageData(int npar, int nver) {
 			n_par_ = npar;
 			n_ver_ = nver;
@@ -82,7 +84,7 @@ namespace hig{
 		unsigned int n_par() const { return n_par_;}
 		unsigned int n_ver() const { return n_ver_;}
 
-		void read(string_t filename);
+		bool read(string_t filename);
 		void save(string_t filename) const;
 
 		//float_t* convert_data();

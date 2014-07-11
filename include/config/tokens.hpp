@@ -3,7 +3,6 @@
  *
  *  File: tokens.hpp
  *  Created: Jun 05, 2012
- *  Modified: Mon 27 Jan 2014 09:27:50 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -170,6 +169,7 @@ namespace hig {
 		fit_param_init_token,
 		fit_reference_data_token,
 		fit_reference_data_path_token,
+		fit_reference_data_mask_token,
 		fit_reference_data_region_token,
 		fit_reference_data_region_min_token,
 		fit_reference_data_region_max_token,

@@ -3,7 +3,6 @@
  *
  *  File: token_mapper.hpp
  *  Created: Jun 05, 2012
- *  Modified: Wed 26 Feb 2014 06:47:57 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -134,7 +133,7 @@ namespace hig {
 			FittingAlgorithmName get_fit_algorithm_name(std::string str) {
 				if(FittingAlgorithmKeyWords_.count(str) > 0) return FittingAlgorithmKeyWords_[str];
 				else return algo_error;
-			} // get_fit_algorithm_param_token()
+			} // get_fit_algorithm_name()
 
 
 			bool get_boolean(std::string str) {
@@ -184,6 +183,7 @@ namespace hig {
 				KeyWords_[std::string("lattice")]			= struct_grain_lattice_token;
 				KeyWords_[std::string("layer")]				= layer_token;
 				KeyWords_[std::string("layer:key")]			= struct_grain_lkey_token;
+				KeyWords_[std::string("mask")]				= fit_reference_data_mask_token;
 				KeyWords_[std::string("max")]				= max_token;
 				KeyWords_[std::string("maxgrains")]			= struct_ensemble_maxgrains_token;
 				KeyWords_[std::string("maxpoint")]			= compute_outregion_maxpoint_token;
@@ -308,10 +308,14 @@ namespace hig {
 
 				/* fitting algorithm parameter keywords */
 
+				// pounders
 				FitAlgorithmParamKeyWords_[std::string("pounders_delta")]	= algo_pounders_param_delta;
-				FitAlgorithmParamKeyWords_[std::string("pso_omega")]	= algo_pso_param_omega;
-				FitAlgorithmParamKeyWords_[std::string("pso_phi1")]		= algo_pso_param_phi1;
-				FitAlgorithmParamKeyWords_[std::string("pso_phi2")]		= algo_pso_param_phi2;
+				// pso
+				FitAlgorithmParamKeyWords_[std::string("pso_omega")]		= algo_pso_param_omega;
+				FitAlgorithmParamKeyWords_[std::string("pso_phi1")]			= algo_pso_param_phi1;
+				FitAlgorithmParamKeyWords_[std::string("pso_phi2")]			= algo_pso_param_phi2;
+				FitAlgorithmParamKeyWords_[std::string("pso_num_particles")]= algo_pso_param_nparticle;
+				FitAlgorithmParamKeyWords_[std::string("pso_num_generations")]	= algo_pso_param_ngen;
 
 				/* boolean keywords */
 

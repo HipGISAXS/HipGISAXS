@@ -321,6 +321,7 @@ namespace hig {
 			} // fit_param_step_values()
 			//std::string reference_data_path() const { return reference_data_.image_path(); }
 			std::string reference_data_path(int i) const { return reference_data_[i].image_path(); }
+			std::string reference_data_mask(int i) const { return reference_data_[i].image_mask(); }
 			int num_analysis_data() const { return 1; }		// temp
 			int num_fit_params() const { return param_key_map_.size(); }
 			std::vector <float_t> fit_param_init_values() const {
@@ -336,6 +337,9 @@ namespace hig {
 			} // fit_param_init_vector()
 			int num_analysis_algos() const { return analysis_algos_.size(); }
 			FittingAlgorithmName analysis_algo(int i) const { return analysis_algos_[i].name(); }
+			float_t analysis_algo_param(int algo_num, const std::string pstr) const {
+				return analysis_algos_[algo_num].param(pstr);
+			} // analysis_algo_param()
 
 			/* printing for testing */
 			void print_all();

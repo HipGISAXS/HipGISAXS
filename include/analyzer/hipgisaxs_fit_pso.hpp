@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_fit_pso.hpp
  *  Created: Jan 13, 2014
- *  Modified: Wed 26 Feb 2014 11:54:59 AM PST
+ *  Modified: Wed 09 Jul 2014 11:59:21 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -90,7 +90,10 @@ namespace hig {
 		public:
 			ParticleSwarmOptimization(int, char**, ObjectiveFunction*,
 										float_t, float_t, float_t, int, int);
+			ParticleSwarmOptimization(int, char**, ObjectiveFunction*, unsigned int);
 			~ParticleSwarmOptimization();
+
+			bool init();
 
 			bool run(int, char**, int);							// simulate
 			parameter_map_t get_best_values() const;

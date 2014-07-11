@@ -3,7 +3,7 @@
  *
  *  File: fit_pso.cpp
  *  Created: Jan 13, 2014
- *  Modified: Wed 26 Feb 2014 01:39:49 PM PST
+ *  Modified: Wed 09 Jul 2014 12:00:24 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -17,13 +17,14 @@
 
 namespace hig {
 
-	//ParticleSwarmOptimization::ParticleSwarmOptimization(int narg, char** args, ObjectiveFunction* obj) :
 	ParticleSwarmOptimization::ParticleSwarmOptimization(int narg, char** args, ObjectiveFunction* obj,
 			float_t omega, float_t phi1, float_t phi2, int npart, int ngen) :
    			rand_(time(NULL))	{
 		name_ = algo_pso;
 		max_hist_ = 100;			// not used ...
 		tol_ = 1e-8;
+
+		obj_func_ = obj;
 
 		//if(narg < 7) {
 		//	std::cerr << "error: for PSO please specify <num_particles> <num_gen> "
@@ -37,10 +38,48 @@ namespace hig {
 		pso_omega_ = omega;
 		pso_phi1_ = phi1;
 		pso_phi2_ = phi2;
+
+		// get number of particles
+		//num_particles_ = atoi(args[2]);
+		num_particles_ = npart;
+		// max number of generations
+		//max_iter_ = atoi(args[3]);
+		max_iter_ = ngen;
+
+		init();
+	} // ParticleSwarmOptimization::ParticleSwarmOptimization()
+
+
+	ParticleSwarmOptimization::ParticleSwarmOptimization(int narg, char** args,
+			ObjectiveFunction* obj, unsigned int algo_num) :
+			rand_(time(NULL)) {
+		name_ = algo_pso;
+		max_hist_ = 100;
+		tol_ = 1e-8;
+
 		obj_func_ = obj;
 
-		std::cout << "** PSO Parameters: " << pso_omega_ << ", " << pso_phi1_ << ", " << pso_phi2_
-					<< std::endl;
+		pso_omega_ = HiGInput::instance().analysis_algo_param(algo_num, "pso_omega");
+		pso_phi1_ = HiGInput::instance().analysis_algo_param(algo_num, "pso_phi1");
+		pso_phi2_ = HiGInput::instance().analysis_algo_param(algo_num, "pso_phi2");
+		num_particles_ = HiGInput::instance().analysis_algo_param(algo_num, "pso_num_particles");
+		max_iter_ = HiGInput::instance().analysis_algo_param(algo_num, "pso_num_generations");
+
+		init();
+	} // ParticleSwarmOptimization::ParticleSwarmOptimization()
+
+
+	ParticleSwarmOptimization::~ParticleSwarmOptimization() {
+		// nothing to do here yet ...
+	} // ParticleSwarmOptimization::~ParticleSwarmOptimization()
+
+
+	bool ParticleSwarmOptimization::init() {
+		std::cout << "** PSO Parameters: Omega = " << pso_omega_ << std::endl
+				  << "                   Phi1  = " << pso_phi1_ << std::endl
+				  << "                   Phi2  = " << pso_phi2_ << std::endl
+				  << "                   Npart = " << num_particles_ << std::endl
+				  << "                   Ngen  = " << max_iter_ << std::endl;
 
 		params_ = (*obj_func_).fit_param_keys();
 		num_params_ = (*obj_func_).num_fit_params();
@@ -71,24 +110,13 @@ namespace hig {
 		constraints_.velocity_min_ = min_limits;
 		constraints_.velocity_max_ = max_limits;
 
-		// get number of particles
-		//num_particles_ = atoi(args[2]);
-		num_particles_ = npart;
-		// max number of generations
-		//max_iter_ = atoi(args[3]);
-		max_iter_ = ngen;
-
 		// initialize particles
 		particles_.clear();
 		for(int i = 0; i < num_particles_; ++ i) {
 			particles_.push_back(PSOParticle(num_params_, PSO_UNIFORM, rand_, constraints_));
 		} // for
-	} // ParticleSwarmOptimization::ParticleSwarmOptimization()
-
-
-	ParticleSwarmOptimization::~ParticleSwarmOptimization() {
-
-	} // ParticleSwarmOptimization::~ParticleSwarmOptimization()
+		return true;
+	} // ParticleSwarmOptimization::init()
 
 
 	bool ParticleSwarmOptimization::run(int narg, char** args, int img_num) {

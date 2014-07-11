@@ -3,7 +3,6 @@
  *
  *  File: typedefs.hpp
  *  Created: Jul 08, 2012
- *  Modified: Sun 26 Jan 2014 09:41:57 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>

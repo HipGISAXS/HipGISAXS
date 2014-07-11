@@ -3,7 +3,7 @@
  *
  *  File: analysis_algorithm.hpp
  *  Created: Feb 02, 2014
- *  Modified: Sun 02 Feb 2014 06:45:13 PM PST
+ *  Modified: Wed 09 Jul 2014 12:06:05 PM PDT
  */
 
 #ifndef __ANALYSIS_ALGORITHM_HPP__
@@ -14,12 +14,13 @@
 #include <analyzer/objective_func.hpp>
 
 
-namespace hig{
+namespace hig {
 
 	class AnalysisAlgorithm {
-		protected :
-			bool is_valid;
-			FittingAlgorithmName name_;			// algorithm name
+
+		protected:
+			bool is_valid_;
+			FittingAlgorithmName name_;		// algorithm name
 			ObjectiveFunction* obj_func_;	// the objective function
 			float tol_;						// error tolerance
 			int max_iter_;					// max num of iterations
@@ -29,17 +30,14 @@ namespace hig{
 			float_vec_t xn_;				// final param values
 
 		public:
-/*			AnalysisAlgorithm(): max_iter_(200), max_hist_(100), tol_(1e-4), num_params_(0) { }
-			AnalysisAlgorithm(ObjectiveFunction* func):
+			AnalysisAlgorithm(): max_iter_(200), max_hist_(100), tol_(1e-4), num_params_(0) { }
+			/*AnalysisAlgorithm(ObjectiveFunction* func):
 					max_iter_(200), max_hist_(100), tol_(1e-4) {
 				obj_func_ = func;
 				num_params_ = (*obj_func_).num_fit_params();
 				x0_ = (*obj_func_).fit_param_init_values();
-			} // AnalysisAlgorithm()
+			} // AnalysisAlgorithm()*/
 
-			~AnalysisAlgorithm() { }
-*/
-			AnalysisAlgorithm() { }
 			~AnalysisAlgorithm() { }
 
 			bool init_params(const float_vec_t& X0);
@@ -48,7 +46,6 @@ namespace hig{
 			float_vec_t get_param_values() { return xn_; }
 
 			virtual bool run(int, char**, int) = 0;
-			virtual void print();
 
 		}; // class AnalysisAlgorithm
 

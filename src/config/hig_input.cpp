@@ -674,6 +674,7 @@ namespace hig {
 			case fit_param_init_token:
 			case fit_reference_data_token:
 			case fit_reference_data_path_token:
+			case fit_reference_data_mask_token:
 			case fit_reference_data_region_token:
 			case fit_reference_data_region_min_token:
 			case fit_reference_data_region_max_token:
@@ -1266,7 +1267,11 @@ namespace hig {
 				break;
 
 			case fit_reference_data_path_token:
-				reference_data_[0].path(str);
+				reference_data_[0].path(str);		// TODO ...
+				break;
+
+			case fit_reference_data_mask_token:
+				reference_data_[0].mask(str);		// TODO ...
 				break;
 
 			case fit_algorithm_name_token:

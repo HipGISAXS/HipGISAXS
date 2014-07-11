@@ -3,7 +3,7 @@
  *
  *  File: Analyzer.hpp
  *  Created: Dec 26, 2013
- *  Modified: Thu 27 Feb 2014 11:02:21 AM PST
+ *  Modified: Wed 09 Jul 2014 11:58:34 AM PDT
  *  Description: The main analysis class that executes the workflows defined therein wrt
  *  the inputs (a priori structural info)  and datasets (expt. data) provided.
  *
@@ -21,58 +21,31 @@
  *  NON-COMMERCIAL END USER LICENSE AGREEMENT.
  */
 
-#ifndef _ANALYZER_HPP_
-#define _ANALYZER_HPP_
+#ifndef __HIPGISAXS_ANA_HPP__
+#define __HIPGISAXS_ANA_HPP__
 
 #include <vector>
 
 #include <analyzer/typedefs.hpp>
 #include <analyzer/analysis_algorithm.hpp>
 
-//#include <analyzer/Workflow.hpp>
-//#include <analyzer/ImageDataProc.hpp>
-//#include <analyzer/objective_functions.hpp>
 
 namespace hig {
 
-  class HipGISAXSAnalyzer {
+	class HipGISAXSAnalyzer {
 
-  private :
-    string_t title_;
-    //Workflow wf_;
-    //ImageDataProc data_;
-    //ObjFct* pobj_fct_;
-    //AnaOutput outputs_;
-	std::vector <AnalysisAlgorithm*> wf_;		// the workflow
-    bool is_valid;
+		private :
+			std::vector <AnalysisAlgorithm*> wf_;		// the workflow
 
-  public:
-    HipGISAXSAnalyzer() { }
-    ~HipGISAXSAnalyzer() { }
+		public:
+			HipGISAXSAnalyzer() { }
+			~HipGISAXSAnalyzer() { }
 
-    bool init();
-    void set_title(string_t title) { title_ = title; }
+			bool add_analysis_algo(AnalysisAlgorithm* algo) { wf_.push_back(algo); return true; }
+			bool analyze(int argc,char **argv, int);
 
-    //bool set_obj_fct(ObjFct* pof);
+	}; // class HipGISAXSAnalyzer
 
-    //bool set_workflow(Workflow wf);
-    //bool set_workflow(string_t wf_str);
+} // namespace hig
 
-    //bool set_data(ImageDataProc data);
-    //bool set_data(string_t filename);
-    //bool set_ref_data(ImageData* pimg);
-
-    //bool set_input(AnaInput inp);
-	bool add_analysis_algo(AnalysisAlgorithm* algo) { wf_.push_back(algo); return true; }
-
-    int analyze(int argc,char **argv, int);
-    //AnaOutput get_output(){return outputs_;}
-    //void write_final_vec(float_vec_t XN);
-
-    void print_output();
-
-  }; /* class HipGISAXSAnalyzer */
-
-} /* namespace hig */
-
-#endif /* ANALYZER_HPP_ */
+#endif // __HIPGISAXS_ANA_HPP__
