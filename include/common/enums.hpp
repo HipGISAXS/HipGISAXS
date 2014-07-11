@@ -3,7 +3,7 @@
  *
  *  File: enums.hpp
  *  Created: Jun 11, 2012
- *  Modified: Wed 26 Feb 2014 06:49:24 AM PST
+ *  Modified: Wed 09 Jul 2014 10:41:44 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -117,12 +117,14 @@ namespace hig {
 	}; // enum FittingAlgorithmName
 
 	enum FitAlgorithmParamType {
-		algo_param_error,
-		algo_param_null,
-		algo_pounders_param_delta,
-		algo_pso_param_omega,
-		algo_pso_param_phi1,
-		algo_pso_param_phi2
+		algo_param_error,			/* error type */
+		algo_param_null,			/* default, null parameter */
+		algo_pounders_param_delta,	/* delta for pounders algorithm */
+		algo_pso_param_omega,		/* omega for pso algorithm */
+		algo_pso_param_phi1,		/* phi1 for pso algorithm */
+		algo_pso_param_phi2,		/* phi2 for pso algorithm */
+		algo_pso_param_nparticle,	/* number of particles for pso algorithm */
+		algo_pso_param_ngen			/* number of generations for pso algorithm */
 	}; // enum FitAlgorithmParamType
 
 } // namespace hig
