@@ -345,8 +345,8 @@ namespace hig {
 			} // fit_param_init_vector()
 			int num_analysis_algos() const { return analysis_algos_.size(); }
 			FittingAlgorithmName analysis_algo(int i) const { return analysis_algos_[i].name(); }
-			float_t analysis_algo_param(int algo_num, const std::string pstr) const {
-				return analysis_algos_[algo_num].param(pstr);
+			bool analysis_algo_param(int algo_num, const std::string pstr, float_t& val) const {
+				return analysis_algos_[algo_num].param(pstr, val);
 			} // analysis_algo_param()
 
 			/* printing for testing */

@@ -129,7 +129,7 @@ namespace hig {
 			float_t pso_phi2_;
 
 			bool tune_omega_;							// whether to vary omega or keep constant
-			const int type_;							// pso type
+			unsigned int type_;							// pso type
 			unsigned int foresee_num_;					// number of samples to choose from
 
 			// helpers
@@ -163,10 +163,12 @@ namespace hig {
 			bool simulate_vonnewmann_generation();		// lbest grid/torus with K = 4
 			bool simulate_random_generation();			// random connectivity with degree k
 
+			unsigned int decode_pso_algo_type(float_t val) { return (unsigned int) val; }
+
 		public:
 			ParticleSwarmOptimization(int, char**, ObjectiveFunction*,
 										float_t, float_t, float_t, int, int, bool, int);
-			ParticleSwarmOptimization(int, char**, ObjectiveFunction*, unsigned int);
+			ParticleSwarmOptimization(int, char**, ObjectiveFunction*, unsigned int, bool, int);
 			~ParticleSwarmOptimization();
 
 			bool init();

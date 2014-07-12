@@ -3,7 +3,7 @@
  *
  *  File: objective_func_hipgisaxs.hpp
  *  Created: Feb 02, 2014
- *  Modified: Wed 19 Mar 2014 05:39:09 PM PDT
+ *  Modified: Fri 11 Jul 2014 06:46:21 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -30,6 +30,7 @@ namespace hig {
 			bool set_distance_measure(DistanceMeasure*);
 			bool set_reference_data(int);
 			bool set_reference_data(char*) { }
+			bool read_mask_data(string_t);
 
 			float_vec_t operator()(const float_vec_t&);
 

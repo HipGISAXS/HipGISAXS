@@ -54,19 +54,59 @@ namespace hig {
 
 
 	ParticleSwarmOptimization::ParticleSwarmOptimization(int narg, char** args,
-			ObjectiveFunction* obj, unsigned int algo_num) :
-			rand_(time(NULL)) {
+			ObjectiveFunction* obj, unsigned int algo_num, bool tune_omega = false, int type = 0) :
+			rand_(time(NULL)), type_(type) {
 		name_ = algo_pso;
 		max_hist_ = 100;
 		tol_ = 1e-8;
 
 		obj_func_ = obj;
 
-		pso_omega_ = HiGInput::instance().analysis_algo_param(algo_num, "pso_omega");
-		pso_phi1_ = HiGInput::instance().analysis_algo_param(algo_num, "pso_phi1");
-		pso_phi2_ = HiGInput::instance().analysis_algo_param(algo_num, "pso_phi2");
-		num_particles_ = HiGInput::instance().analysis_algo_param(algo_num, "pso_num_particles");
-		max_iter_ = HiGInput::instance().analysis_algo_param(algo_num, "pso_num_generations");
+		foresee_num_ = 5;			// TODO: make it modifiable
+
+		float_t temp_val = 0.0;
+
+		// mandatory PSO parameters
+		if(!HiGInput::instance().analysis_algo_param(algo_num, "pso_omega", pso_omega_)) {
+			std::cerr << "error: mandatory PSO parameter 'pso_omega' missing" << std::endl;
+			exit(-1);
+		} // if
+		if(!HiGInput::instance().analysis_algo_param(algo_num, "pso_phi1", pso_phi1_)) {
+			std::cerr << "error: mandatory PSO parameter 'pso_phi1' missing" << std::endl;
+			exit(-1);
+		} // if
+		if(!HiGInput::instance().analysis_algo_param(algo_num, "pso_phi2", pso_phi2_)) {
+			std::cerr << "error: mandatory PSO parameter 'pso_phi2' missing" << std::endl;
+			exit(-1);
+		} // if
+		if(!HiGInput::instance().analysis_algo_param(algo_num, "pso_num_particles", temp_val)) {
+			std::cerr << "error: mandatory PSO parameter 'pso_num_particles' missing" << std::endl;
+			exit(-1);
+		} else {
+			num_particles_ = (unsigned int) temp_val;
+		} // if-else
+		if(!HiGInput::instance().analysis_algo_param(algo_num, "pso_num_generations", temp_val)) {
+			std::cerr << "error: mandatory PSO parameter 'pso_num_generations' missing" << std::endl;
+			exit(-1);
+		} else {
+			max_iter_ = (unsigned int) temp_val;
+		} // if
+		num_particles_global_ = num_particles_;
+
+		// optional PSO parameters
+		if(!HiGInput::instance().analysis_algo_param(algo_num, "pso_tune_omega", temp_val)) {
+			std::cerr << "warning: optional PSO parameter 'pso_tune_omega' defaulted" << std::endl;
+			tune_omega_ = false;
+		} else {
+			if(temp_val > 0.5) tune_omega_ = true;
+			else tune_omega_ = false;
+		} // if-else
+		if(!HiGInput::instance().analysis_algo_param(algo_num, "pso_type", temp_val)) {
+			std::cerr << "warning: optional PSO parameter 'pso_type' defaulted" << std::endl;
+			type_ = 0;	// base algorithm
+		} else {
+			type_ = decode_pso_algo_type(temp_val);
+		} // if-else
 
 		init();
 	} // ParticleSwarmOptimization::ParticleSwarmOptimization()
@@ -78,12 +118,6 @@ namespace hig {
 
 
 	bool ParticleSwarmOptimization::init() {
-		std::cout << "** PSO Parameters: Omega = " << pso_omega_ << std::endl
-				  << "                   Phi1  = " << pso_phi1_ << std::endl
-				  << "                   Phi2  = " << pso_phi2_ << std::endl
-				  << "                   Npart = " << num_particles_ << std::endl
-				  << "                   Ngen  = " << max_iter_ << std::endl;
-
 		params_ = (*obj_func_).fit_param_keys();
 		num_params_ = (*obj_func_).num_fit_params();
 		x0_ = (*obj_func_).fit_param_init_values();
@@ -139,7 +173,9 @@ namespace hig {
 				// assign multiple procs per particle
 				// procs for a particle will be in their common new world
 				// TODO ...
-				std::cout << "error: this case has not been implemented yet" << std::endl;
+				std::cout << "error: this case has not been implemented yet ["
+							<< num_particles_global_ << ", " << num_procs << "]"
+							<< std::endl;
 				exit(-1);
 			} // if-else
 			(*multi_node_).scan_sum(root_comm_, num_particles_, index_offset);
@@ -165,6 +201,16 @@ namespace hig {
 
 		if(type_ > 4) {		// need to construct neighbor list (non-fully-connected topology)
 			if(!construct_neighbor_lists()) exit(2);
+		} // if
+
+		if(is_master()) {
+			std::cout << "** PSO Parameters: Omega = " << pso_omega_ << std::endl
+					  << "                   Phi1  = " << pso_phi1_ << std::endl
+					  << "                   Phi2  = " << pso_phi2_ << std::endl
+					  << "                   Npart = " << num_particles_ << std::endl
+					  << "                   Ngen  = " << max_iter_ << std::endl
+					  << "     PSO Algorithm Type  = " << type_ << std::endl
+					  << "            Tune Omega?  = " << tune_omega_ << std::endl;
 		} // if
 
 		return true;

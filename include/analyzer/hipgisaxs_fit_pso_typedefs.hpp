@@ -3,7 +3,7 @@
  *
  *  File: typedefs.hpp
  *  Created: Jan 14, 2014
- *  Modified: Tue 14 Jan 2014 10:23:37 AM PST
+ *  Modified: Sat 12 Jul 2014 11:13:47 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -29,6 +29,20 @@ namespace hig {
 		PSO_DEFAULT										// currently same as PSO_UNIFORM
 	}; // enum PSOParameterDistribution
 	typedef PSOParameterDistribution pso_parameter_dist_t;
+
+	// PSO algorithm types
+	enum PSOAlgorithmType {
+		pso_algo_base = 0,			// base algorithm (inertia weight)
+		pso_algo_fips,				// FIPS algorithm
+		pso_algo_soothsayer,		// Look-ahead/soothsayer algorithm
+		pso_algo_fdr,				// FDR (Fitness Distance Ratio) algorithm
+		pso_algo_barebones,			// barebones algorithm
+		pso_algo_lbest,				// LBest topology (K = 2)
+		pso_algo_vonnewmann,		// Von Newmann topology (K = 4)
+		pso_algo_random,			// Random topology with 20% connectivity
+		pso_algo_null,				// no algorithm
+		pso_algo_error				// error case
+	};
 
 } // namespace hig
 

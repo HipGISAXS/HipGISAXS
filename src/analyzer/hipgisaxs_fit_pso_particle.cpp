@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_fit_pso_particle.cpp
  *  Created: Jan 13, 2014
- *  Modified: Wed 16 Apr 2014 09:22:54 AM PDT
+ *  Modified: Fri 11 Jul 2014 06:38:04 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -12,8 +12,6 @@
 #include <analyzer/hipgisaxs_fit_pso.hpp>
 
 namespace hig {
-
-	const float_t PI_ = 3.14159;
 
 	PSOParticle::PSOParticle(unsigned int id, unsigned int num_param, pso_parameter_dist_t dist,
 							woo::MTRandomNumberGenerator& rng,

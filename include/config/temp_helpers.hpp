@@ -118,14 +118,15 @@ namespace hig {
 
 			FittingAlgorithmName name() const { return name_; }
 
-			float_t param(const std::string pstr) const {
+			bool param(const std::string pstr, float_t& val) const {
 				FitAlgorithmParamType type = TokenMapper::instance().get_fit_algorithm_param_token(pstr);
 				if(type == algo_param_error) {
-					std::cerr << "error: invalid analysis algorithm parameter type encountered"
-								<< std::endl;
-					exit(2);
+					std::cerr << "warning: non-existent analysis algorithm parameter type encountered ["
+								<< pstr << "]" << std::endl;
+					return false;
 				} // if
-				return params_map_.at(type).value();
+				val = params_map_.at(type).value();
+				return true;
 			} // param()
 
 			void print() const {

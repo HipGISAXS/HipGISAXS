@@ -270,8 +270,8 @@ namespace hig {
 		float_t maxz = HiGInput::instance().reference_region_max_y(i);
 
 		#ifdef USE_MPI
-			int mpi_rank = multi_node_.rank();
-			bool master = multi_node_.is_master();
+			int mpi_rank = multi_node_.rank(root_comm_);
+			bool master = multi_node_.is_master(root_comm_);
 		#else
 			int mpi_rank = 0;
 			bool master = true;
