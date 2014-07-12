@@ -3,7 +3,7 @@
  *
  *  File: Analyzer.hpp
  *  Created: Dec 26, 2013
- *  Modified: Wed 09 Jul 2014 11:58:34 AM PDT
+ *  Modified: Fri 11 Jul 2014 09:03:25 AM PDT
  *  Description: The main analysis class that executes the workflows defined therein wrt
  *  the inputs (a priori structural info)  and datasets (expt. data) provided.
  *
@@ -26,7 +26,7 @@
 
 #include <vector>
 
-#include <analyzer/typedefs.hpp>
+#include <common/typedefs.hpp>
 #include <analyzer/analysis_algorithm.hpp>
 
 

@@ -3,7 +3,7 @@
  *
  *  File: qgrid.cpp
  *  Created: Jun 17, 2012
- *  Modified: Sun 15 Jun 2014 07:12:40 AM PDT
+ *  Modified: Fri 11 Jul 2014 01:47:50 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -123,15 +123,10 @@ namespace hig {
 		cqvec_t qz_temp0, qz_temp1, qz_temp2, qz_temp3;
 		qz_extended_.clear(); qz_temp0.clear(); qz_temp1.clear(); qz_temp2.clear(); qz_temp3.clear();
 		for(qvec_iter_t q = qz_.begin(); q != qz_.end(); ++ q) {
-			//std::complex<float_t> kz_q_temp = sqrt(pow((*q) + kzi_0, 2) -
-			//									pow(k0, 2) * std::complex<float_t>(dnl_q.x, dnl_q.y)) -
-			//									std::complex<float_t>(kzi_q.x, kzi_q.y);
-			//complex_t kz_q = sqrt(pow((*q) + kzi_0, 2) - pow(k0, 2) * dnl_q) - kzi_q;
 			float_t temp0 = (*q) + kzi_0;
 			float_t temp1 = temp0 * temp0;
 			complex_t temp2 = k0 * k0 * dnl_q;
 			complex_t temp3 = sqrt(temp1 - temp2);
-
 			complex_t temp4 = temp3 - kzi_q;
 			qz_temp0.push_back(temp4);
 			complex_t temp5 = - temp3 - kzi_q;
@@ -141,18 +136,47 @@ namespace hig {
 			complex_t temp7 = - temp3 + kzi_q;
 			qz_temp3.push_back(temp7);
 		} // for
-		// can the 4 vectors be concatenated instead of copying ...
-		for(cqvec_iter_t q = qz_temp0.begin(); q != qz_temp0.end(); ++ q)
-			qz_extended_.push_back(*q);
-		for(cqvec_iter_t q = qz_temp1.begin(); q != qz_temp1.end(); ++ q)
-			qz_extended_.push_back(*q);
-		for(cqvec_iter_t q = qz_temp2.begin(); q != qz_temp2.end(); ++ q)
-			qz_extended_.push_back(*q);
-		for(cqvec_iter_t q = qz_temp3.begin(); q != qz_temp3.end(); ++ q)
-			qz_extended_.push_back(*q);
+		// the 4 vectors be concatenated instead of copying ...
+		for(cqvec_iter_t q = qz_temp0.begin(); q != qz_temp0.end(); ++ q) qz_extended_.push_back(*q);
+		for(cqvec_iter_t q = qz_temp1.begin(); q != qz_temp1.end(); ++ q) qz_extended_.push_back(*q);
+		for(cqvec_iter_t q = qz_temp2.begin(); q != qz_temp2.end(); ++ q) qz_extended_.push_back(*q);
+		for(cqvec_iter_t q = qz_temp3.begin(); q != qz_temp3.end(); ++ q) qz_extended_.push_back(*q);
 
 		return true;
 	} // QGrid::create_qz_extended()
+
+
+	/**
+	 * for fitting, update the qgrid to match reference data
+	 */
+	bool QGrid::update(unsigned int nqy, unsigned int nqz,
+						float_t qminy, float_t qminz, float_t qmaxy, float_t qmaxz,
+						float_t freq, float_t alpha_i, float_t k0, int mpi_rank) {
+
+		vector3_t qmax, qmin, step;
+		qmin[0] = 0.0; qmax[0] = 0.0;	// x dimension has just 0.0
+		qmin[1] = qminy; qmax[1] = qmaxy;
+		qmin[2] = qminz; qmax[2] = qmaxz;
+
+		step[1] = (qmax[1] - qmin[1]) / nqy;
+		step[2] = (qmax[2] - qmin[2]) / (nqz - 1);
+
+		qx_.clear(); qy_.clear(); qz_.clear();
+		qx_.push_back(qmin[0]);
+		for(float_t val = qmin[1]; val <= qmax[1]; val += step[1]) qy_.push_back(val);
+		//for(float_t val = qmax[2]; val >= qmin[2]; val -= step[2]) qz_.push_back(val);
+		for(float_t val = qmin[2]; val <= qmax[2]; val += step[2]) qz_.push_back(val);
+		std::reverse(qz_.begin(), qz_.end());
+
+		if(mpi_rank == 0) {
+			std::cout << "**              New Q-grid range: ("
+						<< qmin[0] << ", " << qmin[1] << ", " << qmin[2] << ") x ("
+						<< qmax[0] << ", " << qmax[1] << ", " << qmax[2] << ")" << std::endl;
+			std::cout << "**               NQX x NQY x NQZ: " << qx_.size() << " x " << qy_.size()
+						<< " x " << qz_.size() << std::endl;
+		} // if
+		return true;
+	} // QGrid::create()
 
 
 	/**

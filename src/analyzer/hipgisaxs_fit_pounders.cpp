@@ -3,7 +3,7 @@
  *
  *  File: AnaAlgorithm.cpp
  *  Created: Dec 26, 2013
- *  Modified: Tue 25 Feb 2014 03:52:21 PM PST
+ *  Modified: Fri 11 Jul 2014 10:20:12 AM PDT
  *
  *  Author: Slim Chourou <stchourou@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -37,7 +37,7 @@ namespace hig{
     //Analysis ana_out;
     std::cout << "Running POUNDERS fitting..." <<std::endl;
 
-	(*obj_func_).set_reference_data(img_num);
+	if(!(*obj_func_).set_reference_data(img_num)) return false;
 
     static  char help[]= "Running POUNDERS fitting...";
 

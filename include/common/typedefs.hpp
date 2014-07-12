@@ -25,6 +25,8 @@
 #include <vector>
 #include <map>
 #include <complex>
+#include <string>
+
 #ifdef USE_GPU
 	#include <cuComplex.h>
 #elif defined USE_MIC
@@ -68,6 +70,9 @@ namespace hig {
 	typedef std::complex<float_t>			complex_t;
 	typedef std::vector<float_t> 			float_vec_t;
 	typedef std::vector<complex_t>			complex_vec_t;
+	typedef std::vector<unsigned int>		uint_vec_t;
+
+	typedef std::pair <float_t, float_t>	float_pair_t;
 
 	#ifdef USE_GPU
 		typedef std::vector<cucomplex_t>	cucomplex_vec_t;
@@ -94,10 +99,10 @@ namespace hig {
 		}									mic_m512c_t;
 	#endif
 
+	typedef std::string						string_t;
 	typedef std::map <std::string, float_t>	map_t;
 
 	// TODO: handle multiprecision? ...
-
 
 } // namespace
 

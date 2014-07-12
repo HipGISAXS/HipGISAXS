@@ -227,69 +227,6 @@ namespace hig {
 	} // HipGISAXS::init()
 
 
-	/*
-	// this is temporary, for newton's fit method
-	bool HipGISAXS::init_steepest_fit(float_t qzcut) {
-						// is called at the beginning of the runs (after input is read)
-		// first check if the input has been constructed ...
-
-		#ifdef USE_MPI
-			int mpi_rank = multi_node_.rank();
-			bool master = multi_node_.is_master();
-		#else
-			bool master = true;
-		#endif
-
-		//photon conversion
-		float_t photon = 0.0;
-		std::string unit;
-		freq_ = 0; k0_ = 0;
-		HiGInput::instance().photon_energy(photon, unit);
-		if(unit == "ev") {
-			photon = photon / 1000;		// in keV
-			freq_ = 1e-9 * photon * 1.60217646e-19 * 1000 / 6.626068e-34;
-		} else { // do something else ? ...
-			if(master) std::cerr << "error: photon energy is not given in 'ev'" << std::endl;
-			return false;
-		} // if-else
-
-		k0_ = 2 * PI_ * freq_ / LIGHT_SPEED_;
-
-		// create output directory
-		if(master) {		// this is not quite good for mpi ... improve ...
-			const std::string p = HiGInput::instance().path() + "/" + HiGInput::instance().runname();
-			if(!boost::filesystem::create_directory(p)) {
-				std::cerr << "error: could not create output directory " << p << std::endl;
-				return false;
-			} // if
-		} // if
-
-		#ifdef USE_MPI
-			multi_node_.barrier();
-		#endif
-
-		// create Q-grid
-		float_t min_alphai = HiGInput::instance().scattering_min_alpha_i() * PI_ / 180;
-		if(!QGrid::instance().create_z_cut(freq_, min_alphai, k0_, qzcut)) {
-			if(master) std::cerr << "error: could not create Q-grid" << std::endl;
-			return false;
-		} // if
-
-		nqx_ = QGrid::instance().nqx();
-		nqy_ = QGrid::instance().nqy();
-		nqz_ = QGrid::instance().nqz();
-
-		// construct layer profile
-		if(!HiGInput::instance().construct_layer_profile()) {	// also can be done at input reading ...
-			if(master) std::cerr << "error: could not construct layer profile" << std::endl;
-			return false;
-		} // if
-
-		return true;
-	} // HipGISAXS::init_steepest_fit()
-	*/
-
-
 	bool HipGISAXS::run_init(float_t alphai, float_t phi, float_t tilt, SampleRotation& rot_matrix) {
 					// this is called for each config-run during the main run
 					// it does the following:
@@ -319,6 +256,47 @@ namespace hig {
 		return true;
 	} // HipGISAXS::run_init()
 
+
+	// for fitting, change the qregion when they are different
+	bool HipGISAXS::override_qregion(unsigned int ny, unsigned int nz, unsigned int i) {
+
+		OutputRegionType type = HiGInput::instance().reference_region_type(i);
+		float_t miny = HiGInput::instance().reference_region_min_x(i);
+		float_t minz = HiGInput::instance().reference_region_min_y(i);
+		float_t maxy = HiGInput::instance().reference_region_max_x(i);
+		float_t maxz = HiGInput::instance().reference_region_max_y(i);
+
+		#ifdef USE_MPI
+			int mpi_rank = multi_node_.rank();
+			bool master = multi_node_.is_master();
+		#else
+			int mpi_rank = 0;
+			bool master = true;
+		#endif
+
+		if(type == region_qspace) {
+			// update Q-grid
+			float_t min_alphai = HiGInput::instance().scattering_min_alpha_i() * PI_ / 180;
+			if(!QGrid::instance().update(ny, nz, miny, minz, maxy, maxz,
+											freq_, min_alphai, k0_, mpi_rank)) {
+				if(master) std::cerr << "error: could not update Q-grid" << std::endl;
+				return false;
+			} // if
+
+			nqx_ = QGrid::instance().nqx();
+			nqy_ = QGrid::instance().nqy();
+			nqz_ = QGrid::instance().nqz();
+
+		} else if(type == region_pixels) {
+			std::cerr << "uh-oh: override option for pixels has not yet been implemented" << std::endl;
+			return false;
+		} else if(type == region_angles) {
+			std::cerr << "uh-oh: override option for angles has not yet been implemented" << std::endl;
+			return false;
+		} // if-else
+
+		return true;
+	} // HipGISAXS::override_qregion()
 
 	/**
 	 * This is the main function called from outside
@@ -729,6 +707,7 @@ namespace hig {
 				std::cerr << "error: currently you can simulate only for single "
 							<< "alpha_i, phi and tilt angles"
 							<< std::endl;
+			// TODO ...
 			return -1.0;
 		} // if
 
@@ -752,6 +731,22 @@ namespace hig {
 		if(master)
 			std::cout << "**        Total Simulation time: " << sim_timer.elapsed_msec()
 						<< " ms." << std::endl;
+
+		// temporary for testing ...
+		if(master) {
+			Image img(nqx_, nqy_, nqz_);
+			img.construct_image(final_data, 0); // slice x = 0
+			// define output filename
+			std::stringstream alphai_b;
+			std::string alphai_s;
+			alphai_b << alpha_i; alphai_s = alphai_b.str();
+			std::string output(HiGInput::instance().param_pathprefix() +
+								"/" + HiGInput::instance().runname() +
+								"/img_ai=" + alphai_s + ".tif");
+			std::cout << "-- Saving image in " << output << " ... " << std::flush;
+			img.save(output);
+			std::cout << "done." << std::endl;
+		} // if
 
 		return true;
 	} // HipGISAXS::compute_gisaxs()

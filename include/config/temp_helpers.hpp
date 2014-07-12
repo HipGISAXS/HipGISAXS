@@ -39,6 +39,10 @@ namespace hig {
 			std::string image_path() const { return image_path_; }
 			std::string image_mask() const { return image_mask_; }
 			OutputRegionType get_region_type() const { return region_type_; }
+			float_t region_min_x() const { return x_min_; }
+			float_t region_min_y() const { return y_min_; }
+			float_t region_max_x() const { return x_max_; }
+			float_t region_max_y() const { return y_max_; }
 
 			void print() {
 				std::cout << "Reference Data:" << std::endl;

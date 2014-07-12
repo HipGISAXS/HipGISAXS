@@ -3,7 +3,7 @@
  *
  *	File: ImageData.cpp
  *	Created: Dec 26, 2013
- *	Modified: Wed 09 Jul 2014 12:25:31 PM PDT
+ *	Modified: Fri 11 Jul 2014 08:41:51 AM PDT
  *
  *	Author: Slim Chourou <stchourou@lbl.gov>
  *	Developers: Slim Chourou <stchourou@lbl.gov>
@@ -26,7 +26,6 @@
 
 namespace hig {
 
-	//float ImageData::img_p(int i, int j) const {
 	float_t ImageData::operator()(int i, int j) const {
 		if(i < 0 || i >= n_par_ || j < 0 || j >= n_ver_) return 0;
 		return data_[j * n_par_ + i];
@@ -39,14 +38,11 @@ namespace hig {
 	} // ImageData::operator()()
 
 
-	float_t ImageData::operator()(float_t i, float_t j) const {
+	float_t ImageData::operator()(float_t qi, float_t qj) const {
 		// TODO ...
 		return 0;
 	} // ImageData::operator()()
 
-	//float ImageData::img_q(float qv, float qp) const {
-	//	return 0;
-	//}
 
 	void	ImageData::print() const {
 		std::cout << filename_ << std::endl;
@@ -111,17 +107,4 @@ namespace hig {
 		return true;
 	} // ImageData::read()
 
-
-	// temporary .... -- abhinav
-	//float_t* ImageData::convert_data() {
-	//	std::cout << "ALLOCATING DATA MEMORY" << std::endl;
-	//	data_.clear();
-	//	unsigned int i = 0;
-	//	for(float_mat_t::iterator r = img_.begin(); r != img_.end(); ++ r) {
-	//		//for(float_vec_t::iterator c = (*r).begin(); c != (*r).end(); ++ c) {
-	//			data_.push_back(*r);
-	//		//} // for
-	//	} // for
-	//} // ImageData::data()
-
-}
+} // namespace hig

@@ -150,7 +150,7 @@ namespace hig {
 			bool fit_init();
 			bool compute_gisaxs(float_t*&);
 
-			// temporary fitting related ...
+			// fitting related ... TODO: improve
 			std::vector <std::string> fit_param_keys() const {
 				return HiGInput::instance().fit_param_keys();
 			} // get_fit_param_keys()
@@ -164,10 +164,19 @@ namespace hig {
 			unsigned int nqy() const { return nqy_; }
 			unsigned int nqz() const { return nqz_; }
 
-			//std::string reference_data_path() const { return HiGInput::instance().reference_data_path(); }
-			std::string reference_data_path(int i) const { return HiGInput::instance().reference_data_path(i); }
+			string_t reference_data_path(int i) const {
+				return HiGInput::instance().reference_data_path(i);
+			} // reference_data_path()
+			string_t reference_data_mask(int i) const {
+				return HiGInput::instance().reference_data_mask(i);
+			} // reference_data_mask()
+
 			int num_fit_params() const { return HiGInput::instance().num_fit_params(); }
-			std::vector<float_t> fit_param_init_values() const { return HiGInput::instance().fit_param_init_values(); }
+			std::vector<float_t> fit_param_init_values() const {
+				return HiGInput::instance().fit_param_init_values();
+			} // fit_param_init_values()
+
+			bool override_qregion(unsigned int n_par, unsigned int n_ver, unsigned int i);
 
 
 			//template <typename ErrorFunction>

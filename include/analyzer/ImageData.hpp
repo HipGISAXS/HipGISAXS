@@ -67,7 +67,7 @@ namespace hig{
 		//virtual bool init(){return false;}
 
 		/* setters */
-		void set_data(const float_mat_t& data) { data_ = data; }
+		void set_data(const float_vec_t& data) { data_ = data; }
 		void set_data(const float* data) {
 			data_.clear();
 			for(unsigned int i = 0; i < n_par_ * n_ver_; ++ i) data_.push_back(data[i]);

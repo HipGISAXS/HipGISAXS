@@ -3,13 +3,13 @@
  *
  *  File: analysis_algorithm.hpp
  *  Created: Feb 02, 2014
- *  Modified: Wed 09 Jul 2014 12:06:05 PM PDT
+ *  Modified: Fri 11 Jul 2014 09:03:02 AM PDT
  */
 
 #ifndef __ANALYSIS_ALGORITHM_HPP__
 #define __ANALYSIS_ALGORITHM_HPP__
 
-#include <analyzer/typedefs.hpp>
+#include <common/typedefs.hpp>
 #include <analyzer/enums.hpp>
 #include <analyzer/objective_func.hpp>
 

@@ -319,9 +319,15 @@ namespace hig {
 					steps.push_back((*i).second.step_);
 				return steps;
 			} // fit_param_step_values()
-			//std::string reference_data_path() const { return reference_data_.image_path(); }
 			std::string reference_data_path(int i) const { return reference_data_[i].image_path(); }
 			std::string reference_data_mask(int i) const { return reference_data_[i].image_mask(); }
+			OutputRegionType reference_region_type(int i) const {
+				return reference_data_[i].get_region_type();
+			} // reference_region_type()
+			float_t reference_region_min_x(int i) const { return reference_data_[i].region_min_x(); }
+			float_t reference_region_min_y(int i) const { return reference_data_[i].region_min_y(); }
+			float_t reference_region_max_x(int i) const { return reference_data_[i].region_max_x(); }
+			float_t reference_region_max_y(int i) const { return reference_data_[i].region_max_y(); }
 			int num_analysis_data() const { return 1; }		// temp
 			int num_fit_params() const { return param_key_map_.size(); }
 			std::vector <float_t> fit_param_init_values() const {

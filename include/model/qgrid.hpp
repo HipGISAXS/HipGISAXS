@@ -3,7 +3,7 @@
  *
  *  File: qgrid.hpp
  *  Created: Jun 17, 2012
- *  Modified: Sun 26 Jan 2014 09:59:30 AM PST
+ *  Modified: Fri 11 Jul 2014 01:24:26 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -63,6 +63,10 @@ namespace hig {
 			bool create(float_t, float_t, float_t, int);
 			bool create_qz_extended(float_t, float_t, complex_t, complex_t);
 			bool create_test();
+
+			/* for fitting */
+			bool update(unsigned int, unsigned int, float_t, float_t, float_t, float_t,
+						float_t, float_t, float_t, int);
 
 			/* temporary for steepest descent fitting */
 			bool create_z_cut(float_t, float_t, float_t, float_t);

@@ -3,7 +3,7 @@
  *
  *	File: Data.hpp
  *	Created: Dec 26, 2013
- *	Modified: Sun 02 Feb 2014 08:36:35 AM PST
+ *	Modified: Fri 11 Jul 2014 09:07:59 AM PDT
  *	Description: Abstract class for gisaxs data
  *
  *	Author: Slim Chourou <stchourou@lbl.gov>
@@ -23,7 +23,7 @@
 #ifndef _DATA_HPP_
 #define _DATA_HPP_
 
-#include <analyzer/typedefs.hpp>
+#include <common/typedefs.hpp>
 
 namespace hig{
 

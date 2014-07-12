@@ -3,7 +3,7 @@
  *
  *  File: objective_func.hpp
  *  Created: Feb 02, 2014
- *  Modified: Wed 26 Feb 2014 10:02:54 AM PST
+ *  Modified: Fri 11 Jul 2014 10:16:14 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -11,19 +11,19 @@
 #ifndef __OBJECTIVE_FUNC_HPP__
 #define __OBJECTIVE_FUNC_HPP__
 
-#include <analyzer/ImageData.hpp>
-#include <analyzer/typedefs.hpp>
-#include <analyzer/distance_functions.hpp>
-#include <hipgisaxs.hpp>
-
 #include <tao.h>
+#include <hipgisaxs.hpp>
+#include <analyzer/ImageData.hpp>
+#include <analyzer/distance_functions.hpp>
 
-namespace hig{
+namespace hig {
 
 	class ObjectiveFunction {
 		protected:
 			DistanceMeasure* pdist_;	// distance function
 			ImageData* ref_data_;		// reference data
+			bool mask_set_;				// whether mask data is set or not
+			uint_vec_t mask_data_;		// mask with 0s and 1s
 			float_vec_t curr_dist_;		// current computed distance output
 
 		public:
@@ -60,6 +60,7 @@ namespace hig{
 			bool set_distance_measure(DistanceMeasure*);
 			bool set_reference_data(int);
 			bool set_reference_data(char*) { }
+			bool read_mask_data(string_t);
 			float_vec_t operator()(const float_vec_t&);
 
 			int num_fit_params() const { return hipgisaxs_.num_fit_params(); }

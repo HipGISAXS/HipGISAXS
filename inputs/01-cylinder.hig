@@ -4,7 +4,7 @@ hipGisaxsInput = {
 		name = "cylinder",		# shape name
 		originvec = [0 0 0],
 		param = { type = "height", min = 5 },
-		param = { type = "radius", min = 5 }
+		param = { type = "radius", min = 20 }
 	},
 	layer = {
 		key = "substr",	 	# special key for case of the substrate layer infinite in lower half space

@@ -3,7 +3,7 @@
  *
  *  File: typdefs.hpp
  *  Created: Dec 26, 2013
- *  Modified: Sun 02 Feb 2014 01:18:58 PM PST
+ *  Modified: Fri 11 Jul 2014 09:02:13 AM PDT
  *  Description: Defines the commom data types used.
  *
  *  Author: Slim Chourou <stchourou@lbl.gov>
@@ -30,38 +30,38 @@
 namespace hig{
 
   /* strings */
-  typedef std::string string_t;
-  typedef std::vector<std::string> string_vec_t;
-  typedef std::vector<std::string>::const_iterator   string_vec_cit;
+//  typedef std::string string_t;
+//  typedef std::vector<std::string> string_vec_t;
+//  typedef std::vector<std::string>::const_iterator   string_vec_cit;
 
   /* numbers  */
 
   /* These types are taken form HipGISAXS. Will remove after merge */
-#ifdef DOUBLEP                                          // double precision
-  typedef double                                          float_t;
-#ifdef USE_GPU
-  typedef cuDoubleComplex                 cucomplex_t;
-#endif
-#if defined USE_MIC
-  typedef double2_t                               scomplex_t;
-#endif
-#else                                                           // single precision
-  typedef float                                           float_t;
-#ifdef USE_GPU
-  typedef cuFloatComplex                  cucomplex_t;
-#endif
-#if defined USE_MIC
-  typedef float2_t                                scomplex_t;
-#endif
-#endif
+//#ifdef DOUBLEP                                          // double precision
+//  typedef double                                          float_t;
+//#ifdef USE_GPU
+//  typedef cuDoubleComplex                 cucomplex_t;
+//#endif
+//#if defined USE_MIC
+//  typedef double2_t                               scomplex_t;
+//#endif
+//#else                                                           // single precision
+//  typedef float                                           float_t;
+//#ifdef USE_GPU
+//  typedef cuFloatComplex                  cucomplex_t;
+//#endif
+//#if defined USE_MIC
+//  typedef float2_t                                scomplex_t;
+//#endif
+//#endif
 
-  typedef std::complex<float_t>                   complex_t;
-  typedef std::vector<float_t>                    float_vec_t;
-  typedef std::vector<complex_t>                  complex_vec_t;
+//  typedef std::complex<float_t>                   complex_t;
+//  typedef std::vector<float_t>                    float_vec_t;
+//  typedef std::vector<complex_t>                  complex_vec_t;
   //typedef std::vector<float_vec_t>                float_mat_t;
-  typedef float_vec_t                float_mat_t;
+//  typedef float_vec_t                float_mat_t;
 
-  typedef std::pair <float_t, float_t> float_pair_t;
+//  typedef std::pair <float_t, float_t> float_pair_t;
 
 } /* namespace hig */
 

@@ -16,6 +16,7 @@
 #include <complex>
 #include <map>
 #include <string>
+#include <iostream>
 
 namespace woo {
 

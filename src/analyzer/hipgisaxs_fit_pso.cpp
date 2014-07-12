@@ -3,7 +3,7 @@
  *
  *  File: fit_pso.cpp
  *  Created: Jan 13, 2014
- *  Modified: Wed 09 Jul 2014 12:00:24 PM PDT
+ *  Modified: Fri 11 Jul 2014 10:18:45 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -122,7 +122,7 @@ namespace hig {
 	bool ParticleSwarmOptimization::run(int narg, char** args, int img_num) {
 		std::cout << "Running Particle Swarm Optimization ..." << std::endl;
 
-		(*obj_func_).set_reference_data(img_num);
+		if(!(*obj_func_).set_reference_data(img_num)) return false;
 
 		for(int gen = 0; gen < max_iter_; ++ gen) {
 			if(!simulate_generation()) {

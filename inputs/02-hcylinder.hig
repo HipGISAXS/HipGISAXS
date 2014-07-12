@@ -3,8 +3,9 @@ hipGisaxsInput = {
 		key = "s1",	 		# a unique key to identify this shape in this file
 		name = "hcylinder",		# shape name
 		originvec = [0 0 0],
-		param = { type = "height", min = 5 },
-		param = { type = "radius", min = 5 }
+		param = { type = "height", min = 50 },
+		param = { type = "radius", min = 5 },
+		xyrotation = 90
 	},
 	layer = {
 		key = "substr",	 	# special key for case of the substrate layer infinite in lower half space

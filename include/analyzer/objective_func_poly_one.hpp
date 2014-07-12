@@ -3,7 +3,7 @@
  *
  *  File: objective_func.hpp
  *  Created: Feb 02, 2014
- *  Modified: Mon 03 Feb 2014 11:01:48 AM PST
+ *  Modified: Fri 11 Jul 2014 09:05:18 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -11,12 +11,12 @@
 #ifndef __OBJECTIVE_FUNC_POLY_ONE_HPP__
 #define __OBJECTIVE_FUNC_POLY_ONE_HPP__
 
+#include <tao.h>
+#include <common/typedefs.hpp>
 #include <analyzer/ImageData.hpp>
-#include <analyzer/typedefs.hpp>
 #include <analyzer/distance_functions.hpp>
 #include <analyzer/objective_func.hpp>
 
-#include <tao.h>
 
 namespace hig{
 
