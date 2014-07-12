@@ -3,7 +3,7 @@
  *
  *  File: sf.hpp
  *  Created: Jun 18, 2012
- *  Modified: Sun 26 Jan 2014 10:05:02 AM PST
+ *  Modified: Wed 19 Mar 2014 01:51:50 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -46,16 +46,16 @@ namespace hig {
 			~StructureFactor();
 
 			void clear(void);
-			bool compute_structure_factor(std::string, vector3_t, Lattice*, vector3_t,
+			bool compute_structure_factor(std::string, vector3_t, Lattice*, vector3_t, float_t,
 											vector3_t, vector3_t, vector3_t
 											#ifdef USE_MPI
-												, woo::MultiNode&, const char*
+												, woo::MultiNode&, std::string
 											#endif
 											);
-			bool compute_structure_factor_gpu(std::string, vector3_t, Lattice*, vector3_t,
+			bool compute_structure_factor_gpu(std::string, vector3_t, Lattice*, vector3_t, float_t,
 											vector3_t, vector3_t, vector3_t
 											#ifdef USE_MPI
-												, woo::MultiNode&, const char*
+												, woo::MultiNode&, std::string
 											#endif
 											);
 			complex_t operator[](unsigned int i) const { return sf_[i]; }

@@ -3,7 +3,7 @@
  *
  *  File: ff.hpp
  *  Created: Jul 18, 2012
- *  Modified: Sun 26 Jan 2014 09:44:42 AM PST
+ *  Modified: Wed 19 Mar 2014 01:53:26 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -74,7 +74,7 @@ namespace hig {
 									vector3_t& transvec, float_t shp_tau, float_t shp_eta,
 									vector3_t& rot1, vector3_t& rot2, vector3_t& rot3
 									#ifdef USE_MPI
-										, woo::MultiNode&, const char*
+										, woo::MultiNode&, std::string
 									#endif
 									);
 

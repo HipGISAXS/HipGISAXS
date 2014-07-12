@@ -57,6 +57,10 @@ namespace hig {
 		curr_fit_param_.clear();
 		curr_fit_algo_.clear();
 		curr_fit_algo_param_.clear();
+
+		// temp ...
+		reference_data_.push_back(*(new FitReferenceData()));
+		reference_data_set_ = false;
 	} // init();
 
 
@@ -84,7 +88,7 @@ namespace hig {
 			curr_token_ = InputReader::instance().get_next_token();
 		} // while
 
-		print_all();
+		//print_all();
 
 		return true;
 	} // HiGInput::read_input_config()
@@ -227,6 +231,8 @@ namespace hig {
 					case fit_reference_data_region_token:	// nothing to do :-/
 					case fit_reference_data_npoints_token:	// nothing to do :-/
 						// TODO: check for completeness and validity of the values ...
+						// temp:
+						reference_data_set_ = true;
 						break;
 
 					case fit_algorithm_token:
@@ -2249,24 +2255,49 @@ namespace hig {
 			std::string rem_param2;
 			switch(TokenMapper::instance().get_keyword_token(keyword_name)) {
 				case shape_token:
-					if(!shapes_.at(keyword_key).update_param(rem_param, new_val)) {
-						std::cerr << "error: failed to update param '" << param << "'" << std::endl;
-						return false;
-					} // if
+					#ifdef __INTEL_COMPILER
+						if(shapes_.count(keyword_key) == 0 ||
+								!shapes_[keyword_key].update_param(rem_param, new_val)) {
+							std::cerr << "error: failed to update param '" << param << "'" << std::endl;
+							return false;
+						} // if
+					#else
+						if(!shapes_.at(keyword_key).update_param(rem_param, new_val)) {
+							std::cerr << "error: failed to update param '" << param << "'" << std::endl;
+							return false;
+						} // if
+					#endif // __INTEL_COMPILER
 					break;
 
 				case layer_token:
-					if(!layers_.at(layer_key_map_.at(keyword_key)).update_param(rem_param, new_val)) {
-						std::cerr << "error: failed to update param '" << param << "'" << std::endl;
-						return false;
-					} // if
+					#ifdef __INTEL_COMPILER
+						if(layer_key_map_.count(keyword_key) == 0 ||
+								layers_.count(layer_key_map_[keyword_key]) == 0 ||
+								!(layers_[layer_key_map_[keyword_key]]).update_param(rem_param, new_val)) {
+							std::cerr << "error: failed to update param '" << param << "'" << std::endl;
+							return false;
+						} // if
+					#else
+						if(!layers_.at(layer_key_map_.at(keyword_key)).update_param(rem_param, new_val)) {
+							std::cerr << "error: failed to update param '" << param << "'" << std::endl;
+							return false;
+						} // if
+					#endif
 					break;
 
 				case struct_token:
-					if(!structures_.at(keyword_key).update_param(rem_param, new_val)) {
-						std::cerr << "error: failed to update param '" << param << "'" << std::endl;
-						return false;
-					} // if
+					#ifdef __INTEL_COMPILER
+						if(structures_.count(keyword_key) == 0 ||
+								!structures_[keyword_key].update_param(rem_param, new_val)) {
+							std::cerr << "error: failed to update param '" << param << "'" << std::endl;
+							return false;
+						} // if
+					#else
+						if(!structures_.at(keyword_key).update_param(rem_param, new_val)) {
+							std::cerr << "error: failed to update param '" << param << "'" << std::endl;
+							return false;
+						} // if
+					#endif
 					break;
 
 				case instrument_token:
@@ -2383,6 +2414,7 @@ namespace hig {
 	} // HiGInput::print_compute_params()
 
 	void HiGInput::print_fit_params() {
+		if(param_key_map_.empty()) return;
 		std::cout << "Fit Parameters: " << std::endl;
 		for(std::map <std::string, std::string>::const_iterator i = param_key_map_.begin();
 				i != param_key_map_.end(); ++ i) {
@@ -2395,10 +2427,12 @@ namespace hig {
 	} // HiGInput::print_fit_params()
 
 	void HiGInput::print_ref_data() {
+		if(!reference_data_set_) return;
 		reference_data_[0].print();
 	} // HiGInput::print_ref_data()
 
 	void HiGInput::print_fit_algos() {
+		if(analysis_algos_.empty()) return;
 		std::cout << "Analysis Algorithms: " << std::endl;
 		for(analysis_algo_list_t::const_iterator i = analysis_algos_.begin();
 				i != analysis_algos_.end(); ++ i) {

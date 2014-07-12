@@ -19,6 +19,7 @@
  */
 
 #include <analyzer/hipgisaxs_ana.hpp>
+#include <hipgisaxs.hpp>
 
 namespace hig {
 

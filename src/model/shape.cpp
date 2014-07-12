@@ -3,7 +3,7 @@
  *
  *  File: shape.cpp
  *  Created: Jun 05, 2012
- *  Modified: Sat 08 Mar 2014 07:13:15 AM PST
+ *  Modified: Thu 20 Mar 2014 01:27:14 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -225,7 +225,12 @@ namespace hig {
 				break;
 
 			case shape_param_token:
-				if(!params_.at(key).update_param(rem_str, new_val)) return false;
+				#ifdef __INTEL_COMPILER
+					if(params_.count(key) == 0 ||
+							!params_[key].update_param(rem_str, new_val)) return false;
+				#else
+					if(!params_.at(key).update_param(rem_str, new_val)) return false;
+				#endif
 				break;
 
 			case error_token:

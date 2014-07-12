@@ -3,7 +3,7 @@
  *
  *  File: ff_num.hpp
  *  Created: Nov 05, 2011
- *  Modified: Sun 26 Jan 2014 09:46:04 AM PST
+ *  Modified: Thu 20 Mar 2014 11:26:38 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -97,7 +97,7 @@ namespace hig {
 			bool compute(const char* filename, std::vector<complex_t>& ff,
 							vector3_t&, vector3_t&, vector3_t&
 							#ifdef USE_MPI
-								, woo::MultiNode&, const char*
+								, woo::MultiNode&, std::string
 							#endif
 							);
 	
@@ -148,7 +148,7 @@ namespace hig {
 								#endif
 								complex_vec_t& ff,
 								#ifdef USE_MPI
-									woo::MultiNode&, const char*,
+									woo::MultiNode&, std::string,
 								#endif
 								float_t&, float_t&);
 			//void gather_all(std::complex<float> *cast_p_ff, unsigned long int local_qpoints,

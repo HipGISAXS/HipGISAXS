@@ -100,7 +100,9 @@ namespace hig {
 			std::map <std::string, std::string> param_key_map_;			// maps keys to param strings
 			std::map <std::string, ParamSpace> param_space_key_map_;	// maps keys to param space
 			// TODO: ...
-			FitReferenceData reference_data_[1];		// TODO temp: data about the reference data
+			//FitReferenceData reference_data_[1];		// TODO temp: data about the reference data
+			std::vector <FitReferenceData> reference_data_;
+			bool reference_data_set_;
 
 			/* helpers */
 

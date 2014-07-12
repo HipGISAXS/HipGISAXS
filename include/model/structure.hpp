@@ -3,7 +3,7 @@
  *
  *  File: structure.hpp
  *  Created: Jun 09, 2012
- *  Modified: Sat 08 Mar 2014 08:24:18 AM PST
+ *  Modified: Thu 13 Mar 2014 04:29:17 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -302,8 +302,7 @@ namespace hig {
 			void grain_refindex_delta(float_t d) { grain_.refindex_delta(d); }
 			void grain_refindex_beta(float_t d) { grain_.refindex_beta(d); }
 
-			//void grain_scaling(float_t d) { grain_.scaling(d); }
-			void grain_scaling(float_t d) { grain_.scaling_ = d; }
+			void grain_scaling(float_t d) { grain_.scaling(d); }
 
 			void ensemble_spacing(vector3_t v) { ensemble_.spacing(v); }
 			void ensemble_maxgrains(vector3_t v) { ensemble_.maxgrains(v); }
@@ -337,6 +336,7 @@ namespace hig {
 			const std::string& grain_layer_key() { return grain_.layer_key_; }
 			bool grain_in_layer() { return grain_.in_layer_; }
 			vector3_t grain_transvec() { return grain_.transvec_; }
+			float_t grain_scaling() const { return grain_.scaling_; }
 
 			vector3_t ensemble_spacing() const { return ensemble_.spacing_; }
 			vector3_t ensemble_maxgrains() const { return ensemble_.maxgrains_; }

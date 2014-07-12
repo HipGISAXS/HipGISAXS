@@ -97,6 +97,20 @@ hipGisaxsInput = {
 			variable = "shape['s1']:param['radius']:p2",
 			range = { min = 0.00001, max = 8 },
 			init = 0
+		},
+		referencedata = {
+			path = "/home/asarje/hipgisaxs-samples.git/outputs/09-sizedistr/gisaxs_ai=0.14_rot=0_tilt=0.out",
+			fitregion = { type = "qspace", regmin = [0 0 ], regmax = [ 3 3 ] },
+			npoints = { parallel = 1500, perpendicular = 749 }
+		},
+		algorithm = {
+			algoname = "pso",
+			algoorder = 1,
+			algoparam = { type = "omega", pvalue = 0 },
+			algoparam = { type = "phi1", pvalue = 2 },
+			algoparam = { type = "phi2", pvalue = 2 },
+			restart = "yes",
+			tolerance = 1e-8
 		}
 	}
 }

@@ -3,7 +3,7 @@
  *
  *  File: ff_ana.cpp
  *  Created: Jul 12, 2012
- *  Modified: Sun 26 Jan 2014 10:21:36 AM PST
+ *  Modified: Wed 19 Mar 2014 04:46:01 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -73,7 +73,7 @@ namespace hig {
 									shape_param_list_t& params, float_t single_layer_thickness,
 									vector3_t rot1, vector3_t rot2, vector3_t rot3
 									#ifdef USE_MPI
-										, woo::MultiNode& world_comm, const char* comm_key
+										, woo::MultiNode& world_comm, std::string comm_key
 									#endif
 									) {
 

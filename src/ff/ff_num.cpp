@@ -3,7 +3,7 @@
  *
  *  File: ff_num.cpp
  *  Created: Jul 18, 2012
- *  Modified: Sun 26 Jan 2014 10:26:15 AM PST
+ *  Modified: Thu 20 Mar 2014 11:26:14 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -63,7 +63,7 @@ namespace hig {
 	bool NumericFormFactor::compute(const char* filename, complex_vec_t& ff,
 									vector3_t& rot1, vector3_t& rot2, vector3_t& rot3
 									#ifdef USE_MPI
-										, woo::MultiNode& world_comm, const char* comm_key
+										, woo::MultiNode& world_comm, std::string comm_key
 									#endif
 									) {
 		float_t comp_start = 0.0, comp_end = 0.0, comm_start = 0.0, comm_end = 0.0;
@@ -149,7 +149,7 @@ namespace hig {
 
 			int idle = 0;
 			if(world_comm.rank(comm_key) >= p_y * p_z) idle = 1;
-			const char* real_world = "ff_num_real_world";
+			std::string real_world("ff_num_real_world");
 			world_comm.split(real_world, comm_key, idle);
 
 			commtimer.stop();
@@ -456,7 +456,7 @@ namespace hig {
 											#endif
 											complex_vec_t& ff,
 											#ifdef USE_MPI
-												woo::MultiNode& world_comm, const char* comm_key,
+												woo::MultiNode& world_comm, std::string comm_key,
 											#endif
 											float_t& mem_time, float_t& comm_time) {
 		float_t mem_start = 0, mem_end = 0, comm_start = 0, comm_end = 0;

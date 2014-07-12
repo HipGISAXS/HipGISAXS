@@ -3,7 +3,7 @@
  *
  *  File: structure.cpp
  *  Created: Jun 12, 2012
- *  Modified: Sat 08 Mar 2014 08:25:41 AM PST
+ *  Modified: Thu 20 Mar 2014 11:57:45 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -145,10 +145,10 @@ namespace hig {
 		} // if
 
 		// scale the vector values
-		a_[0] *= scaling; a_[1] *= scaling; a_[2] *= scaling;
+		/*a_[0] *= scaling; a_[1] *= scaling; a_[2] *= scaling;
 		b_[0] *= scaling; b_[1] *= scaling; b_[2] *= scaling;
 		c_[0] *= scaling; c_[1] *= scaling; c_[2] *= scaling;
-		t_[0] *= scaling; t_[1] *= scaling; t_[2] *= scaling;
+		t_[0] *= scaling; t_[1] *= scaling; t_[2] *= scaling;*/
 
 		return true;
 	} // Lattice::construct_vectors()

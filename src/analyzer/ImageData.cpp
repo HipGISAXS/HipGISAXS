@@ -3,7 +3,6 @@
  *
  *	File: ImageData.cpp
  *	Created: Dec 26, 2013
- *	Modified: Fri 11 Jul 2014 08:41:51 AM PDT
  *
  *	Author: Slim Chourou <stchourou@lbl.gov>
  *	Developers: Slim Chourou <stchourou@lbl.gov>
@@ -58,7 +57,7 @@ namespace hig {
 
 	void ImageData::save(string_t filename) const {
 		std::ofstream file;
-		file.open (filename);
+		file.open(filename.c_str());
 
 		for(int iv=0; iv<n_ver_; iv++)
 			{
