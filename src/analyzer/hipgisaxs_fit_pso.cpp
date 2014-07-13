@@ -558,9 +558,8 @@ namespace hig {
 			std::cout << "@@@@@@ Global best: ";
 			std::cout << best_fitness_ << " [ ";
 			for(int j = 0; j < num_params_; ++ j)
-				std::cout << best_values_[j] << " ";
-			std::cout << "]\t";
-			std::cout << std::endl;
+				std::cout << params_[j] << ": " << best_values_[j] << " ";
+			std::cout << "]" << std::endl;
 		#ifdef USE_MPI
 		} // if
 		#endif
