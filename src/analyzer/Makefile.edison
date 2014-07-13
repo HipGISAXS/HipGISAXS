@@ -2,10 +2,11 @@
 MPI_DIR =
 #PETSC_DIR = ${PETSC_DIR}
 TAO_DIR = ${HOME}/local/tao-2.2.0-intel/lib64/python2.6/site-packages/tao
-HIPGISAXS_DIR = ${HOME}/edison/hipgisaxs.git
+HIPGISAXS_DIR = ${HOME}/gscratch2/hipgisaxs.git
 HDF5_DIR = ${HOME}/local/hdf5-1.8.9-edison-intel
 TIFF_DIR = ${HOME}/local/tiff-4.0.2-edison-intel
 #BOOST_DIR = ${BOOST_DIR}
+BOOST_DIR = ${HOME}/local/boost_1_49_0
 #SZIP_DIR = ${SZIP_DIR}
 NUM_BOOST_DIR = ${HOME}/local/boost_1_49_0
 
@@ -29,16 +30,9 @@ TAO_INCL = -I $(TAO_DIR)/include
 TAO_LDFLAGS = -L $(TAO_DIR)/lib
 TAO_LIBS = -ltao
 
-#GCC_LDFLAGS = -L $(GCC_DIR)/lib/gcc/x86_64-unknown-linux-gnu/4.7.0
-#GCC_LDFLAGS += -L $(GCC_DIR)/lib/gcc -L $(GCC_DIR)/lib64 -L $(GCC_DIR)/lib
-
 PETSC_INCL = -I $(PETSC_DIR)/include
-PETSC_LDFLAGS = -L $(PETSC_DIR)/lib #-Wl,-rpath,$(PETSC_DIR)/lib
-#PETSC_LIBS = -lpetsc -lX11 -lpthread -lf2clapack -lf2cblas -lstdc++ -ldl -lrdmacm
-PETSC_LIBS += -lpetsc #-lf2clapack -lf2cblas -lsuperlu_4.3
-#PETSC_LIBS += -lX11 -lrt -lnsl -lutil -lgcc_s -u dlacon_
-#PETSC_LIBS += -libverbs
-#PETSC_LIBS += -lrt -lnsl -lutil -lgcc_s #-ltorque
+PETSC_LDFLAGS = -L $(PETSC_DIR)/lib
+PETSC_LIBS += -lcraypetsc_intel_real
 
 HIPGISAXS_INCL = -I $(HIPGISAXS_DIR)/include
 HIPGISAXS_LDFLAGS = -L $(HIPGISAXS_DIR)/lib
@@ -66,28 +60,27 @@ ALL_LIBS = $(MPI_LIBS) $(TAO_LIBS) $(PETSC_LIBS) $(HIPGISAXS_LIBS) $(HDF5_LIBS) 
 ## all objs and libs                                                                                                                           
 ALL_INCL= $(TAO_INCL) $(PETSC_INCL) $(HDF5_INCL) $(TIFF_INCL) $(BOOST_INCL) $(HIPGISAXS_INCL)
 
-OBJECTS = ImageData.o analysis_algorithm.o objective_func.o hipgisaxs_ana.o
+OBJECTS = ImageData.o analysis_algorithm.o objective_func.o hipgisaxs_ana.o objective_func_hipgisaxs.o
 
-POUND_OBJS = hipgisaxs_fit_pounders.o objective_func_hipgisaxs.o
+POUND_OBJS = hipgisaxs_fit_pounders.o
 POUND_HIP_OBJS = $(POUND_OBJS) hipgisaxs_fit_pounders_main.o
 
 F1_OBJS = objective_func_poly_one.o
 F1_HIP_OBJS = $(F1_OBJS) objective_func_poly_one_main.o
 
-PSO_OBJS = hipgisaxs_fit_pso.o hipgisaxs_fit_pso_particle.o objective_func_hipgisaxs.o
+PSO_OBJS = hipgisaxs_fit_pso.o hipgisaxs_fit_pso_particle.o
 PSO_HIP_OBJS = $(PSO_OBJS) hipgisaxs_fit_pso_main.o
 
-BF_OBJS = hipgisaxs_fit_bruteforce.o objective_func_hipgisaxs.o
+BF_OBJS = hipgisaxs_fit_bruteforce.o
 BF_HIP_OBJS = $(BF_OBJS) hipgisaxs_fit_bruteforce_main.o
 
 HIP_OBJS = hipgisaxs_fit_main.o $(POUND_OBJS) $(PSO_OBJS) $(BF_OBJS)
 
 TEST_HIP_OBJS = hipgisaxs_fit_test.o $(POUND_OBJS) $(PSO_OBJS) $(BF_OBJS)
 
-APP_LIBS = $(ALL_LIBS)
 BINARY = analyze
 
-all: pso
+all: hipgisaxs
 
 test:
 	(make $(BINARY) \
@@ -120,7 +113,7 @@ bf:
 
 
 $(BINARY): $(OBJECTS)
-	$(CXX)  $(CXX_FLAGS) -o $(BIN_DIR)/$@ $^ -Llib $(ALL_LDFLAGS) $(APP_LIBS)
+	$(CXX)  $(CXX_FLAGS) -o $(BIN_DIR)/$@ $^ -Llib $(ALL_LDFLAGS) $(ALL_LIBS)
 
 clean:
 	rm -f *.o $(BINARY)
