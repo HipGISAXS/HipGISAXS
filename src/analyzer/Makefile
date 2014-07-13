@@ -31,8 +31,8 @@ TAO_LIBS = -ltao
 
 PETSC_INCL = -I $(PETSC_DIR)/include
 PETSC_LDFLAGS = -L $(PETSC_DIR)/lib -Wl,-rpath,$(PETSC_DIR)/lib
-PETSC_LIBS += -lpetsc -lf2clapack -lf2cblas -lsuperlu_4.3
-PETSC_LIBS += -lX11 -lrt -lnsl -lutil -lgcc_s -u dlacon_
+PETSC_LIBS += -lpetsc #-lf2clapack -lf2cblas -lsuperlu_4.3
+#PETSC_LIBS += -lX11 -lrt -lnsl -lutil -lgcc_s -u dlacon_
 
 HIPGISAXS_INCL = -I $(HIPGISAXS_DIR)/include -I $(CUDA_DIR)/include
 HIPGISAXS_LDFLAGS = -L $(HIPGISAXS_DIR)/lib -L $(CUDA_DIR)/lib64
