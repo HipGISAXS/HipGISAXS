@@ -26,6 +26,7 @@
 #include <analyzer/hipgisaxs_fit_pounders.hpp>
 #include <analyzer/hipgisaxs_fit_pso.hpp>
 #include <analyzer/hipgisaxs_fit_bruteforce.hpp>
+#include <analyzer/hipgisaxs_fit_lmvm.hpp>
 
 #include <analyzer/distance_functions.hpp>
 #include <analyzer/objective_func.hpp>
