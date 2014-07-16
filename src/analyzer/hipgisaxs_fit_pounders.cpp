@@ -3,7 +3,7 @@
  *
  *  File: AnaAlgorithm.cpp
  *  Created: Dec 26, 2013
- *  Modified: Fri 11 Jul 2014 10:20:12 AM PDT
+ *  Modified: Wed 16 Jul 2014 09:56:42 AM PDT
  *
  *  Author: Slim Chourou <stchourou@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -39,7 +39,7 @@ namespace hig{
 
 	if(!(*obj_func_).set_reference_data(img_num)) return false;
 
-    static  char help[]= "Running POUNDERS fitting...";
+    static char help[]= "Running POUNDERS fitting...";
 
     /* PETSC & TAO INITIALIZATION  */
     PetscErrorCode  ierr;
@@ -48,12 +48,6 @@ namespace hig{
     TaoInitialize(&argc,&argv,(char*)0,help);
 //    ierr = MPI_Comm_size(PETSC_COMM_WORLD,&size);// CHKERRQ(ierr);
 //    ierr = MPI_Comm_rank(PETSC_COMM_WORLD,&rank);// CHKERRQ(ierr);
-//    if (size >1) {
-//      if (rank == 0) {
-//	PetscPrintf(PETSC_COMM_SELF,"This example is intended for single processor use!\n");
-	//SETERRQ(PETSC_COMM_SELF,1,"Incorrect number of processors");
-//      }
-//    }
 
     /* Variables to read from context   */
     Vec x0;
@@ -64,8 +58,6 @@ namespace hig{
       y[0] =(double) x0_[i];
       VecSetValues(x0, 1, &i, y, INSERT_VALUES);
     }
-    //VecView(x0, PETSC_VIEWER_STDOUT_WORLD);
-    /*******************************/
 
     PetscReal tr_rad =10;
 
@@ -79,62 +71,36 @@ namespace hig{
     TaoSolver  tao;      /* TaoSolver solver context */
     TaoSolverTerminationReason reason;
 
-    /*      int argc =2;
-
-	    char opt[50]="-tao_pounders_delta";
-	    char val[10]="5";
-	    char* opt_ch= new char[strlen(opt)+1] ;//= opt.c_str();
-	    char* val_ch= new char[strlen(val)+1] ;//= val.c_str();
-	    strcpy(opt_ch,  opt);
-	    strcpy(val_ch,  val);
-
-
-	    char **argv= new char*[2];
-	    argv[0]= opt_ch;
-	    argv[1]= val_ch;
-
-	    std::cout << argv[0] << " = " << argv[1] << std::endl;
-
-	    // argv[0]=meth;
-	    //argv[1]=val;
-	    */
-
     /* Allocate vectors for the solution, gradient, Hessian, etc. */
-    ierr = VecCreateSeq(PETSC_COMM_SELF, num_obs_ ,&f);// CHKERRQ(ierr);
+    ierr = VecCreateSeq(PETSC_COMM_SELF, num_obs_ ,&f);
 
     /* The TAO code begins here */
 
     /* Create TAO solver with desired solution method */
-    ierr = TaoCreate(PETSC_COMM_SELF,&tao);// CHKERRQ(ierr);
-    ierr = TaoSetType(tao, "tao_pounders");// CHKERRQ(ierr);  // tao_nls
+    ierr = TaoCreate(PETSC_COMM_SELF,&tao);
+    ierr = TaoSetType(tao, "tao_pounders");
     /* Set routines for function, gradient, hessian evaluation */
-    ierr = TaoSetSeparableObjectiveRoutine(tao, f, EvaluateFunction, obj_func_);// CHKERRQ(ierr);
+    ierr = TaoSetSeparableObjectiveRoutine(tao, f, EvaluateFunction, obj_func_);
 
     /* Check for TAO command line options */
-    ierr = TaoSetFromOptions(tao); // CHKERRQ(ierr);
+    ierr = TaoSetFromOptions(tao);
     TaoSetMaximumIterations( tao, max_iter_);
-    //      TaoSetInitialTrustRegionRadius(tao,  tr_rad);
+    //TaoSetInitialTrustRegionRadius(tao,  tr_rad);
     TaoSetHistory(tao, hist, resid, 0, max_hist_, PETSC_TRUE);
-    //TaoSetTolerances(tao, tol_ , tol_, tol_, PETSC_DEFAULT, PETSC_DEFAULT);
     TaoSetTolerances(tao, tol_ , PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT);
-    //TaoDefaultMonitor(tao, PETSC_NULL);
 
     /* Set initial vector  */
-    ierr = TaoSetInitialVector(tao, x0);// CHKERRQ(ierr);
+    ierr = TaoSetInitialVector(tao, x0);
 
     /* Run solver */
-    ierr = TaoSolve(tao); //CHKERRQ(ierr);
-    //f=      pobj_fct_->tao_compute(x0);
-    //VecView(f, PETSC_VIEWER_STDOUT_WORLD);
+    ierr = TaoSolve(tao);
 
     /* Get termination information */
-    ierr = TaoGetTerminationReason(tao,&reason); // CHKERRQ(ierr);
+    ierr = TaoGetTerminationReason(tao, &reason);
 
     /*  get solution  */
-    TaoGetHistory(tao,0,0,0,&nhist);
-    for (int it=0;it<nhist;it++) {
-      PetscPrintf(PETSC_COMM_WORLD,"%G\t%G\n",hist[it],resid[it]);
-    }
+    TaoGetHistory(tao, 0, 0, 0, &nhist);
+    for(int it = 0; it < nhist; ++ it) PetscPrintf(PETSC_COMM_WORLD, "%G\t%G\n", hist[it], resid[it]);
 
     PetscInt iterate;
     PetscReal f_cv;
@@ -144,27 +110,21 @@ namespace hig{
     PetscReal *x_cv;
     TaoGetSolutionStatus(tao, &iterate, &f_cv, &gnorm, &cnorm, &xdiff, &reason);
     TaoGetSolutionVector(tao, &x0);
-    VecGetArray(x0,&x_cv);
+    VecGetArray(x0, &x_cv);
 
     /*  Write to output vector    */
     xn_.clear();
-    for(int j=0; j<num_params_; j++){
+    for(int j = 0; j < num_params_; ++ j){
       VecGetValues(x0, 1 , &j , y);
-      xn_.push_back( (float) y[0]  );
+      xn_.push_back((float) y[0]);
     }
 
     std::cout << "Converged vector: ";
-  //  VecView(x0, PETSC_VIEWER_STDOUT_WORLD);
-	for(float_vec_t::iterator i = xn_.begin(); i != xn_.end(); ++ i)
-		std::cout << *i << " ";
+	for(float_vec_t::iterator i = xn_.begin(); i != xn_.end(); ++ i) std::cout << *i << " ";
 	std::cout << std::endl;
 
-    /* Compose output analysis */
-
-    /* Destroy & finalize  */
-    ierr = TaoDestroy(&tao); //CHKERRQ(ierr);
-    /* Free PETSc data structures */
-    ierr = VecDestroy(&x0); //CHKERRQ(ierr);
+    ierr = TaoDestroy(&tao);
+    ierr = VecDestroy(&x0);
     TaoFinalize();
 
     return true;
