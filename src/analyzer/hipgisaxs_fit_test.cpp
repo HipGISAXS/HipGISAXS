@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_fit_test.cpp
  *  Created: Feb 23, 2014
- *  Modified: Thu 27 Feb 2014 10:59:37 AM PST
+ *  Modified: Wed 16 Jul 2014 10:10:07 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -117,11 +117,12 @@ int main(int narg, char** args) {
 														atof(arg_map.at("-pso_phi1")[0].c_str()),
 														atof(arg_map.at("-pso_phi2")[0].c_str()),
 														atoi(arg_map.at("-pso_npart")[0].c_str()),
-														atoi(arg_map.at("-pso_ngen")[0].c_str()));
+														atoi(arg_map.at("-pso_ngen")[0].c_str()),
+														false, 0);
 	} else if(algo.compare("bruteforce") == 0) {
 		(*obj_func).set_distance_measure(new AbsoluteDifferenceSquareNorm());
 		ana_algo = new hig::BruteForceOptimization(narg, args, obj_func);
-    } else if (algo.compare ("lmvm") == 0) {
+    } else if(algo.compare ("lmvm") == 0) {
         (*obj_func).set_distance_measure(new AbsoluteDifferenceSquareNorm());
         ana_algo = new hig::FitLMVMAlgo (obj_func);
 	} else {
@@ -145,7 +146,7 @@ int main(int narg, char** args) {
 	hig_ana.add_analysis_algo(ana_algo);
 
 	// perform the analysis
-	hig_ana.analyze(narg, args, 0);
+	hig_ana.analyze(narg, args, -1);
 
 	delete ana_algo;
 	delete obj_func;

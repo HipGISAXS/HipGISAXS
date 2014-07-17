@@ -3,7 +3,7 @@
  *
  *  File: objective_func.cpp
  *  Created: Feb 02, 2014
- *  Modified: Sat 12 Jul 2014 10:47:18 AM PDT
+ *  Modified: Wed 16 Jul 2014 10:32:30 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -98,6 +98,10 @@ namespace hig{
             } // if
             mask_set_ = true;
         } // if
+		if(!mask_set_) {
+			mask_data_.clear();
+			mask_data_.resize(n_par_ * n_ver_, 1);
+		} // if
         return true;
 	} // HipGISAXSObjectiveFunction::set_reference_data()
 
@@ -145,9 +149,13 @@ namespace hig{
 		} // if
 
 		// compute error/distance
+		std::cout << "+++++ computing distance ..." << std::endl;
 		float_t* ref_data = (*ref_data_).data();
+		if(ref_data == NULL) std::cerr << "woops: ref_data is NULL" << std::endl;
 		unsigned int* mask_data = NULL;
-		if(mask_set_) mask_data = &mask_data_[0];
+		//if(mask_set_) mask_data = &mask_data_[0];
+		mask_data = &mask_data_[0];
+		if(mask_data == NULL) std::cerr << "warning: mask_data is NULL" << std::endl;
 		(*pdist_)(gisaxs_data, ref_data, mask_data, n_par_ * n_ver_, curr_dist_);
 
 		// write to output file
@@ -182,6 +190,7 @@ namespace hig{
 		hipgisaxs_.compute_gisaxs(gisaxs_data);
 		if(ref_data_ == NULL) ref_data_ = new ImageData(n_par_, n_ver_);
 		(*ref_data_).set_data(gisaxs_data);
+		std::cout << "++ Reference data set after simulation" << std::endl;
 
 		return true;
 	} // ObjectiveFunction::operator()()

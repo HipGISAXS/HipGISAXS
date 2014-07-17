@@ -3,7 +3,7 @@
  *
  *  File: FitLMVMAlgo.hpp
  *  Created: Dec 26, 2013
- *  Modified: Mon 03 Feb 2014 12:35:02 PM PST
+ *  Modified: Wed 16 Jul 2014 10:40:48 PM PDT
  *  Description: Defines the TAO LMVM Algorithm
  *
  *  Author: Slim Chourou <stchourou@lbl.gov>
@@ -41,9 +41,9 @@ namespace hig{
 
 
   public:
-    FitLMVMAlgo() { name_= algo_lmvm; max_iter_ = 50; max_hist_ = 100; tol_ = 1e-6; }
+    FitLMVMAlgo() { name_= algo_lmvm; max_iter_ = 50; max_hist_ = 100; tol_ = 1e-10; }
     FitLMVMAlgo(ObjectiveFunction* obj) {
-		name_= algo_lmvm; obj_func_ = obj; max_iter_ = 50; max_hist_ = 100; tol_ = 1e-6;
+		name_= algo_lmvm; obj_func_ = obj; max_iter_ = 50; max_hist_ = 100; tol_ = 1e-10;
 		num_obs_ = (*obj_func_).data_size();
 		num_params_ = (*obj_func_).num_fit_params();
 		x0_ = (*obj_func_).fit_param_init_values();

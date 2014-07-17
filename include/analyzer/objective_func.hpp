@@ -37,6 +37,8 @@ namespace hig {
 			virtual bool set_reference_data(int) = 0;
 			virtual bool set_reference_data(char*) = 0;
 			virtual unsigned int data_size() const = 0;
+			float_t* get_reference_data() { return ref_data_->data(); }
+			unsigned int* get_mask_data() { return &mask_data_[0]; }
 			//virtual unsigned int n_par() const { }
 			//virtual unsigned int n_ver() const { }
 			#ifdef USE_MPI

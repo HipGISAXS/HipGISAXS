@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs.hpp
  *  Created: Jan 26, 2014
- *  Modified: Wed 26 Feb 2014 08:20:41 AM PST
+ *  Modified: Wed 16 Jul 2014 05:17:24 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -29,6 +29,7 @@
 #include <analyzer/hipgisaxs_fit_lmvm.hpp>
 
 #include <analyzer/distance_functions.hpp>
+#include <analyzer/objective_func_hipgisaxs.hpp>
 #include <analyzer/objective_func.hpp>
 #include <analyzer/hipgisaxs_ana.hpp>
 

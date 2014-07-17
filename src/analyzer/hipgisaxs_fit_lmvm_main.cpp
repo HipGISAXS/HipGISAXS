@@ -2,7 +2,7 @@
 
 #include <analyzer/distance_functions.hpp>
 #include <analyzer/hipgisaxs_fit_lmvm.hpp>
-#include <analyzer/objective_func.hpp>
+#include <analyzer/objective_func_hipgisaxs.hpp>
 #include <analyzer/hipgisaxs_ana.hpp>
 
 
@@ -22,7 +22,8 @@ int main(int narg, char** args) {
 	hig::HipGISAXSAnalyzer ana;									    // define the analyzer
 	ana.add_analysis_algo(&lmvm);								    // add analysis algo
 																    // similarly add more if needed
-	ana.analyze(narg, args, 0);									    // perform the analysis
-
+	ana.analyze(narg, args, 1);								    // perform the analysis
+																// takes flag >= 0 for reading ref data
+																// and flag < 0 for computing ref data
 	return 0;
 } // main()
