@@ -1,7 +1,7 @@
 
 MPI_DIR = /usr/local/openmpi
-TAO_DIR = /usr/local/tao-2.1-p1
-PETSC_DIR = /usr/local/petsc-3.3-p6-gnu/
+TAO_DIR = /usr/local/tao-2.2.0
+PETSC_DIR = /usr/local/petsc-3.4.3-gnu
 HIPGISAXS_DIR = ../..
 HDF5_DIR = /usr/local/hdf5-1.8.9
 TIFF_DIR = /usr/local/tiff-4.0.2
@@ -57,7 +57,7 @@ ALL_LDFLAGS = $(MPI_LDFLAGS) $(TAO_LDFLAGS) $(GCC_LDFLAGS) $(PETSC_LDFLAGS) \
 ALL_LIBS = $(MPI_LIBS) $(TAO_LIBS) $(PETSC_LIBS) $(HIPGISAXS_LIBS) $(HDF5_LIBS) \
 		   $(TIFF_LIBS) $(BOOST_LIBS)
 
-OBJECTS = ImageData.o analysis_algorithm.o objective_func.o hipgisaxs_ana.o 
+OBJECTS = ImageData.o analysis_algorithm.o objective_func.o hipgisaxs_ana.o objective_func_hipgisaxs.o
 
 POUND_OBJS = hipgisaxs_fit_pounders.o
 POUND_HIP_OBJS = $(POUND_OBJS) hipgisaxs_fit_pounders_main.o
@@ -68,10 +68,10 @@ LMVM_HIP_OBJS = $(LMVM_OBJS) hipgisaxs_fit_lmvm_main.o
 F1_OBJS = objective_func_poly_one.o
 F1_HIP_OBJS = $(F1_OBJS) objective_func_poly_one_main.o
 
-PSO_OBJS = hipgisaxs_fit_pso.o hipgisaxs_fit_pso_particle.o objective_func_hipgisaxs.o
+PSO_OBJS = hipgisaxs_fit_pso.o hipgisaxs_fit_pso_particle.o
 PSO_HIP_OBJS = $(PSO_OBJS) hipgisaxs_fit_pso_main.o
 
-BF_OBJS = hipgisaxs_fit_bruteforce.o objective_func_hipgisaxs.o
+BF_OBJS = hipgisaxs_fit_bruteforce.o
 BF_HIP_OBJS = $(BF_OBJS) hipgisaxs_fit_bruteforce_main.o
 
 HIP_OBJS = hipgisaxs_fit_main.o $(POUND_OBJS) $(PSO_OBJS) $(BF_OBJS) $(LMVM_OBJS)
