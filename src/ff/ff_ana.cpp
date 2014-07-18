@@ -3,7 +3,6 @@
  *
  *  File: ff_ana.cpp
  *  Created: Jul 12, 2012
- *  Modified: Wed 19 Mar 2014 04:46:01 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -331,9 +330,9 @@ namespace hig {
 		mqy = qy * rot[3] + qx * rot[4] + qz * rot[5];
 		mqz = qy * rot[6] + qx * rot[7] + qz * rot[8];
 		// rotation transposed
-		//mqx = qy * rot[0] + qx * rot[3] + qz * rot[6];
-		//mqy = qy * rot[1] + qx * rot[4] + qz * rot[7];
-		//mqz = qy * rot[2] + qx * rot[5] + qz * rot[8];
+		/*mqx = qx * rot[0] + qy * rot[3] + qz * rot[6];
+		mqy = qx * rot[1] + qy * rot[4] + qz * rot[7];
+		mqz = qx * rot[2] + qy * rot[5] + qz * rot[8];*/
 	} // AnalyticFormFactor::compute_meshpoints()
 
 } // namespace hig

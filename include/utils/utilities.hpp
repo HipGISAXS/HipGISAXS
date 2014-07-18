@@ -3,7 +3,7 @@
  *
  *  File: utilities.hpp
  *  Created: Jun 25, 2012
- *  Modified: Sun 26 Jan 2014 10:07:03 AM PST
+ *  Modified: Fri 18 Jul 2014 10:36:17 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -211,6 +211,14 @@ namespace hig {
 
 	// adding two data sets into one
 	extern bool add_data_elements(float_t* &dst, const float_t* src1, const float* src2, int size);
+
+
+	// for complex numbers
+	//extern inline float_t magnitude(complex_t);
+	inline float_t magnitude(complex_t z) { return sqrt(z.real() * z.real() + z.imag() * z.imag()); }
+	extern inline bool conjugate(complex_t*, int);
+	extern inline bool normalize(complex_t*, float_t*, int);
+	extern inline float_t gaussian(float_t, float_t, float_t, float_t, float_t, bool);
 
 } // namespace hig
 
