@@ -3,7 +3,6 @@
  *
  *  File: ff_ana_trunc_pyramid.cpp
  *  Created: Jul 12, 2012
- *  Modified: Sun 26 Jan 2014 10:25:42 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -45,6 +44,7 @@ namespace hig {
 		std::vector<float_t> h, distr_h;
 		std::vector<float_t> b, distr_b;
 		for(shape_param_iterator_t i = params.begin(); i != params.end(); ++ i) {
+			std::cout << "-------" << params.size() << "------- " << (*i).second.type() << std::endl;
 			switch((*i).second.type()) {
 				case param_xsize:
 					param_distribution((*i).second, x, distr_x);
@@ -54,6 +54,7 @@ namespace hig {
 					break;
 				case param_height:
 					param_distribution((*i).second, h, distr_h);
+					std::cout << "---------------------------- " << h.size() << ", " << distr_h.size() << std::endl;
 					break;
 				case param_baseangle:
 					param_distribution((*i).second, b, distr_b);
@@ -82,6 +83,11 @@ namespace hig {
 			ff.clear(); ff.reserve(nqx_ * nqy_ * nqz_);
 			for(int i = 0; i < nqx_ * nqy_ * nqz_; ++ i) ff.push_back(complex_t(0, 0));
 
+			std::cout << "nqx = " << nqx_ << ", nqy = " << nqy_ << ", nqz = " << nqz_ << std::endl;
+			std::cout << rot_[0] << " " << rot_[1] << " " << rot_[2] << std::endl;
+			std::cout << rot_[3] << " " << rot_[4] << " " << rot_[5] << std::endl;
+			std::cout << rot_[6] << " " << rot_[7] << " " << rot_[8] << std::endl;
+
 			#pragma omp parallel for collapse(3)
 			for(int zi = 0; zi < nqz_; ++ zi) {
 				for(int yi = 0; yi < nqy_; ++ yi) {
@@ -90,19 +96,27 @@ namespace hig {
 						compute_meshpoints(QGrid::instance().qx(xi), QGrid::instance().qy(yi),
 											QGrid::instance().qz_extended(zi), rot_, mqx, mqy, mqz);
 
+						//std::cout << "HOHHOOHOHOHHOH " << x.size() << ", " << y.size() << ", " << h.size() << ", " << b.size() << std::endl;
 						complex_t temp_ff(0.0, 0.0);
 						for(int i_x = 0; i_x < x.size(); ++ i_x) {
 							for(int i_y = 0; i_y < y.size(); ++ i_y) {
 								for(int i_h = 0; i_h < h.size(); ++ i_h) {
 									for(int i_b = 0; i_b < b.size(); ++ i_b) {
-										float_t xx = x[i_x] * (1 - tr);
-										float_t hh = h[i_h] * (1 - tr);
-										float_t h2 = h[i_h] * tr / 2;
-										float_t yy = y[i_y] * (1 - tr);
-										float_t bb = b[i_b] * PI_ / 180;
-										float_t prob = distr_x[i_h] * distr_y[i_y] * distr_h[i_h];
+									  float_t xx = x[i_x] ;// * (1 - tr);
+									  float_t hh = h[i_h];// * (1 - tr);
+      									  float_t yy = y[i_y] ;  // * (1 - tr);
+									  float_t bb = b[i_b] * PI_ / 180;
+									  float_t prob = distr_x[i_x] * distr_y[i_y] * distr_h[i_h] * distr_b[i_b];
+									  /*
+									  std::cout << "P(x)= " << distr_x[i_x]	<< " for x =  " << xx << "\n ";
+									  std::cout << "P(y)= " << distr_y[i_y] << " for y =  " << yy << "\n ";
+									  std::cout << "P(h)= " << distr_h[i_h] <<  " for h =  " << hh << "\n ";
+									  std::cout << "P(b)= " << distr_b[i_b] << " for b =  " << bb << "\n ";								  */
+									  temp_ff += prob * truncated_pyramid_core(1, 0, 0.01,
+											  		mqx, mqz, xx, yy, hh, bb, vector3_t(0, 0, 0));
 
-										complex_t temp_val(0.0, 0.0);
+									  /* this is for polyhedron FIXME
+										   complex_t temp_val(0.0, 0.0);
 										temp_val += 4 * yy * xx * sinc(mqx * xx) *
 													sinc(mqy * yy) * sinc(mqz * hh / (float_t) 2.0);
 										temp_val += truncated_pyramid_core(1, 0,
@@ -117,8 +131,7 @@ namespace hig {
 													mqx, mqy, mqz, xx, yy, h2, bb, vector3_t(xx, 0, 0));
 										temp_val += truncated_pyramid_core(2, - PI_ / 2,
 													mqx, mqy, mqz, xx, yy, h2, bb, vector3_t(- xx, 0, 0));
-
-										temp_ff += prob * temp_val;
+													temp_ff += prob * temp_val;*/
 									} // for b
 								} // for h
 							} // for y
@@ -126,7 +139,7 @@ namespace hig {
 
 						complex_t temp1 = mqx * transvec[0] + mqy * transvec[1] + mqz * transvec[2];
 						unsigned int index = nqx_ * nqy_ * zi + nqx_ * yi + xi;
-						ff[index] = temp_ff * exp(complex_t(-temp1.imag(), temp1.real()));
+						ff[index] = temp_ff * exp(complex_t(0, 1) * temp1);
 					} // for x
 				} // for y
 			} // for z
@@ -158,30 +171,55 @@ namespace hig {
 		complex_t q3 = (rqz + qxy_s) / (float_t) 2.0;
 		complex_t q4 = (-rqz + qxy_s) / (float_t) 2.0;
 
-		complex_t sinc_eiq1 = sinc(q1 * h) * complex_t(0, 1) * exp(q1 * h);
-		complex_t sinc_eiq2 = sinc(q2 * h) * complex_t(0, 1) * exp(- q2 * h);
-		complex_t sinc_eiq3 = sinc(q3 * h) * complex_t(0, 1) * exp(q3 * h);
-		complex_t sinc_eiq4 = sinc(q4 * h) * complex_t(0, 1) * exp(- q4 * h);
+		/* error in sinc expression fixed 03/06/2014 -Slim   */
+		complex_t sinc_eiq1 = sinc(q1 * h) * exp(  complex_t(0, 1) * q1 * h);
+		complex_t sinc_eiq2 = sinc(q2 * h) * exp(- complex_t(0, 1) * q2 * h);
+		complex_t sinc_eiq3 = sinc(q3 * h) * exp(  complex_t(0, 1) * q3 * h);
+		complex_t sinc_eiq4 = sinc(q4 * h) * exp(- complex_t(0, 1) * q4 * h);
 
 		complex_t k1 = sinc_eiq1 + sinc_eiq2;
 		complex_t k2 = - complex_t(0, 1) * (sinc_eiq1 - sinc_eiq2);
 		complex_t k3 = sinc_eiq3 + sinc_eiq4;
 		complex_t k4 = - complex_t(0, 1) * (sinc_eiq3 - sinc_eiq4);
 
+		complex_t qxqy = rqx * rqy;
+		complex_t qxqy_conj = complex_t(qxqy.real() , - qxqy.imag() );
+		float_t qxqy_amp2 = qxqy.real()*qxqy.real() + qxqy.imag() * qxqy.imag();
+		complex_t qxqy_inv = qxqy_conj /qxqy_amp2;
+
+		//		std::cout << qxy_s << " qxy_d=" << qxy_d << " q1=" << q1<< " q2=" << q2 << " q3=" << q3<< " q4=" << q4 << " k1=" << k1<< " k2=" << k2<< " k3=" << k3<< " k4=" << k4 << " coeff=" << qxqy_inv  << std::endl; 
+		/*
 		if((boost::math::fpclassify(rqx.real()) == FP_ZERO &&
 				boost::math::fpclassify(rqx.imag()) == FP_ZERO) ||
 				(boost::math::fpclassify(rqy.real()) == FP_ZERO &&
 				 boost::math::fpclassify(rqy.imag()) == FP_ZERO)) {
+//			std::cout << "=========== "
+//					<< temp_rot1[0] << "*(" << mqx.real() << "+i" << mqx.imag() << ")+"
+//					<< temp_rot2[0] << "*(" << mqy.real() << "+i" << mqy.imag() << ")+"
+//					<< temp_rot3[0] << "*(" << mqz.real() << "+i" << mqz.imag() << ")" << std::endl;
 			// FIXME: this is temporary fix !!!!! ...
+//			std::cout << "HAHA: " << rqx.real() << "," << rqx.imag() << " " << rqy.real() << "," << rqy.imag() << std::endl;
 			return complex_t(0.0, 0.0);
 		} // if
-		complex_t val = (h / (rqx * rqy)) * (cos(rqx * x - rqy * y) * k1 +
-											sin(rqx * x - rqy * y) * k2 -
-											cos(rqx * x + rqy * y) * k3 -
-											sin(rqx * x + rqy * y) * k4) *
-											exp(complex_t(0, 1) *
-											(rqx * transvec[0] + rqy * transvec[1] + rqz * transvec[2]));
+		*/
+	     
+		float mach_eps = std::numeric_limits<float>::epsilon() ; //move to constants.hpp    
+	      
+		complex_t val = complex_t( 0.0 ,  0.0 );
 
+		if(magnitude(mqx) > mach_eps && magnitude(mqy) > mach_eps) { //   fabs(mqx.real()) > ZERO  && fabs(mqy.real()) > ZERO ) 
+	     
+		  val = (h / (rqx * rqy)) * (
+					   cos(rqx * x - rqy * y) * k1 +
+					   sin(rqx * x - rqy * y) * k2 -
+					   cos(rqx * x + rqy * y) * k3 -
+					   sin(rqx * x + rqy * y) * k4
+						     ) *
+		  exp( complex_t(0, 1) *
+		      (rqx * transvec[0] + rqy * transvec[1] + rqz * transvec[2]) );
+		    
+		}
+		//	std::cout << "FF = "  << val << std::endl;
 		return val;
 	} // AnalyticFormFactor::truncated_pyramid_core()
 
@@ -190,6 +228,10 @@ namespace hig {
 													vector3_t& r1, vector3_t& r2, vector3_t& r3) {
 		float_t s = sin(rang);
 		float_t c = cos(rang);
+
+		////////////////// this is just a temporary fix .............. TODO
+		if(fabs(s) < 0.5) s = 0;
+		if(fabs(c) < 0.5) c = 0;
 
 		switch(axis) {
 			case 1:

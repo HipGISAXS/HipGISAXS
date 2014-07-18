@@ -3,7 +3,7 @@
  *
  *  File: utilities.cpp
  *  Created: Jun 25, 2012
- *  Modified: Sun 26 Jan 2014 10:42:36 AM PST
+ *  Modified: Fri 18 Jul 2014 10:36:45 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -26,6 +26,7 @@
 //#include <boost/math/special_functions/bessel.hpp>
 //#include <pari/pari.h>	// for bessel functions
 
+#include <common/constants.hpp>
 #include <utils/utilities.hpp>
 #include <numerics/numeric_utils.hpp>
 
@@ -737,5 +738,42 @@ namespace hig {
 											(a * x1 + b - a / ik) * exp(ik * x1)));
 		} // if-else
 	} // integral_xe()
+
+
+	/**
+	 * some more operations on complex numbers
+	 */
+
+	//inline float_t magnitude(complex_t z) {
+	//	return sqrt(z.real() * z.real() + z.imag() * z.imag());
+	//} // magnitude()
+
+	inline bool normalize(complex_t* x, float_t* xn, int size) {
+		if(x == NULL) return false;
+		if(xn == NULL) xn = new (std::nothrow) float_t[size];
+
+		float_t max = magnitude(x[0]);
+		for(int i = 0; i < size; ++ i) {
+			xn[i] = magnitude(x[i]);
+			if(xn[i] > max) max = xn[i];
+		} // for
+
+		for(int i = 0; i < size; ++ i) xn[i] = xn[i] / max;
+
+		return true;
+	} // normalize()
+
+	inline bool conjugate(complex_t* x, int size) {
+		if(x == NULL) return false;
+		for(int i = 0; i < size; ++ i) x[i] = complex_t(x[i].real(), -x[i].imag());
+		return true;
+	} // conjugate()
+
+
+	inline float_t gaussian(float_t x, float_t y, float_t mux, float_t muy, float_t sig, bool isnorm) {
+		float_t norm = -1.0;
+		if(isnorm) norm = sig * sqrt(2 * PI_);
+		return exp(-((x - mux) * (x - mux) + (y - muy) * (y - muy)) / (2 * sig * sig)) / norm;
+	} // gaussian()
 
 } // namespace hig
