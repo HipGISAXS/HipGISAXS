@@ -44,7 +44,6 @@ namespace hig {
 		std::vector<float_t> h, distr_h;
 		std::vector<float_t> b, distr_b;
 		for(shape_param_iterator_t i = params.begin(); i != params.end(); ++ i) {
-			std::cout << "-------" << params.size() << "------- " << (*i).second.type() << std::endl;
 			switch((*i).second.type()) {
 				case param_xsize:
 					param_distribution((*i).second, x, distr_x);
@@ -54,7 +53,6 @@ namespace hig {
 					break;
 				case param_height:
 					param_distribution((*i).second, h, distr_h);
-					std::cout << "---------------------------- " << h.size() << ", " << distr_h.size() << std::endl;
 					break;
 				case param_baseangle:
 					param_distribution((*i).second, b, distr_b);
@@ -82,11 +80,6 @@ namespace hig {
 			std::cout << "-- Computing truncated pyramid FF on CPU ..." << std::endl;
 			ff.clear(); ff.reserve(nqx_ * nqy_ * nqz_);
 			for(int i = 0; i < nqx_ * nqy_ * nqz_; ++ i) ff.push_back(complex_t(0, 0));
-
-			std::cout << "nqx = " << nqx_ << ", nqy = " << nqy_ << ", nqz = " << nqz_ << std::endl;
-			std::cout << rot_[0] << " " << rot_[1] << " " << rot_[2] << std::endl;
-			std::cout << rot_[3] << " " << rot_[4] << " " << rot_[5] << std::endl;
-			std::cout << rot_[6] << " " << rot_[7] << " " << rot_[8] << std::endl;
 
 			#pragma omp parallel for collapse(3)
 			for(int zi = 0; zi < nqz_; ++ zi) {
