@@ -946,9 +946,9 @@ namespace hig {
 				// define r_norm (grain orientation by tau and eta)
 				// define full grain rotation matrix r_total = r_phi * r_norm
 				// TODO: ... i think these tau eta zeta can be computed on the fly to save memory ...
-				float_t rot1 = nn[0 * num_gr + grain_i];
-				float_t rot2 = nn[1 * num_gr + grain_i];
-				float_t rot3 = nn[2 * num_gr + grain_i];
+				float_t rot1 = nn[0 * num_grains + grain_i];
+				float_t rot2 = nn[1 * num_grains + grain_i];
+				float_t rot3 = nn[2 * num_grains + grain_i];
 				vector3_t z1, z2, z3, e1, e2, e3, t1, t2, t3;
 				switch(r1axis) {
 					case 0:
@@ -1003,7 +1003,9 @@ namespace hig {
 							r_norm1, r_norm2, r_norm3, r_tot1, r_tot2, r_tot3);
 
 				/* center of unit cell replica */
-				vector3_t curr_dd_vec(dd[grain_i + 0], dd[grain_i + num_gr], dd[grain_i + 2 * num_gr]);
+				vector3_t curr_dd_vec(dd[grain_i + 0],
+										dd[grain_i + num_grains],
+										dd[grain_i + 2 * num_grains]);
 				vector3_t result(0.0, 0.0, 0.0);
 
 				mat_mul_3x1(rotation_matrix.r1_, rotation_matrix.r2_, rotation_matrix.r3_,
@@ -1179,6 +1181,7 @@ namespace hig {
 				if(multi_node_.size(struct_comm) > 1) {
 					// collect grain_ids from all procs in struct_comm
 					if(smaster) {
+						std::cout << "I AM NOW COLLECTING ALL GRAINS DATA" << std::endl;
 						id = new (std::nothrow) complex_t[num_grains * nqx_ * nqy_ * nqz_];
 					} // if
 					int *proc_sizes = new (std::nothrow) int[multi_node_.size(struct_comm)];
@@ -1191,6 +1194,14 @@ namespace hig {
 						proc_displacements[0] = 0;
 						for(int i = 1; i < multi_node_.size(struct_comm); ++ i)
 							proc_displacements[i] = proc_displacements[i - 1] + proc_sizes[i - 1];
+						std::cout << "PROC SIZES: ";
+						for(int i = 0; i < multi_node_.size(struct_comm); ++ i)
+							std::cout << proc_sizes[i] << " ";
+						std::cout << std::endl;
+						std::cout << "PROC DISPL: ";
+						for(int i = 0; i < multi_node_.size(struct_comm); ++ i)
+							std::cout << proc_displacements[i] << " ";
+						std::cout << std::endl;
 					} // if
 					multi_node_.gatherv(struct_comm, grain_ids, gmaster * num_gr * nqx_ * nqy_ * nqz_,
 										id, proc_sizes, proc_displacements);
