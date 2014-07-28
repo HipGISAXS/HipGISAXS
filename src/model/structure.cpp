@@ -3,7 +3,7 @@
  *
  *  File: structure.cpp
  *  Created: Jun 12, 2012
- *  Modified: Sun 26 Jan 2014 10:39:13 AM PST
+ *  Modified: Sun 27 Jul 2014 04:15:47 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -72,12 +72,12 @@ namespace hig {
 					if(hkl_ == "100") {
 						a_[0] = 1; a_[1] = 0; a_[2] = 0;
 						b_[0] = 0; b_[1] = 1; b_[2] = 0;
-						c_[0] = 0; b_[1] = 0; c_[2] = 1;
+						c_[0] = 0; c_[1] = 0; c_[2] = 1;
 						t_[0] = 0.5; t_[1] = 0.5; t_[2] = 0.5;
 					} else if(hkl_ == "110") {
 						a_[0] = 1; a_[1] = 0; a_[2] = 0;
 						b_[0] = 0.5; b_[1] = 0.5 / sqrt2; b_[2] = 0;
-						c_[0] = 0; b_[1] = 0; c_[2] = 1;
+						c_[0] = 0; c_[1] = 0; c_[2] = 1;
 						t_[0] = 0.5; t_[1] = 0; t_[2] = 0.5;
 					} else {
 						std::cerr << "error: invalid lattice type and hkl combination" << std::endl;
@@ -96,13 +96,13 @@ namespace hig {
 					if(hkl_ == "100") {
 						a_[0] = 1; a_[1] = 0; a_[2] = 0;
 						b_[0] = 0.5; b_[1] = 0.5; b_[2] = 0;
-						c_[0] = 0; b_[1] = 0; c_[2] = 1;
+						c_[0] = 0; c_[1] = 0; c_[2] = 1;
 						t_[0] = 0.5; t_[1] = 0; t_[2] = 0.5;
 					} else if(hkl_ == "111") {
 						a_[0] = 1; a_[1] = 0; a_[2] = 0;
 						b_[0] = 0.5; b_[1] = 1.0 / (2.0 * sqrt3); b_[2] = 0;
-						c_[0] = 0; b_[1] = 0; c_[2] = 2.0 / sqrt3;
-						t_[0] = sqrt3 / 3; t_[1] = 0; t_[2] = 1 / sqrt3;
+						c_[0] = 0; c_[1] = 0; c_[2] = 2.0 / sqrt3;
+						t_[0] = 1.0 / sqrt3; t_[1] = 0; t_[2] = 1 / sqrt3;
 					} else {
 						std::cerr << "error: invalid lattice type and khl combination" << std::endl;
 						return false;
@@ -112,15 +112,15 @@ namespace hig {
 				case lattice_fco:					// FCO
 					a_[0] = 1; a_[1] = 0; a_[2] = 0;
 					b_[0] = 0.5; b_[1] = tan(gamma_) / 2.0; b_[2] = 0;
-					c_[0] = 0; b_[1] = 0; c_[2] = ca_;
+					c_[0] = 0; c_[1] = 0; c_[2] = ca_;
 					t_[0] = 0.5; t_[1] = 0; t_[2] = ca_ / 2;
 					break;
 
 				case lattice_hcp:					// HCP
 					a_[0] = 1; a_[1] = 0; a_[2] = 0;
 					b_[0] = 0.5; b_[1] = 1.0 / (2.0 * sqrt3); b_[2] = 0;
-					c_[0] = 0; b_[1] = 0; c_[2] = ca_ / sqrt3;
-					t_[0] = sqrt3 / 3.0; t_[1] = 0; t_[2] = ca_ / (2 * sqrt3);
+					c_[0] = 0; c_[1] = 0; c_[2] = ca_ / sqrt3;
+					t_[0] = 1.0 / sqrt3; t_[1] = 0; t_[2] = ca_ / (2 * sqrt3);
 					break;
 
 				case lattice_hex:					// HEX
