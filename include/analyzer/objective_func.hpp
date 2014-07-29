@@ -24,7 +24,7 @@ namespace hig {
 			ImageData* ref_data_;		// reference data
 			bool mask_set_;				// whether mask data is set or not
 			uint_vec_t mask_data_;		// mask with 0s and 1s
-			float_vec_t curr_dist_;		// current computed distance output
+			//float_vec_t curr_dist_;		// current computed distance output
 
 		public:
 			virtual float_vec_t operator()(const float_vec_t&) = 0;
@@ -38,7 +38,7 @@ namespace hig {
 			virtual bool set_reference_data(char*) = 0;
 			virtual unsigned int data_size() const = 0;
 			float_t* get_reference_data() { return ref_data_->data(); }
-			unsigned int* get_mask_data() { return &mask_data_[0]; }
+			unsigned int* get_mask_data() { return &(mask_data_[0]); }
 			//virtual unsigned int n_par() const { }
 			//virtual unsigned int n_ver() const { }
 			#ifdef USE_MPI

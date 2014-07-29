@@ -3,7 +3,7 @@
  *
  *  File:
  *  Created: Feb 03, 2014
- *  Modified: Mon 03 Feb 2014 12:21:18 PM PST
+ *  Modified: Mon 28 Jul 2014 12:40:10 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -58,19 +58,20 @@ namespace hig {
 		} // for
 		std::cout << std::endl;
 	
-		curr_dist_.clear();
+		//curr_dist_.clear();
+		float_vec_t curr_dist;
 		float_t* ref_data = ref_data_->data();
 		float_t* d = &data[0];
-		(*pdist_)(ref_data, d, data.size(), curr_dist_);
+		(*pdist_)(ref_data, d, data.size(), curr_dist);
 
 		std::cout << " ** reference:\t";
 		for(int i = 0; i < ref_data_->size(); ++ i) std::cout << ref_data[i] << " ";
 		std::cout << std::endl;
 		std::cout << " ** residual:\t";
-		for(int i = 0; i < curr_dist_.size(); ++ i) std::cout << curr_dist_[i] << " ";
+		for(int i = 0; i < curr_dist.size(); ++ i) std::cout << curr_dist[i] << " ";
 		std::cout << std::endl;
 
-		return curr_dist_;
+		return curr_dist;
 	} // PolyOneObjectiveFunction::operator()
 
 

@@ -14,8 +14,9 @@
 
 namespace hig {
 
+	// used in pounders
 	PetscErrorCode EvaluateFunction(TaoSolver tao, Vec X, Vec F, void *ptr) {
-		PetscFunctionBegin;
+//		PetscFunctionBegin;
 		PetscErrorCode ierr;
 
 		PetscReal *x, *ff;
@@ -34,21 +35,25 @@ namespace hig {
 		unsigned int* mask_data = (*(ObjectiveFunction*) ptr).get_mask_data();
 		for(int i = 0; i < data_size; ++ i) {
 			ff[i] = mask_data[i] * temp[i];
+			ff[i] = temp[i];
+			if(i == data_size - 1) std::cout << i << "," << ff[i] << std::endl;
 			//err += mask_data[i] * (temp[i] * temp[i] / ref_data[i]);
-			err += mask_data[i] * (temp[i] * temp[i]);
+			//err += mask_data[i] * (temp[i] * temp[i]);
+			err += ff[i] * ff[i];
 		} // for
 
 		ierr = VecRestoreArray(F, &ff); CHKERRQ(ierr);
 
 		std::cout << "Distance = " << err << std::endl;
-		std::cout << "Eval X =\n" ;
-		VecView(X, PETSC_VIEWER_STDOUT_WORLD);
+//		std::cout << "Eval X =\n" ;
+//		VecView(X, PETSC_VIEWER_STDOUT_WORLD);
 
-		PetscFunctionReturn(0);
+//		PetscFunctionReturn(0);
 		return 0;
 	} // EvaluateFunction()
 
 
+	// used in lmvm
 	PetscReal EvaluateFunction(TaoSolver tao, float_vec_t X, void *ptr) {
 		std::cout << "evaluate function ..." << std::endl;
 		// Compute F(X)

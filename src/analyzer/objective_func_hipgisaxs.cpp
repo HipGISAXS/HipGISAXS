@@ -3,7 +3,7 @@
  *
  *  File: objective_func.cpp
  *  Created: Feb 02, 2014
- *  Modified: Wed 16 Jul 2014 10:32:30 PM PDT
+ *  Modified: Mon 28 Jul 2014 01:29:24 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -34,7 +34,7 @@ namespace hig{
 		mask_data_.clear();
 		mask_set_ = false;
 		pdist_ = d;
-		curr_dist_.clear();
+		//curr_dist_.clear();
 
 	} // HipGISAXSObjectiveFunction::HipGISAXSObjectiveFunction()
 
@@ -58,7 +58,7 @@ namespace hig{
 		mask_data_.clear();
 		mask_set_ = false;
 		pdist_ = NULL;
-		curr_dist_.clear();
+		//curr_dist_.clear();
 
 	} // HipGISAXSObjectiveFunction::HipGISAXSObjectiveFunction()
 
@@ -96,7 +96,6 @@ namespace hig{
                             << std::endl;
                 return false;
             } // if
-            mask_set_ = true;
         } // if
 		if(!mask_set_) {
 			mask_data_.clear();
@@ -107,6 +106,7 @@ namespace hig{
 
 
 	bool HipGISAXSObjectiveFunction::read_mask_data(string_t filename) {
+		mask_data_.clear();
 		if(filename.empty()) {
 			mask_data_.resize(n_par_ * n_ver_, 1);
 			return true;
@@ -123,6 +123,7 @@ namespace hig{
 			mask_data_.push_back(val);
 		} // while
 		maskf.close();
+		mask_set_ = true;
 		return true;
 	} // HipGISAXSObjectiveFunction::read_mask_data()
 
@@ -152,21 +153,22 @@ namespace hig{
 		std::cout << "+++++ computing distance ..." << std::endl;
 		float_t* ref_data = (*ref_data_).data();
 		if(ref_data == NULL) std::cerr << "woops: ref_data is NULL" << std::endl;
-		unsigned int* mask_data = NULL;
-		//if(mask_set_) mask_data = &mask_data_[0];
-		mask_data = &mask_data_[0];
-		if(mask_data == NULL) std::cerr << "warning: mask_data is NULL" << std::endl;
-		(*pdist_)(gisaxs_data, ref_data, mask_data, n_par_ * n_ver_, curr_dist_);
+		unsigned int* mask_data = &(mask_data_[0]);
+//		unsigned int* mask_data = new (std::nothrow) unsigned int[n_par_ * n_ver_];
+//		memset(mask_data, 0, n_par_ * n_ver_ * sizeof(unsigned int));
+		float_vec_t curr_dist;
+		(*pdist_)(gisaxs_data, ref_data, mask_data, n_par_ * n_ver_, curr_dist);
+//		delete[] mask_data;
 
 		// write to output file
 		std::string prefix(HiGInput::instance().param_pathprefix()+"/"+HiGInput::instance().runname());
 		std::ofstream out(prefix + "/convergance.dat", std::ios::app);
-		for(float_vec_t::const_iterator i = curr_dist_.begin(); i != curr_dist_.end(); ++ i)
+		for(float_vec_t::const_iterator i = curr_dist.begin(); i != curr_dist.end(); ++ i)
 			out << (*i) << " ";
 		out << std::endl;
 		out.close();
 
-		return curr_dist_;
+		return curr_dist;
 	} // ObjectiveFunction::operator()()
 
 

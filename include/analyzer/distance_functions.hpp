@@ -3,7 +3,7 @@
   *
   *  File: distance_functions.hpp
   *  Created: May 17, 2013
-  *  Modified: Fri 11 Jul 2014 10:03:43 AM PDT
+  *  Modified: Mon 28 Jul 2014 12:45:19 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -22,7 +22,7 @@
 // The base class used everywhere
 class DistanceMeasure {
 	public:
-		virtual bool operator()(float*& ref, float*& data, unsigned int* mask, unsigned int size,
+		virtual bool operator()(float*& ref, float*& data, unsigned int*& mask, unsigned int size,
 								std::vector<float>& dist) const = 0;
 	//	virtual float operator()(float*& ref, float*& data, unsigned int size) const { }
 }; // class DistanceMeasure
@@ -34,7 +34,7 @@ class AbsoluteDifferenceError : public DistanceMeasure {
 		AbsoluteDifferenceError() { }
 		~AbsoluteDifferenceError() { }
 
-		bool operator()(float*& ref, float*& data, unsigned int* mask, unsigned int size,
+		bool operator()(float*& ref, float*& data, unsigned int*& mask, unsigned int size,
 						std::vector<float>& dist) const {
 			if(ref == NULL || data == NULL) return false;
 			double dist_sum = 0.0;
@@ -55,7 +55,7 @@ class ResidualVector : public DistanceMeasure {
 		~ResidualVector() { }
 
 		//std::vector<float> operator()(float*& ref, float*& data, unsigned int size) const {
-		bool operator()(float*& ref, float*& data, unsigned int* mask, unsigned int size,
+		bool operator()(float*& ref, float*& data, unsigned int*& mask, unsigned int size,
 						std::vector<float>& dist) const {
 			dist.clear();
 			for(int i = 0; i < size; ++ i) {
@@ -72,7 +72,7 @@ class AbsoluteDifferenceSquare : public DistanceMeasure {
 		AbsoluteDifferenceSquare() { }
 		~AbsoluteDifferenceSquare() { }
 
-		bool operator()(float*& ref, float*& data, unsigned int* mask, unsigned int size,
+		bool operator()(float*& ref, float*& data, unsigned int*& mask, unsigned int size,
 						std::vector<float>& dist) const {
 			if(ref == NULL || data == NULL || mask == NULL) return false;
 			double dist_sum = 0.0;
@@ -93,7 +93,7 @@ class AbsoluteDifferenceSquareNorm : public DistanceMeasure {
 		AbsoluteDifferenceSquareNorm() { }
 		~AbsoluteDifferenceSquareNorm() { }
 
-		bool operator()(float*& ref, float*& data, unsigned int* mask, unsigned int size,
+		bool operator()(float*& ref, float*& data, unsigned int*& mask, unsigned int size,
 						std::vector<float>& dist) const {
 			if(ref == NULL || data == NULL) return false;
 			double dist_sum = 0.0;
@@ -117,7 +117,7 @@ class AbsoluteDifferenceNorm : public DistanceMeasure {
 		AbsoluteDifferenceNorm() { }
 		~AbsoluteDifferenceNorm() { }
 
-		bool operator()(float*& ref, float*& data, unsigned int* mask, unsigned int size,
+		bool operator()(float*& ref, float*& data, unsigned int*& mask, unsigned int size,
 						std::vector<float>& dist) const {
 			if(ref == NULL || data == NULL) return false;
 			double dist_sum = 0.0;
