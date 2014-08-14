@@ -3,7 +3,6 @@
  *
  *  File: sf.hpp
  *  Created: Jun 18, 2012
- *  Modified: Wed 19 Mar 2014 01:51:50 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
