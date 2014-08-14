@@ -26,6 +26,8 @@
 #include <fstream>
 #include <vector>
 
+#include <common/typedefs.hpp>
+
 namespace hig {
 
 	class RawShapeReader {

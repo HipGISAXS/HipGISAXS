@@ -3,7 +3,7 @@
  *
  *  File: ff_num.cpp
  *  Created: Jul 18, 2012
- *  Modified: Sun 26 Jan 2014 10:26:15 AM PST
+ *  Modified: Thu 14 Aug 2014 01:33:52 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -37,6 +37,7 @@
 #include <model/qgrid.hpp>
 #include <utils/utilities.hpp>
 #include <file/objectshape_reader.hpp>
+#include <file/rawshape_reader.hpp>
 
 namespace hig {
 
@@ -756,7 +757,8 @@ namespace hig {
 		// TODO: shape definition is already in HigInput ...
 		// utilize ...
 		ShapeFileType type = get_shapes_file_format(filename);
-		if(type == shape_file_data);
+		if(type == shape_file_data)
+			RawShapeReader temp(filename, temp_shape_def, num_triangles);
 		else if(type == shape_file_object)
 			ObjectShapeReader temp(filename, temp_shape_def, num_triangles);
 		else if(type == shape_file_hdf5)

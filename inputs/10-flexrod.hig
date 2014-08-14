@@ -1,7 +1,7 @@
 hipGisaxsInput = {
 	shape = {
 		key = "s1",	 				# a unique key to identify this shape in this file
-		name = "data/flexrod_new.dat"		# shape name
+		name = "data/flexrod_new.hd5"		# shape name
 	},
 	layer = {
 		key = "substr",	 	# special key for case of the substrate layer infinite in lower half space
