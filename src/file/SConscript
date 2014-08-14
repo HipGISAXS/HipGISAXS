@@ -1,7 +1,7 @@
 Import('env')
 
 objs = [ ]
-sources = ['read_oo_input.cpp', 'objectshape_reader.cpp']
+sources = ['read_oo_input.cpp', 'objectshape_reader.cpp', 'rawshape_reader.cpp']
 objs += env.Object(sources)
 
 h5sources = ['hdf5shape_reader.c']

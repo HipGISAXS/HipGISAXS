@@ -3,7 +3,6 @@
  *
  *  File: sf.cpp
  *  Created: Jun 18, 2012
- *  Modified: Sun 06 Jul 2014 12:27:50 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -26,127 +25,173 @@
 #include <boost/math/special_functions/fpclassify.hpp>
 
 #include <woo/timer/woo_boostchronotimers.hpp>
-
 #include <sf/sf.hpp>
-#include <model/qgrid.hpp>
+#include <model/qgrid.hpp> 
 #include <utils/utilities.hpp>
 
-namespace hig {
+ namespace hig {
 
-	StructureFactor::StructureFactor(): sf_(NULL), nx_(0), ny_(0), nz_(0) {
-	} // StructureFactor::StructureFactor()
-
-
-	StructureFactor::~StructureFactor() {
-		if(sf_ != NULL) delete[] sf_;
-		sf_ = NULL;
-	} // StructureFactor::~StructureFactor()
+ 	StructureFactor::StructureFactor(): sf_(NULL), nx_(0), ny_(0), nz_(0) {
+ 	} // StructureFactor::StructureFactor()
 
 
-	void StructureFactor::clear() {
-		if(sf_ != NULL) delete[] sf_;
-		sf_ = NULL;
-		nx_ = ny_ = nz_ = 0;
-	} // StructureFactor::clear()
+ 	StructureFactor::~StructureFactor() {
+ 		if(sf_ != NULL) delete[] sf_;
+ 		sf_ = NULL;
+ 	} // StructureFactor::~StructureFactor()
 
 
-	/**
-	 * compute structure factor sequentially on cpu
-	 */
-	bool StructureFactor::compute_structure_factor(std::string expt, vector3_t center,
-							Lattice* lattice, vector3_t repet,
-							vector3_t rotation_1, vector3_t rotation_2, vector3_t rotation_3
-							#ifdef USE_MPI
-								, woo::MultiNode& world_comm, const char* comm_key
-							#endif
-							) {
-		#ifdef USE_MPI
-			bool master = world_comm.is_master();
-		#else
-			bool master = true;
-		#endif
+ 	void StructureFactor::clear() {
+ 		if(sf_ != NULL) delete[] sf_;
+ 		sf_ = NULL;
+ 		nx_ = ny_ = nz_ = 0;
+ 	} // StructureFactor::clear()
 
-		woo::BoostChronoTimer maintimer, computetimer;
+ 	/**
+ 	 * compute structure factor sequentially on cpu
+ 	 */
+ 	bool StructureFactor::compute_structure_factor(std::string expt, vector3_t center,
+ 							Lattice* lattice, vector3_t repet, //float_t scaling,
+ 							vector3_t rotation_1, vector3_t rotation_2, vector3_t rotation_3
+ 							#ifdef USE_MPI
+ 								, woo::MultiNode& world_comm, const char* comm_key
+ 							#endif
+ 							) {
+ 		#ifdef USE_MPI
+ 			bool master = world_comm.is_master();
+ 		#else
+ 			bool master = true;
+ 		#endif
 
-		maintimer.start();
+ 		woo::BoostChronoTimer maintimer, computetimer;
 
-		nx_ = QGrid::instance().nqx();
-		ny_ = QGrid::instance().nqy();
-		if(expt == "saxs")
-			nz_ = QGrid::instance().nqz();
-		else if(expt == "gisaxs")
-			nz_ = QGrid::instance().nqz_extended();
-		else
-			return false;
+ 		maintimer.start();
 
-		if(repet[0] < 1) repet[0] = 1;
-		if(repet[1] < 1) repet[1] = 1;
-		if(repet[2] < 1) repet[2] = 1;
+ 		nx_ = QGrid::instance().nqx();
+ 		ny_ = QGrid::instance().nqy();
+ 		if(expt == "saxs")
+ 			nz_ = QGrid::instance().nqz();
+ 		else if(expt == "gisaxs")
+ 			nz_ = QGrid::instance().nqz_extended();
+ 		else
+ 			return false;
 
-		vector3_t arot(0, 0, 0), brot(0, 0, 0), crot(0, 0, 0);
-		vector3_t temp_la(lattice->a()), temp_lb(lattice->b()), temp_lc(lattice->c());
-		temp_la[2] = 0; temp_lb[2] = 0;
-		mat_mul_3x1(rotation_1, rotation_2, rotation_3, temp_la, arot);
-		mat_mul_3x1(rotation_1, rotation_2, rotation_3, temp_lb, brot);
-		mat_mul_3x1(rotation_1, rotation_2, rotation_3, temp_lc, crot);
+ 		if(repet[0] < 1) repet[0] = 1;
+ 		if(repet[1] < 1) repet[1] = 1;
+ 		if(repet[2] < 1) repet[2] = 1;
 
-		vector3_t l_t = lattice->t();
+ 		vector3_t arot(0, 0, 0), brot(0, 0, 0), crot(0, 0, 0);
+ 		//vector3_t temp_la(lattice->a() * scaling),
+ 		//		  temp_lb(lattice->b() * scaling),
+ 		//		  temp_lc(lattice->c() * scaling);
+ 		vector3_t temp_la(lattice->a()),
+ 				  temp_lb(lattice->b()),
+ 				  temp_lc(lattice->c());
+ 		temp_la[2] = 0; temp_lb[2] = 0;
+ 		mat_mul_3x1(rotation_1, rotation_2, rotation_3, temp_la, arot);
+ 		mat_mul_3x1(rotation_1, rotation_2, rotation_3, temp_lb, brot);
+ 		mat_mul_3x1(rotation_1, rotation_2, rotation_3, temp_lc, crot);
 
-		sf_ = NULL;
-		sf_ = new (std::nothrow) complex_t[nx_ * ny_ * nz_];
-		if(sf_ == NULL) {
-			if(master)
-				std::cerr << "error: could not allocate memory for structure factor" << std::endl;
-			return false;
-		} // if
+ 		//vector3_t l_t = lattice->t() * scaling;
+ 		vector3_t l_t = lattice->t();
+		/*
+ 		std::cout << "++++ repets = \n" ;
+ 		std::cout  << repet[0] << "  " << repet[1] << "  " << repet[2] <<std::endl;
+ 		std::cout << "++++ scaling= \n" ;
+ 		std::cout  << scaling <<std::endl;
 
-		if(master) std::cout << "-- Computing structure factor ... " << std::flush;
+ 		std::cout << "++++ lt = \n" ;
+ 		std::cout  << l_t[0] << "  " << l_t[1] << "  " << l_t[2] <<std::endl;		
 
-		std::complex<float_t> unit_c(1, 0);
-		std::complex<float_t> unit_ci(0, 1);
+ 		std::cout << "++++ rot * a,b,c = \n" ;
+ 		std::cout  << arot[0] << "  " << arot[1] << "  " << arot[2] <<std::endl;
+ 		std::cout  << brot[0] << "  " << brot[1] << "  " << brot[2] <<std::endl;
+ 		std::cout  << crot[0] << "  " << crot[1] << "  " << crot[2] <<std::endl;
 
-		computetimer.start();
+		*/
 
-		// good for acceleration ...
-		#pragma omp parallel for collapse(3)
-		for(unsigned int z = 0; z < nz_; ++ z) {
-			for(unsigned int y = 0; y < ny_; ++ y) {
-				for(unsigned int x = 0; x < nx_; ++ x) {
-					complex_t temp1, temp_x2, temp_y3, temp_y4, temp_x5;
-					float_t temp_f;
-					complex_t sa, sb, sc;
-					float_t qx = QGrid::instance().qx(x);
-					float_t qy = QGrid::instance().qy(y);
-					complex_t qz;
-					if(expt == "saxs") qz = QGrid::instance().qz(z);
-					else if(expt == "gisaxs") qz = QGrid::instance().qz_extended(z);
+ 		sf_ = NULL;
+ 		sf_ = new (std::nothrow) complex_t[nx_ * ny_ * nz_];
+ 		if(sf_ == NULL) {
+ 			if(master)
+ 				std::cerr << "error: could not allocate memory for structure factor" << std::endl;
+ 			return false;
+ 		} // if
 
-		//			std::cerr << "------ qx[" << x << "]: " << qx
-		//						<< ", qy[" << y << "]: " << qy
-		//						<< ", qz[" << z << "]: " << qz.real() << "+ i" << qz.imag()
-		//						<< std::endl;
-		//			std::cerr << arot[0] << " " << arot[1] << " " << arot[2] << std::endl;
-		//			std::cerr << brot[0] << " " << brot[1] << " " << brot[2] << std::endl;
-		//			std::cerr << crot[0] << " " << crot[1] << " " << crot[2] << std::endl;
+ 		if(master) std::cout << "-- Computing structure factor ... " << std::flush;
 
-					temp1 = exp(unit_ci * (arot[0] * qx + arot[1] * qy + arot[2] * qz));
-					temp_x2 = unit_c - pow(temp1, repet[0]);
+ 		std::complex<float_t> unit_c(1, 0);
+ 		std::complex<float_t> unit_ci(0, 1);
+
+		float mach_eps = std::numeric_limits<float>::epsilon() ; //move to constants.hpp if not there
+
+ 		computetimer.start();
+
+ 		// good for acceleration ...
+ 		#pragma omp parallel for collapse(3)
+ 		for(unsigned int z = 0; z < nz_; ++ z) {
+ 			for(unsigned int y = 0; y < ny_; ++ y) {
+ 				for(unsigned int x = 0; x < nx_; ++ x) {
+ 					complex_t temp1, temp_x2, temp_y3, temp_y4, temp_x5;
+ 					float_t temp_f;
+ 					complex_t sa, sb, sc;
+ 					float_t qx = QGrid::instance().qx(x);
+ 					float_t qy = QGrid::instance().qy(y);
+ 					complex_t qz;
+ 					if(expt == "saxs") qz = QGrid::instance().qz(z);
+ 					else if(expt == "gisaxs") qz = QGrid::instance().qz_extended(z);
+
+ 		//			std::cerr << "------ qx[" << x << "]: " << qx
+ 		//						<< ", qy[" << y << "]: " << qy
+ 		//						<< ", qz[" << z << "]: " << qz.real() << "+ i" << qz.imag()
+ 		//						<< std::endl;
+ 		//			std::cerr << arot[0] << " " << arot[1] << " " << arot[2] << std::endl;
+ 					//		std::cout << "++++ B = " << brot[0] << " " << brot[1] << " " << brot[2] << std::endl;
+ 		//			std::cerr << crot[0] << " " << crot[1] << " " << crot[2] << std::endl;
+					
+ 					complex_t e_iqa = exp(unit_ci * (arot[0] * qx + arot[1] * qy + arot[2] * qz));
+ 					complex_t Xa_0 = unit_c - pow(e_iqa, repet[0]);
+ 					complex_t Ya_0 = unit_c - e_iqa;
+
+					float_t tempya = sqrt(Ya_0.real() * Ya_0.real() + Ya_0.imag() * Ya_0.imag());
+					if(fabs(Ya_0.imag()) > mach_eps || fabs(Ya_0.real()) > mach_eps) sa = Xa_0 / Ya_0;
+					else sa = repet[0];
+ 					sa = pow(e_iqa, ((float_t) 1.0 - repet[0]) / (float_t) 2.0) * sa;
+
+ 					complex_t iqb = unit_ci *  (brot[0] * qx + brot[1] * qy + brot[2] * qz) ;
+ 					complex_t iqNb =  repet[1] * iqb;
+
+ 					complex_t e_iqb = exp(iqb);
+					complex_t Xb_0 = unit_c - exp(iqNb);
+					complex_t Yb_0 = unit_c - exp(iqb);
+
+					float_t tempyb = sqrt(Yb_0.real() * Yb_0.real() + Yb_0.imag() * Yb_0.imag());
+					if(fabs(Yb_0.imag()) > mach_eps || fabs(Yb_0.real()) > mach_eps) sb = Xb_0 / Yb_0;
+					else sb = repet[1];
+					sb = pow(e_iqb, ((float_t) 1.0 - repet[1]) / (float_t) 2.0) * sb;
+
+
+					complex_t e_iqc = exp(unit_ci * (crot[0] * qx + crot[1] * qy + crot[2] * qz));
+					complex_t Xc_0 = unit_c - pow(e_iqc, repet[2]);
+					complex_t Yc_0 = unit_c - e_iqc;
+
+					float_t tempyc = sqrt(Yc_0.real() * Yc_0.real() + Yc_0.imag() * Yc_0.imag());
+					if(fabs(Yc_0.imag()) > mach_eps || fabs(Yc_0.real()) > mach_eps) sc = Xc_0 / Yc_0;
+					else sc = repet[2];
+					sc = pow(e_iqc, ((float_t) 1.0 - repet[2]) / (float_t) 2.0) * sc;
+
+					/*
 					if(!((boost::math::isfinite)(temp_x2.real()) ||
 								(boost::math::isfinite)(temp_x2.imag()))) {
 						std::cerr << "error: here it is not finite (1) " << x << ", " << y << ", " << z
 									<<std::endl;
 					} // if
-					if(unit_c != temp1) {
-						temp_y3 = unit_c / (unit_c - temp1);
-						temp_f = 0;
-						temp_y4 = temp_y3;
-					} else {
-						temp_f = 1;
-						temp_y4 = unit_c;
-					} // if-else
+
+*/
 					//temp_f = (float_t)(!((boost::math::isfinite)(temp_y3.real()) &&
 					//						(boost::math::isfinite)(temp_y3.imag())));
 					//temp_y4 = unit_c / (unit_c / temp_y3 + temp_f);
+					/*
 					if(temp_x2.real() != 0 || temp_x2.imag() != 0) {
 						temp_f = 0;
 						temp_x5 = temp_x2;
@@ -154,11 +199,14 @@ namespace hig {
 						temp_f = 1;
 						temp_x5 = temp_x2 + repet[0];
 					} // if-else
-					//temp_f = (float_t)(!((boost::math::isfinite)((unit_c / temp_x2).real()) &&
+
+					*/					//temp_f = (float_t)(!((boost::math::isfinite)((unit_c / temp_x2).real()) &&
 					//						(boost::math::isfinite)((unit_c / temp_x2).imag())));
 					//temp_x5 = temp_x2 + repet[0] * temp_f;
-					sa = pow(temp1, ((float_t) 1.0 - repet[0]) / (float_t) 2.0) * temp_y4 * temp_x5;
-					if(!((boost::math::isfinite)(sa.real()) ||
+					
+					//					sa = pow(e_iqa, ((float_t) 1.0 - repet[0]) / (float_t) 2.0) * sa;
+					/*					
+     					if(!((boost::math::isfinite)(sa.real()) ||
 								(boost::math::isfinite)(sa.imag()))) {
 						std::cerr << "error: here it is not finite (2) " << x << ", " << y << ", " << z
 									<<std::endl;
@@ -230,7 +278,7 @@ namespace hig {
 					//						(boost::math::isfinite)((unit_c / temp_x2).imag())));
 					//temp_x5 = temp_x2 + repet[2] * temp_f;
 					sc = temp_y4 * temp_x5;
-
+*/
 					if(!((boost::math::isfinite)(sa.real()) && (boost::math::isfinite)(sa.imag()))) {
 						std::cout << "sa sa sa sa sa sa sa: " << x << ", " << y << ", " << z << std::endl; }
 					if(!((boost::math::isfinite)(sb.real()) && (boost::math::isfinite)(sb.imag()))) {
@@ -244,12 +292,22 @@ namespace hig {
 					//				sa * sb * sc *
 					//				(unit_c + exp(unit_ci * (l_t[0] * qx + l_t[1] * qy + l_t[2] * qz)));
 					temp1 = center[0] * qx + center[1] * qy + center[2] * qz;
+					if(qz.imag() > 0.0) std::cout << x << "#" << y << "#" << z << "  " << qz.imag() << std::endl;
 					complex_t temp3 = complex_t(-temp1.imag(), temp1.real());
-					complex_t temp2 = l_t[0] * qx + l_t[1] * qy + l_t[2] * qz;
-					temp2 = complex_t(-temp2.imag(), temp2.real()) + (float_t) 1.0;
+					//if(z > 790) std::cout << temp3.real() << "+i" << temp3.imag() << "  ";
 					temp3 = exp(temp3);
-					temp2 = exp(temp2);
+					//TODO: l_t must be rotated!!
+					complex_t temp2 = l_t[0] * qx + l_t[1] * qy + l_t[2] * qz;
+					temp2 = complex_t(-temp2.imag(), temp2.real()) ; //+ (float_t) 1.0;
+					temp2 = unit_c +  exp(temp2);
 					sf_[sf_i] = temp3 * temp2 * sa * sb * sc;
+
+					//if(z > 790) {
+					//	std::cout << center[0] << "," << center[1] << "," << center[2] << "  "
+					//				<< qx << "," << qy << "," << qz.real() << "+i" << qz.imag() << "  "
+					//				<< temp3.real() << "+i" << temp3.imag()
+					//				<< std::endl;
+					//} // if
 
 //					if(!((boost::math::isfinite)(sf_[sf_i].real()) &&
 //								(boost::math::isfinite)(sf_[sf_i].imag()))) {
@@ -276,6 +334,10 @@ namespace hig {
 						<< std::endl
 						<< "**                 Total SF time: " << maintimer.elapsed_msec() << " ms."
 						<< std::endl;
+
+
+			//	save_sf(  QGrid::instance().nqx(),   QGrid::instance().nqy(),   QGrid::instance().nqz(), "/home/stchourou/sf.dat");
+
 			//int naninfs = count_naninfs(nx_, ny_, nz_, sf_);
 			//std::cout << " ------- " << naninfs << " / " << nx_ * ny_ * nz_ << " nans or infs" << std::endl;
 		} // if
@@ -291,7 +353,7 @@ namespace hig {
 			for(unsigned int y = 0; y < nqy; ++ y) {
 				for(unsigned int x = 0; x < nqx; ++ x) {
 					unsigned int index = nqx * nqy * z + nqx * y + x;
-					f << sf_[index].real() << "\t" << sf_[index].imag() << std::endl;
+					f << x << "\t"  << y << "\t" << z << "\t" <<   QGrid::instance().qx(x) <<  "\t" <<   QGrid::instance().qy(y) <<  "\t" <<   QGrid::instance().qz(z) <<  "\t" << sf_[index].real() << "\t" << sf_[index].imag() << std::endl;
 				} // for
 				f << std::endl;
 			} // for
