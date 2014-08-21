@@ -51,14 +51,14 @@
  	 * compute structure factor sequentially on cpu
  	 */
  	bool StructureFactor::compute_structure_factor(std::string expt, vector3_t center,
- 							Lattice* lattice, vector3_t repet, //float_t scaling,
+ 							Lattice* lattice, vector3_t repet, float_t scaling,
  							vector3_t rotation_1, vector3_t rotation_2, vector3_t rotation_3
  							#ifdef USE_MPI
- 								, woo::MultiNode& world_comm, const char* comm_key
+ 								, woo::MultiNode& world_comm, std::string comm_key
  							#endif
  							) {
  		#ifdef USE_MPI
- 			bool master = world_comm.is_master();
+ 			bool master = world_comm.is_master(comm_key);
  		#else
  			bool master = true;
  		#endif
@@ -81,19 +81,19 @@
  		if(repet[2] < 1) repet[2] = 1;
 
  		vector3_t arot(0, 0, 0), brot(0, 0, 0), crot(0, 0, 0);
- 		//vector3_t temp_la(lattice->a() * scaling),
- 		//		  temp_lb(lattice->b() * scaling),
- 		//		  temp_lc(lattice->c() * scaling);
- 		vector3_t temp_la(lattice->a()),
- 				  temp_lb(lattice->b()),
- 				  temp_lc(lattice->c());
+ 		vector3_t temp_la(lattice->a() * scaling),
+ 				  temp_lb(lattice->b() * scaling),
+ 				  temp_lc(lattice->c() * scaling);
+ 		//vector3_t temp_la(lattice->a()),
+ 		//		  temp_lb(lattice->b()),
+ 		//		  temp_lc(lattice->c());
  		temp_la[2] = 0; temp_lb[2] = 0;
  		mat_mul_3x1(rotation_1, rotation_2, rotation_3, temp_la, arot);
  		mat_mul_3x1(rotation_1, rotation_2, rotation_3, temp_lb, brot);
  		mat_mul_3x1(rotation_1, rotation_2, rotation_3, temp_lc, crot);
 
- 		//vector3_t l_t = lattice->t() * scaling;
- 		vector3_t l_t = lattice->t();
+ 		vector3_t l_t = lattice->t() * scaling;
+ 		//vector3_t l_t = lattice->t();
 		/*
  		std::cout << "++++ repets = \n" ;
  		std::cout  << repet[0] << "  " << repet[1] << "  " << repet[2] <<std::endl;
