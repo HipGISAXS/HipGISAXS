@@ -291,7 +291,7 @@
 					//				sa * sb * sc *
 					//				(unit_c + exp(unit_ci * (l_t[0] * qx + l_t[1] * qy + l_t[2] * qz)));
 					temp1 = center[0] * qx + center[1] * qy + center[2] * qz;
-					if(qz.imag() > 0.0) std::cout << x << "#" << y << "#" << z << "  " << qz.imag() << std::endl;
+					//if(qz.imag() > 0.0) std::cout << x << "#" << y << "#" << z << "  " << qz.imag() << std::endl;
 					complex_t temp3 = complex_t(-temp1.imag(), temp1.real());
 					//if(z > 790) std::cout << temp3.real() << "+i" << temp3.imag() << "  ";
 					temp3 = exp(temp3);
