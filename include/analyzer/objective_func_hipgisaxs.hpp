@@ -3,7 +3,7 @@
  *
  *  File: objective_func_hipgisaxs.hpp
  *  Created: Feb 02, 2014
- *  Modified: Fri 11 Jul 2014 06:46:21 PM PDT
+ *  Modified: Sun 24 Aug 2014 09:07:03 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -45,7 +45,7 @@ namespace hig {
 
 			#ifdef USE_MPI
 				woo::MultiNode* multi_node_comm() { return hipgisaxs_.multi_node_comm(); }
-				bool update_sim_comm(std::string comm) { return hipgisaxs_.update_sim_comm(comm); }
+				bool update_sim_comm(woo::comm_t comm) { return hipgisaxs_.update_sim_comm(comm); }
 			#endif
 
 			// for testing

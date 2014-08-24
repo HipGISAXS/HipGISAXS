@@ -18,13 +18,16 @@
 
 namespace hig {
 
+	/**
+	 * The abstract objective function class
+	 */
 	class ObjectiveFunction {
 		protected:
 			DistanceMeasure* pdist_;	// distance function
 			ImageData* ref_data_;		// reference data
 			bool mask_set_;				// whether mask data is set or not
 			uint_vec_t mask_data_;		// mask with 0s and 1s
-			//float_vec_t curr_dist_;		// current computed distance output
+			//float_vec_t curr_dist_;	// current computed distance output
 
 		public:
 			virtual float_vec_t operator()(const float_vec_t&) = 0;
@@ -51,37 +54,6 @@ namespace hig {
 			virtual bool simulate_and_set_ref(const float_vec_t&) = 0;
 	}; // class ObjectiveFunction
 
-
-/*	class HipGISAXSObjectiveFunction : public ObjectiveFunction {
-		private:
-			HipGISAXS hipgisaxs_;		// the hipgisaxs object
-			unsigned int n_par_;		// nqy
-			unsigned int n_ver_;		// nqz
-
-		public:
-			HipGISAXSObjectiveFunction(int, char**, DistanceMeasure*);
-			HipGISAXSObjectiveFunction(int, char**, std::string);
-			~HipGISAXSObjectiveFunction();
-
-			bool set_distance_measure(DistanceMeasure*);
-			bool set_reference_data(int);
-			bool set_reference_data(char*) { }
-			bool read_mask_data(string_t);
-			float_vec_t operator()(const float_vec_t&);
-
-			int num_fit_params() const { return hipgisaxs_.num_fit_params(); }
-			unsigned int n_par() const { return n_par_; }
-			unsigned int n_ver() const { return n_ver_; }
-			unsigned int data_size() const { return n_par_ * n_ver_; }
-			std::vector <std::string> fit_param_keys() const { return hipgisaxs_.fit_param_keys(); }
-			std::vector <float_pair_t> fit_param_limits() const { return hipgisaxs_.fit_param_limits(); }
-			float_vec_t fit_param_step_values() const { return hipgisaxs_.fit_param_step_values(); }
-			float_vec_t fit_param_init_values() const { return hipgisaxs_.fit_param_init_values(); }
-
-			// for testing
-			bool simulate_and_set_ref(const float_vec_t&);
-	}; // class HipGISAXSObjectiveFunction
-*/
 
 	PetscReal EvaluateFunction(TaoSolver , float_vec_t , void *);
 	PetscErrorCode EvaluateFunction(TaoSolver , Vec , Vec , void *);

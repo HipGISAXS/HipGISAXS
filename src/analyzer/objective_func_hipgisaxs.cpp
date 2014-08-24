@@ -3,7 +3,7 @@
  *
  *  File: objective_func.cpp
  *  Created: Feb 02, 2014
- *  Modified: Mon 28 Jul 2014 01:29:24 PM PDT
+ *  Modified: Sun 24 Aug 2014 09:46:20 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -140,33 +140,38 @@ namespace hig{
 			std::cout << (*i).first << ": " << (*i).second << "  ";
 		std::cout << std::endl;
 
+		float_vec_t curr_dist;
+
 		// update and compute gisaxs
 		hipgisaxs_.update_params(param_vals);
 		hipgisaxs_.compute_gisaxs(gisaxs_data);
-		if(gisaxs_data == NULL) {
-			std::cerr << "error: something went wrong in compute_gisaxs. gisaxs_data == NULL."
-						<< std::endl;
-			exit(-1);
+		// only the master process does the following
+		if(hipgisaxs_.is_master()) {
+			if(gisaxs_data == NULL) {
+				std::cerr << "error: something went wrong in compute_gisaxs. gisaxs_data == NULL."
+							<< std::endl;
+				exit(-1);
+			} // if
+
+			// compute error/distance
+			std::cout << "+++++ computing distance ..." << std::endl;
+			float_t* ref_data = (*ref_data_).data();
+			if(ref_data == NULL) std::cerr << "woops: ref_data is NULL" << std::endl;
+			unsigned int* mask_data = &(mask_data_[0]);
+//			unsigned int* mask_data = new (std::nothrow) unsigned int[n_par_ * n_ver_];
+//			memset(mask_data, 0, n_par_ * n_ver_ * sizeof(unsigned int));
+			(*pdist_)(gisaxs_data, ref_data, mask_data, n_par_ * n_ver_, curr_dist);
+//			delete[] mask_data;
+
+			// write to output file
+			std::string prefix(HiGInput::instance().param_pathprefix() + "/"
+								+ HiGInput::instance().runname());
+			std::ofstream out(prefix + "/convergance.dat", std::ios::app);
+			for(float_vec_t::const_iterator i = curr_dist.begin(); i != curr_dist.end(); ++ i)
+				out << (*i) << " ";
+			out << std::endl;
+			out.close();
 		} // if
-
-		// compute error/distance
-		std::cout << "+++++ computing distance ..." << std::endl;
-		float_t* ref_data = (*ref_data_).data();
-		if(ref_data == NULL) std::cerr << "woops: ref_data is NULL" << std::endl;
-		unsigned int* mask_data = &(mask_data_[0]);
-//		unsigned int* mask_data = new (std::nothrow) unsigned int[n_par_ * n_ver_];
-//		memset(mask_data, 0, n_par_ * n_ver_ * sizeof(unsigned int));
-		float_vec_t curr_dist;
-		(*pdist_)(gisaxs_data, ref_data, mask_data, n_par_ * n_ver_, curr_dist);
-//		delete[] mask_data;
-
-		// write to output file
-		std::string prefix(HiGInput::instance().param_pathprefix()+"/"+HiGInput::instance().runname());
-		std::ofstream out(prefix + "/convergance.dat", std::ios::app);
-		for(float_vec_t::const_iterator i = curr_dist.begin(); i != curr_dist.end(); ++ i)
-			out << (*i) << " ";
-		out << std::endl;
-		out.close();
 
 		return curr_dist;
 	} // ObjectiveFunction::operator()()

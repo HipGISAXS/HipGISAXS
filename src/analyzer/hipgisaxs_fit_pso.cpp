@@ -122,7 +122,9 @@ namespace hig {
 		num_params_ = (*obj_func_).num_fit_params();
 		x0_ = (*obj_func_).fit_param_init_values();
 		#ifdef USE_MPI
+			// obtain the multi node object from hipgisaxs
 			multi_node_ = (*obj_func_).multi_node_comm();
+			// the root communicator
 			root_comm_ = (*multi_node_).universe_key();
 			std::cout << "** MPI Size: " << (*multi_node_).size(root_comm_);
 			std::cout << ", my rank: " << (*multi_node_).rank(root_comm_) << std::endl;
@@ -134,7 +136,7 @@ namespace hig {
 		best_values_.resize(num_params_, 0.0);
 		best_fitness_ = std::numeric_limits<float_t>::max();
 
-		std::vector <std::pair <float_t, float_t> > limits = obj_func_->fit_param_limits();
+		std::vector <std::pair <float_t, float_t> > limits = (*obj_func_).fit_param_limits();
 		parameter_data_list_t max_limits, min_limits;
 		for(std::vector <std::pair <float_t, float_t> >::iterator iter = limits.begin();
 				iter != limits.end(); ++ iter) {
@@ -163,32 +165,47 @@ namespace hig {
 			// two cases:	num_procs <= num_part (easy case)
 			// 				num_procs > num_part
 			particle_comm_ = "pso_particle";
+			int particle_master = 1;	// am I the master proc for a particle
 			if(num_procs <= num_particles_global_) {
 				// assign multiple particles per proc
 				num_particles_ = num_particles_global_ / num_procs +
 										(rank < (num_particles_global_ % num_procs) ? 1 : 0);
 				// each proc will now be in its own new world
 				(*multi_node_).split(particle_comm_, root_comm_, rank);
+				(*multi_node_).scan_sum(root_comm_, num_particles_, index_offset);
+				index_offset -= num_particles_;
+				start_particle_index_ = index_offset;
 			} else {
 				// assign multiple procs per particle
 				// procs for a particle will be in their common new world
 				// TODO ...
-				std::cout << "error: this case has not been implemented yet ["
-							<< num_particles_global_ << ", " << num_procs << "]"
-							<< std::endl;
-				exit(-1);
+				//std::cout << "error: this case has not been implemented yet ["
+				//			<< num_particles_global_ << ", " << num_procs << "]"
+				//			<< std::endl;
+				//exit(-1);
+				std::cout << "** The case with multiple MPI processes per particle" << std::endl;
+				// split the world
+				num_particles_ = 1;		// no fractional particles :P
+				int color = rank % num_particles_global_;	// round-robin distribution for ease
+				(*multi_node_).split(particle_comm_, root_comm_, color);
+				particle_master = (*multi_node_).is_master(particle_comm_);
+				start_particle_index_ = color;	// the index of particle i am responsible for
+				index_offset = color;			// it is same as the index offset
 			} // if-else
-			(*multi_node_).scan_sum(root_comm_, num_particles_, index_offset);
-			index_offset -= num_particles_;
-			start_particle_index_ = index_offset;
+			// create communicator for just the particle masters (which may be all the procs)
+			pmasters_comm_ = "pso_pmasters";
+			(*multi_node_).split(pmasters_comm_, root_comm_, particle_master);
 			// allgather to collect the start indices for each proc
 			unsigned int * buff = new (std::nothrow) unsigned int[(*multi_node_).size(root_comm_)];
 			(*multi_node_).allgather(root_comm_, &start_particle_index_, 1, buff, 1);
 			for(int i = 0; i < (*multi_node_).size(root_comm_); ++ i)
 				start_indices_.push_back(buff[i]);
 			delete[] buff;
+
+			std::cout << "** " << rank << ": pmaster? " << particle_master << std::endl;
 		#else
 			particle_comm_ = root_comm_;
+			pmasters_comm_ = root_comm_;
 			start_particle_index_ = 0;
 		#endif
 
@@ -483,28 +500,41 @@ namespace hig {
 	// Base case and with constriction coeff, tuned omega
 	bool ParticleSwarmOptimization::simulate_generation() {
 		// for each particle, simulate
+		int myrank = 0;
+		#ifdef USE_MPI
+		myrank = (*multi_node_).rank(root_comm_);
+		#endif
 		for(int i = 0; i < num_particles_; ++ i) {
-			std::cout << (*multi_node_).rank(root_comm_) << ": Particle " << i << std::endl;
+			std::cout << myrank << ": Particle " << i << std::endl;
 			// construct param map
 			//parameter_map_t curr_particle;
 			float_vec_t curr_particle;
 			for(int j = 0; j < num_params_; ++ j)
 				curr_particle.push_back(particles_[i].param_values_[j]);
 				//curr_particle[params_[j]] = particles_[i].param_values_[j];
-			// compute the fitness
+			// tell hipgisaxs about the communicator to work with
 			(*obj_func_).update_sim_comm(particle_comm_);
+			// compute the fitness
 			float_vec_t curr_fitness = (*obj_func_)(curr_particle);
 
 			// update particle fitness
-			if(particles_[i].best_fitness_ > curr_fitness[0]) {
-				particles_[i].best_fitness_ = curr_fitness[0];
-				particles_[i].best_values_ = particles_[i].param_values_;
+			// this is meaningful only at the particle masters
+			#ifdef USE_MPI
+			(*multi_node_).barrier(particle_comm_);
+			if((*multi_node_).is_master(particle_comm_)) {
+			#endif
+				if(particles_[i].best_fitness_ > curr_fitness[0]) {
+					particles_[i].best_fitness_ = curr_fitness[0];
+					particles_[i].best_values_ = particles_[i].param_values_;
+				} // if
+				// update global best fitness locally
+				if(best_fitness_ > curr_fitness[0]) {
+					best_fitness_ = curr_fitness[0];
+					best_values_ = particles_[i].param_values_;
+				} // if
+			#ifdef USE_MPI
 			} // if
-			// update global best fitness locally
-			if(best_fitness_ > curr_fitness[0]) {
-				best_fitness_ = curr_fitness[0];
-				best_values_ = particles_[i].param_values_;
-			} // if
+			#endif
 			//std::cout << "@@@@ " << i + 1 << ": " << curr_fitness[0] << " "
 			//	<< particles_[i].best_fitness_ << " [ ";
 			//for(int j = 0; j < num_params_; ++ j) std::cout << particles_[i].param_values_[j] << " ";
@@ -514,34 +544,61 @@ namespace hig {
 		#ifdef USE_MPI
 			// communicate and find globally best fitness
 			float_t new_best_fitness; int best_rank;
-			if((*multi_node_).size("pso_particle") > 1 && num_particles_ == 1) {
+			/*if((*multi_node_).size(particle_comm_) > 1 && num_particles_ == 1) {
 				// in the case when multiple procs work on one particle,
 				// only the master needs to communicate with other masters (for other particles)
 				// TODO ...
-				bool pmaster = (*multi_node_).is_master(particle_comm_);
 				std::cout << "error: this case has not been implemented yet" << std::endl;
 				return false;
+				if(!(*multi_node_).allreduce(pmasters_comm_, best_fitness_, new_best_fitness, best_rank,
+												woo::comm::minloc))
+					return false;
+				best_fitness_ = new_best_fitness;
 			} else {
 				if(!(*multi_node_).allreduce(root_comm_, best_fitness_, new_best_fitness, best_rank,
 												woo::comm::minloc))
 					return false;
 				best_fitness_ = new_best_fitness;
-			} // if-else
-			// the best rank proc broadcasts its best values to all others
-			if(!(*multi_node_).broadcast(root_comm_, best_values_, best_rank)) return false;
+			} // if-else*/
+			// all particle masters find the proc with global min
+			if(!(*multi_node_).allreduce(pmasters_comm_, best_fitness_, new_best_fitness, best_rank,
+											woo::comm::minloc))
+				return false;
+			// the best rank proc broadcasts its best values to all other particle masters
+			//if(!(*multi_node_).broadcast(root_comm_, best_values_, best_rank)) return false;
+			if(!(*multi_node_).broadcast(pmasters_comm_, best_values_, best_rank)) return false;
+			// also broadcast to other procs responsible for same particle, if is the case
+			if((*multi_node_).size(particle_comm_) > 1) {
+				if(!(*multi_node_).broadcast(particle_comm_, best_values_,
+											(*multi_node_).master(particle_comm_))) return false;
+			} // if
 		#endif
 
 		// update each particle using new global best
-		for(int i = 0; i < num_particles_; ++ i) {
-			if(!particles_[i].update_particle(pso_omega_, pso_phi1_, pso_phi2_, best_values_,
-											constraints_, rand_)) {
-				std::cerr << "error: failed to update particle " << i << std::endl;
-				return false;
-			} // if
-		} // for
+		// only the particle masters need to do this
+		#ifdef USE_MPI
+		if((*multi_node_).is_master(particle_comm_)) {
+		#endif
+			for(int i = 0; i < num_particles_; ++ i) {
+				if(!particles_[i].update_particle(pso_omega_, pso_phi1_, pso_phi2_, best_values_,
+												constraints_, rand_)) {
+					std::cerr << "error: failed to update particle " << i << std::endl;
+					return false;
+				} // if
+			} // for
+		#ifdef USE_MPI
+		} // if
+		// the particle master then broadcasts this updated info to all
+		// other procs responsible for the same particle, if any
+		if((*multi_node_).size(particle_comm_) > 1 && num_particles_ == 1) {
+			parameter_data_list_t pvals = particles_[0].get_param_values();
+			if(!(*multi_node_).broadcast(particle_comm_, pvals,
+										(*multi_node_).master(particle_comm_))) return false;
+		} // if
+		#endif
 
 		if(tune_omega_) pso_omega_ /= 2.0;
-		std::cout << (*multi_node_).rank(root_comm_) << ": Omega = " << pso_omega_ << std::endl;
+		std::cout << myrank << ": Omega = " << pso_omega_ << std::endl;
 
 		/*std::cout << "~~~~ Generation best: ";
 		for(int i = 0; i < num_particles_; ++ i) {
@@ -552,6 +609,7 @@ namespace hig {
 		} // for
 		std::cout << std::endl;*/
 
+		// print the global best - only root master does this
 		#ifdef USE_MPI
 		if((*multi_node_).is_master(root_comm_)) {
 		#endif

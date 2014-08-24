@@ -84,8 +84,8 @@ namespace hig {
 			#ifdef USE_MPI
 				woo::MultiNode multi_node_;	/* for multi node communication */
 			#endif
-			std::string root_comm_;		/* the universe */
-			std::string sim_comm_;		/* communicator for simulations */
+			woo::comm_t root_comm_;		/* the universe */
+			woo::comm_t sim_comm_;		/* communicator for simulations */
 
 			bool init();	/* global initialization for all runs */
 			//bool init_steepest_fit(float_t);	/* init for steepest descent fitting */
@@ -152,6 +152,7 @@ namespace hig {
 			bool fit_init();
 			bool compute_gisaxs(float_t*&, std::string = "");
 
+			bool is_master() { return multi_node_.is_master(sim_comm_); }
 			// fitting related ... TODO: improve
 			std::vector <std::string> fit_param_keys() const {
 				return HiGInput::instance().fit_param_keys();
@@ -182,7 +183,7 @@ namespace hig {
 
 			#ifdef USE_MPI
 				woo::MultiNode* multi_node_comm() { return &multi_node_; }
-				bool update_sim_comm(std::string comm) { sim_comm_ = comm; return true; }
+				bool update_sim_comm(woo::comm_t comm) { sim_comm_ = comm; return true; }
 			#endif
 
 			//template <typename ErrorFunction>

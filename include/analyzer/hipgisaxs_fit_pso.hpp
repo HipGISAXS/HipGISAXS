@@ -94,6 +94,7 @@ namespace hig {
 			bool compute_and_set_values(const parameter_data_list_t&, const parameter_data_list_t&,
 						float_t, float_t, float_t, const parameter_data_list_t&,
 						const PSOParticleConstraints&, woo::MTRandomNumberGenerator&);
+			parameter_data_list_t get_param_values() { return param_values_; }
 
 			void print_neighbors() {
 				for(particle_neighbor_set_t::iterator i = neighbors_.begin(); i != neighbors_.end(); ++ i)
@@ -136,18 +137,19 @@ namespace hig {
 			woo::MTRandomNumberGenerator rand_;			// random number generator
 
 			// for multiple node usage
-
 			typedef std::map <int, std::set <unsigned int> > comm_list_t;
 			typedef comm_list_t::iterator comm_list_iter_t;
+			typedef woo::comm_t comm_t;
 			#ifdef USE_MPI
 				// multinode communicator pointer
-				woo::MultiNode* multi_node_;
+				woo::MultiNode *multi_node_;
 				comm_list_t neighbor_send_lists_;
 				comm_list_t neighbor_recv_lists_;
 				std::vector <unsigned int> start_indices_;	// starting index for each proc
 			#endif
-			std::string root_comm_;
-			std::string particle_comm_;
+			comm_t root_comm_;
+			comm_t particle_comm_;
+			comm_t pmasters_comm_;
 
 			bool construct_neighbor_lists();
 			bool neighbor_data_exchange();

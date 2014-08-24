@@ -66,7 +66,9 @@ namespace hig {
 		single_layer_refindex_.delta(0.0);
 		single_layer_refindex_.beta(0.0);
 		single_layer_thickness_ = 0.0;
+		// construct hig input instance
 		HiGInput::instance();
+		// construct the qgrid -- to be changed to be not singleton ...
 		QGrid::instance();
 	} // HipGISAXS::HipGISAXS()
 
@@ -98,6 +100,7 @@ namespace hig {
 			int mpi_rank = 0;
 			bool master = true;
 		#endif
+		// initially, the simulator communicator is same as the universe
 		sim_comm_ = root_comm_;
 
 		if(master) {
@@ -270,6 +273,7 @@ namespace hig {
 		float_t maxz = HiGInput::instance().reference_region_max_y(i);
 
 		#ifdef USE_MPI
+			// this is done at the universal level
 			int mpi_rank = multi_node_.rank(root_comm_);
 			bool master = multi_node_.is_master(root_comm_);
 		#else
@@ -309,7 +313,7 @@ namespace hig {
 		if(!init()) return false;
 
 		#ifdef USE_MPI
-			// this is for the whole comm world
+			// this is for the comm world for this simulation
 			bool master = multi_node_.is_master(sim_comm_);
 		#else
 			bool master = true;
@@ -359,7 +363,7 @@ namespace hig {
 							((num_alphai / num_procs) * rank + min(rank, num_alphai % num_procs));
 				num_alphai = (num_alphai / num_procs) + (rank < num_alphai % num_procs);
 			} // if-else
-			std::string alphai_comm = "alphai";
+			woo::comm_t alphai_comm = "alphai";
 			multi_node_.split(alphai_comm, sim_comm_, alphai_color);
 
 			bool amaster = multi_node_.is_master(alphai_comm);
@@ -392,7 +396,7 @@ namespace hig {
 								((num_phi / num_procs) * rank + min(rank, num_phi % num_procs));
 					num_phi = (num_phi / num_procs) + (rank < num_phi % num_procs);
 				} // if-else
-				std::string phi_comm = "phi";
+				woo::comm_t phi_comm = "phi";
 				multi_node_.split(phi_comm, alphai_comm, phi_color);
 
 				bool pmaster = multi_node_.is_master(phi_comm);
@@ -423,7 +427,7 @@ namespace hig {
 								((num_tilt / num_procs) * rank + min(rank, num_tilt % num_procs));
 						num_tilt = (num_tilt / num_procs) + (rank < num_tilt % num_procs);
 					} // if-else
-					std::string tilt_comm = "tilt";
+					woo::comm_t tilt_comm = "tilt";
 					multi_node_.split(tilt_comm, phi_comm, tilt_color);
 
 					bool tmaster = multi_node_.is_master(tilt_comm);
@@ -684,7 +688,7 @@ namespace hig {
 	bool HipGISAXS::fit_init() { return init(); }
 
 
-	bool HipGISAXS::compute_gisaxs(float_t* &final_data, std::string comm_key) {
+	bool HipGISAXS::compute_gisaxs(float_t* &final_data, woo::comm_t comm_key) {
 		if(!comm_key.empty()) sim_comm_ = comm_key;				// communicator for this simulation
 		#ifdef USE_MPI
 			bool master = multi_node_.is_master(sim_comm_);
@@ -763,7 +767,7 @@ namespace hig {
 
 	/* all the real juice is here */
 	bool HipGISAXS::run_gisaxs(float_t alpha_i, float_t alphai, float_t phi, float_t tilt,
-								float_t* &img3d, std::string comm_key, int corr_doms) {
+								float_t* &img3d, woo::comm_t comm_key, int corr_doms) {
 
 		SampleRotation rotation_matrix;
 		if(!run_init(alphai, phi, tilt, rotation_matrix)) return false;
@@ -771,6 +775,7 @@ namespace hig {
 		#ifdef USE_MPI
 			bool master = multi_node_.is_master(comm_key);
 			int ss = multi_node_.size(comm_key);
+			std::cout << "****************** MPI size for this simulation: " << ss << std::endl;
 		#else
 			bool master = true;
 		#endif
@@ -805,8 +810,9 @@ namespace hig {
 				soffset = ((num_structs / num_procs) * rank + min(rank, num_structs % num_procs));
 				num_structs = (num_structs / num_procs) + (rank < num_structs % num_procs);
 			} // if-else
-			std::string struct_comm = "structure";
+			woo::comm_t struct_comm = "structure";
 			multi_node_.split(struct_comm, comm_key, struct_color);
+			// goto structures i am responsible for
 			for(int i = 0; i < soffset; ++ i) ++ s;
 
 			bool smaster = multi_node_.is_master(struct_comm);
@@ -911,7 +917,7 @@ namespace hig {
 					num_gr = (num_gr / num_procs) + (rank < num_gr % num_procs);
 				} // if-else
 				grain_max = grain_min + num_gr;
-				std::string grain_comm = "grain";
+				woo::comm_t grain_comm = "grain";
 				multi_node_.split(grain_comm, struct_comm, grain_color);
 
 				bool gmaster = multi_node_.is_master(grain_comm);
@@ -1299,7 +1305,7 @@ namespace hig {
 				} // switch
 
 				delete[] id;
-			} // if master
+			} // if smaster
 
 		} // for num_structs
 
@@ -1435,11 +1441,13 @@ namespace hig {
 
 		if(master) {
 			// convolute/smear the computed intensities
-			//float_t sigma = 2.0;	// TODO: to be read from input config
 			float_t sigma = HiGInput::instance().scattering_smearing();
 			if(sigma > 0.0) {
 				woo::BoostChronoTimer smear_timer;
 				std::cout << "-- Smearing the result with sigma = " << sigma << " ... " << std::flush;
+				if(img3d == NULL) {
+					std::cerr << "error: there is no img3d. you are so in the dumps!" << std::endl;
+				} // if
 				smear_timer.start();
 				gaussian_smearing(img3d, sigma);
 				smear_timer.stop();
@@ -1458,7 +1466,7 @@ namespace hig {
 									vector3_t& grain_repeats, float_t grain_scaling,
 									vector3_t& r_tot1, vector3_t& r_tot2, vector3_t& r_tot3
 									#ifdef USE_MPI
-										, std::string comm_key
+										, woo::comm_t comm_key
 									#endif
 									) {
 		#ifndef GPUSF
@@ -1487,7 +1495,7 @@ namespace hig {
 								float_t shp_tau, float_t shp_eta,
 								vector3_t &r_tot1, vector3_t &r_tot2, vector3_t &r_tot3
 								#ifdef USE_MPI
-									, std::string comm_key
+									, woo::comm_t comm_key
 								#endif
 								) {
 		#ifndef GPUSF
