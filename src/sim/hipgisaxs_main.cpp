@@ -391,6 +391,7 @@ namespace hig {
 			bool amaster = true;
 		#endif // USE_MPI
 
+		// for each incidence angle
 		float_t alpha_i = alphai_min;
 		for(int i = 0; i < num_alphai; i ++, alpha_i += alphai_step) {
 			float_t alphai = alpha_i * PI_ / 180;
@@ -424,6 +425,7 @@ namespace hig {
 				bool pmaster = true;
 			#endif // USE_MPI
 
+			// for each inplane rotation angle
 			float_t phi = phi_min;
 			for(int j = 0; j < num_phi; j ++, phi += phi_step) {
 				float_t phi_rad = phi * PI_ / 180;
@@ -455,6 +457,7 @@ namespace hig {
 					bool tmaster = true;
 				#endif // USE_MPI
 
+				// for each tilt angle
 				float_t tilt = tilt_min;
 				for(int k = 0; k < num_tilt; k ++, tilt += tilt_step) {
 					float_t tilt_rad = tilt * PI_ / 180;
