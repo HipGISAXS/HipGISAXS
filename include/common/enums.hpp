@@ -3,7 +3,7 @@
  *
  *  File: enums.hpp
  *  Created: Jun 11, 2012
- *  Modified: Wed 09 Jul 2014 10:41:44 AM PDT
+ *  Modified: Sat 30 Aug 2014 08:40:17 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -80,6 +80,7 @@ namespace hig {
 		stat_gaussian,			/* gaussian distribution */
 		stat_none,				/* default */
 		stat_random,			/* random distribution */
+		stat_range,				/* range of values (basically same as stat_random) */
 		stat_uniform			/* uniform distribution */
 	}; // enum StatisticType
 

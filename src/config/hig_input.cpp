@@ -190,6 +190,8 @@ namespace hig {
 
 					case struct_grain_repetitiondist_token:	// nothing to do :-/
 						// TODO: check if all three repetitions were defined
+						// set flag that repetition is a dist
+						curr_structure_.grain_is_repetition_dist(true);
 						break;
 
 					case struct_grain_xrepetition_token:
@@ -636,6 +638,10 @@ namespace hig {
 			case struct_grain_transvec_token:
 			case struct_grain_scaling_token:
 			case struct_grain_repetition_token:
+			case struct_grain_repetitiondist_token:
+			case struct_grain_xrepetition_token:
+			case struct_grain_yrepetition_token:
+			case struct_grain_zrepetition_token:
 				break;
 
 			case struct_ensemble_token:

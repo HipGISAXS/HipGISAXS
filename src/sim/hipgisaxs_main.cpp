@@ -31,6 +31,7 @@
 #endif // _OPENMP
 
 #include <woo/timer/woo_boostchronotimers.hpp>
+#include <woo/random/woo_mtrandom.hpp>
 
 #include <sim/hipgisaxs_main.hpp>
 #include <common/typedefs.hpp>
@@ -855,9 +856,6 @@ namespace hig {
 			Lattice *curr_lattice = (Lattice*) HiGInput::instance().lattice(*curr_struct);
 			bool struct_in_layer = (*s).second.grain_in_layer();
 
-			vector3_t grain_repeats = (*s).second.grain_repetition();
-			float_t grain_scaling = (*s).second.grain_scaling();
-
 			float_t *dd = NULL, *nn = NULL;		// come back to this ...
 												// these structures can be improved ...
 			float_t tz = 0;
@@ -881,6 +879,32 @@ namespace hig {
 			//	std::cerr << dd[d] << "\t" << dd[num_grains + d] << "\t" << dd[num_grains * 2 + d]
 			//				<< std::endl;
 			//} // for*/
+
+			/* grain repetitions */
+			bool is_grain_repetition_dist = false;
+			std::vector<vector3_t> all_grains_repeats;
+			if((*s).second.grain_is_repetition_dist()) {
+				is_grain_repetition_dist = true;
+				construct_repetition_distribution((*s).second.grain_repetitiondist(), num_grains,
+													all_grains_repeats);
+			} else {
+				vector3_t grain_repeats = (*s).second.grain_repetition();
+				all_grains_repeats.push_back(grain_repeats);
+			} // if-else
+
+			// for testing
+			//if(master) {
+			//	std::cout << "************ grain repetition distribution **************" << std::endl;
+			//	std::cout << " LENGTH = " << all_grains_repeats.size() << std::endl;
+			//	for(std::vector<vector3_t>::iterator i = all_grains_repeats.begin();
+			//			i != all_grains_repeats.end(); ++ i) {
+			//		std::cout << "[ " << (*i)[0] << " " << (*i)[1] << " " << (*i)[2] << " ]"
+			//				<< std::endl;
+			//	} // for
+			//} // if
+
+			/* grain scalings */
+			float_t grain_scaling = (*s).second.grain_scaling();
 
 			vector3_t curr_transvec = (*s).second.grain_transvec();
 			if(HiGInput::instance().param_nslices() <= 1) {
@@ -1017,6 +1041,12 @@ namespace hig {
 				mat_mul_3x1(rotation_matrix.r1_, rotation_matrix.r2_, rotation_matrix.r3_,
 							curr_dd_vec, result);
 				vector3_t center = result + curr_transvec;
+
+				/* set the repetition for this grain */
+				vector3_t grain_repeats;
+				if(is_grain_repetition_dist)
+					grain_repeats = all_grains_repeats[grain_i % all_grains_repeats.size()];
+				else grain_repeats = all_grains_repeats[0];	// same repeat for all grains
 
 				/* compute structure factor and form factor */
 
@@ -2087,6 +2117,96 @@ namespace hig {
 
 		return true;
 	} // HipGISAXS::orientation_distribution()
+
+
+	bool HipGISAXS::generate_repetition_range(unsigned int min_val, unsigned int max_val,
+												int num_vals, std::vector<unsigned int>& vals) {
+		// set up random number generator
+		woo::MTRandomNumberGenerator rng;
+		for(int i = 0; i < num_vals; ++ i) {
+			unsigned int val = min_val + rng.rand() * (max_val - min_val);	// floor
+			vals.push_back(val);
+		} // for
+		return true;
+	} // HipGISAXS::generate_repetition_range()
+
+	bool HipGISAXS::construct_repetition_distribution(const GrainRepetitions& repetition,
+														int num_grains,
+														std::vector<vector3_t>& all_grains_repeats) {
+		unsigned int min_x = 0, max_x = 0;
+		unsigned int min_y = 0, max_y = 0;
+		unsigned int min_z = 0, max_z = 0;
+		float_t mean_x = 0, sd_x = 0;	// for gaussian
+		float_t mean_y = 0, sd_y = 0;	// for gaussian
+		float_t mean_z = 0, sd_z = 0;	// for gaussian
+		// vectors for values
+		std::vector<unsigned int> vals_x, vals_y, vals_z;
+
+		// for x
+		switch(repetition.xstat()) {
+			case stat_none:
+				vals_x.push_back(repetition.xmin());
+				break;
+			case stat_range:
+				min_x = repetition.xmin(); max_x = repetition.xmax();
+				generate_repetition_range(min_x, max_x, num_grains, vals_x);
+				break;
+			case stat_gaussian:
+				std::cout << "uh-oh: gaussian distribution for grain repetitions is not yet supported!"
+							<< std::endl;
+				return false;
+				break;
+			default:
+				std::cerr << "error: invalid grain repetition distribution token encountered"
+							<< std::endl;
+				return false;
+		} // switch
+		// for y
+		switch(repetition.ystat()) {
+			case stat_none:
+				vals_y.push_back(repetition.ymin());
+				break;
+			case stat_range:
+				min_y = repetition.ymin(); max_y = repetition.ymax();
+				generate_repetition_range(min_y, max_y, num_grains, vals_y);
+				break;
+			case stat_gaussian:
+				std::cout << "uh-oh: gaussian distribution for grain repetitions is not yet supported!"
+							<< std::endl;
+				return false;
+				break;
+			default:
+				std::cerr << "error: invalid grain repetition distribution token encountered"
+							<< std::endl;
+				return false;
+		} // switch
+		// for z
+		switch(repetition.zstat()) {
+			case stat_none:
+				vals_z.push_back(repetition.zmin());
+				break;
+			case stat_range:
+				min_z = repetition.zmin(); max_z = repetition.zmax();
+				generate_repetition_range(min_z, max_z, num_grains, vals_z);
+				break;
+			case stat_gaussian:
+				std::cout << "uh-oh: gaussian distribution for grain repetitions is not yet supported!"
+							<< std::endl;
+				return false;
+				break;
+			default:
+				std::cerr << "error: invalid grain repetition distribution token encountered"
+							<< std::endl;
+				return false;
+		} // switch
+
+		// construct the vectors by zipping the x, y and z vals
+		int sizes = std::min(std::min(vals_x.size(), vals_y.size()), vals_z.size());
+		for(int i = 0; i < sizes; ++ i)
+			all_grains_repeats.push_back(vector3_t(vals_x[i], vals_y[i], vals_z[i]));
+
+		return true;
+	} // HipGISAXS::construct_repetition_distribution()
 
 
 	/**

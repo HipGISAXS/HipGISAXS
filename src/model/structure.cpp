@@ -261,6 +261,7 @@ namespace hig {
 		transvec_[0] = transvec_[1] = transvec_[2] = 0;
 		scaling_ = 1;
 		repetition_[0] = repetition_[1] = repetition_[2] = 1;
+		is_repetition_dist_ = false;
 	} // Grain::init()
 
 
@@ -270,6 +271,7 @@ namespace hig {
 		in_layer_ = false;
 		scaling_ = 0.0;
 		lattice_.clear();
+		is_repetition_dist_ = false;
 	} // Grain::clear()
 
 

@@ -167,14 +167,16 @@ namespace hig {
 				float_t sd_;		// for gaussian
 
 			public:
-				Repetition();
-				~Repetition();
+				Repetition(): stat_(stat_null), min_(0), max_(0), mean_(0), sd_(0) { }
+				~Repetition() { }
 
 				void stat(StatisticType s) { stat_ = s; }
 				void min(unsigned int v) { min_ = v; }
 				void max(unsigned int v) { max_ = v; }
 				void mean(float_t v) { mean_ = v; }
 				void sd(float_t v) { sd_ = v; }
+
+				friend class GrainRepetitions;
 
 		}; // class Repetition
 
@@ -184,8 +186,8 @@ namespace hig {
 			Repetition zrepetition_;
 
 		public:
-			GrainRepetitions();
-			~GrainRepetitions();
+			GrainRepetitions(): xrepetition_(), yrepetition_(), zrepetition_() { }
+			~GrainRepetitions() { }
 
 			void xrepetition_stat(StatisticType s) { xrepetition_.stat(s); }
 			void yrepetition_stat(StatisticType s) { yrepetition_.stat(s); }
@@ -203,6 +205,18 @@ namespace hig {
 			void yrepetition_sd(float_t v) { yrepetition_.sd(v); }
 			void zrepetition_sd(float_t v) { zrepetition_.sd(v); }
 
+			/* getters */
+			StatisticType xstat() const { return xrepetition_.stat_; }
+			StatisticType ystat() const { return yrepetition_.stat_; }
+			StatisticType zstat() const { return zrepetition_.stat_; }
+			unsigned int xmin() const { return xrepetition_.min_; }
+			unsigned int ymin() const { return yrepetition_.min_; }
+			unsigned int zmin() const { return zrepetition_.min_; }
+			unsigned int xmax() const { return xrepetition_.max_; }
+			unsigned int ymax() const { return yrepetition_.max_; }
+			unsigned int zmax() const { return zrepetition_.max_; }
+
+
 			friend class Grain;
 	}; // class GrainRepetitions
 
@@ -214,7 +228,8 @@ namespace hig {
 			float_t scaling_;
 			vector3_t transvec_;
 			vector3_t repetition_;
-			GrainRepetition repetitiondist_;
+			GrainRepetitions repetitiondist_;
+			bool is_repetition_dist_;		// true if repetitiondist_ is defined
 			RefractiveIndex refindex_;
 			Lattice lattice_;
 
@@ -247,6 +262,7 @@ namespace hig {
 			void repetition(float_t v, float_t w, float_t x) {
 				repetition_[0] = v, repetition_[1] = w, repetition_[2] = x; }
 
+			void is_repetition_dist(bool b) { is_repetition_dist_ = b; }
 			void xrepetition_stat(StatisticType s) { repetitiondist_.xrepetition_stat(s); }
 			void yrepetition_stat(StatisticType s) { repetitiondist_.yrepetition_stat(s); }
 			void zrepetition_stat(StatisticType s) { repetitiondist_.zrepetition_stat(s); }
@@ -351,6 +367,7 @@ namespace hig {
 			void grain_transvec(float_t v, float_t w, float_t x) { grain_.transvec(v, w, x); }
 			void grain_repetition(float_t v, float_t w, float_t x) { grain_.repetition(v, w, x); }
 
+			void grain_is_repetition_dist(bool b) { grain_.is_repetition_dist(b); }
 			void grain_xrepetition_min(unsigned int v) { grain_.xrepetition_min(v); }
 			void grain_yrepetition_min(unsigned int v) { grain_.yrepetition_min(v); }
 			void grain_zrepetition_min(unsigned int v) { grain_.zrepetition_min(v); }
@@ -406,6 +423,8 @@ namespace hig {
 			bool lattice_abc_set() { return grain_.lattice_abc_set(); }
 
 			vector3_t grain_repetition() const { return grain_.repetition_; }
+			bool grain_is_repetition_dist() const { return grain_.is_repetition_dist_; }
+			const GrainRepetitions& grain_repetitiondist() const { return grain_.repetitiondist_; }
 			std::string grain_orientation() { return ensemble_.orientations_.stat(); }
 			RefractiveIndex grain_refindex() { return grain_.refindex_; }
 			const std::string& grain_shape_key() { return grain_.shape_key_; }

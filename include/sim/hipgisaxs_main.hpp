@@ -126,6 +126,8 @@ namespace hig {
 			bool illuminated_volume(float_t, float_t, int, RefractiveIndex);
 			bool spatial_distribution(structure_iterator_t, float_t, int, int&, int&, float_t*&);
 			bool orientation_distribution(structure_iterator_t, float_t*, int, int, float_t*&);
+			bool generate_repetition_range(unsigned int, unsigned int, int, std::vector<unsigned int>&);
+			bool construct_repetition_distribution(const GrainRepetitions&, int, std::vector<vector3_t>&);
 
 			/* some functions just for testing and debugging */
 			bool write_qgrid(char* filename);

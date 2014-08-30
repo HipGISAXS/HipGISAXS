@@ -278,6 +278,7 @@ namespace hig {
 				/* statistic type keywords */
 
 				StatisticKeyWords_[std::string("none")]		= stat_none;
+				StatisticKeyWords_[std::string("single")]	= stat_none;
 				StatisticKeyWords_[std::string("uniform")]	= stat_uniform;
 				StatisticKeyWords_[std::string("random")]	= stat_random;
 				StatisticKeyWords_[std::string("range")]	= stat_range;
