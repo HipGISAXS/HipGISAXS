@@ -214,6 +214,10 @@ namespace hig {
 				KeyWords_[std::string("regmax")]			= fit_reference_data_region_max_token;
 				KeyWords_[std::string("regmin")]			= fit_reference_data_region_min_token;
 				KeyWords_[std::string("repetition")]		= struct_grain_repetition_token;
+				KeyWords_[std::string("repetitiondist")]	= struct_grain_repetitiondist_token;
+				KeyWords_[std::string("xrepetition")]		= struct_grain_xrepetition_token;
+				KeyWords_[std::string("yrepetition")]		= struct_grain_yrepetition_token;
+				KeyWords_[std::string("zrepetition")]		= struct_grain_zrepetition_token;
 				KeyWords_[std::string("restart")]			= fit_algorithm_restart_token;
 				KeyWords_[std::string("referencedata")]		= fit_reference_data_token;
 				KeyWords_[std::string("refindex")]			= refindex_token;
@@ -276,6 +280,7 @@ namespace hig {
 				StatisticKeyWords_[std::string("none")]		= stat_none;
 				StatisticKeyWords_[std::string("uniform")]	= stat_uniform;
 				StatisticKeyWords_[std::string("random")]	= stat_random;
+				StatisticKeyWords_[std::string("range")]	= stat_range;
 				StatisticKeyWords_[std::string("gaussian")]	= stat_gaussian;
 
 				/* lattice type keywords */

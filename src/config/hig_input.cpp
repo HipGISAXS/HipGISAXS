@@ -186,6 +186,24 @@ namespace hig {
 
 					case struct_grain_lattice_token:	// nothing to do :-/
 					case struct_grain_token:	// nothing to do :-/
+						break;
+
+					case struct_grain_repetitiondist_token:	// nothing to do :-/
+						// TODO: check if all three repetitions were defined
+						break;
+
+					case struct_grain_xrepetition_token:
+						// TODO: check for correctness of this repetition definition
+						break;
+
+					case struct_grain_yrepetition_token:
+						// TODO: check for correctness of this repetition definition
+						break;
+
+					case struct_grain_zrepetition_token:
+						// TODO: check for correctness of this repetition definition
+						break;
+
 					case struct_ensemble_orient_stat_token:	// nothing to do :-/
 					case struct_ensemble_orient_rot1_token:	// nothing to do :-/
 					case struct_ensemble_orient_rot2_token:	// nothing to do :-/
@@ -748,6 +766,18 @@ namespace hig {
 						curr_shape_param_.min(num);
 						break;
 
+					case struct_grain_xrepetition_token:
+						curr_structure_.grain_xrepetition_min(num);
+						break;
+
+					case struct_grain_yrepetition_token:
+						curr_structure_.grain_yrepetition_min(num);
+						break;
+
+					case struct_grain_zrepetition_token:
+						curr_structure_.grain_zrepetition_min(num);
+						break;
+
 					case instrument_scatter_alphai_token:
 						scattering_.alphai_min(num);
 						break;
@@ -777,6 +807,18 @@ namespace hig {
 				switch(parent) {
 					case shape_param_token:
 						curr_shape_param_.max(num);
+						break;
+
+					case struct_grain_xrepetition_token:
+						curr_structure_.grain_xrepetition_max(num);
+						break;
+
+					case struct_grain_yrepetition_token:
+						curr_structure_.grain_yrepetition_max(num);
+						break;
+
+					case struct_grain_zrepetition_token:
+						curr_structure_.grain_zrepetition_max(num);
 						break;
 
 					case instrument_scatter_alphai_token:
@@ -1185,6 +1227,18 @@ namespace hig {
 				switch(parent) {
 					case shape_param_token:
 						curr_shape_param_.stat(TokenMapper::instance().get_stattype_token(str));
+						break;
+
+					case struct_grain_xrepetition_token:
+						curr_structure_.grain_xrepetition_stat(TokenMapper::instance().get_stattype_token(str));
+						break;
+
+					case struct_grain_yrepetition_token:
+						curr_structure_.grain_yrepetition_stat(TokenMapper::instance().get_stattype_token(str));
+						break;
+
+					case struct_grain_zrepetition_token:
+						curr_structure_.grain_zrepetition_stat(TokenMapper::instance().get_stattype_token(str));
 						break;
 
 					case struct_ensemble_orient_token:

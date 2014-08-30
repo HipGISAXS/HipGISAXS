@@ -3,7 +3,6 @@
  *
  *  File: structure.hpp
  *  Created: Jun 09, 2012
- *  Modified: Thu 13 Mar 2014 04:29:17 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -157,6 +156,56 @@ namespace hig {
 
 	}; // class GrainOrientations
 
+
+	class GrainRepetitions {
+		class Repetition {
+			private:
+				StatisticType stat_;
+				unsigned int min_;	// repetitions have to be integers
+				unsigned int max_;
+				float_t mean_;		// for gaussian
+				float_t sd_;		// for gaussian
+
+			public:
+				Repetition();
+				~Repetition();
+
+				void stat(StatisticType s) { stat_ = s; }
+				void min(unsigned int v) { min_ = v; }
+				void max(unsigned int v) { max_ = v; }
+				void mean(float_t v) { mean_ = v; }
+				void sd(float_t v) { sd_ = v; }
+
+		}; // class Repetition
+
+		private:
+			Repetition xrepetition_;
+			Repetition yrepetition_;
+			Repetition zrepetition_;
+
+		public:
+			GrainRepetitions();
+			~GrainRepetitions();
+
+			void xrepetition_stat(StatisticType s) { xrepetition_.stat(s); }
+			void yrepetition_stat(StatisticType s) { yrepetition_.stat(s); }
+			void zrepetition_stat(StatisticType s) { zrepetition_.stat(s); }
+			void xrepetition_min(unsigned int v) { xrepetition_.min(v); }
+			void yrepetition_min(unsigned int v) { yrepetition_.min(v); }
+			void zrepetition_min(unsigned int v) { zrepetition_.min(v); }
+			void xrepetition_max(unsigned int v) { xrepetition_.max(v); }
+			void yrepetition_max(unsigned int v) { yrepetition_.max(v); }
+			void zrepetition_max(unsigned int v) { zrepetition_.max(v); }
+			void xrepetition_mean(float_t v) { xrepetition_.mean(v); }
+			void yrepetition_mean(float_t v) { yrepetition_.mean(v); }
+			void zrepetition_mean(float_t v) { zrepetition_.mean(v); }
+			void xrepetition_sd(float_t v) { xrepetition_.sd(v); }
+			void yrepetition_sd(float_t v) { yrepetition_.sd(v); }
+			void zrepetition_sd(float_t v) { zrepetition_.sd(v); }
+
+			friend class Grain;
+	}; // class GrainRepetitions
+
 	class Grain {
 		private:
 			std::string shape_key_;
@@ -165,6 +214,7 @@ namespace hig {
 			float_t scaling_;
 			vector3_t transvec_;
 			vector3_t repetition_;
+			GrainRepetition repetitiondist_;
 			RefractiveIndex refindex_;
 			Lattice lattice_;
 
@@ -196,6 +246,22 @@ namespace hig {
 				transvec_[0] = v, transvec_[1] = w, transvec_[2] = x; }
 			void repetition(float_t v, float_t w, float_t x) {
 				repetition_[0] = v, repetition_[1] = w, repetition_[2] = x; }
+
+			void xrepetition_stat(StatisticType s) { repetitiondist_.xrepetition_stat(s); }
+			void yrepetition_stat(StatisticType s) { repetitiondist_.yrepetition_stat(s); }
+			void zrepetition_stat(StatisticType s) { repetitiondist_.zrepetition_stat(s); }
+			void xrepetition_min(unsigned int v) { repetitiondist_.xrepetition_min(v); }
+			void yrepetition_min(unsigned int v) { repetitiondist_.yrepetition_min(v); }
+			void zrepetition_min(unsigned int v) { repetitiondist_.zrepetition_min(v); }
+			void xrepetition_max(unsigned int v) { repetitiondist_.xrepetition_max(v); }
+			void yrepetition_max(unsigned int v) { repetitiondist_.yrepetition_max(v); }
+			void zrepetition_max(unsigned int v) { repetitiondist_.zrepetition_max(v); }
+			void xrepetition_mean(float_t v) { repetitiondist_.xrepetition_mean(v); }
+			void yrepetition_mean(float_t v) { repetitiondist_.yrepetition_mean(v); }
+			void zrepetition_mean(float_t v) { repetitiondist_.zrepetition_mean(v); }
+			void xrepetition_sd(float_t v) { repetitiondist_.xrepetition_sd(v); }
+			void yrepetition_sd(float_t v) { repetitiondist_.yrepetition_sd(v); }
+			void zrepetition_sd(float_t v) { repetitiondist_.zrepetition_sd(v); }
 
 			void refindex_delta(float_t d) { refindex_.delta(d); }
 			void refindex_beta(float_t d) { refindex_.beta(d); }
@@ -284,6 +350,16 @@ namespace hig {
 			void grain_repetition(vector3_t v) { grain_.repetition(v); }
 			void grain_transvec(float_t v, float_t w, float_t x) { grain_.transvec(v, w, x); }
 			void grain_repetition(float_t v, float_t w, float_t x) { grain_.repetition(v, w, x); }
+
+			void grain_xrepetition_min(unsigned int v) { grain_.xrepetition_min(v); }
+			void grain_yrepetition_min(unsigned int v) { grain_.yrepetition_min(v); }
+			void grain_zrepetition_min(unsigned int v) { grain_.zrepetition_min(v); }
+			void grain_xrepetition_max(unsigned int v) { grain_.xrepetition_max(v); }
+			void grain_yrepetition_max(unsigned int v) { grain_.yrepetition_max(v); }
+			void grain_zrepetition_max(unsigned int v) { grain_.zrepetition_max(v); }
+			void grain_xrepetition_stat(StatisticType s) { grain_.xrepetition_stat(s); }
+			void grain_yrepetition_stat(StatisticType s) { grain_.yrepetition_stat(s); }
+			void grain_zrepetition_stat(StatisticType s) { grain_.zrepetition_stat(s); }
 
 			void grain_orientation_rot1_angles(vector2_t v) { ensemble_.grain_orientation_rot1_angles(v); }
 			void grain_orientation_rot2_angles(vector2_t v) { ensemble_.grain_orientation_rot2_angles(v); }
