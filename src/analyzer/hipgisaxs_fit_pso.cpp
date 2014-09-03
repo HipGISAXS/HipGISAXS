@@ -8,6 +8,7 @@
  */
 
 #include <iostream>
+#include <fstream>
 #include <algorithm>
 #include <limits>
 #include <ctime>
@@ -492,6 +493,23 @@ namespace hig {
 		
 		// set the final values
 		xn_ = best_values_;
+
+		// print the global best - only root master does this
+		#ifdef USE_MPI
+		if((*multi_node_).is_master(root_comm_)) {
+		#endif
+			std::cout << "@@@@@@ Global best: ";
+			std::cout << best_fitness_ << " [ ";
+			for(int j = 0; j < num_params_; ++ j)
+				std::cout << params_[j] << ": " << best_values_[j] << " ";
+			std::cout << "]" << std::endl;
+			std::ofstream outfile("hipgisaxs_fit_params.txt");
+			for(int j = 0; j < num_params_; ++ j)
+				outfile << params_[j] << ":\t" << best_values_[j] << std::endl;
+			outfile.close();
+		#ifdef USE_MPI
+		} // if
+		#endif
 
 		return true;
 	} // ParticleSwarmOptimization::run()
