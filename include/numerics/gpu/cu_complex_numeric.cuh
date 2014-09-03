@@ -3,7 +3,7 @@
  *
  *  File: cu_complex_numeric.cuh
  *  Created: Oct 17, 2012
- *  Modified: Sun 06 Jul 2014 01:25:33 PM PDT
+ *  Modified: Thu 28 Aug 2014 03:46:02 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -308,24 +308,28 @@ namespace hig {
 
 	__device__ static __inline__ cuFloatComplex cuCsinc(cuFloatComplex value) {
 		cuFloatComplex temp;
-		if(fabsf(value.x) < 1e-14 && fabsf(value.y) < 1e-14) temp = make_cuFloatComplex(1.0, 0.0);
+		//if(fabsf(value.x) < 1e-14 && fabsf(value.y) < 1e-14) temp = make_cuFloatComplex(1.0, 0.0);
+		if(fabsf(value.x) < 1e-5 && fabsf(value.y) < 1e-5) temp = make_cuFloatComplex(1.0, 0.0);
 		else temp = cuCsin(value) / value;
 		return temp;
 	} // cuCsinc()
 
 	__device__ static __inline__ cuDoubleComplex cuCsinc(cuDoubleComplex value) {
 		cuDoubleComplex temp;
-		if(fabs(value.x) < 1e-14 && fabs(value.y) < 1e-14) temp = make_cuDoubleComplex(1.0, 0.0);
+		//if(fabs(value.x) < 1e-14 && fabs(value.y) < 1e-14) temp = make_cuDoubleComplex(1.0, 0.0);
+		if(fabs(value.x) < 1e-9 && fabs(value.y) < 1e-9) temp = make_cuDoubleComplex(1.0, 0.0);
 		else temp = cuCsin(value) / value;
 		return temp;
 	} // cuCsinc()
 
 	__device__ static __inline__ bool cuCiszero(cuFloatComplex value) {
-		return (fabsf(value.x) < 1e-14 && fabsf(value.y) < 1e-14);
+		//return (fabsf(value.x) < 1e-14 && fabsf(value.y) < 1e-14);
+		return (fabsf(value.x) < 1e-5 && fabsf(value.y) < 1e-5);
 	} // cuCiszero()
 
 	__device__ static __inline__ bool cuCiszero(cuDoubleComplex value) {
-		return (fabs(value.x) < 1e-14 && fabs(value.y) < 1e-14);
+		//return (fabs(value.x) < 1e-14 && fabs(value.y) < 1e-14);
+		return (fabs(value.x) < 1e-9 && fabs(value.y) < 1e-9);
 	} // cuCiszero()
 
 

@@ -25,7 +25,7 @@
 
 #include <cmath>
 #include <omp.h>
-#include <unordered_map>
+#include <vector>
 
 #include <utils/utilities.hpp>
 
@@ -134,20 +134,30 @@ namespace hig {
 				float_t* conv_data = new (std::nothrow) float_t[nx * ny];
 
 				// compute the gaussian matrix to avoid computation of gaussian() every time
-				std::unordered_map <int, float_t> gauss_map;
-				int gn = std::max(nx, ny);
-				for(int i = - gn + 1; i < gn; ++ i) gauss_map[i] = gaussian(i, sigma);
+                int i6sigma = (int) (6 * sigma);
+				int gn = 2 * i6sigma + 1;
+                float_t * gauss_map = new float_t[gn];
+				for(int i = 0;  i < gn; ++ i) { 
+                    gauss_map[i] = gaussian(i-i6sigma, sigma);
+                }
 
 				// first do horizontal smearing
 				#pragma omp parallel for collapse(2)
 				for(int j = 0; j < ny; ++ j) {
 					for(int i = 0; i < nx; ++ i) {
 						float_t sum = 0.0;
-						for(int k = 0; k < nx; ++ k) {
+                        float_t norm = 0;
+                        int ibeg = std::max(0, i-i6sigma);
+                        int iend = std::min((int) nx, i+i6sigma);
+						for(int k = ibeg; k < iend; ++ k) {
 							//sum += data[j * nx + k] * gaussian(k - i, sigma);
-							sum += data[j * nx + k] * gauss_map.at(k - i);
+							sum += data[j * nx + k] * gauss_map[k-ibeg];
+                            norm += gauss_map[k-ibeg];
 						} // for
-						conv_data[j * nx + i] = sum;
+                        if ( norm > 0 )
+						    conv_data[j * nx + i] = sum / norm;
+                        else
+                            conv_data[j * nx + i] = 0;
 					} // for
 				} // for
 
@@ -156,18 +166,31 @@ namespace hig {
 				for(int i = 0; i < nx; ++ i) {
 					for(int j = 0; j < ny; ++ j) {
 						float_t sum = 0.0;
-						for(int l = 0; l < ny; ++ l) {
+                        float_t norm = 0;
+                        int jbeg = std::max(0, j-i6sigma);
+                        int jend = std::min((int) ny, j+i6sigma);
+						for(int l = jbeg; l < jend; ++ l) {
 							//sum += conv_data[l * nx + i] * gaussian(l - j, sigma);
-							sum += conv_data[l * nx + i] * gauss_map.at(l - j);
+							sum += conv_data[l * nx + i] * gauss_map[l-jbeg];
+                            norm+= gauss_map[l-jbeg];
 						} // for
-						data[j * nx + i] = sum;
+                        if (norm > 0 )
+						    data[j * nx + i] = sum / norm;
+                        else
+                            data[j * nx + i] = 0;
 					} // for
 				} // for
 
 				delete[] conv_data;
+                delete [] gauss_map;
 				return true;
 			} // convolution_gaussian_2d_new()
 
+
+            bool gaussian_fft ( float_t * &data, unsigned nx, unsigned ny, float_t sigma) {
+                float_t  * image_f;
+                float_t  * filter, * filter_f;
+            }
 
 /*			bool compute_conv_2d_valid1(unsigned int a_xsize, unsigned int a_ysize, const double *a,
 									unsigned int b_xsize, unsigned int b_ysize, const double *b,

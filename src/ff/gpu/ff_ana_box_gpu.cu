@@ -3,7 +3,7 @@
  *
  *  File: ff_ana_gpu.cu
  *  Created: Oct 16, 2012
- *  Modified: Sun 26 Jan 2014 10:29:35 AM PST
+ *  Modified: Thu 28 Aug 2014 03:56:23 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
