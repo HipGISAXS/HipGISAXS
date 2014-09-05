@@ -3,7 +3,7 @@
  *
  *  File: token_mapper.hpp
  *  Created: Jun 05, 2012
- *  Modified: Sun 26 Jan 2014 09:39:13 AM PST
+ *  Modified: Fri 05 Sep 2014 02:10:39 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -148,6 +148,7 @@ namespace hig {
 				KeyWords_[std::string("init")]				= fit_param_init_token;
 				KeyWords_[std::string("inplanerot")]		= instrument_scatter_inplanerot_token;
 				KeyWords_[std::string("instrumentation")]	= instrument_token;
+				KeyWords_[std::string("iratio")]			= struct_iratio_token;
 				KeyWords_[std::string("key")]				= key_token;
 				KeyWords_[std::string("lattice")]			= struct_grain_lattice_token;
 				KeyWords_[std::string("layer")]				= layer_token;

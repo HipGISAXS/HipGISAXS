@@ -3,7 +3,7 @@
  *
  *  File: tokens.hpp
  *  Created: Jun 05, 2012
- *  Modified: Sat 28 Dec 2013 09:13:19 AM PST
+ *  Modified: Fri 05 Sep 2014 02:09:15 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -104,6 +104,7 @@ namespace hig {
 
 		/* structure components */
 		struct_token,
+		struct_iratio_token,			/* intensity ratio, used for multiple structures */
 		struct_grain_token,
 		struct_grain_skey_token,
 		struct_grain_lkey_token,

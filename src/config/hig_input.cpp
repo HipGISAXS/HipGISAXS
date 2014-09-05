@@ -3,7 +3,7 @@
  *
  *  File: hig_input.cpp
  *  Created: Jun 11, 2012
- *  Modified: Tue 01 Apr 2014 04:45:13 PM PDT
+ *  Modified: Fri 05 Sep 2014 02:51:51 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -554,6 +554,7 @@ namespace hig {
 				curr_structure_.init();
 				break;
 
+			case struct_iratio_token:
 			case struct_grain_token:
 			case struct_grain_skey_token:
 			case struct_grain_lkey_token:
@@ -824,6 +825,10 @@ namespace hig {
 
 			case layer_thickness_token:
 				curr_layer_.thickness(num);
+				break;
+
+			case struct_iratio_token:
+				curr_structure_.iratio(num);
 				break;
 
 			case struct_grain_lattice_a_token:
