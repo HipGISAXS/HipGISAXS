@@ -625,6 +625,7 @@ namespace hig {
 				curr_structure_.init();
 				break;
 
+			case struct_iratio_token:
 			case struct_grain_token:
 			case struct_grain_skey_token:
 			case struct_grain_lkey_token:
@@ -954,6 +955,10 @@ namespace hig {
 
 			case layer_thickness_token:
 				curr_layer_.thickness(num);
+				break;
+
+			case struct_iratio_token:
+				curr_structure_.iratio(num);
 				break;
 
 			case struct_grain_lattice_a_token:

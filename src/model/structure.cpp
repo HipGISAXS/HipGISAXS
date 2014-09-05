@@ -302,7 +302,7 @@ namespace hig {
 	/** structure functions
 	 */
 
-	Structure::Structure() { }
+	Structure::Structure() { iratio_ = 1.0; }
 	Structure::~Structure() { }
 
 
@@ -310,6 +310,7 @@ namespace hig {
 		key_ = "";
 		grain_.init();
 		ensemble_.init();
+		iratio_ = 1.0;
 	} // Structure::init()
 
 
@@ -317,6 +318,7 @@ namespace hig {
 		key_.clear();
 		grain_.clear();
 		ensemble_.clear();
+		iratio_ = 1.0;
 	} // Structure::clear()
 
 

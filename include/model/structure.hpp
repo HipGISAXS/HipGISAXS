@@ -339,6 +339,7 @@ namespace hig {
 			std::string key_;
 			Grain grain_;
 			Ensemble ensemble_;
+			float_t iratio_;
 
 		public:
 			Structure();
@@ -350,6 +351,7 @@ namespace hig {
 			/* setters */
 
 			void key(std::string s) { key_ = s; }
+			void iratio(float_t i) { iratio_ = i; }
 
 			void lattice_vec_a(vector3_t v) { grain_.lattice_vec_a(v); }
 			void lattice_vec_b(vector3_t v) { grain_.lattice_vec_b(v); }
@@ -418,6 +420,7 @@ namespace hig {
 			/* getters */
 
 			std::string key() const { return key_; }
+			float_t iratio() const { return iratio_; }
 
 			const Lattice* lattice() const { return &(grain_.lattice_); }
 			bool lattice_abc_set() { return grain_.lattice_abc_set(); }

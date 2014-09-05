@@ -1220,7 +1220,6 @@ namespace hig {
 				if(multi_node_.size(struct_comm) > 1) {
 					// collect grain_ids from all procs in struct_comm
 					if(smaster) {
-						std::cout << "I AM NOW COLLECTING ALL GRAINS DATA" << std::endl;
 						id = new (std::nothrow) complex_t[num_grains * nqx_ * nqy_ * nqz_];
 					} // if
 					int *proc_sizes = new (std::nothrow) int[multi_node_.size(struct_comm)];
@@ -1233,14 +1232,6 @@ namespace hig {
 						proc_displacements[0] = 0;
 						for(int i = 1; i < multi_node_.size(struct_comm); ++ i)
 							proc_displacements[i] = proc_displacements[i - 1] + proc_sizes[i - 1];
-						std::cout << "PROC SIZES: ";
-						for(int i = 0; i < multi_node_.size(struct_comm); ++ i)
-							std::cout << proc_sizes[i] << " ";
-						std::cout << std::endl;
-						std::cout << "PROC DISPL: ";
-						for(int i = 0; i < multi_node_.size(struct_comm); ++ i)
-							std::cout << proc_displacements[i] << " ";
-						std::cout << std::endl;
 					} // if
 					multi_node_.gatherv(struct_comm, grain_ids, gmaster * num_gr * nqx_ * nqy_ * nqz_,
 										id, proc_sizes, proc_displacements);
@@ -1342,6 +1333,19 @@ namespace hig {
 
 		} // for num_structs
 
+		std::vector<float_t> iratios;
+		float_t iratios_sum = 0.0;
+		for(structure_iterator_t s = HiGInput::instance().structure_begin(); s != HiGInput::instance().structure_end(); ++ s) {
+			iratios.push_back((*s).second.iratio());
+			iratios_sum += (*s).second.iratio();
+		} // for
+
+		if(iratios_sum != 1.0) {
+			std::cerr << "error: iratios of all structures must add to 1.0 ("
+						<< iratios_sum << ")" << std::endl;
+			return false;
+		} // if
+
 		float_t* all_struct_intensity = NULL;
 		complex_t* all_c_struct_intensity = NULL;
 		#ifdef USE_MPI
@@ -1409,7 +1413,7 @@ namespace hig {
 								float_t sum = 0.0;
 								for(int s = 0; s < num_structures_; ++ s) {
 									unsigned int index = s * nqx_ * nqy_ * nqz_ + curr_index;
-									sum += all_struct_intensity[index];
+									sum += all_struct_intensity[index] * iratios[s];
 								} // for d
 								img3d[curr_index] = sum;
 							} // for x
@@ -1435,7 +1439,7 @@ namespace hig {
 								float_t sum = 0.0;
 								for(int s = 0; s < num_structures_; ++ s) {
 									unsigned int index = s * nqx_ * nqy_ * nqz_ + curr_index;
-									sum += all_struct_intensity[index];
+									sum += all_struct_intensity[index] * iratios[s];
 								} // for d
 								img3d[curr_index] = sum;
 							} // for x
@@ -1453,7 +1457,7 @@ namespace hig {
 								complex_t sum = 0.0;
 								for(int s = 0; s < num_structures_; ++ s) {
 									unsigned int index = s * nqx_ * nqy_ * nqz_ + curr_index;
-									sum += all_c_struct_intensity[index];
+									sum += all_c_struct_intensity[index] * iratios[s];
 								} // for d
 								img3d[curr_index] = sum.real() * sum.real() + sum.imag() * sum.imag();
 							} // for x

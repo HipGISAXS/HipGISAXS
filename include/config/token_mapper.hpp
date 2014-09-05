@@ -179,6 +179,7 @@ namespace hig {
 				KeyWords_[std::string("init")]				= fit_param_init_token;
 				KeyWords_[std::string("inplanerot")]		= instrument_scatter_inplanerot_token;
 				KeyWords_[std::string("instrumentation")]	= instrument_token;
+				KeyWords_[std::string("iratio")]			= struct_iratio_token;
 				KeyWords_[std::string("key")]				= key_token;
 				KeyWords_[std::string("lattice")]			= struct_grain_lattice_token;
 				KeyWords_[std::string("layer")]				= layer_token;

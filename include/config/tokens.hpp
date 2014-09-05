@@ -103,6 +103,7 @@ namespace hig {
 
 		/* structure components */
 		struct_token,
+		struct_iratio_token,			/* intensity ratio, used for multiple structures */
 		struct_grain_token,
 		struct_grain_skey_token,
 		struct_grain_lkey_token,
