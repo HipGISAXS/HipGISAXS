@@ -3,7 +3,6 @@
  *
  *  File: tokens.hpp
  *  Created: Jun 05, 2012
- *  Modified: Fri 05 Sep 2014 02:09:15 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>

@@ -3,7 +3,6 @@
  *
  *  File: hig_input.cpp
  *  Created: Jun 11, 2012
- *  Modified: Fri 05 Sep 2014 02:51:51 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>

@@ -3,7 +3,6 @@
  *
  *  File: structure.cpp
  *  Created: Jun 12, 2012
- *  Modified: Fri 05 Sep 2014 03:03:32 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>

@@ -3,7 +3,6 @@
  *
  *  File: structure.hpp
  *  Created: Jun 09, 2012
- *  Modified: Fri 05 Sep 2014 02:31:05 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
