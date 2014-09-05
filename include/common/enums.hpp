@@ -3,7 +3,7 @@
  *
  *  File: enums.hpp
  *  Created: Jun 11, 2012
- *  Modified: Sat 30 Aug 2014 08:40:17 AM PDT
+ *  Modified: Thu 04 Sep 2014 07:56:28 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -128,6 +128,13 @@ namespace hig {
 		algo_pso_param_nparticle,	/* number of particles for pso algorithm */
 		algo_pso_param_ngen			/* number of generations for pso algorithm */
 	}; // enum FitAlgorithmParamType
+
+	enum ReferenceFileType {
+		reference_file_null,		/* default, null type */
+		reference_file_error,		/* error type */
+		reference_file_ascii,		/* plain text file */
+		reference_file_edf			/* EDF file format */
+	}; // ReferenceFileType
 
 } // namespace hig
 

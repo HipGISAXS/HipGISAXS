@@ -42,10 +42,15 @@ namespace hig{
 		float_vec_t read_string_values(string_t line);
 
 	public:
-		ImageData() { }
-
 		ImageData(std::string filename) {
 			if(!read(filename)) exit(2);
+		} // ImageData()
+
+		ImageData():
+				n_par_(0), n_ver_(0) {
+			data_.clear();
+			axis_par_.clear();
+			axis_ver_.clear();
 		} // ImageData()
 
 		ImageData(const float_vec_t& data, float_vec_t axis_par, float_vec_t axis_ver,
@@ -68,6 +73,11 @@ namespace hig{
 
 		/* setters */
 		void set_data(const float_vec_t& data) { data_ = data; }
+		void set_data(const float* data, unsigned int n_par, unsigned int n_ver) {
+			n_par_ = n_par;
+			n_ver_ = n_ver;
+			set_data(data);
+		} // set_data()
 		void set_data(const float* data) {
 			data_.clear();
 			for(unsigned int i = 0; i < n_par_ * n_ver_; ++ i) data_.push_back(data[i]);
