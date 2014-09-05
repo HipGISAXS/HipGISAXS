@@ -3,7 +3,7 @@
  *
  *  File: objective_func.cpp
  *  Created: Feb 02, 2014
- *  Modified: Sun 24 Aug 2014 09:46:20 AM PDT
+ *  Modified: Thu 04 Sep 2014 10:00:15 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -12,6 +12,7 @@
 #include <map>
 
 #include <analyzer/objective_func_hipgisaxs.hpp>
+#include <file/edf_reader.hpp>
 
 namespace hig{
 
@@ -74,10 +75,61 @@ namespace hig{
 	} // HipGISAXSObjectiveFunction::set_distance_measure()
 
 
+	ReferenceFileType get_reference_file_type(const std::string& fname) {
+		size_t len = fname.size();
+		char temp_ext[16];
+		int extlen = 0;
+		while(len > 0) {
+			char temp = fname[len - 1];
+			if(temp == '.') break;
+			temp_ext[extlen ++] = temp;
+			if(extlen == 15) break;	// failsafe
+			-- len;
+		} // while()
+		temp_ext[extlen] = '\0';
+		std::string temp_ext2(temp_ext);
+		std::string ext(temp_ext2.rbegin(), temp_ext2.rend());
+		std::cout << "EXTENSION = " << ext << std::endl;
+		if(ext.compare(std::string("edf")) == 0) return reference_file_edf;
+		if(ext.compare(std::string("EDF")) == 0) return reference_file_edf;
+		if(ext.compare(std::string("txt")) == 0) return reference_file_ascii;
+		if(ext.compare(std::string("TXT")) == 0) return reference_file_ascii;
+		if(ext.compare(std::string("dat")) == 0) return reference_file_ascii;
+		if(ext.compare(std::string("DAT")) == 0) return reference_file_ascii;
+		if(ext.compare(std::string("out")) == 0) return reference_file_ascii;
+		if(ext.compare(std::string("OUT")) == 0) return reference_file_ascii;
+		return reference_file_error;
+	} // get_reference_file_type()
+
+
 	bool HipGISAXSObjectiveFunction::set_reference_data(int i) {
         if(i >= 0) {
             if(ref_data_ != NULL) delete ref_data_;
-            ref_data_ = new ImageData(hipgisaxs_.reference_data_path(i));
+			std::string ref_filename = hipgisaxs_.reference_data_path(i);
+			ReferenceFileType ref_type = get_reference_file_type(ref_filename);
+			float_t* temp_data = NULL;
+			unsigned int temp_n_par = 0, temp_n_ver = 0;
+			EDFReader* edfreader = NULL;
+			switch(ref_type) {
+				case reference_file_ascii:
+					ref_data_ = new ImageData(ref_filename);
+					break;
+
+				case reference_file_edf:
+					ref_data_ = new ImageData();
+					edfreader = new EDFReader(ref_filename.c_str());
+					edfreader->get_data(temp_data, temp_n_par, temp_n_ver);
+					ref_data_->set_data(temp_data, temp_n_par, temp_n_ver);
+					delete edfreader;
+					break;
+
+				case reference_file_null:
+				case reference_file_error:
+				default:
+					std::cerr << "error: error in reference data file format (i.e. extension!!!)"
+								<< std::endl;
+					return false;
+			} // if-else
             if(n_par_ != ref_data_->n_par() || n_ver_ != ref_data_->n_ver()) {
                 std::cerr << "warning: reference and simulation data dimension sizes do not match [ "
                             << ref_data_->n_par() << " * " << ref_data_->n_ver() << " ] != [ "
