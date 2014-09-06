@@ -121,15 +121,16 @@ namespace hig {
 
 
 	bool EDFReader::extract_data(std::ifstream& infile, char* chunk, size_t size) {
+		typedef float real_t;
 		unsigned long int num_bytes = atol(header_[std::string("EDF_BinarySize")].c_str());
-		double* data;
+		real_t* data;
 		unsigned long int count = 0;
 		data_.clear();
 		while(count != num_bytes) {
 			infile.read(chunk, size);
-			data = reinterpret_cast<double*>(chunk);
+			data = reinterpret_cast<real_t*>(chunk);
 			int len = std::min(size, (num_bytes - count));
-			for(int i = 0; i < len / sizeof(double); ++ i) data_.push_back((float_t) data[i]);
+			for(int i = 0; i < len / sizeof(real_t); ++ i) data_.push_back((float_t) data[i]);
 			count += len;
 		} // while
 		if(data_.size() != cols_ * rows_) {
