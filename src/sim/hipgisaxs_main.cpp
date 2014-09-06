@@ -1874,9 +1874,11 @@ namespace hig {
 			srand(time(NULL));
 			if(dim == 3) {
 				// find max density - number of grains in vol
-				vector3_t max_density = min(floor(vol_ / spaced_cell) + 1, maxgrains);
-				rand_dim_x = max(1,
-							(int)std::floor(max_density[0] * max_density[1] * max_density[2] / 4.0));
+				//vector3_t max_density = min(floor(vol_ / spaced_cell) + 1, maxgrains);
+				//rand_dim_x = max(1,
+				//			(int)std::floor(max_density[0] * max_density[1] * max_density[2] / 4.0));
+				// TEMPORARY HACK ... FIXME ...
+				rand_dim_x = maxgrains[0] * maxgrains[1] * maxgrains[2];
 				rand_dim_y = 3;
 
 				// construct random matrix
@@ -1934,7 +1936,7 @@ namespace hig {
 					d[8 * rand_dim_x + 3 * rand_dim_x + x] = d[8 * rand_dim_x + x];
 
 				// fix the rand_dim_x
-				rand_dim_x *= 4;
+				// rand_dim_x *= 4; ///////////////////////////////////////////////
 
 			} else if(dim == 2) {
 				std::cerr << "error: dim == 2 case not implemented" << std::endl;
@@ -1951,7 +1953,9 @@ namespace hig {
 
 		} else if(distribution == "regular") {
 			if(dim == 3) {
-				vector3_t nd = min(floor(vol_ / spaced_cell) + 1, maxgrains);
+				//vector3_t nd = min(floor(vol_ / spaced_cell) + 1, maxgrains);
+				// TEMPORARY HACK .......... FIXME ...
+				vector3_t nd = maxgrains;
 
 				int size = nd[0] * nd[1] * nd[2];
 				d = new (std::nothrow) float_t[3 * size];
