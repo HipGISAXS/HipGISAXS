@@ -31,6 +31,7 @@
 #endif // _OPENMP
 
 #include <woo/timer/woo_boostchronotimers.hpp>
+#include <woo/random/woo_mtrandom.hpp>
 
 #include <sim/hipgisaxs_main.hpp>
 #include <common/typedefs.hpp>
@@ -2010,7 +2011,42 @@ namespace hig {
 				std::cerr << "error: invalid dim size " << dim << std::endl;
 				return false;
 			} // if-else
-		} else {
+		} else if(distribution == "gaussian" || distribution == "normal") {
+			// gaussian distribution
+/*			float_t mean = (*s).second.ensemble_distribution_p1();
+			float_t sd = (*s).second.ensemble_distribution_p2();
+			woo::MTNormalRandomNumberGenerator rgen(mean, sd);
+			if(dim == 3) {
+				vector3_t nd = maxgrains;
+				unsigned int size = nd[0] * nd[1] * nd[2];
+				d = new (std::nothrow) float_t[dim * size];
+				float_t* d1 = d;
+				float_t* d2 = d + size;
+				float_t* d3 = d2 + size;
+
+				//float_t max_x = vol_[0];
+				//float_t max_y = vol_[1];
+				//float_t max_z = vol_[2];
+				float_t max_x = spaced_cell[0] * (nd[0] - 1);
+				float_t max_y = spaced_cell[1] * (nd[1] - 1);
+				float_t max_z = spaced_cell[2] * (nd[2] - 1);
+
+				// compute x for each grain
+				for(unsigned int i = 0; i < size; ++ i);
+
+			} else if(dim == 2) {
+				std::cerr << "error: dim == 2 case not implemented" << std::endl;
+				// ...
+				return false;
+			} else if(dim == 1) {
+				std::cerr << "error: dim == 1 case not implemented" << std::endl;
+				// ...
+				return false;
+			} else {
+				std::cerr << "error: invalid dim size " << dim << std::endl;
+				return false;
+			} // if-else
+*/		} else {
 			// read .spa file ...
 			std::cerr << "uh-oh: seems like you wanted to read distribution from a file" << std::endl;
 			std::cerr << "sorry dear, this has not been implemented yet" << std::endl;
