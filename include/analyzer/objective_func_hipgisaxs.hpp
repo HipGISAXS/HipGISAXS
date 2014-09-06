@@ -3,7 +3,7 @@
  *
  *  File: objective_func_hipgisaxs.hpp
  *  Created: Feb 02, 2014
- *  Modified: Sun 24 Aug 2014 09:07:03 AM PDT
+ *  Modified: Sat 06 Sep 2014 01:39:39 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -31,6 +31,7 @@ namespace hig {
 			bool set_reference_data(int);
 			bool set_reference_data(char*) { }
 			bool read_mask_data(string_t);
+			bool read_edf_mask_data(string_t);
 
 			float_vec_t operator()(const float_vec_t&);
 

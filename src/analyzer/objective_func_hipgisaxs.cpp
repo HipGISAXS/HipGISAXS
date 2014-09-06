@@ -3,7 +3,7 @@
  *
  *  File: objective_func.cpp
  *  Created: Feb 02, 2014
- *  Modified: Thu 04 Sep 2014 10:00:15 PM PDT
+ *  Modified: Sat 06 Sep 2014 01:45:13 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -141,7 +141,9 @@ namespace hig{
                 n_ver_ = ref_data_->n_ver();
                 hipgisaxs_.override_qregion(n_par_, n_ver_, i);
             } // if
-            if(!read_mask_data(hipgisaxs_.reference_data_mask(i))) return false;
+			if(ref_type == reference_file_edf)
+				if(!read_edf_mask_data(hipgisaxs_.reference_data_mask(i))) return false;
+			else if(!read_mask_data(hipgisaxs_.reference_data_mask(i))) return false;
             if(mask_data_.size() != n_par_ * n_ver_) {
                 std::cerr << "error: mask and reference data dimension sizes do not match [ "
                             << n_par_ << " * " << n_ver_ << " ] != " << mask_data_.size()
@@ -178,6 +180,22 @@ namespace hig{
 		mask_set_ = true;
 		return true;
 	} // HipGISAXSObjectiveFunction::read_mask_data()
+
+
+	bool HipGISAXSObjectiveFunction::read_edf_mask_data(string_t filename) {
+		mask_data_.clear();
+		if(filename.empty()) {
+			mask_data_.resize(n_par_ * n_ver_, 1);
+			return true;
+		} // if
+		EDFReader edfreader(filename.c_str());
+		float_t* temp_data = NULL;
+		unsigned int temp_n_par = 0, temp_n_ver = 0;
+		edfreader.get_data(temp_data, temp_n_par, temp_n_ver);
+		for(unsigned int i = 0; i < temp_n_par * temp_n_ver; ++ i) mask_data_.push_back(temp_data[i]);
+		mask_set_ = true;
+		return true;
+	} // HipGISAXSObjectiveFunction::read_edf_mask_data()
 
 
 	float_vec_t HipGISAXSObjectiveFunction::operator()(const float_vec_t& x) {
