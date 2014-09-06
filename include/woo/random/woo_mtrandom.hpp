@@ -3,7 +3,6 @@
   *
   *  File: woo_mtrandom.hpp
   *  Created: Aug 25, 2013
-  *  Modified: Sun 25 Aug 2013 01:55:38 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -15,6 +14,11 @@
 #include <random>
 
 namespace woo {
+
+	enum MTRandomDistribution {
+		mt_uniform_dist,		/* uniform distribution */
+		mt_normal_dist			/* normal/gaussian distribution */
+	};
 
 	// C++ std Mersenne-Twister random number generator
 	class MTRandomNumberGenerator : public WooRandomNumberGenerator {
@@ -68,6 +72,60 @@ namespace woo {
 
 			double rand_last() { return last_; }
 	}; // class WooRandomNumberGenerator
+
+	// C++ std Mersenne-Twister random number generator with normal distribution
+	class MTNormalRandomNumberGenerator : public WooRandomNumberGenerator {
+		private:
+			// random number generator
+			std::mt19937_64 mt_rand_gen_;
+			std::normal_distribution<double> dist_;
+			double mean_;
+			double sd_;
+
+			// return a random number
+			double mt_rand() {
+				return dist_(mt_rand_gen_);
+			} // mt_rand_01()
+
+		public:
+			MTNormalRandomNumberGenerator(double mean, double sd): dist_(mean, sd) {
+				mean_ = mean;
+				sd_ = sd;
+				min_ = mt_rand_gen_.min();
+				max_ = mt_rand_gen_.max();
+				last_ = -1.0;	// nothing
+			} // MTRandomNumberGenerator()
+
+			// construct with a given seed
+			MTNormalRandomNumberGenerator(double mean, double sd, unsigned int seed): dist_(mean, sd) {
+				mt_rand_gen_.seed(seed);
+				mean_ = mean;
+				sd_ = sd;
+				min_ = mt_rand_gen_.min();
+				max_ = mt_rand_gen_.max();
+				last_ = -1.0;	// nothing
+			} // MTRandomNumberGenerator()
+
+			~MTNormalRandomNumberGenerator() { }
+
+			void reset() {
+				mt_rand_gen_.seed(0);
+				last_ = -1.0;
+			} // reset()
+
+			void reset(unsigned int seed) {
+				mt_rand_gen_.seed(seed);
+				last_ = -1.0;
+			} // reset()
+
+			// returns the next random number
+			double rand() {
+				last_ = mt_rand();
+				return last_;
+			} // rand()
+
+			double rand_last() { return last_; }
+	}; // class WooNormalRandomNumberGenerator
 
 } // namespace woo
 

@@ -1914,9 +1914,11 @@ namespace hig {
 			srand(time(NULL));
 			if(dim == 3) {
 				// find max density - number of grains in vol
-				vector3_t max_density = min(floor(vol_ / spaced_cell) + 1, maxgrains);
-				rand_dim_x = max(1,
-							(int)std::floor(max_density[0] * max_density[1] * max_density[2] / 4.0));
+				//vector3_t max_density = min(floor(vol_ / spaced_cell) + 1, maxgrains);
+				//rand_dim_x = max(1,
+				//			(int)std::floor(max_density[0] * max_density[1] * max_density[2] / 4.0));
+				// TEMPORARY HACK ... FIXME ...
+				rand_dim_x = maxgrains[0] * maxgrains[1] * maxgrains[2];
 				rand_dim_y = 3;
 
 				// construct random matrix
@@ -1974,7 +1976,7 @@ namespace hig {
 					d[8 * rand_dim_x + 3 * rand_dim_x + x] = d[8 * rand_dim_x + x];
 
 				// fix the rand_dim_x
-				rand_dim_x *= 4;
+				// rand_dim_x *= 4; ///////////////////////////////////////////////
 
 			} else if(dim == 2) {
 				std::cerr << "error: dim == 2 case not implemented" << std::endl;
@@ -1991,7 +1993,9 @@ namespace hig {
 
 		} else if(distribution == "regular") {
 			if(dim == 3) {
-				vector3_t nd = min(floor(vol_ / spaced_cell) + 1, maxgrains);
+				//vector3_t nd = min(floor(vol_ / spaced_cell) + 1, maxgrains);
+				// TEMPORARY HACK .......... FIXME ...
+				vector3_t nd = maxgrains;
 
 				int size = nd[0] * nd[1] * nd[2];
 				d = new (std::nothrow) float_t[3 * size];
@@ -2051,7 +2055,42 @@ namespace hig {
 				std::cerr << "error: invalid dim size " << dim << std::endl;
 				return false;
 			} // if-else
-		} else {
+		} else if(distribution == "gaussian" || distribution == "normal") {
+			// gaussian distribution
+/*			float_t mean = (*s).second.ensemble_distribution_p1();
+			float_t sd = (*s).second.ensemble_distribution_p2();
+			woo::MTNormalRandomNumberGenerator rgen(mean, sd);
+			if(dim == 3) {
+				vector3_t nd = maxgrains;
+				unsigned int size = nd[0] * nd[1] * nd[2];
+				d = new (std::nothrow) float_t[dim * size];
+				float_t* d1 = d;
+				float_t* d2 = d + size;
+				float_t* d3 = d2 + size;
+
+				//float_t max_x = vol_[0];
+				//float_t max_y = vol_[1];
+				//float_t max_z = vol_[2];
+				float_t max_x = spaced_cell[0] * (nd[0] - 1);
+				float_t max_y = spaced_cell[1] * (nd[1] - 1);
+				float_t max_z = spaced_cell[2] * (nd[2] - 1);
+
+				// compute x for each grain
+				for(unsigned int i = 0; i < size; ++ i);
+
+			} else if(dim == 2) {
+				std::cerr << "error: dim == 2 case not implemented" << std::endl;
+				// ...
+				return false;
+			} else if(dim == 1) {
+				std::cerr << "error: dim == 1 case not implemented" << std::endl;
+				// ...
+				return false;
+			} else {
+				std::cerr << "error: invalid dim size " << dim << std::endl;
+				return false;
+			} // if-else
+*/		} else {
 			// read .spa file ...
 			std::cerr << "uh-oh: seems like you wanted to read distribution from a file" << std::endl;
 			std::cerr << "sorry dear, this has not been implemented yet" << std::endl;
