@@ -37,7 +37,7 @@ namespace hig {
 		infile.close();
 		delete[] dataseg;
 		print_header();
-		print_data();
+		//print_data();
 	} // EDFReader::EDFReader()
 
 
@@ -126,7 +126,7 @@ namespace hig {
 
 	bool EDFReader::extract_data(std::ifstream& infile, char* chunk, size_t size) {
 		unsigned long int num_bytes = atol(header_[std::string("EDF_BinarySize")].c_str());
-		typedef float real_t;
+		typedef double real_t;
 		real_t* data;
 		unsigned long int count = 0;
 		data_.clear();
@@ -136,7 +136,7 @@ namespace hig {
 			int len = std::min(size, (num_bytes - count));
 			for(int i = 0; i < len / sizeof(real_t); ++ i) data_.push_back((float_t) data[i]);
 			count += len;
-			std::cout << "****** " << count << std::endl;
+			//std::cout << "****** " << count << std::endl;
 		} // while
 		if(data_.size() != cols_ * rows_) {
 			std::cerr << "error: mismatch in reference data size" << std::endl;

@@ -3,7 +3,7 @@
  *
  *  File: objective_func.cpp
  *  Created: Feb 02, 2014
- *  Modified: Sat 06 Sep 2014 01:45:13 PM PDT
+ *  Modified: Sun 07 Sep 2014 07:24:09 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -129,7 +129,7 @@ namespace hig{
 					std::cerr << "error: error in reference data file format (i.e. extension!!!)"
 								<< std::endl;
 					return false;
-			} // if-else
+			} // switch
             if(n_par_ != ref_data_->n_par() || n_ver_ != ref_data_->n_ver()) {
                 std::cerr << "warning: reference and simulation data dimension sizes do not match [ "
                             << ref_data_->n_par() << " * " << ref_data_->n_ver() << " ] != [ "
@@ -141,9 +141,9 @@ namespace hig{
                 n_ver_ = ref_data_->n_ver();
                 hipgisaxs_.override_qregion(n_par_, n_ver_, i);
             } // if
-			if(ref_type == reference_file_edf)
+			if(ref_type == reference_file_edf) {
 				if(!read_edf_mask_data(hipgisaxs_.reference_data_mask(i))) return false;
-			else if(!read_mask_data(hipgisaxs_.reference_data_mask(i))) return false;
+			} else { if(!read_mask_data(hipgisaxs_.reference_data_mask(i))) return false; }
             if(mask_data_.size() != n_par_ * n_ver_) {
                 std::cerr << "error: mask and reference data dimension sizes do not match [ "
                             << n_par_ << " * " << n_ver_ << " ] != " << mask_data_.size()
