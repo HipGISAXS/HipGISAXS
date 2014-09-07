@@ -36,8 +36,8 @@ namespace hig {
 		if(!extract_data(infile, dataseg, EDF_CHUNK_SIZE)) exit(1);
 		infile.close();
 		delete[] dataseg;
-		//print_header();
-		//print_data();
+		print_header();
+		print_data();
 	} // EDFReader::EDFReader()
 
 
@@ -92,17 +92,19 @@ namespace hig {
 
 
 	bool EDFReader::extract_header(std::ifstream& infile, char* chunk, size_t size) {
-		char key[64], value[64];
+		char key[size], value[size];
 		int counter = 0, i_k = 0, i_v = 0;
 		bool end_k = false, end_v = false;
 		infile.read(chunk, size);
 		while(1) {
 			if(!get_next_item(chunk, counter, size, key, i_k, end_k, value, i_v, end_v)) {
+				counter = 0;
 				infile.read(chunk, size);
 				continue;
 			} // if
 			// we have a new key value pair
 			header_[std::string(key)] = std::string(value);
+			//std::cout << "****** " << key << " -> " << value << std::endl;
 			i_k = 0; i_v = 0;
 			end_k = false; end_v = false;
 			if(header_done(chunk, counter, size)) break;
@@ -110,6 +112,8 @@ namespace hig {
 
 		cols_ = convert_to_unsigned(std::string("Dim_1"));
 		rows_ = convert_to_unsigned(std::string("Dim_2"));
+
+		//std::cout << "*** Header reading done. " << std::endl;
 
 		return true;	/* to signal that header was complete */
 	} // EDFReader::extract_header()
@@ -121,8 +125,8 @@ namespace hig {
 
 
 	bool EDFReader::extract_data(std::ifstream& infile, char* chunk, size_t size) {
-		typedef float real_t;
 		unsigned long int num_bytes = atol(header_[std::string("EDF_BinarySize")].c_str());
+		typedef float real_t;
 		real_t* data;
 		unsigned long int count = 0;
 		data_.clear();
@@ -132,6 +136,7 @@ namespace hig {
 			int len = std::min(size, (num_bytes - count));
 			for(int i = 0; i < len / sizeof(real_t); ++ i) data_.push_back((float_t) data[i]);
 			count += len;
+			std::cout << "****** " << count << std::endl;
 		} // while
 		if(data_.size() != cols_ * rows_) {
 			std::cerr << "error: mismatch in reference data size" << std::endl;
@@ -139,6 +144,7 @@ namespace hig {
 			std::cerr << "error: data_.size() = " << data_.size() << std::endl;
 			return false;
 		} // if
+		//std::cout << "*** Data reading done." << std::endl;
 		return true;
 	} // EDFReader::extract_data()
 
