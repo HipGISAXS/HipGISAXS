@@ -123,6 +123,8 @@ namespace hig {
 			void save_gisaxs(float_t *final_data, std::string output);
 			bool gaussian_smearing(float_t*&, float_t);
 
+			bool normalize(float_t*&, unsigned int);
+
 			bool illuminated_volume(float_t, float_t, int, RefractiveIndex);
 			bool spatial_distribution(structure_iterator_t, float_t, int, int&, int&, float_t*&);
 			bool orientation_distribution(structure_iterator_t, float_t*, int, int, float_t*&);

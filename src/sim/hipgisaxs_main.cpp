@@ -1420,6 +1420,10 @@ namespace hig {
 		#endif
 
 		if(master) {
+			// normalize
+			if(all_struct_intensity != NULL)
+				normalize(all_struct_intensity, nqx_ * nqy_ * nqz_);
+
 			img3d = new (std::nothrow) float_t[nqx_ * nqy_ * nqz_];
 			// sum of all struct_intensity into intensity
 
@@ -1519,6 +1523,21 @@ namespace hig {
 
 		return true;
 	} // HipGISAXS::run_gisaxs()
+
+
+	bool HipGISAXS::normalize(float_t*& data, unsigned int size) {
+		float_t min_val = data[0], max_val = data[0];
+		#pragma omp parallel for
+		for(unsigned int i = 1; i < size; ++ i) {
+			min_val = std::min(min_val, data[i]);
+			max_val = std::max(max_val, data[i]);
+		} // for
+		float_t d = max_val - min_val;
+		if(d < 1e-30) return false;
+		#pragma omp parallel for
+		for(unsigned int i = 1; i < size; ++ i) data[i] = (data[i] - min_val) / d;
+		return true;
+	} // HipGISAXS::normalize()
 
 
 	bool HipGISAXS::structure_factor(StructureFactor& sf,
