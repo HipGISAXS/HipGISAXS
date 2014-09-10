@@ -135,6 +135,8 @@ namespace hig {
 		struct_ensemble_orient_rot3_token,
 		struct_ensemble_orient_rot_axis_token,
 		struct_ensemble_orient_rot_angles_token,
+		struct_ensemble_orient_rot_anglemean_token,
+		struct_ensemble_orient_rot_anglesd_token,
 
 		/* compute parameters */
 		compute_token,

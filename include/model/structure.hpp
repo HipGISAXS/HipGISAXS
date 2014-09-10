@@ -100,9 +100,12 @@ namespace hig {
 			private: 
 				char axis_;		// x y or z
 				vector2_t angles_;
+				float_t mean_;	// for gaussian
+				float_t sd_;	// for gaussian
+				bool mean_set_;
 
 			public:
-				Rotation() : axis_('n') { }
+				Rotation() : axis_('n'), mean_(0), sd_(0), mean_set_(false) { }
 				~Rotation() { }
 
 				void init();
@@ -114,8 +117,13 @@ namespace hig {
 				void angles(vector2_t v) { angles_ = v; }
 				void angles(float_t a, float_t b) { angles_[0] = a; angles_[1] = b; }
 
-				void angles_min(float_t val) { angles_[0] = val; }
+				void angles_min(float_t val) { angles_[0] = val; if(!mean_set_) mean_ = val; }
 				void angles_max(float_t val) { angles_[1] = val; }
+
+				void angle_mean(float_t val) { mean_ = val; mean_set_ = true; }
+				void angle_sd(float_t val) { sd_ = val; }
+				float_t angle_mean() { return mean_; }
+				float_t angle_sd() { return sd_; }
 
 		}; // class Rotation
 
@@ -149,6 +157,13 @@ namespace hig {
 			void rot1_axis(char c) { rot1_.axis(c); }
 			void rot2_axis(char c) { rot2_.axis(c); }
 			void rot3_axis(char c) { rot3_.axis(c); }
+
+			void rot1_anglemean(float_t m) { rot1_.angle_mean(m); }
+			void rot2_anglemean(float_t m) { rot2_.angle_mean(m); }
+			void rot3_anglemean(float_t m) { rot3_.angle_mean(m); }
+			void rot1_anglesd(float_t m) { rot1_.angle_sd(m); }
+			void rot2_anglesd(float_t m) { rot2_.angle_sd(m); }
+			void rot3_anglesd(float_t m) { rot3_.angle_sd(m); }
 
 			bool update_param(const std::string&, float_t);
 
@@ -326,6 +341,13 @@ namespace hig {
 			void grain_orientation_rot2_axis(char c) { orientations_.rot2_axis(c); }
 			void grain_orientation_rot3_axis(char c) { orientations_.rot3_axis(c); }
 
+			void grain_orientation_rot1_mean(float_t c) { orientations_.rot1_anglemean(c); }
+			void grain_orientation_rot2_mean(float_t c) { orientations_.rot2_anglemean(c); }
+			void grain_orientation_rot3_mean(float_t c) { orientations_.rot3_anglemean(c); }
+			void grain_orientation_rot1_sd(float_t c) { orientations_.rot1_anglesd(c); }
+			void grain_orientation_rot2_sd(float_t c) { orientations_.rot2_anglesd(c); }
+			void grain_orientation_rot3_sd(float_t c) { orientations_.rot3_anglesd(c); }
+
 			void grain_orientation_stat(std::string s) { orientations_.stat(s); }
 
 			void distribution(std::string s) { distribution_ = s; }
@@ -393,6 +415,13 @@ namespace hig {
 			void grain_orientation_rot1_axis(char c) { ensemble_.grain_orientation_rot1_axis(c); }
 			void grain_orientation_rot2_axis(char c) { ensemble_.grain_orientation_rot2_axis(c); }
 			void grain_orientation_rot3_axis(char c) { ensemble_.grain_orientation_rot3_axis(c); }
+
+			void grain_orientation_rot1_anglemean(float_t a) { ensemble_.grain_orientation_rot1_mean(a); }
+			void grain_orientation_rot2_anglemean(float_t a) { ensemble_.grain_orientation_rot2_mean(a); }
+			void grain_orientation_rot3_anglemean(float_t a) { ensemble_.grain_orientation_rot3_mean(a); }
+			void grain_orientation_rot1_anglesd(float_t a) { ensemble_.grain_orientation_rot1_sd(a); }
+			void grain_orientation_rot2_anglesd(float_t a) { ensemble_.grain_orientation_rot2_sd(a); }
+			void grain_orientation_rot3_anglesd(float_t a) { ensemble_.grain_orientation_rot3_sd(a); }
 
 			void grain_refindex_delta(float_t d) { grain_.refindex_delta(d); }
 			void grain_refindex_beta(float_t d) { grain_.refindex_beta(d); }
@@ -465,6 +494,13 @@ namespace hig {
 				return vector3_t((float_t) ((char)axis - 'x'), angs[0], angs[1]);
 				//return vector3_t((float_t) axis, angs[0], angs[1]);
 			} // rotation_rot3()
+
+			float_t rotation_rot1_anglemean() { return ensemble_.orientations_.rot1().angle_mean(); }
+			float_t rotation_rot2_anglemean() { return ensemble_.orientations_.rot2().angle_mean(); }
+			float_t rotation_rot3_anglemean() { return ensemble_.orientations_.rot3().angle_mean(); }
+			float_t rotation_rot1_anglesd() { return ensemble_.orientations_.rot1().angle_sd(); }
+			float_t rotation_rot2_anglesd() { return ensemble_.orientations_.rot2().angle_sd(); }
+			float_t rotation_rot3_anglesd() { return ensemble_.orientations_.rot3().angle_sd(); }
 
 			/* modifiers (updates) */
 			bool update_param(const std::string&, float_t);

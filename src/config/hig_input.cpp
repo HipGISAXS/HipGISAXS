@@ -656,6 +656,8 @@ namespace hig {
 			case struct_ensemble_orient_rot3_token:
 			case struct_ensemble_orient_rot_axis_token:
 			case struct_ensemble_orient_rot_angles_token:
+			case struct_ensemble_orient_rot_anglemean_token:
+			case struct_ensemble_orient_rot_anglesd_token:
 				break;
 
 			case compute_token:
@@ -1035,6 +1037,42 @@ namespace hig {
 					std::cerr << "error: more than 2 values in angles vector" << std::endl;
 					return false;
 				} // if
+				break;
+
+			case struct_ensemble_orient_rot_anglemean_token:
+				parent = get_curr_parent();
+				switch(parent) {
+					case struct_ensemble_orient_rot1_token:
+						curr_structure_.grain_orientation_rot1_anglemean(num);
+						break;
+					case struct_ensemble_orient_rot2_token:
+						curr_structure_.grain_orientation_rot2_anglemean(num);
+						break;
+					case struct_ensemble_orient_rot3_token:
+						curr_structure_.grain_orientation_rot3_anglemean(num);
+						break;
+					default:
+						std::cerr << "error: something wrong in the rot angle mean" << std::endl;
+						return false;
+				} // switch
+				break;
+
+			case struct_ensemble_orient_rot_anglesd_token:
+				parent = get_curr_parent();
+				switch(parent) {
+					case struct_ensemble_orient_rot1_token:
+						curr_structure_.grain_orientation_rot1_anglesd(num);
+						break;
+					case struct_ensemble_orient_rot2_token:
+						curr_structure_.grain_orientation_rot2_anglesd(num);
+						break;
+					case struct_ensemble_orient_rot3_token:
+						curr_structure_.grain_orientation_rot3_anglesd(num);
+						break;
+					default:
+						std::cerr << "error: something wrong in the rot angle sd" << std::endl;
+						return false;
+				} // switch
 				break;
 
 			case compute_outregion_maxpoint_token:

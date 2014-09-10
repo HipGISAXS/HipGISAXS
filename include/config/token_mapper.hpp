@@ -157,6 +157,8 @@ namespace hig {
 				KeyWords_[std::string("algoparam")]			= fit_algorithm_param_token;
 				KeyWords_[std::string("alphai")]			= instrument_scatter_alphai_token;
 				KeyWords_[std::string("angles")]			= struct_ensemble_orient_rot_angles_token;
+				KeyWords_[std::string("anglemean")]			= struct_ensemble_orient_rot_anglemean_token;
+				KeyWords_[std::string("anglesd")]			= struct_ensemble_orient_rot_anglesd_token;
 				KeyWords_[std::string("axis")]				= struct_ensemble_orient_rot_axis_token;
 				KeyWords_[std::string("b")]					= struct_grain_lattice_b_token;
 				KeyWords_[std::string("beta")]				= refindex_beta_token;

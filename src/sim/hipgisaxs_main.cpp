@@ -869,6 +869,13 @@ namespace hig {
 			orientation_distribution(s, dd, ndx, ndy, nn);
 			int num_grains = ndx;
 
+			/*for(int i = 0; i < ndx; ++ i) std::cout << nn[i] << " ";
+			std::cout << std::endl;
+			for(int i = 0; i < ndx; ++ i) std::cout << nn[ndx + i] << " ";
+			std::cout << std::endl;
+			for(int i = 0; i < ndx; ++ i) std::cout << nn[2 * ndx + i] << " ";
+			std::cout << std::endl;*/
+
 			int r1axis = (int) (*s).second.rotation_rot1()[0];
 			int r2axis = (int) (*s).second.rotation_rot2()[0];
 			int r3axis = (int) (*s).second.rotation_rot3()[0];
@@ -2198,6 +2205,55 @@ namespace hig {
 				nn[x] = x * da;
 			} // for x
 			for(int x = 0; x < 2 * ndx; ++ x) nn[ndx + x] = 0;*/
+		} else if(distribution == "gaussian" || distribution == "normal") {	// gaussian
+			float_t mean1 = (*s).second.rotation_rot1_anglemean();
+			float_t sd1 = (*s).second.rotation_rot1_anglesd();
+			float_t mean2 = (*s).second.rotation_rot2_anglemean();
+			float_t sd2 = (*s).second.rotation_rot2_anglesd();
+			float_t mean3 = (*s).second.rotation_rot3_anglemean();
+			float_t sd3 = (*s).second.rotation_rot3_anglesd();
+			woo::MTNormalRandomNumberGenerator rgen1(mean1, sd1);
+			woo::MTNormalRandomNumberGenerator rgen2(mean1, sd2);
+			woo::MTNormalRandomNumberGenerator rgen3(mean1, sd3);
+			float_t drot1 = fabs(rot1[2] - rot1[1]);
+			float_t drot2 = fabs(rot2[2] - rot2[1]);
+			float_t drot3 = fabs(rot3[2] - rot3[1]);
+			if(drot1 > 1e-20) {
+				for(int x = 0; x < ndx; ++ x) {
+					float_t temp;
+					while(1) {
+						temp = rgen1.rand();
+						if(temp > rot1[1] && temp < rot1[2]) break;
+					} // while
+					nn[x] = temp * PI_ / 180;
+				} // for x
+			} else {
+				for(int x = 0; x < ndx; ++ x) nn[x] = rot1[1] * PI_ / 180;
+			} // if
+			if(drot2 > 1e-20) {
+				for(int x = 0; x < ndx; ++ x) {
+					float_t temp;
+					while(1) {
+						temp = rgen2.rand();
+						if(temp > rot2[1] && temp < rot2[2]) break;
+					} // while
+					nn[ndx + x] = temp * PI_ / 180;
+				} // for x
+			} else {
+				for(int x = 0; x < ndx; ++ x) nn[ndx + x] = rot2[1] * PI_ / 180;
+			} // if
+			if(drot3 > 1e-20) {
+				for(int x = 0; x < ndx; ++ x) {
+					float_t temp;
+					while(1) {
+						temp = rgen3.rand();
+						if(temp > rot3[1] && temp < rot3[2]) break;
+					} // while
+					nn[2 * ndx + x] = temp * PI_ / 180;
+				} // for x
+			} else {
+				for(int x = 0; x < ndx; ++ x) nn[2 * ndx + x] = rot3[1] * PI_ / 180;
+			} // if
 		} else {
 			// TODO read .ori file ...
 			std::cerr << "uh-oh: I guess you wanted to read orientations from a file" << std::endl;
