@@ -167,8 +167,12 @@ namespace hig {
 		stat_ = "single";
 		rot1_.axis('x');
 		rot1_.angles(0, 0);
-		rot2_.axis('n');
-		rot3_.axis('n');		// for null. all could be same as rot1 too ...
+		rot2_.axis('y');
+		rot2_.angles(0, 0);
+		rot3_.axis('z');
+		rot3_.angles(0, 0);
+		//rot2_.axis('n');
+		//rot3_.axis('n');		// for null. all could be same as rot1 too ...
 	} // GrainOrientations::init()
 
 

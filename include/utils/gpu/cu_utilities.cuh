@@ -3,7 +3,7 @@
  *
  *  File: cu_utilities.cuh
  *  Created: Feb 19, 2013
- *  Modified: Sun 26 Jan 2014 10:07:53 AM PST
+ *  Modified: Wed 10 Sep 2014 09:20:18 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -39,9 +39,12 @@ namespace hig {
 	__device__ static __inline__ void compute_meshpoints(const float_t qx, const float_t qy,
 										const cucomplex_t qz, const float_t* rot,
 										cucomplex_t& mqx, cucomplex_t& mqy, cucomplex_t& mqz) {
-		mqx = make_cuC(qy * rot[0] + qx * rot[1] + qz.x * rot[2], qz.y * rot[2]);
-		mqy = make_cuC(qy * rot[3] + qx * rot[4] + qz.x * rot[5], qz.y * rot[5]);
-		mqz = make_cuC(qy * rot[6] + qx * rot[7] + qz.x * rot[8], qz.y * rot[8]);
+		//mqx = make_cuC(qx * rot[0] + qy * rot[1] + qz.x * rot[2], qz.y * rot[2]);
+		//mqy = make_cuC(qx * rot[3] + qy * rot[4] + qz.x * rot[5], qz.y * rot[5]);
+		//mqz = make_cuC(qx * rot[6] + qy * rot[7] + qz.x * rot[8], qz.y * rot[8]);
+		mqx = make_cuC(qx * rot[0] + qy * rot[3] + qz.x * rot[6], qz.y * rot[6]);
+		mqy = make_cuC(qx * rot[1] + qy * rot[4] + qz.x * rot[7], qz.y * rot[7]);
+		mqz = make_cuC(qx * rot[2] + qy * rot[5] + qz.x * rot[8], qz.y * rot[8]);
 	} // compute_meshpoints()
 
 } // namespace hig

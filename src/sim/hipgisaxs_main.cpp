@@ -1034,6 +1034,9 @@ namespace hig {
 				vector3_t r_tot1, r_tot2, r_tot3;
 				mat_mul_3x3(rotation_matrix.r1_, rotation_matrix.r2_, rotation_matrix.r3_,
 							r_norm1, r_norm2, r_norm3, r_tot1, r_tot2, r_tot3);
+				//mat_mul_3x3(r_norm1, r_norm2, r_norm3,
+				//			rotation_matrix.r1_, rotation_matrix.r2_, rotation_matrix.r3_,
+				//			r_tot1, r_tot2, r_tot3);
 
 				/* center of unit cell replica */
 				vector3_t curr_dd_vec(dd[grain_i + 0],
@@ -1066,6 +1069,12 @@ namespace hig {
 					FormFactor ff;
 				#endif
 
+				// print rot matrix for debug
+				//std::cout << ">>>s1 " << r_tot1[0] << " " << r_tot1[1] << " " << r_tot1[2] << std::endl;
+				//std::cout << ">>>s2 " << r_tot2[0] << " " << r_tot2[1] << " " << r_tot2[2] << std::endl;
+				//std::cout << ">>>s3 " << r_tot3[0] << " " << r_tot3[1] << " " << r_tot3[2] << std::endl;
+
+
 				// TODO: parallel tasks ...
 
 				structure_factor(sf, HiGInput::instance().experiment(), center, curr_lattice,
@@ -1091,6 +1100,11 @@ namespace hig {
 					std::cout << "done." << std::endl;
 				} // if*/
 
+				// print rot matrix for debug
+				//std::cout << ">>>f1 " << r_tot1[0] << " " << r_tot1[1] << " " << r_tot1[2] << std::endl;
+				//std::cout << ">>>f2 " << r_tot2[0] << " " << r_tot2[1] << " " << r_tot2[2] << std::endl;
+				//std::cout << ">>>f3 " << r_tot3[0] << " " << r_tot3[1] << " " << r_tot3[2] << std::endl;
+
 				//read_form_factor("curr_ff.out");
 				form_factor(ff, shape_name, shape_file, shape_params, curr_transvec,
 							shape_tau, shape_eta, r_tot1, r_tot2, r_tot3
@@ -1100,6 +1114,7 @@ namespace hig {
 							);
 				//ff.print_ff(nqx_, nqy_, nqz_extended_);
 				//ff.printff(nqx_, nqy_, nqz_extended_);
+				//ff.save_ff(nqx_, nqy_, nqz_, "ff.out");
 
 				// save form factor data on disk
 				/*if(master) {
@@ -1185,6 +1200,14 @@ namespace hig {
 										unsigned int curr_index_2 = 2 * nqx_ * nqy_ * nqz_ + curr_index;
 										unsigned int curr_index_3 = 3 * nqx_ * nqy_ * nqz_ + curr_index;
 										base_id[curr_index] = dn2 *
+	//										(h0[curr_index] * sf[curr_index_0] +
+	//										rk2[curr_index] * sf[curr_index_1] +
+	//										rk1[curr_index] * sf[curr_index_2] +
+	//										rk1rk2[curr_index] * sf[curr_index_3]);
+//											(h0[curr_index] * ff[curr_index_0] +
+//											rk2[curr_index] * ff[curr_index_1] +
+//											rk1[curr_index] * ff[curr_index_2] +
+//											rk1rk2[curr_index] * ff[curr_index_3]);
 											(h0[curr_index] * sf[curr_index_0] * ff[curr_index_0] +
 											rk2[curr_index] * sf[curr_index_1] * ff[curr_index_1] +
 											rk1[curr_index] * sf[curr_index_2] * ff[curr_index_2] +
@@ -1573,9 +1596,11 @@ namespace hig {
 		float_t s = sin(angle);
 		float_t c = cos(angle);
 
-		r1[0] = c; r1[1] = 0.0; r1[2] = -s;
+		//r1[0] = c; r1[1] = 0.0; r1[2] = -s;
+		r1[0] = c; r1[1] = 0.0; r1[2] = s;
 		r2[0] = 0.0; r2[1] = 1.0; r2[2]  = 0.0;
-		r3[0] = s; r3[1] = 0.0; r3[2]  = c;
+		//r3[0] = s; r3[1] = 0.0; r3[2]  = c;
+		r3[0] = -s; r3[1] = 0.0; r3[2]  = c;
 
 		return true;
 	} // HipGISAXS::compute_rotation_matrix_y()

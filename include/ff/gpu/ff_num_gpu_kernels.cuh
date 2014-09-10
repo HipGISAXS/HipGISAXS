@@ -3,7 +3,7 @@
  *
  *  File: ff_num_gpu_kernels.cuh
  *  Created: Apr 11, 2013
- *  Modified: Sun 15 Sep 2013 06:38:34 PM PDT
+ *  Modified: Wed 10 Sep 2014 10:56:11 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -94,9 +94,12 @@
 			cucomplex_t temp_qz = shared_qz[threadIdx.y];
 
 			// TODO: optimize this ... please ...
-			cucomplex_t temp_x = rot[0] * temp_qx + rot[1] * temp_qy + rot[2] * temp_qz;
-			cucomplex_t temp_y = rot[3] * temp_qx + rot[4] * temp_qy + rot[5] * temp_qz;
-			cucomplex_t temp_z = rot[6] * temp_qx + rot[7] * temp_qy + rot[8] * temp_qz;
+			//cucomplex_t temp_x = rot[0] * temp_qx + rot[1] * temp_qy + rot[2] * temp_qz;
+			//cucomplex_t temp_y = rot[3] * temp_qx + rot[4] * temp_qy + rot[5] * temp_qz;
+			//cucomplex_t temp_z = rot[6] * temp_qx + rot[7] * temp_qy + rot[8] * temp_qz;
+			cucomplex_t temp_x = rot[0] * temp_qx + rot[3] * temp_qy + rot[6] * temp_qz;
+			cucomplex_t temp_y = rot[1] * temp_qx + rot[4] * temp_qy + rot[7] * temp_qz;
+			cucomplex_t temp_z = rot[2] * temp_qx + rot[5] * temp_qy + rot[8] * temp_qz;
 
 			cucomplex_t qy2 = temp_y * temp_y;
 			cucomplex_t qxy2 = temp_x * temp_x + qy2;

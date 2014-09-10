@@ -3,7 +3,7 @@
  *
  *  File: ff_num_gpu.cu
  *  Created: Aug 25, 2012
- *  Modified: Sun 26 Jan 2014 10:55:47 AM PST
+ *  Modified: Wed 10 Sep 2014 10:55:23 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -48,7 +48,7 @@ namespace hig {
 	 * Some forward declarations.
 	 */
 
-	/* K1: default kernel, with t decompostion, no shared memory */
+	/* K1: kernel, with t decompostion, no shared memory */
 	__global__ void form_factor_kernel(float_t*, float_t*, cucomplex_t*, float_t*, short int*,
 										unsigned int, unsigned int, unsigned int, unsigned int,
 										unsigned int, unsigned int, unsigned int, unsigned int,
@@ -2656,9 +2656,12 @@ namespace hig {
 				float_t temp_qx = shared_qx[i_x];
 
 				// optimize this ... rot should go to shared memory
-				cucomplex_t temp_x = rot[0] * temp_qx + rot[1] * temp_qy + rot[2] * temp_qz;
-				cucomplex_t temp_y = rot[3] * temp_qx + rot[4] * temp_qy + rot[5] * temp_qz;
-				cucomplex_t temp_z = rot[6] * temp_qx + rot[7] * temp_qy + rot[8] * temp_qz;
+				//cucomplex_t temp_x = rot[0] * temp_qx + rot[1] * temp_qy + rot[2] * temp_qz;
+				//cucomplex_t temp_y = rot[3] * temp_qx + rot[4] * temp_qy + rot[5] * temp_qz;
+				//cucomplex_t temp_z = rot[6] * temp_qx + rot[7] * temp_qy + rot[8] * temp_qz;
+				cucomplex_t temp_x = rot[0] * temp_qx + rot[3] * temp_qy + rot[6] * temp_qz;
+				cucomplex_t temp_y = rot[1] * temp_qx + rot[4] * temp_qy + rot[7] * temp_qz;
+				cucomplex_t temp_z = rot[2] * temp_qx + rot[5] * temp_qy + rot[8] * temp_qz;
 
 				cucomplex_t qy2 = temp_y * temp_y;
 
