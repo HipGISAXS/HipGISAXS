@@ -200,6 +200,10 @@ namespace hig {
 					rot1_.angles_min(new_val);
 				} else if(keyword2.compare("max") == 0 || keyword2.compare("1") == 0) {
 					rot1_.angles_max(new_val);
+				} else if(keyword2.compare("anglemean") == 0) {
+					rot1_.angle_mean(new_val);
+				} else if(keyword2.compare("anglesd") == 0) {
+					rot1_.angle_sd(new_val);
 				} else {
 					std::cerr << "error: invalid keyword '" << keyword2 << "' in param '"
 								<< str << "'" << std::endl;
@@ -217,6 +221,10 @@ namespace hig {
 					rot2_.angles_min(new_val);
 				} else if(keyword2.compare("max") == 0 || keyword2.compare("1") == 0) {
 					rot2_.angles_min(new_val);
+				} else if(keyword2.compare("anglemean") == 0) {
+					rot2_.angle_mean(new_val);
+				} else if(keyword2.compare("anglesd") == 0) {
+					rot2_.angle_sd(new_val);
 				} else {
 					std::cerr << "error: invalid keyword '" << keyword2 << "' in param '"
 								<< str << "'" << std::endl;
@@ -234,6 +242,10 @@ namespace hig {
 					rot3_.angles_min(new_val);
 				} else if(keyword2.compare("max") == 0 || keyword2.compare("1") == 0) {
 					rot3_.angles_max(new_val);
+				} else if(keyword2.compare("anglemean") == 0) {
+					rot3_.angle_mean(new_val);
+				} else if(keyword2.compare("anglesd") == 0) {
+					rot3_.angle_sd(new_val);
 				} else {
 					std::cerr << "error: invalid keyword '" << keyword2 << "' in param '"
 								<< str << "'" << std::endl;
@@ -427,7 +439,7 @@ namespace hig {
 								} else if(keyword4.compare("y") == 0 || keyword4.compare("1") == 0) {
 									//grain_.lattice_.a_[1] = new_val;
 									grain_.lattice_.ay(new_val);
-								} else if(keyword4.compare("z") == 0 || keyword4.compare("1") == 0) {
+								} else if(keyword4.compare("z") == 0 || keyword4.compare("2") == 0) {
 									//grain_.lattice_.a_[2] = new_val;
 									grain_.lattice_.az(new_val);
 								} else {
@@ -445,7 +457,7 @@ namespace hig {
 								} else if(keyword4.compare("y") == 0 || keyword4.compare("1") == 0) {
 									//grain_.lattice_.b_[1] = new_val;
 									grain_.lattice_.by(new_val);
-								} else if(keyword4.compare("z") == 0 || keyword4.compare("1") == 0) {
+								} else if(keyword4.compare("z") == 0 || keyword4.compare("2") == 0) {
 									//grain_.lattice_.b_[2] = new_val;
 									grain_.lattice_.bz(new_val);
 								} else {
@@ -463,7 +475,7 @@ namespace hig {
 								} else if(keyword4.compare("y") == 0 || keyword4.compare("1") == 0) {
 									//grain_.lattice_.c_[1] = new_val;
 									grain_.lattice_.cy(new_val);
-								} else if(keyword4.compare("z") == 0 || keyword4.compare("1") == 0) {
+								} else if(keyword4.compare("z") == 0 || keyword4.compare("2") == 0) {
 									//grain_.lattice_.c_[2] = new_val;
 									grain_.lattice_.cz(new_val);
 								} else {
@@ -509,7 +521,7 @@ namespace hig {
 							grain_.transvec_[0] = new_val;
 						} else if(keyword3.compare("y") == 0 || keyword3.compare("1") == 0) {
 							grain_.transvec_[1] = new_val;
-						} else if(keyword3.compare("z") == 0 || keyword3.compare("1") == 0) {
+						} else if(keyword3.compare("z") == 0 || keyword3.compare("2") == 0) {
 							grain_.transvec_[2] = new_val;
 						} else {
 							std::cerr << "error: invalid keyword '" << keyword3 << "' in param '"
@@ -526,7 +538,7 @@ namespace hig {
 							grain_.repetition_[0] = new_val;
 						} else if(keyword3.compare("y") == 0 || keyword3.compare("1") == 0) {
 							grain_.repetition_[1] = new_val;
-						} else if(keyword3.compare("z") == 0 || keyword3.compare("1") == 0) {
+						} else if(keyword3.compare("z") == 0 || keyword3.compare("2") == 0) {
 							grain_.repetition_[2] = new_val;
 						} else {
 							std::cerr << "error: invalid keyword '" << keyword3 << "' in param '"
