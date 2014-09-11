@@ -127,7 +127,7 @@ namespace hig {
 
 			bool illuminated_volume(float_t, float_t, int, RefractiveIndex);
 			bool spatial_distribution(structure_iterator_t, float_t, int, int&, int&, float_t*&);
-			bool orientation_distribution(structure_iterator_t, float_t*, int, int, float_t*&);
+			bool orientation_distribution(structure_iterator_t, float_t*, int, int, float_t*&, float_t *&);
 			bool generate_repetition_range(unsigned int, unsigned int, int, std::vector<unsigned int>&);
 			bool construct_repetition_distribution(const GrainRepetitions&, int, std::vector<vector3_t>&);
 
@@ -136,6 +136,10 @@ namespace hig {
 			bool read_form_factor(FormFactor&, const char* filename);
 			void printfc(const char*, complex_t*, unsigned int);
 			void printfr(const char*, float_t*, unsigned int);
+
+			float_t gaussian (float_t x, float_t mean, float_t sigma) {
+				return (1/(sigma*SQRT_2PI_)*std::exp(-(x-mean)*(x-mean)/(2*sigma*sigma)));
+			}
 
 		public:
 			HipGISAXS(int, char**);

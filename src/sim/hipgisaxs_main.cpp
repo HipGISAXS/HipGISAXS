@@ -859,14 +859,14 @@ namespace hig {
 			Lattice *curr_lattice = (Lattice*) HiGInput::instance().lattice(*curr_struct);
 			bool struct_in_layer = (*s).second.grain_in_layer();
 
-			float_t *dd = NULL, *nn = NULL;		// come back to this ...
+			float_t *dd = NULL, *nn = NULL, *wght = NULL;		// come back to this ...
 												// these structures can be improved ...
 			float_t tz = 0;
 			int num_dimen = 3;
 			int ndx = 0, ndy = 0;
 			// compute dd and nn
 			spatial_distribution(s, tz, num_dimen, ndx, ndy, dd);
-			orientation_distribution(s, dd, ndx, ndy, nn);
+			orientation_distribution(s, dd, ndx, ndy, nn, wght);
 			int num_grains = ndx;
 
 			/*for(int i = 0; i < ndx; ++ i) std::cout << nn[i] << " ";
@@ -989,6 +989,8 @@ namespace hig {
 				float_t rot1 = nn[0 * num_grains + grain_i];
 				float_t rot2 = nn[1 * num_grains + grain_i];
 				float_t rot3 = nn[2 * num_grains + grain_i];
+				float_t gauss_wght = wght[grain_i] * wght[num_grains + grain_i] * wght[2 * num_grains + grain_i];
+				//float_t gauss_wght = 1;
 				vector3_t z1, z2, z3, e1, e2, e3, t1, t2, t3;
 				switch(r1axis) {
 					case 0:
@@ -1170,7 +1172,7 @@ namespace hig {
 										unsigned int curr_index_2 = 2 * nqx_ * nqy_ * nqz_ + curr_index;
 										unsigned int curr_index_3 = 3 * nqx_ * nqy_ * nqz_ + curr_index;
 
-										base_id[curr_index] = dn2 *
+										base_id[curr_index] = dn2 * gauss_wght *
 											(amm[curr_index] * sf[curr_index_0] * ff[curr_index_0] +
 											amp[curr_index] * sf[curr_index_1] * ff[curr_index_1] +
 											apm[curr_index] * sf[curr_index_2] * ff[curr_index_2] +
@@ -1189,7 +1191,7 @@ namespace hig {
 								for(unsigned int y = 0; y < nqy_; ++ y) {
 									for(unsigned int x = 0; x < nqx_; ++ x) {
 										unsigned int curr_index = nqx_ * nqy_ * z + nqx_ * y + x;
-										base_id[curr_index] = dn2 * sf[curr_index] * ff[curr_index];
+										base_id[curr_index] = dn2 * gauss_wght * sf[curr_index] * ff[curr_index];
 									} // for x
 								} // for y
 							} // for z
@@ -1206,7 +1208,7 @@ namespace hig {
 										unsigned int curr_index_1 = nqx_ * nqy_ * nqz_ + curr_index;
 										unsigned int curr_index_2 = 2 * nqx_ * nqy_ * nqz_ + curr_index;
 										unsigned int curr_index_3 = 3 * nqx_ * nqy_ * nqz_ + curr_index;
-										base_id[curr_index] = dn2 *
+										base_id[curr_index] = dn2 * gauss_wght *
 	//										(h0[curr_index] * sf[curr_index_0] +
 	//										rk2[curr_index] * sf[curr_index_1] +
 	//										rk1[curr_index] * sf[curr_index_2] +
@@ -1279,6 +1281,7 @@ namespace hig {
 
 			delete[] nn;
 			delete[] dd;
+			delete[] wght;
 
 			if(smaster) {
 				// FIXME: double check the following correlation stuff ...
@@ -2152,8 +2155,8 @@ namespace hig {
 	} // HipGISAXS::spatial_distribution()
 
 
-	bool HipGISAXS::orientation_distribution(structure_iterator_t s, float_t* dd,
-												int ndx, int ndy, float_t* &nn) {
+	bool HipGISAXS::orientation_distribution(structure_iterator_t s, float_t* dd, int ndx, int ndy, 
+		float_t* &nn, float_t * & wght) {
 		std::string distribution = (*s).second.grain_orientation();
 		//vector2_t tau = (*s).second.rotation_tau();
 		//vector2_t eta = (*s).second.rotation_eta();
@@ -2163,6 +2166,7 @@ namespace hig {
 		vector3_t rot3 = (*s).second.rotation_rot3();
 
 		nn = new (std::nothrow) float_t[ndx * ndy];
+		wght = new (std::nothrow) float_t[ndx * ndy];
 											// TODO i believe constructing nn may not be needed ...
 		if(distribution == "single") {		// single
 			for(int x = 0; x < ndx; ++ x) {
@@ -2212,7 +2216,7 @@ namespace hig {
 			float_t sd2 = (*s).second.rotation_rot2_anglesd();
 			float_t mean3 = (*s).second.rotation_rot3_anglemean();
 			float_t sd3 = (*s).second.rotation_rot3_anglesd();
-			woo::MTNormalRandomNumberGenerator rgen1(mean1, sd1);
+			/*woo::MTNormalRandomNumberGenerator rgen1(mean1, sd1);
 			woo::MTNormalRandomNumberGenerator rgen2(mean1, sd2);
 			woo::MTNormalRandomNumberGenerator rgen3(mean1, sd3);
 			float_t drot1 = fabs(rot1[2] - rot1[1]);
@@ -2253,6 +2257,50 @@ namespace hig {
 				} // for x
 			} else {
 				for(int x = 0; x < ndx; ++ x) nn[2 * ndx + x] = rot3[1] * PI_ / 180;
+			} // if*/
+
+			// for the gaussian weighting with regular instead of gaussian sampling
+			float_t drot1 = rot1[2] - rot1[1];
+			float_t drot2 = rot2[2] - rot2[1];
+			float_t drot3 = rot3[2] - rot3[1];
+			if(fabs(drot1) > 1e-20) {
+				drot1 /= ndx;
+				for(int x = 0; x < ndx; ++ x) {
+					float_t temp = rot1[1] + x * drot1;
+					nn[x] = temp * PI_ / 180;
+					wght[x] = gaussian(temp, mean1, sd1);
+				} // for x
+			} else {
+				for(int x = 0; x < ndx; ++ x) { 
+					nn[x] = rot1[1] * PI_ / 180;
+					wght[x] = 1;
+				}
+			} // if
+			if(fabs(drot2) > 1e-20) {
+				drot2 /= ndx;
+				for(int x = 0; x < ndx; ++ x) {
+					float_t temp = rot2[1] + x * drot2;
+					nn[ndx + x] =  temp * PI_ / 180;
+					wght[ndx + x] = gaussian(temp, mean2, sd2);
+				} // for x
+			} else {
+				for(int x = 0; x < ndx; ++ x) {
+					nn[ndx + x] = rot2[1] * PI_ / 180;
+					wght[ndx + x] = 1;
+				}
+			} // if
+			if(fabs(drot3) > 1e-20) {
+				drot3 /= ndx;
+				for(int x = 0; x < ndx; ++ x) {
+					float_t temp = rot3[1] + x * drot3;
+					nn[2 * ndx + x] = temp * PI_ / 180;
+					wght[2 * ndx + x] = gaussian(temp, mean3, sd3);
+				} // for x
+			} else {
+				for(int x = 0; x < ndx; ++ x) { 
+					nn[2 * ndx + x] = rot3[1] * PI_ / 180;
+					wght[2 * ndx + x] = 1;
+				}
 			} // if
 		} else {
 			// TODO read .ori file ...
