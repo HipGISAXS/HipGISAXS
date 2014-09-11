@@ -3,7 +3,7 @@
  *
  *  File: objective_func.cpp
  *  Created: Feb 02, 2014
- *  Modified: Sun 07 Sep 2014 07:24:09 AM PDT
+ *  Modified: Wed 10 Sep 2014 06:42:14 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -188,12 +188,19 @@ namespace hig{
 			mask_data_.resize(n_par_ * n_ver_, 1);
 			return true;
 		} // if
-		EDFReader edfreader(filename.c_str());
+		//EDFReader edfreader(filename.c_str());
+		std::cout << "***** READING MASK EDF FILE " << filename << std::endl;
+		EDFReader* edfreader = new EDFReader(filename.c_str());
 		float_t* temp_data = NULL;
 		unsigned int temp_n_par = 0, temp_n_ver = 0;
-		edfreader.get_data(temp_data, temp_n_par, temp_n_ver);
+		edfreader->get_data(temp_data, temp_n_par, temp_n_ver);
+		if(temp_data == NULL) {
+			std::cerr << "error: failed to get edf mask data" << std::endl;
+			return false;
+		} // if
 		for(unsigned int i = 0; i < temp_n_par * temp_n_ver; ++ i) mask_data_.push_back(temp_data[i]);
 		mask_set_ = true;
+		delete edfreader;
 		return true;
 	} // HipGISAXSObjectiveFunction::read_edf_mask_data()
 

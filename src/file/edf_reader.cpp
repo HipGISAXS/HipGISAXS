@@ -57,9 +57,10 @@ namespace hig {
 			// read key
 			while(1) {
 				char curr = chunk[counter ++];
+				//std::cout << counter << " ==> " << curr << std::endl;
 				if(curr == '=') { key[i_k] = '\0'; end_k = true; break; }		// end of keyword
-				if(is_white_space(curr)) continue;	// skip white spaces
-				key[i_k ++] = curr;
+				if(!is_white_space(curr)) // skip white spaces
+					key[i_k ++] = curr;
 				if(counter == max_size) break;
 			} // while
 		} // if
@@ -68,9 +69,10 @@ namespace hig {
 			// read value
 			while(1) {
 				char curr = chunk[counter ++];
+				//std::cout << curr << std::endl;
 				if(curr == ';') { value[i_v] = '\0'; end_v = true; break; }		// end of keyword
-				if(is_white_space(curr)) continue;	// skip white spaces
-				value[i_v ++] = curr;
+				if(!is_white_space(curr))	// skip white spaces
+					value[i_v ++] = curr;
 				if(counter == max_size) break;
 			} // while
 		} // if
@@ -126,7 +128,7 @@ namespace hig {
 
 	bool EDFReader::extract_data(std::ifstream& infile, char* chunk, size_t size) {
 		unsigned long int num_bytes = atol(header_[std::string("EDF_BinarySize")].c_str());
-		typedef double real_t;
+		typedef float real_t;
 		real_t* data;
 		unsigned long int count = 0;
 		data_.clear();
