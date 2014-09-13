@@ -875,6 +875,7 @@ namespace hig {
 			// compute dd and nn
 			spatial_distribution(s, tz, num_dimen, ndx, ndy, dd);
 			orientation_distribution(s, dd, ndx, ndy, nn, wght);
+			std::string struct_dist = (*s).second.grain_orientation();
 			int num_grains = ndx;
 
 			/*for(int i = 0; i < ndx; ++ i) std::cout << nn[i] << " ";
@@ -997,8 +998,11 @@ namespace hig {
 				float_t rot1 = nn[0 * num_grains + grain_i];
 				float_t rot2 = nn[1 * num_grains + grain_i];
 				float_t rot3 = nn[2 * num_grains + grain_i];
-				float_t gauss_wght = wght[grain_i] * wght[num_grains + grain_i] * wght[2 * num_grains + grain_i];
-				//float_t gauss_wght = 1;
+				float_t gauss_weight = 1.0;
+				if(struct_dist == "gaussian") {
+					gauss_weight = wght[grain_i] * wght[num_grains + grain_i] *
+									wght[2 * num_grains + grain_i];
+				} // if
 				vector3_t z1, z2, z3, e1, e2, e3, t1, t2, t3;
 				switch(r1axis) {
 					case 0:
@@ -1180,7 +1184,7 @@ namespace hig {
 										unsigned int curr_index_2 = 2 * nqx_ * nqy_ * nqz_ + curr_index;
 										unsigned int curr_index_3 = 3 * nqx_ * nqy_ * nqz_ + curr_index;
 
-										base_id[curr_index] = dn2 * gauss_wght *
+										base_id[curr_index] = dn2 * gauss_weight *
 											(amm[curr_index] * sf[curr_index_0] * ff[curr_index_0] +
 											amp[curr_index] * sf[curr_index_1] * ff[curr_index_1] +
 											apm[curr_index] * sf[curr_index_2] * ff[curr_index_2] +
@@ -1199,7 +1203,7 @@ namespace hig {
 								for(unsigned int y = 0; y < nqy_; ++ y) {
 									for(unsigned int x = 0; x < nqx_; ++ x) {
 										unsigned int curr_index = nqx_ * nqy_ * z + nqx_ * y + x;
-										base_id[curr_index] = dn2 * gauss_wght * sf[curr_index] * ff[curr_index];
+										base_id[curr_index] = dn2 * gauss_weight * sf[curr_index] * ff[curr_index];
 									} // for x
 								} // for y
 							} // for z
@@ -1216,7 +1220,7 @@ namespace hig {
 										unsigned int curr_index_1 = nqx_ * nqy_ * nqz_ + curr_index;
 										unsigned int curr_index_2 = 2 * nqx_ * nqy_ * nqz_ + curr_index;
 										unsigned int curr_index_3 = 3 * nqx_ * nqy_ * nqz_ + curr_index;
-										base_id[curr_index] = dn2 * gauss_wght *
+										base_id[curr_index] = dn2 * gauss_weight *
 	//										(h0[curr_index] * sf[curr_index_0] +
 	//										rk2[curr_index] * sf[curr_index_1] +
 	//										rk1[curr_index] * sf[curr_index_2] +
@@ -1381,11 +1385,11 @@ namespace hig {
 			iratios_sum += (*s).second.iratio();
 		} // for
 
-		if(iratios_sum != 1.0) {
+		/*if(iratios_sum != 1.0) {
 			std::cerr << "error: iratios of all structures must add to 1.0 ("
 						<< iratios_sum << ")" << std::endl;
 			return false;
-		} // if
+		} // if*/
 
 		float_t* all_struct_intensity = NULL;
 		complex_t* all_c_struct_intensity = NULL;
