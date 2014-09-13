@@ -3,7 +3,7 @@
  *
  *  File: colormap.hpp
  *  Created: Jul 02, 2012
- *  Modified: Sun 26 Jan 2014 09:55:39 AM PST
+ *  Modified: Sat 13 Sep 2014 01:09:42 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -280,6 +280,31 @@ namespace hig {
 				return result;
 			} // channel_map()
 
+			/*	0: 0               1: 0.5             2: 1
+				3: x               4: x^2             5: x^3
+				6: x^4             7: sqrt(x)         8: sqrt(sqrt(x))
+				9: sin(90x)        10: cos(90x)       11: |x-0.5|
+				12: (2x-1)^2       13: sin(180x)      14: |cos(180x)|
+				15: sin(360x)      16: cos(360x)      17: |sin(360x)|
+				18: |cos(360x)|    19: |sin(720x)|    20: |cos(720x)|
+				21: 3x             22: 3x-1           23: 3x-2
+				24: |3x-1|         25: |3x-2|         26: (3x-1)/2
+				27: (3x-2)/2       28: |(3x-1)/2|     29: |(3x-2)/2|
+				30: x/0.32-0.78125 31: 2*x-0.84       32: 4x;1;-2x+1.84;x/0.08-11.5
+				33: |2*x - 0.5|    34: 2*x            35: 2*x - 0.5
+				36: 2*x - 1 
+				# Some nice schemes in RGB color space
+				# 07,05,15 ... traditional pm3d (black-blue-red-yellow)
+				# 03,11,06 ... green-red-violet
+				# 23,28,03 ... ocean (green-blue-white); try also all other permutations
+				# 21,22,23 ... hot (black-red-yellow-white)
+				# 30,31,32 ... color printable on gray (black-blue-violet-yellow-white)
+				# 33,13,10 ... rainbow (blue-green-yellow-red)
+				# 34,35,36 ... AFM hot (black-red-yellow-white)
+			*/
+			// (0.237-2.13*x+26.92*x^2-65.5*x^3+63.5*x^4-22.36*x^5)	R
+			// (0.572+1.524*x-1.811*x^2)^2/(1-0.291*x+0.1574*x^2)^2	G
+			// (1.579-4.03*x+12.92*x^2-31.4*x^3+48.6*x^4-23.36*x^5)	B
 			double compute_channel(unsigned int func_num, double x) {
 				double temp;
 				switch(func_num) {
@@ -434,19 +459,6 @@ namespace hig {
 						std::cerr << "error: color function out of bounds" << std::endl;
 						exit(1);
 
-						/*	0: 0               1: 0.5             2: 1
-							3: x               4: x^2             5: x^3
-							6: x^4             7: sqrt(x)         8: sqrt(sqrt(x))
-							9: sin(90x)        10: cos(90x)       11: |x-0.5|
-							12: (2x-1)^2       13: sin(180x)      14: |cos(180x)|
-							15: sin(360x)      16: cos(360x)      17: |sin(360x)|
-							18: |cos(360x)|    19: |sin(720x)|    20: |cos(720x)|
-							21: 3x             22: 3x-1           23: 3x-2
-							24: |3x-1|         25: |3x-2|         26: (3x-1)/2
-							27: (3x-2)/2       28: |(3x-1)/2|     29: |(3x-2)/2|
-							30: x/0.32-0.78125 31: 2*x-0.84       32: 4x;1;-2x+1.84;x/0.08-11.5
-							33: |2*x - 0.5|    34: 2*x            35: 2*x - 0.5
-							36: 2*x - 1 */
 				} // switch
 			} // compute_channel()
 

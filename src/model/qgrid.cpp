@@ -3,7 +3,7 @@
  *
  *  File: qgrid.cpp
  *  Created: Jun 17, 2012
- *  Modified: Fri 11 Jul 2014 01:47:50 PM PDT
+ *  Modified: Sat 13 Sep 2014 12:43:28 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -43,15 +43,15 @@ namespace hig {
 		//			<< ", type = " << type << std::endl;
 
 		// sanitize these values
-		if(min_point[0] < 0 || min_point[0] >= max_point[0] || min_point[0] > total_pixels[0])
-			min_point[0] = 0;
-		if(min_point[1] < 0 || min_point[1] >= max_point[1] || min_point[1] > total_pixels[1])
-			min_point[1] = 0;
+		//if(min_point[0] < 0 || min_point[0] >= max_point[0] || min_point[0] > total_pixels[0])
+		//	min_point[0] = 0;
+		//if(min_point[1] < 0 || min_point[1] >= max_point[1] || min_point[1] > total_pixels[1])
+		//	min_point[1] = 0;
 
-		if(max_point[0] < 0 || max_point[0] <= min_point[0] || max_point[0] > total_pixels[0])
-			max_point[0] = total_pixels[0];
-		if(max_point[1] < 0 || max_point[1] <= min_point[1] || max_point[1] > total_pixels[1])
-			max_point[1] = total_pixels[1];
+		//if(max_point[0] < 0 || max_point[0] <= min_point[0] || max_point[0] > total_pixels[0])
+		//	max_point[0] = total_pixels[0];
+		//if(max_point[1] < 0 || max_point[1] <= min_point[1] || max_point[1] > total_pixels[1])
+		//	max_point[1] = total_pixels[1];
 
 		// NOTE: total_pixels is just for making sure image is not bigger than that, and
 		// is not the actual total pixels of the output.
@@ -74,7 +74,8 @@ namespace hig {
 			vector3_t temp_qmin = pixel_to_kspace(min_point, k0, alpha_i, pixel_size, sd_distance, beam);
 			vector3_t temp_qmax = pixel_to_kspace(max_point, k0, alpha_i, pixel_size, sd_distance, beam);
 			qmax[1] = max(fabs(temp_qmax[1]), fabs(temp_qmin[1]));
-			qmin[1] = - qmax[1];
+			qmin[1] = min(fabs(temp_qmax[1]), fabs(temp_qmin[1]));
+			//qmin[1] = - qmax[1];
 			qmax[2] = max(temp_qmax[2], temp_qmin[2]);
 			qmin[2] = min(temp_qmax[2], temp_qmin[2]);
 			step[0] = fabs(qmax[0] - qmin[0]) / 2;			// why ... ?
@@ -87,7 +88,8 @@ namespace hig {
 			} // if
 		} else if(type == region_qspace) {
 			qmax[1] = max(max_point[0], min_point[0]);
-			qmin[1] = - qmax[1];
+			qmin[1] = min(max_point[0], min_point[0]);
+			//qmin[1] = - qmax[1];
 			qmax[2] = max(max_point[1], min_point[1]);
 			qmin[2] = min(max_point[1], min_point[1]);
 			step[0] = fabs(q1[0] - q0[0]) / 2;		// why / 2 ???

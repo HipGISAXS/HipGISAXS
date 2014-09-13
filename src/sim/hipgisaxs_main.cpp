@@ -490,6 +490,14 @@ namespace hig {
 						//Image img(nqx_, nqy_, nqz_);
 						// testing ...
 						//Image img(nqx_, nqy_, nqz_, 37, 36, 27);
+						//Image img(nqx_, nqy_, nqz_, 7, 5, 15);
+						//Image img(nqx_, nqy_, nqz_, 3, 11, 6);
+						//Image img(nqx_, nqy_, nqz_, 23, 28, 3);
+						//Image img(nqx_, nqy_, nqz_, 21, 22, 23);
+						//Image img(nqx_, nqy_, nqz_, 30, 31, 32);
+						//Image img(nqx_, nqy_, nqz_, 33, 13, 10);
+						//Image img(nqx_, nqy_, nqz_, 34, 35, 36);
+						//Image img(nqx_, nqy_, nqz_, 3, 2, 2);
 						Image img(nqx_, nqy_, nqz_);
 						img.construct_image(final_data, 0); // merge this into the contructor ...
 						std::cout << "done." << std::endl;
