@@ -190,6 +190,10 @@ namespace hig {
 		if(!extract_keyword_name_and_key(keyword, keyword_name, key)) return false;
 		std::string keyword2, rem_str2;
 		switch(TokenMapper::instance().get_keyword_token(keyword_name)) {
+			case struct_iratio_token:
+				iratio_ = new_val;
+				break;
+
 			case struct_ensemble_orient_rot1_token:
 				if(key.compare(std::string(1, rot1_.axis())) != 0) {
 					std::cerr << "error: invalid axis key given in param '" << str << "'" << std::endl;
