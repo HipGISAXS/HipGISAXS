@@ -3,7 +3,7 @@
  *
  *  File: qgrid.cpp
  *  Created: Jun 17, 2012
- *  Modified: Sat 13 Sep 2014 12:43:28 PM PDT
+ *  Modified: Mon 15 Sep 2014 09:21:13 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -161,7 +161,8 @@ namespace hig {
 		qmin[2] = qminz; qmax[2] = qmaxz;
 
 		step[1] = (qmax[1] - qmin[1]) / nqy;
-		step[2] = (qmax[2] - qmin[2]) / (nqz - 1);
+		//step[2] = (qmax[2] - qmin[2]) / (nqz - 1);
+		step[2] = (qmax[2] - qmin[2]) / nqz;
 
 		qx_.clear(); qy_.clear(); qz_.clear();
 		qx_.push_back(qmin[0]);
@@ -169,6 +170,12 @@ namespace hig {
 		//for(float_t val = qmax[2]; val >= qmin[2]; val -= step[2]) qz_.push_back(val);
 		for(float_t val = qmin[2]; val <= qmax[2]; val += step[2]) qz_.push_back(val);
 		std::reverse(qz_.begin(), qz_.end());
+
+		// sanity check
+		if(qy_.size() != nqy || qz_.size() != nqz) {
+			std::cerr << "error: mismatch in the needed qgrid size and the constructed one" << std::endl;
+			return false;
+		} // if
 
 		if(mpi_rank == 0) {
 			std::cout << "**              New Q-grid range: ("
