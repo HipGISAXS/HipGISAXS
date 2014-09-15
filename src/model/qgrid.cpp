@@ -3,7 +3,7 @@
  *
  *  File: qgrid.cpp
  *  Created: Jun 17, 2012
- *  Modified: Mon 15 Sep 2014 09:21:13 AM PDT
+ *  Modified: Mon 15 Sep 2014 11:33:47 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -166,9 +166,10 @@ namespace hig {
 
 		qx_.clear(); qy_.clear(); qz_.clear();
 		qx_.push_back(qmin[0]);
-		for(float_t val = qmin[1]; val <= qmax[1]; val += step[1]) qy_.push_back(val);
-		//for(float_t val = qmax[2]; val >= qmin[2]; val -= step[2]) qz_.push_back(val);
-		for(float_t val = qmin[2]; val <= qmax[2]; val += step[2]) qz_.push_back(val);
+		//for(float_t val = qmin[1]; val <= qmax[1]; val += step[1]) qy_.push_back(val);
+		//for(float_t val = qmin[2]; val <= qmax[2]; val += step[2]) qz_.push_back(val);
+		float_t val = qmin[1]; for(int i = 0; i < nqy; ++ i, val += step[1]) qy_.push_back(val);
+		val = qmin[2]; for(int i = 0; i < nqz; ++ i, val += step[2]) qz_.push_back(val);
 		std::reverse(qz_.begin(), qz_.end());
 
 		// sanity check
