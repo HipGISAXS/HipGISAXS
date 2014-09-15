@@ -257,6 +257,7 @@ namespace hig {
 			const std::string& param_pathprefix() const { return compute_.pathprefix_; }
 			unsigned int param_nslices() const { return compute_.nslices_; }
 			StructCorrelationType param_structcorrelation() const { return compute_.correlation_; }
+			std::string palette() const { return compute_.palette_; }
 
 			Shape* shape(Structure& s) { return &(shapes_[s.grain_shape_key()]); }
 			const Lattice* lattice(Structure& s) { return s.lattice(); }

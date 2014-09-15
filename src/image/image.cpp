@@ -3,7 +3,7 @@
  *
  *  File: image.cpp
  *  Created: Jun 18, 2012
- *  Modified: Sun 26 Jan 2014 10:36:36 AM PST
+ *  Modified: Sun 14 Sep 2014 09:32:09 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -34,19 +34,19 @@
 namespace hig {
 
 	Image::Image(unsigned int ny, unsigned int nz):
-					nx_(1), ny_(ny), nz_(nz), color_map_() {
+					nx_(1), ny_(ny), nz_(nz), new_color_map_() {
 		image_buffer_ = NULL;
 	} // Image::Image()
 
 
 	Image::Image(unsigned int ny, unsigned int nz, char* palette):
-					nx_(1), ny_(ny), nz_(nz), color_map_(palette) {
+					nx_(1), ny_(ny), nz_(nz), new_color_map_(palette) {
 		image_buffer_ = NULL;
 	} // Image::Image()
 
 
 	Image::Image(unsigned int ny, unsigned int nz, std::string palette):
-					nx_(1), ny_(ny), nz_(nz), color_map_(palette) {
+					nx_(1), ny_(ny), nz_(nz), new_color_map_(palette) {
 		image_buffer_ = NULL;
 	} // Image::Image()
 
@@ -58,13 +58,13 @@ namespace hig {
 
 
 	Image::Image(unsigned int nx, unsigned int ny, unsigned int nz, char* palette):
-					nx_(nx), ny_(ny), nz_(nz), color_map_(palette) {
+					nx_(nx), ny_(ny), nz_(nz), new_color_map_(palette) {
 		image_buffer_ = NULL;
 	} // Image::Image()
 
 
 	Image::Image(unsigned int nx, unsigned int ny, unsigned int nz, std::string palette):
-					nx_(nx), ny_(ny), nz_(nz), color_map_(palette) {
+					nx_(nx), ny_(ny), nz_(nz), new_color_map_(palette) {
 		image_buffer_ = NULL;
 	} // Image::Image()
 

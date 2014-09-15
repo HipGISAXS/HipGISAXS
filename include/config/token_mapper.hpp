@@ -204,6 +204,7 @@ namespace hig {
 				KeyWords_[std::string("outputregion")]		= compute_outregion_token;
 				KeyWords_[std::string("p1")]				= shape_param_p1_token;		// mean
 				KeyWords_[std::string("p2")]				= shape_param_p2_token;		// std dev
+				KeyWords_[std::string("palette")]			= compute_palette_token;
 				KeyWords_[std::string("parallel")]			= fit_reference_data_npoints_parallel_token;
 				KeyWords_[std::string("param")]				= shape_param_token;
 				KeyWords_[std::string("path")]				= fit_reference_data_path_token;

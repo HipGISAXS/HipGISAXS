@@ -498,7 +498,7 @@ namespace hig {
 						//Image img(nqx_, nqy_, nqz_, 33, 13, 10);
 						//Image img(nqx_, nqy_, nqz_, 34, 35, 36);
 						//Image img(nqx_, nqy_, nqz_, 3, 2, 2);
-						Image img(nqx_, nqy_, nqz_);
+						Image img(nqx_, nqy_, nqz_, HiGInput::instance().palette());
 						img.construct_image(final_data, 0); // merge this into the contructor ...
 						std::cout << "done." << std::endl;
 
@@ -2168,7 +2168,7 @@ namespace hig {
 
 
 	bool HipGISAXS::orientation_distribution(structure_iterator_t s, float_t* dd, int ndx, int ndy, 
-		float_t* &nn, float_t * & wght) {
+												float_t* &nn, float_t* &wght) {
 		std::string distribution = (*s).second.grain_orientation();
 		//vector2_t tau = (*s).second.rotation_tau();
 		//vector2_t eta = (*s).second.rotation_eta();
@@ -2279,6 +2279,7 @@ namespace hig {
 				drot1 /= ndx;
 				for(int x = 0; x < ndx; ++ x) {
 					float_t temp = rot1[1] + x * drot1;
+					//float_t temp = rot1[1] + (float_t(rand()) / RAND_MAX) * drot1;
 					nn[x] = temp * PI_ / 180;
 					wght[x] = gaussian(temp, mean1, sd1);
 				} // for x

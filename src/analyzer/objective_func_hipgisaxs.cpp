@@ -3,7 +3,7 @@
  *
  *  File: objective_func.cpp
  *  Created: Feb 02, 2014
- *  Modified: Wed 10 Sep 2014 06:42:14 PM PDT
+ *  Modified: Sun 14 Sep 2014 10:40:20 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -237,6 +237,7 @@ namespace hig{
 			unsigned int* mask_data = &(mask_data_[0]);
 //			unsigned int* mask_data = new (std::nothrow) unsigned int[n_par_ * n_ver_];
 //			memset(mask_data, 0, n_par_ * n_ver_ * sizeof(unsigned int));
+			std::cout << "============== " << n_par_ << " x " << n_ver_ << std::endl;
 			(*pdist_)(gisaxs_data, ref_data, mask_data, n_par_ * n_ver_, curr_dist);
 //			delete[] mask_data;
 

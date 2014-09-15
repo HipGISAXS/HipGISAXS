@@ -144,6 +144,7 @@ namespace hig {
 		compute_runname_token,
 		compute_method_token,
 		compute_resolution_token,
+		compute_palette_token,
 		compute_outregion_token,
 		compute_outregion_minpoint_token,
 		compute_outregion_maxpoint_token,

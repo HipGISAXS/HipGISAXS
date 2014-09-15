@@ -670,6 +670,7 @@ namespace hig {
 			case compute_outregion_maxpoint_token:
 			case compute_outregion_minpoint_token:
 			case compute_structcorr_token:
+			case compute_palette_token:
 				break;
 
 			case instrument_token:
@@ -1369,6 +1370,10 @@ namespace hig {
 
 			case compute_structcorr_token:
 				compute_.structcorrelation(TokenMapper::instance().get_structcorr_type(str));
+				break;
+
+			case compute_palette_token:
+				compute_.palette(str);
 				break;
 
 			case fit_param_variable_token:

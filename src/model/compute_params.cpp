@@ -3,7 +3,7 @@
  *
  *  File: compute_params.cpp
  *  Created: Jun 05, 2012
- *  Modified: Sun 26 Jan 2014 10:37:30 AM PST
+ *  Modified: Sun 14 Sep 2014 09:05:09 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -42,6 +42,7 @@ namespace hig {
 		resolution_[1] = 1;
 		nslices_ = 0;
 		correlation_ = structcorr_null;
+		palette_ = "default";
 	} // ComputeParams::init()
 
 

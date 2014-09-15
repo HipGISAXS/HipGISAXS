@@ -3,7 +3,7 @@
  *
  *  File: colormap.hpp
  *  Created: Jul 02, 2012
- *  Modified: Sat 13 Sep 2014 01:09:42 PM PDT
+ *  Modified: Mon 15 Sep 2014 10:26:28 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -31,6 +31,21 @@
 #include <common/constants.hpp>
 
 namespace hig {
+
+	enum ColorPalette {
+		palette_null,
+		palette_default,
+		palette_jet,
+		palette_warm,
+		palette_traditional,
+		palette_grevi,
+		palette_ocean,
+		palette_hot,
+		palette_printable,
+		palette_rainbow,
+		palette_afmhot,
+		palette_crimson
+	}; // enum ColorPalette
 
 	typedef boost::array <unsigned char, 3> color8_t;
 	
@@ -203,6 +218,48 @@ namespace hig {
 				construct_channel_limits();
 			} // ColorMap()
 
+			ColorMap(const std::string p) {
+				ColorPalette palette = palette_mapper(p);
+				switch(palette) {
+					case palette_jet:
+						palette_[0] = 38; palette_[1] = 39; palette_[2] = 40;
+						break;
+					case palette_warm:
+						palette_[0] = 37; palette_[1] = 26; palette_[2] = 27;
+						break;
+					case palette_traditional:
+						palette_[0] = 7; palette_[1] = 5; palette_[2] = 15;
+						break;
+					case palette_grevi:
+						palette_[0] = 3; palette_[1] = 11; palette_[2] = 6;
+						break;
+					case palette_ocean:
+						palette_[0] = 23; palette_[1] = 28; palette_[2] = 3;
+						break;
+					case palette_hot:
+						palette_[0] = 21; palette_[1] = 22; palette_[2] = 23;
+						break;
+					case palette_printable:
+						palette_[0] = 30; palette_[1] = 31; palette_[2] = 32;
+						break;
+					case palette_rainbow:
+						palette_[0] = 33; palette_[1] = 13; palette_[2] = 10;
+						break;
+					case palette_afmhot:
+						palette_[0] = 34; palette_[1] = 35; palette_[2] = 36;
+						break;
+					case palette_crimson:
+						palette_[0] = 3; palette_[1] = 2; palette_[2] = 2;
+						break;
+					case palette_null:
+					case palette_default:
+					default:
+						palette_[0] = 38; palette_[1] = 39; palette_[2] = 40;
+						break;
+				} // switch()
+				construct_channel_limits();
+			} // ColorMap()
+
 			~ColorMap() { }
 
 			void construct_channel_limits() {
@@ -269,6 +326,20 @@ namespace hig {
 			palette_t palette_;
 			double channel_limits_[41][2];
 
+			ColorPalette palette_mapper(const std::string& p) const {
+				if(p == "jet") return palette_jet;
+				else if(p == "warm") return palette_warm;
+				else if(p == "traditional") return palette_traditional;
+				else if(p == "grevi") return palette_grevi;
+				else if(p == "ocean") return palette_ocean;
+				else if(p == "hot") return palette_hot;
+				else if(p == "printable") return palette_printable;
+				else if(p == "rainbow") return palette_rainbow;
+				else if(p == "afmhot") return palette_afmhot;
+				else if(p == "crimson") return palette_crimson;
+				else return palette_default;
+			} // palette_mapper()
+
 			unsigned int channel_map(unsigned int channel, double value) {
 				unsigned int func_num = palette_[channel];
 				double channel_val = compute_channel(func_num, value);	// channel_val is >= 0 and <= 1
@@ -294,6 +365,8 @@ namespace hig {
 				33: |2*x - 0.5|    34: 2*x            35: 2*x - 0.5
 				36: 2*x - 1 
 				# Some nice schemes in RGB color space
+				# 38,39,40 ... jet
+				# 37,36,27 ... warm
 				# 07,05,15 ... traditional pm3d (black-blue-red-yellow)
 				# 03,11,06 ... green-red-violet
 				# 23,28,03 ... ocean (green-blue-white); try also all other permutations
@@ -301,6 +374,7 @@ namespace hig {
 				# 30,31,32 ... color printable on gray (black-blue-violet-yellow-white)
 				# 33,13,10 ... rainbow (blue-green-yellow-red)
 				# 34,35,36 ... AFM hot (black-red-yellow-white)
+				# 03,02,02 ... crimson
 			*/
 			// (0.237-2.13*x+26.92*x^2-65.5*x^3+63.5*x^4-22.36*x^5)	R
 			// (0.572+1.524*x-1.811*x^2)^2/(1-0.291*x+0.1574*x^2)^2	G

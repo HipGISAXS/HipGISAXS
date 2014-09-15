@@ -3,7 +3,7 @@
  *
  *  File: compute_params.hpp
  *  Created: Jun 05, 2012
- *  Modified: Sun 26 Jan 2014 09:58:29 AM PST
+ *  Modified: Sun 14 Sep 2014 09:06:11 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -46,6 +46,7 @@ namespace hig {
 				OutputRegion() { }
 			} output_region_;
 			vector2_t resolution_;
+			std::string palette_;
 			unsigned int nslices_;
 
 			std::string timestamp();
@@ -74,6 +75,7 @@ namespace hig {
 				output_region_.maxpoint_[0] = v; output_region_.maxpoint_[1] = w; }
 			void resolution(float_t a, float_t b) { resolution_[0] = a; resolution_[1] = b; }
 
+			void palette(std::string p) { palette_ = p; }
 			void nslices(float_t d) { nslices_ = (unsigned int) d; }
 			void structcorrelation(StructCorrelationType c) { correlation_ = c; }
 
@@ -95,6 +97,7 @@ namespace hig {
 							<< " resolution_ = [" << resolution_[0] << ", "
 							<< resolution_[1] << "]" << std::endl
 							<< " nslices_ = " << nslices_ << std::endl
+							<< " palette_ = " << palette_ << std::endl
 							<< std::endl;
 			} // print()
 
