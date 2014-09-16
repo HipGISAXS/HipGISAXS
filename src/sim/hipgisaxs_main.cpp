@@ -753,7 +753,7 @@ namespace hig {
 						<< " ms." << std::endl;
 
 		// temporary for testing ...
-		/*if(master) {
+		if(master) {
 			Image img(nqx_, nqy_, nqz_);
 			img.construct_image(final_data, 0); // slice x = 0
 			// define output filename
@@ -766,7 +766,7 @@ namespace hig {
 			std::cout << "-- Saving image in " << output << " ... " << std::flush;
 			img.save(output);
 			std::cout << "done." << std::endl;
-		} // if*/
+		} // if
 
 		return true;
 	} // HipGISAXS::compute_gisaxs()
