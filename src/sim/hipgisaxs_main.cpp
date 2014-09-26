@@ -33,6 +33,10 @@
 #include <woo/timer/woo_boostchronotimers.hpp>
 #include <woo/random/woo_mtrandom.hpp>
 
+#ifdef USE_MPI
+#include <woo/comm/multi_node_comm.hpp>
+#endif // USE_MPI
+
 #include <sim/hipgisaxs_main.hpp>
 #include <common/typedefs.hpp>
 #include <utils/utilities.hpp>
@@ -911,6 +915,23 @@ namespace hig {
 				all_grains_repeats.push_back(grain_repeats);
 			} // if-else
 
+			/* grain scalings */
+            std::vector<vector3_t> scaling_samples;
+            std::vector <float_t> scaling_weights;
+            bool is_scaling_distribution = false;
+            if (s->second.grain_scaling_is_dist()) {
+                is_scaling_distribution = true;
+                std::vector<StatisticType> dist = s->second.grain_scaling_dist();
+                vector3_t mean = s->second.grain_scaling();
+                vector3_t stddev = s->second.grain_scaling_stddev();
+                std::vector<int> scaling_nvals = s->second.grain_scaling_nvals();
+                construct_scaling_distribution (dist, mean, stddev, scaling_nvals, 
+                        scaling_samples, scaling_weights);
+            } else {
+                scaling_samples.push_back (s->second.grain_scaling());
+                scaling_weights.push_back (1.);
+            }
+
 			// for testing
 			//if(master) {
 			//	std::cout << "************ grain repetition distribution **************" << std::endl;
@@ -921,9 +942,6 @@ namespace hig {
 			//				<< std::endl;
 			//	} // for
 			//} // if
-
-			/* grain scalings */
-			float_t grain_scaling = (*s).second.grain_scaling();
 
 			vector3_t curr_transvec = (*s).second.grain_transvec();
 			if(HiGInput::instance().param_nslices() <= 1) {
@@ -1077,7 +1095,6 @@ namespace hig {
 
 				/* compute structure factor and form factor */
 
-				StructureFactor sf;
 				#ifdef FF_NUM_GPU   // use GPU
 					#ifdef FF_NUM_GPU_FUSED
 						FormFactor ff(64, 8);
@@ -1097,14 +1114,20 @@ namespace hig {
 
 
 				// TODO: parallel tasks ...
-
-				structure_factor(sf, HiGInput::instance().experiment(), center, curr_lattice,
+                StructureFactor sf(nqx_, nqy_, nqz_);
+                for (int i_scale = 0; i_scale < scaling_samples.size(); i_scale++) {
+                    vector3_t grain_scaling = scaling_samples[i_scale];
+                    float_t scaling_wght = scaling_weights[i_scale];
+                    StructureFactor temp_sf;
+				    structure_factor(temp_sf, HiGInput::instance().experiment(), center, curr_lattice,
 									grain_repeats, grain_scaling, r_tot1, r_tot2, r_tot3
 									#ifdef USE_MPI
 										, grain_comm
 									#endif
 									);
-				//sf.printsf();
+                    for (int iqpt = 0; iqpt < nqz_*nqy_*nqx_; iqpt++)
+                        sf[iqpt] += scaling_wght * temp_sf[iqpt];
+                }
 
 				/*if(master) {
 					std::stringstream alphai_b, phi_b, tilt_b;
@@ -1564,7 +1587,7 @@ namespace hig {
 
 	bool HipGISAXS::structure_factor(StructureFactor& sf,
 									std::string expt, vector3_t& center, Lattice* &curr_lattice,
-									vector3_t& grain_repeats, float_t grain_scaling,
+									vector3_t& grain_repeats, vector3_t &grain_scaling,
 									vector3_t& r_tot1, vector3_t& r_tot2, vector3_t& r_tot3
 									#ifdef USE_MPI
 										, woo::comm_t comm_key
@@ -2415,6 +2438,37 @@ namespace hig {
 		return true;
 	} // HipGISAXS::construct_repetition_distribution()
 
+    bool HipGISAXS::construct_scaling_distribution (std::vector<StatisticType> dist, 
+            vector3_t mean, vector3_t stddev, std::vector<int> nvals,
+            std::vector<vector3_t> & samples, std::vector<float_t> & weights) {
+        int i, j, k;
+        float_t frand_max = (float_t) RAND_MAX;
+        float_t width = 6;
+        for (i = 0; i < 3; i++)
+            if (dist[i] != stat_gaussian) {
+                std::cerr << "Error: only Gaussian distribution for scaling!" << std::endl;
+                return false;
+            }
+        vector3_t temp;
+        vector3_t min, dx;
+        for (i = 0; i < 3; i++)
+        {
+            min[i] = mean[i] - width * stddev[i];
+            dx[i]  = (2 * width) * stddev[i]/(nvals[i]+1);
+        }
+        for (i = 0; i < nvals[0]; i++) {
+            for (j = 0; j < nvals[1]; j++) {
+                for (k = 0; k < nvals[2]; k++) {
+                    temp[0] = min[0] + i*dx[0] + ((float_t)rand())/frand_max * dx[0];
+                    temp[1] = min[1] + j*dx[1] + ((float_t)rand())/frand_max * dx[1];
+                    temp[2] = min[2] + k*dx[2] + ((float_t)rand())/frand_max * dx[2];
+                    samples.push_back (temp);
+                    weights.push_back (gaussian3d (temp, mean, stddev));
+                }
+            }
+        }
+        return true;
+    }
 
 	/**
 	 * fitting related functions

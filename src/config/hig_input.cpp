@@ -185,6 +185,8 @@ namespace hig {
 						break;
 
 					case struct_grain_lattice_token:	// nothing to do :-/
+                    case struct_grain_scaling_token: 
+                        curr_structure_.grain_check_scaling_dists();
 					case struct_grain_token:	// nothing to do :-/
 						break;
 
@@ -224,6 +226,15 @@ namespace hig {
 					case compute_structcorr_token:	// nothing to do :-/
 					case hipgisaxs_token:	// nothing to do :-/
 						break;
+
+                     // scaling distibution
+                    //case stat_token:
+                    //case stat_mean_token:
+                    //case stat_stddev_token:
+                    case struct_grain_lattice_a_token:
+                    case struct_grain_lattice_b_token:
+                    case struct_grain_lattice_c_token:
+                        break;
 
 					case fit_token:
 					case fit_param_range_token:
@@ -268,6 +279,8 @@ namespace hig {
 					default:
 						std::cerr << "error: something is wrong with one of your objects"
 									<< std::endl;
+                        std::cerr << "curr token type = " << curr_token_.type_ << std::endl;
+                        std::cerr << "keyword=" << curr_keyword_ << ", parent=" << parent << std::endl;
 						return false;
 				} // switch
 				if(keyword_stack_.size() < 1) {
@@ -314,9 +327,8 @@ namespace hig {
 						break;
 
 					case struct_grain_lattice_a_token:
-						if(curr_vector_.size() != 3) {
-							std::cerr << "error: less than 3 values in lattice vector a"
-										<< std::endl;
+					    if(curr_vector_.size() != 3) {
+						    std::cerr << "error: less than 3 values in lattice vector a" << std::endl;
 							return false;
 						} // if
 						curr_structure_.lattice_vec_a(curr_vector_[0], curr_vector_[1], curr_vector_[2]);
@@ -659,6 +671,10 @@ namespace hig {
 			case struct_ensemble_orient_rot_anglemean_token:
 			case struct_ensemble_orient_rot_anglesd_token:
 				break;
+
+            case stat_mean_token:
+            case stat_stddev_token:
+                break;
 
 			case compute_token:
 			case compute_path_token:
@@ -1004,9 +1020,39 @@ namespace hig {
 				} // if
 				break;
 
-			case struct_grain_scaling_token:
-				curr_structure_.grain_scaling(num);
-				break;
+            case stat_mean_token:
+                switch (get_curr_parent()) {
+                    case struct_grain_lattice_a_token:
+				        curr_structure_.grain_scaling_a_mean(num);
+				        break;
+                    case struct_grain_lattice_b_token:
+				        curr_structure_.grain_scaling_b_mean(num);
+                        break;
+                    case struct_grain_lattice_c_token:
+				        curr_structure_.grain_scaling_c_mean(num);
+                        break;
+                    default:
+                        std::cerr <<"error:distribution is not implemented for this type yet" << std::endl;
+                        return false;
+                }
+                break;
+
+            case stat_stddev_token:
+                switch (get_curr_parent()) {
+                    case struct_grain_lattice_a_token:
+				        curr_structure_.grain_scaling_a_stddev(num);
+                        break;
+                    case struct_grain_lattice_b_token:
+				        curr_structure_.grain_scaling_b_stddev(num);
+                        break;
+                    case struct_grain_lattice_c_token:
+                        curr_structure_.grain_scaling_c_stddev(num);
+                        break;
+                    default:
+                        std::cerr <<"error:distribution is not implemented for this type yet" << std::endl;
+                        return false;
+                }
+                break;
 
 			case struct_grain_repetition_token:
 				curr_vector_.push_back(num);
@@ -1294,6 +1340,18 @@ namespace hig {
 					case struct_ensemble_orient_token:
 						curr_structure_.ensemble_orientation_stat(str);
 						break;
+
+                    case struct_grain_lattice_a_token:
+                        curr_structure_.grain_scaling_a_stat (TokenMapper::instance().get_stattype_token(str));
+                        break;
+
+                    case struct_grain_lattice_b_token:
+                        curr_structure_.grain_scaling_b_stat (TokenMapper::instance().get_stattype_token(str));
+                        break;
+
+                    case struct_grain_lattice_c_token:
+                        curr_structure_.grain_scaling_c_stat (TokenMapper::instance().get_stattype_token(str));
+                        break;
 
 					default:
 						std::cerr << "error: 'stat' token in wrong place" << std::endl;

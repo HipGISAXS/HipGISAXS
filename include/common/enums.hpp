@@ -81,7 +81,9 @@ namespace hig {
 		stat_none,				/* default */
 		stat_random,			/* random distribution */
 		stat_range,				/* range of values (basically same as stat_random) */
-		stat_uniform			/* uniform distribution */
+		stat_uniform,			/* uniform distribution */
+        stat_mean,              /* mean value */
+        stat_stddev             /* standard deviation */
 	}; // enum StatisticType
 
 	enum OutputRegionType {

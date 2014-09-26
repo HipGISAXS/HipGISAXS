@@ -59,7 +59,7 @@ namespace hig {
 	} // Lattice::clear()
 
 
-	bool Lattice::construct_vectors(float_t scaling) {
+	bool Lattice::construct_vectors(vector3_t scaling) {
 		//if(abc_set_) return true;	// a b c are already defined in the input
 
 		float_t sqrt2 = sqrt(2.0);
@@ -266,8 +266,8 @@ namespace hig {
 	/** grain functions
 	 */
 
-	Grain::Grain() { }
-	Grain::~Grain() { }
+	Grain::Grain() {}
+	Grain::~Grain() {}
 
 
 	void Grain::init() {
@@ -275,9 +275,14 @@ namespace hig {
 		in_layer_ = false;
 		lattice_.init();
 		transvec_[0] = transvec_[1] = transvec_[2] = 0;
-		scaling_ = 1;
+		scaling_[0] = scaling_[1] = scaling_[2] = 1;
+        scaling_stddev_[0] = scaling_stddev_[1] = scaling_stddev_[2] = 0;
 		repetition_[0] = repetition_[1] = repetition_[2] = 1;
 		is_repetition_dist_ = false;
+        for (int i = 0; i<3; i++) {
+            scaling_dist_.push_back (stat_gaussian);
+            scaling_nvals_.push_back (20);
+        }
 	} // Grain::init()
 
 
@@ -285,7 +290,7 @@ namespace hig {
 		shape_key_.clear();
 		layer_key_.clear();
 		in_layer_ = false;
-		scaling_ = 0.0;
+        scaling_dist_.clear();
 		lattice_.clear();
 		is_repetition_dist_ = false;
 	} // Grain::clear()
@@ -318,7 +323,10 @@ namespace hig {
 	/** structure functions
 	 */
 
-	Structure::Structure() { iratio_ = 1.0; }
+	Structure::Structure() { 
+        iratio_ = 1.0; 
+        scaling_dist_.reserve(3);
+    }
 	Structure::~Structure() { }
 
 
@@ -335,6 +343,7 @@ namespace hig {
 		grain_.clear();
 		ensemble_.clear();
 		iratio_ = 1.0;
+        scaling_dist_.clear();
 	} // Structure::clear()
 
 
@@ -346,7 +355,9 @@ namespace hig {
 		std::cout << " grain_: " << std::endl
 					<< "  shape_key_ = " << grain_.shape_key_ << std::endl
 					<< "  layer_ley_ = " << grain_.layer_key_ << std::endl
-					<< "  scaling_ = " << grain_.scaling_ << std::endl
+					<< "  scaling_a_ = " << grain_.scaling_[0] << std::endl
+					<< "  scaling_b_ = " << grain_.scaling_[1] << std::endl
+					<< "  scaling_c_ = " << grain_.scaling_[2] << std::endl
 					<< "  transvec_ = [" << grain_.transvec_[0] << ", "
 					<< grain_.transvec_[1] << ", " << grain_.transvec_[2]
 					<< "]" << std::endl
@@ -516,7 +527,7 @@ namespace hig {
 						break;
 
 					case struct_grain_scaling_token:
-						grain_scaling(new_val);
+						//grain_scaling(new_val); // TODO fitting
 						break;
 
 					case struct_grain_transvec_token:

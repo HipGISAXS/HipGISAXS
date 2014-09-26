@@ -45,8 +45,8 @@ namespace woo {
 		}; // enum CommOp
 
 	} // namespace comm
-
 	typedef std::string comm_t;
+
 
 	/**
 	 * Communicator

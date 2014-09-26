@@ -94,8 +94,8 @@ namespace hig {
 										/* a single GISAXS run */
 
 			/* wrapper over sf function */
-			bool structure_factor(StructureFactor&, std::string, vector3_t&, Lattice*&, vector3_t&,
-									float_t, vector3_t&, vector3_t&, vector3_t&
+			bool structure_factor(StructureFactor&, std::string, vector3_t&, Lattice*&, 
+                    vector3_t&, vector3_t&, vector3_t&, vector3_t&, vector3_t&
 									#ifdef USE_MPI
 										, std::string
 									#endif
@@ -130,6 +130,11 @@ namespace hig {
 			bool orientation_distribution(structure_iterator_t, float_t*, int, int, float_t*&, float_t *&);
 			bool generate_repetition_range(unsigned int, unsigned int, int, std::vector<unsigned int>&);
 			bool construct_repetition_distribution(const GrainRepetitions&, int, std::vector<vector3_t>&);
+			bool construct_scaling_distribution(std::vector<StatisticType>, 
+                    vector3_t, vector3_t,
+                    std::vector<int>,
+                    std::vector<vector3_t>&,
+                    std::vector<float_t>&); 
 
 			/* some functions just for testing and debugging */
 			bool write_qgrid(char* filename);
@@ -140,6 +145,21 @@ namespace hig {
 			float_t gaussian (float_t x, float_t mean, float_t sigma) {
 				return (1/(sigma*SQRT_2PI_)*std::exp(-(x-mean)*(x-mean)/(2*sigma*sigma)));
 			}
+
+            float_t gaussian3d (vector3_t x, vector3_t mean, vector3_t sigma) {
+                vector3_t t1 = (x-mean)*(x-mean);
+                vector3_t t2 = sigma*sigma;
+                float_t xx = 0;
+                float_t kk = 1;
+                int ndim = 0;
+                for (int i = 0; i < 3; i++)
+                    if (sigma[i] > 0 ) {
+                        xx += t1[i]/t2[i];
+                        kk *= sigma[i];
+                        ndim++;
+                    }
+                return (1./(std::pow(SQRT_2PI_,ndim)*kk) * std::exp(-0.5*xx));
+            }
 
 		public:
 			HipGISAXS(int, char**);

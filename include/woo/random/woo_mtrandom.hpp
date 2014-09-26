@@ -124,6 +124,14 @@ namespace woo {
 				return last_;
 			} // rand()
 
+            // returns N random numbers
+            std::vector <double> rand (int N) {
+                std::vector <double> rand(N);
+                for (int i = 0; i <  N; i++)
+                    rand[i] = mt_rand();
+                return rand;
+            }
+
 			double rand_last() { return last_; }
 	}; // class WooNormalRandomNumberGenerator
 

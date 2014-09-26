@@ -42,10 +42,12 @@ namespace hig {
 
 		public:
 			StructureFactor();
+			StructureFactor(int , int, int);
 			~StructureFactor();
 
 			void clear(void);
-			bool compute_structure_factor(std::string, vector3_t, Lattice*, vector3_t, float_t,
+
+			bool compute_structure_factor(std::string, vector3_t, Lattice*, vector3_t, vector3_t,
 											vector3_t, vector3_t, vector3_t
 											#ifdef USE_MPI
 												, woo::MultiNode&, std::string
@@ -57,7 +59,7 @@ namespace hig {
 												, woo::MultiNode&, std::string
 											#endif
 											);
-			complex_t operator[](unsigned int i) const { return sf_[i]; }
+			complex_t & operator[](unsigned int i) const { return sf_[i]; }
 			void save_sf(unsigned int nqx, unsigned int nqy, unsigned int nqz, const char* filename);
 
 			// only for testing - remove it ...
