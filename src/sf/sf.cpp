@@ -43,6 +43,31 @@
  		sf_ = new (std::nothrow) complex_t[nx_ * ny_ * nz_];
     }
 
+    StructureFactor & StructureFactor::operator=(const StructureFactor & rhs) {
+        nx_ = rhs.nx_;
+        ny_ = rhs.ny_;
+        nz_ = rhs.nz_;
+        size_t size = nx_ * ny_ * nz_;
+        sf_ = new (std::nothrow) complex_t [size];
+        if (sf_ == NULL) {
+            std::cerr << "could not allocate memeory" << std::endl;
+            // TODO should call MPI_Abort
+            std::exit(1);
+        }
+        memcpy (sf_, rhs.sf_, size);
+        return *this;
+    }
+
+    StructureFactor & StructureFactor::operator+= (const StructureFactor & rhs) {
+        if ( nx_ != rhs.nx_ || ny_ != rhs.ny_ || nz_ != rhs.nz_ ) {
+            std::cerr << "error: cannot add non-similar shaped arrays" << std::endl;
+            std::exit(1);
+        }
+        int num_of_el = nx_ * ny_ * nz_;
+        for (int i = 0; i < num_of_el; i++ )
+            sf_[i] += rhs.sf_[i];
+        return *this;
+    }
 
  	StructureFactor::~StructureFactor() {
  		if(sf_ != NULL) delete[] sf_;
@@ -108,9 +133,7 @@
  			return false;
  		} // if
 
-#ifdef DEBUG
  		if(master) std::cout << "-- Computing structure factor ... " << std::flush;
-#endif // DEBUG
 
  		std::complex<float_t> unit_c(1, 0);
  		std::complex<float_t> unit_ci(0, 1);
@@ -200,7 +223,6 @@
 		computetimer.stop();
 		maintimer.stop();
 
-#ifdef DEBUG 
 		if(master) {
 			std::cout << "done. " << std::endl;
 			std::cout << "**               SF compute time: " << computetimer.elapsed_msec()  << " ms."
@@ -208,7 +230,6 @@
 						<< "**                 Total SF time: " << maintimer.elapsed_msec() << " ms."
 						<< std::endl;
 		} // if
-#endif // DEBUG
 
 		return true;
 	} // StructureFactor::compute_structure_factor()

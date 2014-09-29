@@ -62,6 +62,14 @@ namespace hig {
 			complex_t & operator[](unsigned int i) const { return sf_[i]; }
 			void save_sf(unsigned int nqx, unsigned int nqy, unsigned int nqz, const char* filename);
 
+            StructureFactor & operator=(const StructureFactor & rhs);
+            StructureFactor & operator+=(const StructureFactor & rhs);
+            StructureFactor & operator*(const float_t val) {
+                for (int i = 0; i < nx_ * ny_ * nz_; i++)
+                    sf_[i] *= val;
+                return *this;
+            }
+
 			// only for testing - remove it ...
 			complex_t* sf() { return sf_; }
 			void printsf() {

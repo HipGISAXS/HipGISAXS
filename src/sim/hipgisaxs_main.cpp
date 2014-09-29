@@ -879,6 +879,7 @@ namespace hig {
 			// compute dd and nn
 			spatial_distribution(s, tz, num_dimen, ndx, ndy, dd);
 			orientation_distribution(s, dd, ndx, ndy, nn, wght);
+
 			std::string struct_dist = (*s).second.grain_orientation();
 			int num_grains = ndx;
 
@@ -915,23 +916,6 @@ namespace hig {
 				all_grains_repeats.push_back(grain_repeats);
 			} // if-else
 
-			/* grain scalings */
-            std::vector<vector3_t> scaling_samples;
-            std::vector <float_t> scaling_weights;
-            bool is_scaling_distribution = false;
-            if (s->second.grain_scaling_is_dist()) {
-                is_scaling_distribution = true;
-                std::vector<StatisticType> dist = s->second.grain_scaling_dist();
-                vector3_t mean = s->second.grain_scaling();
-                vector3_t stddev = s->second.grain_scaling_stddev();
-                std::vector<int> scaling_nvals = s->second.grain_scaling_nvals();
-                construct_scaling_distribution (dist, mean, stddev, scaling_nvals, 
-                        scaling_samples, scaling_weights);
-            } else {
-                scaling_samples.push_back (s->second.grain_scaling());
-                scaling_weights.push_back (1.);
-            }
-
 			// for testing
 			//if(master) {
 			//	std::cout << "************ grain repetition distribution **************" << std::endl;
@@ -942,6 +926,42 @@ namespace hig {
 			//				<< std::endl;
 			//	} // for
 			//} // if
+
+			/* grain scalings */
+            std::vector<vector3_t> scaling_samples;
+            std::vector <float_t> scaling_weights;
+            bool is_scaling_distribution = false;
+            if (s->second.grain_scaling_is_dist()) {
+                is_scaling_distribution = true;
+                std::vector<StatisticType> dist = s->second.grain_scaling_dist();
+                vector3_t mean = s->second.grain_scaling();
+                vector3_t stddev = s->second.grain_scaling_stddev();
+                std::vector<int> scaling_nvals = s->second.grain_scaling_nvals();
+
+                // if sigma is zeros set sampling count to ZERO
+                for (int i = 0; i < 3; i++)
+                    if ( stddev[i] == 0 )
+                        scaling_nvals[i] = 1;
+
+                construct_scaling_distribution (dist, mean, stddev, scaling_nvals, 
+                        scaling_samples, scaling_weights);
+            } else {
+                scaling_samples.push_back (s->second.grain_scaling());
+                scaling_weights.push_back (1.);
+            }
+
+            /*
+			// for testing
+			if(master) {
+				std::cerr << "************ grain scaling distribution **************" << std::endl;
+				std::cerr << " LENGTH = " << scaling_samples.size() << std::endl;
+				for(std::vector<vector3_t>::iterator i = scaling_samples.begin();
+						i != scaling_samples.end(); ++i) {
+					std::cerr << "scaling = [ " << (*i)[0] << " " << (*i)[1] << " " << (*i)[2] << " ]"
+							<< std::endl;
+				} // for
+			} // if
+            */
 
 			vector3_t curr_transvec = (*s).second.grain_transvec();
 			if(HiGInput::instance().param_nslices() <= 1) {
@@ -1114,10 +1134,12 @@ namespace hig {
 
 
 				// TODO: parallel tasks ...
-                StructureFactor sf(nqx_, nqy_, nqz_);
+ 
+                StructureFactor sf;
                 for (int i_scale = 0; i_scale < scaling_samples.size(); i_scale++) {
                     vector3_t grain_scaling = scaling_samples[i_scale];
                     float_t scaling_wght = scaling_weights[i_scale];
+                    std::cout << "Calculating scaling samples "<< i_scale << " of " << scaling_samples.size() << ".\n";
                     StructureFactor temp_sf;
 				    structure_factor(temp_sf, HiGInput::instance().experiment(), center, curr_lattice,
 									grain_repeats, grain_scaling, r_tot1, r_tot2, r_tot3
@@ -1125,8 +1147,11 @@ namespace hig {
 										, grain_comm
 									#endif
 									);
-                    for (int iqpt = 0; iqpt < nqz_*nqy_*nqx_; iqpt++)
-                        sf[iqpt] += scaling_wght * temp_sf[iqpt];
+                    if (i_scale == 0)
+                        sf = temp_sf * scaling_wght;
+                    else
+                        sf += temp_sf * scaling_wght;
+                    temp_sf.clear();
                 }
 
 				/*if(master) {
@@ -1256,6 +1281,23 @@ namespace hig {
 											rk2[curr_index] * sf[curr_index_1] * ff[curr_index_1] +
 											rk1[curr_index] * sf[curr_index_2] * ff[curr_index_2] +
 											rk1rk2[curr_index] * sf[curr_index_3] * ff[curr_index_3]);
+                                        if (std::isnan(base_id[curr_index].real())||
+                                                std::isnan(base_id[curr_index].imag())) {
+
+                                            std::cerr << "Base id : " << std::endl;
+                                            std::cerr << base_id[curr_index] << std::endl;
+                                            std::cerr << "Wght = " << gauss_weight << std::endl;
+                                            std::cerr << "FF = " << std::endl;
+                                            std::cerr << ff[curr_index_0] << ", " << ff[curr_index_1] << ", " 
+                                                << ff[curr_index_2] << ", " << ff[curr_index_3] << std::endl;
+                                            std::cerr << "SF = " << std::endl;
+                                            std::cerr << sf[curr_index_0] << ", " << sf[curr_index_1] << ", " 
+                                                << sf[curr_index_2] << sf[curr_index_3] << std::endl;
+                                            std::cerr << "Coefs: " << std::endl;
+                                            std::cerr << h0[curr_index] << ", " << rk2[curr_index] << ", " 
+                                                << rk1[curr_index] << ", " << rk1rk2[curr_index] << std::endl;
+                                            std::exit(1);
+                                        }
 									} // for x
 								} // for y
 							} // for z
@@ -1470,6 +1512,10 @@ namespace hig {
 				normalize(all_struct_intensity, nqx_ * nqy_ * nqz_);
 
 			img3d = new (std::nothrow) float_t[nqx_ * nqy_ * nqz_];
+            if (img3d == nullptr) {
+                std::cerr << "error: unable to allocate memeory." << std::endl;
+                std::exit(1);
+            }
 			// sum of all struct_intensity into intensity
 
 			// new stuff for correlation
@@ -2200,8 +2246,17 @@ namespace hig {
 		vector3_t rot2 = (*s).second.rotation_rot2();
 		vector3_t rot3 = (*s).second.rotation_rot3();
 
-		nn = new (std::nothrow) float_t[ndx * ndy];
-		wght = new (std::nothrow) float_t[ndx * ndy];
+        nn = new (std::nothrow) float_t [ndx * ndy];
+        if (nn == NULL) {
+            std::cerr << "error: could not allocate memory" << std::endl;
+            return false;
+        }
+        wght = new (std::nothrow) float_t [ndx * ndy];
+        if (wght == NULL) {
+            std::cerr << "error: could not allocate memory" << std::endl;
+            return false;
+        }
+
 											// TODO i believe constructing nn may not be needed ...
 		if(distribution == "single") {		// single
 			for(int x = 0; x < ndx; ++ x) {

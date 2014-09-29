@@ -186,7 +186,6 @@ namespace hig {
 
 					case struct_grain_lattice_token:	// nothing to do :-/
                     case struct_grain_scaling_token: 
-                        curr_structure_.grain_check_scaling_dists();
 					case struct_grain_token:	// nothing to do :-/
 						break;
 

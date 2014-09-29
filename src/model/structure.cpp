@@ -29,10 +29,28 @@
 namespace hig {
 
 
+    /** grain scaling methods
+     */
+    GrainScaling::GrainScaling() {
+        mean_[0] = mean_[1] = mean_[2] = 0;
+        stddev_[0] = stddev_[1] = stddev_[2];
+        for (int i = 0; i < 3; i++)
+        {
+            dist_.push_back(stat_gaussian);
+            nvals_.push_back (12);
+        }
+    }
+
+    void GrainScaling::clear() {
+        mean_[0] = mean_[1] = mean_[2] = 0;
+        stddev_[0] = stddev_[1] = stddev_[2] = 0;
+        dist_.clear();
+        nvals_.clear();
+    }
+
+
 	/** lattice functions
 	 */
-
-
 	Lattice::Lattice() { ca_ = 1; gamma_ = 0; }
 	Lattice::~Lattice() { }
 
@@ -275,14 +293,8 @@ namespace hig {
 		in_layer_ = false;
 		lattice_.init();
 		transvec_[0] = transvec_[1] = transvec_[2] = 0;
-		scaling_[0] = scaling_[1] = scaling_[2] = 1;
-        scaling_stddev_[0] = scaling_stddev_[1] = scaling_stddev_[2] = 0;
 		repetition_[0] = repetition_[1] = repetition_[2] = 1;
 		is_repetition_dist_ = false;
-        for (int i = 0; i<3; i++) {
-            scaling_dist_.push_back (stat_gaussian);
-            scaling_nvals_.push_back (20);
-        }
 	} // Grain::init()
 
 
@@ -290,7 +302,7 @@ namespace hig {
 		shape_key_.clear();
 		layer_key_.clear();
 		in_layer_ = false;
-        scaling_dist_.clear();
+        scaling_.clear();
 		lattice_.clear();
 		is_repetition_dist_ = false;
 	} // Grain::clear()
@@ -325,7 +337,6 @@ namespace hig {
 
 	Structure::Structure() { 
         iratio_ = 1.0; 
-        scaling_dist_.reserve(3);
     }
 	Structure::~Structure() { }
 
@@ -343,7 +354,6 @@ namespace hig {
 		grain_.clear();
 		ensemble_.clear();
 		iratio_ = 1.0;
-        scaling_dist_.clear();
 	} // Structure::clear()
 
 
@@ -355,9 +365,9 @@ namespace hig {
 		std::cout << " grain_: " << std::endl
 					<< "  shape_key_ = " << grain_.shape_key_ << std::endl
 					<< "  layer_ley_ = " << grain_.layer_key_ << std::endl
-					<< "  scaling_a_ = " << grain_.scaling_[0] << std::endl
-					<< "  scaling_b_ = " << grain_.scaling_[1] << std::endl
-					<< "  scaling_c_ = " << grain_.scaling_[2] << std::endl
+					<< "  scaling_a_ = " << grain_.scaling_.mean_[0] << std::endl
+					<< "  scaling_b_ = " << grain_.scaling_.mean_[1] << std::endl
+					<< "  scaling_c_ = " << grain_.scaling_.mean_[2] << std::endl
 					<< "  transvec_ = [" << grain_.transvec_[0] << ", "
 					<< grain_.transvec_[1] << ", " << grain_.transvec_[2]
 					<< "]" << std::endl

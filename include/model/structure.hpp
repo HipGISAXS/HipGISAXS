@@ -34,6 +34,19 @@ namespace hig {
 
 	// make stuff private (with help of friend) ...
 
+    class GrainScaling {
+        private:
+            vector3_t mean_;
+            vector3_t stddev_;
+            std::vector<StatisticType> dist_;
+            std::vector<int> nvals_;
+        public:
+            GrainScaling();
+            void clear();
+       friend class Grain;
+       friend class Structure;
+    };
+
 	class Lattice {
 		private:
 			LatticeType type_;	/* overrides a_ b_ c_ vectors */
@@ -241,10 +254,7 @@ namespace hig {
 			std::string shape_key_;
 			std::string layer_key_;
 			bool in_layer_;
-            std::vector<StatisticType> scaling_dist_;
-            std::vector<int> scaling_nvals_;
-			vector3_t scaling_;  // scaling mean in case this is a distribution 
-            vector3_t scaling_stddev_; 
+			GrainScaling scaling_;  
 			vector3_t transvec_;
 			vector3_t repetition_;
 			GrainRepetitions repetitiondist_;
@@ -252,7 +262,7 @@ namespace hig {
 			RefractiveIndex refindex_;
 			Lattice lattice_;
 
-			bool construct_lattice_vectors() { return lattice_.construct_vectors(scaling_); }
+			bool construct_lattice_vectors() { return lattice_.construct_vectors(scaling_.mean_); }
 
 		public:
 			Grain();
@@ -304,9 +314,9 @@ namespace hig {
 			void lattice_abangle(float_t d) { lattice_.abangle(d); }
 			void lattice_caratio(float_t d) { lattice_.caratio(d); }
 
-			void scaling_dist(std::vector<StatisticType> s) { scaling_dist_ = s; }
-			void scaling(vector3_t d) { scaling_ = d; }
-			void scaling_stddev(vector3_t d) { scaling_stddev_ = d; }
+			void scaling_dist(std::vector<StatisticType> s) { scaling_.dist_ = s; }
+			void scaling_mean(vector3_t d) { scaling_.mean_ = d; }
+			void scaling_stddev(vector3_t d) { scaling_.stddev_ = d; }
 
 			void lattice_type(LatticeType l) { lattice_.type(l); }
 			void lattice_hkl(std::string l) { lattice_.hkl(l); }
@@ -368,8 +378,6 @@ namespace hig {
 			Grain grain_;
 			Ensemble ensemble_;
 			float_t iratio_;
-            std::vector<StatisticType> scaling_dist_;
-            vector3_t scaling_mean_, scaling_stddev_;
 
 		public:
 			Structure();
@@ -435,15 +443,15 @@ namespace hig {
 			void grain_refindex_beta(float_t d) { grain_.refindex_beta(d); }
 
             // set grain scaling parameters
-			void grain_scaling_a_stat (StatisticType s) { grain_.scaling_dist_[0] = s; }
-			void grain_scaling_b_stat (StatisticType s) { grain_.scaling_dist_[1] = s; }
-			void grain_scaling_c_stat (StatisticType s) { grain_.scaling_dist_[2] = s; }
-            void grain_scaling_a_mean (float_t num) { grain_.scaling_[0] = num; } 
-            void grain_scaling_b_mean (float_t num) { grain_.scaling_[1] = num; } 
-            void grain_scaling_c_mean (float_t num) { grain_.scaling_[2] = num; }
-            void grain_scaling_a_stddev (float_t num) { grain_.scaling_stddev_[0] = num; }
-            void grain_scaling_b_stddev (float_t num) { grain_.scaling_stddev_[1] = num; } 
-            void grain_scaling_c_stddev (float_t num) { grain_.scaling_stddev_[2] = num; }
+			void grain_scaling_a_stat (StatisticType s) { grain_.scaling_.dist_[0] = s; }
+			void grain_scaling_b_stat (StatisticType s) { grain_.scaling_.dist_[1] = s; }
+			void grain_scaling_c_stat (StatisticType s) { grain_.scaling_.dist_[2] = s; }
+            void grain_scaling_a_mean (float_t num) { grain_.scaling_.mean_[0] = num; } 
+            void grain_scaling_b_mean (float_t num) { grain_.scaling_.mean_[1] = num; } 
+            void grain_scaling_c_mean (float_t num) { grain_.scaling_.mean_[2] = num; }
+            void grain_scaling_a_stddev (float_t num) { grain_.scaling_.stddev_[0] = num; }
+            void grain_scaling_b_stddev (float_t num) { grain_.scaling_.stddev_[1] = num; } 
+            void grain_scaling_c_stddev (float_t num) { grain_.scaling_.stddev_[2] = num; }
 
 			void ensemble_spacing(vector3_t v) { ensemble_.spacing(v); }
 			void ensemble_maxgrains(vector3_t v) { ensemble_.maxgrains(v); }
@@ -484,19 +492,14 @@ namespace hig {
             // scaling related params
             bool grain_scaling_is_dist () {
                 for (int i = 0; i < 3; i++)
-                    if ( grain_.scaling_stddev_[i] > 0 )
+                    if ( grain_.scaling_.stddev_[i] > 0 )
                         return true;
                 return false;
             }
-            void grain_check_scaling_dists () {
-                for (int i = 0; i < 3; i++)
-                    if (grain_.scaling_stddev_[i] == 0)
-                        grain_.scaling_nvals_[i] = 1;
-            }
-			vector3_t grain_scaling() const { return grain_.scaling_; }
-            vector3_t grain_scaling_stddev() const { return grain_.scaling_stddev_; }
-            std::vector<StatisticType> grain_scaling_dist() const { return grain_.scaling_dist_; }
-            std::vector<int> grain_scaling_nvals() { return grain_.scaling_nvals_; }
+			vector3_t grain_scaling() const { return grain_.scaling_.mean_; }
+            vector3_t grain_scaling_stddev() const { return grain_.scaling_.stddev_; }
+            std::vector<StatisticType> grain_scaling_dist() const { return grain_.scaling_.dist_; }
+            std::vector<int> grain_scaling_nvals() { return grain_.scaling_.nvals_; }
 
 
 			vector3_t ensemble_spacing() const { return ensemble_.spacing_; }
