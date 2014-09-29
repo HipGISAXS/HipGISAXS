@@ -3,7 +3,7 @@
  *
  *  File: ff_ana_cylinder_gpu.cu
  *  Created: Oct 16, 2012
- *  Modified: Sun 26 Jan 2014 10:32:02 AM PST
+ *  Modified: Mon 29 Sep 2014 11:55:52 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -26,6 +26,7 @@
 
 #include <ff/gpu/ff_ana_gpu.cuh>
 #include <common/enums.hpp>
+#include <utils/matmul.hpp>
 #include <numerics/gpu/cu_complex_numeric.cuh>
 #include <utils/gpu/cu_utilities.cuh>
 
@@ -56,7 +57,16 @@ namespace hig {
 		const float_t *r_h = r.empty() ? NULL : &*r.begin();
 		const float_t *distr_r_h = distr_r.empty() ? NULL : &*distr_r.begin();
 
-		run_init(rot, transvec);
+		// hcylinder is basically cylinder, so apply a 90 degree rotation around y axis BEFORE rot
+		// rot = hrot * rot
+		float_vec_t hrot;
+		hrot.push_back(0); hrot.push_back(0); hrot.push_back(-1);
+		hrot.push_back(0); hrot.push_back(1); hrot.push_back(0);
+		hrot.push_back(1); hrot.push_back(0); hrot.push_back(0);
+		float_t *newrot = new (std::nothrow) float_t[9];
+		mat_mul_3x3(hrot, rot, newrot);
+
+		run_init(newrot, transvec);
 
 		// construct device buffers
 		float_t *h_d, *distr_h_d;
@@ -90,13 +100,15 @@ namespace hig {
 		cudaThreadSynchronize();
 		cudaError_t err = cudaGetLastError();
 		if(err != cudaSuccess) {
-			std::cerr << "error: box form factor kernel failed [" << __FILE__ << ":" << __LINE__ << "]: "
+			std::cerr << "error: hcylinder form factor kernel failed [" << __FILE__ << ":" << __LINE__ << "]: "
 						<< cudaGetErrorString(err) << std::endl;
 			return false;
 		} else {
 			//std::cout << "block size: " << cby << " x " << cbz << ". ";
 			construct_output_ff(ff);
 		} // if-else
+
+		delete[] newrot;
 
 		cudaFree(distr_r_d);
 		cudaFree(r_d);
@@ -120,7 +132,8 @@ namespace hig {
 			for(unsigned int i_x = 0; i_x < nqx; ++ i_x) {
 				cucomplex_t mqx, mqy, mqz;
 				compute_meshpoints(qx[i_x], qy[i_y], qz[i_z], rot, mqx, mqy, mqz);
-				cucomplex_t qpar = cuCsqrt(mqz * mqz + mqy * mqy);
+				//cucomplex_t qpar = cuCsqrt(mqz * mqz + mqy * mqy);
+				cucomplex_t qpar = cuCsqrt(mqx * mqx + mqy * mqy);
 				cucomplex_t temp_ff = make_cuC((float_t) 0.0, (float_t) 0.0);
 				// why does this not depend on eta? ...
 				for(unsigned int p_r = 0; p_r < n_r; ++ p_r) {
@@ -128,7 +141,8 @@ namespace hig {
 						float_t temp1 = distr_r[p_r] * distr_h[p_h] * 2 * PI_ * r[p_r] * r[p_r];
 						cucomplex_t temp2 = qpar * r[p_r];
 						cucomplex_t temp3 = cuCcbessj(temp2, 1) / temp2;
-						cucomplex_t temp4 = fq_inv(mqx, h[p_h]);
+						//cucomplex_t temp4 = fq_inv(mqx, h[p_h]);
+						cucomplex_t temp4 = fq_inv(mqz, h[p_h]);
 						temp_ff = temp_ff + temp1 * temp3 * temp4;
 					} // for h
 				} // for r

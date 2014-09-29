@@ -3,7 +3,7 @@
  *
  *  File: utilities.hpp
  *  Created: Jun 25, 2012
- *  Modified: Fri 18 Jul 2014 10:36:17 AM PDT
+ *  Modified: Mon 29 Sep 2014 11:01:12 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -26,6 +26,8 @@
 
 #include <common/globals.hpp>
 #include <common/typedefs.hpp>
+
+#include <utils/matmul.hpp>
 
 namespace hig {
 
@@ -188,6 +190,9 @@ namespace hig {
 	*/
 	extern bool mat_mul_3x3(vector3_t a, vector3_t b, vector3_t c, vector3_t d, vector3_t e, vector3_t f,
 					vector3_t& x, vector3_t& y, vector3_t& z);
+	extern bool mat_mul_3x3(float_vec_t a, float_vec_t d, float_vec_t& x);
+	extern bool mat_mul_3x3(float_vec_t a, float_t* d, float_t*& x);
+	extern bool mat_mul_3x3(float_t* a, float_t* d, float_t*& x);
 
 	/** matrix vector product for matrix of size 3x3 and vector of size 1x3
 	 * operation is:

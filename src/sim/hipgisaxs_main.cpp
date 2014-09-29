@@ -1058,6 +1058,9 @@ namespace hig {
 				//mat_mul_3x3(r_norm1, r_norm2, r_norm3,
 				//			rotation_matrix.r1_, rotation_matrix.r2_, rotation_matrix.r3_,
 				//			r_tot1, r_tot2, r_tot3);
+				std::cout << "--> " << r_tot1[0] << " " << r_tot1[1] << " " << r_tot1[2] << std::endl;
+				std::cout << "--> " << r_tot2[0] << " " << r_tot2[1] << " " << r_tot2[2] << std::endl;
+				std::cout << "--> " << r_tot3[0] << " " << r_tot3[1] << " " << r_tot3[2] << std::endl;
 
 				/* center of unit cell replica */
 				vector3_t curr_dd_vec(dd[grain_i + 0],
@@ -1225,10 +1228,10 @@ namespace hig {
 	//										rk2[curr_index] * sf[curr_index_1] +
 	//										rk1[curr_index] * sf[curr_index_2] +
 	//										rk1rk2[curr_index] * sf[curr_index_3]);
-//											(h0[curr_index] * ff[curr_index_0] +
-//											rk2[curr_index] * ff[curr_index_1] +
-//											rk1[curr_index] * ff[curr_index_2] +
-//											rk1rk2[curr_index] * ff[curr_index_3]);
+	//										(h0[curr_index] * ff[curr_index_0] +
+	//										rk2[curr_index] * ff[curr_index_1] +
+	//										rk1[curr_index] * ff[curr_index_2] +
+	//										rk1rk2[curr_index] * ff[curr_index_3]);
 											(h0[curr_index] * sf[curr_index_0] * ff[curr_index_0] +
 											rk2[curr_index] * sf[curr_index_1] * ff[curr_index_1] +
 											rk1[curr_index] * sf[curr_index_2] * ff[curr_index_2] +
