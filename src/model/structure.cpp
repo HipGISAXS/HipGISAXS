@@ -33,14 +33,22 @@ namespace hig {
      */
     GrainScaling::GrainScaling() {
         mean_[0] = mean_[1] = mean_[2] = 0;
-        stddev_[0] = stddev_[1] = stddev_[2];
+        stddev_[0] = stddev_[1] = stddev_[2] = 0;
         for (int i = 0; i < 3; i++)
         {
             dist_.push_back(stat_gaussian);
             nvals_.push_back (12);
         }
     }
-
+    void GrainScaling::init() {
+        mean_[0] = mean_[1] = mean_[2] = 0;
+        stddev_[0] = stddev_[1] = stddev_[2] = 0;
+        for (int i = 0; i < 3; i++)
+        {
+            dist_.push_back(stat_gaussian);
+            nvals_.push_back (12);
+        }
+    }
     void GrainScaling::clear() {
         mean_[0] = mean_[1] = mean_[2] = 0;
         stddev_[0] = stddev_[1] = stddev_[2] = 0;
@@ -295,6 +303,7 @@ namespace hig {
 		transvec_[0] = transvec_[1] = transvec_[2] = 0;
 		repetition_[0] = repetition_[1] = repetition_[2] = 1;
 		is_repetition_dist_ = false;
+        scaling_.init();
 	} // Grain::init()
 
 

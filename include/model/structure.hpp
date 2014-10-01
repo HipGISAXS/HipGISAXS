@@ -42,6 +42,7 @@ namespace hig {
             std::vector<int> nvals_;
         public:
             GrainScaling();
+            void init();
             void clear();
        friend class Grain;
        friend class Structure;
