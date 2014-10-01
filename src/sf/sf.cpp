@@ -327,19 +327,21 @@
 		computetimer.stop();
 		maintimer.stop();
 
-		if(master) {
-			std::cout << "done. " << std::endl;
-			std::cout << "**               SF compute time: " << computetimer.elapsed_msec()  << " ms."
-						<< std::endl
-						<< "**                 Total SF time: " << maintimer.elapsed_msec() << " ms."
-						<< std::endl;
+		#ifdef TIME_DETAIL_1
+			if(master) {
+				std::cout << "done. " << std::endl;
+				std::cout << "**               SF compute time: "
+						<< computetimer.elapsed_msec()  << " ms." << std::endl
+						<< "**                 Total SF time: "
+						<< maintimer.elapsed_msec() << " ms." << std::endl;
 
 
-			//	save_sf(  QGrid::instance().nqx(),   QGrid::instance().nqy(),   QGrid::instance().nqz(), "/home/stchourou/sf.dat");
+				//	save_sf(  QGrid::instance().nqx(),   QGrid::instance().nqy(),   QGrid::instance().nqz(), "/home/stchourou/sf.dat");
 
-			//int naninfs = count_naninfs(nx_, ny_, nz_, sf_);
-			//std::cout << " ------- " << naninfs << " / " << nx_ * ny_ * nz_ << " nans or infs" << std::endl;
-		} // if
+				//int naninfs = count_naninfs(nx_, ny_, nz_, sf_);
+				//std::cout << " ------- " << naninfs << " / " << nx_ * ny_ * nz_ << " nans or infs" << std::endl;
+			} // if
+		#endif // TIME_DETAIL_1
 
 		return true;
 	} // StructureFactor::compute_structure_factor()

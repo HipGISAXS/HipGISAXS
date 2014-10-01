@@ -3,7 +3,7 @@
  *
  *  File: ff_num_cpu.hpp
  *  Created: Nov 05, 2011
- *  Modified: Sun 26 Jan 2014 10:29:09 AM PST
+ *  Modified: Wed 01 Oct 2014 08:20:03 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -218,13 +218,15 @@ namespace hig {
 		unsigned int curr_b_num_triangles = b_num_triangles;
 		unsigned int num_blocks = nb_x * nb_y * nb_z * nb_t;
 
-		if(rank == 0) {
-			std::cout << "++               Hyperblock size: " << b_nqx << " x " << b_nqy
-						<< " x " << b_nqz << " x " << b_num_triangles << std::endl;
-			std::cout << "++  Number of decomposed Hblocks: " << num_blocks
-						<< " [" << nb_x << " x " << nb_y << " x " << nb_z << " x " << nb_t << "]"
-						<< std::endl;
-		} // if
+		#ifdef TIME_DETAIL_2
+			if(rank == 0) {
+				std::cout << "++               Hyperblock size: " << b_nqx << " x " << b_nqy
+							<< " x " << b_nqz << " x " << b_num_triangles << std::endl;
+				std::cout << "++  Number of decomposed Hblocks: " << num_blocks
+							<< " [" << nb_x << " x " << nb_y << " x " << nb_z << " x " << nb_t << "]"
+							<< std::endl;
+			} // if
+		#endif // TIME_DETAIL_2
 
 		unsigned int block_num = 0;
 

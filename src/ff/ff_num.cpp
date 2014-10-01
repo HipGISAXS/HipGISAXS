@@ -392,7 +392,8 @@ namespace hig {
 			mem_time += memtimer.elapsed_msec();
 	
 			if(master) {
-				std::cout
+				#ifdef TIME_DETAIL_1
+					std::cout
 						<< "**                FF kernel time: " << kernel_time << " ms." << std::endl
 						<< "**               FF compute time: " << computetimer.elapsed_msec() << " ms."
 						<< std::endl
@@ -400,6 +401,7 @@ namespace hig {
 						<< "**            Communication time: " << comm_time * 1000 << " ms." << std::endl
 						<< "**                 Total FF time: " << maintimer.elapsed_msec() << " ms."
 						<< std::endl << std::flush;
+				#endif // TIME_DETAIL_1
 
 				double mflop = 0.0; float_t gflops = 0.0;
 

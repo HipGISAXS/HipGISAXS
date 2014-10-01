@@ -787,7 +787,7 @@ namespace hig {
 		#ifdef USE_MPI
 			bool master = multi_node_.is_master(comm_key);
 			int ss = multi_node_.size(comm_key);
-			std::cout << "****************** MPI size for this simulation: " << ss << std::endl;
+			//std::cout << "****************** MPI size for this simulation: " << ss << std::endl;
 		#else
 			bool master = true;
 		#endif
@@ -1058,9 +1058,9 @@ namespace hig {
 				//mat_mul_3x3(r_norm1, r_norm2, r_norm3,
 				//			rotation_matrix.r1_, rotation_matrix.r2_, rotation_matrix.r3_,
 				//			r_tot1, r_tot2, r_tot3);
-				std::cout << "--> " << r_tot1[0] << " " << r_tot1[1] << " " << r_tot1[2] << std::endl;
-				std::cout << "--> " << r_tot2[0] << " " << r_tot2[1] << " " << r_tot2[2] << std::endl;
-				std::cout << "--> " << r_tot3[0] << " " << r_tot3[1] << " " << r_tot3[2] << std::endl;
+				//std::cout << "--> " << r_tot1[0] << " " << r_tot1[1] << " " << r_tot1[2] << std::endl;
+				//std::cout << "--> " << r_tot2[0] << " " << r_tot2[1] << " " << r_tot2[2] << std::endl;
+				//std::cout << "--> " << r_tot3[0] << " " << r_tot3[1] << " " << r_tot3[2] << std::endl;
 
 				/* center of unit cell replica */
 				vector3_t curr_dd_vec(dd[grain_i + 0],

@@ -3,7 +3,7 @@
  *
  *  File: ff_num_gpu.cu
  *  Created: Aug 25, 2012
- *  Modified: Wed 10 Sep 2014 10:55:23 AM PDT
+ *  Modified: Wed 01 Oct 2014 08:35:51 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -373,14 +373,16 @@ namespace hig {
 		cudaMemGetInfo(&device_mem_avail, &device_mem_total);
 		device_mem_used = device_mem_total - device_mem_avail;
 		size_t estimated_device_mem_need = matrix_size * sizeof(cucomplex_t) + device_mem_used;
-		if(rank == 0) {
-			std::cout << "++       Available device memory: "
-						<< (float) device_mem_avail / 1024 / 1024
-						<< " MB" << std::endl;
-			std::cout << "++  Estimated device memory need: "
-						<< (float) estimated_device_mem_need / 1024 / 1024
-						<< " MB" << std::endl;
-		} // if
+		#ifdef TIME_DETAIL_1
+			if(rank == 0) {
+				std::cout << "++       Available device memory: "
+							<< (float) device_mem_avail / 1024 / 1024
+							<< " MB" << std::endl;
+				std::cout << "++  Estimated device memory need: "
+							<< (float) estimated_device_mem_need / 1024 / 1024
+							<< " MB" << std::endl;
+			} // if
+		#endif // TIME_DETAIL_1
 		//cudaEventRecord(mem_end_event, 0);
 		//cudaEventSynchronize(mem_end_event);
 		//cudaEventElapsedTime(&temp_mem_time, mem_begin_event, mem_end_event);
@@ -403,10 +405,13 @@ namespace hig {
 		cucomplex_t *fq_buffer = NULL, *ff_buffer = NULL, *fq_d = NULL, *ff_d = NULL;
 	#ifdef GPUR
 		size_t estimated_host_mem_need = host_mem_usage + blocked_3d_matrix_size * sizeof(cucomplex_t);
-		if(rank == 0) {
-			std::cout << "++    Estimated host memory need: " << (float) estimated_host_mem_need / 1024 / 1024
+		#ifdef TIME_DETAIL_1
+			if(rank == 0) {
+				std::cout << "++    Estimated host memory need: "
+						<< (float) estimated_host_mem_need / 1024 / 1024
 						<< " MB" << std::endl;
-		} // if
+			} // if
+		#endif // TIME_DETAIL_1
 		host_mem_usage += blocked_3d_matrix_size * sizeof(cucomplex_t);
 		if(cudaMallocHost(&ff_buffer, blocked_3d_matrix_size * sizeof(cucomplex_t)) != cudaSuccess) {
 			std::cerr << "Memory allocation failed for ff_buffer. blocked_3d_matrix_size = "
@@ -415,10 +420,13 @@ namespace hig {
 						<< std::endl;
 	#else
 		size_t estimated_host_mem_need = host_mem_usage + blocked_matrix_size * sizeof(cucomplex_t);
-		if(rank == 0) {
-			std::cout << "++    Estimated host memory need: " << (float) estimated_host_mem_need / 1024 / 1024
+		#ifdef TIME_DETAIL_1
+			if(rank == 0) {
+				std::cout << "++    Estimated host memory need: "
+						<< (float) estimated_host_mem_need / 1024 / 1024
 						<< " MB" << std::endl;
-		} // if
+			} // if
+		#endif // TIME_DETAIL_1
 		host_mem_usage += blocked_matrix_size * sizeof(cucomplex_t);
 		fq_buffer = new (std::nothrow) cucomplex_t[blocked_matrix_size]();
 		if(fq_buffer == NULL) {
@@ -439,14 +447,16 @@ namespace hig {
 				} else {
 					cudaMemGetInfo(&device_mem_avail, &device_mem_total);
 					device_mem_used = device_mem_total - device_mem_avail;
-					if(rank == 0) {
-						std::cout << "++            Device memory used: "
-									<< (float) device_mem_used / 1024 / 1024
-									<< " MB" << std::endl;
-						std::cout << "++              Host memory used: "
-									<< (float) host_mem_usage / 1024 / 1024
-									<< " MB" << std::endl << std::flush;
-					} // if
+					#ifdef TIME_DETAIL_1
+						if(rank == 0) {
+							std::cout << "++            Device memory used: "
+										<< (float) device_mem_used / 1024 / 1024
+										<< " MB" << std::endl;
+							std::cout << "++              Host memory used: "
+										<< (float) host_mem_usage / 1024 / 1024
+										<< " MB" << std::endl << std::flush;
+						} // if
+					#endif // TIME_DETAIL_1
 
 					// compute the number of sub-blocks, along each of the 4 dimensions
 					// formulate loops over each dimension, to go over each sub block
@@ -459,24 +469,28 @@ namespace hig {
 					unsigned int curr_b_num_triangles = b_num_triangles;
 					unsigned int num_blocks = nb_x * nb_y * nb_z * nb_t;
 
-					if(rank == 0) {
-						std::cout << "++               Hyperblock size: " << b_nqx << " x " << b_nqy
-									<< " x " << b_nqz << " x " << b_num_triangles << std::endl;
-						std::cout << "++         Number of hyperblocks: " << num_blocks
-									<< " [" << nb_x << ", " << nb_y << ", " << nb_z << ", " << nb_t << "]"
-									<< std::endl;
-
-						std::cout << "++        Kernel CUDA block size: ";
-	#ifndef KERNEL2
-						std::cout << block_cuda_ << std::endl;
-	#else
-						std::cout << block_cuda_t_ << " x " << block_cuda_y_ << " x "
-									<< block_cuda_z_ << std::endl;
-	#endif
-						std::cout << "++     Reduction CUDA block size: "
-									<< BLOCK_REDUCTION_X_ << " x " << BLOCK_REDUCTION_Y_ << " x "
-									<< BLOCK_REDUCTION_Z_ << std::endl;
-					} // if
+					#ifdef TIME_DETAIL_1
+						if(rank == 0) {
+							std::cout << "++               Hyperblock size: "
+									<< b_nqx << " x " << b_nqy << " x " << b_nqz
+									<< " x " << b_num_triangles << std::endl;
+							std::cout << "++         Number of hyperblocks: " << num_blocks
+									<< " [" << nb_x << ", " << nb_y << ", " << nb_z
+									<< ", " << nb_t << "]" << std::endl;
+	
+							std::cout << "++        Kernel CUDA block size: ";
+							#ifndef KERNEL2
+								std::cout << block_cuda_ << std::endl;
+							#else	
+								std::cout << block_cuda_t_ << " x " << block_cuda_y_ << " x "
+											<< block_cuda_z_ << std::endl;
+							#endif	
+							std::cout << "++     Reduction CUDA block size: "
+										<< BLOCK_REDUCTION_X_ << " x "
+										<< BLOCK_REDUCTION_Y_ << " x "
+										<< BLOCK_REDUCTION_Z_ << std::endl;
+						} // if
+					#endif // TIME_DETAIL_1
 
 					cudaEventRecord(mem_end_event, 0);
 					cudaEventSynchronize(mem_end_event);
@@ -549,11 +563,13 @@ namespace hig {
 									size_t stat_shared_mem_size = (FQ_COPY_SIZE_ + BANK_OFF_) *
 																	MAX_NUM_THREADS_;
 									size_t tot_shared_mem_size = dyn_shared_mem_size + stat_shared_mem_size;
-									if(rank == 0 && ib_x + ib_y + ib_z + ib_t == 0) {
-										std::cout << "++       Required shared memory: "
+									#ifdef TIME_DETAIL_1
+										if(rank == 0 && ib_x + ib_y + ib_z + ib_t == 0) {
+											std::cout << "++       Required shared memory: "
 													<< (float) tot_shared_mem_size << " B"
 													<< std::endl;
-									} // if
+										} // if
+									#endif // TIME_DETAIL_1
 									if(tot_shared_mem_size > 32768) {
 										std::cerr << "error: too much shared memory requested!" << std::endl;
 										exit(1);
@@ -848,14 +864,16 @@ namespace hig {
 		cudaMemGetInfo(&device_mem_avail, &device_mem_total);
 		device_mem_used = device_mem_total - device_mem_avail;
 		size_t estimated_device_mem_need = matrix_size * sizeof(cucomplex_t) + device_mem_used;
-		if(rank == 0) {
-			std::cout << "++       Available device memory: "
+		#ifdef TIME_DETAIL_1
+			if(rank == 0) {
+				std::cout << "++       Available device memory: "
 						<< (float) device_mem_avail / 1024 / 1024
 						<< " MB" << std::endl;
-			std::cout << "++  Estimated device memory need: "
+				std::cout << "++  Estimated device memory need: "
 						<< (float) estimated_device_mem_need / 1024 / 1024
 						<< " MB" << std::endl;
-		} // if
+			} // if
+		#endif // TIME_DETAIL_1
 	
 		// do hyperblocking
 		unsigned int b_nqx = 0, b_nqy = 0, b_nqz = 0, b_num_triangles = 0;
@@ -876,11 +894,13 @@ namespace hig {
 		cucomplex_t *ff_double_buff[2], *fq_double_d[2], *ff_double_d[2];
 	
 		size_t estimated_host_mem_need = host_mem_usage + 2 * blocked_3d_matrix_size * sizeof(cucomplex_t);
-		if(rank == 0) {
-			std::cout << "++    Estimated host memory need: "
+		#ifdef TIME_DETAIL_1
+			if(rank == 0) {
+				std::cout << "++    Estimated host memory need: "
 						<< (float) estimated_host_mem_need / 1024 / 1024
 						<< " MB" << std::endl;
-		} // if
+			} // if
+		#endif // TIME_DETAIL_1
 		host_mem_usage += 2 * blocked_3d_matrix_size * sizeof(cucomplex_t);
 		if(cudaMallocHost((void **) &ff_buffer, 2 * blocked_3d_matrix_size * sizeof(cucomplex_t))
 				!= cudaSuccess) {
@@ -912,14 +932,16 @@ namespace hig {
 	
 					cudaMemGetInfo(&device_mem_avail, &device_mem_total);
 					device_mem_used = device_mem_total - device_mem_avail;
-					if(rank == 0) {
-						std::cout << "++     Actual device memory used: "
+					#ifdef TIME_DETAIL_1
+						if(rank == 0) {
+							std::cout << "++     Actual device memory used: "
 									<< (float) device_mem_used / 1024 / 1024
 									<< " MB" << std::endl;
-						std::cout << "++       Actual host memory used: "
+							std::cout << "++       Actual host memory used: "
 									<< (float) host_mem_usage / 1024 / 1024
 									<< " MB" << std::endl << std::flush;
-					} // if
+						} // if
+					#endif // TIME_DETAIL_1
 	
 					// compute the number of sub-blocks, along each of the 4 dimensions
 					// formulate loops over each dimension, to go over each sub block
@@ -932,22 +954,23 @@ namespace hig {
 					unsigned int curr_b_num_triangles = b_num_triangles;
 					unsigned int num_blocks = nb_x * nb_y * nb_z * nb_t;
 	
-					if(rank == 0) {
-						std::cout << "++               Hyperblock size: " << b_nqx << " x " << b_nqy
-									<< " x " << b_nqz << " x " << b_num_triangles << std::endl;
-						std::cout << "++         Number of hyperblocks: " << num_blocks
+					#ifdef TIME_DETAIL_1
+						if(rank == 0) {
+							std::cout << "++               Hyperblock size: "
+									<< b_nqx << " x " << b_nqy << " x " << b_nqz
+									<< " x " << b_num_triangles << std::endl;
+							std::cout << "++         Number of hyperblocks: " << num_blocks
 									<< " [" << nb_x << " x " << nb_y << " x "
-									<< nb_z << " x " << nb_t << "]"
-									<< std::endl;
+									<< nb_z << " x " << nb_t << "]" << std::endl;
 	
-						std::cout << "++     FF kernel CUDA block size: ";
+							std::cout << "++     FF kernel CUDA block size: ";
 	#ifndef KERNEL2
-						std::cout << block_cuda_ << std::endl;
+							std::cout << block_cuda_ << std::endl;
 	#else // KERNEL2
-						std::cout << block_cuda_t_ << " x " << block_cuda_y_ << " x "
+							std::cout << block_cuda_t_ << " x " << block_cuda_y_ << " x "
 									<< block_cuda_z_ << std::endl;
 	#endif // KERNEL2
-						std::cout << "++     Reduction CUDA block size: "
+							std::cout << "++     Reduction CUDA block size: "
 	#ifndef REDUCTION2
 									<< std::min((unsigned int)BLOCK_REDUCTION_X_, b_nqx) << " x "
 	#else // REDUCTION2
@@ -955,7 +978,8 @@ namespace hig {
 	#endif // REDUCTION2
 									<< BLOCK_REDUCTION_Y_ << " x "
 									<< BLOCK_REDUCTION_Z_ << std::endl;
-					} // if
+						} // if
+					#endif // TIME_DETAIL_1
 	
 					cudaEventRecord(mem_end_event, 0);
 					cudaEventSynchronize(mem_end_event);
@@ -1015,12 +1039,14 @@ namespace hig {
 									size_t dyna_shmem_size = 0;
 									size_t stat_shmem_size = 0;
 									size_t total_shmem_size = dyna_shmem_size + stat_shmem_size;
-									if(rank == 0 && ib_x + ib_y + ib_z + ib_t == 0) {
-										std::cout << std::endl
+									#ifdef TIME_DETAIL_1
+										if(rank == 0 && ib_x + ib_y + ib_z + ib_t == 0) {
+											std::cout << std::endl
 													<< "++              FF shared memory: "
 													<< (float) total_shmem_size
 													<< " B" << std::endl;
-									} // if
+										} // if
+									#endif // TIME_DETAIL_1
 									if(total_shmem_size > 49152) {
 										std::cerr << "error: too much shared memory requested!" << std::endl;
 										exit(1);
@@ -1051,12 +1077,14 @@ namespace hig {
 																sizeof(cucomplex_t) * block_cuda_z_;
 									size_t stat_shmem_size = 0;
 									size_t total_shmem_size = dyna_shmem_size + stat_shmem_size;
-									if(rank == 0 && ib_x + ib_y + ib_z + ib_t == 0) {
-										std::cout << std::endl
+									#ifdef TIME_DETAIL_1
+										if(rank == 0 && ib_x + ib_y + ib_z + ib_t == 0) {
+											std::cout << std::endl
 													<< "++              FF shared memory: "
 													<< (float) total_shmem_size
 													<< " B" << std::endl;
-									} // if
+										} // if
+									#endif // TIME_DETAIL_1
 									if(total_shmem_size > 49152) {
 										std::cerr << "error: too much shared memory requested!" << std::endl;
 										exit(1);
@@ -1107,11 +1135,13 @@ namespace hig {
 										dyna_shmem_size = 0;
 										stat_shmem_size = 0;
 										total_shmem_size = dyna_shmem_size + stat_shmem_size;
-										if(rank == 0 && ib_x + ib_y + ib_z + ib_t == 0) {
-											std::cout << "++       Reduction shared memory: "
+										#ifdef TIME_DETAIL_1
+											if(rank == 0 && ib_x + ib_y + ib_z + ib_t == 0) {
+												std::cout << "++       Reduction shared memory: "
 														<< (float) total_shmem_size
 														<< " B" << std::endl;
-										} // if
+											} // if
+										#endif // TIME_DETAIL_1
 										if(total_shmem_size > 49152) {
 											std::cerr << "error: too much shared memory requested!"
 														<< std::endl;
@@ -1148,11 +1178,13 @@ namespace hig {
 										stat_shmem_size = sizeof(cucomplex_t) * BLOCK_REDUCTION_T_ *
 															BLOCK_REDUCTION_Y_ * BLOCK_REDUCTION_Z_;
 										total_shmem_size = dyna_shmem_size + stat_shmem_size;
-										if(rank == 0 && ib_x + ib_y + ib_z + ib_t == 0) {
-											std::cout << "++       Reduction shared memory: "
+										#ifdef TIME_DETAIL_1
+											if(rank == 0 && ib_x + ib_y + ib_z + ib_t == 0) {
+												std::cout << "++       Reduction shared memory: "
 														<< (float) total_shmem_size
 														<< " B" << std::endl;
-										} // if
+											} // if
+										#endif // TIME_DETAIL_1
 										if(total_shmem_size > 49152) {
 											std::cerr << "error: too much shared memory requested!"
 														<< std::endl;
@@ -1383,14 +1415,16 @@ namespace hig {
 		cudaMemGetInfo(&device_mem_avail, &device_mem_total);
 		device_mem_used = device_mem_total - device_mem_avail;
 		size_t estimated_device_mem_need = matrix_size * sizeof(cucomplex_t) + device_mem_used;
-		if(rank == 0) {
-			std::cout << "++       Available device memory: "
+		#ifdef TIME_DETAIL_1
+			if(rank == 0) {
+				std::cout << "++       Available device memory: "
 						<< (float) device_mem_avail / 1024 / 1024
 						<< " MB" << std::endl;
-			std::cout << "++  Estimated device memory need: "
+				std::cout << "++  Estimated device memory need: "
 						<< (float) estimated_device_mem_need / 1024 / 1024
 						<< " MB" << std::endl;
-		} // if
+			} // if
+		#endif // TIME_DETAIL_1
 	
 		// do hyperblocking
 		unsigned int b_nqx = 0, b_nqy = 0, b_nqz = 0, b_num_triangles = 0;
@@ -1414,11 +1448,13 @@ namespace hig {
 		cucomplex_t *ff_double_buff[2], *ff_double_d[2];
 	
 		size_t estimated_host_mem_need = host_mem_usage + 2 * blocked_3d_matrix_size * sizeof(cucomplex_t);
-		if(rank == 0) {
-			std::cout << "++    Estimated host memory need: "
+		#ifdef TIME_DETAIL_1
+			if(rank == 0) {
+				std::cout << "++    Estimated host memory need: "
 						<< (float) estimated_host_mem_need / 1024 / 1024
 						<< " MB" << std::endl;
-		} // if
+			} // if
+		#endif // TIME_DETAIL_1
 		host_mem_usage += 2 * blocked_3d_matrix_size * sizeof(cucomplex_t);
 		if(cudaMallocHost((void **) &ff_buffer, 2 * blocked_3d_matrix_size * sizeof(cucomplex_t))
 				!= cudaSuccess) {
@@ -1442,14 +1478,16 @@ namespace hig {
 
 				cudaMemGetInfo(&device_mem_avail, &device_mem_total);
 				device_mem_used = device_mem_total - device_mem_avail;
-				if(rank == 0) {
-					std::cout << "++     Actual device memory used: "
+				#ifdef TIME_DETAIL_1
+					if(rank == 0) {
+						std::cout << "++     Actual device memory used: "
 								<< (float) device_mem_used / 1024 / 1024
 								<< " MB" << std::endl;
-					std::cout << "++       Actual host memory used: "
+						std::cout << "++       Actual host memory used: "
 								<< (float) host_mem_usage / 1024 / 1024
 								<< " MB" << std::endl << std::flush;
-				} // if
+					} // if
+				#endif // TIME_DETAIL_1
 
 				// compute the number of sub-blocks, along each of the 4 dimensions
 				// formulate loops over each dimension, to go over each sub block
@@ -1469,17 +1507,18 @@ namespace hig {
 
 				// decompose only along y and z (no t since reducing along t)
 
-				if(rank == 0) {
-					std::cout << "++               Hyperblock size: " << b_nqx << " x " << b_nqy
+				#ifdef TIME_DETAIL_1
+					if(rank == 0) {
+						std::cout << "++               Hyperblock size: " << b_nqx << " x " << b_nqy
 								<< " x " << b_nqz << " x " << b_num_triangles << std::endl;
-					std::cout << "++         Number of hyperblocks: " << num_blocks
+						std::cout << "++         Number of hyperblocks: " << num_blocks
 								<< " [" << nb_x << " x " << nb_y << " x "
 								<< nb_z << " x " << nb_t << "]"
 								<< std::endl;
-
-					std::cout << "++     FF kernel CUDA block size: ";
-					std::cout << block_cuda_y_ << " x " << block_cuda_z_ << std::endl;
-				} // if
+						std::cout << "++     FF kernel CUDA block size: ";
+						std::cout << block_cuda_y_ << " x " << block_cuda_z_ << std::endl;
+					} // if
+				#endif // TIME_DETAIL_1
 
 				cudaEventRecord(mem_end_event, 0);
 				cudaEventSynchronize(mem_end_event);
@@ -1543,12 +1582,14 @@ namespace hig {
 															sizeof(cucomplex_t) * block_cuda_z_;
 								size_t stat_shmem_size = 0;
 								size_t total_shmem_size = dyna_shmem_size + stat_shmem_size;
-								if(rank == 0 && ib_x + ib_y + ib_z + ib_t == 0) {
-									std::cout << std::endl
+								#ifdef TIME_DETAIL_1
+									if(rank == 0 && ib_x + ib_y + ib_z + ib_t == 0) {
+										std::cout << std::endl
 												<< "++              FF shared memory: "
 												<< (float) total_shmem_size
 												<< " B" << std::endl;
-								} // if
+									} // if
+								#endif // TIME_DETAIL_1
 								if(total_shmem_size > 49152) {
 									std::cerr << "error: too much shared memory requested!" << std::endl;
 									exit(1);
@@ -1755,14 +1796,16 @@ namespace hig {
 		
 		cudaMemGetInfo(&device_mem_avail, &device_mem_total);
 		device_mem_used = device_mem_total - device_mem_avail;
-		if(rank == 0) {
-			std::cout << "++       Available device memory: "
+		#ifdef TIME_DETAIL_1
+			if(rank == 0) {
+				std::cout << "++       Available device memory: "
 						<< (float) device_mem_avail / 1024 / 1024
 						<< " MB" << std::endl;
-			//std::cout << "++  Estimated device memory need: "
-			//			<< (float) estimated_device_mem_need / 1024 / 1024
-			//			<< " MB" << std::endl;
-		} // if
+				//std::cout << "++  Estimated device memory need: "
+				//			<< (float) estimated_device_mem_need / 1024 / 1024
+				//			<< " MB" << std::endl;
+			} // if
+		#endif // TIME_DETAIL_1
 	
 		// do hyperblocking
 		unsigned int b_nqx = 0, b_nqy = 0, b_nqz = 0, b_num_triangles = 0;
@@ -1887,14 +1930,16 @@ namespace hig {
 
 				cudaMemGetInfo(&device_mem_avail, &device_mem_total);
 				device_mem_used = device_mem_total - device_mem_avail;
-				if(rank == 0) {
-					std::cout << "++           Device memory usage: "
+				#ifdef TIME_DETAIL_1
+					if(rank == 0) {
+						std::cout << "++           Device memory usage: "
 								<< (float) device_mem_used / 1024 / 1024
 								<< " MB" << std::endl;
-					std::cout << "++             Host memory usage: "
+						std::cout << "++             Host memory usage: "
 								<< (float) host_mem_usage / 1024 / 1024
 								<< " MB" << std::endl << std::flush;
-				} // if
+					} // if
+				#endif // TIME_DETAIL_1
 
 				// compute the number of sub-blocks, along each of the 4 dimensions
 				// formulate loops over each dimension, to go over each sub block
@@ -1907,17 +1952,18 @@ namespace hig {
 				unsigned int curr_b_num_triangles = b_num_triangles;
 				unsigned int num_blocks = nb_x * nb_y * nb_z * nb_t;
 
-				if(rank == 0) {
-					std::cout << "++               Hyperblock size: " << b_nqx << " x " << b_nqy
+				#ifdef TIME_DETAIL_1
+					if(rank == 0) {
+						std::cout << "++               Hyperblock size: " << b_nqx << " x " << b_nqy
 								<< " x " << b_nqz << " x " << b_num_triangles << std::endl;
-					std::cout << "++         Number of hyperblocks: " << num_blocks
+						std::cout << "++         Number of hyperblocks: " << num_blocks
 								<< " [" << nb_x << " x " << nb_y << " x "
 								<< nb_z << " x " << nb_t << "]"
 								<< std::endl;
-
-					//std::cout << "++     FF kernel CUDA block size: ";
-					//std::cout << block_cuda_y_ << " x " << block_cuda_z_ << std::endl;
-				} // if
+						//std::cout << "++     FF kernel CUDA block size: ";
+						//std::cout << block_cuda_y_ << " x " << block_cuda_z_ << std::endl;
+					} // if
+				#endif // TIME_DETAIL_1
 
 				#ifdef FF_NUM_AUTOTUNE
 					// AUTOTUNING: find optimal CUDA block size
@@ -1973,10 +2019,12 @@ namespace hig {
 					} // if
 				#endif
 
-				if(rank == 0) {
-					std::cout << "++    Autotuned CUDA block size: " << block_cuda_y_ << " x "
+				#ifdef TIME_DETAIL_1
+					if(rank == 0) {
+						std::cout << "++    Autotuned CUDA block size: " << block_cuda_y_ << " x "
 								<< block_cuda_z_ << std::endl;
-				} // if
+					} // if
+				#endif // TIME_DETAIL_1
 
 				if(rank == 0) std::cout << "-- Computing form factor on GPU ... " << std::flush;
 				woo::CUDATimer fftimer;
@@ -2045,12 +2093,14 @@ namespace hig {
 															sizeof(cucomplex_t) * block_cuda_z_;
 								size_t stat_shmem_size = 0;
 								size_t total_shmem_size = dyna_shmem_size + stat_shmem_size;
-								if(rank == 0 && hblock_iter == 0) {
-									std::cout << std::endl
+								#ifdef TIME_DETAIL_1
+									if(rank == 0 && hblock_iter == 0) {
+										std::cout << std::endl
 												<< "++              FF shared memory: "
 												<< (float) total_shmem_size
 												<< " B" << std::endl;
-								} // if
+									} // if
+								#endif // TIME_DETAIL_1
 								if(total_shmem_size > 49152) {
 									std::cerr << "error: too much shared memory requested!" << std::endl;
 									exit(1);

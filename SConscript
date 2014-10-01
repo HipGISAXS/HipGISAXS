@@ -371,6 +371,8 @@ add_option("with-cuda", "Enable GPU support", 0, False)
 add_option("with-mic", "Enable Intel MIC support", 0, False)
 add_option("with-mpi", "Enable MPI parallelization", 0, False)
 add_option("with-papi", "Enable PAPI profiling", 0, False)
+## other stuff
+add_option("detail-timings", "Output detailed timings", 0, False)
 
 printLocalInfo()
 
@@ -486,7 +488,8 @@ mpi_libs = ["mpi_cxx", "mpi"]
 gpu_libs = ["cudart"]
 papi_libs = ["papi"]
 ## required flags
-detail_flags = ['TIME_DETAIL_1', 'TIME_DETAIL_2']
+if _has_option("detail-timings"): detail_flags = ['TIME_DETAIL_1', 'TIME_DETAIL_2']
+else: detail_flags = []
 all_flags = detail_flags
 ## optional flags
 gpu_flags = ['USE_GPU', 'GPUR', 'KERNEL2', 'FF_ANA_GPU', 'FF_NUM_GPU', 'FF_NUM_GPU_FUSED']
