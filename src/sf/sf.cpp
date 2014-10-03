@@ -241,9 +241,9 @@
 			for(unsigned int y = 0; y < nqy; ++ y) {
 				for(unsigned int x = 0; x < nqx; ++ x) {
 					unsigned int index = nqx * nqy * z + nqx * y + x;
-					f << x << "\t"  << y << "\t" << z << "\t" <<   QGrid::instance().qx(x) <<  "\t" <<   QGrid::instance().qy(y) <<  "\t" <<   QGrid::instance().qz(z) <<  "\t" << sf_[index].real() << "\t" << sf_[index].imag() << std::endl;
+					f << std::norm (sf_[index]);
 				} // for
-				f << std::endl;
+				f << "  ";
 			} // for
 			f << std::endl;
 		} // for

@@ -109,9 +109,9 @@ namespace hig {
 			for(unsigned int y = 0; y < nqy; ++ y) {
 				for(unsigned int x = 0; x < nqx; ++ x) {
 					unsigned int index = nqx * nqy * z + nqx * y + x;
-					f << ff_[index].real() << "\t" << ff_[index].imag() << std::endl;
+					f << std::norm(ff_[index]);
 				} // for
-				f << std::endl;
+				f << " "; 
 			} // for
 			f << std::endl;
 		} // for

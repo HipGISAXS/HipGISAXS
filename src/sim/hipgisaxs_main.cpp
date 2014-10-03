@@ -1681,8 +1681,7 @@ namespace hig {
 					 vector3_t &grain_repeats, vector3_t &grain_scaling, vector3_t &r_tot1, vector3_t &r_tot2,
 					 vector3_t &r_tot3
 #ifdef USE_MPI
-					 ,
-					 woo::comm_t comm_key
+					 , woo::comm_t comm_key
 #endif
 					 ) {
 #ifndef GPUSF
@@ -1706,8 +1705,7 @@ namespace hig {
 				    shape_param_list_t &shape_params, vector3_t &curr_transvec, float_t shp_tau, float_t shp_eta,
 				    vector3_t &r_tot1, vector3_t &r_tot2, vector3_t &r_tot3
 #ifdef USE_MPI
-				    ,
-				    woo::comm_t comm_key
+				    , woo::comm_t comm_key
 #endif
 				    ) {
 #ifndef GPUSF
