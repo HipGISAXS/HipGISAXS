@@ -708,7 +708,7 @@ namespace hig {
 			bool master = true;
 		#endif
 
-		int num_alphai = 0, num_phi = 0, num_tilt = 0;;
+		int num_alphai = 0, num_phi = 0, num_tilt = 0;
 		float_t alphai_min, alphai_max, alphai_step;
 		HiGInput::instance().scattering_alphai(alphai_min, alphai_max, alphai_step);
 		if(alphai_max < alphai_min) alphai_max = alphai_min;
@@ -899,13 +899,54 @@ namespace hig {
 			//				<< std::endl;
 			//} // for*/
 
+			/* grain scalings */
+			std::vector<vector3_t> scaling_samples;
+			std::vector<float_t> scaling_weights;
+			bool is_scaling_distribution = false;
+			if (s->second.grain_scaling_is_dist()) {
+				is_scaling_distribution = true;
+				std::vector<StatisticType> dist = s->second.grain_scaling_dist();
+				vector3_t mean = s->second.grain_scaling();
+				vector3_t stddev = s->second.grain_scaling_stddev();
+				std::vector<int> scaling_nvals = s->second.grain_scaling_nvals();
+
+				// if sigma is zeros set sampling count to 1
+				for (int i = 0; i < 3; i++)
+					if (stddev[i] == 0)
+						scaling_nvals[i] = 1;
+				construct_scaling_distribution(dist, mean, stddev, scaling_nvals, scaling_samples,
+							       scaling_weights);
+			} else {
+				scaling_samples.push_back(s->second.grain_scaling());
+				scaling_weights.push_back(1.);
+			} // if-else
+
+			/*
+			   // for testing
+			   if(master) {
+			   std::cerr << "************ grain scaling distribution **************" << std::endl;
+			   std::cerr << " LENGTH = " << scaling_samples.size() << std::endl;
+			   for(std::vector<vector3_t>::iterator i = scaling_samples.begin();
+			   i != scaling_samples.end(); ++i) {
+			   std::cerr << "scaling = [ " << (*i)[0] << " " << (*i)[1] << " " << (*i)[2] << " ]"
+			   << std::endl;
+			   } // for
+			   } // if
+			 */
+
 			/* grain repetitions */
 			bool is_grain_repetition_dist = false;
 			std::vector<vector3_t> all_grains_repeats;
 			if((*s).second.grain_is_repetition_dist()) {
 				is_grain_repetition_dist = true;
-				construct_repetition_distribution((*s).second.grain_repetitiondist(), num_grains,
-													all_grains_repeats);
+				// get nvalues from scaling distribution
+				int num_repeats;
+				if (scaling_samples.size() > 1) 
+                    num_repeats = scaling_samples.size();		// CHECK ...
+				else
+					num_repeats = num_grains;					// CHECK ...
+				construct_repetition_distribution((*s).second.grain_repetitiondist(), 
+                        num_repeats, all_grains_repeats);
 			} else {
 				vector3_t grain_repeats = (*s).second.grain_repetition();
 				all_grains_repeats.push_back(grain_repeats);
@@ -922,8 +963,17 @@ namespace hig {
 			//	} // for
 			//} // if
 
-			/* grain scalings */
-			float_t grain_scaling = (*s).second.grain_scaling();
+			int num_repeat_scaling;
+			if (scaling_samples.size() == all_grains_repeats.size())
+				num_repeat_scaling = scaling_samples.size();
+			else if ((scaling_samples.size() == 1) && (all_grains_repeats.size() > 1))
+				num_repeat_scaling = all_grains_repeats.size();
+			else if ((scaling_samples.size() > 1) && (all_grains_repeats.size() == 1))
+				num_repeat_scaling = scaling_samples.size();
+			else {
+				std::cerr << "error: scaling and repetition distributions are not aligned." << std::endl;
+				return false;
+			}
 
 			vector3_t curr_transvec = (*s).second.grain_transvec();
 			if(HiGInput::instance().param_nslices() <= 1) {
@@ -1072,15 +1122,9 @@ namespace hig {
 							curr_dd_vec, result);
 				vector3_t center = result + curr_transvec;
 
-				/* set the repetition for this grain */
-				vector3_t grain_repeats;
-				if(is_grain_repetition_dist)
-					grain_repeats = all_grains_repeats[grain_i % all_grains_repeats.size()];
-				else grain_repeats = all_grains_repeats[0];	// same repeat for all grains
 
 				/* compute structure factor and form factor */
 
-				StructureFactor sf;
 				#ifdef FF_NUM_GPU   // use GPU
 					#ifdef FF_NUM_GPU_FUSED
 						FormFactor ff(64, 8);
@@ -1101,12 +1145,57 @@ namespace hig {
 
 				// TODO: parallel tasks ...
 
+				StructureFactor sf;
+
+				/*vector3_t grain_scaling(1, 1, 1);
+				vector3_t grain_repeats;
+				if(is_grain_repetition_dist)
+					grain_repeats = all_grains_repeats[grain_i % all_grains_repeats.size()];
+				else grain_repeats = all_grains_repeats[0];	// same repeat for all grains
 				structure_factor(sf, HiGInput::instance().experiment(), center, curr_lattice,
 									grain_repeats, grain_scaling, r_tot1, r_tot2, r_tot3
 									#ifdef USE_MPI
 										, grain_comm
 									#endif
+									);*/
+				for (int i_scale = 0; i_scale < num_repeat_scaling; i_scale++) {
+
+					/* set the scalig for this grain */
+					vector3_t grain_scaling;
+					float_t scaling_wght = 1.0;
+					if (is_scaling_distribution) {
+						grain_scaling = scaling_samples[i_scale];
+						scaling_wght = scaling_weights[i_scale];
+					} else {
+						grain_scaling = scaling_samples[0];
+						scaling_wght = scaling_weights[0];
+					} // if-else
+
+					/* set the repetition for this grain */
+					vector3_t grain_repeats;
+					if (is_grain_repetition_dist)
+						grain_repeats = all_grains_repeats[grain_i % all_grains_repeats.size()];
+					else
+						grain_repeats = all_grains_repeats[0]; // same repeat for all grains
+
+					std::cout << "-- Calculating scaling-repetition sample " << i_scale + 1 << " / "
+						  << scaling_samples.size() << ".\n";
+
+					/* calulate structure factor for the grain */
+					StructureFactor temp_sf;
+					structure_factor(temp_sf, HiGInput::instance().experiment(), center, curr_lattice,
+									grain_repeats, grain_scaling, r_tot1, r_tot2, r_tot3
+									#ifdef USE_MPI
+										, grain_comm
+									#endif
 									);
+					if (i_scale == 0)
+						sf = temp_sf * scaling_wght;
+					else
+						sf += temp_sf * scaling_wght;
+					temp_sf.clear();
+				}
+
 				//sf.printsf();
 
 				/*if(master) {
@@ -1224,18 +1313,38 @@ namespace hig {
 										unsigned int curr_index_2 = 2 * nqx_ * nqy_ * nqz_ + curr_index;
 										unsigned int curr_index_3 = 3 * nqx_ * nqy_ * nqz_ + curr_index;
 										base_id[curr_index] = dn2 * gauss_weight *
-	//										(h0[curr_index] * sf[curr_index_0] +
-	//										rk2[curr_index] * sf[curr_index_1] +
-	//										rk1[curr_index] * sf[curr_index_2] +
-	//										rk1rk2[curr_index] * sf[curr_index_3]);
-	//										(h0[curr_index] * ff[curr_index_0] +
-	//										rk2[curr_index] * ff[curr_index_1] +
-	//										rk1[curr_index] * ff[curr_index_2] +
-	//										rk1rk2[curr_index] * ff[curr_index_3]);
+//											(h0[curr_index] * sf[curr_index_0] +
+//											rk2[curr_index] * sf[curr_index_1] +
+//											rk1[curr_index] * sf[curr_index_2] +
+//											rk1rk2[curr_index] * sf[curr_index_3]);
+//											(h0[curr_index] * ff[curr_index_0] +
+//											rk2[curr_index] * ff[curr_index_1] +
+//											rk1[curr_index] * ff[curr_index_2] +
+//											rk1rk2[curr_index] * ff[curr_index_3]);
 											(h0[curr_index] * sf[curr_index_0] * ff[curr_index_0] +
 											rk2[curr_index] * sf[curr_index_1] * ff[curr_index_1] +
 											rk1[curr_index] * sf[curr_index_2] * ff[curr_index_2] +
 											rk1rk2[curr_index] * sf[curr_index_3] * ff[curr_index_3]);
+
+										if (std::isnan(base_id[curr_index].real()) ||
+										    std::isnan(base_id[curr_index].imag())) {
+
+											std::cerr << "Base id : " << std::endl;
+											std::cerr << base_id[curr_index] << std::endl;
+											std::cerr << "Wght = " << gauss_weight << std::endl;
+											std::cerr << "Index = " << curr_index_0 << ", " << curr_index_1 << ", "
+												  << curr_index_2 << ", " << curr_index_3 << std::endl;
+											std::cerr << "FF = " << std::endl;
+											std::cerr << ff[curr_index_0] << ", " << ff[curr_index_1] << ", "
+												  << ff[curr_index_2] << ", " << ff[curr_index_3] << std::endl;
+											std::cerr << "SF = " << std::endl;
+											std::cerr << sf[curr_index_0] << ", " << sf[curr_index_1] << ", "
+												  << sf[curr_index_2] << ", " << sf[curr_index_3] << std::endl;
+											std::cerr << "Coefs: " << std::endl;
+											std::cerr << h0[curr_index] << ", " << rk2[curr_index] << ", "
+												  << rk1[curr_index] << ", " << rk1rk2[curr_index] << std::endl;
+											return false;
+										} // if
 									} // for x
 								} // for y
 							} // for z
@@ -1450,6 +1559,10 @@ namespace hig {
 				normalize(all_struct_intensity, nqx_ * nqy_ * nqz_);
 
 			img3d = new (std::nothrow) float_t[nqx_ * nqy_ * nqz_];
+			if (img3d == nullptr) {
+				std::cerr << "error: unable to allocate memeory." << std::endl;
+				std::exit(1);
+			}
 			// sum of all struct_intensity into intensity
 
 			// new stuff for correlation
@@ -1567,7 +1680,7 @@ namespace hig {
 
 	bool HipGISAXS::structure_factor(StructureFactor& sf,
 									std::string expt, vector3_t& center, Lattice* &curr_lattice,
-									vector3_t& grain_repeats, float_t grain_scaling,
+									vector3_t& grain_repeats, vector3_t& grain_scaling,
 									vector3_t& r_tot1, vector3_t& r_tot2, vector3_t& r_tot3
 									#ifdef USE_MPI
 										, woo::comm_t comm_key
@@ -2181,8 +2294,16 @@ namespace hig {
 		vector3_t rot3 = (*s).second.rotation_rot3();
 
 		nn = new (std::nothrow) float_t[ndx * ndy];
+		if (nn == NULL) {
+			std::cerr << "error: could not allocate memory" << std::endl;
+			return false;
+		}
 		wght = new (std::nothrow) float_t[ndx * ndy];
-											// TODO i believe constructing nn may not be needed ...
+		if (wght == NULL) {
+			std::cerr << "error: could not allocate memory" << std::endl;
+			return false;
+		}
+		// TODO i believe constructing nn may not be needed ...
 		if(distribution == "single") {		// single
 			for(int x = 0; x < ndx; ++ x) {
 				//nn[x] = tau[0] * PI_ / 180;
@@ -2418,6 +2539,39 @@ namespace hig {
 		return true;
 	} // HipGISAXS::construct_repetition_distribution()
 
+	bool HipGISAXS::construct_scaling_distribution(std::vector<StatisticType> dist,
+													vector3_t mean, vector3_t stddev,
+													std::vector<int> nvals,
+													std::vector<vector3_t> &samples,
+						 							std::vector<float_t> &weights) {
+        woo::MTRandomNumberGenerator rng;
+		float_t width = 4;
+		for (int i = 0; i < 3; ++ i) {
+			if (dist[i] != stat_gaussian) {
+				std::cerr << "error: only Gaussian distribution for scaling is implemented."
+						<< std::endl;
+				return false;
+			} // if
+		} // for
+		vector3_t temp;
+		vector3_t min, dx;
+		for (int i = 0; i < 3; ++ i) {
+			min[i] = mean[i] - width * stddev[i];
+			dx[i] = (2 * width) * stddev[i] / (nvals[i] + 1);
+		} // for
+		for (int i = 0; i < nvals[0]; ++ i) {
+			for (int j = 0; j < nvals[1]; ++ j) {
+				for (int k = 0; k < nvals[2]; ++ k) {
+					temp[0] = min[0] + i * dx[0] + rng.rand() * dx[0];
+					temp[1] = min[1] + j * dx[1] + rng.rand() * dx[1];
+					temp[2] = min[2] + k * dx[2] + rng.rand() * dx[2];
+					samples.push_back(temp);
+					weights.push_back(gaussian3d(temp, mean, stddev));
+				} // for
+			} // for
+		} // for
+		return true;
+	} // HipGISAXS::construct_scaling_distribution()
 
 	/**
 	 * fitting related functions

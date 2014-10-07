@@ -79,6 +79,8 @@ namespace hig {
 		rot_token,						/* rotation value for various */
 		type_token,						/* various types */
 		stat_token,						/* statistic type: gaussian, uniform, random, etc. */
+        mean_token,                     /* mean value */
+        stddev_token,                   /* standard deviation */
 
 		/* refractive index components */
 		refindex_token,					/* refractive index of various */

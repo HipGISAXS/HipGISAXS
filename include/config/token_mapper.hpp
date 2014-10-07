@@ -254,6 +254,9 @@ namespace hig {
 				KeyWords_[std::string("variable")]			= fit_param_variable_token;
 				KeyWords_[std::string("xyrotation")]		= shape_xyrot_token;
 				KeyWords_[std::string("ztilt")]				= shape_ztilt_token;
+				KeyWords_[std::string("mean")]				= mean_token;
+				KeyWords_[std::string("stddev")]			= stddev_token;
+
 			
 				/* shape name keywords */
 

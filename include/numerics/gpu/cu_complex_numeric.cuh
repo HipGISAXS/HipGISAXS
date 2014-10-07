@@ -3,7 +3,7 @@
  *
  *  File: cu_complex_numeric.cuh
  *  Created: Oct 17, 2012
- *  Modified: Thu 28 Aug 2014 03:46:02 PM PDT
+ *  Modified: Sat 04 Oct 2014 09:59:46 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -39,6 +39,25 @@ namespace hig {
 		return make_cuDoubleComplex(r, i);
 	} // make_cuC()
 
+	// get the real part from float type complex
+	__device__ static __inline__ float cu_real (cuFloatComplex x) {
+		return cuCrealf (x);
+	}
+
+	// get the real part from double type complex
+	__device__ static __inline__ double cu_real (cuDoubleComplex x) {
+		return cuCreal (x);
+	}
+
+	// get the imaginary part from float type complex
+	__device__ static __inline__ float cu_imag (cuFloatComplex x) {
+		return cuCimagf (x);
+	}
+
+	// get the imaginary part from double type complex
+	__device__ static __inline__ double cu_imag (cuDoubleComplex x) {
+		return cuCimag (x);
+	}
 
 	// addition
 
@@ -402,11 +421,11 @@ namespace hig {
 	
 	// temporary fix. assuming imaginary component is 0
 	__device__ static __inline__ cuDoubleComplex cuCcbessj(cuDoubleComplex zz, int order) {
-		return make_cuDoubleComplex(j1(zz.x), 0.0);
+		return make_cuDoubleComplex(j1(cu_real(zz)), 0.0);
 	} // cuCcbessj()
 	
 	__device__ static __inline__ cuFloatComplex cuCcbessj(cuFloatComplex zz, int order) {
-		return make_cuFloatComplex(j1f(zz.x), (float) 0.0);
+		return make_cuFloatComplex(j1f(cu_real(zz)), (float) 0.0);
 	} // cuCcbessj()
 	
 } // namespace

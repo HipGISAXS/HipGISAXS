@@ -3,7 +3,6 @@
  *
  *  File: ff_ana_cylinder_gpu.cu
  *  Created: Oct 16, 2012
- *  Modified: Sun 23 Mar 2014 08:27:35 AM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -122,13 +121,14 @@ namespace hig {
 				cucomplex_t mqx, mqy, mqz;
 				compute_meshpoints(qx[i_x], qy[i_y], qz[i_z], rot, mqx, mqy, mqz);
 				cucomplex_t qpar = cuCsqrt(mqx * mqx + mqy * mqy);
-				cucomplex_t temp1 = sin(eta) * mqx;
-				cucomplex_t temp2 = cos(eta) * mqy;
-				cucomplex_t temp_qm = mqz + tan(tau) * (temp1 + temp2);
+				//cucomplex_t temp1 = sin(eta) * mqx;
+				//cucomplex_t temp2 = cos(eta) * mqy;
+				//cucomplex_t temp_qm = mqz + tan(tau) * (temp1 + temp2);
 				cucomplex_t temp_ff = make_cuC((float_t) 0.0, (float_t) 0.0);
 				for(int p_r = 0; p_r < n_r; ++ p_r) {
 					for(int p_h = 0; p_h < n_h; ++ p_h) {
-						cucomplex_t temp3 = fq_inv(temp_qm, h[p_h]);
+						//cucomplex_t temp3 = fq_inv(temp_qm, h[p_h]);
+						cucomplex_t temp3 = fq_inv(mqz, h[p_h]);
 						cucomplex_t temp4 = qpar * r[p_r];
 						cucomplex_t temp5;
 						if(cuCiszero(temp4)) temp5 = make_cuC((float_t) 0.5, (float_t) 0.0);

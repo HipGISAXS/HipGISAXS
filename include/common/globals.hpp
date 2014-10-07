@@ -128,6 +128,10 @@ namespace hig {
 			return vector3_t(vec_[0] * tomul, vec_[1] * tomul, vec_[2] * tomul);
 		} // operator*()
 
+		vector3_t operator*(vector3_t rhs) {
+			return vector3_t(vec_[0]*rhs[0], vec_[1]*rhs[1], vec_[2]*rhs[2]);
+		} // operator*()
+
 		vector3_t operator/(vector3_t todiv) {
 			return vector3_t(vec_[0] / todiv[0], vec_[1] / todiv[1], vec_[2] / todiv[2]);
 		} // operator/()

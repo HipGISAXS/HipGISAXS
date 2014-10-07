@@ -35,6 +35,40 @@
  	} // StructureFactor::StructureFactor()
 
 
+    StructureFactor::
+    StructureFactor (int nqx, int nqy, int nqz) {
+        nx_ = nqx;
+        ny_ = nqy;
+        nz_ = nqz;
+ 		sf_ = new (std::nothrow) complex_t[nx_ * ny_ * nz_];
+    }
+
+    StructureFactor & StructureFactor::operator=(const StructureFactor & rhs) {
+        nx_ = rhs.nx_;
+        ny_ = rhs.ny_;
+        nz_ = rhs.nz_;
+        size_t size = nx_ * ny_ * nz_;
+        sf_ = new (std::nothrow) complex_t [size];
+        if (sf_ == NULL) {
+            std::cerr << "could not allocate memeory" << std::endl;
+            // TODO should call MPI_Abort
+            std::exit(1);
+        }
+        memcpy (sf_, rhs.sf_, size * sizeof(complex_t));
+        return *this;
+    }
+
+    StructureFactor & StructureFactor::operator+= (const StructureFactor & rhs) {
+        if ( nx_ != rhs.nx_ || ny_ != rhs.ny_ || nz_ != rhs.nz_ ) {
+            std::cerr << "error: cannot add non-similar shaped arrays" << std::endl;
+            std::exit(1);
+        }
+        int num_of_el = nx_ * ny_ * nz_;
+        for (int i = 0; i < num_of_el; i++ )
+            sf_[i] += rhs.sf_[i];
+        return *this;
+    }
+
  	StructureFactor::~StructureFactor() {
  		if(sf_ != NULL) delete[] sf_;
  		sf_ = NULL;
@@ -51,7 +85,7 @@
  	 * compute structure factor sequentially on cpu
  	 */
  	bool StructureFactor::compute_structure_factor(std::string expt, vector3_t center,
- 							Lattice* lattice, vector3_t repet, float_t scaling,
+ 							Lattice* lattice, vector3_t repet, vector3_t scaling,
  							vector3_t rotation_1, vector3_t rotation_2, vector3_t rotation_3
  							#ifdef USE_MPI
  								, woo::MultiNode& world_comm, std::string comm_key
@@ -81,19 +115,17 @@
  		if(repet[2] < 1) repet[2] = 1;
 
  		vector3_t arot(0, 0, 0), brot(0, 0, 0), crot(0, 0, 0);
- 		vector3_t temp_la(lattice->a() * scaling),
- 				  temp_lb(lattice->b() * scaling),
- 				  temp_lc(lattice->c() * scaling);
- 		//vector3_t temp_la(lattice->a()),
- 		//		  temp_lb(lattice->b()),
- 		//		  temp_lc(lattice->c());
- 		temp_la[2] = 0; temp_lb[2] = 0;
+ 		vector3_t temp_la(lattice->a() * scaling[0]),
+			 		temp_lb(lattice->b() * scaling[1]),
+			 		temp_lc(lattice->c() * scaling[2]);
+ 		//temp_la[2] = 0; temp_lb[2] = 0;
  		mat_mul_3x1(rotation_1, rotation_2, rotation_3, temp_la, arot);
  		mat_mul_3x1(rotation_1, rotation_2, rotation_3, temp_lb, brot);
  		mat_mul_3x1(rotation_1, rotation_2, rotation_3, temp_lc, crot);
 
- 		vector3_t l_t = lattice->t() * scaling;
- 		//vector3_t l_t = lattice->t();
+ 		//vector3_t l_t = lattice->t() * scaling;
+ 		vector3_t l_t = lattice->t();
+
 		/*
  		std::cout << "++++ repets = \n" ;
  		std::cout  << repet[0] << "  " << repet[1] << "  " << repet[2] <<std::endl;
@@ -354,9 +386,11 @@
 			for(unsigned int y = 0; y < nqy; ++ y) {
 				for(unsigned int x = 0; x < nqx; ++ x) {
 					unsigned int index = nqx * nqy * z + nqx * y + x;
-					f << x << "\t"  << y << "\t" << z << "\t" <<   QGrid::instance().qx(x) <<  "\t" <<   QGrid::instance().qy(y) <<  "\t" <<   QGrid::instance().qz(z) <<  "\t" << sf_[index].real() << "\t" << sf_[index].imag() << std::endl;
+					//f << x << "\t"  << y << "\t" << z << "\t" <<   QGrid::instance().qx(x) <<  "\t" <<   QGrid::instance().qy(y) <<  "\t" <<   QGrid::instance().qz(z) <<  "\t" << sf_[index].real() << "\t" << sf_[index].imag() << std::endl;
+					f << std::norm (sf_[index]);
 				} // for
-				f << std::endl;
+				//f << std::endl;
+				f << " ";
 			} // for
 			f << std::endl;
 		} // for
