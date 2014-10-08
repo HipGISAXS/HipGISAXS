@@ -23,18 +23,18 @@
 
 namespace hig {
 
-	bool HipGISAXSAnalyzer::analyze(int argc, char **argv, int flag) {
+  bool HipGISAXSAnalyzer::analyze(int argc, char **argv, int flag) {
 
-		std::vector <float_vec_t> all_results;
-		for(int i = 0; i < HiGInput::instance().num_analysis_data(); ++ i) {
-			for(int j = 0; j < wf_.size(); ++ j) {
-				if(flag < 0) wf_[j]->run(argc, argv, -1);		// ref data to be computed
-				else wf_[j]->run(argc, argv, i);				// ref data to be read
-				all_results.push_back(wf_[j]->get_param_values());
-			} // for
-		} // for
+    std::vector <float_vec_t> all_results;
+    for(int i = 0; i < HiGInput::instance().num_analysis_data(); ++ i) {
+      for(int j = 0; j < wf_.size(); ++ j) {
+        if(flag < 0) wf_[j]->run(argc, argv, -1);    // ref data to be computed
+        else wf_[j]->run(argc, argv, i);        // ref data to be read
+        all_results.push_back(wf_[j]->get_param_values());
+      } // for
+    } // for
 
-		return true;
-	} // HipGISAXSAnalyzer::analyze()
+    return true;
+  } // HipGISAXSAnalyzer::analyze()
 
 } // namespace hig

@@ -3,7 +3,7 @@
  *
  *  File: string_utils.hpp
  *  Created: Jan 08, 2014
- *  Modified: Wed 08 Jan 2014 12:00:35 PM PST
+ *  Modified: Wed 08 Oct 2014 12:13:09 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -27,8 +27,8 @@
 
 namespace hig {
 
-	extern bool extract_first_keyword(const std::string&, std::string&, std::string&);
-	extern bool extract_keyword_name_and_key(const std::string&, std::string&, std::string&);
+  extern bool extract_first_keyword(const std::string&, std::string&, std::string&);
+  extern bool extract_keyword_name_and_key(const std::string&, std::string&, std::string&);
 
 } // namespace hig
 

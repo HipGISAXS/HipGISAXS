@@ -3,7 +3,7 @@
  *
  *  File: test_read.cpp
  *  Created: Aug 25, 2012
- *  Modified: Tue 16 Jul 2013 12:19:34 PM PDT
+ *  Modified: Wed 08 Oct 2014 12:17:47 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -27,14 +27,14 @@ using namespace hig;
 
 int main(int narg, char** args) {
 
-	if(narg != 2) {
-		cout << "Please specify input filename" << endl;
-		exit(1);
-	} // if
+  if(narg != 2) {
+    cout << "Please specify input filename" << endl;
+    exit(1);
+  } // if
 
-	if(HiGInput::instance().construct_input_config(args[1])) {
-		HiGInput::instance().print_all();
-		return 0;
-	} // if
-	return 1;
+  if(HiGInput::instance().construct_input_config(args[1])) {
+    HiGInput::instance().print_all();
+    return 0;
+  } // if
+  return 1;
 } // main()

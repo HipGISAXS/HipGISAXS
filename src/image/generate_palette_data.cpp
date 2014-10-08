@@ -3,7 +3,7 @@
  *
  *  File: generate_palettes.cpp
  *  Created: Oct 12, 2012
- *  Modified: Tue 16 Jul 2013 11:50:46 AM PDT
+ *  Modified: Wed 08 Oct 2014 12:17:46 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -26,27 +26,27 @@
 
 
 int main(int narg, char** args) {
-	if(narg != 3) {
-		std::cout << "usage: generate_palettes <width> <height>" << std::endl;
-		return 0;
-	} // if
+  if(narg != 3) {
+    std::cout << "usage: generate_palettes <width> <height>" << std::endl;
+    return 0;
+  } // if
 
-	int width = std::atoi(args[1]);
-	int height = std::atoi(args[2]);
+  int width = std::atoi(args[1]);
+  int height = std::atoi(args[2]);
 
-	double start = 0.0, end = 1.0;
-	double step = (end - start) / height;
+  double start = 0.0, end = 1.0;
+  double step = (end - start) / height;
 
-	double value = start;
-	std::ofstream fdata("palette_data.dat");
-	for(int y = 0; y < height; ++ y) {
-		for(int x = 0; x < width; ++ x) {
-			fdata << value << "\t";
-		} // for
-		fdata << std::endl;
-		value += step;
-	} // for
-	fdata.close();
+  double value = start;
+  std::ofstream fdata("palette_data.dat");
+  for(int y = 0; y < height; ++ y) {
+    for(int x = 0; x < width; ++ x) {
+      fdata << value << "\t";
+    } // for
+    fdata << std::endl;
+    value += step;
+  } // for
+  fdata.close();
 
-	return 0;
+  return 0;
 } // main()

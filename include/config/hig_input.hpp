@@ -42,318 +42,318 @@
 
 namespace hig {
 
-	// TODO: later on create a syntax tree out of the input reading
-	// for that create a class with generic 'object type' and parent, children pointers
-	// ...
+  // TODO: later on create a syntax tree out of the input reading
+  // for that create a class with generic 'object type' and parent, children pointers
+  // ...
 
-	class HiGInput {
+  class HiGInput {
 
-		private:
-			/*containers */
+    private:
+      /*containers */
 
-			shape_list_t shapes_;
-			layer_list_t layers_;
-			layer_key_t layer_key_map_;
-			structure_list_t structures_;
-			ScatteringParams scattering_;
-			DetectorParams detector_;
-			ComputeParams compute_;
-			bool struct_in_layer_;
+      shape_list_t shapes_;
+      layer_list_t layers_;
+      layer_key_t layer_key_map_;
+      structure_list_t structures_;
+      ScatteringParams scattering_;
+      DetectorParams detector_;
+      ComputeParams compute_;
+      bool struct_in_layer_;
 
-			std::vector<float_t> shape_def_;	/* shape definition from a file */
-			// there may be multiple shape files ... do this later ...
+      std::vector<float_t> shape_def_;  /* shape definition from a file */
+      // there may be multiple shape files ... do this later ...
 
-			/* helpers */
+      /* helpers */
 
-			Token curr_token_;
-			Token past_token_;
-			TokenType curr_keyword_;
-			TokenType past_keyword_;
+      Token curr_token_;
+      Token past_token_;
+      TokenType curr_keyword_;
+      TokenType past_keyword_;
 
-			std::stack <TokenType> keyword_stack_;	// for keyword tokens
-													// keyword tokens get pushed on '{' and '['
-													// and popped on '}' and ']'
-			Shape curr_shape_;
-			ShapeParam curr_shape_param_;
-			Layer curr_layer_;
-			Structure curr_structure_;
-			std::vector <float_t> curr_vector_;		// to store values in a vector while parsing it
+      std::stack <TokenType> keyword_stack_;  // for keyword tokens
+                          // keyword tokens get pushed on '{' and '['
+                          // and popped on '}' and ']'
+      Shape curr_shape_;
+      ShapeParam curr_shape_param_;
+      Layer curr_layer_;
+      Structure curr_structure_;
+      std::vector <float_t> curr_vector_;    // to store values in a vector while parsing it
 
-			/* fitting related */
+      /* fitting related */
 
-			analysis_algo_list_t analysis_algos_;						// list of algorithms
+      analysis_algo_list_t analysis_algos_;            // list of algorithms
 
-			class ParamSpace {						// TODO: move it out ...
-				public:
+      class ParamSpace {            // TODO: move it out ...
+        public:
 
-				float_t min_;
-				float_t max_;
-				float_t step_;
+        float_t min_;
+        float_t max_;
+        float_t step_;
 
-				ParamSpace(): min_(0), max_(0), step_(-1) { }
-				ParamSpace(float_t a, float_t b): min_(a), max_(b), step_(-1) { }
-				ParamSpace(float_t a, float_t b, float_t c): min_(a), max_(b), step_(c) { }
-				~ParamSpace() { }
-				void clear() { min_ = 0; max_ = 0; step_ = -1; }
-			}; // class ParamSpace
+        ParamSpace(): min_(0), max_(0), step_(-1) { }
+        ParamSpace(float_t a, float_t b): min_(a), max_(b), step_(-1) { }
+        ParamSpace(float_t a, float_t b, float_t c): min_(a), max_(b), step_(c) { }
+        ~ParamSpace() { }
+        void clear() { min_ = 0; max_ = 0; step_ = -1; }
+      }; // class ParamSpace
 
-			std::map <std::string, std::string> param_key_map_;			// maps keys to param strings
-			std::map <std::string, ParamSpace> param_space_key_map_;	// maps keys to param space
-			// TODO: ...
-			//FitReferenceData reference_data_[1];		// TODO temp: data about the reference data
-			std::vector <FitReferenceData> reference_data_;
-			bool reference_data_set_;
+      std::map <std::string, std::string> param_key_map_;      // maps keys to param strings
+      std::map <std::string, ParamSpace> param_space_key_map_;  // maps keys to param space
+      // TODO: ...
+      //FitReferenceData reference_data_[1];    // TODO temp: data about the reference data
+      std::vector <FitReferenceData> reference_data_;
+      bool reference_data_set_;
 
-			/* helpers */
+      /* helpers */
 
-			class FitParam {						// TODO: move it out ...
-				public:
+      class FitParam {            // TODO: move it out ...
+        public:
 
-				std::string key_;
-				std::string variable_;
-				ParamSpace range_;
-				float_t init_;
+        std::string key_;
+        std::string variable_;
+        ParamSpace range_;
+        float_t init_;
 
-				FitParam(): key_(""), variable_(""), range_(), init_(0) { }
-				~FitParam() { }
-				void clear() { key_ = ""; variable_ = ""; range_.clear(); init_ = 0; }
-				void init() { clear(); }
-			};
+        FitParam(): key_(""), variable_(""), range_(), init_(0) { }
+        ~FitParam() { }
+        void clear() { key_ = ""; variable_ = ""; range_.clear(); init_ = 0; }
+        void init() { clear(); }
+      };
 
-			std::map <std::string, FitParam> param_data_key_map_;	// temporary, to be merged above ...
+      std::map <std::string, FitParam> param_data_key_map_;  // temporary, to be merged above ...
 
-			FitParam curr_fit_param_;
-			AnalysisAlgorithmData curr_fit_algo_;
-			AnalysisAlgorithmParamData curr_fit_algo_param_;
-			FitReferenceData curr_ref_data_;
-
-
-			/**
-			 * methods
-			 */
-
-			/* singleton */
-
-			HiGInput();
-			HiGInput(const HiGInput&);
-			HiGInput& operator=(const HiGInput&);
-
-			void init();
-
-			/* setters */
-
-			TokenType get_curr_parent();
-			TokenType get_curr_grandparent();
-
-			bool process_curr_keyword();
-			bool process_curr_token();
-
-			bool process_number(const float_t&);
-			bool process_string(const std::string&);
-
-			unsigned int read_shape_definition(const char* shape_file);
-			//unsigned int read_shape_definition(std::string shape_file) {
-			//	return read_shape_definition(shape_file.c_str());
-			//} // read_shape_definition()
+      FitParam curr_fit_param_;
+      AnalysisAlgorithmData curr_fit_algo_;
+      AnalysisAlgorithmParamData curr_fit_algo_param_;
+      FitReferenceData curr_ref_data_;
 
 
-			/* getters */
+      /**
+       * methods
+       */
 
-			ShapeFileType shape_filetype(const char*);
+      /* singleton */
 
-			/* misc */
+      HiGInput();
+      HiGInput(const HiGInput&);
+      HiGInput& operator=(const HiGInput&);
 
-			inline bool preceeded_by_keyword() {
-				return TokenMapper::instance().keyword_token_exists(past_token_.type_);
-			} // HiGInput::preceeded_by_keyword()
+      void init();
+
+      /* setters */
+
+      TokenType get_curr_parent();
+      TokenType get_curr_grandparent();
+
+      bool process_curr_keyword();
+      bool process_curr_token();
+
+      bool process_number(const float_t&);
+      bool process_string(const std::string&);
+
+      unsigned int read_shape_definition(const char* shape_file);
+      //unsigned int read_shape_definition(std::string shape_file) {
+      //  return read_shape_definition(shape_file.c_str());
+      //} // read_shape_definition()
 
 
-			/* computers */
+      /* getters */
 
-			bool compute_shape_domain(Shape&, vector3_t&, vector3_t&);
-			bool compute_shapedef_minmax(vector3_t&, vector3_t&);
+      ShapeFileType shape_filetype(const char*);
 
-			/* iterators */
+      /* misc */
 
-			template <typename type_t>
-			class HiGIterators {
-				// TODO ...
-			}; // class HiGIterators
+      inline bool preceeded_by_keyword() {
+        return TokenMapper::instance().keyword_token_exists(past_token_.type_);
+      } // HiGInput::preceeded_by_keyword()
 
-			/* testers */
 
-			void print_shapes();
-			void print_layers();
-			void print_structures();
-			void print_scattering_params();
-			void print_detector_params();
-			void print_compute_params();
+      /* computers */
 
-			void print_fit_params();
-			void print_ref_data();
-			void print_fit_algos();
+      bool compute_shape_domain(Shape&, vector3_t&, vector3_t&);
+      bool compute_shapedef_minmax(vector3_t&, vector3_t&);
 
-		public:
-			// TODO: ...
-			//typedef HiGIterators <Shape> shape_iterator_t;
-			//typedef std::unordered_map <std::string, Structure>::iterator structure_iterator_t;
-			//typedef structure_list_t::iterator structure_iterator_t;
+      /* iterators */
 
-			static HiGInput& instance() {
-				static HiGInput hig_input;
-				return hig_input;
-			} // instance()
+      template <typename type_t>
+      class HiGIterators {
+        // TODO ...
+      }; // class HiGIterators
 
-			bool construct_input_config(const char* filename);
-			bool construct_lattice_vectors();
-			bool construct_layer_profile();
+      /* testers */
 
-			bool compute_domain_size(vector3_t&, vector3_t&, float_t&, float_t&);
+      void print_shapes();
+      void print_layers();
+      void print_structures();
+      void print_scattering_params();
+      void print_detector_params();
+      void print_compute_params();
 
-			const std::string& path() const { return compute_.pathprefix(); }
-			const std::string& runname() const { return compute_.runname(); }
+      void print_fit_params();
+      void print_ref_data();
+      void print_fit_algos();
 
-			void photon_energy(float_t& value, std::string& unit) const {
-				value = scattering_.photon_energy().value_;
-				unit = scattering_.photon_energy().unit_;
-			} // photon_energy()
+    public:
+      // TODO: ...
+      //typedef HiGIterators <Shape> shape_iterator_t;
+      //typedef std::unordered_map <std::string, Structure>::iterator structure_iterator_t;
+      //typedef structure_list_t::iterator structure_iterator_t;
 
-			unsigned int num_layers() const;
-			bool is_single_layer() const;
-			int min_layer_order();
-			bool has_vacuum_layer() const;
-			bool has_substrate_layer() const;
-			Layer& substrate_layer();		// the one with order -1
-			RefractiveIndex substrate_refindex();
-			Layer& single_layer();			// if there is exactly 1 layer
-											// excluding substrate
-			float_t layers_z_min();
-			unsigned int num_structures() const;
+      static HiGInput& instance() {
+        static HiGInput hig_input;
+        return hig_input;
+      } // instance()
 
-			float_t scattering_spot_area() const { return scattering_.spot_area_; }
-			float_t scattering_min_alpha_i() const { return scattering_.alpha_i_.min_; }
-			void scattering_alphai(float_t& min, float_t& max, float_t& step) {
-				min = scattering_.alpha_i_.min_;
-				max = scattering_.alpha_i_.max_;
-				step = scattering_.alpha_i_.step_; }
-			void scattering_inplanerot(float_t& min, float_t& max, float_t& step) {
-				min = scattering_.inplane_rot_.min_;
-				max = scattering_.inplane_rot_.max_;
-				step = scattering_.inplane_rot_.step_; }
-			void scattering_tilt(float_t& min, float_t& max, float_t& step) {
-				min = scattering_.tilt_.min_;
-				max = scattering_.tilt_.max_;
-				step = scattering_.tilt_.step_; }
-			std::string experiment() const { return scattering_.expt_; }
-			float_t scattering_smearing() const { return scattering_.smearing_; }
-			vector2_t detector_total_pixels() const { return detector_.total_pixels_; }
-			vector2_t detector_direct_beam() const { return detector_.direct_beam_; }
-			float_t detector_pixel_size() const { return detector_.pixel_size_; }
-			float_t detector_sd_distance() const { return detector_.sd_distance_; }
-			vector2_t param_output_minpoint() { return compute_.output_region_.minpoint_; }
-			vector2_t param_output_maxpoint() { return compute_.output_region_.maxpoint_; }
-			OutputRegionType param_output_type() { return compute_.output_region_.type_; }
-			vector2_t param_resolution() const { return compute_.resolution_; }
-			const std::string& param_pathprefix() const { return compute_.pathprefix_; }
-			unsigned int param_nslices() const { return compute_.nslices_; }
-			StructCorrelationType param_structcorrelation() const { return compute_.correlation_; }
-			std::string palette() const { return compute_.palette_; }
+      bool construct_input_config(const char* filename);
+      bool construct_lattice_vectors();
+      bool construct_layer_profile();
 
-			Shape* shape(Structure& s) { return &(shapes_[s.grain_shape_key()]); }
-			const Lattice* lattice(Structure& s) { return s.lattice(); }
-			ShapeName shape_name(Structure& s) { return shapes_[s.grain_shape_key()].name(); }
-			float_t  shape_tau(Structure& s) { return shapes_[s.grain_shape_key()].ztilt(); }
-			float_t shape_eta(Structure& s) { return shapes_[s.grain_shape_key()].xyrotation(); }
-			vector3_t shape_originvec(Structure& s) { return shapes_[s.grain_shape_key()].originvec(); }
-			std::string shape_filename(Structure& s) { return shapes_[s.grain_shape_key()].filename(); }
-			shape_param_list_t& shape_params(Structure& s) {
-				return shapes_[s.grain_shape_key()].param_list(); }
-			bool struct_in_layer() { return struct_in_layer_; }
+      bool compute_domain_size(vector3_t&, vector3_t&, float_t&, float_t&);
 
-			unsigned int read_shape_file_data(const char*);
-			unsigned int read_shape_file_hdf5(const char*);
-			unsigned int read_shape_file_object(const char*);
+      const std::string& path() const { return compute_.pathprefix(); }
+      const std::string& runname() const { return compute_.runname(); }
 
-			int structure_layer_order(Structure& s) { return layer_key_map_[s.grain_layer_key()]; }
-			float_t layer_z_val(int order) { return layers_[order].z_val(); }
-			float_t layer_z_val_min() {
-				layer_iterator_t begin = layers_.begin();
-				return (*begin).second.z_val();
-			} // layer_z_val()
-			float_t layer_origin_z(Structure& s) {
-				int order = structure_layer_order(s);
-				vector3_t transvec = s.grain_transvec();
-				if(order >= 0) {
-					float_t layer_z_val = layers_[order].z_val();
-					return layer_z_val + transvec[2];
-				} else {
-					float_t layer_z_val = (*(layers_.begin())).second.z_val();
-					return layer_z_val - transvec[2];
-				} // if-else
-			} // layer_origin_z()
+      void photon_energy(float_t& value, std::string& unit) const {
+        value = scattering_.photon_energy().value_;
+        unit = scattering_.photon_energy().unit_;
+      } // photon_energy()
 
-			// implement better iterators for structures, shapes and layers ...
-			structure_iterator_t structure_begin() { return structures_.begin(); }
-			structure_iterator_t structure_end() { return structures_.end(); }
+      unsigned int num_layers() const;
+      bool is_single_layer() const;
+      int min_layer_order();
+      bool has_vacuum_layer() const;
+      bool has_substrate_layer() const;
+      Layer& substrate_layer();    // the one with order -1
+      RefractiveIndex substrate_refindex();
+      Layer& single_layer();      // if there is exactly 1 layer
+                      // excluding substrate
+      float_t layers_z_min();
+      unsigned int num_structures() const;
 
-			/* fitting related */
-			bool update_params(const map_t&);
-			// return list of parameter keys
-			std::vector <std::string> fit_param_keys() const {
-				std::vector <std::string> key_list;
-				for(std::map <std::string, ParamSpace>::const_iterator i = param_space_key_map_.begin();
-						i != param_space_key_map_.end(); ++ i)
-					key_list.push_back((*i).first);
-				return key_list;
-			} // get_fit_param_keys()
-			// return list of min-max for all parameters
-			std::vector <std::pair <float_t, float_t> > fit_param_limits() const {
-				std::vector <std::pair <float_t, float_t> > plimits;
-				for(std::map <std::string, ParamSpace>::const_iterator i = param_space_key_map_.begin();
-						i != param_space_key_map_.end(); ++ i)
-					plimits.push_back(std::pair<float_t, float_t>((*i).second.min_, (*i).second.max_));
-				return plimits;
-			} // get_fit_param_limits()
-			// return list of step values for all parameters
-			float_vec_t fit_param_step_values() const {
-				float_vec_t steps;
-				for(std::map <std::string, ParamSpace>::const_iterator i = param_space_key_map_.begin();
-						i != param_space_key_map_.end(); ++ i)
-					steps.push_back((*i).second.step_);
-				return steps;
-			} // fit_param_step_values()
-			std::string reference_data_path(int i) const { return reference_data_[i].image_path(); }
-			std::string reference_data_mask(int i) const { return reference_data_[i].image_mask(); }
-			OutputRegionType reference_region_type(int i) const {
-				return reference_data_[i].get_region_type();
-			} // reference_region_type()
-			float_t reference_region_min_x(int i) const { return reference_data_[i].region_min_x(); }
-			float_t reference_region_min_y(int i) const { return reference_data_[i].region_min_y(); }
-			float_t reference_region_max_x(int i) const { return reference_data_[i].region_max_x(); }
-			float_t reference_region_max_y(int i) const { return reference_data_[i].region_max_y(); }
-			int num_analysis_data() const { return 1; }		// temp
-			int num_fit_params() const { return param_key_map_.size(); }
-			std::vector <float_t> fit_param_init_values() const {
-				std::vector<float_t> init_vec;
-				std::cout << "Initial Vector: ";
-				for(std::map<std::string, FitParam>::const_iterator i = param_data_key_map_.begin();
-						i != param_data_key_map_.end(); ++ i) {
-					init_vec.push_back((*i).second.init_);
-					std::cout << (*i).second.init_ << " ";
-				} // for
-				std::cout << std::endl;
-				return init_vec;
-			} // fit_param_init_vector()
-			int num_analysis_algos() const { return analysis_algos_.size(); }
-			FittingAlgorithmName analysis_algo(int i) const { return analysis_algos_[i].name(); }
-			bool analysis_algo_param(int algo_num, const std::string pstr, float_t& val) const {
-				return analysis_algos_[algo_num].param(pstr, val);
-			} // analysis_algo_param()
+      float_t scattering_spot_area() const { return scattering_.spot_area_; }
+      float_t scattering_min_alpha_i() const { return scattering_.alpha_i_.min_; }
+      void scattering_alphai(float_t& min, float_t& max, float_t& step) {
+        min = scattering_.alpha_i_.min_;
+        max = scattering_.alpha_i_.max_;
+        step = scattering_.alpha_i_.step_; }
+      void scattering_inplanerot(float_t& min, float_t& max, float_t& step) {
+        min = scattering_.inplane_rot_.min_;
+        max = scattering_.inplane_rot_.max_;
+        step = scattering_.inplane_rot_.step_; }
+      void scattering_tilt(float_t& min, float_t& max, float_t& step) {
+        min = scattering_.tilt_.min_;
+        max = scattering_.tilt_.max_;
+        step = scattering_.tilt_.step_; }
+      std::string experiment() const { return scattering_.expt_; }
+      float_t scattering_smearing() const { return scattering_.smearing_; }
+      vector2_t detector_total_pixels() const { return detector_.total_pixels_; }
+      vector2_t detector_direct_beam() const { return detector_.direct_beam_; }
+      float_t detector_pixel_size() const { return detector_.pixel_size_; }
+      float_t detector_sd_distance() const { return detector_.sd_distance_; }
+      vector2_t param_output_minpoint() { return compute_.output_region_.minpoint_; }
+      vector2_t param_output_maxpoint() { return compute_.output_region_.maxpoint_; }
+      OutputRegionType param_output_type() { return compute_.output_region_.type_; }
+      vector2_t param_resolution() const { return compute_.resolution_; }
+      const std::string& param_pathprefix() const { return compute_.pathprefix_; }
+      unsigned int param_nslices() const { return compute_.nslices_; }
+      StructCorrelationType param_structcorrelation() const { return compute_.correlation_; }
+      std::string palette() const { return compute_.palette_; }
 
-			/* printing for testing */
-			void print_all();
+      Shape* shape(Structure& s) { return &(shapes_[s.grain_shape_key()]); }
+      const Lattice* lattice(Structure& s) { return s.lattice(); }
+      ShapeName shape_name(Structure& s) { return shapes_[s.grain_shape_key()].name(); }
+      float_t  shape_tau(Structure& s) { return shapes_[s.grain_shape_key()].ztilt(); }
+      float_t shape_eta(Structure& s) { return shapes_[s.grain_shape_key()].xyrotation(); }
+      vector3_t shape_originvec(Structure& s) { return shapes_[s.grain_shape_key()].originvec(); }
+      std::string shape_filename(Structure& s) { return shapes_[s.grain_shape_key()].filename(); }
+      shape_param_list_t& shape_params(Structure& s) {
+        return shapes_[s.grain_shape_key()].param_list(); }
+      bool struct_in_layer() { return struct_in_layer_; }
 
-	}; // class HiGInput
+      unsigned int read_shape_file_data(const char*);
+      unsigned int read_shape_file_hdf5(const char*);
+      unsigned int read_shape_file_object(const char*);
+
+      int structure_layer_order(Structure& s) { return layer_key_map_[s.grain_layer_key()]; }
+      float_t layer_z_val(int order) { return layers_[order].z_val(); }
+      float_t layer_z_val_min() {
+        layer_iterator_t begin = layers_.begin();
+        return (*begin).second.z_val();
+      } // layer_z_val()
+      float_t layer_origin_z(Structure& s) {
+        int order = structure_layer_order(s);
+        vector3_t transvec = s.grain_transvec();
+        if(order >= 0) {
+          float_t layer_z_val = layers_[order].z_val();
+          return layer_z_val + transvec[2];
+        } else {
+          float_t layer_z_val = (*(layers_.begin())).second.z_val();
+          return layer_z_val - transvec[2];
+        } // if-else
+      } // layer_origin_z()
+
+      // implement better iterators for structures, shapes and layers ...
+      structure_iterator_t structure_begin() { return structures_.begin(); }
+      structure_iterator_t structure_end() { return structures_.end(); }
+
+      /* fitting related */
+      bool update_params(const map_t&);
+      // return list of parameter keys
+      std::vector <std::string> fit_param_keys() const {
+        std::vector <std::string> key_list;
+        for(std::map <std::string, ParamSpace>::const_iterator i = param_space_key_map_.begin();
+            i != param_space_key_map_.end(); ++ i)
+          key_list.push_back((*i).first);
+        return key_list;
+      } // get_fit_param_keys()
+      // return list of min-max for all parameters
+      std::vector <std::pair <float_t, float_t> > fit_param_limits() const {
+        std::vector <std::pair <float_t, float_t> > plimits;
+        for(std::map <std::string, ParamSpace>::const_iterator i = param_space_key_map_.begin();
+            i != param_space_key_map_.end(); ++ i)
+          plimits.push_back(std::pair<float_t, float_t>((*i).second.min_, (*i).second.max_));
+        return plimits;
+      } // get_fit_param_limits()
+      // return list of step values for all parameters
+      float_vec_t fit_param_step_values() const {
+        float_vec_t steps;
+        for(std::map <std::string, ParamSpace>::const_iterator i = param_space_key_map_.begin();
+            i != param_space_key_map_.end(); ++ i)
+          steps.push_back((*i).second.step_);
+        return steps;
+      } // fit_param_step_values()
+      std::string reference_data_path(int i) const { return reference_data_[i].image_path(); }
+      std::string reference_data_mask(int i) const { return reference_data_[i].image_mask(); }
+      OutputRegionType reference_region_type(int i) const {
+        return reference_data_[i].get_region_type();
+      } // reference_region_type()
+      float_t reference_region_min_x(int i) const { return reference_data_[i].region_min_x(); }
+      float_t reference_region_min_y(int i) const { return reference_data_[i].region_min_y(); }
+      float_t reference_region_max_x(int i) const { return reference_data_[i].region_max_x(); }
+      float_t reference_region_max_y(int i) const { return reference_data_[i].region_max_y(); }
+      int num_analysis_data() const { return 1; }    // temp
+      int num_fit_params() const { return param_key_map_.size(); }
+      std::vector <float_t> fit_param_init_values() const {
+        std::vector<float_t> init_vec;
+        std::cout << "Initial Vector: ";
+        for(std::map<std::string, FitParam>::const_iterator i = param_data_key_map_.begin();
+            i != param_data_key_map_.end(); ++ i) {
+          init_vec.push_back((*i).second.init_);
+          std::cout << (*i).second.init_ << " ";
+        } // for
+        std::cout << std::endl;
+        return init_vec;
+      } // fit_param_init_vector()
+      int num_analysis_algos() const { return analysis_algos_.size(); }
+      FittingAlgorithmName analysis_algo(int i) const { return analysis_algos_[i].name(); }
+      bool analysis_algo_param(int algo_num, const std::string pstr, float_t& val) const {
+        return analysis_algos_[algo_num].param(pstr, val);
+      } // analysis_algo_param()
+
+      /* printing for testing */
+      void print_all();
+
+  }; // class HiGInput
 
 } // namespace hig
 

@@ -3,7 +3,7 @@
  *
  *  File: AnaInput.cpp
  *  Created: Dec 26, 2013
- *  Modified: Wed 29 Jan 2014 03:52:25 PM PST
+ *  Modified: Wed 08 Oct 2014 12:17:47 PM PDT
  *
  *  Author: Slim Chourou <stchourou@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -30,7 +30,7 @@ namespace hig{
     ana_struct_vec_it it;
     for(it=struct_vec_.begin(); it!= struct_vec_.end(); it++){
       if( uid.compare( it->get_uid() ) == 0 ){
-	break;
+  break;
       }
     }
     if( uid.compare( it->get_uid() ) == 0 )
@@ -56,7 +56,7 @@ namespace hig{
     ana_struct_vec_it it;
     for(it=struct_vec_.begin(); it!= struct_vec_.end(); it++){
       if( uid.compare( it->get_uid() ) == 0 ){
-	it->set_val(val);
+  it->set_val(val);
         return true;
       }
     }

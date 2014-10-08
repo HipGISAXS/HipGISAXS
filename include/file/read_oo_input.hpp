@@ -3,7 +3,7 @@
  *
  *  File: read_oo_output.hpp
  *  Created: Jun 09, 2012
- *  Modified: Wed 26 Feb 2014 10:06:24 AM PST
+ *  Modified: Wed 08 Oct 2014 12:13:02 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -33,41 +33,41 @@
 
 namespace hig {
 
-	class InputReader {
-		private:
-			/* singleton */
-			InputReader();
-			InputReader(const InputReader&);
-			InputReader& operator=(const InputReader&);
+  class InputReader {
+    private:
+      /* singleton */
+      InputReader();
+      InputReader(const InputReader&);
+      InputReader& operator=(const InputReader&);
 
-			std::istringstream input_stream_;
-			std::stack<TokenType> structure_stack_;	// for checking that all "{", "[", """ etc match
+      std::istringstream input_stream_;
+      std::stack<TokenType> structure_stack_;  // for checking that all "{", "[", """ etc match
 
-			Token current_token_;
-			Token previous_token_;
-			Token parent_token_;
+      Token current_token_;
+      Token previous_token_;
+      Token parent_token_;
 
-			//TokenMapper mapper_;
+      //TokenMapper mapper_;
 
-			TokenType raw_token_lookup(char c);
-			bool get_raw_token(Token& token);
-			TokenType process_keyword_token(std::string& keyword);
-			bool read_keyword(std::string& str);
-			bool read_quoted_string(std::string& str);
-			bool read_number(float_t& val);
-			bool skip_white_spaces(void);
-			bool skip_comments(void);
+      TokenType raw_token_lookup(char c);
+      bool get_raw_token(Token& token);
+      TokenType process_keyword_token(std::string& keyword);
+      bool read_keyword(std::string& str);
+      bool read_quoted_string(std::string& str);
+      bool read_number(float_t& val);
+      bool skip_white_spaces(void);
+      bool skip_comments(void);
 
-		public:
-			static InputReader& instance() {
-				static InputReader reader;
-				return reader;
-			} // instance()
+    public:
+      static InputReader& instance() {
+        static InputReader reader;
+        return reader;
+      } // instance()
 
-			bool read_input(const char* filename);
-			Token get_next_token();
+      bool read_input(const char* filename);
+      Token get_next_token();
 
-	}; // class InputReader
+  }; // class InputReader
 
 } // namespace hig
 

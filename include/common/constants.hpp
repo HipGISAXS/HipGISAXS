@@ -3,7 +3,7 @@
  *
  *  File: constants.hpp
  *  Created: Aug 25, 2012
- *  Modified: Sun 26 Jan 2014 09:40:09 AM PST
+ *  Modified: Wed 08 Oct 2014 12:13:01 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -27,12 +27,12 @@
 
 namespace hig {
 
-	const unsigned int LIGHT_SPEED_ = 3e+8;		/* speed of light in m/s */
-	const float_t PI_ = 3.141592653589793;		/* PI correct upto 15 decimal places */
-	const float_t SQRT_2PI_ = 2.506628;
+  const unsigned int LIGHT_SPEED_ = 3e+8;    /* speed of light in m/s */
+  const float_t PI_ = 3.141592653589793;    /* PI correct upto 15 decimal places */
+  const float_t SQRT_2PI_ = 2.506628;
 
-	//const unsigned int MAX_DEPTH_ = 500;		/* maximum depth allowed */
-	const unsigned int MAX_DEPTH_ = 150;		/* maximum depth allowed */
+  //const unsigned int MAX_DEPTH_ = 500;    /* maximum depth allowed */
+  const unsigned int MAX_DEPTH_ = 150;    /* maximum depth allowed */
 
 } // namespace
 

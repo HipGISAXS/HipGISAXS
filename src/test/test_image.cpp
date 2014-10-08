@@ -3,7 +3,7 @@
  *
  *  File: test_image.cpp
  *  Created: Aug 06, 2012
- *  Modified: Tue 16 Jul 2013 11:52:22 AM PDT
+ *  Modified: Wed 08 Oct 2014 12:17:47 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -29,34 +29,34 @@
 
 
 bool make_data(float* &data, int nx, int ny) {
-	if(nx < 1 || ny < 1) return false;
+  if(nx < 1 || ny < 1) return false;
 
-	srand(time(NULL));
-	data = new (std::nothrow) float[nx * ny];
-	for(int i = 0; i < ny; ++ i) {
-		for(int j = 0 ; j < nx; ++ j) {
-			data[nx * i + j] = ((float)rand() / RAND_MAX) / (pow(10, rand() % 5));
-		} // for
-	} // for
+  srand(time(NULL));
+  data = new (std::nothrow) float[nx * ny];
+  for(int i = 0; i < ny; ++ i) {
+    for(int j = 0 ; j < nx; ++ j) {
+      data[nx * i + j] = ((float)rand() / RAND_MAX) / (pow(10, rand() % 5));
+    } // for
+  } // for
 
-	return true;
+  return true;
 } // make_data()
 
 int main(int narg, char** args) {
-	int nx = 10, ny = 10;
-	float *data = NULL;
-	if(!make_data(data, nx, ny)) return -1;
+  int nx = 10, ny = 10;
+  float *data = NULL;
+  if(!make_data(data, nx, ny)) return -1;
 
-	for(int i = 0; i < ny; ++ i) {
-		for(int j = 0; j < nx; ++ j) {
-			std::cout << data[nx * i + j] << "\t";
-		} // for
-		std::cout << std::endl;
-	} // for
+  for(int i = 0; i < ny; ++ i) {
+    for(int j = 0; j < nx; ++ j) {
+      std::cout << data[nx * i + j] << "\t";
+    } // for
+    std::cout << std::endl;
+  } // for
 
-	hig::Image image(nx, ny);
-	image.construct_image(data);
-	image.save(std::string("image_file.tif"));
+  hig::Image image(nx, ny);
+  image.construct_image(data);
+  image.save(std::string("image_file.tif"));
 
-	return 0;
+  return 0;
 } // main()

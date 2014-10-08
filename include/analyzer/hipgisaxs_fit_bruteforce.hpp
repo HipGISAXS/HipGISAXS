@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_fit_bruteforce.hpp
  *  Created: Feb 07, 2014
- *  Modified: Fri 07 Feb 2014 10:03:27 AM PST
+ *  Modified: Wed 08 Oct 2014 12:11:48 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -26,25 +26,25 @@
 
 namespace hig{
 
-	class BruteForceOptimization : public AnalysisAlgorithm {
-		private:
-			std::vector<std::string> params_;	// list of parameter keys
-			float_vec_t x_min_;		// range min for all parameters
-			float_vec_t x_max_;		// range max for all parameters
-			float_vec_t x_step_;	// stepping delta for all parameters. defaults to 1
+  class BruteForceOptimization : public AnalysisAlgorithm {
+    private:
+      std::vector<std::string> params_;  // list of parameter keys
+      float_vec_t x_min_;    // range min for all parameters
+      float_vec_t x_max_;    // range max for all parameters
+      float_vec_t x_step_;  // stepping delta for all parameters. defaults to 1
 
-			std::vector <std::pair <float_vec_t, float_t> > error_list_;
-									// list of errors for corresponding parameter values
+      std::vector <std::pair <float_vec_t, float_t> > error_list_;
+                  // list of errors for corresponding parameter values
 
-			void loop_over_param(int, float_vec_t&);
-			bool save_history(char*);
+      void loop_over_param(int, float_vec_t&);
+      bool save_history(char*);
 
-		public:
-			BruteForceOptimization(int, char**, ObjectiveFunction*);
-			~BruteForceOptimization();
+    public:
+      BruteForceOptimization(int, char**, ObjectiveFunction*);
+      ~BruteForceOptimization();
 
-			bool run(int argc,char **argv, int);
-	}; // class BruteForceOptimization
+      bool run(int argc,char **argv, int);
+  }; // class BruteForceOptimization
 
 } // namespace hig
 

@@ -3,7 +3,7 @@
  *
  *  File: shape2hdf5.hpp
  *  Created: Aug 25, 2012
- *  Modified: Tue 16 Jul 2013 12:18:48 PM PDT
+ *  Modified: Wed 08 Oct 2014 12:13:02 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -36,22 +36,22 @@ void s2h_converter(double** shape_def, unsigned int num_triangles, char* hdf5_fi
 }
 
 class shape2hdf5_converter {
-	public:
-		shape2hdf5_converter(char* filename, char* outfilename, MPI_Comm comm);
-		~shape2hdf5_converter() {
-			if(filename_ != NULL) delete filename_;
-			if(outfilename_ != NULL) delete outfilename_;
-			if(shape_def_ != NULL) delete[] shape_def_;
-		} // ~converter()
+  public:
+    shape2hdf5_converter(char* filename, char* outfilename, MPI_Comm comm);
+    ~shape2hdf5_converter() {
+      if(filename_ != NULL) delete filename_;
+      if(outfilename_ != NULL) delete outfilename_;
+      if(shape_def_ != NULL) delete[] shape_def_;
+    } // ~converter()
 
-	private:
-		int load_shape(char* filename, std::vector<double> &shape_def);
-		void convert(char* outfilename, std::vector<double> shape_def);
+  private:
+    int load_shape(char* filename, std::vector<double> &shape_def);
+    void convert(char* outfilename, std::vector<double> shape_def);
 
-		std::string *filename_;
-		std::string *outfilename_;
-		double* shape_def_;
-		MPI_Comm comm_;
+    std::string *filename_;
+    std::string *outfilename_;
+    double* shape_def_;
+    MPI_Comm comm_;
 }; // class shape2hdf5_converter
 
 #endif // _SHAPE2HDF5_H_

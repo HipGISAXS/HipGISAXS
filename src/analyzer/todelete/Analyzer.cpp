@@ -3,7 +3,7 @@
  *
  *  File: Analyzer.cpp
  *  Created: Dec 26, 2013
- *  Modified: Wed 29 Jan 2014 03:52:31 PM PST
+ *  Modified: Wed 08 Oct 2014 12:17:47 PM PDT
  *
  *  Author: Slim Chourou <stchourou@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -78,9 +78,9 @@ namespace hig{
       set_ref_data(&(*it));
       Workflow wf_c = wf_;
       while (!wf_c.empty()){
-	AnaAlgorithm* palgo = wf_c.deq();
-	palgo->run(argc,argv);
-	XN = palgo->get_final_vec();
+  AnaAlgorithm* palgo = wf_c.deq();
+  palgo->run(argc,argv);
+  XN = palgo->get_final_vec();
       } // run the workflow queue
     }// loop over image data set
 

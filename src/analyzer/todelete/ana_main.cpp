@@ -14,55 +14,55 @@
  */
 int main(int narg, char** args) {
 
-	if(narg > 4) {
-		std::cout << "usage: hipgisaxs <input_config>" << std::endl;
-		return 1;
-	} // if
+  if(narg > 4) {
+    std::cout << "usage: hipgisaxs <input_config>" << std::endl;
+    return 1;
+  } // if
 
-	hig::HipGISAXS psim(narg, args);
-	if(!psim.construct_input(args[1])) {
-		std::cerr << "failed to construct input containers" << std::endl;
-		return 1;
-	} // if
-	if(!psim.fit_init()) {
-		std::cerr << "error: failed to initialize hipgisaxs for fitting" << std::endl;
-		return 1;
-	} // if
+  hig::HipGISAXS psim(narg, args);
+  if(!psim.construct_input(args[1])) {
+    std::cerr << "failed to construct input containers" << std::endl;
+    return 1;
+  } // if
+  if(!psim.fit_init()) {
+    std::cerr << "error: failed to initialize hipgisaxs for fitting" << std::endl;
+    return 1;
+  } // if
 
-	/////// TODO: all the following will go into the input construction ...
+  /////// TODO: all the following will go into the input construction ...
 
-	hig::ImageData img_data1(psim.reference_data_path());
-	hig::ImageDataProc img_data_set;
-	img_data_set.push(img_data1);
+  hig::ImageData img_data1(psim.reference_data_path());
+  hig::ImageDataProc img_data_set;
+  img_data_set.push(img_data1);
 
-	/* Define objective function */
-	ResidualVector err;
-	hig::ObjFct pobj_fct(&err, &img_data1, &psim, psim.get_num_fit_params());
+  /* Define objective function */
+  ResidualVector err;
+  hig::ObjFct pobj_fct(&err, &img_data1, &psim, psim.get_num_fit_params());
 
-	/* The algorithms to use for fitting  */
-	hig::FitPOUNDERSAlgo pounders;
-	pounders.set_obj_fct(&pobj_fct);
-	pounders.set_initial_vec(psim.fit_param_init_vector());
+  /* The algorithms to use for fitting  */
+  hig::FitPOUNDERSAlgo pounders;
+  pounders.set_obj_fct(&pobj_fct);
+  pounders.set_initial_vec(psim.fit_param_init_vector());
 
-	/* The worklow of algorithms to use for fitting  */
-	hig::Workflow wf;
-	wf.enq(&pounders);
+  /* The worklow of algorithms to use for fitting  */
+  hig::Workflow wf;
+  wf.enq(&pounders);
 
-	std::cout << "Setting up analyzer...\n" ;
-	hig::Analyzer ana;
-	ana.set_workflow(wf);
-	ana.set_data(img_data_set);
-	ana.set_obj_fct(&pobj_fct);
+  std::cout << "Setting up analyzer...\n" ;
+  hig::Analyzer ana;
+  ana.set_workflow(wf);
+  ana.set_data(img_data_set);
+  ana.set_obj_fct(&pobj_fct);
 
-	std::cout << "Starting Analysis:\n" ;
-	ana.analyze(narg,args);
-	std::cout << "Done.\n";
+  std::cout << "Starting Analysis:\n" ;
+  ana.analyze(narg,args);
+  std::cout << "Done.\n";
 
-	//test.print();
+  //test.print();
 
-	//ana.print_output();
+  //ana.print_output();
 
-	return 0;
+  return 0;
 } // main()
 
 
@@ -142,7 +142,7 @@ int main(int narg, char** args) {
 //  hig::ImageData img_err(err, qy, qz,frm);
 //  img_err.print();
 //  */
-//		    /*******************************/
+//        /*******************************/
 //
 //
 //  /* The worklow of algorithms to use for fitting  */

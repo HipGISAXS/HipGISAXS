@@ -30,32 +30,32 @@
 
 namespace hig {
 
-	const size_t EDF_CHUNK_SIZE = 512;
+  const size_t EDF_CHUNK_SIZE = 512;
 
-	class EDFReader {
-		public:
-			EDFReader(const char*);
-			~EDFReader() { }
+  class EDFReader {
+    public:
+      EDFReader(const char*);
+      ~EDFReader() { }
 
-			bool get_data(float*&, unsigned int&, unsigned int&);
+      bool get_data(float*&, unsigned int&, unsigned int&);
 
-		private:
-			bool is_white_space(char);
-			bool get_next_item(char*, int&, const int, char*, int&, bool&, char*, int&, bool&);
-			bool header_done(char*, const int, const int);
-			bool extract_header(std::ifstream&, char*, size_t);
-			bool extract_data(std::ifstream&, char*, size_t);
-			unsigned int convert_to_unsigned(const std::string&);
-			void print_header(void);
-			void print_data(void);
+    private:
+      bool is_white_space(char);
+      bool get_next_item(char*, int&, const int, char*, int&, bool&, char*, int&, bool&);
+      bool header_done(char*, const int, const int);
+      bool extract_header(std::ifstream&, char*, size_t);
+      bool extract_data(std::ifstream&, char*, size_t);
+      unsigned int convert_to_unsigned(const std::string&);
+      void print_header(void);
+      void print_data(void);
 
-		private:
-			std::map <std::string, std::string> header_;	/* header key -> value map */
-			std::vector <float_t> data_;					/* the data as float_ts */
-			unsigned int rows_;
-			unsigned int cols_;
+    private:
+      std::map <std::string, std::string> header_;  /* header key -> value map */
+      std::vector <float_t> data_;          /* the data as float_ts */
+      unsigned int rows_;
+      unsigned int cols_;
 
-	}; // class EDFReader
+  }; // class EDFReader
 
 } // namespace hig
 
