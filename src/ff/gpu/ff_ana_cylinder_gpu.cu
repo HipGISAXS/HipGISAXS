@@ -42,12 +42,13 @@ namespace hig {
 
 
   bool AnalyticFormFactorG::compute_cylinder(const float_t tau, const float_t eta,
-                  const std::vector<float_t>& h,
-                  const std::vector<float_t>& distr_h,
-                  const std::vector<float_t>& r,
-                  const std::vector<float_t>& distr_r,
-                  const float_t* rot_h, const std::vector<float_t>& transvec,
-                  std::vector<complex_t>& ff) {
+                                              const std::vector<float_t>& h,
+                                              const std::vector<float_t>& distr_h,
+                                              const std::vector<float_t>& r,
+                                              const std::vector<float_t>& distr_r,
+                                              const float_t* rot_h,
+                                              const std::vector<float_t>& transvec,
+                                              std::vector<complex_t>& ff) {
     unsigned int n_h = h.size(), n_distr_h = distr_h.size();
     unsigned int n_r = r.size(), n_distr_r = distr_r.size();
     const float_t *h_h = h.empty() ? NULL : &*h.begin();

@@ -3,7 +3,7 @@
  *
  *  File: ff_ana_cylinder.cpp
  *  Created: Jul 12, 2012
- *  Modified: Wed 08 Oct 2014 12:17:43 PM PDT
+ *  Modified: Wed 08 Oct 2014 06:20:29 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -38,7 +38,7 @@ namespace hig {
    * cylinder
    */
   bool AnalyticFormFactor::compute_cylinder(shape_param_list_t& params, float_t tau, float_t eta,
-      std::vector<complex_t>& ff, vector3_t transvec) {
+                                            std::vector<complex_t>& ff, vector3_t transvec) {
     std::vector <float_t> h, distr_h;  // for h dimension: param_height
     std::vector <float_t> r, distr_r;  // for r dimension: param_radius
     for(shape_param_iterator_t i = params.begin(); i != params.end(); ++ i) {

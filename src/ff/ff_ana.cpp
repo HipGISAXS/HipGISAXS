@@ -55,10 +55,6 @@ namespace hig {
     rot_[3] = rot2[0]; rot_[4] = rot2[1]; rot_[5] = rot2[2];
     rot_[6] = rot3[0]; rot_[7] = rot3[1]; rot_[8] = rot3[2];
 
-    //rot_[0] = 1; rot_[1] = 0; rot_[2] = 0;
-    //rot_[3] = 0; rot_[4] = 1; rot_[5] = 0;
-    //rot_[6] = 0; rot_[7] = 0; rot_[8] = 1;
-
     return true;
   } // AnalyticFormFactor::init()
 
@@ -72,13 +68,13 @@ namespace hig {
 
 
   bool AnalyticFormFactor::compute(ShapeName shape, float_t tau, float_t eta, vector3_t transvec,
-                  std::vector<complex_t>& ff,
-                  shape_param_list_t& params, float_t single_layer_thickness,
-                  vector3_t rot1, vector3_t rot2, vector3_t rot3
-                  #ifdef USE_MPI
-                    , woo::MultiNode& world_comm, std::string comm_key
-                  #endif
-                  ) {
+                                    std::vector<complex_t>& ff,
+                                    shape_param_list_t& params, float_t single_layer_thickness,
+                                    vector3_t rot1, vector3_t rot2, vector3_t rot3
+                                    #ifdef USE_MPI
+                                      , woo::MultiNode& world_comm, std::string comm_key
+                                    #endif
+                                    ) {
 
     std::cout << "-- Computing form factor analytically ... " << std::endl;
     #ifdef TIME_DETAIL_1

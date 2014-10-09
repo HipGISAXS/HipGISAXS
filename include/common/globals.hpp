@@ -3,7 +3,7 @@
  *
  *  File: globals.hpp
  *  Created: Jun 05, 2012
- *  Modified: Wed 08 Oct 2014 12:13:01 PM PDT
+ *  Modified: Wed 08 Oct 2014 06:32:15 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -139,7 +139,7 @@ namespace hig {
 
 
   typedef struct matrix3x3_t {
-    typedef boost::array<float_t, 3> mat3_t;
+    typedef boost::array <float_t, 3> mat3_t;
     mat3_t mat_[3];
 
     /* constructors */
