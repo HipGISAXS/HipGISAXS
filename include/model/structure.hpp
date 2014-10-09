@@ -34,19 +34,19 @@ namespace hig {
 
   // make stuff private (with help of friend) ...
 
-    class GrainScaling {
-        private:
-            vector3_t mean_;
-            vector3_t stddev_;
-            std::vector<StatisticType> dist_;
-            std::vector<int> nvals_;
-        public:
-            GrainScaling();
-            void init();
-            void clear();
-       friend class Grain;
-       friend class Structure;
-    };
+  class GrainScaling {
+    private:
+      vector3_t mean_;
+      vector3_t stddev_;
+      std::vector<StatisticType> dist_;
+      std::vector<int> nvals_;
+    public:
+      GrainScaling();
+      void init();
+      void clear();
+    friend class Grain;
+    friend class Structure;
+  };
 
   class Lattice {
     private:
