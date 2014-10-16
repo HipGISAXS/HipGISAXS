@@ -3,7 +3,7 @@
  *
  *  File: inst_detector.hpp
  *  Created: Jun 05, 2012
- *  Modified: Sun 26 Jan 2014 09:58:43 AM PST
+ *  Modified: Wed 08 Oct 2014 12:13:02 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -30,47 +30,47 @@
 
 namespace hig {
 
-	class DetectorParams {
-		friend class HiGInput;
+  class DetectorParams {
+    friend class HiGInput;
 
-		private:
-			std::string origin_; 	// change to enum - tl tr bl br
-			float_t pixel_size_;
-			float_t sd_distance_;		/* sample to detector distance */
-			vector2_t total_pixels_;	// make it vector3_t for 3d ? ...
-			vector2_t direct_beam_;
+    private:
+      std::string origin_;   // change to enum - tl tr bl br
+      float_t pixel_size_;
+      float_t sd_distance_;    /* sample to detector distance */
+      vector2_t total_pixels_;  // make it vector3_t for 3d ? ...
+      vector2_t direct_beam_;
 
-		public:
-			DetectorParams();
-			~DetectorParams();
+    public:
+      DetectorParams();
+      ~DetectorParams();
 
-			void init();
-			void clear();
+      void init();
+      void clear();
 
-			void origin(std::string s) { origin_ = s; }
+      void origin(std::string s) { origin_ = s; }
 
-			void direct_beam(vector2_t v) { direct_beam_ = v; }
-			void total_pixels(vector2_t v) { total_pixels_ = v; }
-			void direct_beam(float_t v, float_t w) { direct_beam_[0] = v; direct_beam_[1] = w; }
-			void total_pixels(float_t v, float_t w) { total_pixels_[0] = v; total_pixels_[1] = w; }
+      void direct_beam(vector2_t v) { direct_beam_ = v; }
+      void total_pixels(vector2_t v) { total_pixels_ = v; }
+      void direct_beam(float_t v, float_t w) { direct_beam_[0] = v; direct_beam_[1] = w; }
+      void total_pixels(float_t v, float_t w) { total_pixels_[0] = v; total_pixels_[1] = w; }
 
-			void sd_distance(float_t d) { sd_distance_ = d; }
-			void pixel_size(float_t d) { pixel_size_ = d; }
+      void sd_distance(float_t d) { sd_distance_ = d; }
+      void pixel_size(float_t d) { pixel_size_ = d; }
 
-			bool update_param(const std::string&, float_t);
+      bool update_param(const std::string&, float_t);
 
-			void print() {
-				std::cout << " origin_ = " << origin_ << std::endl
-							<< " pixel_size_ = " << pixel_size_ << std::endl
-							<< " sd_distance_ = " << sd_distance_ << std::endl
-							<< " total_pixels_ = [" << total_pixels_[0] << ", "
-							<< total_pixels_[1] << "]" << std::endl
-							<< " direct_beam_ = [" << direct_beam_[0] << ", "
-							<< direct_beam_[1] << "]" << std::endl
-							<< std::endl;
-			} // print()
+      void print() {
+        std::cout << " origin_ = " << origin_ << std::endl
+              << " pixel_size_ = " << pixel_size_ << std::endl
+              << " sd_distance_ = " << sd_distance_ << std::endl
+              << " total_pixels_ = [" << total_pixels_[0] << ", "
+              << total_pixels_[1] << "]" << std::endl
+              << " direct_beam_ = [" << direct_beam_[0] << ", "
+              << direct_beam_[1] << "]" << std::endl
+              << std::endl;
+      } // print()
 
-	}; // class DetectorParams
+  }; // class DetectorParams
 
 } // namespace hig
 

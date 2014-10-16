@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_sim.cpp
  *  Created: Dec 06, 2012
- *  Modified: Mon 27 Jan 2014 07:56:28 AM PST
+ *  Modified: Wed 08 Oct 2014 12:17:46 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -42,35 +42,35 @@
  */
 int main(int narg, char** args) {
 
-	if(narg != 2) {
-		std::cout << "usage: hipgisaxs <input_config>" << std::endl;
-		return 1;
-	} // if
+  if(narg != 2) {
+    std::cout << "usage: hipgisaxs <input_config>" << std::endl;
+    return 1;
+  } // if
 
-	woo::BoostChronoTimer maintimer, readtimer;
-	
-	maintimer.start();
-	readtimer.start();
+  woo::BoostChronoTimer maintimer, readtimer;
+  
+  maintimer.start();
+  readtimer.start();
 
-	/* read input file and construct input structures */
-	hig::HipGISAXS my_gisaxs(narg, args);
-	
-	if(!my_gisaxs.construct_input(args[1])) {
-		std::cerr << "error: failed to construct input containers" << std::endl;
-		return 1;
-	} // if
+  /* read input file and construct input structures */
+  hig::HipGISAXS my_gisaxs(narg, args);
+  
+  if(!my_gisaxs.construct_input(args[1])) {
+    std::cerr << "error: failed to construct input containers" << std::endl;
+    return 1;
+  } // if
 
-	readtimer.stop();
-	//hig::HiGInput::instance().print_all();	// for testing
+  readtimer.stop();
+  //hig::HiGInput::instance().print_all();  // for testing
 
-	/* run the simulation */
-	if(!my_gisaxs.run_all_gisaxs()) {
-		std::cerr << "error: could not run the simulation - some error occured" << std::endl;
-		maintimer.stop();
-		return 1;
-	} // if
+  /* run the simulation */
+  if(!my_gisaxs.run_all_gisaxs()) {
+    std::cerr << "error: could not run the simulation - some error occured" << std::endl;
+    maintimer.stop();
+    return 1;
+  } // if
 
-	maintimer.stop();
+  maintimer.stop();
 
-	return 0;
+  return 0;
 } // main()

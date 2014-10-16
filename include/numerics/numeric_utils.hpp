@@ -3,7 +3,7 @@
  *
  *  File: numeric_utils.hpp
  *  Created: Oct 08, 2012
- *  Modified: Sun 26 Jan 2014 10:01:18 AM PST
+ *  Modified: Wed 08 Oct 2014 12:13:09 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -27,9 +27,9 @@
 
 namespace hig {
 
-	const int MAXK = 20;
+  const int MAXK = 20;
 
-	extern double gamma(double x);
-	extern complex_t cbessj(complex_t zz, int order);
+  extern double gamma(double x);
+  extern complex_t cbessj(complex_t zz, int order);
 
 } // namespace hig

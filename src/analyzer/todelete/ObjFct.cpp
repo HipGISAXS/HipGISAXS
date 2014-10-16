@@ -3,7 +3,7 @@
  *
  *  File: ObjFct.cpp
  *  Created: Dec 26, 2013
- *  Modified: Sun 02 Feb 2014 09:47:20 AM PST
+ *  Modified: Wed 08 Oct 2014 12:17:47 PM PDT
  *
  *  Author: Slim Chourou <stchourou@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -77,50 +77,50 @@ namespace hig{
   float_mat_t ObjFct::compute(float_vec_t X){
     if(psim_)
       {
-	//if (is_valid_ && pdata_ref_){
-//	psim_->update_vars(X);
-//	psim_->compute();
-	//	pdata_sim_=psim_->get_data();
-//	f_x_ = pdist_->dist( psim_->get_data()   , *pdata_ref_ );
-	return f_x_;
+  //if (is_valid_ && pdata_ref_){
+//  psim_->update_vars(X);
+//  psim_->compute();
+  //  pdata_sim_=psim_->get_data();
+//  f_x_ = pdist_->dist( psim_->get_data()   , *pdata_ref_ );
+  return f_x_;
       }
   }
 
-	float_vec_t ObjFct::operator()(float_vec_t x) {
-		float_t *gisaxs_data = NULL;
-		// construct param_vals ...
-		std::vector <std::string> params = psim_->get_fit_param_keys();
-		std::map <std::string, float_t> param_vals;
-		for(int i = 0; i < x.size(); ++ i) {
-			param_vals[params[i]] = x[i];
-		} // for
-		psim_->update_params(param_vals);
-		psim_->compute_gisaxs(gisaxs_data);
-		float_t* ref_data = (*pdata_ref_).data();
-		(*pdist_)(gisaxs_data, ref_data, (*pdata_ref_).size(), f_x_);
-		//std::cout << "@@ ERROR: " << err << std::endl;
-		return f_x_;
-	} // ObjFct::operator()()
+  float_vec_t ObjFct::operator()(float_vec_t x) {
+    float_t *gisaxs_data = NULL;
+    // construct param_vals ...
+    std::vector <std::string> params = psim_->get_fit_param_keys();
+    std::map <std::string, float_t> param_vals;
+    for(int i = 0; i < x.size(); ++ i) {
+      param_vals[params[i]] = x[i];
+    } // for
+    psim_->update_params(param_vals);
+    psim_->compute_gisaxs(gisaxs_data);
+    float_t* ref_data = (*pdata_ref_).data();
+    (*pdist_)(gisaxs_data, ref_data, (*pdata_ref_).size(), f_x_);
+    //std::cout << "@@ ERROR: " << err << std::endl;
+    return f_x_;
+  } // ObjFct::operator()()
 
 
 //  float_mat_t ObjFct::compute_jacobian(float_vec_t X, int dim){
 //    if(psim_)
 //      {
         //if (is_valid_ && pdata_ref_){
-//	for (int n=0; n<dim; n++){
+//  for (int n=0; n<dim; n++){
 
 
-	  //f_xpdx_n = compute(X+DXn);
+    //f_xpdx_n = compute(X+DXn);
 
 
-//	}
+//  }
 
-	/*	psim_->update_vars(X);
+  /*  psim_->update_vars(X);
         psim_->compute();
         pdata_sim_=psim_->get_data();
         J_x_ = pdist_->dist(*pdata_sim_ , *pdata_ref_ );
-	*/
-//	return J_x_;
+  */
+//  return J_x_;
 //      }
 //  }
 
@@ -155,10 +155,10 @@ namespace hig{
     int ix=0;
     for(int iv=0; iv<n_ver_; iv++)
       for(int ip=0; ip<n_par_; ip++){
-	pfx[ix] = f_x_[ix];
-	ix++;
+  pfx[ix] = f_x_[ix];
+  ix++;
       }
-//	pfx[0] = f_x_[0][0];
+//  pfx[0] = f_x_[0][0];
     return pfx;
   }
 

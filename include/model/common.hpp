@@ -3,7 +3,7 @@
  *
  *  File: common.hpp
  *  Created: Jun 13, 2012
- *  Modified: Sun 26 Jan 2014 09:58:05 AM PST
+ *  Modified: Wed 08 Oct 2014 12:13:02 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -25,25 +25,25 @@
 
 namespace hig {
 
-	class RefractiveIndex {
-		private:
-			float_t delta_;
-			float_t beta_;
+  class RefractiveIndex {
+    private:
+      float_t delta_;
+      float_t beta_;
 
-		public:
-			RefractiveIndex(): delta_(0.0), beta_(0.0) { }
-			RefractiveIndex(float_t delta, float_t beta): delta_(delta), beta_(beta) { }
-			~RefractiveIndex() { }
+    public:
+      RefractiveIndex(): delta_(0.0), beta_(0.0) { }
+      RefractiveIndex(float_t delta, float_t beta): delta_(delta), beta_(beta) { }
+      ~RefractiveIndex() { }
 
-			float_t delta() { return delta_; }
-			float_t beta() { return beta_; }
+      float_t delta() { return delta_; }
+      float_t beta() { return beta_; }
 
-			void delta(float_t a) { delta_ = a; }
-			void beta(float_t a) { beta_ = a; }
+      void delta(float_t a) { delta_ = a; }
+      void beta(float_t a) { beta_ = a; }
 
-			void init();
-			void clear();
-	}; // class RefractiveIndex
+      void init();
+      void clear();
+  }; // class RefractiveIndex
 
 } // namespace hig
 

@@ -3,7 +3,7 @@
  *
  *  File: Workflow.cpp
  *  Created: Dec 26, 2013
- *  Modified: Wed 29 Jan 2014 03:53:21 PM PST
+ *  Modified: Wed 08 Oct 2014 12:17:47 PM PDT
  *
  *  Author: Slim Chourou <stchourou@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -81,7 +81,7 @@ namespace hig{
   void Workflow::clear(){
     while(!wfq_.empty())
       {
-	deq();
+  deq();
       }
   }
 
@@ -92,11 +92,11 @@ namespace hig{
     int cnt=1;
     while(!wfq_c.empty())
       {
-	AnaAlgorithm* fr_algo = wfq_c.front();
-	std::cout << cnt << ": ";
-	fr_algo->print();
-	wfq_c.pop();
-	cnt++;
+  AnaAlgorithm* fr_algo = wfq_c.front();
+  std::cout << cnt << ": ";
+  fr_algo->print();
+  wfq_c.pop();
+  cnt++;
       }
   }
 }

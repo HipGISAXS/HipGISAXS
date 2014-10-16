@@ -3,7 +3,7 @@
  *
  *  File: SimTest.cpp
  *  Created: Dec 26, 2013
- *  Modified: Sun 02 Feb 2014 09:07:40 AM PST
+ *  Modified: Wed 08 Oct 2014 12:17:47 PM PDT
  *
  *  Author: Slim Chourou <stchourou@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -76,11 +76,11 @@ namespace hig{
 
     for(int iz=0;iz<nqz; iz++)
       {
-	//float_vec_t img_z;
-	for(int iy=0;iy<nqy; iy++){
-	  img.push_back( model(qy_[iy],qz_[iz], fit_vars_) );
-	}
-	//img.push_back(img_z);
+  //float_vec_t img_z;
+  for(int iy=0;iy<nqy; iy++){
+    img.push_back( model(qy_[iy],qz_[iz], fit_vars_) );
+  }
+  //img.push_back(img_z);
       }
 
     data_sim_ =     ImageData(img, qy_, qz_, region_qspace);

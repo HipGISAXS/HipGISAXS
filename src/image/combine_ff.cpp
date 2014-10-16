@@ -3,7 +3,7 @@
  *
  *  File: combine_ff.cpp
  *  Created: Aug 22, 2012
- *  Modified: Sun 26 Jan 2014 10:36:54 AM PST
+ *  Modified: Wed 08 Oct 2014 12:17:46 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -24,19 +24,19 @@
 
 int main(int narg, char** args) {
 
-	if(narg != 6) {
-		std::cout << "usage: plot_ff nx ny nz infile outfile" << std::endl;
-		exit(1);
-	} // if
+  if(narg != 6) {
+    std::cout << "usage: plot_ff nx ny nz infile outfile" << std::endl;
+    exit(1);
+  } // if
 
-	unsigned int nx = std::atoi(args[1]);
-	unsigned int ny = std::atoi(args[2]);
-	unsigned int nz = std::atoi(args[3]);
-	char* infile = args[4];
-	char* outfile = args[5];
+  unsigned int nx = std::atoi(args[1]);
+  unsigned int ny = std::atoi(args[2]);
+  unsigned int nz = std::atoi(args[3]);
+  char* infile = args[4];
+  char* outfile = args[5];
 
-	hig::PlotCombined new_plot(nx, ny, nz);
-	new_plot.plot(infile, outfile);
+  hig::PlotCombined new_plot(nx, ny, nz);
+  new_plot.plot(infile, outfile);
 
-	return 0;
+  return 0;
 } // main()

@@ -3,7 +3,7 @@
  *
  *  File: shape2hdf5.cpp
  *  Created: Aug 25, 2012
- *  Modified: Sun 26 Jan 2014 10:35:06 AM PST
+ *  Modified: Wed 08 Oct 2014 12:17:44 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -25,17 +25,17 @@
 
 
 shape2hdf5_converter::shape2hdf5_converter(char* filename, char* outfilename, MPI_Comm comm) {
-	filename_ = NULL; outfilename_ = NULL; shape_def_ = NULL;
+  filename_ = NULL; outfilename_ = NULL; shape_def_ = NULL;
 
-	filename_ = new std::string(filename);
-	outfilename_ = new std::string(outfilename);
-	comm_ = comm;
+  filename_ = new std::string(filename);
+  outfilename_ = new std::string(outfilename);
+  comm_ = comm;
 
-	std::vector<double> shape_def;
+  std::vector<double> shape_def;
 
-	int num = load_shape(filename, shape_def);
-	std::cout << "NUM: " << num << std::endl;
-	convert(outfilename, shape_def);
+  int num = load_shape(filename, shape_def);
+  std::cout << "NUM: " << num << std::endl;
+  convert(outfilename, shape_def);
 } // o2s_converter()
 
 
@@ -67,12 +67,12 @@ int shape2hdf5_converter::load_shape(char* filename, std::vector<double> &shape_
 
 
 void shape2hdf5_converter::convert(char* outfilename, std::vector<double> shape_def) {
-	shape_def_ = new double[shape_def.size()];
+  shape_def_ = new double[shape_def.size()];
 
-	int count = 0;
-	for(std::vector<double>::iterator i = shape_def.begin(); i != shape_def.end(); ++ i)
-		shape_def_[count ++] = *i;
+  int count = 0;
+  for(std::vector<double>::iterator i = shape_def.begin(); i != shape_def.end(); ++ i)
+    shape_def_[count ++] = *i;
 
-	// call the C HDF5 function
-	s2h_converter(&shape_def_, shape_def.size() / 7, outfilename, comm_);
+  // call the C HDF5 function
+  s2h_converter(&shape_def_, shape_def.size() / 7, outfilename, comm_);
 } // convert()

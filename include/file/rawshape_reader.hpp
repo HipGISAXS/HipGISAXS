@@ -30,13 +30,13 @@
 
 namespace hig {
 
-	class RawShapeReader {
-		public:
-			RawShapeReader(const char*, double*&, unsigned int&);
-			~RawShapeReader() { }
-		private:
-			bool load_raw(const char*, std::vector<float_t>&);
-	}; // class RawShapeReader
+  class RawShapeReader {
+    public:
+      RawShapeReader(const char*, double*&, unsigned int&);
+      ~RawShapeReader() { }
+    private:
+      bool load_raw(const char*, std::vector<float_t>&);
+  }; // class RawShapeReader
 
 } // namespace hig
 

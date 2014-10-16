@@ -3,7 +3,7 @@
  *
  *  File: Data.cpp
  *  Created: Dec 26, 2013
- *  Modified: Wed 29 Jan 2014 03:52:41 PM PST
+ *  Modified: Wed 08 Oct 2014 12:17:47 PM PDT
  *  Description: Abstract class for gisaxs data
  *
  *  Author: Slim Chourou <stchourou@lbl.gov>
@@ -32,13 +32,13 @@ namespace hig{
     if(stp>0){
       nv =1+ (max-min)/stp;
       for(int i = 0; i<nv;i++){
-	v.push_back(min+stp*i);
+  v.push_back(min+stp*i);
       }
     }
     else if(nv>1){
       stp = (max-min)/(nv-1);
       for(int i = 0; i<nv;i++){
-	//std::cout << min+stp*i << "- ";
+  //std::cout << min+stp*i << "- ";
         v.push_back(min+stp*i);
       }
     }

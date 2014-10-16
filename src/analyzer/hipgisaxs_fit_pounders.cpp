@@ -3,7 +3,7 @@
  *
  *  File: AnaAlgorithm.cpp
  *  Created: Dec 26, 2013
- *  Modified: Wed 16 Jul 2014 09:56:42 AM PDT
+ *  Modified: Wed 08 Oct 2014 12:17:42 PM PDT
  *
  *  Author: Slim Chourou <stchourou@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -37,7 +37,7 @@ namespace hig{
     //Analysis ana_out;
     std::cout << "Running POUNDERS fitting..." <<std::endl;
 
-	if(!(*obj_func_).set_reference_data(img_num)) return false;
+  if(!(*obj_func_).set_reference_data(img_num)) return false;
 
     static char help[]= "Running POUNDERS fitting...";
 
@@ -120,8 +120,8 @@ namespace hig{
     }
 
     std::cout << "Converged vector: ";
-	for(float_vec_t::iterator i = xn_.begin(); i != xn_.end(); ++ i) std::cout << *i << " ";
-	std::cout << std::endl;
+  for(float_vec_t::iterator i = xn_.begin(); i != xn_.end(); ++ i) std::cout << *i << " ";
+  std::cout << std::endl;
 
     ierr = TaoDestroy(&tao);
     ierr = VecDestroy(&x0);

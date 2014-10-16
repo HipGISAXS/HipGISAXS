@@ -3,7 +3,7 @@
  *
  *  File: Dist.cpp
  *  Created: Dec 26, 2013
- *  Modified: Sun 02 Feb 2014 08:52:43 AM PST
+ *  Modified: Wed 08 Oct 2014 12:17:47 PM PDT
  *  Description: Abstract class for gisaxs data
  *
  *  Author: Slim Chourou <stchourou@lbl.gov>
@@ -31,10 +31,10 @@ namespace hig{
   */
   float_mat_t Dist::dist(float_t* img1, float_t* img2, unsigned int np1){
     float_mat_t dm ;
-	for(int ip=0; ip<np1; ip++)
-	  {
-	    dm.push_back( img1[ip] -  img2[ip] );
-	  }
+  for(int ip=0; ip<np1; ip++)
+    {
+      dm.push_back( img1[ip] -  img2[ip] );
+    }
     return dm;
   }
 
@@ -51,12 +51,12 @@ namespace hig{
 
     for(int iv=0; iv<nv1; iv++)
       {
-	float_vec_t dist_z ;
-	for(int ip=0; ip<np1; ip++)
-	  {
-	    dist_z.push_back( img1.img_p(iv,ip) -  img2.img_p(iv,ip) );
-	  }
-	dm.push_back(dist_z);
+  float_vec_t dist_z ;
+  for(int ip=0; ip<np1; ip++)
+    {
+      dist_z.push_back( img1.img_p(iv,ip) -  img2.img_p(iv,ip) );
+    }
+  dm.push_back(dist_z);
       }
     return dm;
   }*/

@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_fit_bruteforce_main.cpp
  *  Created: Jan 13, 2014
- *  Modified: Fri 07 Feb 2014 12:09:14 PM PST
+ *  Modified: Wed 08 Oct 2014 12:17:42 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -13,21 +13,21 @@
 #include <analyzer/hipgisaxs_ana.hpp>
 
 int main(int narg, char** args) {
-	if(narg < 2 || narg > 3) {
-		std::cout << "usage: analyze <input_config> [<history_output_filename>]" << std::endl;
-		return 1;
-	} // if
+  if(narg < 2 || narg > 3) {
+    std::cout << "usage: analyze <input_config> [<history_output_filename>]" << std::endl;
+    return 1;
+  } // if
 
-	//AbsoluteDifferenceError err;
-	//AbsoluteDifferenceNorm err;
-	AbsoluteDifferenceSquareNorm err;
-	hig::HipGISAXSObjectiveFunction hip_func(narg, args, &err);
-	hig::BruteForceOptimization my_bfo(narg, args, &hip_func);
+  //AbsoluteDifferenceError err;
+  //AbsoluteDifferenceNorm err;
+  AbsoluteDifferenceSquareNorm err;
+  hig::HipGISAXSObjectiveFunction hip_func(narg, args, &err);
+  hig::BruteForceOptimization my_bfo(narg, args, &hip_func);
 
-	hig::HipGISAXSAnalyzer ana;
-	ana.add_analysis_algo(&my_bfo);
+  hig::HipGISAXSAnalyzer ana;
+  ana.add_analysis_algo(&my_bfo);
 
-	ana.analyze(narg, args);
+  ana.analyze(narg, args);
 
-	return 0;
+  return 0;
 } // main()

@@ -3,7 +3,7 @@
  *
  *  File: Analyzer.hpp
  *  Created: Dec 26, 2013
- *  Modified: Fri 11 Jul 2014 09:03:25 AM PDT
+ *  Modified: Wed 08 Oct 2014 12:11:41 PM PDT
  *  Description: The main analysis class that executes the workflows defined therein wrt
  *  the inputs (a priori structural info)  and datasets (expt. data) provided.
  *
@@ -32,19 +32,19 @@
 
 namespace hig {
 
-	class HipGISAXSAnalyzer {
+  class HipGISAXSAnalyzer {
 
-		private :
-			std::vector <AnalysisAlgorithm*> wf_;		// the workflow
+    private :
+      std::vector <AnalysisAlgorithm*> wf_;    // the workflow
 
-		public:
-			HipGISAXSAnalyzer() { }
-			~HipGISAXSAnalyzer() { }
+    public:
+      HipGISAXSAnalyzer() { }
+      ~HipGISAXSAnalyzer() { }
 
-			bool add_analysis_algo(AnalysisAlgorithm* algo) { wf_.push_back(algo); return true; }
-			bool analyze(int argc,char **argv, int);
+      bool add_analysis_algo(AnalysisAlgorithm* algo) { wf_.push_back(algo); return true; }
+      bool analyze(int argc,char **argv, int);
 
-	}; // class HipGISAXSAnalyzer
+  }; // class HipGISAXSAnalyzer
 
 } // namespace hig
 

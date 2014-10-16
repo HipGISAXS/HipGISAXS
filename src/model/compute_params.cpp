@@ -3,7 +3,7 @@
  *
  *  File: compute_params.cpp
  *  Created: Jun 05, 2012
- *  Modified: Sun 14 Sep 2014 09:05:09 AM PDT
+ *  Modified: Wed 08 Oct 2014 12:17:46 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -27,61 +27,61 @@
 
 namespace hig {
 
-	ComputeParams::ComputeParams() { }
+  ComputeParams::ComputeParams() { }
 
-	void ComputeParams::init() {	// sets all default values
-		pathprefix_ = ".";
-		runname_ = "run_" + timestamp();
-		method_ = "dwba";
-		output_region_.type_ = region_qspace;
-		output_region_.minpoint_[0] = -1;
-		output_region_.minpoint_[1] = -1;
-		output_region_.maxpoint_[0] = -1;
-		output_region_.maxpoint_[1] = -1;
-		resolution_[0] = 1;
-		resolution_[1] = 1;
-		nslices_ = 0;
-		correlation_ = structcorr_null;
-		palette_ = "default";
-	} // ComputeParams::init()
-
-
-	bool ComputeParams::update_param(const std::string& str, float_t new_val) {
-		std::string keyword, rem_str;
-		if(!extract_first_keyword(str, keyword, rem_str)) return false;
-		switch(TokenMapper::instance().get_keyword_token(keyword)) {
-			case compute_path_token:
-			case compute_runname_token:
-			case compute_method_token:
-			case compute_outregion_token:
-			case compute_resolution_token:
-			case compute_nslices_token:
-				std::cerr << "earning: immutable param in '" << str << "'. ignoring." << std::endl;
-				break;
-
-			case error_token:
-				std::cerr << "error: invalid keyword in '" << str << "'" << std::endl;
-				return false;
-
-			default:
-				std::cerr << "error: misplaced keyword in '" << str << "'" << std::endl;
-				return false;
-		} // switch
-
-		return true;
-	} // ComputeParams::update_param()
+  void ComputeParams::init() {  // sets all default values
+    pathprefix_ = ".";
+    runname_ = "run_" + timestamp();
+    method_ = "dwba";
+    output_region_.type_ = region_qspace;
+    output_region_.minpoint_[0] = -1;
+    output_region_.minpoint_[1] = -1;
+    output_region_.maxpoint_[0] = -1;
+    output_region_.maxpoint_[1] = -1;
+    resolution_[0] = 1;
+    resolution_[1] = 1;
+    nslices_ = 0;
+    correlation_ = structcorr_null;
+    palette_ = "default";
+  } // ComputeParams::init()
 
 
-	std::string ComputeParams::timestamp() {	// make this an independent utility ...
-		time_t rawtime;
-		struct tm * timeinfo;
-		char buffer[16];
+  bool ComputeParams::update_param(const std::string& str, float_t new_val) {
+    std::string keyword, rem_str;
+    if(!extract_first_keyword(str, keyword, rem_str)) return false;
+    switch(TokenMapper::instance().get_keyword_token(keyword)) {
+      case compute_path_token:
+      case compute_runname_token:
+      case compute_method_token:
+      case compute_outregion_token:
+      case compute_resolution_token:
+      case compute_nslices_token:
+        std::cerr << "earning: immutable param in '" << str << "'. ignoring." << std::endl;
+        break;
 
-		time(&rawtime);
-		timeinfo = localtime(&rawtime);
-		strftime(buffer, 16, "%Y%m%d_%H%M%S", timeinfo);
+      case error_token:
+        std::cerr << "error: invalid keyword in '" << str << "'" << std::endl;
+        return false;
 
-		return std::string(buffer);
-	} // ComputeParams::timestamp()
+      default:
+        std::cerr << "error: misplaced keyword in '" << str << "'" << std::endl;
+        return false;
+    } // switch
+
+    return true;
+  } // ComputeParams::update_param()
+
+
+  std::string ComputeParams::timestamp() {  // make this an independent utility ...
+    time_t rawtime;
+    struct tm * timeinfo;
+    char buffer[16];
+
+    time(&rawtime);
+    timeinfo = localtime(&rawtime);
+    strftime(buffer, 16, "%Y%m%d_%H%M%S", timeinfo);
+
+    return std::string(buffer);
+  } // ComputeParams::timestamp()
 
 } // namespace hig

@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_helpers.cpp
  *  Created: Apr 01, 2014
- *  Modified: Tue 01 Apr 2014 04:01:15 PM PDT
+ *  Modified: Wed 08 Oct 2014 12:17:46 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -26,8 +26,8 @@
 
 namespace hig {
 
-	bool HipGISAXS::gaussian_smearing(float_t*& data, float_t sigma) {
-		return Convolutions::instance().convolution_gaussian_2d(data, nqy_, nqz_, sigma);
-	} // HipGISAXS::gaussian_smearing()
+  bool HipGISAXS::gaussian_smearing(float_t*& data, float_t sigma) {
+    return Convolutions::instance().convolution_gaussian_2d(data, nqy_, nqz_, sigma);
+  } // HipGISAXS::gaussian_smearing()
 
 } // namespace hig

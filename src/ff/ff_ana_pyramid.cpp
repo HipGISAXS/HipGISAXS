@@ -3,7 +3,7 @@
  *
  *  File: ff_ana_pyramid.cpp
  *  Created: Jul 12, 2012
- *  Modified: Sun 26 Jan 2014 10:23:30 AM PST
+ *  Modified: Wed 08 Oct 2014 12:17:43 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -33,26 +33,26 @@
 
 namespace hig {
 
-	/**
-	 * pyramid
-	 */
-	bool AnalyticFormFactor::compute_pyramid() {
-		std::cerr << "uh-oh: you reach an unimplemented part of the code, compute_pyramid"
-					<< std::endl;
-		return false;
-		/*for(shape_param_iterator_t i = params.begin(); i != params.end(); ++ i) {
-			switch((*i).second.type()) {
-				case param_edge:
-				case param_xsize:
-				case param_ysize:
-				case param_height:
-				case param_radius:
-				case param_baseangle:
-				default:
-			} // switch
-		} // for */
+  /**
+   * pyramid
+   */
+  bool AnalyticFormFactor::compute_pyramid() {
+    std::cerr << "uh-oh: you reach an unimplemented part of the code, compute_pyramid"
+          << std::endl;
+    return false;
+    /*for(shape_param_iterator_t i = params.begin(); i != params.end(); ++ i) {
+      switch((*i).second.type()) {
+        case param_edge:
+        case param_xsize:
+        case param_ysize:
+        case param_height:
+        case param_radius:
+        case param_baseangle:
+        default:
+      } // switch
+    } // for */
 
-		// what are AD/AA and AAD ... ???
+    // what are AD/AA and AAD ... ???
 /*            RD = Dimension_Distr( dims(1,:) );[rows, NRR] = size(RD); RR = RD(1,:); RRD = RD(2,:);
             HD = Dimension_Distr( dims(2,:) );[rows, NHH] = size(HD); HH = HD(1,:); HHD = HD(2,:);
             WD = Dimension_Distr( dims(3,:) );[rows, NWW] = size(WD); WW = WD(1,:); WWD = WD(2,:);
@@ -145,7 +145,7 @@ namespace hig {
             %%%%%%
             FF = FF  .* exp(1i* (qx*T(1) + qy*T(2) + qz*T(3))); */
 
-	} // AnalyticFormFactor::compute_pyramid()
+  } // AnalyticFormFactor::compute_pyramid()
 
 } // namespace hig
 

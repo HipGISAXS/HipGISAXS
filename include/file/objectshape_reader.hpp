@@ -3,7 +3,7 @@
  *
  *  File: objectshape_reader.hpp
  *  Created: Aug 25, 2013
- *  Modified: Sun 29 Sep 2013 05:00:11 PM PDT
+ *  Modified: Wed 08 Oct 2014 12:13:01 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -33,56 +33,56 @@
 
 namespace hig {
 
-	enum token_t {
-		COMMENT,
-		VERTEX,
-		TEXTURE,
-		SUB_MESH,
-		MATERIAL_LIBRARY,
-		MATERIAL_NAME,
-		LINE,
-		SMOOTH_SHADING,
-		NORMAL,
-		FACE,
-		UNKNOWN
-	}; //enum
+  enum token_t {
+    COMMENT,
+    VERTEX,
+    TEXTURE,
+    SUB_MESH,
+    MATERIAL_LIBRARY,
+    MATERIAL_NAME,
+    LINE,
+    SMOOTH_SHADING,
+    NORMAL,
+    FACE,
+    UNKNOWN
+  }; //enum
 
-	typedef struct {
-		float_t x;
-		float_t y;
-		float_t z;
-		float_t w; 	// for format's completeness
-	} vertex_t;
+  typedef struct {
+    float_t x;
+    float_t y;
+    float_t z;
+    float_t w;   // for format's completeness
+  } vertex_t;
 
-	typedef struct {
-		int a;
-		int b;
-		int c;
-		int d;
-	} poly_index_t;
+  typedef struct {
+    int a;
+    int b;
+    int c;
+    int d;
+  } poly_index_t;
 
-	typedef boost::char_separator<char> token_separator_t;
-	typedef boost::tokenizer<token_separator_t> tokenizer_t;
+  typedef boost::char_separator<char> token_separator_t;
+  typedef boost::tokenizer<token_separator_t> tokenizer_t;
 
-	class ObjectShapeReader {
-		public:
-			ObjectShapeReader(const char*, double*&, unsigned int&);
-			~ObjectShapeReader() { }
+  class ObjectShapeReader {
+    public:
+      ObjectShapeReader(const char*, double*&, unsigned int&);
+      ~ObjectShapeReader() { }
 
-		private:
-			bool load_object(const char* filename, std::vector<vertex_t> &vertices,
-								std::vector<std::vector<int> > &face_list_3v,
-								std::vector<std::vector<int> > &face_list_4v);
-			bool convert_to_shape(std::vector<std::vector<int> > face_list_3v,
-								std::vector<vertex_t> vertices, std::vector<float_t>&);
-	
-			bool get_triangle_params(vertex_t v1, vertex_t v2, vertex_t v3,
-								float_t &s_area, vertex_t &normal, vertex_t &center);
-			token_t token_hash(std::string const &str);
-			void findall(std::string str, char c, std::vector<int> &pos_list);
-			void display_vertices(std::vector<vertex_t> &vertices);
-			void display_poly_index(std::vector<poly_index_t> &indices);
-	}; // class ObjectShapeReader
+    private:
+      bool load_object(const char* filename, std::vector<vertex_t> &vertices,
+                std::vector<std::vector<int> > &face_list_3v,
+                std::vector<std::vector<int> > &face_list_4v);
+      bool convert_to_shape(std::vector<std::vector<int> > face_list_3v,
+                std::vector<vertex_t> vertices, std::vector<float_t>&);
+  
+      bool get_triangle_params(vertex_t v1, vertex_t v2, vertex_t v3,
+                float_t &s_area, vertex_t &normal, vertex_t &center);
+      token_t token_hash(std::string const &str);
+      void findall(std::string str, char c, std::vector<int> &pos_list);
+      void display_vertices(std::vector<vertex_t> &vertices);
+      void display_poly_index(std::vector<poly_index_t> &indices);
+  }; // class ObjectShapeReader
 
 } // namespace hig
 
