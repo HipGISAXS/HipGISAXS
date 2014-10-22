@@ -1317,10 +1317,10 @@ namespace hig {
 //                                          rk2[curr_index] * sf[curr_index_1] +
 //                                          rk1[curr_index] * sf[curr_index_2] +
 //                                          rk1rk2[curr_index] * sf[curr_index_3]);
-//                                          (h0[curr_index] * ff[curr_index_0] +
-//                                          rk2[curr_index] * ff[curr_index_1] +
-//                                          rk1[curr_index] * ff[curr_index_2] +
-//                                          rk1rk2[curr_index] * ff[curr_index_3]);
+ //                                         (h0[curr_index] * ff[curr_index_0] +
+  //                                        rk2[curr_index] * ff[curr_index_1] +
+  //                                        rk1[curr_index] * ff[curr_index_2] +
+ //                                         rk1rk2[curr_index] * ff[curr_index_3]);
                                           (h0[curr_index] * sf[curr_index_0] * ff[curr_index_0] +
                                           rk2[curr_index] * sf[curr_index_1] * ff[curr_index_1] +
                                           rk1[curr_index] * sf[curr_index_2] * ff[curr_index_2] +

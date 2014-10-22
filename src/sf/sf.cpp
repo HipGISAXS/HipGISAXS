@@ -63,6 +63,7 @@ namespace hig {
       std::exit(1);
     }
     int num_of_el = nx_ * ny_ * nz_;
+    #pragma omp parallel for
     for(int i = 0; i < num_of_el; i++)
       sf_[i] += rhs.sf_[i];
     return *this;
