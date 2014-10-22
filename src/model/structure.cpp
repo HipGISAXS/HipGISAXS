@@ -168,12 +168,6 @@ namespace hig {
       } // switch
     } // if
 
-    // scale the vector values
-    /*a_[0] *= scaling; a_[1] *= scaling; a_[2] *= scaling;
-    b_[0] *= scaling; b_[1] *= scaling; b_[2] *= scaling;
-    c_[0] *= scaling; c_[1] *= scaling; c_[2] *= scaling;
-    t_[0] *= scaling; t_[1] *= scaling; t_[2] *= scaling;*/
-
     return true;
   } // Lattice::construct_vectors()
 
@@ -542,6 +536,61 @@ namespace hig {
 
           case struct_grain_scaling_token:
             //grain_scaling(new_val); // TODO: fitting ...
+            if(!extract_first_keyword(rem_str2, keyword3, rem_str3)) return false;
+            switch(TokenMapper::instance().get_keyword_token(keyword3)) {
+              case struct_grain_lattice_a_token:
+                if(!extract_first_keyword(rem_str3, keyword4, rem_str4)) return false;
+                switch(TokenMapper::instance().get_keyword_token(keyword4)) {
+                  case mean_token:
+                    grain_.scaling_.mean_[0] = new_val;
+                    break;
+                  case stddev_token:
+                    grain_.scaling_.stddev_[0] = new_val;
+                    break;
+                  default:
+                    std::cerr << "error: invalid keyword '" << keyword4 << "' in param '"
+                              << rem_str3 << "'" << std::endl;
+                  return false;
+                } // if-else
+                break;
+
+              case struct_grain_lattice_b_token:
+                if(!extract_first_keyword(rem_str3, keyword4, rem_str4)) return false;
+                switch(TokenMapper::instance().get_keyword_token(keyword4)) {
+                  case mean_token:
+                    grain_.scaling_.mean_[1] = new_val;
+                    break;
+                  case stddev_token:
+                    grain_.scaling_.stddev_[1] = new_val;
+                    break;
+                  default:
+                    std::cerr << "error: invalid keyword '" << keyword4 << "' in param '"
+                              << rem_str3 << "'" << std::endl;
+                  return false;
+                } // if-else
+                break;
+
+              case struct_grain_lattice_c_token:
+                if(!extract_first_keyword(rem_str3, keyword4, rem_str4)) return false;
+                switch(TokenMapper::instance().get_keyword_token(keyword4)) {
+                  case mean_token:
+                    grain_.scaling_.mean_[2] = new_val;
+                    break;
+                  case stddev_token:
+                    grain_.scaling_.stddev_[2] = new_val;
+                    break;
+                  default:
+                    std::cerr << "error: invalid keyword '" << keyword4 << "' in param '"
+                              << rem_str3 << "'" << std::endl;
+                  return false;
+                } // if-else
+                break;
+
+              default:
+                std::cerr << "error: invalid keyword '" << keyword3 << "' in param '"
+                              << rem_str2 << "'" << std::endl;
+                return false;
+            } // switch
             break;
 
           case struct_grain_transvec_token:
