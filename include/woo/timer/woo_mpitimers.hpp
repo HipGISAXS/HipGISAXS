@@ -1,15 +1,12 @@
-/**
- *  Project: WOO Timer Library
- *
- *  File: woo_mpitimers.hpp
- *  Created: Nov 21, 2012
- *  Modified: Wed 17 Jul 2013 10:26:30 AM PDT
- *
- *  Author: Abhinav Sarje <asarje@lbl.gov>
- *  Copyright (c) 2012-2013 Abhinav Sarje
- *  Distributed under the Boost Software License.
- *  See accompanying LICENSE file.
- */
+/***
+  *  Project: WOO Timer Library
+  *
+  *  File: woo_mpitimers.hpp
+  *  Created: Nov 21, 2012
+  *  Modified: Tue 18 Feb 2014 10:54:41 AM PST
+  *
+  *  Author: Abhinav Sarje <asarje@lbl.gov>
+  */
 
 #include "wootimers.hpp"
 #include <mpi.h>
@@ -25,10 +22,10 @@ class MPITimer : public WooTimer {
 	private:
 
 	public:
-		MPITimer() { start_ = 0.0; stop_ = 0.0; elapsed_ = 0.0; is_running_ = false; }
+		MPITimer() { start_ = 0.0; stop_ = 0.0; elapsed_ = 0.0; is_running_ = false; is_paused_ = false; }
 		~MPITimer() { }
 
-		void reset() { start_ = 0.0; stop_ = 0.0; elapsed_ = 0.0; is_running_ = false; }
+		void reset() { start_ = 0.0; stop_ = 0.0; elapsed_ = 0.0; is_running_ = false; is_paused_ = false; }
 
 		void start() {
 			reset();
@@ -41,7 +38,7 @@ class MPITimer : public WooTimer {
 				std::cerr << "error: timer has not yet started" << std::endl;
 				return;
 			} // if
-			stop_ = MPI_Wtime();
+			if(!is_paused_) stop_ = MPI_Wtime();
 			is_running_ = false;
 			elapsed_ = stop_ - start_;
 		} // stop()
@@ -57,6 +54,34 @@ class MPITimer : public WooTimer {
 			start_ = temp1;
 			return temp2;
 		} // lap()
+
+		void pause() {
+			if(!is_running_) {
+				std::cerr << "error: timer is not running" << std::endl;
+				return;
+			} // if
+			if(is_paused_) {
+				std::cerr << "warning: timer is already paused. ignoring" << std::endl;
+				return;
+			} // if
+			stop_ = MPI_Wtime();
+			is_paused_ = true;
+		} // pause()
+
+		void resume() {
+			if(!is_running_) {
+				std::cerr << "error: timer is not running" << std::endl;
+				return;
+			} // if
+			if(!is_paused_) {
+				std::cerr << "warning: timer is not paused. ignoring" << std::endl;
+				return;
+			} // if
+			double temp1 = MPI_Wtime();
+			double temp2 = temp1 - stop_;
+			start_ += temp2;
+			is_paused_ = false;
+		} // resume()
 
 		double elapsed_sec() { return elapsed_; }
 		double elapsed_msec() { return elapsed_ * 1e3; }

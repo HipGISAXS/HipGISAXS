@@ -76,11 +76,13 @@ namespace hig {
                                     #endif
                                     ) {
 
-    std::cout << "-- Computing form factor analytically ... " << std::endl;
-    #ifdef TIME_DETAIL_1
+    #ifdef FF_VERBOSE
+      std::cout << "-- Computing form factor analytically ... " << std::endl;
+    #endif
+//    #ifdef TIME_DETAIL_1
       woo::BoostChronoTimer compute_timer;
       compute_timer.start();
-    #endif // TIME_DETAIL_1
+//    #endif // TIME_DETAIL_1
 
     switch(shape) {
       case shape_box:            // cube or box

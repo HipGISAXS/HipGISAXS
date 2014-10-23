@@ -1125,6 +1125,8 @@ namespace hig {
 
         /* compute structure factor and form factor */
 
+        woo::BoostChronoTimer sftimer, fftimer;
+
         #ifdef FF_NUM_GPU   // use GPU
           #ifdef FF_NUM_GPU_FUSED
             FormFactor ff(64, 8);
@@ -1158,6 +1160,10 @@ namespace hig {
                     , grain_comm
                   #endif
                   );*/
+        #ifndef SF_VERBOSE
+          std::cout << "-- Computing structure factor ... " << std::flush;
+        #endif
+        sftimer.start(); sftimer.pause();
         for (int i_scale = 0; i_scale < num_repeat_scaling; i_scale++) {
 
           /* set the scalig for this grain */
@@ -1178,23 +1184,31 @@ namespace hig {
           else
             grain_repeats = all_grains_repeats[0]; // same repeat for all grains
 
-          std::cout << "-- Calculating scaling-repetition sample " << i_scale + 1 << " / "
+        #ifdef SF_VERBOSE
+          std::cout << "-- Distribution sample " << i_scale + 1 << " / "
               << scaling_samples.size() << ".\n";
+        #endif
 
           /* calulate structure factor for the grain */
           StructureFactor temp_sf;
+          sftimer.resume();
           structure_factor(temp_sf, HiGInput::instance().experiment(), center, curr_lattice,
                   grain_repeats, grain_scaling, r_tot1, r_tot2, r_tot3
                   #ifdef USE_MPI
                     , grain_comm
                   #endif
                   );
+          sftimer.pause();
           if (i_scale == 0)
             sf = temp_sf * scaling_wght;
           else
             sf += temp_sf * scaling_wght;
           temp_sf.clear();
         }
+        sftimer.stop();
+        #ifndef SF_VERBOSE
+          std::cout << sftimer.elapsed_msec() << " ms." << std::endl;
+        #endif
 
         //sf.printsf();
 
@@ -1218,13 +1232,21 @@ namespace hig {
         //std::cout << ">>>f2 " << r_tot2[0] << " " << r_tot2[1] << " " << r_tot2[2] << std::endl;
         //std::cout << ">>>f3 " << r_tot3[0] << " " << r_tot3[1] << " " << r_tot3[2] << std::endl;
 
+        #ifndef FF_VERBOSE
+          std::cout << "-- Computing form factor ... " << std::flush;
+        #endif
         //read_form_factor("curr_ff.out");
+        fftimer.start();
         form_factor(ff, shape_name, shape_file, shape_params, curr_transvec,
               shape_tau, shape_eta, r_tot1, r_tot2, r_tot3
               #ifdef USE_MPI
                 , grain_comm
               #endif
               );
+        fftimer.stop();
+        #ifndef FF_VERBOSE
+          std::cout << fftimer.elapsed_msec() << " ms." << std::endl;
+        #endif
         //ff.print_ff(nqx_, nqy_, nqz_extended_);
         //ff.printff(nqx_, nqy_, nqz_extended_);
         //ff.save_ff(nqx_, nqy_, nqz_, "ff.out");

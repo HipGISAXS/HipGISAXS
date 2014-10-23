@@ -3,7 +3,7 @@
  *
  *  File: ff_ana_box.cpp
  *  Created: Jul 12, 2012
- *  Modified: Wed 08 Oct 2014 12:17:43 PM PDT
+ *  Modified: Wed 22 Oct 2014 05:29:47 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -86,7 +86,9 @@ namespace hig {
     #endif // TIME_DETAIL_2
     #ifdef FF_ANA_GPU
       // on gpu
-      std::cout << "-- Computing box FF on GPU ..." << std::endl;
+      #ifdef FF_VERBOSE
+        std::cout << "-- Computing box FF on GPU ..." << std::endl;
+      #endif
 
       std::vector<float_t> transvec_v;
       transvec_v.push_back(transvec[0]);

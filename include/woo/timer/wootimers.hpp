@@ -1,15 +1,12 @@
-/**
- *  Project: WOO Timer Library
- *
- *  File: wootimers.hpp
- *  Created: Nov 21, 2012
- *  Modified: Wed 17 Jul 2013 10:26:44 AM PDT
- *
- *  Author: Abhinav Sarje <asarje@lbl.gov>
- *  Copyright (c) 2012-2013 Abhinav Sarje
- *  Distributed under the Boost Software License.
- *  See accompanying LICENSE file.
- */
+/***
+  *  Project: WOO Timer Library
+  *
+  *  File: wootimers.hpp
+  *  Created: Nov 21, 2012
+  *  Modified: Tue 18 Feb 2014 10:48:03 AM PST
+  *
+  *  Author: Abhinav Sarje <asarje@lbl.gov>
+  */
 
 #ifndef _WOOTIMERS_HPP_
 #define _WOOTIMERS_HPP_
@@ -22,6 +19,7 @@ class WooTimer {		// an abstract class
 		double stop_;
 		double elapsed_;	// in lowest resolution of respective timers used
 		bool is_running_;
+		bool is_paused_;
 
 	public:
 		virtual ~WooTimer() { }
@@ -31,6 +29,8 @@ class WooTimer {		// an abstract class
 		virtual void start() = 0;
 		virtual void stop() = 0;
 		virtual double lap() = 0;			// lap in lowest resolution
+		virtual void pause() = 0;
+		virtual void resume() = 0;
 
 		virtual double elapsed_sec() = 0;	// in seconds		10^0
 		virtual double elapsed_msec() = 0;	// in miliseconds	10^3

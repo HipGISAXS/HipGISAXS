@@ -131,7 +131,9 @@ namespace hig {
       return false;
     } // if
 
-    if(master) std::cout << "-- Computing structure factor ... " << std::flush;
+    #ifdef SF_VERBOSE
+      if(master) std::cout << "-- Computing structure factor ... " << std::flush;
+    #endif
 
     std::complex<float_t> unit_c(1, 0);
     std::complex<float_t> unit_ci(0, 1);
@@ -320,21 +322,24 @@ namespace hig {
     computetimer.stop();
     maintimer.stop();
 
-    #ifdef TIME_DETAIL_1
-      if(master) {
-        std::cout << "done. " << std::endl;
+    #ifdef SF_VERBOSE
+      if(master) std::cout << "done. " << std::endl;
+    #endif
+
+    if(master) {
+      #ifdef TIME_DETAIL_1
         std::cout << "**               SF compute time: "
-            << computetimer.elapsed_msec()  << " ms." << std::endl
-            << "**                 Total SF time: "
-            << maintimer.elapsed_msec() << " ms." << std::endl;
+                << computetimer.elapsed_msec()  << " ms." << std::endl;
+        //std::cout << "**                 Total SF time: "
+        //          << maintimer.elapsed_msec() << " ms." << std::endl;
 
 
         //  save_sf(  QGrid::instance().nqx(),   QGrid::instance().nqy(),   QGrid::instance().nqz(), "/home/stchourou/sf.dat");
 
         //int naninfs = count_naninfs(nx_, ny_, nz_, sf_);
         //std::cout << " ------- " << naninfs << " / " << nx_ * ny_ * nz_ << " nans or infs" << std::endl;
-      } // if
-    #endif // TIME_DETAIL_1
+      #endif // TIME_DETAIL_1
+    } // if
 
     return true;
   } // StructureFactor::compute_structure_factor()

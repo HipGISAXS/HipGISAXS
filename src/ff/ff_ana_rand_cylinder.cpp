@@ -3,7 +3,7 @@
  *
  *  File: ff_ana_rand_cylinder.cpp
  *  Created: Jul 12, 2012
- *  Modified: Wed 08 Oct 2014 12:17:43 PM PDT
+ *  Modified: Wed 22 Oct 2014 05:31:38 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -75,7 +75,9 @@ namespace hig {
 
     #ifdef FF_ANA_GPU
       // on gpu
-      std::cout << "-- Computing random cylinders FF on GPU ..." << std::endl;
+      #ifdef FF_VERBOSE
+        std::cout << "-- Computing random cylinders FF on GPU ..." << std::endl;
+      #endif
 
       std::vector<float_t> transvec_v;
       transvec_v.push_back(transvec[0]);

@@ -1,15 +1,14 @@
-/**
- *  Project: WOO Timer Library
- *
- *  File: woo_cxxtimers.hpp
- *  Created: Nov 21, 2012
- *  Modified: Wed 17 Jul 2013 10:26:04 AM PDT
- *
- *  Author: Abhinav Sarje <asarje@lbl.gov>
- *  Copyright (c) 2012-2013 Abhinav Sarje
- *  Distributed under the Boost Software License.
- *  See accompanying LICENSE file.
- */
+/***
+  *  $Id$
+  *
+  *  Project:
+  *
+  *  File: woo_cxxtimers.hpp
+  *  Created: Nov 21, 2012
+  *  Modified: Sun 31 Mar 2013 02:04:12 PM PDT
+  *
+  *  Author: Abhinav Sarje <asarje@lbl.gov>
+  */
 
 #include "wootimers.hpp"
 #include <ctime>

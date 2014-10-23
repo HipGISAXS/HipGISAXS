@@ -3,7 +3,7 @@
  *
  *  File: ff_ana_gpu.cu
  *  Created: Oct 16, 2012
- *  Modified: Wed 08 Oct 2014 12:17:47 PM PDT
+ *  Modified: Wed 22 Oct 2014 05:06:43 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -106,8 +106,10 @@ namespace hig {
     nb_y_ = (unsigned int) ceil((float) nqy_ / b_nqy_);
     nb_z_ = (unsigned int) ceil((float) nqz_ / b_nqz_);
     unsigned int num_hblocks = nb_x_ * nb_y_ * nb_z_;
-    std::cout << "++         Number of hyperblocks: " << num_hblocks
-          << " [" << nb_x_ << " x " << nb_y_ << " x " << nb_z_ << "]" << std::endl;
+    #ifdef FF_VERBOSE
+      std::cout << "++         Number of hyperblocks: " << num_hblocks
+                << " [" << nb_x_ << " x " << nb_y_ << " x " << nb_z_ << "]" << std::endl;
+    #endif
 
     // allocate ff buffer memories
     cudaMalloc((void**) &ff_buff_d_, b_nqx_ * b_nqy_ * b_nqz_ * sizeof(cucomplex_t));
@@ -116,10 +118,12 @@ namespace hig {
 
     cudaMemGetInfo(&device_mem_avail, &device_mem_total);
     device_mem_used = device_mem_total - device_mem_avail;
-    std::cout << "++            Used device memory: " << (float) device_mem_used / 1024 / 1024
-          << " MB" << std::endl;
-    std::cout << "++            Free device memory: " << (float) device_mem_avail / 1024 / 1024
-          << " MB" << std::endl;
+    #ifdef MEM_DETAIL
+      std::cout << "++            Used device memory: " << (float) device_mem_used / 1024 / 1024
+                << " MB" << std::endl;
+      std::cout << "++            Free device memory: " << (float) device_mem_avail / 1024 / 1024
+                << " MB" << std::endl;
+    #endif
 
     return true;
   } // AnalyticFormFactorG::init()
@@ -231,8 +235,10 @@ namespace hig {
     b_nqx_ = nqx_;
     b_nqy_ = nqy_;
     b_nqz_ = nqz_;
-    std::cout << "++               Hyperblock size: " << b_nqx_ << " x " << b_nqy_ << " x "
-          << b_nqz_ << std::endl;
+    #ifdef FF_VERBOSE
+      std::cout << "++               Hyperblock size: " << b_nqx_ << " x " << b_nqy_ << " x "
+                << b_nqz_ << std::endl;
+    #endif
     return true;
   } // AnalyticFormFactorG::compute_hyperblock_size()
 

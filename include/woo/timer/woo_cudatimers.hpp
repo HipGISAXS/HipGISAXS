@@ -3,7 +3,7 @@
  *
  *  File: woo_cudatimers.hpp
  *  Created: Nov 21, 2012
- *  Modified: Wed 17 Jul 2013 10:25:34 AM PDT
+ *  Modified: Wed 22 Oct 2014 05:37:47 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Copyright (c) 2012-2013 Abhinav Sarje
@@ -74,6 +74,14 @@ class CUDATimer : public WooTimer {	// this does not use the start_ and stop_ of
 			// not functional!
 			return 0.0;
 		} // lap()
+
+    void pause() {
+      std::cerr << "error: pause() for CUDATimer not implemented" << std::endl;
+    } // pause() 
+
+    void resume() {
+      std::cerr << "error: resume() for CUDATimer not implemented" << std::endl;
+    } // resume() 
 
 		double elapsed_sec() {
 			if(is_running_) elapsed_compute();

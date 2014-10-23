@@ -372,7 +372,9 @@ add_option("with-mic", "Enable Intel MIC support", 0, False)
 add_option("with-mpi", "Enable MPI parallelization", 0, False)
 add_option("with-papi", "Enable PAPI profiling", 0, False)
 ## other stuff
-add_option("detail-timings", "Output detailed timings", 0, False)
+add_option("detail-time", "Output detailed timings", 0, False)
+add_option("detail-mem", "Output detailed memory usage", 0, False)
+add_option("verbose", "Be verbose", 0, False)
 
 printLocalInfo()
 
@@ -488,8 +490,10 @@ mpi_libs = ["mpi_cxx", "mpi"]
 gpu_libs = ["cudart"]
 papi_libs = ["papi"]
 ## required flags
-if _has_option("detail-timings"): detail_flags = ['TIME_DETAIL_1', 'TIME_DETAIL_2']
-else: detail_flags = []
+detail_flags = []
+if _has_option("detail-time"): detail_flags += ['TIME_DETAIL_1', 'TIME_DETAIL_2']
+if _has_option("detail-mem"): detail_flags += ['MEM_DETAIL']
+if _has_option("verbose"): detail_flags += ['FF_VERBOSE', 'SF_VERBOSE']
 all_flags = detail_flags
 ## optional flags
 gpu_flags = ['USE_GPU', 'GPUR', 'KERNEL2', 'FF_ANA_GPU', 'FF_NUM_GPU', 'FF_NUM_GPU_FUSED']
