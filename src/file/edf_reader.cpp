@@ -62,6 +62,7 @@ namespace hig {
         if(!is_white_space(curr)) // skip white spaces
           key[i_k ++] = curr;
         if(counter == max_size) break;
+        if(curr == '}') { -- counter; return false; }
       } // while
     } // if
     if(counter == max_size) return false;
@@ -86,6 +87,7 @@ namespace hig {
     while(1) {
       char curr = chunk[mycount ++];
       if(curr == '}') return true;
+      if(mycount == max_size) break;    // reached the end of the chunk
       if(is_white_space(curr)) continue;
       break;  // curr is some other character => more stuff
     } // while
@@ -100,13 +102,14 @@ namespace hig {
     infile.read(chunk, size);
     while(1) {
       if(!get_next_item(chunk, counter, size, key, i_k, end_k, value, i_v, end_v)) {
+        if(header_done(chunk, counter, size)) break;
         counter = 0;
         infile.read(chunk, size);
         continue;
       } // if
       // we have a new key value pair
       header_[std::string(key)] = std::string(value);
-      //std::cout << "****** " << key << " -> " << value << std::endl;
+      std::cout << "****** [" << counter << "] " << key << " -> " << value << std::endl;
       i_k = 0; i_v = 0;
       end_k = false; end_v = false;
       if(header_done(chunk, counter, size)) break;
