@@ -109,7 +109,7 @@ namespace hig {
       } // if
       // we have a new key value pair
       header_[std::string(key)] = std::string(value);
-      std::cout << "****** [" << counter << "] " << key << " -> " << value << std::endl;
+      //std::cout << "****** [" << counter << "] " << key << " -> " << value << std::endl;
       i_k = 0; i_v = 0;
       end_k = false; end_v = false;
       if(header_done(chunk, counter, size)) break;
