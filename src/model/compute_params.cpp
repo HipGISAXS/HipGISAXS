@@ -38,8 +38,7 @@ namespace hig {
     output_region_.minpoint_[1] = -1;
     output_region_.maxpoint_[0] = -1;
     output_region_.maxpoint_[1] = -1;
-    resolution_[0] = 1;
-    resolution_[1] = 1;
+    resolution_.push_back(1); resolution_.push_back(1);
     nslices_ = 0;
     correlation_ = structcorr_null;
     palette_ = "default";

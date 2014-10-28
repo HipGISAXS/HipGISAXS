@@ -253,7 +253,7 @@ namespace hig {
       vector2_t param_output_minpoint() { return compute_.output_region_.minpoint_; }
       vector2_t param_output_maxpoint() { return compute_.output_region_.maxpoint_; }
       OutputRegionType param_output_type() { return compute_.output_region_.type_; }
-      vector2_t param_resolution() const { return compute_.resolution_; }
+      std::vector<int> param_resolution() const { return compute_.resolution_; }
       const std::string& param_pathprefix() const { return compute_.pathprefix_; }
       unsigned int param_nslices() const { return compute_.nslices_; }
       StructCorrelationType param_structcorrelation() const { return compute_.correlation_; }

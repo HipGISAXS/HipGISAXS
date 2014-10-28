@@ -97,36 +97,35 @@ namespace hig {
       // on cpu
       std::cout << "-- Computing box FF on CPU ..." << std::endl;
       // initialize ff
-      ff.clear();  ff.reserve(nqz * nqy * nqx);
-      for(unsigned int i = 0; i < nqz * nqy * nqx; ++ i) ff.push_back(complex_t(0, 0));
+      ff.clear();  ff.reserve(nqz);
+      for(unsigned int i = 0; i < nqz ; ++ i) ff.push_back(complex_t(0, 0));
 
-      #pragma omp parallel for collapse(3)
-      for(unsigned int j_z = 0; j_z < nqz; ++ j_z) {
-        for(unsigned int j_y = 0; j_y < nqy; ++ j_y) {
-          for(unsigned int j_x = 0; j_x < nqx; ++ j_x) {
-            complex_t mqx, mqy, mqz;
-            compute_meshpoints(QGrid::instance().qx(j_x), QGrid::instance().qy(j_y),
-                      QGrid::instance().qz_extended(j_z), rot_, mqx, mqy, mqz);
-            complex_t temp1 = sin(eta) * mqx;
-            complex_t temp2 = cos(eta) * mqy;
-            complex_t temp3 = temp1 + temp2;
-            complex_t temp_qm = tan(tau) * temp3;
-            complex_t temp_ff(0.0, 0.0);
-            for(unsigned int i_z = 0; i_z < z.size(); ++ i_z) {
-              for(unsigned int i_y = 0; i_y < y.size(); ++ i_y) {
-                for(unsigned int i_x = 0; i_x < x.size(); ++ i_x) {
-                  complex_t temp1 = mqz + temp_qm;
-                  complex_t temp2 = mqy * y[i_y];
-                  complex_t temp3 = mqx * x[i_x];
-                  complex_t temp4 = fq_inv(temp1, z[i_z]);
-                  complex_t temp5 = sinc(temp2);
-                  complex_t temp6 = sinc(temp3);
-                  complex_t temp7 = temp6 * temp5;
-                  complex_t temp8 = temp7 * temp4;
-                  complex_t temp9 = 4 * distr_x[i_x] * distr_y[i_y] * distr_z[i_z] *
+      #pragma omp parallel for 
+      for(unsigned int i = 0; i < nqz; ++ i) {
+        unsigned int j = i % nqy;
+        complex_t mqx, mqy, mqz;
+        compute_meshpoints(QGrid::instance().qx(j), QGrid::instance().qy(j),
+                   QGrid::instance().qz_extended(i), rot_, mqx, mqy, mqz);
+        complex_t temp1 = sin(eta) * mqx;
+        complex_t temp2 = cos(eta) * mqy;
+        complex_t temp3 = temp1 + temp2;
+        complex_t temp_qm = tan(tau) * temp3;
+        complex_t temp_ff(0.0, 0.0);
+        for(unsigned int i_z = 0; i_z < z.size(); ++ i_z) {
+          for(unsigned int i_y = 0; i_y < y.size(); ++ i_y) {
+            for(unsigned int i_x = 0; i_x < x.size(); ++ i_x) {
+              complex_t temp1 = mqz + temp_qm;
+              complex_t temp2 = mqy * y[i_y];
+              complex_t temp3 = mqx * x[i_x];
+              complex_t temp4 = fq_inv(temp1, z[i_z]);
+              complex_t temp5 = sinc(temp2);
+              complex_t temp6 = sinc(temp3);
+              complex_t temp7 = temp6 * temp5;
+              complex_t temp8 = temp7 * temp4;
+              complex_t temp9 = 4 * distr_x[i_x] * distr_y[i_y] * distr_z[i_z] *
                             x[i_x] * y[i_y];
-                  complex_t temp10 = temp9 * temp8;
-                  temp_ff += temp10;
+              complex_t temp10 = temp9 * temp8;
+              temp_ff += temp10;
                   /*if(!(boost::math::isfinite(temp10.real()) &&
                       boost::math::isfinite(temp10.imag()))) {
                     std::cerr << "+++++++++++++++ here it is +++++++ " << j_x << ", "
@@ -142,17 +141,16 @@ namespace hig {
                     << j_y << ", " << j_z << std::endl;
               exit(1);
             } // if*/
-            unsigned int curr_index = nqx * nqy * j_z + nqx * j_y + j_x;
-            ff[curr_index] = temp_ff * exp(complex_t(-temp7.imag(), temp7.real()));
-            /*if(!(boost::math::isfinite(ff[curr_index].real()) &&
+            ff[i] = temp_ff * exp(complex_t(-temp7.imag(), temp7.real()));
+            /*
+             if(!(boost::math::isfinite(ff[curr_index].real()) &&
                 boost::math::isfinite(ff[curr_index].imag()))) {
               std::cerr << "******************* here it is ********* " << j_x << ", "
                     << j_y << ", " << j_z << std::endl;
               exit(1);
-            } // if*/
-          } // for x
-        } // for y
-      } // for z
+             } //if 
+            */
+      } // for i
     #endif // FF_ANA_GPU
     #ifdef TIME_DETAIL_2
       maintimer.stop();

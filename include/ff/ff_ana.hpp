@@ -90,8 +90,9 @@ namespace hig {
       bool compute_prism3x(shape_param_list_t&, std::vector<complex_t>&,
               float_t, float_t, vector3_t);
       bool compute_truncated_pyramid(shape_param_list_t&, std::vector<complex_t>&, vector3_t);
-      complex_t truncated_pyramid_core(int, float_t, complex_t, complex_t, complex_t,
-              float_t, float_t, float_t, float_t, vector3_t);
+      complex_t truncated_pyramid_core(complex_t, complex_t, complex_t, 
+          float_t, float_t, float_t, float_t);
+      complex_t ffTruncatedPyramid (complex_t, complex_t, complex_t, float_t, float_t, float_t, float_t);
       bool compute_rotation_matrix(int, float_t, vector3_t&, vector3_t&, vector3_t&);
       bool compute_truncated_cone(shape_param_list_t&, float_t, float_t, std::vector<complex_t>&,
               vector3_t);

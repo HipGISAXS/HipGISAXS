@@ -316,10 +316,18 @@ namespace hig {
     return true;
   } // AnalyticFormFactor::param_distribution()
 
+  /*
+  void AnalyticFormFactor::compute_meshpoints(const float_t qx, const float_t qy, const complex_t qz,
+      complex_t & mqx, complex_t & mqy, complex_t & mqz) {
+    mqx = qx * rot_[0] + qy * rot_[1] + qz * rot_[2];
+    mqy = qx * rot_[3] + qy * rot_[4] + qz * rot_[5];
+    mqz = qx * rot_[6] + qy * rot_[7] + qz * rot_[8];
+  }
+  */
 
   void AnalyticFormFactor::compute_meshpoints(const float_t qx, const float_t qy, const complex_t qz,
                         const float_t* rot,
-                                          complex_t& mqx, complex_t& mqy, complex_t& mqz) {
+                        complex_t& mqx, complex_t& mqy, complex_t& mqz) {
     // FIXME: check which one is correct ...
     // x and y swapped
     mqx = qx * rot[0] + qy * rot[1] + qz * rot[2];

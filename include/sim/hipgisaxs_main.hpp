@@ -72,6 +72,8 @@ namespace hig {
           } //SampleRotation()
       }; // rotation_matrix_;
 
+      unsigned int nrow_;    /* Image size */
+      unsigned int ncol_;
       unsigned int nqx_;      /* number of q-points along x */
       unsigned int nqy_;      /* number of q-points along y */
       unsigned int nqz_;      /* number of q-points along z */

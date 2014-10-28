@@ -36,13 +36,15 @@ namespace hig {
   class StructureFactor {
     private:
       complex_t *sf_;
-      unsigned int nx_;
-      unsigned int ny_;
-      unsigned int nz_;
+      unsigned nx_;
+      unsigned ny_;
+      unsigned nz_;
+      unsigned nrow_;
+      unsigned ncol_;
 
     public:
       StructureFactor();
-      StructureFactor(int , int, int);
+      StructureFactor(int, int);
       ~StructureFactor();
 
       void clear(void);
@@ -60,25 +62,27 @@ namespace hig {
                       #endif
                       );
       complex_t & operator[](unsigned int i) const { return sf_[i]; }
-      void save_sf(unsigned int nqx, unsigned int nqy, unsigned int nqz, const char* filename);
 
-            StructureFactor & operator=(const StructureFactor & rhs);
-            StructureFactor & operator+=(const StructureFactor & rhs);
-            StructureFactor & operator*(const float_t val) {
-                for (int i = 0; i < nx_ * ny_ * nz_; i++)
-                    sf_[i] *= val;
-                return *this;
-            }
+      //void save_sf(unsigned int nqx, unsigned int nqy, unsigned int nqz, const char* filename);
+      void save (const char* filename);
+
+      StructureFactor & operator=(const StructureFactor & rhs);
+      StructureFactor & operator+=(const StructureFactor & rhs);
+      StructureFactor & operator*(const float_t val) {
+        for (int i = 0; i < nrow_ * ncol_; i++) sf_[i] *= val;
+        return *this;
+      }
 
       // only for testing - remove it ...
-      complex_t* sf() { return sf_; }
-      void printsf() {
+      // complex_t* sf() { return sf_; }
+ 
+      void print() {
         std::cout << "sf:" << std::endl;
-        for(unsigned int i = 0; i < nx_ * ny_ * nz_; ++ i) {
+        for(unsigned int i = 0; i < nrow_ * ncol_; ++ i) {
           std::cout << sf_[i].real() << "," << sf_[i].imag() << "\t";
         } // for
         std::cout << std::endl;
-      } // printsf()
+      } // print()
   }; // class StructureFactor
 
 } // namespace hig

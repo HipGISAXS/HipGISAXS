@@ -102,6 +102,15 @@ namespace hig {
   } // FormFactor::print_ff()
 
 
+  void FormFactor::save (unsigned nrow, unsigned ncol, const char * filename) {
+    std::ofstream out (filename);
+    for (unsigned i = 0; i < nrow; i++){
+      for (unsigned j = 0; j < ncol; j++ ) out << std::norm (ff_[i*ncol + j]) << " ";
+      out << std::endl;
+    }
+    out.close();
+  }
+
   void FormFactor::save_ff(unsigned int nqx, unsigned int nqy, unsigned int nqz,
                 const char* filename) {
     std::ofstream f(filename);

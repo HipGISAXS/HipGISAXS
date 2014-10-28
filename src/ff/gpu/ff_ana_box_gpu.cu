@@ -32,18 +32,77 @@
 
 namespace hig {
 
-  /**
-   * box on gpu
+  __constant__ float_t d_transvec[3];
+  __constant__ float_t d_rot[9];
+  __constant__ float_t d_tau;
+  __constant__ float_t d_eta;
+
+  /** Form Factor of Box:
+   *  L : (real) Length of the box 
+   *  W : (real) Width of the box
+   *  H : (real) Height of the box
+   *  q : (complex) q-vector
+   *  ff = L * W * H exp(j * qz * H/2) * sinc(qx * L/2) * sinc (qy * W/2) * sinc(qz * H/2)
    */
+  __device__  __inline__ cucomplex_t FormFactorBox (float_t L, float_t W, float_t H, 
+      cucomplex_t qx, cucomplex_t qy, cucomplex_t qz)
+  {
+    cucomplex_t temp1, temp2, temp3, temp4;
+    temp1 = cuCsinc (0.5 * qx * L);
+    temp2 = cuCsinc (0.5 * qy * W);
+    temp3 = cuCsinc (0.5 * qz * H);
+    temp4 = L * W * H * cuCexpi(0.5 * qz * H);
+    return (temp1 * temp2 * temp3 * temp4);
+  }
+ 
 
-  __global__ void form_factor_box_kernel(unsigned int, unsigned int, unsigned int,
-                  float_t*, float_t*, cucomplex_t*, float_t, float_t, float_t*,
-                  unsigned int, float_t*, unsigned int, float_t*,
-                  unsigned int, float_t*, unsigned int, float_t*,
-                  unsigned int, float_t*, unsigned int, float_t*,
-                  float_t*, cucomplex_t*);
+  __global__ void form_factor_box_kernel (unsigned int nqy, unsigned int nqz,
+                  float_t *qx, float_t *qy, cucomplex_t *qz,
+                  unsigned int n_x, float_t *x, unsigned int n_distr_x, float_t *distr_x,
+                  unsigned int n_y, float_t *y, unsigned int n_distr_y, float_t *distr_y,
+                  unsigned int n_z, float_t *z, unsigned int n_distr_z, float_t *distr_z,
+                  cucomplex_t *ff) {
+    unsigned int i_z = blockDim.x * blockIdx.x + threadIdx.x;
+    unsigned int idx = threadIdx.x;
+    if ( i_z > nqz ) {
+      unsigned int i_y = i_z % nqy;
 
+      /*
+      // shared buffers:
+      __shared__ cucomplex_t qz_s[blockDim.x];
+      __shared__ float_t qx_s[blockDim.x];
+      __shared__ float_t qy_s[blockDim.x];
 
+      // load all q-vectors
+      qx_s[threadIdx.x] = qx[i_y];
+      qy_s[threadIdx.x] = qy[i_y];
+      qz_s[threadIdx.x] = qz[i_z];
+      */
+
+      // TODO: also put x, y, z, distr_x, distr_y, distr_z in shared mem ...
+      // TODO: also put transvec in shared mem ...
+
+      // make sure everything is in place
+      __syncthreads();
+
+      cucomplex_t mqx, mqy, mqz;
+      //compute_meshpoints(qx_s[idx], qy_s[idx], qz_s[idx], d_rot, mqx, mqy, mqz);
+      compute_meshpoints(qx[i_y], qy[i_y], qz[i_z], d_rot, mqx, mqy, mqz);
+      cucomplex_t temp_ff = make_cuC ((float_t) 0, (float_t) 0);
+      for(unsigned int p_z = 0; p_z < n_z; ++ p_z) {
+          for(unsigned int p_y = 0; p_y < n_y; ++ p_y) {
+            for(unsigned int p_x = 0; p_x < n_x; ++ p_x) {
+              float_t w = distr_x[p_x] * distr_y[p_y] * distr_z[p_z];
+              cucomplex_t tff = FormFactorBox (x[p_x], y[p_y], z[p_z], mqx, mqy, mqz);
+              temp_ff = temp_ff +  tff * w;
+            } // for x
+          } // for y
+        } // for z
+        ff[i_z] = temp_ff * cuCexpi(mqx * d_transvec[0] + mqy * d_transvec[1] + mqz * d_transvec[2]);
+    } // if
+  } // form_factor_box_kernel()
+
+   
   bool AnalyticFormFactorG::compute_box(const float_t tau, const float_t eta,
                   const std::vector<float_t>& x,
                   const std::vector<float_t>& distr_x,
@@ -84,28 +143,28 @@ namespace hig {
     cudaMemcpy(distr_z_d, distr_z_h, n_distr_z * sizeof(float_t), cudaMemcpyHostToDevice);
 
     run_init(rot_h, transvec);
+    cudaMemcpyToSymbol (d_transvec, transvec_, 3 * sizeof(float_t), 0, cudaMemcpyHostToDevice);
+    cudaMemcpyToSymbol (d_rot, rot_, 9 * sizeof(float_t), 0, cudaMemcpyHostToDevice);
+    cudaMemcpyToSymbol (d_tau, &tau, sizeof(float_t), 0, cudaMemcpyHostToDevice);
+    cudaMemcpyToSymbol (d_eta, &eta, sizeof(float_t), 0, cudaMemcpyHostToDevice);
 
-    unsigned int cuda_block_y = 16, cuda_block_z = 8;
-    unsigned int cuda_num_blocks_y = (unsigned int) ceil((float_t) nqy_ / cuda_block_y);
-    unsigned int cuda_num_blocks_z = (unsigned int) ceil((float_t) nqz_ / cuda_block_z);
-    dim3 ff_grid_size(cuda_num_blocks_y, cuda_num_blocks_z, 1);
-    dim3 ff_block_size(cuda_block_y, cuda_block_z, 1);
+    unsigned int cuda_block = 256;
+    unsigned int cuda_num_blocks = (unsigned int) ceil((float_t) nqz_ / cuda_block);
+    dim3 ff_grid_size(cuda_num_blocks, 1, 1);
+    dim3 ff_block_size(cuda_block, 1, 1);
 
-    size_t shared_mem_size = (nqx_ + cuda_block_y) * sizeof(float_t) +
-                  cuda_block_z * sizeof(cucomplex_t);
-    if(shared_mem_size > 49152) {
+    size_t shared_mem_size = 4 * cuda_block * sizeof(float_t);
+    if(shared_mem_size > 49152) { //??? should this limit come from hardware?
       std::cerr << "Too much shared memory requested!" << std::endl;
       return false;
     } // if
 
     // the kernel
-    //form_factor_box_kernel <<< ff_grid_size, ff_block_size >>> (
-    form_factor_box_kernel <<< ff_grid_size, ff_block_size, shared_mem_size >>> (
-        nqx_, nqy_, nqz_, qx_, qy_, qz_, tau, eta, rot_,
+    form_factor_box_kernel <<< ff_grid_size, ff_block_size >>> (
+        nqy_, nqz_, qx_, qy_, qz_,
         n_x, x_d, n_distr_x, distr_x_d,
         n_y, y_d, n_distr_y, distr_y_d,
         n_z, z_d, n_distr_z, distr_z_d,
-        transvec_,
         ff_);
 
     cudaThreadSynchronize();
@@ -115,7 +174,7 @@ namespace hig {
             << cudaGetErrorString(err) << std::endl;
       return false;
     } else {
-      //std::cout << "block size: " << cby << " x " << cbz << ". ";
+      std::cout << "block size: " << 1 << " x " << 1 << ". ";
       construct_output_ff(ff);
     } // if-else
 
@@ -128,110 +187,6 @@ namespace hig {
 
     return true;
   } // AnalyticFormFactorG::compute_box()
-
-
-/*  __global__ void form_factor_box_kernel(unsigned int nqx, unsigned int nqy, unsigned int nqz,
-                  float_t *qx, float_t *qy, cucomplex_t *qz,
-                  float_t tau, float_t eta, float_t *rot,
-                  unsigned int n_x, float_t *x, unsigned int n_distr_x, float_t *distr_x,
-                  unsigned int n_y, float_t *y, unsigned int n_distr_y, float_t *distr_y,
-                  unsigned int n_z, float_t *z, unsigned int n_distr_z, float_t *distr_z,
-                  float_t *transvec, cucomplex_t *ff) {
-    unsigned int i_y = blockDim.x * blockIdx.x + threadIdx.x;
-    unsigned int i_z = blockDim.y * blockIdx.y + threadIdx.y;
-    unsigned int base_index = nqx * nqy * i_z + nqx * i_y;
-    if(i_y < nqy && i_z < nqz) {
-      for(unsigned int i_x = 0; i_x < nqx; ++ i_x) {
-        cucomplex_t mqx, mqy, mqz;
-        compute_meshpoints(qx[i_x], qy[i_y], qz[i_z], rot, mqx, mqy, mqz);
-        cucomplex_t tempa = sin(eta) * mqx;
-        cucomplex_t tempb = cos(eta) * mqy;
-        cucomplex_t temp_qm = tan(tau) * (tempa + tempb);
-        cucomplex_t temp_ff = make_cuC((float_t) 0.0, (float_t) 0.0);
-        for(unsigned int p_z = 0; p_z < n_z; ++ p_z) {
-          for(unsigned int p_y = 0; p_y < n_y; ++ p_y) {
-            for(unsigned int p_x = 0; p_x < n_x; ++ p_x) {
-              cucomplex_t temp4 = fq_inv(mqz + temp_qm, y[p_y]);
-              cucomplex_t temp8 = temp4 * cuCsinc(mqy * z[p_z]) * cuCsinc(mqx * x[p_x]);
-              float_t temp9 = 4.0 * distr_x[p_x] * distr_y[p_y] * distr_z[p_z] *
-                      z[p_z] * x[p_x];
-              temp_ff = temp_ff + temp9 * temp8;
-            } // for x
-          } // for y
-        } // for z
-        cucomplex_t temp_e = cuCexpi(mqx * transvec[0] + mqy * transvec[1] + mqz * transvec[2]);
-        unsigned int curr_index = base_index + i_x;
-        ff[curr_index] = temp_ff * temp_e;
-      } // for x
-    } // if
-  } // form_factor_box_kernel()*/
-
-
-  extern __shared__ float_t dynamic_shared[];
-
-  __global__ void form_factor_box_kernel(unsigned int nqx, unsigned int nqy, unsigned int nqz,
-                  float_t *qx, float_t *qy, cucomplex_t *qz,
-                  float_t tau, float_t eta, float_t *rot,
-                  unsigned int n_x, float_t *x, unsigned int n_distr_x, float_t *distr_x,
-                  unsigned int n_y, float_t *y, unsigned int n_distr_y, float_t *distr_y,
-                  unsigned int n_z, float_t *z, unsigned int n_distr_z, float_t *distr_z,
-                  float_t *transvec, cucomplex_t *ff) {
-    unsigned int i_y = blockDim.x * blockIdx.x + threadIdx.x;
-    unsigned int i_z = blockDim.y * blockIdx.y + threadIdx.y;
-    unsigned int base_index = nqx * nqy * i_z + nqx * i_y;
-
-    // shared buffers:
-    cucomplex_t* qz_s = (cucomplex_t*) dynamic_shared;
-    float_t* qx_s = (float_t*) &qz_s[blockDim.y];
-    float_t* qy_s = (float_t*) &qx_s[nqx];
-
-    // load all qx
-    unsigned int i_thread = blockDim.x * threadIdx.y + threadIdx.x;
-    unsigned int num_threads = blockDim.x * blockDim.y;
-    unsigned int num_loads = ceil((float_t) nqx / num_threads);
-    for(int i = 0; i < num_loads; ++ i) {
-      unsigned int index = i * num_threads + i_thread;
-      if(index < nqx) qx_s[index] = qx[index];
-      else ;  // nop
-    } // for
-    // load part of qy
-    if(i_y < nqy && threadIdx.y == 0)  // first row of threads
-      qy_s[threadIdx.x] = qy[i_y];
-    // load part of qz
-    if(i_z < nqz && threadIdx.x == 0)  // first column of threads
-      qz_s[threadIdx.y] = qz[i_z];
-
-    // TODO: also put x, y, z, distr_x, distr_y, distr_z in shared mem ...
-    // TODO: also put transvec in shared mem ...
-
-    // make sure everything is in place
-    __syncthreads();
-
-    if(i_y < nqy && i_z < nqz) {
-      for(unsigned int i_x = 0; i_x < nqx; ++ i_x) {
-        cucomplex_t mqx, mqy, mqz;
-        compute_meshpoints(qx_s[i_x], qy_s[threadIdx.x], qz_s[threadIdx.y], rot, mqx, mqy, mqz);
-        cucomplex_t tempa = sin(eta) * mqx;
-        cucomplex_t tempb = cos(eta) * mqy;
-        cucomplex_t temp_qm = tan(tau) * (tempa + tempb);
-        cucomplex_t temp_ff = make_cuC((float_t) 0.0, (float_t) 0.0);
-        for(unsigned int p_z = 0; p_z < n_z; ++ p_z) {
-          for(unsigned int p_y = 0; p_y < n_y; ++ p_y) {
-            for(unsigned int p_x = 0; p_x < n_x; ++ p_x) {
-              cucomplex_t temp4 = fq_inv(mqz + temp_qm, z[p_z]);
-              cucomplex_t temp8 = temp4 * cuCsinc(mqy * y[p_y]) * cuCsinc(mqx * x[p_x]);
-              float_t temp9 = 4.0 * distr_x[p_x] * distr_y[p_y] * distr_z[p_z] *
-                      y[p_y] * x[p_x];
-              temp_ff = temp_ff + temp9 * temp8;
-            } // for x
-          } // for y
-        } // for z
-        cucomplex_t temp_e = cuCexpi(mqx * transvec[0] + mqy * transvec[1] + mqz * transvec[2]);
-        unsigned int curr_index = base_index + i_x;
-        ff[curr_index] = temp_ff * temp_e;
-      } // for x
-    } // if
-  } // form_factor_box_kernel()
 
 } // namespace hig
 

@@ -67,7 +67,7 @@ namespace hig {
     cudaMalloc((void**) &qx_, nqx_ * sizeof(float_t));
     cudaMalloc((void**) &qy_, nqy_ * sizeof(float_t));
     cudaMalloc((void**) &qz_, nqz_ * sizeof(cucomplex_t));
-    cudaMalloc((void**) &ff_, nqx_ * nqy_ * nqz_ * sizeof(cucomplex_t));
+    cudaMalloc((void**) &ff_, nqz_ * sizeof(cucomplex_t));
     cudaMalloc((void**) &transvec_, 3 * sizeof(float_t));  // check this ...
     cudaMalloc((void**) &rot_, 9 * sizeof(float_t));
     if(qx_ == NULL || qy_ == NULL || qz_ == NULL || ff_ == NULL || transvec_ == NULL || rot_ == NULL) {
@@ -99,7 +99,7 @@ namespace hig {
     size_t device_mem_avail, device_mem_total, device_mem_used;
     cudaMemGetInfo(&device_mem_avail, &device_mem_total);
 
-    unsigned int est_device_mem_need = nqx_ * nqy_ * nqz_ * sizeof(cucomplex_t);
+    unsigned int est_device_mem_need = 2 * nqz_ * sizeof(cucomplex_t);
     compute_hyperblock_size(est_device_mem_need, device_mem_avail);
 
     nb_x_ = (unsigned int) ceil((float) nqx_ / b_nqx_);
@@ -178,7 +178,7 @@ namespace hig {
 
 
   bool AnalyticFormFactorG::construct_output_ff(std::vector<complex_t>& ff) {
-    unsigned int grid_size = nqx_ * nqy_ * nqz_;
+    unsigned int grid_size = nqz_;
     cucomplex_t* ff_h = new (std::nothrow) cucomplex_t[grid_size];
     cudaMemcpy(ff_h, ff_, grid_size * sizeof(cucomplex_t), cudaMemcpyDeviceToHost);
     ff.clear(); ff.reserve(grid_size);

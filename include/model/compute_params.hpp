@@ -45,7 +45,7 @@ namespace hig {
         vector2_t maxpoint_;
         OutputRegion() { }
       } output_region_;
-      vector2_t resolution_;
+      std::vector<int> resolution_;
       std::string palette_;
       unsigned int nslices_;
 
@@ -73,7 +73,7 @@ namespace hig {
         output_region_.minpoint_[0] = v; output_region_.minpoint_[1] = w; }
       void output_region_maxpoint(float_t v, float_t w) {
         output_region_.maxpoint_[0] = v; output_region_.maxpoint_[1] = w; }
-      void resolution(float_t a, float_t b) { resolution_[0] = a; resolution_[1] = b; }
+      void resolution(int a, int b) { resolution_[0] = a; resolution_[1] = b; }
 
       void palette(std::string p) { palette_ = p; }
       void nslices(float_t d) { nslices_ = (unsigned int) d; }

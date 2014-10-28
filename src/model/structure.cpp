@@ -41,7 +41,7 @@ namespace hig {
         stddev_[0] = stddev_[1] = stddev_[2] = 0;
         for (int i = 0; i < 3; i++) {
             dist_.push_back(stat_gaussian);
-            nvals_.push_back (12);
+            nvals_.push_back (40);
         } // for
     } // GrainScaling::init()
 

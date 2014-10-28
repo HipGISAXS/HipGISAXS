@@ -129,35 +129,35 @@ namespace hig {
       } // gaussian()
 
 
-      bool convolution_gaussian_2d(float_t*& data, unsigned int nx, unsigned int ny,
-                        float_t sigma) {
+      bool convolution_gaussian_2d(float_t*& data, unsigned int nx, unsigned int ny, 
+          float_t sigma) {
         float_t* conv_data = new (std::nothrow) float_t[nx * ny];
 
         // compute the gaussian matrix to avoid computation of gaussian() every time
-                int i6sigma = (int) (6 * sigma);
+        int i6sigma = (int) (6 * sigma);
         int gn = 2 * i6sigma + 1;
-                float_t * gauss_map = new float_t[gn];
+        float_t * gauss_map = new float_t[gn];
         for(int i = 0;  i < gn; ++ i) { 
-                    gauss_map[i] = gaussian(i-i6sigma, sigma);
-                }
+          gauss_map[i] = gaussian(i-i6sigma, sigma); 
+        }
 
         // first do horizontal smearing
         #pragma omp parallel for collapse(2)
         for(int j = 0; j < ny; ++ j) {
           for(int i = 0; i < nx; ++ i) {
             float_t sum = 0.0;
-                        float_t norm = 0;
-                        int ibeg = std::max(0, i-i6sigma);
-                        int iend = std::min((int) nx, i+i6sigma);
+            float_t norm = 0;
+            int ibeg = std::max(0, i-i6sigma);
+            int iend = std::min((int) nx, i+i6sigma);
             for(int k = ibeg; k < iend; ++ k) {
               //sum += data[j * nx + k] * gaussian(k - i, sigma);
               sum += data[j * nx + k] * gauss_map[k-ibeg];
-                            norm += gauss_map[k-ibeg];
+              norm += gauss_map[k-ibeg];
             } // for
-                        if ( norm > 0 )
-                conv_data[j * nx + i] = sum / norm;
-                        else
-                            conv_data[j * nx + i] = 0;
+            if ( norm > 0 )
+              conv_data[j * nx + i] = sum / norm;
+            else
+              conv_data[j * nx + i] = 0;
           } // for
         } // for
 
@@ -166,18 +166,18 @@ namespace hig {
         for(int i = 0; i < nx; ++ i) {
           for(int j = 0; j < ny; ++ j) {
             float_t sum = 0.0;
-                        float_t norm = 0;
-                        int jbeg = std::max(0, j-i6sigma);
-                        int jend = std::min((int) ny, j+i6sigma);
+            float_t norm = 0;
+            int jbeg = std::max(0, j-i6sigma);
+            int jend = std::min((int) ny, j+i6sigma);
             for(int l = jbeg; l < jend; ++ l) {
               //sum += conv_data[l * nx + i] * gaussian(l - j, sigma);
               sum += conv_data[l * nx + i] * gauss_map[l-jbeg];
-                            norm+= gauss_map[l-jbeg];
+              norm+= gauss_map[l-jbeg];
             } // for
-                        if (norm > 0 )
-                data[j * nx + i] = sum / norm;
-                        else
-                            data[j * nx + i] = 0;
+            if (norm > 0 )
+              data[j * nx + i] = sum / norm;
+            else
+              data[j * nx + i] = 0;
           } // for
         } // for
 

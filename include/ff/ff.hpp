@@ -85,6 +85,7 @@ namespace hig {
                   unsigned int nqx, unsigned int nqy, unsigned int nqz);
       void print_ff(unsigned int nqx, unsigned int nqy, unsigned int nqz);
       void save_ff(unsigned int nqx, unsigned int nqy, unsigned int nqz, const char* filename);
+      void save (unsigned, unsigned, const char *);
       void printff(unsigned int nqx, unsigned int nqy, unsigned int nqz) {
         std::cout << "ff:" << std::endl;
         for(unsigned int i = 0; i < nqx * nqy * nqz; ++ i)
