@@ -101,6 +101,12 @@ namespace hig {
               #endif
               );
   
+      bool compute2(const char* filename, std::vector<complex_t>& ff,
+              vector3_t&, vector3_t&, vector3_t&
+              #ifdef USE_MPI
+                , woo::MultiNode&, std::string
+              #endif
+              );
     private:
 
       // TODO: make these for gpu only ...

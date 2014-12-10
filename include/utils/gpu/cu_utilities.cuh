@@ -48,6 +48,24 @@ namespace hig {
     //mqz = make_cuC(qx * rot[6] + qy * rot[7] + cu_real(qz) * rot[8], cu_imag(qz) * rot[8]);
   } // compute_meshpoints()
 
+  // vector norm
+  __device__ __inline__ float_t norm2 (float_t * v) {
+      return sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+  }
+
+  // dot product
+  __device__ __inline__ float_t dot_prod (float_t * v1, float_t * v2) {
+      return (v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2]);
+  }
+
+  // cross product
+  __device__ __inline__ void cross_prod (float_t * v1, float_t * v2, float_t * res) {
+      res[0] = v1[1] * v2[2] - v1[2] * v2[1];
+      res[1] = v1[2] * v2[0] - v1[0] * v2[2];
+      res[2] = v1[0] * v2[1] - v1[1] * v2[0];
+  }
+
+
 } // namespace hig
 
 #endif // __CU_UTILITIES_CUH__

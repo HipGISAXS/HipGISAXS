@@ -24,6 +24,7 @@
 #include <cmath>
 #include <cstring>
 #include <sstream>
+#include <algorithm>
 #if (defined(__SSE3__) || defined(INTEL_SB_AVX)) && !defined(USE_GPU) && !defined(__APPLE__)
   #include <malloc.h>
 #endif
@@ -60,6 +61,135 @@ namespace hig {
     return true;
   } // NumericFormFactor::init()
 
+  bool NumericFormFactor::compute2(const char * filename, complex_vec_t &ff,
+          vector3_t & rot1, vector3_t & rot2, vector3_t & rot_3
+#ifdef USE_MPI
+          , woo::MultiNode & world_comm, std::string comm_key
+#endif
+          ) {
+
+    // read file
+ /*
+    std::vector<vertex_t> vertices;
+    std::vector<std::vector<int>> faces;
+    std::vector<std::vector<int>> dummy;
+    ObjectShapeReader shape_reader;
+    if (!shape_reader.load_object (filename, vertices, faces, dummy)) {
+        std::cerr << "Error: shape reader failed to load triangles" << std::endl;
+        return false;
+    }
+
+    // create triangles
+    int num_triangles = faces.size();
+    triangle_t * triangles = new (std::nothrow) triangle_t [num_triangles];
+    for (int i = 0; i < num_triangles; i++) {
+      triangles[i].v1[0] = vertices[faces[i][0]].x;
+      triangles[i].v1[1] = vertices[faces[i][0]].y;
+      triangles[i].v1[2] = vertices[faces[i][0]].z;
+
+      triangles[i].v2[0] = vertices[faces[i][1]].x;
+      triangles[i].v2[1] = vertices[faces[i][1]].y;
+      triangles[i].v2[2] = vertices[faces[i][1]].z;
+
+      triangles[i].v3[0] = vertices[faces[i][2]].x;
+      triangles[i].v3[1] = vertices[faces[i][2]].y;
+      triangles[i].v3[2] = vertices[faces[i][2]].z;
+    }
+*/
+
+#ifndef __SSE3__
+    float_vec_t shape_def;
+#else
+#ifdef USE_GPU
+    float_vec_t shape_def;
+#else
+    float_t * shape_def = NULL;
+#endif
+#endif
+    unsigned int num_triangles = read_shapes_file(filename, shape_def);
+
+#ifdef USE_MPI
+      int num_procs = world_comm.size(comm_key);
+      int rank = world_comm.rank(comm_key);
+      bool master = world_comm.is_master(comm_key);
+#else
+      bool master = true;
+
+#endif
+
+    if(master) {
+      std::cout << "-- Numerical form factor computation ..." << std::endl
+            << "**        Using input shape file: " << filename << std::endl
+            << "**     Number of input triangles: " << num_triangles << std::endl
+            << "**  Q-grid resolution (q-points): " << nqy_ << std::endl
+#ifdef USE_MPI
+              << "** Number of processes requested: " << num_procs << std::endl
+#endif
+            << std::flush;
+    } // if
+
+    // copy q-points
+    float_t * qx = new (std::nothrow) float_t [nqx_];
+    if (qx == NULL) {
+        std::cerr << "Error: failure in allocation memeroy." << std::endl;
+        return false;
+    }
+    for (int i = 0; i < nqx_; i++ ) qx[i] = QGrid::instance().qx(i);
+
+    float_t * qy = new (std::nothrow) float_t [nqy_];
+    if (qy == NULL) {
+        std::cerr << "Error: failure in allocation memeroy." << std::endl;
+        return false;
+    }
+    for (int i = 0; i < nqy_; i++) qy[i] = QGrid::instance().qy(i);
+
+#ifdef FF_NUM_GPU
+    cucomplex_t * qz = new (std::nothrow) cucomplex_t [nqz_];
+    if (qz == NULL) {
+      std::cerr << "Error: failure in memeroy allocation." << std::endl;
+      return 0;
+    }
+    for (int i = 0; i < nqz_; i++) {
+      qz[i].x = QGrid::instance().qz_extended(i).real();
+      qz[i].y = QGrid::instance().qz_extended(i).imag();
+    }
+#else
+    complex_t * qz = new (std::nothrow) complex_t [nqz_];
+    if (qz == NULL) {
+        std::cerr << "Error: failure in memeroy allocation." << std::endl;
+        return 0;
+    }
+    for (int i = 0; i < nqz_; i++) qz[i] = QGrid::instance().qz_extended(i);
+#endif
+
+#ifdef FF_NUM_GPU
+    cucomplex_t * p_ff = NULL;
+#else
+    complex_t * p_ff = NULL;
+#endif
+
+    // call kernel
+    float_t compute_time = 0.;
+    if (num_triangles != gff_.compute_tri_ff(rank, shape_def, 
+                p_ff, qx, nqx_, qy, nqy_,
+                qz, nqz_, rot_, compute_time)) {
+        std::cerr << "Calculation of numerical form-factor failed" << std::endl;
+        std::cerr << "watned : " << num_triangles << std::endl;
+        return false;
+    }
+    for (int i = 0; i < nqz_; i++) {
+        complex_t temp(p_ff[i].x, p_ff[i].y);
+        ff.push_back (temp);
+    }
+
+    std::cout << "**                FF kernel time: " << compute_time << " ms." << std::endl;
+    delete [] qx;
+    delete [] qy;
+    delete [] qz;
+    //delete [] triangles;
+    if (p_ff != NULL) delete [] p_ff;
+    return true;
+  }
 
   /**
    * main host function

@@ -66,13 +66,14 @@ namespace hig {
 
   class ObjectShapeReader {
     public:
+      ObjectShapeReader() {};
       ObjectShapeReader(const char*, double*&, unsigned int&);
       ~ObjectShapeReader() { }
 
-    private:
       bool load_object(const char* filename, std::vector<vertex_t> &vertices,
                 std::vector<std::vector<int> > &face_list_3v,
                 std::vector<std::vector<int> > &face_list_4v);
+    private:
       bool convert_to_shape(std::vector<std::vector<int> > face_list_3v,
                 std::vector<vertex_t> vertices, std::vector<float_t>&);
   

@@ -49,8 +49,18 @@ namespace hig {
       NumericFormFactorG():  // called when not using this GPU version
         block_cuda_(0), block_cuda_t_(0), block_cuda_y_(0), block_cuda_z_(0) { }
 
-      ~NumericFormFactorG() { }
+      ~NumericFormFactorG() {}
 
+      /* Spherical Q_grid */
+      unsigned int compute_tri_form_factor (int, triangle_t *, int, 
+              cucomplex_t *& ff, 
+              float_t *&, int, float_t *&, int,
+              cucomplex_t *&, int, float_t *&, float_t &);
+      unsigned int compute_tri_ff (int, std::vector<float_t> &, cucomplex_t * &,
+              float_t * &, int, float_t * &, int,
+              cucomplex_t * &, int, float_t * &, float_t &);
+
+      
       /* original */
       unsigned int compute_form_factor(int,
           std::vector<float_t> &shape_def, std::vector<short int> &axes,

@@ -176,17 +176,14 @@ namespace hig {
   } // operator/()
 
 
-/*  __device__ static __inline__ float cuCabs(cuFloatComplex z) {
-    float x = z.x;
-    float y = z.y;
-    return sqrtf(x * x + y * y);
-  } // cuCabs()
-  __device__ static __inline__ double cuCabs(cuDoubleComplex z) {
-    double x = z.x;
-    double y = z.y;
-    return sqrt(x * x + y * y);
-  } // cuCabs()
-*/
+  __device__ static __inline__ float cuCabsolute (cuFloatComplex z) {
+    return cuCabsf(z);
+  } // cuCabsolute()
+
+  __device__ static __inline__ double cuCabsolute (cuDoubleComplex z) {
+    return cuCabs(z);
+  } // cuCabsolute
+
   __device__ static __inline__ cuFloatComplex cuCsqrt(cuFloatComplex z) {
     float x = z.x;
     float y = z.y;
@@ -239,31 +236,27 @@ namespace hig {
   } // cuCpow()
 
   // eucledian norm
-  __device__ static __inline__ cuFloatComplex cuCnorm3(
+  __device__ static __inline__ float cuCnorm3(
         cuFloatComplex a, cuFloatComplex b, cuFloatComplex c) {
-    cuFloatComplex a2 = cuCmulf(a, a);
-    cuFloatComplex b2 = cuCmulf(b, b);
-    cuFloatComplex c2 = cuCmulf(c, c);
-    //cuFloatComplex n = cuCsqrt(cuCaddf(cuCaddf(a2, b2), c2));
-    cuFloatComplex n = cuCsqrt(make_cuC(a2.x + b2.x + c2.x, a2.y + b2.y + c2.y));
-    return n;
+    float a2 = cuCabsf (a);
+    float b2 = cuCabsf (b);
+    float c2 = cuCabsf (c);
+    return sqrt(a2 * a2 + b2 * b2 + c2 * c2);
   } // cuCnorm3()
 
-  __device__ static __inline__ cuDoubleComplex cuCnorm3(
+  __device__ static __inline__ double cuCnorm3(
         cuDoubleComplex a, cuDoubleComplex b, cuDoubleComplex c) {
-    cuDoubleComplex a2 = cuCmul(a, a);
-    cuDoubleComplex b2 = cuCmul(b, b);
-    cuDoubleComplex c2 = cuCmul(c, c);
-    //cuDoubleComplex n = cuCsqrt(cuCadd(cuCadd(a2, b2), c2));
-    cuDoubleComplex n = cuCsqrt(make_cuC(a2.x + b2.x + c2.x, a2.y + b2.y + c2.y));
-    return n;
+    double a2 = cuCabs (a);
+    double b2 = cuCabs (b);
+    double c2 = cuCabs (c);
+    return sqrt (a2 * a2 + b2 * b2 + c2 * c2);
   } // cuCnorm3()
 
-  __device__ static __inline__ cuFloatComplex cuCnorm3(float a, float b, cuFloatComplex c) {
+  __device__ static __inline__ float cuCnorm3(float a, float b, cuFloatComplex c) {
     return cuCnorm3(make_cuFloatComplex(a, 0), make_cuFloatComplex(b, 0), c);
   } // cuCnorm3()
 
-  __device__ static __inline__ cuDoubleComplex cuCnorm3(double a, double b, cuDoubleComplex c) {
+  __device__ static __inline__ double cuCnorm3(double a, double b, cuDoubleComplex c) {
     return cuCnorm3(make_cuDoubleComplex(a, 0), make_cuDoubleComplex(b, 0), c);
   } // cuCnorm3()
 

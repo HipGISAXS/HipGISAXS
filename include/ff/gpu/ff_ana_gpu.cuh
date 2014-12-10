@@ -80,34 +80,38 @@ namespace hig {
                 const std::vector<float_t>&, const std::vector<float_t>&,
                 const std::vector<float_t>&, const std::vector<float_t>&,
                 const float_t*, const std::vector<float_t>&, std::vector<complex_t>&);
-            bool compute_cylinder(const float_t, const float_t,
+      bool compute_cylinder(const float_t, const float_t,
                 const std::vector<float_t>&, const std::vector<float_t>&,
                 const std::vector<float_t>&, const std::vector<float_t>&,
                 const float_t*, const std::vector<float_t>&, std::vector<complex_t>&);
-            bool compute_horizontal_cylinder(const float_t, const float_t,
+      bool compute_horizontal_cylinder(const float_t, const float_t,
                 const std::vector<float_t>&, const std::vector<float_t>&,
                 const std::vector<float_t>&, const std::vector<float_t>&,
                 const float_t*, const std::vector<float_t>&, std::vector<complex_t>&);
-            bool compute_random_cylinders(const float_t, const float_t,
+      bool compute_random_cylinders(const float_t, const float_t,
                 const std::vector<float_t>&, const std::vector<float_t>&,
                 const std::vector<float_t>&, const std::vector<float_t>&,
                 const float_t*, const std::vector<float_t>&, std::vector<complex_t>&);
-            bool compute_sphere(const std::vector<float_t>&, const std::vector<float_t>&,
+      bool compute_sphere(const std::vector<float_t>&, const std::vector<float_t>&,
                 const float_t*, const std::vector<float_t>&, std::vector<complex_t>&);
-            bool compute_prism3(const float_t, const float_t,
-                const std::vector<float_t>&, const std::vector<float_t>&,
-                const std::vector<float_t>&, const std::vector<float_t>&,
-                const float_t*, const std::vector<float_t>&, std::vector<complex_t>&);
-            bool compute_prism6(const float_t, const float_t,
+      bool compute_prism3(const float_t, const float_t,
                 const std::vector<float_t>&, const std::vector<float_t>&,
                 const std::vector<float_t>&, const std::vector<float_t>&,
                 const float_t*, const std::vector<float_t>&, std::vector<complex_t>&);
-            bool compute_prism3x();
-            bool compute_sawtooth_up();
-            bool compute_sawtooth_down();
-            bool compute_pyramid();
-            bool compute_truncated_pyramid();
-            bool compute_truncated_cone();
+      bool compute_prism6(const float_t, const float_t,
+                const std::vector<float_t>&, const std::vector<float_t>&,
+                const std::vector<float_t>&, const std::vector<float_t>&,
+                const float_t*, const std::vector<float_t>&, std::vector<complex_t>&);
+      bool compute_prism3x();
+      bool compute_sawtooth_up();
+      bool compute_sawtooth_down();
+      bool compute_pyramid();
+      bool compute_trunc_pyramid(const float_t, const float_t,
+                const std::vector<float_t>&, const std::vector<float_t>&,
+                const std::vector<float_t>&, const std::vector<float_t>&,
+                const std::vector<float_t>&, const std::vector<float_t>&,
+                const float_t*, const std::vector<float_t>&, std::vector<complex_t>&);
+      bool compute_truncated_cone();
 
   }; // class AnalyticFormFactorG
 

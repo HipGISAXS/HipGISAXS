@@ -318,13 +318,6 @@
         cuFloatComplex qz2, float nx, cuFloatComplex qyn,
         cuFloatComplex qzn, float x, cuFloatComplex qyt, cuFloatComplex qzt,
         cuFloatComplex& qn_d, cuFloatComplex& qt_d) {
-    //cuFloatComplex q2 = cuCaddf(make_cuFloatComplex(fmaf(temp_x, temp_x, qy2), 0.0f), qz2);
-    //qn_d = cuCdivf(cuCaddf(make_cuFloatComplex(temp_x * nx, 0.0f),
-    //            cuCaddf(make_cuFloatComplex(qyn, 0.0f), qzn)), q2);
-    //qt_d = cuCaddf(make_cuFloatComplex(fmaf(temp_x, x, qyt), 0.0f), qzt);
-    /*cuFloatComplex q2 = fmaf(temp_x, temp_x, qy2) + qz2;
-    qt_d = fmaf(temp_x, x, qyt) + qzt;
-    qn_d = cuCdivf((fmaf(temp_x, nx, qyn) + qzn), q2);*/
     cuFloatComplex q2 = cuCaddf(cuCaddf(cuCmulf(temp_x, temp_x), qy2), qz2);
     qt_d = cuCaddf(cuCaddf(cuCmulf(temp_x, make_cuFloatComplex(x, 0.0f)), qyt), qzt);
     qn_d = cuCdivf(cuCaddf(cuCaddf(cuCmulf(temp_x, make_cuFloatComplex(nx, 0.0f)), qyn), qzn), q2);

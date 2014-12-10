@@ -204,14 +204,14 @@ namespace hig {
         // computing mesh values on the fly instead of storing them
         cucomplex_t mqx, mqy, mqz;
         compute_meshpoints(qx_s[i_x], qy_s[threadIdx.x], qz_s[threadIdx.y], rot, mqx, mqy, mqz);
-        cucomplex_t q = cuCnorm3(mqx, mqy, mqz);
+        float_t q = cuCnorm3(mqx, mqy, mqz);
         cucomplex_t temp_f = make_cuC((float_t)0.0, (float_t)0.0);
         for(unsigned int i_r = 0; i_r < n_r; ++ i_r) {
           float_t temp4 = distr_r[i_r] * 4 * PI_ * pow(r[i_r], 3);
-          if(cuCiszero(q)) {
+          if(q < 1.0E-05) {
             temp_f = temp_f + temp4 / (float_t) 3.0;
           } else {
-            cucomplex_t temp1 = q * r[i_r];
+            cucomplex_t temp1 = make_cuC(q * r[i_r], (float_t) 0.);
             cucomplex_t temp2 = cuCsin(temp1) - temp1 * cuCcos(temp1);
             cucomplex_t temp3 = temp1 * temp1 * temp1;
             temp_f = temp_f + temp4 * (temp2 / temp3) * cuCexpi(mqz * r[i_r]);

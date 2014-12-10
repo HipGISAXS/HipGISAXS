@@ -153,6 +153,213 @@ namespace hig {
         cuDoubleComplex& qn_d, cuDoubleComplex& qt_d);
 
 
+
+//**************************************************************************************
+//         USE 1D-Array QGrid  
+//**************************************************************************************
+
+  __constant__ float_t rot[9];
+
+  __global__ void ff_tri_kernel (unsigned int nqy, unsigned int nqz,
+                  float_t *qx, float_t *qy, cucomplex_t *qz,
+                  int num_tri, float_t * shape_def,
+                  cucomplex_t *ff) {
+
+    unsigned int i_thread = threadIdx.x;
+    unsigned int block_size = blockDim.x;
+    unsigned int i_z = blockDim.x * blockIdx.x + threadIdx.x;
+
+    if ( i_z < nqz ) {
+      unsigned int i_y = i_z % nqy;
+
+      cucomplex_t ff_temp = make_cuC((float_t) 0.0, (float_t) 0.0);
+
+      // shared memory
+      extern __shared__ float_t shared_shape_def[];
+
+      // do the rotations
+      cucomplex_t mqx, mqy, mqz;
+      mqx.x = qx[i_y] * rot[0] + qy[i_y] * rot[1] + qz[i_z].x * rot[2];
+      mqx.y = qz[i_z].y * rot[2];
+      mqy.x = qx[i_y] * rot[3] + qy[i_y] * rot[4] + qz[i_z].x * rot[5];
+      mqy.y = qz[i_z].y * rot[5];
+      mqz.x = qx[i_y] * rot[6] + qy[i_y] * rot[7] + qz[i_z].x * rot[8];
+      mqz.y = qz[i_z].y * rot[8];
+
+      cucomplex_t qy2 = mqy * mqy;
+      cucomplex_t qz2 = mqz * mqz;
+
+      for (int i = 0; i < num_tri; i++) {
+        unsigned int shape_off = i * T_PROP_SIZE_;
+        float_t s = shape_def[shape_off];
+        float_t nx = shape_def[shape_off + 1];
+        float_t ny = shape_def[shape_off + 2];
+        float_t nz = shape_def[shape_off + 3];
+        float_t x = shape_def[shape_off + 4];
+        float_t y = shape_def[shape_off + 5];
+        float_t z = shape_def[shape_off + 6];
+
+        cucomplex_t qyn = mqy * ny;
+        cucomplex_t qyt = mqy * y;
+        
+        cucomplex_t qzn = mqz * nz;
+        cucomplex_t qzt = mqz * z;
+          
+        cucomplex_t qn_d, qt_d;
+        compute_x(mqx, qy2, qz2, nx, qyn, qzn, x, qyt, qzt, qn_d, qt_d);
+        cucomplex_t fq_temp = compute_fq(s, qt_d, qn_d);
+        ff_temp = ff_temp + fq_temp;
+      }
+      ff[i_z] = ff_temp;
+    } // if(i_z < nqz)
+  } // formfactor_tri_kernel
+
+  /**
+   * The main host function called from outside, as part of the API for a single node.
+   */
+  unsigned int NumericFormFactorG::compute_tri_ff(int rank,
+            std::vector<float_t> & shape_def, 
+            cucomplex_t * & ff,
+            float_t * & qx_h, int nqx,
+            float_t * & qy_h, int nqy,
+            cucomplex_t * & qz_h, int nqz,
+            float_t * & rot_h,
+            float_t & pass_kernel_time) { 
+      
+    cudaError_t err;
+    float_t * rot_d;
+    float_t * qx_d, * qy_d;
+    cucomplex_t *qz_d;
+    cucomplex_t * ff_d;
+
+    unsigned int num_triangles = shape_def.size() / T_PROP_SIZE_;
+    if(num_triangles < 1) return 0;
+
+    cudaEvent_t begin_event, end_event;
+    cudaEventCreate(&begin_event); cudaEventCreate(&end_event);
+    cudaEventRecord(begin_event, 0);
+
+    // allocate memory for the final FF matrix
+    ff = new (std::nothrow) cucomplex_t[nqz];  // allocate and initialize to 0
+    if(ff == NULL) {
+      std::cerr << "Memory allocation failed for ff. Size = "
+            << nqz * sizeof(cucomplex_t) << " b" << std::endl;
+      return 0;
+    } // if
+    for (int i = 0; i < nqy; i++) { 
+        ff[i].x = (float_t) 0.;
+        ff[i].y = (float_t) 0.;
+    }
+
+    if(cudaMalloc((void **) &ff_d, nqy * sizeof(cucomplex_t)) != cudaSuccess) {
+        std::cerr << "Device memory allocation failed for ff_d. " << std::endl;
+        cudaFree(rot_d);
+        delete [] ff;
+        return 0;
+    }
+
+    if(cudaMalloc((void **) &qx_d, nqx * sizeof(float_t)) != cudaSuccess) {
+      std::cerr << "Device memory allocation failed for qx_d. "
+            << "Size = " << nqx * sizeof(float_t) << " B" << std::endl;
+      delete[] ff;
+      cudaFree(ff_d);
+      return 0;
+    } // if
+
+    if(cudaMalloc((void **) &qy_d, nqy * sizeof(float_t)) != cudaSuccess) {
+      std::cerr << "Device memory allocation failed for qy_d. "
+            << "Size = " << nqy * sizeof(float_t) << " B" << std::endl;
+      cudaFree(qx_d);
+      cudaFree(ff_d);
+      delete[] ff;
+      return 0;
+    } // if
+
+    if(cudaMalloc((void **) &qz_d, nqz * sizeof(cucomplex_t)) != cudaSuccess) {
+      std::cerr << "Device memory allocation failed for qz_d. "
+            << "Size = " << nqz * sizeof(cucomplex_t) << " B" << std::endl;
+      cudaFree(qy_d);
+      cudaFree(qx_d);
+      cudaFree(ff_d);
+      delete[] ff;
+      return 0;
+    } // if
+
+    cudaMemcpy(qx_d, qx_h, nqx * sizeof(float_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(qy_d, qy_h, nqy * sizeof(float_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(qz_d, qz_h, nqz * sizeof(cucomplex_t), cudaMemcpyHostToDevice);
+
+    // copy triangles
+    float_t * shape_def_d;
+    float_t * shape_def_h = &shape_def[0];
+    err = cudaMalloc((void **) &shape_def_d, T_PROP_SIZE_ * num_triangles * sizeof(float_t));
+    if(err != cudaSuccess) {
+      std::cerr << "Device memory allocation failed for triangles. "
+            << "Size = " <<  num_triangles << std::endl;
+      cudaFree(qz_d);
+      cudaFree(qy_d);
+      cudaFree(qx_d);
+      cudaFree(ff_d);
+      delete[] ff;
+      return 0;
+    } // if
+
+    err = cudaMemcpy(shape_def_d, shape_def_h, 
+            T_PROP_SIZE_ * num_triangles * sizeof(float_t), cudaMemcpyHostToDevice);
+    if(err != cudaSuccess) {
+      std::cerr << "CUDA Error [" << __FILE__ << ":" << __LINE__ << "]: "
+          << cudaGetErrorString(err) << std::endl;
+      cudaFree(qz_d);
+      cudaFree(qy_d);
+      cudaFree(qx_d);
+      cudaFree(ff_d);
+      delete[] ff;
+      return 0;
+    }
+
+    // copy rotation matrix
+    err = cudaMemcpyToSymbol(rot, rot_h, 9 * sizeof(float_t), 0, cudaMemcpyHostToDevice);
+    
+    // calculate triangle load sizes
+    unsigned int cuda_block_size = 256;
+    unsigned int cuda_num_blocks = nqz / cuda_block_size + 1;
+    int i = 0; 
+    int max_tri_per_load = 48 * 1024 / (T_PROP_SIZE_ * sizeof(float_t));// assuming shared mem = 48KB
+    for (i = 0; i < num_triangles; i++)
+        if ( i * cuda_block_size > max_tri_per_load)
+            break;
+    int tri_chunk_size = (i-1) * cuda_block_size;
+    int num_of_loads = num_triangles / tri_chunk_size + 1;
+    size_t shared_mem = tri_chunk_size * T_PROP_SIZE_;
+   
+    // Kernel
+    ff_tri_kernel <<< cuda_num_blocks, cuda_block_size, shared_mem >>> (nqy, nqz, qx_d, 
+            qy_d, qz_d, num_triangles, shape_def_d, ff_d);
+
+    cudaMemcpy (ff, ff_d, nqy * sizeof(cucomplex_t), cudaMemcpyDeviceToHost);
+    if(err != cudaSuccess) {
+      std::cerr << "CUDA Error [" << __FILE__ << ":" << __LINE__ << "]: "
+          << cudaGetErrorString(err) << std::endl;
+      return 0;
+    } 
+ 
+    cudaFree(qz_d);
+    cudaFree(qy_d);
+    cudaFree(qx_d);
+    cudaFree(ff_d);
+
+    float total_time;
+    cudaEventRecord(end_event, 0);
+    cudaEventSynchronize(end_event);
+    cudaEventElapsedTime(&total_time, begin_event, end_event);
+    pass_kernel_time = total_time;
+
+    return num_triangles;
+
+  } // NumericFormFactorG::compute2()
+
+//**************************************************************************************
+
   /**
    * Wrapper for the NumericFormFactorG class function.
    * This is required because with templates, everything is required to be in the
