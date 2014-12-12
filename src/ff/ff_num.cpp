@@ -174,7 +174,6 @@ namespace hig {
                 p_ff, qx, nqx_, qy, nqy_,
                 qz, nqz_, rot_, compute_time)) {
         std::cerr << "Calculation of numerical form-factor failed" << std::endl;
-        std::cerr << "watned : " << num_triangles << std::endl;
         return false;
     }
     for (int i = 0; i < nqz_; i++) {
