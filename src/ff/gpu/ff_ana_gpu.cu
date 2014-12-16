@@ -147,10 +147,9 @@ namespace hig {
 
   bool AnalyticFormFactorG::run_init(const float_t* rot_h, const std::vector<float_t>& transvec,
                     std::vector<complex_t>& ff) {
-    complex_t zero(0, 0);
     ff.resize(nqx_ * nqy_ * nqz_);
     //std::fill(ff.begin(), ff.end(), zero);
-    memset(&(ff[0]), 0, nqx_ * nqy_ * nqz_);
+    memset(&(ff[0]), 0, nqx_ * nqy_ * nqz_ * sizeof(cucomplex_t));
 
     return run_init(rot_h, transvec);
   } // AnalyticFormFactorG::run_init()

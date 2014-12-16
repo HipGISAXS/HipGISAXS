@@ -93,6 +93,7 @@ namespace woo {
 				idle_ = false;
 				master_rank_ = MASTER_RANK;
 				MPI_Comm_rank(world_, &rank_);
+        return *this;
 			} // operator=()
 
 			MultiNodeComm& operator=(const MultiNodeComm& comm) {
@@ -106,6 +107,7 @@ namespace woo {
 				idle_ = comm.idle_;
 				master_rank_ = comm.master_rank_;
 				rank_ = comm.rank_;
+        return *this;
 			} // operator=()
 
 			inline void set_idle() { idle_ = true; }

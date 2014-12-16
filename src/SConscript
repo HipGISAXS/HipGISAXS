@@ -2,8 +2,8 @@ Import('env')
 
 Export('env')
 
-subdirs = ['common', 'config', 'file', 'image', 'init', 'model', 'numerics', 'sf', 'utils']
-acc_subdirs = ['ff']
+subdirs = ['common', 'config', 'file', 'image', 'init', 'model', 'numerics', 'utils']
+acc_subdirs = ['ff', 'sf']
 main_subdirs = ['sim']
 testsubdirs = ['test']
 

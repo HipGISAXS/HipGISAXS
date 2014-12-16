@@ -23,6 +23,8 @@
 #ifndef __CONSTANTS_HPP__
 #define __CONSTANTS_HPP__
 
+#include <boost/math/special_functions/fpclassify.hpp>
+
 #include <common/typedefs.hpp>
 
 namespace hig {
@@ -30,6 +32,7 @@ namespace hig {
   const unsigned int LIGHT_SPEED_ = 3e+8;    /* speed of light in m/s */
   const float_t PI_ = 3.141592653589793;    /* PI correct upto 15 decimal places */
   const float_t SQRT_2PI_ = 2.506628;
+  const float_t REAL_ZERO_ = std::numeric_limits<float_t>::epsilon();
 
   //const unsigned int MAX_DEPTH_ = 500;    /* maximum depth allowed */
   const unsigned int MAX_DEPTH_ = 150;    /* maximum depth allowed */

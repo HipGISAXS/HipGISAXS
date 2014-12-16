@@ -28,6 +28,7 @@
 #include <sf/sf.hpp>
 #include <model/qgrid.hpp> 
 #include <utils/utilities.hpp>
+#include <common/constants.hpp>
 
 namespace hig {
 
@@ -35,12 +36,15 @@ namespace hig {
   } // StructureFactor::StructureFactor()
 
 
-  StructureFactor::StructureFactor (int nqx, int nqy, int nqz) {
+  StructureFactor::StructureFactor(int nqx, int nqy, int nqz) {
     nx_ = nqx;
     ny_ = nqy;
     nz_ = nqz;
     sf_ = new (std::nothrow) complex_t[nx_ * ny_ * nz_];
-  }
+    #ifdef SF_GPU
+      gsf_.init(nqx, nqy, nqz);
+    #endif
+  } // StructureFactor::StructureFactor()
 
   StructureFactor & StructureFactor::operator=(const StructureFactor & rhs) {
     nx_ = rhs.nx_;
@@ -49,7 +53,7 @@ namespace hig {
     size_t size = nx_ * ny_ * nz_;
     sf_ = new (std::nothrow) complex_t [size];
     if(sf_ == NULL) {
-      std::cerr << "could not allocate memeory" << std::endl;
+      std::cerr << "error: could not allocate memeory" << std::endl;
       // TODO should call MPI_Abort
       std::exit(1);
     }
@@ -132,17 +136,14 @@ namespace hig {
     } // if
 
     #ifdef SF_VERBOSE
-      if(master) std::cout << "-- Computing structure factor ... " << std::flush;
+      if(master) std::cout << "-- Computing structure factor on CPU ... " << std::flush;
     #endif
 
     std::complex<float_t> unit_c(1, 0);
     std::complex<float_t> unit_ci(0, 1);
 
-    float mach_eps = std::numeric_limits<float>::epsilon() ; //move to constants.hpp if not there
-
     computetimer.start();
 
-    // good for acceleration ...
     #pragma omp parallel for collapse(3)
     for(unsigned int z = 0; z < nz_; ++ z) {
       for(unsigned int y = 0; y < ny_; ++ y) {
@@ -161,7 +162,7 @@ namespace hig {
           complex_t Ya_0 = unit_c - e_iqa;
 
           float_t tempya = sqrt(Ya_0.real() * Ya_0.real() + Ya_0.imag() * Ya_0.imag());
-          if(fabs(Ya_0.imag()) > mach_eps || fabs(Ya_0.real()) > mach_eps) sa = Xa_0 / Ya_0;
+          if(fabs(Ya_0.imag()) > REAL_ZERO_ || fabs(Ya_0.real()) > REAL_ZERO_) sa = Xa_0 / Ya_0;
           else sa = repet[0];
           sa = pow(e_iqa, ((float_t) 1.0 - repet[0]) / (float_t) 2.0) * sa;
 
@@ -173,7 +174,7 @@ namespace hig {
           complex_t Yb_0 = unit_c - exp(iqb);
 
           float_t tempyb = sqrt(Yb_0.real() * Yb_0.real() + Yb_0.imag() * Yb_0.imag());
-          if(fabs(Yb_0.imag()) > mach_eps || fabs(Yb_0.real()) > mach_eps) sb = Xb_0 / Yb_0;
+          if(fabs(Yb_0.imag()) > REAL_ZERO_ || fabs(Yb_0.real()) > REAL_ZERO_) sb = Xb_0 / Yb_0;
           else sb = repet[1];
           sb = pow(e_iqb, ((float_t) 1.0 - repet[1]) / (float_t) 2.0) * sb;
 
@@ -183,7 +184,7 @@ namespace hig {
           complex_t Yc_0 = unit_c - e_iqc;
 
           float_t tempyc = sqrt(Yc_0.real() * Yc_0.real() + Yc_0.imag() * Yc_0.imag());
-          if(fabs(Yc_0.imag()) > mach_eps || fabs(Yc_0.real()) > mach_eps) sc = Xc_0 / Yc_0;
+          if(fabs(Yc_0.imag()) > REAL_ZERO_ || fabs(Yc_0.real()) > REAL_ZERO_) sc = Xc_0 / Yc_0;
           else sc = repet[2];
           sc = pow(e_iqc, ((float_t) 1.0 - repet[2]) / (float_t) 2.0) * sc;
 

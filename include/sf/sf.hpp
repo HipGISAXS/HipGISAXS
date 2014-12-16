@@ -30,6 +30,9 @@
 #include <common/typedefs.hpp>
 #include <common/globals.hpp>
 #include <model/structure.hpp>
+#ifdef USE_GPU
+  #include <sf/gpu/sf_gpu.cuh>
+#endif
 
 namespace hig {
   
@@ -39,6 +42,10 @@ namespace hig {
       unsigned int nx_;
       unsigned int ny_;
       unsigned int nz_;
+
+      #ifdef SF_GPU
+        StructureFactorG gsf_;
+      #endif
 
     public:
       StructureFactor();
@@ -53,22 +60,23 @@ namespace hig {
                         , woo::MultiNode&, std::string
                       #endif
                       );
-      bool compute_structure_factor_gpu(std::string, vector3_t, Lattice*, vector3_t, float_t,
+      #ifdef SF_GPU
+      bool compute_structure_factor_gpu(std::string, vector3_t, Lattice*, vector3_t, vector3_t,
                       vector3_t, vector3_t, vector3_t
                       #ifdef USE_MPI
                         , woo::MultiNode&, std::string
                       #endif
                       );
+      #endif
       complex_t & operator[](unsigned int i) const { return sf_[i]; }
       void save_sf(unsigned int nqx, unsigned int nqy, unsigned int nqz, const char* filename);
 
-            StructureFactor & operator=(const StructureFactor & rhs);
-            StructureFactor & operator+=(const StructureFactor & rhs);
-            StructureFactor & operator*(const float_t val) {
-                for (int i = 0; i < nx_ * ny_ * nz_; i++)
-                    sf_[i] *= val;
-                return *this;
-            }
+      StructureFactor & operator=(const StructureFactor & rhs);
+      StructureFactor & operator+=(const StructureFactor & rhs);
+      StructureFactor & operator*(float_t val) {
+        for(unsigned int i = 0; i < nx_ * ny_ * nz_; ++ i) sf_[i] *= val;
+        return *this;
+      } // operator*()
 
       // only for testing - remove it ...
       complex_t* sf() { return sf_; }

@@ -496,7 +496,7 @@ if _has_option("detail-mem"): detail_flags += ['MEM_DETAIL']
 if _has_option("verbose"): detail_flags += ['FF_VERBOSE', 'SF_VERBOSE']
 all_flags = detail_flags
 ## optional flags
-gpu_flags = ['USE_GPU', 'GPUR', 'KERNEL2', 'FF_ANA_GPU', 'FF_NUM_GPU', 'FF_NUM_GPU_FUSED']
+gpu_flags = ['USE_GPU', 'GPUR', 'KERNEL2', 'FF_ANA_GPU', 'FF_NUM_GPU', 'FF_NUM_GPU_FUSED', 'SF_GPU']
 mic_flags = ['USE_MIC', 'FF_MIC_OPT', 'FF_NUM_MIC_SWAP', 'FF_NUM_MIC_KB']
 cpu_flags = ['FF_NUM_CPU_FUSED']
 mpi_flags = ['USE_MPI']
@@ -565,7 +565,7 @@ if using_cuda:
 	gpuenv.Append(LINKFLAGS = ['-Xlinker', '-Wl,-rpath', '-Xlinker', '-Wl,$CUDA_TOOLKIT_PATH/lib64'])
 	gpuenv.Append(LINKFLAGS = ['-Xlinker', '-lgomp'])
 	gpuenv.Append(LINKFLAGS = ['-arch=sm_35'])
-	#gpuenv.Append(LINKFLAGS = ['-arch=sm_21'])
+        #gpuenv.Append(LINKFLAGS = ['-arch=sm_21'])
 	gpuenv.Append(LINKFLAGS = ['-dlink'])
 	nvlibobj = gpuenv.Program('nv_hipgisaxs.o', nvobjs)
 	objs += nvlibobj + nvobjs

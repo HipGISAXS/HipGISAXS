@@ -1,4 +1,20 @@
+Import('env')
+
+gpuenv = env.Clone()
+gpuenv.Tool('cuda')
+
+cuda_flags = ['-Xcompiler', '-fPIC', '-Xcompiler', '-fopenmp', '-m64', '-dc', '-std=c++11' ]
+cuda_flags += ['-gencode', 'arch=compute_20,code=sm_20']
+cuda_flags += ['-gencode', 'arch=compute_20,code=compute_20']
+cuda_flags += ['-gencode', 'arch=compute_20,code=sm_21']
+cuda_flags += ['-gencode', 'arch=compute_30,code=sm_30']
+cuda_flags += ['-gencode', 'arch=compute_35,code=sm_35']
+cuda_flags += ['--ptxas-options="-v"']
+cuda_flags += ['-use_fast_math', '-ftz=true', '-prec-div=false']
+
+gpuenv.Append(NVCCFLAGS = cuda_flags)
 
 objs = [ ]
+objs += gpuenv.Object(Glob('*.cu'))
 
 Return('objs')

@@ -106,21 +106,21 @@ namespace hig {
   extern complex_t operator*(complex_t c, float_t s);
   extern complex_t operator*(float_t s, complex_t c);
   extern std::complex<long double> operator*(std::complex<long double> c, long double s);
-  #ifdef USE_GPU
+/*  #ifdef USE_GPU
     extern complex_t operator*(float2 c, float2 s);
     extern complex_t operator*(float_t s, cucomplex_t c);
     extern complex_t operator*(cucomplex_t c, float_t s);
     extern complex_t operator*(complex_t s, cucomplex_t c);
     extern complex_t operator*(cucomplex_t c, complex_t s);
   #endif
-
-  #ifdef USE_GPU
+*/
+/*  #ifdef USE_GPU
     extern complex_t operator+(float_t s, cucomplex_t c);
     extern complex_t operator+(cucomplex_t c, float_t s);
     extern complex_t operator+(complex_t s, cucomplex_t c);
     extern complex_t operator+(cucomplex_t c, complex_t s);
   #endif
-
+*/
   /**
    * matrix and vector operation functions
    * use boost libs ...

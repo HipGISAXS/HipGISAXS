@@ -1208,6 +1208,8 @@ namespace hig {
         sftimer.stop();
         #ifndef SF_VERBOSE
           std::cout << sftimer.elapsed_msec() << " ms." << std::endl;
+        #else
+          std::cout << sftimer.elapsed_msec() << " ms." << std::endl;
         #endif
 
         //sf.printsf();
@@ -1706,7 +1708,7 @@ namespace hig {
                     , woo::comm_t comm_key
                   #endif
                   ) {
-    #ifndef GPUSF
+    #ifndef SF_GPU
       return sf.compute_structure_factor(expt, center, curr_lattice, grain_repeats,
                       grain_scaling,
                       r_tot1, r_tot2, r_tot3
