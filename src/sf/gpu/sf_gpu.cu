@@ -48,6 +48,7 @@ namespace hig {
     else if(expt == "gisaxs") nz_ = QGrid::instance().nqz_extended();
     else return false;
     sf_ = new (std::nothrow) complex_t[nx_ * ny_ * nz_];
+    if(sf_ == NULL) return false;
     gsf_.init(nx_, ny_, nz_);
     bool ret = gsf_.compute(expt, center, lattice, repet, scaling, rotation_1, rotation_2, rotation_3
                         #ifdef USE_MPI
@@ -114,10 +115,10 @@ namespace hig {
 
     // TODO: do hyperblocking if needed just as in ff ...
 
-    size_t device_mem_avail, device_mem_used, device_mem_total;
-    cudaMemGetInfo(&device_mem_avail, &device_mem_total);
-    device_mem_used = device_mem_total - device_mem_avail;
     #ifdef MEM_DETAIL
+      size_t device_mem_avail, device_mem_used, device_mem_total;
+      cudaMemGetInfo(&device_mem_avail, &device_mem_total);
+      device_mem_used = device_mem_total - device_mem_avail;
       std::cout << "++            Used device memory: " << (float) device_mem_used / 1024 / 1024
                 << " MB" << std::endl;
       std::cout << "++            Free device memory: " << (float) device_mem_avail / 1024 / 1024
@@ -129,7 +130,7 @@ namespace hig {
 
 
   // TODO: avoid all this copying .........
-  void StructureFactorG::get_sf(complex_t* sf) {
+  void StructureFactorG::get_sf(complex_t* &sf) {
     // copy sf to main memory from device mem
     cucomplex_t * temp_buf = new (std::nothrow) cucomplex_t[nqx_ * nqy_ * nqz_];
 
@@ -232,16 +233,12 @@ namespace hig {
     structure_factor_kernel <<< sf_grid_size, sf_block_size >>>
                             (nqx_, nqy_, nqz_, qx_, qy_, qz_, rot_, repet_, center_, transvec_, sf_);
     
-    cudaThreadSynchronize();
+    cudaDeviceSynchronize();
     cudaError_t err = cudaGetLastError();
     if(err != cudaSuccess) {
       std::cerr << "error: structure factor kernel failed: " << cudaGetErrorString(err) << std::endl;
       return false;
-    } else {
-      // move sf to cpu
-      // TODO: merge sf ff multiplication to a gpu routine, wont need to transfer this output ...
-      //cudaMemcpy();
-    } // if-else
+    } // if
 
     return true;
   } // StructureFactorG::compute()
@@ -263,25 +260,18 @@ namespace hig {
         cucomplex_t sa, sb, sc;
 
         float_t q_x = qx[i_x], q_y = qy[i_y];
-        cucomplex_t q_z; q_z.x = qz[i_z].x; q_z.y = qz[i_z].y;
+        cucomplex_t q_z = qz[i_z];
 
         cucomplex_t e_iqa = cuCexpi(rot[0] * q_x + rot[1] * q_y + rot[2] * q_z);
         cucomplex_t xa_0 = unit_c - cuCpow(e_iqa, repet[0]);
         cucomplex_t ya_0 = unit_c - e_iqa;
-
-        float_t tempya = sqrt(ya_0.x * ya_0.x + ya_0.y * ya_0.y);
-        if(fabs(ya_0.x) > REAL_ZERO_ || fabs(ya_0.y) > REAL_ZERO_) sa = xa_0 / ya_0;
+        if(fabs(ya_0.y) > REAL_ZERO_ || fabs(ya_0.x) > REAL_ZERO_) sa = xa_0 / ya_0;
         else sa = make_cuC(repet[0], 0);
         sa = cuCpow(e_iqa, ((float_t) 1.0 - repet[0]) / (float_t) 2.0) * sa;
 
-        cucomplex_t iqb = make_cuC(- rot[5] * q_z.y, rot[3] * q_x + rot[4] * q_y + rot[5] * q_z.x);
-        cucomplex_t iqnb = repet[1] * iqb;
-
-        cucomplex_t e_iqb = cuCexp(iqb);
-        cucomplex_t xb_0 = unit_c - cuCexp(iqnb);
-        cucomplex_t yb_0 = unit_c - cuCexp(iqb);
-
-        float_t tempyb = sqrt(yb_0.x * yb_0.x + yb_0.y * yb_0.y);
+        cucomplex_t e_iqb = cuCexpi(rot[3] * q_x + rot[4] * q_y + rot[5] * q_z);
+        cucomplex_t xb_0 = unit_c - cuCpow(e_iqb, repet[1]);
+        cucomplex_t yb_0 = unit_c - e_iqb;
         if(fabs(yb_0.y) > REAL_ZERO_ || fabs(yb_0.x) > REAL_ZERO_) sb = xb_0 / yb_0;
         else sb = make_cuC(repet[1], 0);
         sb = cuCpow(e_iqb, ((float_t) 1.0 - repet[1]) / (float_t) 2.0) * sb;
@@ -289,12 +279,38 @@ namespace hig {
         cucomplex_t e_iqc = cuCexpi(rot[6] * q_x + rot[7] * q_y + rot[8] * q_z);
         cucomplex_t xc_0 = unit_c - cuCpow(e_iqc, repet[2]);
         cucomplex_t yc_0 = unit_c - e_iqc;
-
-        float_t tempyc = sqrt(yc_0.x * yc_0.x + yc_0.y * yc_0.y);
         if(fabs(yc_0.y) > REAL_ZERO_ || fabs(yc_0.x) > REAL_ZERO_) sc = xc_0 / yc_0;
         else sc = make_cuC(repet[2], 0);
         sc = cuCpow(e_iqc, ((float_t) 1.0 - repet[2]) / (float_t) 2.0) * sc;
 
+
+/*        cucomplex_t iqa = rot[0] * q_x + rot[1] * q_y + rot[2] * q_z;
+        cucomplex_t iqna = repet[0] * iqa;
+        cucomplex_t e_iqa = cuCexpi(iqa);
+        cucomplex_t xa_0 = unit_c - cuCexpi(iqna);
+        cucomplex_t ya_0 = unit_c - e_iqa;
+        if(fabs(ya_0.y) > REAL_ZERO_ || fabs(ya_0.x) > REAL_ZERO_) sa = xa_0 / ya_0;
+        else sa = make_cuC(repet[0], 0);
+        sa = cuCpow(e_iqa, ((float_t) 1.0 - repet[0]) / (float_t) 2.0) * sa;
+
+        cucomplex_t iqb = rot[3] * q_x + rot[4] * q_y + rot[5] * q_z;
+        cucomplex_t iqnb = repet[1] * iqb;
+        cucomplex_t e_iqb = cuCexpi(iqb);
+        cucomplex_t xb_0 = unit_c - cuCexpi(iqnb);
+        cucomplex_t yb_0 = unit_c - e_iqb;
+        if(fabs(yb_0.y) > REAL_ZERO_ || fabs(yb_0.x) > REAL_ZERO_) sb = xb_0 / yb_0;
+        else sb = make_cuC(repet[1], 0);
+        sb = cuCpow(e_iqb, ((float_t) 1.0 - repet[1]) / (float_t) 2.0) * sb;
+
+        cucomplex_t iqc = rot[6] * q_x + rot[7] * q_y + rot[8] * q_z;
+        cucomplex_t iqnc = repet[2] * iqc;
+        cucomplex_t e_iqc = cuCexpi(iqc);
+        cucomplex_t xc_0 = unit_c - cuCexpi(iqnc);
+        cucomplex_t yc_0 = unit_c - e_iqc;
+        if(fabs(yc_0.y) > REAL_ZERO_ || fabs(yc_0.x) > REAL_ZERO_) sc = xc_0 / yc_0;
+        else sc = make_cuC(repet[2], 0);
+        sc = cuCpow(e_iqc, ((float_t) 1.0 - repet[2]) / (float_t) 2.0) * sc;
+*/
         unsigned long int sf_i = base_index + i_x;
         cucomplex_t temp3 = cuCexpi(center[0] * q_x + center[1] * q_y + center[2] * q_z);
         cucomplex_t temp2 = unit_c + cuCexpi(transvec[0] * q_x + transvec[1] * q_y + transvec[2] * q_z);

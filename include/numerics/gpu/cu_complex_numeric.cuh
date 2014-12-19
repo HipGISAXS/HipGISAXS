@@ -222,21 +222,11 @@ namespace hig {
 
   __device__ static __inline__ cuFloatComplex cuCsqr(cuFloatComplex a) {
     return make_cuFloatComplex(a.x * a.x - a.y * a.y, 2.0f * a.x * a.y);
-  } // cuCpow()
+  } // cuCsqr()
 
   __device__ static __inline__ cuDoubleComplex cuCsqr(cuDoubleComplex a) {
     return make_cuDoubleComplex(a.x * a.x - a.y * a.y, 2.0 * a.x * a.y);
-  } // cuCpow()
-
-  __device__ static __inline__ cuFloatComplex cuCpow(cuFloatComplex a, int p) {
-    // ...
-    return a;
-  } // cuCpow()
-
-  __device__ static __inline__ cuDoubleComplex cuCpow(cuDoubleComplex a, int p) {
-    // ...
-    return a;
-  } // cuCpow()
+  } // cuCsqr()
 
   // eucledian norm
   __device__ static __inline__ cuFloatComplex cuCnorm3(
@@ -299,6 +289,46 @@ namespace hig {
   __device__ static __inline__ cuDoubleComplex cuCexpi(cuDoubleComplex z) {
     return cuCexp(make_cuDoubleComplex(-z.y, z.x));
   } // cuCexpi()
+
+  __device__ static __inline__ float cuCabs(cuFloatComplex z) {
+    return hypotf(z.x, z.y);
+  } // cuCabs()
+
+//  __device__ static __inline__ double cuCabs(cuDoubleComplex z) {
+//    return hypot(z.x, z.y);
+//  } // cuCabs()
+
+  __device__ static __inline__ float cuCarg(cuFloatComplex z) {
+    return atan2f(z.y, z.x);
+  } // cuCarg()
+
+  __device__ static __inline__ double cuCarg(cuDoubleComplex z) {
+    return atan2(z.y, z.x);
+  } // cuCarg()
+
+  __device__ static __inline__ cuFloatComplex cuClog(cuFloatComplex z) {
+    return make_cuFloatComplex(log(cuCabs(z)), cuCarg(z));
+  } // cuClog()
+
+  __device__ static __inline__ cuDoubleComplex cuClog(cuDoubleComplex z) {
+    return make_cuDoubleComplex(log(cuCabs(z)), cuCarg(z));
+  } // cuClog()
+
+  __device__ static __inline__ cuFloatComplex cuCpow(cuFloatComplex a, float p) {
+    return cuCexp(cuClog(a) * p);;
+  } // cuCpow()
+
+  __device__ static __inline__ cuDoubleComplex cuCpow(cuDoubleComplex a, double p) {
+    return cuCexp(cuClog(a) * p);;
+  } // cuCpow()
+
+  __device__ static __inline__ cuFloatComplex cuCpow(cuFloatComplex a, cuFloatComplex p) {
+    return cuCexp(cuClog(a) * p);;
+  } // cuCpow()
+
+  __device__ static __inline__ cuDoubleComplex cuCpow(cuDoubleComplex a, cuDoubleComplex p) {
+    return cuCexp(cuClog(a) * p);
+  } // cuCpow()
 
   __device__ static __inline__ cuFloatComplex cuCsin(cuFloatComplex z) {
     float x = z.x;

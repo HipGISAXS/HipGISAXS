@@ -51,6 +51,7 @@ namespace hig {
     ny_ = rhs.ny_;
     nz_ = rhs.nz_;
     size_t size = nx_ * ny_ * nz_;
+    if(sf_ != NULL) delete[] sf_;
     sf_ = new (std::nothrow) complex_t [size];
     if(sf_ == NULL) {
       std::cerr << "error: could not allocate memeory" << std::endl;
@@ -83,10 +84,13 @@ namespace hig {
     if(sf_ != NULL) delete[] sf_;
     sf_ = NULL;
     nx_ = ny_ = nz_ = 0;
+    #ifdef SF_GPU
+      gsf_.destroy();
+    #endif
   } // StructureFactor::clear()
 
   /**
-   * compute structure factor sequentially on cpu
+   * compute structure factor on cpu
    */
   bool StructureFactor::compute_structure_factor(std::string expt, vector3_t center,
                Lattice* lattice, vector3_t repet, vector3_t scaling,
@@ -160,30 +164,20 @@ namespace hig {
           complex_t e_iqa = exp(unit_ci * (arot[0] * qx + arot[1] * qy + arot[2] * qz));
           complex_t Xa_0 = unit_c - pow(e_iqa, repet[0]);
           complex_t Ya_0 = unit_c - e_iqa;
-
-          float_t tempya = sqrt(Ya_0.real() * Ya_0.real() + Ya_0.imag() * Ya_0.imag());
           if(fabs(Ya_0.imag()) > REAL_ZERO_ || fabs(Ya_0.real()) > REAL_ZERO_) sa = Xa_0 / Ya_0;
           else sa = repet[0];
           sa = pow(e_iqa, ((float_t) 1.0 - repet[0]) / (float_t) 2.0) * sa;
 
-          complex_t iqb = unit_ci *  (brot[0] * qx + brot[1] * qy + brot[2] * qz) ;
-          complex_t iqNb =  repet[1] * iqb;
-
-          complex_t e_iqb = exp(iqb);
-          complex_t Xb_0 = unit_c - exp(iqNb);
-          complex_t Yb_0 = unit_c - exp(iqb);
-
-          float_t tempyb = sqrt(Yb_0.real() * Yb_0.real() + Yb_0.imag() * Yb_0.imag());
+          complex_t e_iqb = exp(unit_ci * (brot[0] * qx + brot[1] * qy + brot[2] * qz));
+          complex_t Xb_0 = unit_c - pow(e_iqb, repet[1]);
+          complex_t Yb_0 = unit_c - e_iqb;
           if(fabs(Yb_0.imag()) > REAL_ZERO_ || fabs(Yb_0.real()) > REAL_ZERO_) sb = Xb_0 / Yb_0;
           else sb = repet[1];
           sb = pow(e_iqb, ((float_t) 1.0 - repet[1]) / (float_t) 2.0) * sb;
 
-
           complex_t e_iqc = exp(unit_ci * (crot[0] * qx + crot[1] * qy + crot[2] * qz));
           complex_t Xc_0 = unit_c - pow(e_iqc, repet[2]);
           complex_t Yc_0 = unit_c - e_iqc;
-
-          float_t tempyc = sqrt(Yc_0.real() * Yc_0.real() + Yc_0.imag() * Yc_0.imag());
           if(fabs(Yc_0.imag()) > REAL_ZERO_ || fabs(Yc_0.real()) > REAL_ZERO_) sc = Xc_0 / Yc_0;
           else sc = repet[2];
           sc = pow(e_iqc, ((float_t) 1.0 - repet[2]) / (float_t) 2.0) * sc;
