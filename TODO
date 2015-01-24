@@ -1,0 +1,4 @@
+* Parallelize using MPI
+* Fix cone integration
+* Add GPU method for analytical triangulation integration
+* Add switch to select between Approx and excat methods for triangles
