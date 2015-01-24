@@ -93,6 +93,11 @@ namespace hig {
     } // vector3_t()
 
     /* operators */
+    float_t norm2 () {
+      float_t norm = 0.;
+      for (int i = 0; i < 3; i++) norm += vec_[i] * vec_[i];
+      return sqrt(norm);
+    }
 
     vector3_t& operator=(const vector3_t& a) {
       vec_ = a.vec_;
@@ -132,6 +137,9 @@ namespace hig {
       return vector3_t(vec_[0]*rhs[0], vec_[1]*rhs[1], vec_[2]*rhs[2]);
     } // operator*()
 
+    vector3_t operator/(float_t todiv) {
+      return vector3_t(vec_[0] / todiv, vec_[1] / todiv, vec_[2] / todiv);
+    }
     vector3_t operator/(vector3_t todiv) {
       return vector3_t(vec_[0] / todiv[0], vec_[1] / todiv[1], vec_[2] / todiv[2]);
     } // operator/()

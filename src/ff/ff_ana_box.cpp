@@ -26,6 +26,7 @@
 
 #include <ff/ff_ana.hpp>
 #include <common/enums.hpp>
+#include <common/constants.hpp>
 #include <model/shape.hpp>
 #include <model/qgrid.hpp>
 #include <utils/utilities.hpp>
@@ -36,6 +37,16 @@ namespace hig {
   /**
    * box
    */
+
+  inline complex_t FormFactorBox(complex_t qx, complex_t qy, complex_t qz, 
+          float_t length, float_t width, float_t height) {
+      float_t vol = length * width * height;
+      complex_t exp_val = std::exp(complex_t(0,1) * 0.5 * qz * height);
+      complex_t sinc_val = sinc(0.5 * qx * length) * sinc(0.5 * qy * width) 
+          * sinc(0.5 * qz * height);
+      return (vol * exp_val * sinc_val);
+  }
+
   bool AnalyticFormFactor::compute_box(unsigned int nqx, unsigned int nqy, unsigned int nqz,
                     std::vector<complex_t>& ff,
                     ShapeName shape, shape_param_list_t& params,
@@ -87,7 +98,6 @@ namespace hig {
     #ifdef FF_ANA_GPU
       // on gpu
       std::cout << "-- Computing box FF on GPU ..." << std::endl;
-
       std::vector<float_t> transvec_v;
       transvec_v.push_back(transvec[0]);
       transvec_v.push_back(transvec[1]);
@@ -97,8 +107,7 @@ namespace hig {
       // on cpu
       std::cout << "-- Computing box FF on CPU ..." << std::endl;
       // initialize ff
-      ff.clear();  ff.reserve(nqz);
-      for(unsigned int i = 0; i < nqz ; ++ i) ff.push_back(complex_t(0, 0));
+      ff.clear();  ff.resize(nqz, C_ZERO);
 
       #pragma omp parallel for 
       for(unsigned int i = 0; i < nqz; ++ i) {
@@ -106,49 +115,29 @@ namespace hig {
         complex_t mqx, mqy, mqz;
         compute_meshpoints(QGrid::instance().qx(j), QGrid::instance().qy(j),
                    QGrid::instance().qz_extended(i), rot_, mqx, mqy, mqz);
-        complex_t temp1 = sin(eta) * mqx;
-        complex_t temp2 = cos(eta) * mqy;
-        complex_t temp3 = temp1 + temp2;
-        complex_t temp_qm = tan(tau) * temp3;
         complex_t temp_ff(0.0, 0.0);
         for(unsigned int i_z = 0; i_z < z.size(); ++ i_z) {
           for(unsigned int i_y = 0; i_y < y.size(); ++ i_y) {
             for(unsigned int i_x = 0; i_x < x.size(); ++ i_x) {
-              complex_t temp1 = mqz + temp_qm;
-              complex_t temp2 = mqy * y[i_y];
-              complex_t temp3 = mqx * x[i_x];
-              complex_t temp4 = fq_inv(temp1, z[i_z]);
-              complex_t temp5 = sinc(temp2);
-              complex_t temp6 = sinc(temp3);
-              complex_t temp7 = temp6 * temp5;
-              complex_t temp8 = temp7 * temp4;
-              complex_t temp9 = 4 * distr_x[i_x] * distr_y[i_y] * distr_z[i_z] *
-                            x[i_x] * y[i_y];
-              complex_t temp10 = temp9 * temp8;
-              temp_ff += temp10;
-                  /*if(!(boost::math::isfinite(temp10.real()) &&
-                      boost::math::isfinite(temp10.imag()))) {
-                    std::cerr << "+++++++++++++++ here it is +++++++ " << j_x << ", "
-                          << j_y << ", " << j_z << std::endl;
-                    exit(1);
-                  } // if*/
-                } // for i_x
-              } // for i_y
-            } // for i_z
-            complex_t temp7 = (mqx * transvec[0] + mqy * transvec[1] + mqz * transvec[2]);
-            /*if(!(boost::math::isfinite(temp7.real()) && boost::math::isfinite(temp7.imag()))) {
-              std::cerr << "---------------- here it is ------ " << j_x << ", "
-                    << j_y << ", " << j_z << std::endl;
-              exit(1);
-            } // if*/
-            ff[i] = temp_ff * exp(complex_t(-temp7.imag(), temp7.real()));
-            /*
-             if(!(boost::math::isfinite(ff[curr_index].real()) &&
-                boost::math::isfinite(ff[curr_index].imag()))) {
-              std::cerr << "******************* here it is ********* " << j_x << ", "
-                    << j_y << ", " << j_z << std::endl;
-              exit(1);
-             } //if 
+              float_t wght = distr_x[i_x] * distr_y[i_y] * distr_z[i_z];
+              temp_ff += FormFactorBox(mqx, mqy, mqz, x[i_x], y[i_y], z[i_z]) * wght;
+            } // for i_x
+          } // for i_y
+        } // for i_z
+        complex_t temp7 = (mqx * transvec[0] + mqy * transvec[1] + mqz * transvec[2]);
+        /*if(!(boost::math::isfinite(temp7.real()) && boost::math::isfinite(temp7.imag()))) {
+          std::cerr << "---------------- here it is ------ " << j_x << ", "
+                << j_y << ", " << j_z << std::endl;
+          exit(1);
+       } // if*/
+       ff[i] = temp_ff * exp(complex_t(-temp7.imag(), temp7.real()));
+       /*
+       if(!(boost::math::isfinite(ff[curr_index].real()) &&
+          boost::math::isfinite(ff[curr_index].imag()))) {
+        std::cerr << "******************* here it is ********* " << j_x << ", "
+              << j_y << ", " << j_z << std::endl;
+        exit(1);
+       } //if 
             */
       } // for i
     #endif // FF_ANA_GPU

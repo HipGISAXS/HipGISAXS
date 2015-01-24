@@ -107,7 +107,8 @@ namespace hig {
   typedef struct Triangle {
       float_t v1[3];
       float_t v2[3];
-      float_t v3[3]; }                      triangle_t;
+      float_t v3[3]; 
+  }                      triangle_t;
  
 
   // TODO: handle multiprecision? ...

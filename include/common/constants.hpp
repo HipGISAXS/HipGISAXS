@@ -34,6 +34,16 @@ namespace hig {
   //const unsigned int MAX_DEPTH_ = 500;    /* maximum depth allowed */
   const unsigned int MAX_DEPTH_ = 150;    /* maximum depth allowed */
 
+  // real constants
+  const float_t ZERO = (float_t) 0.;
+  const float_t ONE  = (float_t) 1.;
+  const float_t NEG_ONE = (float_t) -1.;
+
+  // complex constants
+  const complex_t C_ZERO = complex_t(ZERO,ZERO);
+  const complex_t C_ONE  = complex_t(ZERO, ONE);
+  const complex_t C_NEG_ONE = complex_t(ZERO, NEG_ONE);
+
 } // namespace
 
 #endif // __CONSTANTS_HPP__

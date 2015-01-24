@@ -159,7 +159,7 @@ namespace hig {
 //**************************************************************************************
 
   __constant__ float_t rot[9];
-  extern __constant__ int num_loads;
+  __constant__ int num_loads;
   __constant__ int buf_size;
 
   __global__ void ff_tri_kernel (unsigned int nqy, unsigned int nqz,
@@ -259,6 +259,8 @@ namespace hig {
             float_t * & rot_h,
             float_t & pass_kernel_time) { 
       
+
+    int i; 
     cudaError_t err;
     float_t * rot_d;
     float_t * qx_d, * qy_d;
@@ -271,6 +273,34 @@ namespace hig {
     cudaEvent_t begin_event, end_event;
     cudaEventCreate(&begin_event); cudaEventCreate(&end_event);
     cudaEventRecord(begin_event, 0);
+
+
+    /***
+    // Get all the compute 2+ GPUs on the node
+    int num_dev = 0;
+    std::vector<int> dev_id;
+    cudaDeviceProp dev_prop;
+    err = cudaGetDeviceCount (&num_dev);
+    for (i = 0; i < num_dev; i++) {
+      err = cudaGetDeviceProperties (&dev_prop, dev_id[i]);
+      if ( dev_prop.major >= 2 )
+          dev_id.push_back(i);
+    }
+    num_dev = dev_id.size();
+    
+    // distribute data amongst 'n' devices
+    ***/
+
+    // calculate triangle load sizes
+    unsigned int cuda_num_threads = 256;
+    unsigned int cuda_num_blocks = nqz / cuda_num_threads + 1;
+    // assuming shared mem = 48KB 
+    int max_per_load = 49152 / sizeof(float_t);
+    for (i = 0; i < num_triangles; i++)
+        if ( i * cuda_num_threads * T_PROP_SIZE_ > max_per_load)
+            break;
+    int shared_buf = (i-1) * cuda_num_threads * T_PROP_SIZE_;
+    int num_of_loads = num_triangles * T_PROP_SIZE_ / shared_buf + 1;
 
     // allocate memory for the final FF matrix
     ff = new (std::nothrow) cucomplex_t[nqz];  // allocate and initialize to 0
@@ -350,26 +380,24 @@ namespace hig {
       return 0;
     }
 
-    // copy rotation matrix
-    err = cudaMemcpyToSymbol(rot, rot_h, 9 * sizeof(float_t), 0, cudaMemcpyHostToDevice);
-    
-    // calculate triangle load sizes
-    unsigned int cuda_num_threads = 256;
-    unsigned int cuda_num_blocks = nqz / cuda_num_threads + 1;
-    int i = 0; 
-    int max_per_load = 48 * 1024 / sizeof(float_t);// assuming shared mem = 48KB
-    for (i = 0; i < num_triangles; i++)
-        if ( i * cuda_num_threads * T_PROP_SIZE_ > max_per_load)
-            break;
-    int shared_buf_size = (i-1) * cuda_num_threads * T_PROP_SIZE_;
-    int num_of_loads = num_triangles * T_PROP_SIZE_ / shared_buf_size + 1;
 
-    // copy num_of_loads and shared_buffer_size to constant memeory
-    err = cudaMemcpyToSymbol(num_loads, &num_of_loads, sizeof(int), 0, cudaMemcpyHostToDevice);
-    err = cudaMemcpyToSymbol(buf_size, &shared_buf_size, sizeof(int), 0, cudaMemcpyHostToDevice);
-   
+    //for (i = 0; i < num_dev; i++) {
+    //  err = cudaSetDevice (dev_id[i]);
+
+      /* copy symbols to constant memory */
+     
+      // copy rotation matrix
+      err = cudaMemcpyToSymbol(rot, rot_h, 9 * sizeof(float_t), 0, cudaMemcpyHostToDevice);
+
+      // copy num_of_loads and shared_buffer_size to constant memeory
+      err = cudaMemcpyToSymbol(num_loads, &num_of_loads, sizeof(int), 0, cudaMemcpyHostToDevice);
+      err = cudaMemcpyToSymbol(buf_size, &shared_buf, sizeof(int), 0, cudaMemcpyHostToDevice);
+    //}
+
+
     // Kernel
-    ff_tri_kernel <<< cuda_num_blocks, cuda_num_threads, shared_buf_size * sizeof(float_t) >>> (nqy, nqz, qx_d, 
+    //cudaFuncSetCacheConfig(ff_tri_kernel, cudaFuncCachePreferL1);
+    ff_tri_kernel <<< cuda_num_blocks, cuda_num_threads, shared_buf * sizeof(float_t) >>> (nqy, nqz, qx_d, 
             qy_d, qz_d, num_triangles, shape_def_d, ff_d);
     err = cudaGetLastError();
     if (err != cudaSuccess) {

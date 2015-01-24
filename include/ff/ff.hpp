@@ -84,7 +84,7 @@ namespace hig {
       bool read_form_factor(const char* filename,
                   unsigned int nqx, unsigned int nqy, unsigned int nqz);
       void print_ff(unsigned int nqx, unsigned int nqy, unsigned int nqz);
-      void save_ff(unsigned int nqx, unsigned int nqy, unsigned int nqz, const char* filename);
+      void save_ff(unsigned int nqz, const char* filename);
       void save (unsigned, unsigned, const char *);
       void printff(unsigned int nqx, unsigned int nqy, unsigned int nqz) {
         std::cout << "ff:" << std::endl;

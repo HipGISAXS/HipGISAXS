@@ -50,13 +50,13 @@ namespace hig {
     ff.clear();
 
     rot_ = new (std::nothrow) float_t[9];
-    rot_[0] = rot1[0]; rot_[1] = rot1[1]; rot_[2] = rot1[2];
-    rot_[3] = rot2[0]; rot_[4] = rot2[1]; rot_[5] = rot2[2];
-    rot_[6] = rot3[0]; rot_[7] = rot3[1]; rot_[8] = rot3[2];
+    //rot_[0] = rot1[0]; rot_[1] = rot1[1]; rot_[2] = rot1[2];
+    //rot_[3] = rot2[0]; rot_[4] = rot2[1]; rot_[5] = rot2[2];
+    //rot_[6] = rot3[0]; rot_[7] = rot3[1]; rot_[8] = rot3[2];
 
-    //rot_[0] = 1; rot_[1] = 0; rot_[2] = 0;
-    //rot_[3] = 0; rot_[4] = 1; rot_[5] = 0;
-    //rot_[6] = 0; rot_[7] = 0; rot_[8] = 1;
+    rot_[0] = 1; rot_[1] = 0; rot_[2] = 0;
+    rot_[3] = 0; rot_[4] = 1; rot_[5] = 0;
+    rot_[6] = 0; rot_[7] = 0; rot_[8] = 1;
 
     return true;
   } // NumericFormFactor::init()
@@ -68,8 +68,10 @@ namespace hig {
 #endif
           ) {
 
+    // initialize 
+    init (rot1, rot2, rot2, ff);
+
     // read file
- /*
     std::vector<vertex_t> vertices;
     std::vector<std::vector<int>> faces;
     std::vector<std::vector<int>> dummy;
@@ -83,19 +85,19 @@ namespace hig {
     int num_triangles = faces.size();
     triangle_t * triangles = new (std::nothrow) triangle_t [num_triangles];
     for (int i = 0; i < num_triangles; i++) {
-      triangles[i].v1[0] = vertices[faces[i][0]].x;
-      triangles[i].v1[1] = vertices[faces[i][0]].y;
-      triangles[i].v1[2] = vertices[faces[i][0]].z;
+      triangles[i].v1[0] = vertices[faces[i][0]-1].x;
+      triangles[i].v1[1] = vertices[faces[i][0]-1].y;
+      triangles[i].v1[2] = vertices[faces[i][0]-1].z;
 
-      triangles[i].v2[0] = vertices[faces[i][1]].x;
-      triangles[i].v2[1] = vertices[faces[i][1]].y;
-      triangles[i].v2[2] = vertices[faces[i][1]].z;
+      triangles[i].v2[0] = vertices[faces[i][1]-1].x;
+      triangles[i].v2[1] = vertices[faces[i][1]-1].y;
+      triangles[i].v2[2] = vertices[faces[i][1]-1].z;
 
-      triangles[i].v3[0] = vertices[faces[i][2]].x;
-      triangles[i].v3[1] = vertices[faces[i][2]].y;
-      triangles[i].v3[2] = vertices[faces[i][2]].z;
+      triangles[i].v3[0] = vertices[faces[i][2]-1].x;
+      triangles[i].v3[1] = vertices[faces[i][2]-1].y;
+      triangles[i].v3[2] = vertices[faces[i][2]-1].z;
     }
-*/
+
 
 #ifndef __SSE3__
     float_vec_t shape_def;
@@ -106,7 +108,7 @@ namespace hig {
     float_t * shape_def = NULL;
 #endif
 #endif
-    unsigned int num_triangles = read_shapes_file(filename, shape_def);
+    //unsigned int num_triangles = read_shapes_file(filename, shape_def);
 
 #ifdef USE_MPI
       int num_procs = world_comm.size(comm_key);
@@ -162,15 +164,12 @@ namespace hig {
     for (int i = 0; i < nqz_; i++) qz[i] = QGrid::instance().qz_extended(i);
 #endif
 
+    float_t compute_time = 0.;
 #ifdef FF_NUM_GPU
     cucomplex_t * p_ff = NULL;
-#else
-    complex_t * p_ff = NULL;
-#endif
-
     // call kernel
-    float_t compute_time = 0.;
-    if (num_triangles != gff_.compute_tri_ff(rank, shape_def, 
+    if (num_triangles != gff_.compute_poly_form_factor (rank, 
+                triangles, num_triangles,
                 p_ff, qx, nqx_, qy, nqy_,
                 qz, nqz_, rot_, compute_time)) {
         std::cerr << "Calculation of numerical form-factor failed" << std::endl;
@@ -180,8 +179,17 @@ namespace hig {
         complex_t temp(p_ff[i].x, p_ff[i].y);
         ff.push_back (temp);
     }
-
-    std::cout << "**                FF kernel time: " << compute_time << " ms." << std::endl;
+    std::cout << "**        FF GPU compute time: " << compute_time << " ms." << std::endl;
+#else
+    complex_t * p_ff = NULL;
+    if (num_triangles != cff_.compute_ff(rank, triangles, num_triangles, p_ff, 
+                qx, nqx_, qy, nqy_, qz, nqz_, rot_, compute_time)) {
+        std::cerr << "Calculation of numerical form-factor failed" << std::endl;
+        return false;
+    }
+    for (int i = 0; i < nqz_; i++) ff.push_back(p_ff[i]);
+    std::cout << "**        FF CPU compute time: " << compute_time << " ms." << std::endl;
+#endif
     delete [] qx;
     delete [] qy;
     delete [] qz;
@@ -992,51 +1000,5 @@ namespace hig {
 
     return num_triangles;
   } // NumericFormFactor::read_shapes_file()
-  
-
-  #ifdef FF_NUM_GPU
-      /**
-       * Write a slice to output file
-       */
-      /*void write_slice_to_file(cucomplex_t *ff, int nqx, int nqy, int nqz,
-                  char* filename, int axis, int slice) {
-          if(ff == NULL) return;
-
-          std::cout << "** Writing slice to file ...";
-          switch(axis) {
-              case 0:
-                  break;
-              default:
-                  std::cout << "Given axis slice writing not implemented yet!" << std::endl;
-          } // switch
-
-          if(slice >= nqx || slice < 0) {
-              std::cout << "Given slice does not exist!" << std::endl;
-              return;
-          } // if
-
-          std::ofstream slice_file;
-          //char* outfilename = "output_ff.dat";
-          char outfilename[50];
-          sprintf(outfilename, "ff_p%d.dat", world_comm.rank());
-          std::cout << " " << outfilename << " ";
-          slice_file.open(outfilename);
-          if(!slice_file.is_open()) {
-              std::cerr << "Error opening slice file for writing." << std::endl;
-              return;
-          } // if
-
-          for(int y = 0; y < nqy; ++ y) {
-              for(int z = 0; z < nqz; ++ z) {
-                  unsigned long int index = nqx * nqy * z + nqx * y + slice;
-                  slice_file << ff[index].x << "," << ff[index].y << "\t";
-              } // for z
-              slice_file << std::endl;
-          } // for y
-          slice_file.close();
-          std::cout << " done." << std::endl;
-      } // write_slice_to_file()*/
-  #endif
-
 
 } // namespace hig

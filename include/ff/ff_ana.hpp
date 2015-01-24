@@ -89,16 +89,13 @@ namespace hig {
               float_t, float_t, vector3_t);
       bool compute_prism3x(shape_param_list_t&, std::vector<complex_t>&,
               float_t, float_t, vector3_t);
-      bool compute_truncated_pyramid(shape_param_list_t&, std::vector<complex_t>&, vector3_t);
-      complex_t truncated_pyramid_core(complex_t, complex_t, complex_t, 
-          float_t, float_t, float_t, float_t);
-      complex_t ffTruncatedPyramid (complex_t, complex_t, complex_t, float_t, float_t, float_t, float_t);
+      bool compute_pyramid(shape_param_list_t&, std::vector<complex_t>&,
+              float_t, float_t, vector3_t);
       bool compute_rotation_matrix(int, float_t, vector3_t&, vector3_t&, vector3_t&);
       bool compute_truncated_cone(shape_param_list_t&, float_t, float_t, std::vector<complex_t>&,
               vector3_t);
       bool compute_sawtooth_up();
       bool compute_sawtooth_down();
-      bool compute_pyramid();
 
       /* other helpers */ // check if they should be private ...
       bool param_distribution(ShapeParam&, std::vector<float_t>&, std::vector<float_t>&);

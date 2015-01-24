@@ -265,7 +265,7 @@ namespace hig {
         ShapeKeyWords_[std::string("hcylinder")]  = shape_horizontal_cylinder;
         ShapeKeyWords_[std::string("randcylinders")]= shape_random_cylinders;
         ShapeKeyWords_[std::string("sphere")]    = shape_sphere;
-        ShapeKeyWords_[std::string("truncpyr")]    = shape_truncpyr;
+        ShapeKeyWords_[std::string("pyramid")]    = shape_pyramid;
         ShapeKeyWords_[std::string("trunccone")]  = shape_trunccone;
         ShapeKeyWords_[std::string("prism3")]    = shape_prism3;
         ShapeKeyWords_[std::string("prism6")]    = shape_prism6;

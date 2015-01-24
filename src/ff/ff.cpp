@@ -47,7 +47,7 @@ namespace hig {
       /* compute numerically */
       is_analytic_ = false;
       numeric_ff_.init(rot1, rot2, rot3, ff_);
-      numeric_ff_.compute2 (shape_filename.c_str(), ff_, rot1, rot2, rot3
+      numeric_ff_.compute (shape_filename.c_str(), ff_, rot1, rot2, rot3
                 #ifdef USE_MPI
                   , multi_node, comm_key
                 #endif
@@ -111,20 +111,10 @@ namespace hig {
     out.close();
   }
 
-  void FormFactor::save_ff(unsigned int nqx, unsigned int nqy, unsigned int nqz,
-                const char* filename) {
+  void FormFactor::save_ff(unsigned int nqz, const char* filename) {
     std::ofstream f(filename);
     for(unsigned int z = 0; z < nqz; ++ z) {
-      for(unsigned int y = 0; y < nqy; ++ y) {
-        for(unsigned int x = 0; x < nqx; ++ x) {
-          unsigned int index = nqx * nqy * z + nqx * y + x;
-          //f << ff_[index].real() << "\t" << ff_[index].imag() << std::endl;
-          f << std::norm(ff_[index]);
-        } // for
-        //f << std::endl;
-        f << " ";
-      } // for
-      f << std::endl;
+      f << std::norm(ff_[z]) << std::endl;
     } // for
     f.close();
   } // FormFactor::save_ff()

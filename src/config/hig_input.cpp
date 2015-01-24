@@ -1661,7 +1661,7 @@ namespace hig {
         } // while
         return true;
 
-      case shape_truncpyr:
+      case shape_pyramid:
         while(param != shape.param_end()) {
           switch((*param).second.type()) {
             case param_radius:

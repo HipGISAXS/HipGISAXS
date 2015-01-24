@@ -26,6 +26,7 @@
 
 #include <ff/ff_ana.hpp>
 #include <common/enums.hpp>
+#include <common/constants.hpp>
 #include <model/shape.hpp>
 #include <model/qgrid.hpp>
 #include <utils/utilities.hpp>
@@ -73,7 +74,7 @@ namespace hig {
       maintimer.start();
     #endif // TIME_DETAIL_2
 
-    #ifdef FF_ANA_GPU
+    #ifdef __FF_ANA_GPU
       // on gpu
       std::cout << "-- Computing random cylinders FF on GPU ..." << std::endl;
 
@@ -87,46 +88,25 @@ namespace hig {
       std::cout << "-- Computing random cylinder FF on CPU ..." << std::endl;
 
       ff.clear();
-      ff.reserve(nqx_ * nqy_ * nqy_);
-      for(unsigned int i = 0; i < nqx_ * nqy_ * nqz_; ++ i) ff.push_back(complex_t(0.0, 0.0));
-      complex_t unitc(0, 1);
+      ff.resize(nqx_, C_ZERO);
+      complex_t unitc = C_ONE;
 
-      float_t dx = 0.001;    // FIXME: hard-coded ???
-      unsigned int nx = (unsigned int) ((1.0 - dx) / dx + 1.0);
-
+      float_t x_val = 0.0;
       #pragma omp parallel for
       for(unsigned int z = 0; z < nqz_; ++ z) {
         complex_t qz = QGrid::instance().qz_extended(z);
-        complex_t temp_ff(0.0, 0.0);
+        complex_t temp_ff = C_ZERO;
+        complex_t temp_ffx = C_ZERO;
         for(unsigned int i_r = 0; i_r < r.size(); ++ i_r) {
           for(unsigned int i_h = 0; i_h < h.size(); ++ i_h) {
-            float_t x_val = 0.0;
-            complex_t temp_ffx(0.0, 0.0);
-            for(unsigned int i_x = 0; i_x < nx; ++ i_x, x_val += dx) {
-              complex_t temp1 = sinc(qz * h[i_h] * x_val / (float_t) 2.0);
-              complex_t temp2 = qz * r[i_r] * sqrt(1 - x_val * x_val);
-              if(!(temp2.real() == 0 && temp2.imag() == 0))  // TODO improve fp comparison ...
-                temp_ffx += temp1 * cbessj(temp2, 1) / temp2;
-              /*if(!(boost::math::isfinite(temp_ffx.real()) &&
-                  boost::math::isfinite(temp_ffx.imag()))) {
-                std::cout << "&&&&&&&&&&&&& OHO OHOH OHOHO: "
-                      << z << ", " << i_x <<  ", " << i_r << ", " << i_h
-                      << ": " << r[i_r] << ", " << h[i_h] << ", (" << temp1.real()
-                      << "," << temp1.imag() << "), (" << temp2.real() << ","
-                      << temp2.imag() << ")" << ", (" << qz.real() << "," << qz.imag()
-                      << ")" << std::endl;
-              } // if*/
-            } // for
+            complex_t temp1 = sinc(qz * h[i_h] * x_val / (float_t) 2.0);
+            complex_t temp2 = qz * r[i_r] * sqrt(1 - x_val * x_val);
+            if(!(temp2.real() == 0 && temp2.imag() == 0))  // TODO improve fp comparison ...
+              temp_ffx = temp1 * cbessj(temp2, 1) / temp2;
             temp_ff += 4.0 * distr_r[i_r] * distr_h[i_h] * temp_ffx * temp_ffx;
           } // for h
         } // for r
-        // copy to all x and y
-        for(unsigned int y = 0; y < nqy_; ++ y) {
-          for(unsigned int x = 0; x < nqx_; ++ x) {
-            unsigned int index = nqx_ * nqy_ * z + nqx_ * y + x;
-            ff[index] = temp_ff;
-          } // for x
-        } // for y
+        ff[z] = temp_ff;
       } // for z
     #endif // FF_ANA_GPU
     #ifdef TIME_DETAIL_2

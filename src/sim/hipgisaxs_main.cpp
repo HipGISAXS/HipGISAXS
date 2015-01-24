@@ -1172,6 +1172,7 @@ namespace hig {
                 , grain_comm
               #endif
               );
+
         //ff.print_ff(nqx_, nqy_, nqz_extended_);
         //ff.printff(nqx_, nqy_, nqz_extended_);
         //ff.save (nrow_, ncol_, "ff.out");

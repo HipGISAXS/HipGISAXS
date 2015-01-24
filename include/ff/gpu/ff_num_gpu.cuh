@@ -52,7 +52,7 @@ namespace hig {
       ~NumericFormFactorG() {}
 
       /* Spherical Q_grid */
-      unsigned int compute_tri_form_factor (int, triangle_t *, int, 
+      unsigned int compute_poly_form_factor (int, triangle_t *&, int, 
               cucomplex_t *& ff, 
               float_t *&, int, float_t *&, int,
               cucomplex_t *&, int, float_t *&, float_t &);

@@ -46,7 +46,7 @@ namespace hig {
     ff.clear();
 
     #ifdef FF_ANA_GPU
-      gff_.init(nqx_, nqy_, nqz_);
+      gff_.init(nqy_, nqz_);
     #endif // FF_ANA_GPU
 
     // rotation matrices are new for each ff calculation
@@ -156,7 +156,7 @@ namespace hig {
         } // if
         break;
       case shape_pyramid:          // pyramid
-        if(!compute_pyramid()) {
+        if(!compute_pyramid(params, ff, tau, eta, transvec)){
           std::cerr << "error: something went wrong while computing FF for a pyramid"
                 << std::endl;
           return false;
@@ -165,13 +165,6 @@ namespace hig {
       case shape_trunccone:        // truncated cone
         if(!compute_truncated_cone(params, tau, eta, ff, transvec)) {
           std::cerr << "error: something went wrong while computing FF for a truncated cone"
-                << std::endl;
-          return false;
-        } // if
-        break;
-      case shape_truncpyr:        // truncated pyramid
-        if(!compute_truncated_pyramid(params, ff, transvec)) {
-          std::cerr << "error: something went wrong while computing FF for a truncated pyramid"
                 << std::endl;
           return false;
         } // if
@@ -187,9 +180,6 @@ namespace hig {
             << std::endl;
     #endif // TIME_DETAIL_1
 
-    //int naninfs = count_naninfs(nqx_, nqy_, nqz_, ff);
-    //std::cout << " ------ " << naninfs << " / " << nqx_ * nqy_ * nqz_
-    //      << " nans or infs" << std::endl;
     return true;
   } // AnalyticFormFactor::compute()
 

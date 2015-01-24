@@ -30,6 +30,23 @@
 // cuCadd, cuCsub, cuCmul, cuCdiv, 
 
 namespace hig {
+  __device__ static __inline__ float factorialf (int i) {
+    float factorial[9] = {1.0f, 1.0f, 2.0f, 6.0f, 24.0f, 120.0f, 720.0f, 5050.0f, 40320.0f};
+    return factorial[i];
+  }
+  
+  __device__ static __inline__ double factorial (int i) {
+    double factorial[9] = {1.0, 1.0, 2.0, 6.0, 24.0, 120.0, 720.0, 5050.0, 40320.0};
+    return factorial[i];
+  }
+
+  __device__ static __inline__ float cuRtan(float a){
+    return tanf(a);
+  }
+
+  __device__ static __inline__ double cuRtan(double a){
+    return tan(a);
+  }
 
   __device__ static __inline__ cuFloatComplex make_cuC(float r, float i) {
     return make_cuFloatComplex(r, i);
@@ -317,6 +334,19 @@ namespace hig {
     return make_cuC(cos(x) * cosh(y), -sin(x) * sinh(y));
   } // cuCsin()
 
+  __device__ static __inline__ float cuCsinc(float v) {
+      if (fabs(v) > 1.0E-05)
+          return (sin(v)/v);
+      else
+          return (1.0 - (v*v)/factorialf(3) + (v*v*v*v)/factorialf(5));
+  }
+
+  __device__ static __inline__ double cuCsinc(double v) {
+      if (abs(v) > 1.0E-05)
+          return (sin(v)/v);
+      else
+          return (1.0 - (v*v)/factorial(3) + (v*v*v*v)/factorial(5));
+  }
 
   __device__ static __inline__ cuFloatComplex cuCsinc(cuFloatComplex value) {
     cuFloatComplex temp;

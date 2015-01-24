@@ -1,9 +1,9 @@
 /**
  *  Project: HipGISAXS (High-Performance GISAXS)
  *
- *  File: ff_ana_prism_gpu.cu
+ *  File: ff_ana_gpu.cu
  *  Created: Oct 16, 2012
- *  Modified: Wed 08 Oct 2014 12:17:49 PM PDT
+ *  Modified: Wed 08 Oct 2014 12:17:47 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -21,129 +21,130 @@
  */
 
 #include <iostream>
+#include <fstream>
 #include <complex>
 #include <cuComplex.h>
+#include <stdio.h>
 
 #include <ff/gpu/ff_ana_gpu.cuh>
 #include <common/enums.hpp>
+#include <common/constants.hpp>
 #include <numerics/gpu/cu_complex_numeric.cuh>
 #include <utils/gpu/cu_utilities.cuh>
 
 
 namespace hig {
 
-  /**
-   * prism3 on gpu
+  extern __constant__ float_t tau_d;
+  extern __constant__ float_t eta_d;
+  extern __constant__ float_t transvec_d[3];
+  extern __constant__ float_t rot_d[9];
+
+  /** Form Factor of Prism3:
+   *  ff = It is complicated ...
    */
+  __device__  __inline__ cucomplex_t FormFactorPrism3(cucomplex_t qx, cucomplex_t qy, cucomplex_t qz, 
+          float_t length, float_t height){
 
-  __global__ void form_factor_prism3_kernel(unsigned int, unsigned int, unsigned int,
-                  float_t*, float_t*, cucomplex_t*, float_t, float_t, float_t*,
-                  unsigned int, float_t*, unsigned int, float_t*,
-                  unsigned int, float_t*, unsigned int, float_t*,
-                  float_t*, cucomplex_t*);
+    cucomplex_t tmp = qx * (qx * qx - 3. * qy * qy);
+    if (cuCabsolute(tmp) < 1.0E-20)
+        return make_cuC(ZERO, ZERO);
 
+    // define complex units
+    const cucomplex_t P_J = make_cuC(ZERO, ONE);
+    const cucomplex_t N_J = make_cuC(ZERO, NEG_ONE);
+    const float_t sqrt3 = 1.732050808;
 
+    float_t L = 0.5 * length;
+    float_t H = 0.5 * height;
+    cucomplex_t t1 = sqrt3 * cuCexp(N_J * qy * L / sqrt3) / tmp;
+    cucomplex_t t2 = qx * cuCexp(P_J * qy * L * sqrt3) - qx * cuCcos(qx * L) - P_J * sqrt3 * qy * cuCsin(qy * L);
+    cucomplex_t t3 = cuCsinc(qz * H) * cuCexp(P_J * qz * H);
+    return (t1 * t2 * t3);
+  }
+ 
+  __global__ void ff_prism3_kernel (unsigned int nqy, unsigned int nqz, 
+          float_t * qx, float_t * qy, cucomplex_t * qz, cucomplex_t * ff,
+          int nx, float_t * x, float_t * distr_x,
+          int ny, float_t * y, float_t * distr_y) {
+
+    int i_z = blockDim.x * blockIdx.x + threadIdx.x;
+    if (i_z < nqz){
+      int i_y = i_z % nqy;
+      cucomplex_t c_neg_unit = make_cuC(ZERO, NEG_ONE);
+      cucomplex_t mqx, mqy, mqz;
+      compute_meshpoints(qx[i_y], qy[i_y], qz[i_z], rot_d, mqx, mqy, mqz);
+      cucomplex_t temp_ff = make_cuC(ZERO, ZERO);
+      for (int i = 0; i < nx; i++){
+        for (int j = 0; j < ny; j++){
+          float_t wght = distr_x[i] * distr_y[j];
+          temp_ff = temp_ff + FormFactorPrism3(mqx, mqy, mqz, x[i], y[j]) * wght;
+        }
+      }
+      cucomplex_t temp1 = transvec_d[0] * mqx + transvec_d[1] * mqy + transvec_d[2] * mqz;
+      ff[i_z] =  temp_ff * cuCexpi(temp1);
+    }
+  } // ff_prism3_kernel()
+
+   
   bool AnalyticFormFactorG::compute_prism3(const float_t tau, const float_t eta,
-                  const std::vector<float_t>& l,
-                  const std::vector<float_t>& distr_l,
-                  const std::vector<float_t>& h,
-                  const std::vector<float_t>& distr_h,
+                  const std::vector<float_t>& x,
+                  const std::vector<float_t>& distr_x,
+                  const std::vector<float_t>& y,
+                  const std::vector<float_t>& distr_y,
                   const float_t* rot_h, const std::vector<float_t>& transvec,
                   std::vector<complex_t>& ff) {
-    unsigned int n_l = l.size(), n_distr_l = distr_l.size();
-    unsigned int n_h = h.size(), n_distr_h = distr_h.size();
-    const float_t *l_h = l.empty() ? NULL : &*l.begin();
-    const float_t *distr_l_h = distr_l.empty() ? NULL : &*distr_l.begin();
-    const float_t *h_h = h.empty() ? NULL : &*h.begin();
-    const float_t *distr_h_h = distr_h.empty() ? NULL : &*distr_h.begin();
+    unsigned int n_x = x.size(), n_distr_x = distr_x.size();
+    unsigned int n_y = y.size(), n_distr_y = distr_y.size();
+
+    const float_t *x_h = x.empty() ? NULL : &*x.begin();
+    const float_t *distr_x_h = distr_x.empty() ? NULL : &*distr_x.begin();
+    const float_t *y_h = y.empty() ? NULL : &*y.begin();
+    const float_t *distr_y_h = distr_y.empty() ? NULL : &*distr_y.begin();
+    float_t transvec_h[3] = {transvec[0], transvec[1], transvec[2]};
 
     // construct device buffers
-    float_t *l_d, *distr_l_d;
-    float_t *h_d, *distr_h_d;
+    float_t *x_d, *distr_x_d;
+    float_t *y_d, *distr_y_d;
 
-    cudaMalloc((void**) &l_d, n_l * sizeof(float_t));
-    cudaMalloc((void**) &distr_l_d, n_distr_l * sizeof(float_t));
-    cudaMalloc((void**) &h_d, n_h * sizeof(float_t));
-    cudaMalloc((void**) &distr_h_d, n_distr_h * sizeof(float_t));
+    cudaMalloc((void**) &x_d, n_x * sizeof(float_t));
+    cudaMalloc((void**) &distr_x_d, n_distr_x * sizeof(float_t));
+    cudaMalloc((void**) &y_d, n_y * sizeof(float_t));
+    cudaMalloc((void**) &distr_y_d, n_distr_y * sizeof(float_t));
 
     // copy data to device buffers
-    cudaMemcpy(l_d, l_h, n_l * sizeof(float_t), cudaMemcpyHostToDevice);
-    cudaMemcpy(h_d, h_h, n_h * sizeof(float_t), cudaMemcpyHostToDevice);
-    cudaMemcpy(distr_l_d, distr_l_h, n_distr_l * sizeof(float_t), cudaMemcpyHostToDevice);
-    cudaMemcpy(distr_h_d, distr_h_h, n_distr_h * sizeof(float_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(x_d, x_h, n_x * sizeof(float_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(y_d, y_h, n_y * sizeof(float_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(distr_x_d, distr_x_h, n_distr_x * sizeof(float_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(distr_y_d, distr_y_h, n_distr_y * sizeof(float_t), cudaMemcpyHostToDevice);
 
-    run_init(rot_h, transvec);
+    //run_init(rot_h, transvec);
+    cudaMemcpyToSymbol(tau_d, &tau, sizeof(float_t), 0, cudaMemcpyHostToDevice);
+    cudaMemcpyToSymbol(eta_d, &eta, sizeof(float_t), 0, cudaMemcpyHostToDevice);
+    cudaMemcpyToSymbol(rot_d, rot_h, 9*sizeof(float_t), 0, cudaMemcpyHostToDevice); 
+    cudaMemcpyToSymbol(transvec_d, transvec_h, 3*sizeof(float_t), 0, cudaMemcpyHostToDevice); 
 
-    unsigned int cuda_block_y = 16, cuda_block_z = 8;
-    unsigned int cuda_num_blocks_y = (unsigned int) ceil((float_t) nqy_ / cuda_block_y);
-    unsigned int cuda_num_blocks_z = (unsigned int) ceil((float_t) nqz_ / cuda_block_z);
-    dim3 ff_grid_size(cuda_num_blocks_y, cuda_num_blocks_z, 1);
-    dim3 ff_block_size(cuda_block_y, cuda_block_z, 1);
+    int num_threads = 256;
+    int num_blocks =  nqz_ / num_threads + 1;
+    dim3 ff_grid_size(num_blocks, 1, 1);
+    dim3 ff_block_size(num_threads, 1, 1);
+    std::cerr << "Q-Grid size = " << nqz_ << std::endl;
 
     // the kernel
-    form_factor_prism3_kernel <<< ff_grid_size, ff_block_size >>> (
-        nqx_, nqy_, nqz_, qx_, qy_, qz_, tau, eta, rot_,
-        n_l, l_d, n_distr_l, distr_l_d,
-        n_h, h_d, n_distr_h, distr_h_d,
-        transvec_,
-        ff_);
+    ff_prism3_kernel <<<num_blocks, num_threads >>> (nqy_, nqz_, 
+            qx_, qy_, qz_, ff_, 
+            n_x, x_d, distr_x_d, 
+            n_y, y_d, distr_y_d);
+    
+    construct_output_ff(ff);
 
-    cudaThreadSynchronize();
-    cudaError_t err = cudaGetLastError();
-    if(err != cudaSuccess) {
-      std::cerr << "error: prism3 form factor kernel failed [" << __FILE__ << ":" << __LINE__ << "]: "
-            << cudaGetErrorString(err) << std::endl;
-      return false;
-    } else {
-      //std::cout << "block size: " << cby << " x " << cbz << ". ";
-      construct_output_ff(ff);
-    } // if-else
-
-    cudaFree(distr_h_d);
-    cudaFree(h_d);
-    cudaFree(distr_l_d);
-    cudaFree(l_d);
-
+    cudaFree(distr_y_d);
+    cudaFree(y_d);
+    cudaFree(distr_x_d);
+    cudaFree(x_d);
+   
     return true;
-  } // AnalyticFormFactorG::compute_box()
-
-
-  __global__ void form_factor_prism3_kernel(unsigned int nqx, unsigned int nqy, unsigned int nqz,
-                  float_t *qx, float_t *qy, cucomplex_t *qz,
-                  float_t tau, float_t eta, float_t *rot,
-                  unsigned int n_l, float_t *l, unsigned int n_distr_l, float_t *distr_l,
-                  unsigned int n_h, float_t *h, unsigned int n_distr_h, float_t *distr_h,
-                  float_t *transvec, cucomplex_t *ff) {
-    unsigned int i_y = blockDim.x * blockIdx.x + threadIdx.x;
-    unsigned int i_z = blockDim.y * blockIdx.y + threadIdx.y;
-    unsigned int base_index = nqx * nqy * i_z + nqx * i_y;
-    float_t sqrt3 = sqrt((float_t) 3.0);
-    if(i_y < nqy && i_z < nqz) {
-      for(unsigned int i_x = 0; i_x < nqx; ++ i_x) {
-        cucomplex_t mqx, mqy, mqz;
-        compute_meshpoints(qx[i_x], qy[i_y], qz[i_z], rot, mqx, mqy, mqz);
-        cucomplex_t temp1 = mqx * (mqx * mqx - 3.0 * mqy * mqx);
-        cucomplex_t temp2 = mqz + tan(tau) * (sin(eta) * mqx + cos(eta) * mqy);
-        cucomplex_t temp_ff = make_cuC((float_t) 0.0, (float_t) 0.0);
-        for(unsigned int p_h = 0; p_h < n_h; ++ p_h) {
-          for(unsigned int p_l = 0; p_l < n_l; ++ p_l) {
-            cucomplex_t temp4 = mqx * cuCexpi(mqy * l[p_l] * sqrt3);
-            cucomplex_t temp5 = mqx * cuCcos(mqx * l[p_l]);
-            cucomplex_t temp6 = make_cuC((float_t) 0.0, (float_t) 1.0) *
-                      sqrt3 * mqy * cuCsin(mqx * l[p_l]);
-            cucomplex_t temp7 = fq_inv(temp2, h[p_h]);
-            cucomplex_t temp8 = (temp4 - temp5 - temp6) * temp7;
-            cucomplex_t temp9 = 2.0 * sqrt3 * cuCexpi(mqy * l[p_l] / sqrt3);
-            temp_ff = temp_ff + (temp9 / temp1) * temp8;
-          } // for x
-        } // for y
-        cucomplex_t temp_e = cuCexpi(mqx * transvec[0] + mqy * transvec[1] + mqz * transvec[2]);
-        unsigned int curr_index = base_index + i_x;
-        ff[curr_index] = temp_ff * temp_e;
-      } // for x
-    } // if
-  } // form_factor_prism3_kernel()
-
+  } // AnalyticFormFactorG::compute_prism3()
 
 } // namespace hig
 
