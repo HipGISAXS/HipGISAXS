@@ -154,6 +154,7 @@ namespace hig {
 
 
 
+#ifdef __DONT_COMPILE_THIS__
 //**************************************************************************************
 //         USE 1D-Array QGrid  
 //**************************************************************************************
@@ -426,6 +427,7 @@ namespace hig {
   } // NumericFormFactorG::compute2()
 
 //**************************************************************************************
+#endif // __DONT_COMPILE_THIS__
 
   /**
    * Wrapper for the NumericFormFactorG class function.

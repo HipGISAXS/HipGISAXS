@@ -76,8 +76,18 @@ namespace hig {
     return cuCimag (x);
   }
 
-  // addition
 
+  // single-precision conjugate
+  __device__ static __inline__ cuFloatComplex cuCconj(cuFloatComplex x){
+    return make_cuFloatComplex(x.x, -x.y);
+  }
+
+  // double-precision conjugate
+  __device__ static __inline__ cuDoubleComplex cuCconj(cuDoubleComplex x){
+    return make_cuDoubleComplex(x.x, -x.y);
+  }
+
+  // addition
   __device__ static __inline__ cuFloatComplex operator+(cuFloatComplex a, cuFloatComplex b) {
     return make_cuFloatComplex(a.x + b.x, a.y + b.y);
   } // operator+()
@@ -134,27 +144,27 @@ namespace hig {
 
   __device__ static __inline__ cuFloatComplex operator*(cuFloatComplex a, cuFloatComplex b) {
     return make_cuFloatComplex(a.x * b.x - a.y * b.y, a.x * b.y + a.y * b.x);
-  } // operator+()
+  } // operator*()
 
   __device__ static __inline__ cuFloatComplex operator*(cuFloatComplex a, float b) {
     return make_cuFloatComplex(a.x * b, a.y * b);
-  } // operator+()
+  } // operator*()
 
   __device__ static __inline__ cuFloatComplex operator*(float a, cuFloatComplex b) {
     return make_cuFloatComplex(a * b.x, a * b.y);
-  } // operator+()
+  } // operator*()
 
   __device__ static __inline__ cuDoubleComplex operator*(cuDoubleComplex a, cuDoubleComplex b) {
     return make_cuDoubleComplex(a.x * b.x - a.y * b.y, a.x * b.y + a.y * b.x);
-  } // operator+()
+  } // operator*()
 
   __device__ static __inline__ cuDoubleComplex operator*(cuDoubleComplex a, double b) {
     return make_cuDoubleComplex(a.x * b, a.y * b);
-  } // operator+()
+  } // operator*()
 
   __device__ static __inline__ cuDoubleComplex operator*(double a, cuDoubleComplex b) {
     return make_cuDoubleComplex(a * b.x, a * b.y);
-  } // operator+()
+  } // operator*()
 
 
   // division
@@ -200,6 +210,15 @@ namespace hig {
   __device__ static __inline__ double cuCabsolute (cuDoubleComplex z) {
     return cuCabs(z);
   } // cuCabsolute
+
+
+  // rotate the Q-vector float case
+  __device__ static __inline__ void rotate_q(float * rot, float qx, float qy, cuFloatComplex qz,
+          cuFloatComplex & mqx, cuFloatComplex & mqy, cuFloatComplex & mqz) {
+      mqx.x = rot[0] * qx + rot[1] * qy + rot[2] * qz.x; mqx.y = rot[2] * qz.y;
+      mqy.x = rot[3] * qx + rot[4] * qy + rot[5] * qz.x; mqy.y = rot[5] * qz.y;
+      mqz.x = rot[6] * qx + rot[7] * qy + rot[8] * qz.x; mqz.y = rot[8] * qz.y;
+  }
 
   __device__ static __inline__ cuFloatComplex cuCsqrt(cuFloatComplex z) {
     float x = z.x;

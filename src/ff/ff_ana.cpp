@@ -106,12 +106,14 @@ namespace hig {
         } // if
         break;
       case shape_horizontal_cylinder:    // horizontal cylinder
+        /*
         if(!compute_horizontal_cylinder(tau, eta, params, transvec, ff)) {
           std::cerr << "error: something went wrong while computing FF for a "
                 << "horizontal cylinder"
                 << std::endl;
           return false;
         } // if
+        */
         break;
       case shape_sphere:          // simple sphere
         if(!compute_sphere(params, ff, transvec)) {

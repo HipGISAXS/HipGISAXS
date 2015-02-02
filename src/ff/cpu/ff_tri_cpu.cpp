@@ -161,25 +161,16 @@ namespace hig {
 
 
   /**
-   * The main host function called from outside, as part of the API for a single node.
+   * Exact integration
    */
-  unsigned int NumericFormFactorC::compute_ana_triangle (int rank,
-            triangle_t * shape_def, int num_triangles,
-            complex_t* &ff,
-            float_t * qx, int nqx, float_t * qy, int nqy, complex_t * qz, int nqz,
-            float_t * rot,
-            float_t & compute_time) {
+  unsigned int NumericFormFactorC::compute_exact_triangle(
+          triangle_t * shape_def, int num_triangles,
+          complex_t* &ff,
+          int nqy, float_t * qx, float_t * qy, int nqz, complex_t * qz,
+          float_t * rot, float_t & compute_time) {
 
-    double temp_mem_time = 0.0, total_mem_time = 0.0;
-    #ifdef _OPENMP
-      if(rank == 0)
-        std::cout << "++      Number of OpenMP threads: " << omp_get_max_threads() << std::endl;
-    #endif
-  
     if(num_triangles < 1) return 0;
     unsigned long int total_qpoints = nqz;
-    unsigned long int host_mem_usage = ((unsigned long int) nqx + nqy) * sizeof(float_t) +
-                        nqz * sizeof(complex_t);
   
     // allocate memory for the final FF 3D matrix
     ff = new (std::nothrow) complex_t[total_qpoints];  // allocate and initialize to 0
@@ -189,7 +180,6 @@ namespace hig {
             << total_qpoints * sizeof(complex_t) << " b" << std::endl;
       return 0;
     } // if
-    host_mem_usage += total_qpoints * sizeof(complex_t);
  
     #ifdef DEBUG
     int n = 10;
@@ -210,5 +200,58 @@ namespace hig {
     }
     return num_triangles;
   }
-  
+
+  /**
+   * Approximated integration
+   */
+  unsigned int NumericFormFactorC::compute_approx_triangle(
+          float_vec_t &shape_def,
+          complex_t *& ff,
+          int nqy, float_t * qx, float_t * qy, 
+          int nqz, complex_t * qz, float_t * rot, float_t &comp_time){
+
+    int num_triangles = shape_def.size() / CPU_T_PROP_SIZE_;
+    if (num_triangles < 1) return 0;
+
+    ff = new (std::nothrow) complex_t[nqz];
+    if (ff == NULL){
+      std::cerr << "Memory allocation failed for ff. Requested size: " << nqz << std::endl;
+      return 0;
+    }
+    memset(ff, 0, nqz * sizeof(complex_t));
+
+    woo::BoostChronoTimer timer;
+    timer.start();
+
+#pragma omp parallel for
+    for (int i_z = 0; i_z < nqz; i_z++){
+      int i_y = i_z % nqy;
+      for (int i_t = 0; i_t < num_triangles; i_t++){
+        int offset = i_t * CPU_T_PROP_SIZE_;
+        float_t s  = shape_def[offset];
+        float_t nx = shape_def[offset + 1];
+        float_t ny = shape_def[offset + 2];
+        float_t nz = shape_def[offset + 3];
+        float_t x  = shape_def[offset + 4];
+        float_t y  = shape_def[offset + 5];
+        float_t z  = shape_def[offset + 6];
+
+        // TODO Fix it move it one place for all the rotations
+        complex_t mqx, mqy, mqz;
+        mqx = rot[0] * qx[i_y] + rot[1] * qy[i_y] + rot[2] * qz[i_z];
+        mqy = rot[3] * qx[i_y] + rot[4] * qy[i_y] + rot[5] * qz[i_z];
+        mqz = rot[6] * qx[i_y] + rot[7] * qy[i_y] + rot[8] * qz[i_z];
+
+        float_t q2 = std::norm(mqx) + std::norm(mqy) + std::norm(mqz);
+        complex_t qn = mqx * nx + mqy * ny + mqz * nz;
+        complex_t qt = mqx * x  + mqy * y  + mqz * z;
+        complex_t nj = C_NEG_ONE;
+        complex_t np = C_ONE;
+        ff[i_z] += (nj * qn * s * std::exp(np * qt) / q2);
+      }
+    }
+    timer.stop();
+    comp_time = timer.elapsed_msec();
+    return num_triangles;
+  }
 } // namespace hig

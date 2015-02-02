@@ -39,10 +39,15 @@ namespace hig {
 
 			bool init();	// TODO ...
 	
-            unsigned int compute_ana_triangle (int, triangle_t *, int,
+            unsigned int compute_exact_triangle(triangle_t *, int,
                     complex_t *&, 
-                    float_t *, int, float_t *, int, complex_t *, int, 
+                    int, float_t *, float_t *, int, complex_t *,
                     float_t *, float_t &);
+
+            unsigned int compute_approx_triangle(float_vec_t &,
+                    complex_t *&,
+                    int, float_t *, float_t *,
+                    int, complex_t *, float_t *, float_t &); 
 		private:
 			#ifndef FF_NUM_CPU_FUSED			
 				void form_factor_kernel(float_t*, float_t*, complex_t*, float_vec_t&,

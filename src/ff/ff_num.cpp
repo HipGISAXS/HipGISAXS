@@ -43,7 +43,6 @@ namespace hig {
 
   bool NumericFormFactor::init(vector3_t& rot1, vector3_t& rot2, vector3_t& rot3,
                   std::vector<complex_t>& ff) {
-    nqx_ = QGrid::instance().nqx();
     nqy_ = QGrid::instance().nqy();
     nqz_ = QGrid::instance().nqz_extended();
 
@@ -131,12 +130,12 @@ namespace hig {
     } // if
 
     // copy q-points
-    float_t * qx = new (std::nothrow) float_t [nqx_];
+    float_t * qx = new (std::nothrow) float_t [nqy_];
     if (qx == NULL) {
         std::cerr << "Error: failure in allocation memeroy." << std::endl;
         return false;
     }
-    for (int i = 0; i < nqx_; i++ ) qx[i] = QGrid::instance().qx(i);
+    for (int i = 0; i < nqy_; i++ ) qx[i] = QGrid::instance().qx(i);
 
     float_t * qy = new (std::nothrow) float_t [nqy_];
     if (qy == NULL) {
@@ -168,10 +167,9 @@ namespace hig {
 #ifdef FF_NUM_GPU
     cucomplex_t * p_ff = NULL;
     // call kernel
-    if (num_triangles != gff_.compute_poly_form_factor (rank, 
-                triangles, num_triangles,
-                p_ff, qx, nqx_, qy, nqy_,
-                qz, nqz_, rot_, compute_time)) {
+    if (num_triangles != gff_.compute_exact_triangle(triangles, num_triangles,
+                p_ff, nqy_, qx, qy,
+                nqz_, qz, rot_, compute_time)) {
         std::cerr << "Calculation of numerical form-factor failed" << std::endl;
         return false;
     }
@@ -182,8 +180,9 @@ namespace hig {
     std::cout << "**        FF GPU compute time: " << compute_time << " ms." << std::endl;
 #else
     complex_t * p_ff = NULL;
-    if (num_triangles != cff_.compute_ff(rank, triangles, num_triangles, p_ff, 
-                qx, nqx_, qy, nqy_, qz, nqz_, rot_, compute_time)) {
+    if (num_triangles != cff_.compute_exact_triangle(triangles, num_triangles, 
+                p_ff, nqy_, qx, qy, 
+                nqz_, qz, rot_, compute_time)) {
         std::cerr << "Calculation of numerical form-factor failed" << std::endl;
         return false;
     }
@@ -198,6 +197,101 @@ namespace hig {
     return true;
   }
 
+
+  bool NumericFormFactor::compute(const char * filename, complex_vec_t & ff,
+          vector3_t & rot1, vector3_t & rot2, vector3_t & rot3
+#ifdef USE_MPI
+          , woo::MultiNode &world_comm, std::string comm_key
+#endif
+          ){
+    float_t comp_time = 0.0;
+
+    unsigned int nqy = QGrid::instance().nqy();
+    unsigned int nqz = QGrid::instance().nqz_extended();
+
+    // warning: all procs read the shape file!!!!
+    // TODO: improve to parallel IO, or one proc reading and sending to all ...
+    #ifndef __SSE3__
+      float_vec_t shape_def;
+    #else
+      #ifdef USE_GPU
+        float_vec_t shape_def;
+      #else
+        float_t* shape_def = NULL;
+      #endif
+    #endif
+    // use the new file reader instead ...
+    unsigned int num_triangles = read_shapes_file(filename, shape_def);
+            // TODO ... <--- sadly all procs read this! IMPROVE!!!
+  
+    #ifdef USE_MPI
+    int num_procs = world_comm.size(comm_key);
+    int rank = world_comm.rank(comm_key);
+    bool master = world_comm.is_master(comm_key);
+    #else
+    bool master = true;
+    #endif
+
+    if(master) {
+      std::cout << "-- Numerical form factor computation ..." << std::endl
+            << "**        Using input shape file: " << filename << std::endl
+            << "**     Number of input triangles: " << num_triangles << std::endl
+            << "**  Q-grid resolution (q-points): " <<  nqz << std::endl
+            #ifdef USE_MPI
+              << "** Number of processes requested: " << num_procs << std::endl
+            #endif
+            << std::flush;
+    } // if
+    if(num_triangles < 1) {
+      std::cerr << "error: no triangles found in specified definition file" << std::endl;
+      return false;
+    } // if
+  
+    // FIXME: this is a yucky temporary fix ... fix properly ...
+    float_t* qx = new (std::nothrow) float_t[nqy]();
+    float_t* qy = new (std::nothrow) float_t[nqy]();
+    #ifdef FF_NUM_GPU
+    cucomplex_t* qz = new (std::nothrow) cucomplex_t[nqz]();
+    #else
+    complex_t* qz = new (std::nothrow) complex_t[nqz]();
+    #endif
+   
+    // create qy_and qz using qgrid instance
+    for(unsigned int i = 0; i < nqy; ++ i) qx[i] = QGrid::instance().qx(i);
+    for(unsigned int i = 0; i < nqy; ++ i) qy[i] = QGrid::instance().qy(i);
+    for(unsigned int i = 0; i < nqz; ++ i) {
+    #ifdef FF_NUM_GPU
+      qz[i].x = QGrid::instance().qz_extended(i).real();
+      qz[i].y = QGrid::instance().qz_extended(i).imag();
+    #else
+      qz[i] = QGrid::instance().qz_extended(i);
+    #endif
+    } // for
+      
+    #ifdef FF_NUM_GPU
+    cucomplex_t *p_ff = NULL;
+    #else
+    complex_t *p_ff = NULL;
+    #endif
+  
+    float_t kernel_time = 0.;
+    unsigned int ret_numtriangles = 0;
+    #ifdef FF_NUM_GPU  // use GPU
+    ret_numtriangles = gff_.compute_approx_triangle(shape_def, 
+            p_ff, nqy, qx, qy, nqz, qz, rot_, kernel_time);
+
+    #else  // use only CPU
+    ret_numtriangles = cff_.compute_approx_triangle(shape_def, 
+            p_ff, nqy, qx, qy, nqz, qz, rot_, kernel_time);
+    #endif
+
+      if(p_ff != NULL) delete[] p_ff;
+      delete[] qz;
+      delete[] qy;
+      delete[] qx;
+  }
+
+#ifdef OLD_Q_GRID
   /**
    * main host function
    */
@@ -583,7 +677,8 @@ namespace hig {
 
     return true;
   } // NumericFormFactor::compute()
-  
+
+#endif // OLD_Q_GRID
 
   /**
    * Function to gather partial FF arrays from all processes to construct the final FF.
@@ -1000,5 +1095,6 @@ namespace hig {
 
     return num_triangles;
   } // NumericFormFactor::read_shapes_file()
+
 
 } // namespace hig

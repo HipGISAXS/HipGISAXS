@@ -52,13 +52,15 @@ namespace hig {
       ~NumericFormFactorG() {}
 
       /* Spherical Q_grid */
-      unsigned int compute_poly_form_factor (int, triangle_t *&, int, 
-              cucomplex_t *& ff, 
-              float_t *&, int, float_t *&, int,
-              cucomplex_t *&, int, float_t *&, float_t &);
-      unsigned int compute_tri_ff (int, std::vector<float_t> &, cucomplex_t * &,
-              float_t * &, int, float_t * &, int,
-              cucomplex_t * &, int, float_t * &, float_t &);
+      unsigned int compute_exact_triangle(triangle_t *, int, 
+              cucomplex_t *&, 
+              int, float_t *, float_t *, int,
+              cucomplex_t *, float_t *, float_t &);
+
+      unsigned int compute_approx_triangle(std::vector<float_t> &, 
+              cucomplex_t * &,
+              int, float_t *, float_t *, int, 
+              cucomplex_t *, float_t * , float_t &);
 
       
       /* original */
