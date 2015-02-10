@@ -77,13 +77,13 @@ int main(int narg, char** args) {
   readtimer.stop();
   std::cout << "**       Input construction time: " << readtimer.elapsed_msec() << " ms." << std::endl;
 
-  float_t zcut = std::atof(args[2]);
-  float_t radius_min = std::atof(args[3]);
-  float_t radius_max = std::atof(args[4]);
-  float_t radius_num = std::atof(args[5]);
-  float_t sd_min = std::atof(args[6]);
-  float_t sd_max = std::atof(args[7]);
-  float_t sd_num = std::atof(args[8]);
+  real_t zcut = std::atof(args[2]);
+  real_t radius_min = std::atof(args[3]);
+  real_t radius_max = std::atof(args[4]);
+  real_t radius_num = std::atof(args[5]);
+  real_t sd_min = std::atof(args[6]);
+  real_t sd_max = std::atof(args[7]);
+  real_t sd_num = std::atof(args[8]);
   unsigned int dim = std::atoi(args[9]);
 
   computetimer.start();

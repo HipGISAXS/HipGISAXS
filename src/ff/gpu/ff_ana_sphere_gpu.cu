@@ -34,8 +34,8 @@
 
 namespace hig {
 
-  extern __constant__ float_t transvec_d[3];
-  extern __constant__ float_t rot_d[9];
+  extern __constant__ real_t transvec_d[3];
+  extern __constant__ real_t rot_d[9];
 
   /** Form Factor of Sphere:
    *  R : (real) Radius of the sphere 
@@ -43,10 +43,10 @@ namespace hig {
    *  ff = L * W * H exp(j * qz * H/2) * sinc(qx * L/2) * sinc (qy * W/2) * sinc(qz * H/2)
    */
   __device__  __inline__ cucomplex_t FormFactorSphere(cucomplex_t qx, cucomplex_t qy, cucomplex_t qz, 
-          float_t radius){
+          real_t radius){
     cucomplex_t qR    = cuCsqrt(qx * qx + qy * qy + qz * qz) * radius;
 
-    float_t     vol = 4 * PI_ * radius * radius * radius;
+    real_t     vol = 4 * PI_ * radius * radius * radius;
     cucomplex_t sincos = cuCsin(qR) - cuCcos(qR) * qR; 
     cucomplex_t expval = cuCexpi(qz * radius);
     cucomplex_t qR3 = qR * qR * qR;
@@ -54,8 +54,8 @@ namespace hig {
   }
  
   __global__ void ff_sphere_kernel (unsigned int nqy, unsigned int nqz, 
-          float_t * qx, float_t * qy, cucomplex_t * qz, cucomplex_t * ff,
-          int nr, float_t * r, float_t * distr_r){
+          real_t * qx, real_t * qy, cucomplex_t * qz, cucomplex_t * ff,
+          int nr, real_t * r, real_t * distr_r){
     int i_z = blockDim.x * blockIdx.x + threadIdx.x;
     if (i_z < nqz){
       int i_y = i_z % nqy;
@@ -73,29 +73,29 @@ namespace hig {
 
    
   bool AnalyticFormFactorG::compute_sphere(
-                  const std::vector<float_t>& x,
-                  const std::vector<float_t>& distr_x,
-                  const float_t* rot_h, const std::vector<float_t>& transvec,
+                  const std::vector<real_t>& x,
+                  const std::vector<real_t>& distr_x,
+                  const real_t* rot_h, const std::vector<real_t>& transvec,
                   std::vector<complex_t>& ff) {
 
     unsigned int n_x = x.size(), n_distr_x = distr_x.size();
-    const float_t *x_h = x.empty() ? NULL : &*x.begin();
-    const float_t *distr_x_h = distr_x.empty() ? NULL : &*distr_x.begin();
-    float_t transvec_h[3] = {transvec[0], transvec[1], transvec[2]};
+    const real_t *x_h = x.empty() ? NULL : &*x.begin();
+    const real_t *distr_x_h = distr_x.empty() ? NULL : &*distr_x.begin();
+    real_t transvec_h[3] = {transvec[0], transvec[1], transvec[2]};
 
     // construct device buffers
-    float_t *x_d, *distr_x_d;
+    real_t *x_d, *distr_x_d;
 
-    cudaMalloc((void**) &x_d, n_x * sizeof(float_t));
-    cudaMalloc((void**) &distr_x_d, n_distr_x * sizeof(float_t));
+    cudaMalloc((void**) &x_d, n_x * sizeof(real_t));
+    cudaMalloc((void**) &distr_x_d, n_distr_x * sizeof(real_t));
 
     // copy data to device buffers
-    cudaMemcpy(x_d, x_h, n_x * sizeof(float_t), cudaMemcpyHostToDevice);
-    cudaMemcpy(distr_x_d, distr_x_h, n_distr_x * sizeof(float_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(x_d, x_h, n_x * sizeof(real_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(distr_x_d, distr_x_h, n_distr_x * sizeof(real_t), cudaMemcpyHostToDevice);
 
     //run_init(rot_h, transvec);
-    cudaMemcpyToSymbol(rot_d, rot_h, 9*sizeof(float_t), 0, cudaMemcpyHostToDevice); 
-    cudaMemcpyToSymbol(transvec_d, transvec_h, 3*sizeof(float_t), 0, cudaMemcpyHostToDevice); 
+    cudaMemcpyToSymbol(rot_d, rot_h, 9*sizeof(real_t), 0, cudaMemcpyHostToDevice); 
+    cudaMemcpyToSymbol(transvec_d, transvec_h, 3*sizeof(real_t), 0, cudaMemcpyHostToDevice); 
 
     int num_threads = 256;
     int num_blocks =  nqz_ / num_threads + 1;
@@ -117,4 +117,3 @@ namespace hig {
   } // AnalyticFormFactorG::compute_sphere()
 
 } // namespace hig
-

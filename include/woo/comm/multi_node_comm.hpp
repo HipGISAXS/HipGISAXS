@@ -179,6 +179,11 @@ namespace woo {
 				return true;
 			} // broadcast()
 
+			inline bool broadcast(double* data, int size, int root) {
+				if(MPI_Bcast(&(*data), size, MPI_DOUBLE, root, world_) != MPI_SUCCESS) return false;
+				return true;
+			} // broadcast()
+
 			inline bool allreduce(float sendval, float& recvval, int& proc_rank, comm::ReduceOp op) {
 				if(op != comm::minloc && op != comm::maxloc) {
 					std::cerr << "error: invalid reduction operation" << std::endl;
@@ -187,6 +192,25 @@ namespace woo {
 				MPI_Op mpi_op = reduce_op_map(op);
 				struct {
 					float val;
+					int rank;
+				} send, recv;
+				send.val = sendval;
+				send.rank = rank_;
+				if(MPI_Allreduce(&send, &recv, 1, MPI_FLOAT_INT, mpi_op, world_) != MPI_SUCCESS)
+					return false;
+				recvval = recv.val;
+				proc_rank = recv.rank;
+				return true;
+			} // allreduce()
+
+			inline bool allreduce(double sendval, double & recvval, int& proc_rank, comm::ReduceOp op) {
+				if(op != comm::minloc && op != comm::maxloc) {
+					std::cerr << "error: invalid reduction operation" << std::endl;
+					return false;
+				} // if
+				MPI_Op mpi_op = reduce_op_map(op);
+				struct {
+					double val;
 					int rank;
 				} send, recv;
 				send.val = sendval;
@@ -289,8 +313,20 @@ namespace woo {
 				return true;
 			} // send()
 
+			bool isend(double * sbuf, int scount, int to, MPI_Request& req) {
+				if(MPI_Isend(sbuf, scount, MPI_DOUBLE, to, rank_, world_, &req) != MPI_SUCCESS)
+					return false;
+				return true;
+			} // send()
+
 			bool irecv(float* rbuf, int rcount, int from, MPI_Request& req) {
 				if(MPI_Irecv(rbuf, rcount, MPI_FLOAT, from, from, world_, &req) != MPI_SUCCESS)
+					return false;
+				return true;
+			} // send()
+
+			bool irecv(double * rbuf, int rcount, int from, MPI_Request& req) {
+				if(MPI_Irecv(rbuf, rcount, MPI_DOUBLE, from, from, world_, &req) != MPI_SUCCESS)
 					return false;
 				return true;
 			} // send()
@@ -516,11 +552,19 @@ namespace woo {
 			 * Point-to-point
 			 */
 
-			inline bool isend(comm_t key, float_t* sbuf, int scount, int to, MPI_Request& req) {
+			inline bool isend(comm_t key, float * sbuf, int scount, int to, MPI_Request& req) {
 				return comms_[key].isend(sbuf, scount, to, req);
 			} // send()
 
-			inline bool irecv(comm_t key, float_t* rbuf, int rcount, int from, MPI_Request& req) {
+			inline bool isend(comm_t key, double * sbuf, int scount, int to, MPI_Request& req) {
+				return comms_[key].isend(sbuf, scount, to, req);
+			} // send()
+
+			inline bool irecv(comm_t key, float * rbuf, int rcount, int from, MPI_Request& req) {
+				return comms_[key].irecv(rbuf, rcount, from, req);
+			} // send()
+
+			inline bool irecv(comm_t key, double * rbuf, int rcount, int from, MPI_Request& req) {
 				return comms_[key].irecv(rbuf, rcount, from, req);
 			} // send()
 

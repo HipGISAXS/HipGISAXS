@@ -33,7 +33,7 @@ namespace hig{
       float_vec_t x_max_;    // range max for all parameters
       float_vec_t x_step_;  // stepping delta for all parameters. defaults to 1
 
-      std::vector <std::pair <float_vec_t, float_t> > error_list_;
+      std::vector <std::pair <float_vec_t, real_t> > error_list_;
                   // list of errors for corresponding parameter values
 
       void loop_over_param(int, float_vec_t&);
@@ -49,3 +49,4 @@ namespace hig{
 } // namespace hig
 
 #endif // __HIPGISAXS_FIT_BRUTEFORCE__
+

@@ -25,35 +25,29 @@
 
 #include <common/typedefs.hpp>
 #include <common/globals.hpp>
+#include <common/cudafy.hpp>
 
 namespace hig {
-
-  const int MAXK = 20;
 
   extern double gamma(double x);
   extern complex_t cbessj(complex_t zz, int order);
 
-  inline vector3_t cross_product(vector3_t & u, vector3_t & v){
-      vector3_t w;
-      w[0] = u[1] * v[2] - u[2] * v[1];
-      w[1] = u[2] * v[0] - u[0] * v[2];
-      w[2] = u[0] * v[1] - u[1] * v[0];
-      return w;
-  }
-
-  inline float_t dot_product (vector3_t u, vector3_t v){
-      float_t p = 0;
-      for (int i = 0; i < 3; i++) p += u[i] * v[i];
-      return p;
+  INLINE
+  vector3_t cross_product(vector3_t & u, vector3_t & v){
+    vector3_t w;
+    w[0] = u[1] * v[2] - u[2] * v[1];
+    w[1] = u[2] * v[0] - u[0] * v[2];
+    w[2] = u[0] * v[1] - u[1] * v[0];
+    return w;
   }
 
   // sinc function
   inline complex_t sinc(complex_t x){
-      if (std::abs(x) > 1.0E-14)
-          return std::sin(x) / x;
-      else
-          return complex_t(1.,0);
+    if (std::abs(x) > 1.0E-14)
+      return std::sin(x) / x;
+    else
+      // Taylor series approx
+      return (1.- x*x/6. + x*x*x*x/120.);
   }
-
 
 } // namespace hig

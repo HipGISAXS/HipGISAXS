@@ -85,8 +85,8 @@ namespace hig {
   bool Lattice::construct_vectors(vector3_t scaling) {
     //if(abc_set_) return true;  // a b c are already defined in the input
 
-    float_t sqrt2 = sqrt(2.0);
-    float_t sqrt3 = sqrt(3.0);
+    real_t sqrt2 = sqrt(2.0);
+    real_t sqrt3 = sqrt(3.0);
 
     if(!abc_set_) {
       switch(type_) {
@@ -206,7 +206,7 @@ namespace hig {
   } // GrainOrientations::clear()
 
 
-  bool GrainOrientations::update_param(const std::string& str, float_t new_val) {
+  bool GrainOrientations::update_param(const std::string& str, real_t new_val) {
     std::string keyword, rem_str;
     if(!extract_first_keyword(str, keyword, rem_str)) return false;
     std::string keyword_name, key;
@@ -416,7 +416,7 @@ namespace hig {
   /** fitting updates
    */
 
-  bool Structure::update_param(const std::string& str, float_t new_val) {
+  bool Structure::update_param(const std::string& str, real_t new_val) {
     std::string keyword, rem_str;
     if(!extract_first_keyword(str, keyword, rem_str)) return false;
     std::string keyword2, rem_str2;

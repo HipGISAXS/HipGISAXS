@@ -31,7 +31,7 @@ namespace hig {
   /**
    * create Q-grid in reciprocal space
    */
-  bool QGrid::create(float_t freq, float_t alpha_i, float_t k0, int mpi_rank) {
+  bool QGrid::create(real_t freq, real_t alpha_i, real_t k0, int mpi_rank) {
                     // x and y are reversed in slim's code ? ...
     vector2_t total_pixels = HiGInput::instance().detector_total_pixels();
     vector2_t min_point = HiGInput::instance().param_output_minpoint();
@@ -39,8 +39,8 @@ namespace hig {
     OutputRegionType type = HiGInput::instance().param_output_type();
 
     vector2_t beam = HiGInput::instance().detector_direct_beam();
-    float_t pixel_size = HiGInput::instance().detector_pixel_size();
-    float_t sd_distance = HiGInput::instance().detector_sd_distance();
+    real_t pixel_size = HiGInput::instance().detector_pixel_size();
+    real_t sd_distance = HiGInput::instance().detector_sd_distance();
     std::vector<int> pixels = HiGInput::instance().param_resolution();
     nrow_ = pixels[1];
     ncol_ = pixels[0];
@@ -51,7 +51,7 @@ namespace hig {
     vector3_t q1 = pixel_to_kspace(vector2_t(1, 1), k0, alpha_i, pixel_size, sd_distance, beam);
 
     vector3_t qmax, qmin, step;
-    float_t theta[2], alpha[2];
+    real_t theta[2], alpha[2];
 
     qmin[0] = 0.0; qmax[0] = 0.0;
 
@@ -92,8 +92,8 @@ namespace hig {
      */
     for (int i = 0; i < pixels[1]; i++) {
         for (int j = 0; j < pixels[0]; j++) {
-            float_t tth = theta[0] + j * step[0];
-            float_t alf = alpha[0] + i * step[1];
+            real_t tth = theta[0] + j * step[0];
+            real_t alf = alpha[0] + i * step[1];
             qx_.push_back (k0 * (cos(alf) * cos(tth) - cos(alpha_i)));
             qy_.push_back (k0 * (cos(alf) * sin(tth)));
             qz_.push_back (k0 * (sin(alf) + sin(alpha_i)));
@@ -112,12 +112,12 @@ namespace hig {
   } // QGrid::create()
 
 
-  bool QGrid::create_qz_extended(float_t k0, float_t kzi_0, complex_t kzi_q, complex_t dnl_q) {
+  bool QGrid::create_qz_extended(real_t k0, real_t kzi_0, complex_t kzi_q, complex_t dnl_q) {
     cqvec_t qz_temp0, qz_temp1, qz_temp2, qz_temp3;
     qz_extended_.clear(); qz_temp0.clear(); qz_temp1.clear(); qz_temp2.clear(); qz_temp3.clear();
     for(qvec_iter_t q = qz_.begin(); q != qz_.end(); ++ q) {
-      float_t temp0 = (*q) + kzi_0;
-      float_t temp1 = temp0 * temp0;
+      real_t temp0 = (*q) + kzi_0;
+      real_t temp1 = temp0 * temp0;
       complex_t temp2 = k0 * k0 * dnl_q;
       complex_t temp3 = sqrt(temp1 - temp2);
       complex_t temp4 = temp3 - kzi_q;
@@ -143,8 +143,8 @@ namespace hig {
    * for fitting, update the qgrid to match reference data
    */
   bool QGrid::update(unsigned int nqy, unsigned int nqz,
-            float_t qminy, float_t qminz, float_t qmaxy, float_t qmaxz,
-            float_t freq, float_t alpha_i, float_t k0, int mpi_rank) {
+            real_t qminy, real_t qminz, real_t qmaxy, real_t qmaxz,
+            real_t freq, real_t alpha_i, real_t k0, int mpi_rank) {
 
     vector3_t qmax, qmin, step;
     qmin[0] = 0.0; qmax[0] = 0.0;  // x dimension has just 0.0
@@ -157,9 +157,9 @@ namespace hig {
 
     qx_.clear(); qy_.clear(); qz_.clear();
     qx_.push_back(qmin[0]);
-    //for(float_t val = qmin[1]; val <= qmax[1]; val += step[1]) qy_.push_back(val);
-    //for(float_t val = qmin[2]; val <= qmax[2]; val += step[2]) qz_.push_back(val);
-    float_t val = qmin[1]; for(int i = 0; i < nqy; ++ i, val += step[1]) qy_.push_back(val);
+    //for(real_t val = qmin[1]; val <= qmax[1]; val += step[1]) qy_.push_back(val);
+    //for(real_t val = qmin[2]; val <= qmax[2]; val += step[2]) qz_.push_back(val);
+    real_t val = qmin[1]; for(int i = 0; i < nqy; ++ i, val += step[1]) qy_.push_back(val);
     val = qmin[2]; for(int i = 0; i < nqz; ++ i, val += step[2]) qz_.push_back(val);
     std::reverse(qz_.begin(), qz_.end());
 
@@ -186,13 +186,13 @@ namespace hig {
    * should come either from input file or pre-build models of common detectors.
    * Also need should check if coordinates need to be corrected for alpha_i
    */
-  bool QGrid::pixel_to_kspace(vector2_t pixel, float_t k0, float_t alpha_i,
-          float_t rho, float_t distance, vector2_t beam,
+  bool QGrid::pixel_to_kspace(vector2_t pixel, real_t k0, real_t alpha_i,
+          real_t rho, real_t distance, vector2_t beam,
           vector3_t& qpoint) {
-    //float_t alpha_f = atan(rho * (pixel[1] - 2 * beam[1] + 1043) / distance) - alpha_i;
-    //float_t theta_f = atan(rho * (pixel[0] - beam[0]) / distance);
-    float_t alpha_f = atan(rho * (pixel[1] - 2 * beam[1] + 1043) / 4350) - alpha_i;
-    float_t theta_f = atan(rho * (pixel[0] - beam[0]) / 4350);
+    //real_t alpha_f = atan(rho * (pixel[1] - 2 * beam[1] + 1043) / distance) - alpha_i;
+    //real_t theta_f = atan(rho * (pixel[0] - beam[0]) / distance);
+    real_t alpha_f = atan(rho * (pixel[1] - 2 * beam[1] + 1043) / 4350) - alpha_i;
+    real_t theta_f = atan(rho * (pixel[0] - beam[0]) / 4350);
 
     qpoint[0] = k0 * (cos(theta_f) * cos(alpha_f) - cos(alpha_i));  // x
     qpoint[1] = k0 * cos(alpha_f) * sin(theta_f);          // y
@@ -208,11 +208,11 @@ namespace hig {
       f << qx_[i] << ", " << qy_[i] << ", " << qz_[i] << std::endl;
     f.close();
   }
-  vector3_t QGrid::pixel_to_kspace(vector2_t pixel, float_t k0, float_t alpha_i,
-          float_t rho, float_t distance, vector2_t beam) {
+  vector3_t QGrid::pixel_to_kspace(vector2_t pixel, real_t k0, real_t alpha_i,
+          real_t rho, real_t distance, vector2_t beam) {
     // 'distance' is not used. currently it is hard-coded as 4350
-    float_t alpha_f = atan(rho * (pixel[1] - 2 * beam[1] + 1043) / 4350) - alpha_i;
-    float_t theta_f = atan(rho * (pixel[0] - beam[0]) / 4350);
+    real_t alpha_f = atan(rho * (pixel[1] - 2 * beam[1] + 1043) / 4350) - alpha_i;
+    real_t theta_f = atan(rho * (pixel[0] - beam[0]) / 4350);
 
     vector3_t qpoint;
     qpoint[0] = k0 * (cos(theta_f) * cos(alpha_f) - cos(alpha_i));  // x

@@ -36,8 +36,8 @@ namespace hig {
     private:
       std::string key_;      /* a unique key string */
       int order_;          /* layer order: -1(substrate) 0 1 2 3 ... */
-      float_t thickness_;      /* layer thickness */
-      float_t z_val_;        /* cumulative distance */
+      real_t thickness_;      /* layer thickness */
+      real_t z_val_;        /* cumulative distance */
       RefractiveIndex refindex_;  /* layer's refractive index */
 
     public:
@@ -50,20 +50,20 @@ namespace hig {
       /* getters */
       std::string key() const { return key_; }
       RefractiveIndex& refindex() { return refindex_; }
-      float_t thickness() const { return thickness_; }
+      real_t thickness() const { return thickness_; }
       int order() const { return order_; }
-      float_t z_val() const { return z_val_; }
+      real_t z_val() const { return z_val_; }
 
       /* setters */
       void key(std::string s) { key_ = s; }
-      void refindex_delta(float_t d) { refindex_.delta(d); }
-      void refindex_beta(float_t d) { refindex_.beta(d); }
-      void order(float_t d) { order_ = (int) d; }
-      void thickness(float_t d) { thickness_ = d; }
-      void z_val(float_t z) { z_val_ = z; }
+      void refindex_delta(real_t d) { refindex_.delta(d); }
+      void refindex_beta(real_t d) { refindex_.beta(d); }
+      void order(real_t d) { order_ = (int) d; }
+      void thickness(real_t d) { thickness_ = d; }
+      void z_val(real_t z) { z_val_ = z; }
 
       /* modifiers (updat) */
-      bool update_param(const std::string&, float_t);
+      bool update_param(const std::string&, real_t);
 
       void print();
 

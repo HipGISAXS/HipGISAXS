@@ -31,6 +31,7 @@ namespace hig {
 
   /* ShapeParam */
 
+
   void ShapeParam::init() {
     type_ = param_error;  // this object is required from user
     stat_ = stat_none;
@@ -68,7 +69,7 @@ namespace hig {
 
   // not used
   Shape::Shape(const std::string& key, const ShapeName name, const vector3_t& origin,
-          const float_t ztilt, const float_t xyrot, shape_param_list_t& param_list) :
+          const real_t ztilt, const real_t xyrot, shape_param_list_t& param_list) :
           key_(key), name_(name), originvec_(origin),
           ztilt_(ztilt), xyrotation_(xyrot) {
     for(shape_param_iterator_t i = param_list.begin(); i != param_list.end(); i ++) {
@@ -146,7 +147,7 @@ namespace hig {
    */
 
 
-  bool ShapeParam::update_param(const std::string& str, float_t new_val) {
+  bool ShapeParam::update_param(const std::string& str, real_t new_val) {
     std::string keyword, rem_str;
     if(!extract_first_keyword(str, keyword, rem_str)) return false;
     std::string keyword_name, key;
@@ -191,7 +192,7 @@ namespace hig {
   } // ShapeParam::update_param()
 
 
-  bool Shape::update_param(const std::string& str, float_t new_val) {
+  bool Shape::update_param(const std::string& str, real_t new_val) {
     std::string keyword, rem_str, rem_str2;
     if(!extract_first_keyword(str, keyword, rem_str)) return false;
     std::string keyword_name, key;

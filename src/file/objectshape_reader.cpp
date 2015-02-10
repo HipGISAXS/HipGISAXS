@@ -44,7 +44,7 @@ namespace hig {
 
     if(face_list_4v.size() > 0)
       std::cerr << "warning: ignoring faces with four vertices. may be fix it later" << std::endl;
-    std::vector<float_t> temp_shape_def;
+    std::vector<real_t> temp_shape_def;
     convert_to_shape(face_list_3v, vertices, temp_shape_def);
     num_triangles = temp_shape_def.size() / 7;
     shape_def = new (std::nothrow) double[temp_shape_def.size()];
@@ -72,7 +72,7 @@ namespace hig {
     //std::vector<int> g3num, g4num;
     //int f3num = 0, f4num = 0;
     //char discard;
-    //float_t data[12], tc1[4], vn1[4];
+    //real_t data[12], tc1[4], vn1[4];
     //poly_index_t f1;
 
     std::vector<int> face_vi, face_vti, face_vni;
@@ -253,12 +253,12 @@ namespace hig {
    */
   bool ObjectShapeReader::convert_to_shape(std::vector<std::vector<int> > face_list_3v,
                           std::vector<vertex_t> vertices,
-                          std::vector<float_t> &shape_def) {
+                          std::vector<real_t> &shape_def) {
     int num_triangles = face_list_3v.size();
     int count = 0;
     for(std::vector<std::vector<int> >::iterator i = face_list_3v.begin();
         i != face_list_3v.end(); ++ i) {
-      float_t s_area = 0.0;
+      real_t s_area = 0.0;
       vertex_t norm, center;
       if(!get_triangle_params(vertices[(*i)[0] - 1], vertices[(*i)[1] - 1], vertices[(*i)[2] - 1],
                 s_area, norm, center)) continue;
@@ -279,7 +279,7 @@ namespace hig {
    * given the vertices of a triangle in order, compute surface area, normal and center
    */
   bool ObjectShapeReader::get_triangle_params(vertex_t v1, vertex_t v2, vertex_t v3,
-      float_t &s_area, vertex_t &normal, vertex_t &center) {
+      real_t &s_area, vertex_t &normal, vertex_t &center) {
     center.x = (v1.x + v2.x + v3.x) / 3.0;
     center.y = (v1.y + v2.y + v3.y) / 3.0;
     center.z = (v1.z + v2.z + v3.z) / 3.0;
@@ -288,19 +288,19 @@ namespace hig {
     a.x = (v2.x - v1.x); a.y = (v2.y - v1.y); a.z = (v2.z - v1.z);
     b.x = (v3.x - v1.x); b.y = (v3.y - v1.y); b.z = (v3.z - v1.z);
 
-    float_t norm_a = sqrt(a.x * a.x + a.y * a.y + a.z * a.z);
-    float_t norm_b = sqrt(b.x * b.x + b.y * b.y + b.z * b.z);
-    float_t dot = a.x * b.x + a.y * b.y + a.z * b.z;
+    real_t norm_a = sqrt(a.x * a.x + a.y * a.y + a.z * a.z);
+    real_t norm_b = sqrt(b.x * b.x + b.y * b.y + b.z * b.z);
+    real_t dot = a.x * b.x + a.y * b.y + a.z * b.z;
     vertex_t cross;
     cross.x = a.y * b.z - a.z * b.y; cross.y = a.z * b.x - a.x * b.z; cross.z = a.x * b.y - a.y * b.x;
 
-    float_t norm_cross = sqrt(cross.x * cross.x + cross.y * cross.y + cross.z * cross.z);
+    real_t norm_cross = sqrt(cross.x * cross.x + cross.y * cross.y + cross.z * cross.z);
 
     if(norm_cross == 0 || norm_a == 0 || norm_b == 0) return false;
 
     normal.x = cross.x / norm_cross; normal.y = cross.y / norm_cross; normal.z = cross.z / norm_cross;
 
-    float_t sintheta = sqrt(1 - (dot / (norm_a * norm_b)) * (dot / (norm_a * norm_b)));
+    real_t sintheta = sqrt(1 - (dot / (norm_a * norm_b)) * (dot / (norm_a * norm_b)));
     s_area = norm_a * norm_b * sintheta / 2;
     return true;
   } // ObjectShapeReader::get_triangle_params()

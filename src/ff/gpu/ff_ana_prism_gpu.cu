@@ -35,28 +35,28 @@
 
 namespace hig {
 
-  extern __constant__ float_t tau_d;
-  extern __constant__ float_t eta_d;
-  extern __constant__ float_t transvec_d[3];
-  extern __constant__ float_t rot_d[9];
+  extern __constant__ real_t tau_d;
+  extern __constant__ real_t eta_d;
+  extern __constant__ real_t transvec_d[3];
+  extern __constant__ real_t rot_d[9];
 
   /** Form Factor of Prism3:
    *  ff = It is complicated ...
    */
   __device__  __inline__ cucomplex_t FormFactorPrism3(cucomplex_t qx, cucomplex_t qy, cucomplex_t qz, 
-          float_t length, float_t height){
+          real_t length, real_t height){
 
     cucomplex_t tmp = qx * (qx * qx - 3. * qy * qy);
-    if (cuCabsolute(tmp) < 1.0E-20)
+    if (cuC_abs(tmp) < 1.0E-20)
         return make_cuC(ZERO, ZERO);
 
     // define complex units
     const cucomplex_t P_J = make_cuC(ZERO, ONE);
     const cucomplex_t N_J = make_cuC(ZERO, NEG_ONE);
-    const float_t sqrt3 = 1.732050808;
+    const real_t sqrt3 = 1.732050808;
 
-    float_t L = 0.5 * length;
-    float_t H = 0.5 * height;
+    real_t L = 0.5 * length;
+    real_t H = 0.5 * height;
     cucomplex_t t1 = sqrt3 * cuCexp(N_J * qy * L / sqrt3) / tmp;
     cucomplex_t t2 = qx * cuCexp(P_J * qy * L * sqrt3) - qx * cuCcos(qx * L) - P_J * sqrt3 * qy * cuCsin(qy * L);
     cucomplex_t t3 = cuCsinc(qz * H) * cuCexp(P_J * qz * H);
@@ -64,9 +64,9 @@ namespace hig {
   }
  
   __global__ void ff_prism3_kernel (unsigned int nqy, unsigned int nqz, 
-          float_t * qx, float_t * qy, cucomplex_t * qz, cucomplex_t * ff,
-          int nx, float_t * x, float_t * distr_x,
-          int ny, float_t * y, float_t * distr_y) {
+          real_t * qx, real_t * qy, cucomplex_t * qz, cucomplex_t * ff,
+          int nx, real_t * x, real_t * distr_x,
+          int ny, real_t * y, real_t * distr_y) {
 
     int i_z = blockDim.x * blockIdx.x + threadIdx.x;
     if (i_z < nqz){
@@ -77,7 +77,7 @@ namespace hig {
       cucomplex_t temp_ff = make_cuC(ZERO, ZERO);
       for (int i = 0; i < nx; i++){
         for (int j = 0; j < ny; j++){
-          float_t wght = distr_x[i] * distr_y[j];
+          real_t wght = distr_x[i] * distr_y[j];
           temp_ff = temp_ff + FormFactorPrism3(mqx, mqy, mqz, x[i], y[j]) * wght;
         }
       }
@@ -87,42 +87,42 @@ namespace hig {
   } // ff_prism3_kernel()
 
    
-  bool AnalyticFormFactorG::compute_prism3(const float_t tau, const float_t eta,
-                  const std::vector<float_t>& x,
-                  const std::vector<float_t>& distr_x,
-                  const std::vector<float_t>& y,
-                  const std::vector<float_t>& distr_y,
-                  const float_t* rot_h, const std::vector<float_t>& transvec,
+  bool AnalyticFormFactorG::compute_prism3(const real_t tau, const real_t eta,
+                  const std::vector<real_t>& x,
+                  const std::vector<real_t>& distr_x,
+                  const std::vector<real_t>& y,
+                  const std::vector<real_t>& distr_y,
+                  const real_t* rot_h, const std::vector<real_t>& transvec,
                   std::vector<complex_t>& ff) {
     unsigned int n_x = x.size(), n_distr_x = distr_x.size();
     unsigned int n_y = y.size(), n_distr_y = distr_y.size();
 
-    const float_t *x_h = x.empty() ? NULL : &*x.begin();
-    const float_t *distr_x_h = distr_x.empty() ? NULL : &*distr_x.begin();
-    const float_t *y_h = y.empty() ? NULL : &*y.begin();
-    const float_t *distr_y_h = distr_y.empty() ? NULL : &*distr_y.begin();
-    float_t transvec_h[3] = {transvec[0], transvec[1], transvec[2]};
+    const real_t *x_h = x.empty() ? NULL : &*x.begin();
+    const real_t *distr_x_h = distr_x.empty() ? NULL : &*distr_x.begin();
+    const real_t *y_h = y.empty() ? NULL : &*y.begin();
+    const real_t *distr_y_h = distr_y.empty() ? NULL : &*distr_y.begin();
+    real_t transvec_h[3] = {transvec[0], transvec[1], transvec[2]};
 
     // construct device buffers
-    float_t *x_d, *distr_x_d;
-    float_t *y_d, *distr_y_d;
+    real_t *x_d, *distr_x_d;
+    real_t *y_d, *distr_y_d;
 
-    cudaMalloc((void**) &x_d, n_x * sizeof(float_t));
-    cudaMalloc((void**) &distr_x_d, n_distr_x * sizeof(float_t));
-    cudaMalloc((void**) &y_d, n_y * sizeof(float_t));
-    cudaMalloc((void**) &distr_y_d, n_distr_y * sizeof(float_t));
+    cudaMalloc((void**) &x_d, n_x * sizeof(real_t));
+    cudaMalloc((void**) &distr_x_d, n_distr_x * sizeof(real_t));
+    cudaMalloc((void**) &y_d, n_y * sizeof(real_t));
+    cudaMalloc((void**) &distr_y_d, n_distr_y * sizeof(real_t));
 
     // copy data to device buffers
-    cudaMemcpy(x_d, x_h, n_x * sizeof(float_t), cudaMemcpyHostToDevice);
-    cudaMemcpy(y_d, y_h, n_y * sizeof(float_t), cudaMemcpyHostToDevice);
-    cudaMemcpy(distr_x_d, distr_x_h, n_distr_x * sizeof(float_t), cudaMemcpyHostToDevice);
-    cudaMemcpy(distr_y_d, distr_y_h, n_distr_y * sizeof(float_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(x_d, x_h, n_x * sizeof(real_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(y_d, y_h, n_y * sizeof(real_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(distr_x_d, distr_x_h, n_distr_x * sizeof(real_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(distr_y_d, distr_y_h, n_distr_y * sizeof(real_t), cudaMemcpyHostToDevice);
 
     //run_init(rot_h, transvec);
-    cudaMemcpyToSymbol(tau_d, &tau, sizeof(float_t), 0, cudaMemcpyHostToDevice);
-    cudaMemcpyToSymbol(eta_d, &eta, sizeof(float_t), 0, cudaMemcpyHostToDevice);
-    cudaMemcpyToSymbol(rot_d, rot_h, 9*sizeof(float_t), 0, cudaMemcpyHostToDevice); 
-    cudaMemcpyToSymbol(transvec_d, transvec_h, 3*sizeof(float_t), 0, cudaMemcpyHostToDevice); 
+    cudaMemcpyToSymbol(tau_d, &tau, sizeof(real_t), 0, cudaMemcpyHostToDevice);
+    cudaMemcpyToSymbol(eta_d, &eta, sizeof(real_t), 0, cudaMemcpyHostToDevice);
+    cudaMemcpyToSymbol(rot_d, rot_h, 9*sizeof(real_t), 0, cudaMemcpyHostToDevice); 
+    cudaMemcpyToSymbol(transvec_d, transvec_h, 3*sizeof(real_t), 0, cudaMemcpyHostToDevice); 
 
     int num_threads = 256;
     int num_blocks =  nqz_ / num_threads + 1;
@@ -147,4 +147,3 @@ namespace hig {
   } // AnalyticFormFactorG::compute_prism3()
 
 } // namespace hig
-

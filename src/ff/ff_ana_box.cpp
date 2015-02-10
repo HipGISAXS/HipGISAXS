@@ -39,8 +39,8 @@ namespace hig {
    */
 
   inline complex_t FormFactorBox(complex_t qx, complex_t qy, complex_t qz, 
-          float_t length, float_t width, float_t height) {
-      float_t vol = length * width * height;
+          real_t length, real_t width, real_t height) {
+      real_t vol = length * width * height;
       complex_t exp_val = std::exp(complex_t(0,1) * 0.5 * qz * height);
       complex_t sinc_val = sinc(0.5 * qx * length) * sinc(0.5 * qy * width) 
           * sinc(0.5 * qz * height);
@@ -50,11 +50,11 @@ namespace hig {
   bool AnalyticFormFactor::compute_box(unsigned int nqx, unsigned int nqy, unsigned int nqz,
                     std::vector<complex_t>& ff,
                     ShapeName shape, shape_param_list_t& params,
-                    float_t tau, float_t eta, vector3_t &transvec,
+                    real_t tau, real_t eta, vector3_t &transvec,
                     vector3_t &rot1, vector3_t &rot2, vector3_t &rot3) {
-    std::vector <float_t> x, distr_x;  // for x dimension: param_xsize  param_edge
-    std::vector <float_t> y, distr_y;  // for y dimension: param_ysize  param_edge
-    std::vector <float_t> z, distr_z;  // for z dimension: param_height param_edge
+    std::vector <real_t> x, distr_x;  // for x dimension: param_xsize  param_edge
+    std::vector <real_t> y, distr_y;  // for y dimension: param_ysize  param_edge
+    std::vector <real_t> z, distr_z;  // for z dimension: param_height param_edge
     for(shape_param_iterator_t i = params.begin(); i != params.end(); ++ i) {
       if(!(*i).second.isvalid()) {
         std::cerr << "warning: invalid shape parameter found" << std::endl;
@@ -98,7 +98,7 @@ namespace hig {
     #ifdef FF_ANA_GPU
       // on gpu
       std::cout << "-- Computing box FF on GPU ..." << std::endl;
-      std::vector<float_t> transvec_v;
+      std::vector<real_t> transvec_v;
       transvec_v.push_back(transvec[0]);
       transvec_v.push_back(transvec[1]);
       transvec_v.push_back(transvec[2]);
@@ -119,7 +119,7 @@ namespace hig {
         for(unsigned int i_z = 0; i_z < z.size(); ++ i_z) {
           for(unsigned int i_y = 0; i_y < y.size(); ++ i_y) {
             for(unsigned int i_x = 0; i_x < x.size(); ++ i_x) {
-              float_t wght = distr_x[i_x] * distr_y[i_y] * distr_z[i_z];
+              real_t wght = distr_x[i_x] * distr_y[i_y] * distr_z[i_z];
               temp_ff += FormFactorBox(mqx, mqy, mqz, x[i_x], y[i_y], z[i_z]) * wght;
             } // for i_x
           } // for i_y
@@ -148,5 +148,4 @@ namespace hig {
 
     return true;
   } // AnalyticFormFactor::compute_box()
-
 } // namespace hig

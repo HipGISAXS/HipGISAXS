@@ -37,8 +37,8 @@ namespace hig {
 
       // device buffers
 
-      float_t* qx_;
-      float_t* qy_;
+      real_t* qx_;
+      real_t* qy_;
       cucomplex_t* qz_;
       cucomplex_t* ff_;
       bool construct_output_ff(std::vector<complex_t>&);
@@ -49,55 +49,51 @@ namespace hig {
       ~AnalyticFormFactorG();
 
       bool init(unsigned int, unsigned int);
-      bool run_init(const float_t*, const std::vector<float_t>&);
-      bool run_init(const float_t*, const std::vector<float_t>&, std::vector<complex_t>&);
+      bool run_init(const real_t*, const std::vector<real_t>&);
+      bool run_init(const real_t*, const std::vector<real_t>&, std::vector<complex_t>&);
       bool clear();
       bool destroy();
 
       void grid_size(unsigned int, unsigned int);
 
-      bool compute_box(const float_t, const float_t,
-                const std::vector<float_t>&, const std::vector<float_t>&,
-                const std::vector<float_t>&, const std::vector<float_t>&,
-                const std::vector<float_t>&, const std::vector<float_t>&,
-                const float_t*, const std::vector<float_t>&, std::vector<complex_t>&);
-      bool compute_cylinder(const float_t, const float_t,
-                const std::vector<float_t>&, const std::vector<float_t>&,
-                const std::vector<float_t>&, const std::vector<float_t>&,
-                const float_t*, const std::vector<float_t>&, std::vector<complex_t>&);
-      bool compute_horizontal_cylinder(const float_t, const float_t,
-                const std::vector<float_t>&, const std::vector<float_t>&,
-                const std::vector<float_t>&, const std::vector<float_t>&,
-                const float_t*, const std::vector<float_t>&, std::vector<complex_t>&);
-      bool compute_random_cylinders(const float_t, const float_t,
-                const std::vector<float_t>&, const std::vector<float_t>&,
-                const std::vector<float_t>&, const std::vector<float_t>&,
-                const float_t*, const std::vector<float_t>&, std::vector<complex_t>&);
-      bool compute_sphere(const std::vector<float_t>&, const std::vector<float_t>&,
-                const float_t*, const std::vector<float_t>&, std::vector<complex_t>&);
-      bool compute_prism3(const float_t, const float_t,
-                const std::vector<float_t>&, const std::vector<float_t>&,
-                const std::vector<float_t>&, const std::vector<float_t>&,
-                const float_t*, const std::vector<float_t>&, std::vector<complex_t>&);
-      bool compute_prism6(const float_t, const float_t,
-                const std::vector<float_t>&, const std::vector<float_t>&,
-                const std::vector<float_t>&, const std::vector<float_t>&,
-                const float_t*, const std::vector<float_t>&, std::vector<complex_t>&);
+      bool compute_box(const real_t, const real_t,
+                const std::vector<real_t>&, const std::vector<real_t>&,
+                const std::vector<real_t>&, const std::vector<real_t>&,
+                const std::vector<real_t>&, const std::vector<real_t>&,
+                const real_t*, const std::vector<real_t>&, std::vector<complex_t>&);
+      bool compute_cylinder(const real_t, const real_t,
+                const std::vector<real_t>&, const std::vector<real_t>&,
+                const std::vector<real_t>&, const std::vector<real_t>&,
+                const real_t*, const std::vector<real_t>&, std::vector<complex_t>&);
+      bool compute_horizontal_cylinder(const real_t, const real_t,
+                const std::vector<real_t>&, const std::vector<real_t>&,
+                const std::vector<real_t>&, const std::vector<real_t>&,
+                const real_t*, const std::vector<real_t>&, std::vector<complex_t>&);
+      bool compute_random_cylinders(const real_t, const real_t,
+                const std::vector<real_t>&, const std::vector<real_t>&,
+                const std::vector<real_t>&, const std::vector<real_t>&,
+                const real_t*, const std::vector<real_t>&, std::vector<complex_t>&);
+      bool compute_sphere(const std::vector<real_t>&, const std::vector<real_t>&,
+                const real_t*, const std::vector<real_t>&, std::vector<complex_t>&);
+      bool compute_prism3(const real_t, const real_t,
+                const std::vector<real_t>&, const std::vector<real_t>&,
+                const std::vector<real_t>&, const std::vector<real_t>&,
+                const real_t*, const std::vector<real_t>&, std::vector<complex_t>&);
+      bool compute_prism6(const real_t, const real_t,
+                const std::vector<real_t>&, const std::vector<real_t>&,
+                const std::vector<real_t>&, const std::vector<real_t>&,
+                const real_t*, const std::vector<real_t>&, std::vector<complex_t>&);
       bool compute_prism3x();
       bool compute_sawtooth_up();
       bool compute_sawtooth_down();
-      bool compute_pyramid(const float_t, const float_t,
-                const std::vector<float_t>&, const std::vector<float_t>&,
-                const std::vector<float_t>&, const std::vector<float_t>&,
-                const std::vector<float_t>&, const std::vector<float_t>&,
-                const std::vector<float_t>&, const std::vector<float_t>&,
-                const float_t*, const std::vector<float_t>&, std::vector<complex_t>&);
+      bool compute_pyramid(const real_t, const real_t,
+                const std::vector<real_t>&, const std::vector<real_t>&,
+                const std::vector<real_t>&, const std::vector<real_t>&,
+                const std::vector<real_t>&, const std::vector<real_t>&,
+                const std::vector<real_t>&, const std::vector<real_t>&,
+                const real_t*, const std::vector<real_t>&, std::vector<complex_t>&);
       bool compute_truncated_cone();
 
   }; // class AnalyticFormFactorG
-
 } // namespace
-
-
 #endif // _FF_ANA_GPU_CUH_
-

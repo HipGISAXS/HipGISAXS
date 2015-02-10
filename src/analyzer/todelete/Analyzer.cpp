@@ -62,7 +62,7 @@ namespace hig{
     pobj_fct_->set_ref_data(pimg);
   }
 
-  void Analyzer::write_final_vec(float_vec_t XN){
+  void Analyzer::write_final_vec(real_vec_t XN){
 
     for(int i=0; i<inputs_.size();i++){
       inputs_.set_var_final_val(i, XN[i]);
@@ -72,7 +72,7 @@ namespace hig{
 
   int Analyzer::analyze(int argc,char **argv){
     img_data_vec_t img_data_set = data_.get_data();
-    float_vec_t XN;
+    real_vec_t XN;
     for(img_data_vec_t::iterator it=img_data_set.begin(); it!=img_data_set.end(); it++){
       std::cout << (*it).get_name()   << std::endl;
       set_ref_data(&(*it));
@@ -95,4 +95,5 @@ namespace hig{
   }
 
 
+}
 }

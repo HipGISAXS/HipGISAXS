@@ -28,7 +28,7 @@
 namespace hig {
 
   // for now m = n = 2
-  bool mldivide(int m, float_t* a_mat, float_t* &c_mat) {
+  bool mldivide(int m, real_t* a_mat, real_t* &c_mat) {
   /*  double *a_data = new (std::nothrow) double[m * m];
     for(int i = 0; i < m; ++ i) {
       for(int j = 0; j < m; ++ j) {
@@ -43,10 +43,10 @@ namespace hig {
     gsl_linalg_LU_decomp(&a.matrix, p, &s);
     gsl_linalg_LU_invert(&a.matrix, p, x);
 
-    c_mat = new (std::nothrow) float_t[m * m];
+    c_mat = new (std::nothrow) real_t[m * m];
     for(int i = 0; i < m; ++ i) {
       for(int j = 0; j < m; ++ j) {
-        c_mat[m * i + j] = (float_t) gsl_matrix_get(x, i, j);
+        c_mat[m * i + j] = (real_t) gsl_matrix_get(x, i, j);
       } // for
     } // for
                                      
@@ -59,8 +59,8 @@ namespace hig {
       std::cerr << "error: only 2x2 matrix case is implemented" << std::endl;
       return false;
     } // if
-    float_t det_a = a_mat[0] * a_mat[3] - a_mat[1] * a_mat[2];
-    c_mat = new (std::nothrow) float_t[m * m];
+    real_t det_a = a_mat[0] * a_mat[3] - a_mat[1] * a_mat[2];
+    c_mat = new (std::nothrow) real_t[m * m];
     c_mat[0] = a_mat[3] / det_a;
     c_mat[1] = - a_mat[1] / det_a;
     c_mat[2] = - a_mat[2] / det_a;
@@ -70,9 +70,9 @@ namespace hig {
   } // mldivide()
 
   // currently only hacked for spheres, with radius and sd as two parameters
-  bool HipGISAXS::fit_steepest_descent(float_t zcut,
-          float_t radius_min, float_t radius_max, float_t radius_num,
-          float_t sd_min, float_t sd_max, float_t sd_num,
+  bool HipGISAXS::fit_steepest_descent(real_t zcut,
+          real_t radius_min, real_t radius_max, real_t radius_num,
+          real_t sd_min, real_t sd_max, real_t sd_num,
           unsigned int dim, MPI::Intracomm& world_comm,
           int x_min, int x_max, int x_step) {
     int mpi_rank = world_comm.Get_rank();
@@ -81,18 +81,18 @@ namespace hig {
 
     int num_alphai = 0, num_phi = 0, num_tilt = 0;;
 
-    float_t alphai_min, alphai_max, alphai_step;
+    real_t alphai_min, alphai_max, alphai_step;
     HiGInput::instance().scattering_alphai(alphai_min, alphai_max, alphai_step);
     if(alphai_max < alphai_min) alphai_max = alphai_min;
     if(alphai_min == alphai_max || alphai_step == 0) num_alphai = 1;
     else num_alphai = (alphai_max - alphai_min) / alphai_step + 1;
 
-    float_t phi_min, phi_max, phi_step;
+    real_t phi_min, phi_max, phi_step;
     HiGInput::instance().scattering_inplanerot(phi_min, phi_max, phi_step);
     if(phi_step == 0) num_phi = 1;
     else num_phi = (phi_max - phi_min) / phi_step + 1;
 
-    float_t tilt_min, tilt_max, tilt_step;
+    real_t tilt_min, tilt_max, tilt_step;
     HiGInput::instance().scattering_tilt(tilt_min, tilt_max, tilt_step);
     if(tilt_step == 0) num_tilt = 1;
     else num_tilt = (tilt_max - tilt_min) / tilt_step + 1;
@@ -103,10 +103,10 @@ namespace hig {
 
     // prepare parameters
 
-    std::vector<std::vector<float_t> > params;
+    std::vector<std::vector<real_t> > params;
     int num_params = 2;
-    std::vector<float_t> temp;
-    float_t deltap = 0.0;
+    std::vector<real_t> temp;
+    real_t deltap = 0.0;
     if(radius_num <= 1)
       temp.push_back(radius_min);
     else {
@@ -130,28 +130,28 @@ namespace hig {
 
     // this will work only on one shape and one structure
 
-    const float_t err_threshold = 1e-8;
+    const real_t err_threshold = 1e-8;
     const unsigned int max_iter = 200;
 
-    std::vector<float_t> param_vals;
+    std::vector<real_t> param_vals;
     //param_vals.push_back(16.0);
     //param_vals.push_back(6.0);
     param_vals.push_back(23.0);
     param_vals.push_back(2.0);
-    std::vector<float_t> param_deltas;
+    std::vector<real_t> param_deltas;
     param_deltas.push_back(0.05);
     param_deltas.push_back(0.05);
-    float_t gamma_const = 0.05;
+    real_t gamma_const = 0.05;
 
-    float_t qdeltay = QGrid::instance().delta_y();
+    real_t qdeltay = QGrid::instance().delta_y();
 
-    float_t alpha_i = alphai_min;
+    real_t alpha_i = alphai_min;
     // high level of parallelism here (alphai, phi, tilt) for dynamicity ...
     for(int i = 0; i < num_alphai; i ++, alpha_i += alphai_step) {
-      float_t alphai = alpha_i * PI_ / 180;
-      float_t phi = phi_min;
+      real_t alphai = alpha_i * PI_ / 180;
+      real_t phi = phi_min;
       for(int j = 0; j < num_phi; j ++, phi += phi_step) {
-        float_t tilt = tilt_min;
+        real_t tilt = tilt_min;
         for(int k = 0; k < num_tilt; k ++, tilt += tilt_step) {
 
           std::cout << "-- Computing reference GISAXS "
@@ -161,7 +161,7 @@ namespace hig {
                 << ", tilt = " << tilt << "] ..." << std::endl;
 
           /* run the reference gisaxs simulation using input params */
-          float_t* ref_data = NULL;
+          real_t* ref_data = NULL;
           if(!run_gisaxs(alpha_i, alphai, phi, tilt, ref_data, world_comm)) {
             if(mpi_rank == 0) std::cerr << "error: could not finish successfully" << std::endl;
             return false;
@@ -172,7 +172,7 @@ namespace hig {
             return false;
           } // if
 
-          float_t* ref_z_cut = new (std::nothrow) float_t[nqy_];
+          real_t* ref_z_cut = new (std::nothrow) real_t[nqy_];
           for(unsigned int iy = 0; iy < nqy_; ++ iy) {
             // assuming nqz_ == 1 ...
             ref_z_cut[iy] = ref_data[nqx_ * iy + 0];
@@ -181,8 +181,8 @@ namespace hig {
           delete[] ref_data;
 
           // this will store z cut values for each iteration for plotting later
-          float_t* z_cuts = new (std::nothrow) float_t[nqy_ * max_iter];
-          float_t* temp_zcuts = new (std::nothrow) float_t[nqy_];
+          real_t* z_cuts = new (std::nothrow) real_t[nqy_ * max_iter];
+          real_t* temp_zcuts = new (std::nothrow) real_t[nqy_];
 
           // do some preprocessing
           // start the main loop, bound by max_iter and err_threshold
@@ -193,15 +193,15 @@ namespace hig {
           //   update parameter values
           // compute the error surface
 
-          float_t err = 10.0;
-          std::vector<float_t> param1_list;
-          std::vector<float_t> param2_list;
+          real_t err = 10.0;
+          std::vector<real_t> param1_list;
+          std::vector<real_t> param2_list;
           structure_iterator_t structure_iter = HiGInput::instance().structure_begin();
           Structure* structure = &((*structure_iter).second);
           Shape* shape = HiGInput::instance().shape(*structure);
           shape_param_iterator_t shape_param = (*shape).param_begin();
-          float_t* data = NULL;
-          std::vector<float_t> param_error_data;
+          real_t* data = NULL;
+          std::vector<real_t> param_error_data;
           for(unsigned int iter = 0; iter < max_iter; ++ iter) {
             param1_list.clear();
             param1_list.push_back(param_vals[0] - 2 * param_deltas[0]);  // p1mm
@@ -229,7 +229,7 @@ namespace hig {
               z_cuts[iter * nqy_ + iy] = data[nqx_ * iy];
             } // for
             delete[] data; data = NULL;
-            float_t err22 = compute_cut_fit_error(z_cuts + iter * nqy_, ref_z_cut, qdeltay);
+            real_t err22 = compute_cut_fit_error(z_cuts + iter * nqy_, ref_z_cut, qdeltay);
 
             // 12 neighbors
 
@@ -245,7 +245,7 @@ namespace hig {
               temp_zcuts[iy] = data[nqx_ * iy];
             } // for
             delete[] data; data = NULL;
-            float_t err02 = compute_cut_fit_error(temp_zcuts, ref_z_cut, qdeltay);
+            real_t err02 = compute_cut_fit_error(temp_zcuts, ref_z_cut, qdeltay);
 
             (*shape_param).second.mean(param1_list[1]);
             (*shape_param).second.deviation(param2_list[1]);
@@ -259,7 +259,7 @@ namespace hig {
               temp_zcuts[iy] = data[nqx_ * iy];
             } // for
             delete[] data; data = NULL;
-            float_t err11 = compute_cut_fit_error(temp_zcuts, ref_z_cut, qdeltay);
+            real_t err11 = compute_cut_fit_error(temp_zcuts, ref_z_cut, qdeltay);
 
             (*shape_param).second.mean(param1_list[1]);
             (*shape_param).second.deviation(param2_list[2]);
@@ -273,7 +273,7 @@ namespace hig {
               temp_zcuts[iy] = data[nqx_ * iy];
             } // for
             delete[] data; data = NULL;
-            float_t err12 = compute_cut_fit_error(temp_zcuts, ref_z_cut, qdeltay);
+            real_t err12 = compute_cut_fit_error(temp_zcuts, ref_z_cut, qdeltay);
 
             (*shape_param).second.mean(param1_list[1]);
             (*shape_param).second.deviation(param2_list[3]);
@@ -287,7 +287,7 @@ namespace hig {
               temp_zcuts[iy] = data[nqx_ * iy];
             } // for
             delete[] data; data = NULL;
-            float_t err13 = compute_cut_fit_error(temp_zcuts, ref_z_cut, qdeltay);
+            real_t err13 = compute_cut_fit_error(temp_zcuts, ref_z_cut, qdeltay);
 
             (*shape_param).second.mean(param1_list[2]);
             (*shape_param).second.deviation(param2_list[0]);
@@ -301,7 +301,7 @@ namespace hig {
               temp_zcuts[iy] = data[nqx_ * iy];
             } // for
             delete[] data; data = NULL;
-            float_t err20 = compute_cut_fit_error(temp_zcuts, ref_z_cut, qdeltay);
+            real_t err20 = compute_cut_fit_error(temp_zcuts, ref_z_cut, qdeltay);
 
             (*shape_param).second.mean(param1_list[2]);
             (*shape_param).second.deviation(param2_list[1]);
@@ -315,7 +315,7 @@ namespace hig {
               temp_zcuts[iy] = data[nqx_ * iy];
             } // for
             delete[] data; data = NULL;
-            float_t err21 = compute_cut_fit_error(temp_zcuts, ref_z_cut, qdeltay);
+            real_t err21 = compute_cut_fit_error(temp_zcuts, ref_z_cut, qdeltay);
 
             (*shape_param).second.mean(param1_list[2]);
             (*shape_param).second.deviation(param2_list[3]);
@@ -329,7 +329,7 @@ namespace hig {
               temp_zcuts[iy] = data[nqx_ * iy];
             } // for
             delete[] data; data = NULL;
-            float_t err23 = compute_cut_fit_error(temp_zcuts, ref_z_cut, qdeltay);
+            real_t err23 = compute_cut_fit_error(temp_zcuts, ref_z_cut, qdeltay);
 
             (*shape_param).second.mean(param1_list[2]);
             (*shape_param).second.deviation(param2_list[4]);
@@ -343,7 +343,7 @@ namespace hig {
               temp_zcuts[iy] = data[nqx_ * iy];
             } // for
             delete[] data; data = NULL;
-            float_t err24 = compute_cut_fit_error(temp_zcuts, ref_z_cut, qdeltay);
+            real_t err24 = compute_cut_fit_error(temp_zcuts, ref_z_cut, qdeltay);
 
             (*shape_param).second.mean(param1_list[3]);
             (*shape_param).second.deviation(param2_list[1]);
@@ -357,7 +357,7 @@ namespace hig {
               temp_zcuts[iy] = data[nqx_ * iy];
             } // for
             delete[] data; data = NULL;
-            float_t err31 = compute_cut_fit_error(temp_zcuts, ref_z_cut, qdeltay);
+            real_t err31 = compute_cut_fit_error(temp_zcuts, ref_z_cut, qdeltay);
 
             (*shape_param).second.mean(param1_list[3]);
             (*shape_param).second.deviation(param2_list[2]);
@@ -371,7 +371,7 @@ namespace hig {
               temp_zcuts[iy] = data[nqx_ * iy];
             } // for
             delete[] data; data = NULL;
-            float_t err32 = compute_cut_fit_error(temp_zcuts, ref_z_cut, qdeltay);
+            real_t err32 = compute_cut_fit_error(temp_zcuts, ref_z_cut, qdeltay);
 
             (*shape_param).second.mean(param1_list[3]);
             (*shape_param).second.deviation(param2_list[3]);
@@ -385,7 +385,7 @@ namespace hig {
               temp_zcuts[iy] = data[nqx_ * iy];
             } // for
             delete[] data; data = NULL;
-            float_t err33 = compute_cut_fit_error(temp_zcuts, ref_z_cut, qdeltay);
+            real_t err33 = compute_cut_fit_error(temp_zcuts, ref_z_cut, qdeltay);
 
             (*shape_param).second.mean(param1_list[4]);
             (*shape_param).second.deviation(param2_list[2]);
@@ -399,7 +399,7 @@ namespace hig {
               temp_zcuts[iy] = data[nqx_ * iy];
             } // for
             delete[] data; data = NULL;
-            float_t err42 = compute_cut_fit_error(temp_zcuts, ref_z_cut, qdeltay);
+            real_t err42 = compute_cut_fit_error(temp_zcuts, ref_z_cut, qdeltay);
 
             // 22  0
             // 02  1mm
@@ -415,8 +415,8 @@ namespace hig {
             // 33  1p2p
             // 42  1pp
 
-            float_t derr1 = (err32 - err12) / (2 * param_deltas[0]);
-            float_t derr2 = (err23 - err21) / (2 * param_deltas[1]);
+            real_t derr1 = (err32 - err12) / (2 * param_deltas[0]);
+            real_t derr2 = (err23 - err21) / (2 * param_deltas[1]);
             err = sqrt(derr1 * derr1 + derr2 * derr2);
             std::cout << "++ Iteration: " << iter << ", Error: " << err << std::endl;
             std::cout << "++ Parameter 1: " << param_vals[0]
@@ -427,20 +427,20 @@ namespace hig {
             param_error_data.push_back(err);
             if(err < err_threshold) break;
 
-            float_t herr11 = (err42 + err02 - 2 * err22) /
+            real_t herr11 = (err42 + err02 - 2 * err22) /
                       (4 * param_deltas[0] * param_deltas[0]);
-            float_t herr12 = (err33 - err13 - (err31 - err11)) /
+            real_t herr12 = (err33 - err13 - (err31 - err11)) /
                       (4 * param_deltas[0] * param_deltas[1]);
-            float_t herr21 = (err33 - err13 - (err31 - err11)) /
+            real_t herr21 = (err33 - err13 - (err31 - err11)) /
                       (4 * param_deltas[0] * param_deltas[1]);
-            float_t herr22 = (err24 + err20 - 2 * err22) /
+            real_t herr22 = (err24 + err20 - 2 * err22) /
                       (4 * param_deltas[1] * param_deltas[1]);
-            float_t* herr = new (std::nothrow) float_t[2 * 2];
+            real_t* herr = new (std::nothrow) real_t[2 * 2];
             herr[0] = herr11;
             herr[1] = herr12;
             herr[2] = herr21;
             herr[3] = herr22;
-            float_t* herrinv;
+            real_t* herrinv;
             mldivide(2, herr, herrinv);
 
             param_vals[0] -= gamma_const * (herrinv[0] * derr1 + herrinv[1] * derr2);
@@ -451,12 +451,12 @@ namespace hig {
           } // for
 
           // compute the error surface
-          std::vector<std::vector<float_t> >::iterator mean_iter = params.begin();
-          std::vector<std::vector<float_t> >::iterator sd_iter = mean_iter + 1;
-          std::vector<float_t> err_surface;
-          for(std::vector<float_t>::iterator curr_mean = (*mean_iter).begin();
+          std::vector<std::vector<real_t> >::iterator mean_iter = params.begin();
+          std::vector<std::vector<real_t> >::iterator sd_iter = mean_iter + 1;
+          std::vector<real_t> err_surface;
+          for(std::vector<real_t>::iterator curr_mean = (*mean_iter).begin();
               curr_mean != (*mean_iter).end(); ++ curr_mean) {
-            for(std::vector<float_t>::iterator curr_sd = (*sd_iter).begin();
+            for(std::vector<real_t>::iterator curr_sd = (*sd_iter).begin();
                 curr_sd != (*sd_iter).end(); ++ curr_sd) {
               (*shape_param).second.mean(*curr_mean);
               (*shape_param).second.deviation(*curr_sd);
@@ -470,7 +470,7 @@ namespace hig {
                 temp_zcuts[iy] = data[nqx_ * iy];
               } // for
               delete[] data; data = NULL;
-              float_t curr_err = compute_cut_fit_error(temp_zcuts, ref_z_cut, qdeltay);
+              real_t curr_err = compute_cut_fit_error(temp_zcuts, ref_z_cut, qdeltay);
               err_surface.push_back(*curr_mean);
               err_surface.push_back(*curr_sd);
               err_surface.push_back(curr_err);
@@ -498,7 +498,7 @@ namespace hig {
                         "_tilt=" + tilt_s + ".dat");
           // write param_error_data
           std::ofstream param_error_f(param_error_file.c_str());
-          for(std::vector<float_t>::iterator pei = param_error_data.begin();
+          for(std::vector<real_t>::iterator pei = param_error_data.begin();
               pei != param_error_data.end(); pei += 4) {
             param_error_f << *pei << "\t" << *(pei + 1) << "\t" << *(pei + 2) << "\t"
                     << *(pei + 3) << std::endl;
@@ -519,7 +519,7 @@ namespace hig {
           zcut_f.close();
           // write error surface
           std::ofstream err_surf_f(err_surf_file.c_str());
-          for(std::vector<float_t>::iterator surfi = err_surface.begin();
+          for(std::vector<real_t>::iterator surfi = err_surface.begin();
               surfi != err_surface.end(); surfi += 3) {
             err_surf_f << *surfi << "\t" << *(surfi + 1) << "\t" << *(surfi + 2) << std::endl;
           } // for
@@ -546,13 +546,11 @@ namespace hig {
   } // HipGISAXS::fit_all_gisaxs()
 
 
-  float_t HipGISAXS::compute_cut_fit_error(float_t* cut, float_t* ref, float_t dy) {
-    float_t err_sum = 0.0;
+  real_t HipGISAXS::compute_cut_fit_error(real_t* cut, real_t* ref, real_t dy) {
+    real_t err_sum = 0.0;
     for(unsigned int i = 0; i < nqy_; ++ i) {
       err_sum += fabs(cut[i] - ref[i]);
     } // for
     return err_sum * dy;
   } // HipGISAXS::compute_cut_fit_error()
-
-
 } // namespace hig

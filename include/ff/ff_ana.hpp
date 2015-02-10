@@ -47,7 +47,7 @@ namespace hig {
       unsigned int nqy_;
       unsigned int nqz_;
 
-      float_t *rot_;
+      real_t *rot_;
 
       #ifdef FF_ANA_GPU
         AnalyticFormFactorG gff_;
@@ -60,9 +60,9 @@ namespace hig {
       bool init(vector3_t&, vector3_t&, vector3_t&, std::vector<complex_t> &ff);
       void clear();
 
-      bool compute(ShapeName shape, float_t tau, float_t eta, vector3_t transvec,
+      bool compute(ShapeName shape, real_t tau, real_t eta, vector3_t transvec,
             std::vector<complex_t>&,
-            shape_param_list_t& params, float_t single_layer_thickness_,
+            shape_param_list_t& params, real_t single_layer_thickness_,
             vector3_t rot1, vector3_t rot2, vector3_t rot3
             #ifdef USE_MPI
               , woo::MultiNode& multi_node, std::string comm_key
@@ -74,39 +74,41 @@ namespace hig {
       bool compute_box(unsigned int nqx, unsigned int nqy, unsigned int nqz,
               std::vector<complex_t>& ff,
               ShapeName shape, shape_param_list_t& params,
-              float_t tau, float_t eta, vector3_t &transvec,
+              real_t tau, real_t eta, vector3_t &transvec,
               vector3_t &rot1, vector3_t &rot2, vector3_t &rot3);
-      bool compute_cylinder(shape_param_list_t&, float_t, float_t,
+      bool compute_cylinder(shape_param_list_t&, real_t, real_t,
               std::vector<complex_t>&, vector3_t);
-      bool compute_horizontal_cylinder(float_t, float_t, shape_param_list_t&, vector3_t,
+      bool compute_horizontal_cylinder(real_t, real_t, shape_param_list_t&, vector3_t,
               std::vector<complex_t>&);
       bool compute_random_cylinders(shape_param_list_t&, std::vector<complex_t>&,
-              float_t, float_t, vector3_t);
+              real_t, real_t, vector3_t);
       bool compute_sphere(shape_param_list_t&, std::vector<complex_t>&, vector3_t);
       bool compute_prism(shape_param_list_t&, std::vector<complex_t>&,
-              float_t, float_t, vector3_t);
+              real_t, real_t, vector3_t);
       bool compute_prism6(shape_param_list_t&, std::vector<complex_t>&,
-              float_t, float_t, vector3_t);
+              real_t, real_t, vector3_t);
       bool compute_prism3x(shape_param_list_t&, std::vector<complex_t>&,
-              float_t, float_t, vector3_t);
+              real_t, real_t, vector3_t);
       bool compute_pyramid(shape_param_list_t&, std::vector<complex_t>&,
-              float_t, float_t, vector3_t);
-      bool compute_rotation_matrix(int, float_t, vector3_t&, vector3_t&, vector3_t&);
-      bool compute_truncated_cone(shape_param_list_t&, float_t, float_t, std::vector<complex_t>&,
+              real_t, real_t, vector3_t);
+      bool compute_rotation_matrix(int, real_t, vector3_t&, vector3_t&, vector3_t&);
+      bool compute_truncated_cone(shape_param_list_t&, real_t, real_t, std::vector<complex_t>&, 
+              vector3_t);
+      bool compute_truncated_sphere(shape_param_list_t&, real_t, real_t, std::vector<complex_t>&, 
               vector3_t);
       bool compute_sawtooth_up();
       bool compute_sawtooth_down();
 
       /* other helpers */ // check if they should be private ...
-      bool param_distribution(ShapeParam&, std::vector<float_t>&, std::vector<float_t>&);
-      bool mat_fq_inv_in(unsigned int, unsigned int, unsigned int, complex_vec_t&, float_t);
+      bool param_distribution(ShapeParam&, std::vector<real_t>&, std::vector<real_t>&);
+      bool mat_fq_inv_in(unsigned int, unsigned int, unsigned int, complex_vec_t&, real_t);
       bool mat_fq_inv(unsigned int, unsigned int, unsigned int, const complex_vec_t&,
-              float_t, complex_vec_t&);
-      complex_t fq_inv(complex_t, float_t);
+              real_t, complex_vec_t&);
+      complex_t fq_inv(complex_t, real_t);
       bool mat_sinc(unsigned int, unsigned int, unsigned int,  const complex_vec_t&, complex_vec_t&);
       bool mat_sinc_in(unsigned int, unsigned int, unsigned int, complex_vec_t&);
       complex_t sinc(complex_t value);
-      void compute_meshpoints(const float_t, const float_t, const complex_t, const float_t*,
+      void compute_meshpoints(const real_t, const real_t, const complex_t, const real_t*,
               complex_t&, complex_t&, complex_t&);
 
   }; // class AnalyticFormFactor

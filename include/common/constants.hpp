@@ -27,17 +27,23 @@
 
 namespace hig {
 
+#ifdef DOUBLEP
+  const double TINY = 1.0E-18;
+#else
+  const float  TINY = 1.0E-18;
+#endif
+
   const unsigned int LIGHT_SPEED_ = 3e+8;    /* speed of light in m/s */
-  const float_t PI_ = 3.141592653589793;    /* PI correct upto 15 decimal places */
-  const float_t SQRT_2PI_ = 2.506628;
+  const real_t PI_ = 3.141592653589793;    /* PI correct upto 15 decimal places */
+  const real_t SQRT_2PI_ = 2.506628;
 
   //const unsigned int MAX_DEPTH_ = 500;    /* maximum depth allowed */
   const unsigned int MAX_DEPTH_ = 150;    /* maximum depth allowed */
 
   // real constants
-  const float_t ZERO = (float_t) 0.;
-  const float_t ONE  = (float_t) 1.;
-  const float_t NEG_ONE = (float_t) -1.;
+  const real_t ZERO = (real_t) 0.;
+  const real_t ONE  = (real_t) 1.;
+  const real_t NEG_ONE = (real_t) -1.;
 
   // complex constants
   const complex_t C_ZERO = complex_t(ZERO,ZERO);

@@ -41,7 +41,7 @@ namespace hig {
   } // init()
 
 
-  bool DetectorParams::update_param(const std::string& str, float_t new_val) {
+  bool DetectorParams::update_param(const std::string& str, real_t new_val) {
     std::string keyword, rem_str;
     if(!extract_first_keyword(str, keyword, rem_str)) return false;
     switch(TokenMapper::instance().get_keyword_token(keyword)) {
@@ -71,3 +71,4 @@ namespace hig {
   } // DetectorParams::update_param()
 
 } // namespace hig
+

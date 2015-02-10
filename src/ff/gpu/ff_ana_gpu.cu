@@ -32,10 +32,10 @@
 
 namespace hig {
 
-  __constant__ float_t tau_d;
-  __constant__ float_t eta_d;
-  __constant__ float_t transvec_d[3];
-  __constant__ float_t rot_d[9];
+  __constant__ real_t tau_d;
+  __constant__ real_t eta_d;
+  __constant__ real_t transvec_d[3];
+  __constant__ real_t rot_d[9];
 
   AnalyticFormFactorG::AnalyticFormFactorG(unsigned int ny, unsigned int nz):
     nqy_(ny), nqz_(nz),
@@ -65,8 +65,8 @@ namespace hig {
     //   + allocate device buffers
     //   + copy qgrid to device memory
     nqy_ = nqy; nqz_ = nqz;
-    cudaMalloc((void**) &qx_, nqy_ * sizeof(float_t));
-    cudaMalloc((void**) &qy_, nqy_ * sizeof(float_t));
+    cudaMalloc((void**) &qx_, nqy_ * sizeof(real_t));
+    cudaMalloc((void**) &qy_, nqy_ * sizeof(real_t));
     cudaMalloc((void**) &qz_, nqz_ * sizeof(cucomplex_t));
     cudaMalloc((void**) &ff_, nqz_ * sizeof(cucomplex_t));
 
@@ -79,8 +79,8 @@ namespace hig {
     //std::cerr << "AFTER MALLOCS: " << cudaGetErrorString(err) << std::endl;
 
     // first need to construct host buffers
-    float_t* qx_h = new (std::nothrow) float_t[nqy_];
-    float_t* qy_h = new (std::nothrow) float_t[nqy_];
+    real_t* qx_h = new (std::nothrow) real_t[nqy_];
+    real_t* qy_h = new (std::nothrow) real_t[nqy_];
     cucomplex_t* qz_h = new (std::nothrow) cucomplex_t[nqz_];
     if(qx_h == NULL || qy_h == NULL || qz_h == NULL) {
       std::cerr << "error: memory allocation for host mesh grid failed" << std::endl;
@@ -93,8 +93,8 @@ namespace hig {
       qz_h[iz].y = QGrid::instance().qz_extended(iz).imag();
     } // for qz
 
-    cudaMemcpy(qx_, qx_h, nqy_ * sizeof(float_t), cudaMemcpyHostToDevice);
-    cudaMemcpy(qy_, qy_h, nqy_ * sizeof(float_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(qx_, qx_h, nqy_ * sizeof(real_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(qy_, qy_h, nqy_ * sizeof(real_t), cudaMemcpyHostToDevice);
     cudaMemcpy(qz_, qz_h, nqz_ * sizeof(cucomplex_t), cudaMemcpyHostToDevice);
 
     delete [] qx_h;
@@ -133,4 +133,3 @@ namespace hig {
   } // AnalyticFormFactorG::construct_output_ff()
 
 } // namespace hig
-

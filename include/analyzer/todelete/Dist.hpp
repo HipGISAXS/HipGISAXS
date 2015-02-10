@@ -33,12 +33,13 @@ namespace hig{
   public:
     Dist(){}
     ~Dist(){}
-    //    virtual float_t dist(const float_t** mat1, const float_t** mat2, frame_t frm);
+    //    virtual real_t dist(const real_t** mat1, const real_t** mat2, frame_t frm);
     //virtual float_mat_t dist(const ImageData& img1, const ImageData& img2);
     virtual float_vec_t dist(float* img1, float* img2, unsigned int);
-    //float_t** residual(const float_t** mat1, const float_t** mat2);
+    //real_t** residual(const real_t** mat1, const real_t** mat2);
   }; /* class Dist */
 
 } /* namespace hig */
 
 #endif /* DIST_HPP_ */
+P_ */

@@ -35,24 +35,24 @@
 
 namespace hig {
 
-  extern __constant__ float_t tau_d;
-  extern __constant__ float_t eta_d;
-  extern __constant__ float_t transvec_d[3];
-  extern __constant__ float_t rot_d[9];
+  extern __constant__ real_t tau_d;
+  extern __constant__ real_t eta_d;
+  extern __constant__ real_t transvec_d[3];
+  extern __constant__ real_t rot_d[9];
 
   /** Form Factor of Pyramid:
    *  ff = It is complicated ...
    */
   __device__  __inline__ cucomplex_t FormFactorPyramid(cucomplex_t qx, cucomplex_t qy, cucomplex_t qz, 
-          float_t length, float_t width, float_t height, float_t angle){
+          real_t length, real_t width, real_t height, real_t angle){
 
-    float_t a = angle * PI_ / 180.;
-    float_t tan_a = cuRtan(a);
+    real_t a = angle * PI_ / 180.;
+    real_t tan_a = cuRtan(a);
     if ((2*height/length >= tan_a) || (2*height/width >= tan_a)) 
       return make_cuC(ZERO, ZERO);
 
     cucomplex_t tmp = (qx * qy);
-    if (cuCabsolute(tmp) < 1.0E-20)
+    if (cuC_abs(tmp) < 1.0E-20)
       return make_cuC(ZERO, ZERO);
 
     // define complex units
@@ -84,11 +84,11 @@ namespace hig {
   }
  
   __global__ void ff_pyramid_kernel (unsigned int nqy, unsigned int nqz, 
-          float_t * qx, float_t * qy, cucomplex_t * qz, cucomplex_t * ff,
-          int nx, float_t * x, float_t * distr_x,
-          int ny, float_t * y, float_t * distr_y,
-          int nz, float_t * z, float_t * distr_z,
-          int na, float_t * a, float_t * distr_a) {
+          real_t * qx, real_t * qy, cucomplex_t * qz, cucomplex_t * ff,
+          int nx, real_t * x, real_t * distr_x,
+          int ny, real_t * y, real_t * distr_y,
+          int nz, real_t * z, real_t * distr_z,
+          int na, real_t * a, real_t * distr_a) {
     int i_z = blockDim.x * blockIdx.x + threadIdx.x;
     if (i_z < nqz){
       int i_y = i_z % nqy;
@@ -100,7 +100,7 @@ namespace hig {
         for (int j = 0; j < ny; j++){
           for (int k = 0; k < nz; k++){
             for (int l = 0; l < na; l++){
-              float_t wght = distr_x[i] * distr_y[j] * distr_z[k] * distr_a[l];
+              real_t wght = distr_x[i] * distr_y[j] * distr_z[k] * distr_a[l];
               temp_ff = temp_ff + FormFactorPyramid(mqx, mqy, mqz, x[i], y[j], z[k], a[l]) * wght;
             }
           }
@@ -112,61 +112,61 @@ namespace hig {
   } // ff_pyramid_kernel()
 
    
-  bool AnalyticFormFactorG::compute_pyramid(const float_t tau, const float_t eta,
-                  const std::vector<float_t>& x,
-                  const std::vector<float_t>& distr_x,
-                  const std::vector<float_t>& y,
-                  const std::vector<float_t>& distr_y,
-                  const std::vector<float_t>& z,
-                  const std::vector<float_t>& distr_z,
-                  const std::vector<float_t>& a,
-                  const std::vector<float_t>& distr_a,
-                  const float_t* rot_h, const std::vector<float_t>& transvec,
+  bool AnalyticFormFactorG::compute_pyramid(const real_t tau, const real_t eta,
+                  const std::vector<real_t>& x,
+                  const std::vector<real_t>& distr_x,
+                  const std::vector<real_t>& y,
+                  const std::vector<real_t>& distr_y,
+                  const std::vector<real_t>& z,
+                  const std::vector<real_t>& distr_z,
+                  const std::vector<real_t>& a,
+                  const std::vector<real_t>& distr_a,
+                  const real_t* rot_h, const std::vector<real_t>& transvec,
                   std::vector<complex_t>& ff) {
     unsigned int n_x = x.size(), n_distr_x = distr_x.size();
     unsigned int n_y = y.size(), n_distr_y = distr_y.size();
     unsigned int n_z = z.size(), n_distr_z = distr_z.size();
     unsigned int n_a = a.size(), n_distr_a = distr_a.size();
-    const float_t *x_h = x.empty() ? NULL : &*x.begin();
-    const float_t *distr_x_h = distr_x.empty() ? NULL : &*distr_x.begin();
-    const float_t *y_h = y.empty() ? NULL : &*y.begin();
-    const float_t *distr_y_h = distr_y.empty() ? NULL : &*distr_y.begin();
-    const float_t *z_h = z.empty() ? NULL : &*z.begin();
-    const float_t *distr_z_h = distr_z.empty() ? NULL : &*distr_z.begin();
-    const float_t *a_h = a.empty() ? NULL : &*a.begin();
-    const float_t *distr_a_h = distr_a.empty() ? NULL : &*distr_a.begin();
-    float_t transvec_h[3] = {transvec[0], transvec[1], transvec[2]};
+    const real_t *x_h = x.empty() ? NULL : &*x.begin();
+    const real_t *distr_x_h = distr_x.empty() ? NULL : &*distr_x.begin();
+    const real_t *y_h = y.empty() ? NULL : &*y.begin();
+    const real_t *distr_y_h = distr_y.empty() ? NULL : &*distr_y.begin();
+    const real_t *z_h = z.empty() ? NULL : &*z.begin();
+    const real_t *distr_z_h = distr_z.empty() ? NULL : &*distr_z.begin();
+    const real_t *a_h = a.empty() ? NULL : &*a.begin();
+    const real_t *distr_a_h = distr_a.empty() ? NULL : &*distr_a.begin();
+    real_t transvec_h[3] = {transvec[0], transvec[1], transvec[2]};
 
     // construct device buffers
-    float_t *x_d, *distr_x_d;
-    float_t *y_d, *distr_y_d;
-    float_t *z_d, *distr_z_d;
-    float_t *a_d, *distr_a_d;
+    real_t *x_d, *distr_x_d;
+    real_t *y_d, *distr_y_d;
+    real_t *z_d, *distr_z_d;
+    real_t *a_d, *distr_a_d;
 
-    cudaMalloc((void**) &x_d, n_x * sizeof(float_t));
-    cudaMalloc((void**) &distr_x_d, n_distr_x * sizeof(float_t));
-    cudaMalloc((void**) &y_d, n_y * sizeof(float_t));
-    cudaMalloc((void**) &distr_y_d, n_distr_y * sizeof(float_t));
-    cudaMalloc((void**) &z_d, n_z * sizeof(float_t));
-    cudaMalloc((void**) &distr_z_d, n_distr_z * sizeof(float_t));
-    cudaMalloc((void**) &a_d, n_a * sizeof(float_t));
-    cudaMalloc((void**) &distr_a_d, n_distr_a * sizeof(float_t));
+    cudaMalloc((void**) &x_d, n_x * sizeof(real_t));
+    cudaMalloc((void**) &distr_x_d, n_distr_x * sizeof(real_t));
+    cudaMalloc((void**) &y_d, n_y * sizeof(real_t));
+    cudaMalloc((void**) &distr_y_d, n_distr_y * sizeof(real_t));
+    cudaMalloc((void**) &z_d, n_z * sizeof(real_t));
+    cudaMalloc((void**) &distr_z_d, n_distr_z * sizeof(real_t));
+    cudaMalloc((void**) &a_d, n_a * sizeof(real_t));
+    cudaMalloc((void**) &distr_a_d, n_distr_a * sizeof(real_t));
 
     // copy data to device buffers
-    cudaMemcpy(x_d, x_h, n_x * sizeof(float_t), cudaMemcpyHostToDevice);
-    cudaMemcpy(y_d, y_h, n_y * sizeof(float_t), cudaMemcpyHostToDevice);
-    cudaMemcpy(z_d, z_h, n_z * sizeof(float_t), cudaMemcpyHostToDevice);
-    cudaMemcpy(a_d, a_h, n_a * sizeof(float_t), cudaMemcpyHostToDevice);
-    cudaMemcpy(distr_x_d, distr_x_h, n_distr_x * sizeof(float_t), cudaMemcpyHostToDevice);
-    cudaMemcpy(distr_y_d, distr_y_h, n_distr_y * sizeof(float_t), cudaMemcpyHostToDevice);
-    cudaMemcpy(distr_z_d, distr_z_h, n_distr_z * sizeof(float_t), cudaMemcpyHostToDevice);
-    cudaMemcpy(distr_a_d, distr_a_h, n_distr_a * sizeof(float_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(x_d, x_h, n_x * sizeof(real_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(y_d, y_h, n_y * sizeof(real_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(z_d, z_h, n_z * sizeof(real_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(a_d, a_h, n_a * sizeof(real_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(distr_x_d, distr_x_h, n_distr_x * sizeof(real_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(distr_y_d, distr_y_h, n_distr_y * sizeof(real_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(distr_z_d, distr_z_h, n_distr_z * sizeof(real_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(distr_a_d, distr_a_h, n_distr_a * sizeof(real_t), cudaMemcpyHostToDevice);
 
     //run_init(rot_h, transvec);
-    cudaMemcpyToSymbol(tau_d, &tau, sizeof(float_t), 0, cudaMemcpyHostToDevice);
-    cudaMemcpyToSymbol(eta_d, &eta, sizeof(float_t), 0, cudaMemcpyHostToDevice);
-    cudaMemcpyToSymbol(rot_d, rot_h, 9*sizeof(float_t), 0, cudaMemcpyHostToDevice); 
-    cudaMemcpyToSymbol(transvec_d, transvec_h, 3*sizeof(float_t), 0, cudaMemcpyHostToDevice); 
+    cudaMemcpyToSymbol(tau_d, &tau, sizeof(real_t), 0, cudaMemcpyHostToDevice);
+    cudaMemcpyToSymbol(eta_d, &eta, sizeof(real_t), 0, cudaMemcpyHostToDevice);
+    cudaMemcpyToSymbol(rot_d, rot_h, 9*sizeof(real_t), 0, cudaMemcpyHostToDevice); 
+    cudaMemcpyToSymbol(transvec_d, transvec_h, 3*sizeof(real_t), 0, cudaMemcpyHostToDevice); 
 
     int num_threads = 256;
     int num_blocks =  nqz_ / num_threads + 1;
@@ -197,4 +197,3 @@ namespace hig {
   } // AnalyticFormFactorG::compute_pyramid()
 
 } // namespace hig
-

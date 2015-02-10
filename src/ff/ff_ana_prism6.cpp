@@ -38,9 +38,9 @@ namespace hig {
    * six faceted prism
    */
   bool AnalyticFormFactor::compute_prism6(shape_param_list_t& params, std::vector<complex_t>& ff,
-                      float_t tau, float_t eta, vector3_t transvec) {
-    std::vector<float_t> l, distr_l;
-    std::vector<float_t> h, distr_h;
+                      real_t tau, real_t eta, vector3_t transvec) {
+    std::vector<real_t> l, distr_l;
+    std::vector<real_t> h, distr_h;
     for(shape_param_iterator_t i = params.begin(); i != params.end(); ++ i) {
       switch((*i).second.type()) {
         case param_edge:
@@ -65,11 +65,11 @@ namespace hig {
     woo::BoostChronoTimer maintimer;
     maintimer.start();
 #endif // TIME_DETAIL_2
-#ifdef __FF_ANA_GPU
+#ifdef FF_ANA_GPU
     // on gpu
     std::cout << "-- Computing prism6 FF on GPU ..." << std::endl;
 
-    std::vector<float_t> transvec_v;
+    std::vector<real_t> transvec_v;
     transvec_v.push_back(transvec[0]);
     transvec_v.push_back(transvec[1]); 
     transvec_v.push_back(transvec[2]);
@@ -79,7 +79,7 @@ namespace hig {
     std::cout << "-- Computing prism6 FF on CPU ..." << std::endl;
 
     ff.clear(); ff.resize(nqz_, C_ZERO);
-    float_t sqrt3 = sqrt(3.0);
+    real_t sqrt3 = sqrt(3.0);
 
     #pragma omp parallel for 
     for(unsigned int z = 0; z < nqz_; ++ z) {
@@ -88,7 +88,7 @@ namespace hig {
       compute_meshpoints(QGrid::instance().qx(y), QGrid::instance().qy(y),
                 QGrid::instance().qz_extended(z), rot_, mqx, mqy, mqz);
       complex_t qm = tan(tau) * (mqx * sin(eta) + mqy * cos(eta));
-      complex_t temp1 = ((float_t) 4.0 * sqrt3) / (3.0 * mqy * mqy - mqx * mqx);
+      complex_t temp1 = ((real_t) 4.0 * sqrt3) / (3.0 * mqy * mqy - mqx * mqx);
       complex_t temp_ff(0.0, 0.0);
       for(unsigned int i_h = 0; i_h < h.size(); ++ i_h) {
         for(unsigned int i_l = 0; i_l < l.size(); ++ i_l) {

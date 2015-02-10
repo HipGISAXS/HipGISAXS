@@ -371,6 +371,7 @@ add_option("with-cuda", "Enable GPU support", 0, False)
 add_option("with-mic", "Enable Intel MIC support", 0, False)
 add_option("with-mpi", "Enable MPI parallelization", 0, False)
 add_option("with-papi", "Enable PAPI profiling", 0, False)
+add_option("use-single", "Use single precision floating point arithmatic", 0, False)
 ## other stuff
 add_option("detail-timings", "Output detailed timings", 0, False)
 
@@ -394,6 +395,7 @@ using_cuda = _has_option("with-cuda")
 using_mic = _has_option("with-mic")
 using_mpi = _has_option("with-mpi")
 using_papi = _has_option("with-papi")
+using_single = _has_option("use-single")
 if using_cuda and using_mic:
     print("error: currently GPU and MIC are not supported simultaneously. select one of them.")
     Exit(1)
@@ -526,6 +528,10 @@ if using_debug:
 else:
     env.Append(CCFLAGS = ['-O3'])
     env.Append(CPPDEFINES = ['NDEBUG'])
+
+# use double-precision as defualt
+if not using_single:
+    env.Append(CPPDEFINES = ['DOUBLEP'])
 
 ## print stuff
 #for item in sorted(env.Dictionary().items()):

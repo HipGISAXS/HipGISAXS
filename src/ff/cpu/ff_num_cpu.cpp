@@ -60,14 +60,14 @@ namespace hig {
    */
   unsigned int NumericFormFactorC::compute_form_factor(int rank,
             #ifndef __SSE3__
-              float_vec_t &shape_def,
+              real_vec_t &shape_def,
             #else
-              float_t* shape_def, unsigned int num_triangles,
+              real_t* shape_def, unsigned int num_triangles,
             #endif
             complex_t* &ff,
-            float_t* &qx, int nqx, float_t* &qy, int nqy, complex_t* &qz, int nqz,
-            float_t* &rot,
-            float_t& kernel_time, float_t& red_time, float_t& mem_time
+            real_t* &qx, int nqx, real_t* &qy, int nqy, complex_t* &qz, int nqz,
+            real_t* &rot,
+            real_t& kernel_time, real_t& red_time, real_t& mem_time
             #ifdef FINDBLOCK
               , const int block_x, const int block_y, const int block_z, const int block_t
             #endif
@@ -91,7 +91,7 @@ namespace hig {
   
     //#ifndef FF_NUM_CPU_PADDING
       unsigned long int total_qpoints = nqx * nqy * nqz;
-      unsigned long int host_mem_usage = ((unsigned long int) nqx + nqy) * sizeof(float_t) +
+      unsigned long int host_mem_usage = ((unsigned long int) nqx + nqy) * sizeof(real_t) +
                         nqz * sizeof(complex_t);
     //#else
       // padding to 16 bytes
@@ -102,7 +102,7 @@ namespace hig {
       //unsigned int pad_z = (PAD_LINE_ - (nqz % PAD_LINE_)) % PAD_LINE_;
       //unsigned int pnqx = nqx + pad_x, pnqy = nqy + pad_y, pnqz = nqz + pad_z;
       //unsigned long int total_qpoints = pnqx * pnqy * pnqz;
-      //unsigned long int host_mem_usage = ((unsigned long int) pnqx + pnqy) * sizeof(float_t) +
+      //unsigned long int host_mem_usage = ((unsigned long int) pnqx + pnqy) * sizeof(real_t) +
       //                  pnqz * sizeof(complex_t);
     //#endif
   
@@ -393,8 +393,8 @@ namespace hig {
    * needs reduction kernel after this.
    * DO NOT USE THIS. IT IS ANCIENT AND DOES NOT HAVE ROTATION!
    */
-  void NumericFormFactorC::form_factor_kernel(float_t* qx, float_t* qy, complex_t* qz,
-          float_vec_t& shape_def,
+  void NumericFormFactorC::form_factor_kernel(real_t* qx, real_t* qy, complex_t* qz,
+          real_vec_t& shape_def,
           unsigned int curr_nqx, unsigned int curr_nqy, unsigned int curr_nqz,
           unsigned int curr_num_triangles,
           unsigned int b_nqx, unsigned int b_nqy, unsigned int b_nqz,
@@ -408,13 +408,13 @@ namespace hig {
       #pragma omp for nowait //schedule(auto)
       for(unsigned int i_t = 0; i_t < curr_num_triangles; ++ i_t) {
         unsigned int shape_off = (ib_t * b_num_triangles + i_t) * CPU_T_PROP_SIZE_;
-        float_t s = shape_def[shape_off];
-        float_t nx = shape_def[shape_off + 1];
-        float_t ny = shape_def[shape_off + 2];
-        float_t nz = shape_def[shape_off + 3];
-        float_t x = shape_def[shape_off + 4];
-        float_t y = shape_def[shape_off + 5];
-        float_t z = shape_def[shape_off + 6];
+        real_t s = shape_def[shape_off];
+        real_t nx = shape_def[shape_off + 1];
+        real_t ny = shape_def[shape_off + 2];
+        real_t nz = shape_def[shape_off + 3];
+        real_t x = shape_def[shape_off + 4];
+        real_t y = shape_def[shape_off + 5];
+        real_t z = shape_def[shape_off + 6];
   
         unsigned long int xy_size = (unsigned long int) curr_nqx * curr_nqy;
         unsigned long int matrix_off = xy_size * curr_nqz * i_t;
@@ -433,15 +433,15 @@ namespace hig {
           for(unsigned int i_y = 0, global_i_y = start_y; i_y < curr_nqy;
               ++ i_y, ++ global_i_y) {
             unsigned long int xy_off_start = (unsigned long int) curr_nqx * i_y;
-            float_t temp_y = qy[global_i_y];
-            float_t qy2 = temp_y * temp_y;
-            float_t qyn = temp_y * ny;
-            float_t qyt = temp_y * y;
+            real_t temp_y = qy[global_i_y];
+            real_t qy2 = temp_y * temp_y;
+            real_t qyn = temp_y * ny;
+            real_t qyt = temp_y * y;
   
             for(unsigned int i_x = 0, global_i_x = start_x; i_x < curr_nqx;
                 ++ i_x, ++ global_i_x) {
               unsigned long int off = off_start + xy_off_start + i_x;
-              float_t temp_x = qx[global_i_x];
+              real_t temp_x = qx[global_i_x];
               complex_t q2 = temp_x * temp_x + qy2 + qz2;
               complex_t qt = temp_x * x + qyt + qzt;
               complex_t qn = (temp_x * nx + qyn + qzn) / q2;
@@ -509,14 +509,14 @@ namespace hig {
    * the main Form Factor kernel with fused reduction function - for one hyperblock.
    * using this as baseline.
    */
-  void NumericFormFactorC::form_factor_kernel_fused(float_t* qx, float_t* qy, complex_t* qz,
-          float_vec_t& shape_def,
+  void NumericFormFactorC::form_factor_kernel_fused(real_t* qx, real_t* qy, complex_t* qz,
+          real_vec_t& shape_def,
           unsigned int curr_nqx, unsigned int curr_nqy, unsigned int curr_nqz,
           unsigned int curr_num_triangles,
           unsigned int b_nqx, unsigned int b_nqy, unsigned int b_nqz, unsigned int b_num_triangles,
           unsigned int nqx, unsigned int nqy, unsigned int nqz, unsigned int num_triangles,
           unsigned int ib_x, unsigned int ib_y, unsigned int ib_z, unsigned int ib_t,
-          float_t* rot,
+          real_t* rot,
           complex_t* ff) {
     if(ff == NULL || qx == NULL || qy == NULL || qz == NULL) return;
   
@@ -533,17 +533,17 @@ namespace hig {
           for(int i_x = 0; i_x < curr_nqx; ++ i_x) {
             for(int i_t = 0; i_t < curr_num_triangles; ++ i_t) {
               unsigned int shape_off = (ib_t * b_num_triangles + i_t) * CPU_T_PROP_SIZE_;
-              float_t s = shape_def[shape_off];
-              float_t nx = shape_def[shape_off + 1];
-              float_t ny = shape_def[shape_off + 2];
-              float_t nz = shape_def[shape_off + 3];
-              float_t x = shape_def[shape_off + 4];
-              float_t y = shape_def[shape_off + 5];
-              float_t z = shape_def[shape_off + 6];
+              real_t s = shape_def[shape_off];
+              real_t nx = shape_def[shape_off + 1];
+              real_t ny = shape_def[shape_off + 2];
+              real_t nz = shape_def[shape_off + 3];
+              real_t x = shape_def[shape_off + 4];
+              real_t y = shape_def[shape_off + 5];
+              real_t z = shape_def[shape_off + 6];
   
               complex_t temp_qz = qz[start_z + i_z];
-              float_t temp_qy = qy[start_y + i_y];
-              float_t temp_qx = qx[start_x + i_x];
+              real_t temp_qy = qy[start_y + i_y];
+              real_t temp_qx = qx[start_x + i_x];
 
               complex_t temp_x = rot[0] * temp_qx + rot[1] * temp_qy + rot[2] * temp_qz;
               complex_t temp_y = rot[3] * temp_qx + rot[4] * temp_qy + rot[5] * temp_qz;
@@ -585,9 +585,9 @@ namespace hig {
   /**
    * Computational kernel function.
    */
-  inline complex_t NumericFormFactorC::compute_fq(float_t s, complex_t qt, complex_t qn) {
+  inline complex_t NumericFormFactorC::compute_fq(real_t s, complex_t qt, complex_t qn) {
     complex_t v1 = qn * complex_t(cos(qt.real()), sin(qt.real()));
-    float_t v2 = s * exp(qt.imag());
+    real_t v2 = s * exp(qt.imag());
     return v1 * v2;
   } // NumericFormFactorC::compute_fq()
   

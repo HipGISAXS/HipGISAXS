@@ -38,10 +38,10 @@ namespace hig {
    */
 
   complex_t FormFactorPyramid (complex_t qx, complex_t qy, complex_t qz,
-      float_t length, float_t width, float_t height, float_t angle) {
+      real_t length, real_t width, real_t height, real_t angle) {
 
-    float_t a = angle * PI_ / 180.;
-    float_t tan_a = std::tan(a);
+    real_t a = angle * PI_ / 180.;
+    real_t tan_a = std::tan(a);
     if ((2*height/length >= tan_a) || (2*height/width >= tan_a))
         return C_ZERO;
 
@@ -81,12 +81,12 @@ namespace hig {
 
   bool AnalyticFormFactor::compute_pyramid(shape_param_list_t& params,
                             std::vector<complex_t>& ff,
-                            float_t tau, float_t eta,
+                            real_t tau, real_t eta,
                             vector3_t transvec) {
-    std::vector<float_t> x, distr_x;
-    std::vector<float_t> y, distr_y;
-    std::vector<float_t> h, distr_h;
-    std::vector<float_t> b, distr_b;
+    std::vector<real_t> x, distr_x;
+    std::vector<real_t> y, distr_y;
+    std::vector<real_t> h, distr_h;
+    std::vector<real_t> b, distr_b;
     for(shape_param_iterator_t i = params.begin(); i != params.end(); ++ i) {
       switch((*i).second.type()) {
         case param_xsize:
@@ -118,7 +118,7 @@ namespace hig {
 
     #ifdef FF_ANA_GPU
       std::cout << "-- Computing pyramid FF on GPU ..." << std::endl;
-      std::vector<float_t> transvec_v; 
+      std::vector<real_t> transvec_v; 
       transvec_v.push_back(transvec[0]);
       transvec_v.push_back(transvec[1]);
       transvec_v.push_back(transvec[2]);
@@ -140,8 +140,8 @@ namespace hig {
           for(int i_y = 0; i_y < y.size(); ++ i_y) {
             for(int i_h = 0; i_h < h.size(); ++ i_h) {
               for(int i_b = 0; i_b < b.size(); ++ i_b) {
-                float_t bb = b[i_b] * PI_ / 180;
-                float_t prob = distr_x[i_x] * distr_y[i_y] * distr_h[i_h] * distr_b[i_b];
+                real_t bb = b[i_b] * PI_ / 180;
+                real_t prob = distr_x[i_x] * distr_y[i_y] * distr_h[i_h] * distr_b[i_b];
                 temp_ff += FormFactorPyramid(mqx, mqy, mqz, x[i_x], y[i_y], h[i_h], b[i_b]) * prob;
               } // for b
             } // for h
@@ -161,4 +161,3 @@ namespace hig {
     return true;
   } // AnalyticFormFactor::compute_pyramid()
 } // namespace hig
-

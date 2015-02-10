@@ -88,8 +88,8 @@ namespace hig {
    * requires iterator to be defined
    */
   template <typename scalar_t>    // how to restrict scalar_t to just scalars? ...
-  std::vector<float_t>& operator*(scalar_t scalar, std::vector<float_t>& vec) {
-    for(std::vector<float_t>::iterator i = vec.begin(); i != vec.end(); ++ i) {
+  std::vector<real_t>& operator*(scalar_t scalar, std::vector<real_t>& vec) {
+    for(std::vector<real_t>::iterator i = vec.begin(); i != vec.end(); ++ i) {
       (*i) = (*i) * scalar;
     } // for
     return vec;
@@ -103,20 +103,20 @@ namespace hig {
    * complex operators
    */
 
-  extern complex_t operator*(complex_t c, float_t s);
-  extern complex_t operator*(float_t s, complex_t c);
+  extern complex_t operator*(complex_t c, real_t s);
+  extern complex_t operator*(real_t s, complex_t c);
   extern std::complex<long double> operator*(std::complex<long double> c, long double s);
   #ifdef USE_GPU
     extern complex_t operator*(float2 c, float2 s);
-    extern complex_t operator*(float_t s, cucomplex_t c);
-    extern complex_t operator*(cucomplex_t c, float_t s);
+    extern complex_t operator*(real_t s, cucomplex_t c);
+    extern complex_t operator*(cucomplex_t c, real_t s);
     extern complex_t operator*(complex_t s, cucomplex_t c);
     extern complex_t operator*(cucomplex_t c, complex_t s);
   #endif
 
   #ifdef USE_GPU
-    extern complex_t operator+(float_t s, cucomplex_t c);
-    extern complex_t operator+(cucomplex_t c, float_t s);
+    extern complex_t operator+(real_t s, cucomplex_t c);
+    extern complex_t operator+(cucomplex_t c, real_t s);
     extern complex_t operator+(complex_t s, cucomplex_t c);
     extern complex_t operator+(cucomplex_t c, complex_t s);
   #endif
@@ -126,7 +126,7 @@ namespace hig {
    * use boost libs ...
    */
 
-  extern bool mat_log10_2d(unsigned int x_size, unsigned int y_size, float_t* &data);
+  extern bool mat_log10_2d(unsigned int x_size, unsigned int y_size, real_t* &data);
   extern vector3_t floor(vector3_t a);
 
   extern complex_vec_t& mat_sqr(complex_vec_t&);
@@ -150,17 +150,17 @@ namespace hig {
             complex_vec_t&);
   extern bool mat_add_in(unsigned int, unsigned int, unsigned int, complex_vec_t&,
             unsigned int, unsigned int, unsigned int, complex_vec_t&);
-  extern complex_vec_t& mat_mul(float_t scalar, std::vector<complex_t>& matrix);
+  extern complex_vec_t& mat_mul(real_t scalar, std::vector<complex_t>& matrix);
   extern complex_vec_t& mat_mul(complex_t scalar, std::vector<complex_t>& matrix);
-  extern complex_vec_t& mat_mul(std::vector<complex_t>& matrix, float_t scalar);
+  extern complex_vec_t& mat_mul(std::vector<complex_t>& matrix, real_t scalar);
   extern complex_vec_t& mat_mul(std::vector<complex_t>& matrix, complex_t scalar);
-  extern bool mat_mul(float_t, const std::vector<complex_t>&, complex_vec_t&);
+  extern bool mat_mul(real_t, const std::vector<complex_t>&, complex_vec_t&);
   extern bool mat_mul(complex_t, const std::vector<complex_t>&, complex_vec_t&);
-  extern bool mat_mul(const std::vector<complex_t>&, float_t, complex_vec_t&);
+  extern bool mat_mul(const std::vector<complex_t>&, real_t, complex_vec_t&);
   extern bool mat_mul(const std::vector<complex_t>&, complex_t, complex_vec_t&);
-  extern bool mat_mul_in(float_t scalar, std::vector<complex_t>& matrix);
+  extern bool mat_mul_in(real_t scalar, std::vector<complex_t>& matrix);
   extern bool mat_mul_in(complex_t scalar, std::vector<complex_t>& matrix);
-  extern bool mat_mul_in(std::vector<complex_t>& matrix, float_t scalar);
+  extern bool mat_mul_in(std::vector<complex_t>& matrix, real_t scalar);
   extern bool mat_mul_in(std::vector<complex_t>& matrix, complex_t scalar);
   extern complex_vec_t& mat_dot_prod(unsigned int, unsigned int, unsigned int, complex_vec_t&,
             unsigned int, unsigned int, unsigned int, complex_vec_t&);
@@ -178,7 +178,7 @@ namespace hig {
 
   /** compute the transpose of a matrix
    */
-  extern bool transpose(unsigned int x_size, unsigned int y_size, const float_t *matrix, float_t* &transp);
+  extern bool transpose(unsigned int x_size, unsigned int y_size, const real_t *matrix, real_t* &transp);
 
   /** matrix multiplication for two 3x3 matrices
    * operation is:
@@ -190,9 +190,9 @@ namespace hig {
   */
   extern bool mat_mul_3x3(vector3_t a, vector3_t b, vector3_t c, vector3_t d, vector3_t e, vector3_t f,
           vector3_t& x, vector3_t& y, vector3_t& z);
-  extern bool mat_mul_3x3(float_vec_t a, float_vec_t d, float_vec_t& x);
-  extern bool mat_mul_3x3(float_vec_t a, float_t* d, float_t*& x);
-  extern bool mat_mul_3x3(float_t* a, float_t* d, float_t*& x);
+  extern bool mat_mul_3x3(real_vec_t a, real_vec_t d, real_vec_t& x);
+  extern bool mat_mul_3x3(real_vec_t a, real_t* d, real_t*& x);
+  extern bool mat_mul_3x3(real_t* a, real_t* d, real_t*& x);
 
   /** matrix vector product for matrix of size 3x3 and vector of size 1x3
    * operation is:
@@ -211,19 +211,19 @@ namespace hig {
     extern int count_naninfs(int, int, int, const cucomplex_t*);
   #endif
 
-  extern complex_t integral_e(float_t, float_t, complex_t);
-  extern complex_t integral_xe(float_t, float_t, float_t, float_t, complex_t);
+  extern complex_t integral_e(real_t, real_t, complex_t);
+  extern complex_t integral_xe(real_t, real_t, real_t, real_t, complex_t);
 
   // adding two data sets into one
-  extern bool add_data_elements(float_t* &dst, const float_t* src1, const float* src2, int size);
+  extern bool add_data_elements(real_t* &dst, const real_t* src1, const real_t * src2, int size);
 
 
   // for complex numbers
-  //extern inline float_t magnitude(complex_t);
-  inline float_t magnitude(complex_t z) { return sqrt(z.real() * z.real() + z.imag() * z.imag()); }
+  //extern inline real_t magnitude(complex_t);
+  inline real_t magnitude(complex_t z) { return sqrt(z.real() * z.real() + z.imag() * z.imag()); }
   extern inline bool conjugate(complex_t*, int);
-  extern inline bool normalize(complex_t*, float_t*, int);
-  extern inline float_t gaussian(float_t, float_t, float_t, float_t, float_t, bool);
+  extern inline bool normalize(complex_t*, real_t*, int);
+  extern inline real_t gaussian(real_t, real_t, real_t, real_t, real_t, bool);
 
 } // namespace hig
 

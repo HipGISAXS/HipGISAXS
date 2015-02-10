@@ -37,8 +37,8 @@ namespace hig {
   /**
    * cylinder
    */
-  complex_t FormFactorCylinder(complex_t qpar, complex_t qz, float_t radius, float_t height){
-    float_t vol = 2. * PI_ * radius * radius * height;
+  complex_t FormFactorCylinder(complex_t qpar, complex_t qz, real_t radius, real_t height){
+    real_t vol = 2. * PI_ * radius * radius * height;
     complex_t sinc_val = sinc(0.5 * qz * height);
     complex_t expt_val = std::exp(C_ONE * 0.5 * qz * height);
     complex_t t1 = qpar * radius;
@@ -46,10 +46,10 @@ namespace hig {
     return (vol * sinc_val * expt_val * bess_val);
   }  
 
-  bool AnalyticFormFactor::compute_cylinder(shape_param_list_t& params, float_t tau, float_t eta,
+  bool AnalyticFormFactor::compute_cylinder(shape_param_list_t& params, real_t tau, real_t eta,
                                             std::vector<complex_t>& ff, vector3_t transvec) {
-    std::vector <float_t> h, distr_h;  // for h dimension: param_height
-    std::vector <float_t> r, distr_r;  // for r dimension: param_radius
+    std::vector <real_t> h, distr_h;  // for h dimension: param_height
+    std::vector <real_t> r, distr_r;  // for r dimension: param_radius
     for(shape_param_iterator_t i = params.begin(); i != params.end(); ++ i) {
       if(!(*i).second.isvalid()) {
         std::cerr << "warning: ignoring invalid shape parameter" << std::endl;
@@ -87,7 +87,7 @@ namespace hig {
     // on gpu
     std::cout << "-- Computing cylinder FF on GPU ..." << std::endl;
 
-    std::vector<float_t> transvec_v;
+    std::vector<real_t> transvec_v;
     transvec_v.push_back(transvec[0]);
     transvec_v.push_back(transvec[1]);
     transvec_v.push_back(transvec[2]);

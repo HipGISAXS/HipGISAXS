@@ -35,9 +35,9 @@ namespace hig {
   bool mat_mul_3x3(vector3_t a, vector3_t b, vector3_t c,
           vector3_t d, vector3_t e, vector3_t f,
           vector3_t& x, vector3_t& y, vector3_t& z) {
-    float_t *A = new (std::nothrow) float_t[9];
-    float_t *B = new (std::nothrow) float_t[9];
-    float_t *C = new (std::nothrow) float_t[9];
+    real_t *A = new (std::nothrow) real_t[9];
+    real_t *B = new (std::nothrow) real_t[9];
+    real_t *C = new (std::nothrow) real_t[9];
 
     A[0] = a[0]; A[1] = a[1]; A[2] = a[2];
     A[3] = b[0]; A[4] = b[1]; A[5] = b[2];
@@ -75,19 +75,19 @@ namespace hig {
     return true;
   } // mat_mul_3x3()
 
-  bool mat_mul_3x3(const float_vec_t a, const float_vec_t d, float_vec_t& x) {
-    const float_t *A = &a[0], *B = &d[0];
-    float_t *C = &x[0];
+  bool mat_mul_3x3(const real_vec_t a, const real_vec_t d, real_vec_t& x) {
+    const real_t *A = &a[0], *B = &d[0];
+    real_t *C = &x[0];
     return mat_mul_3x3(A, B, C);
   } // mat_mul_3x3()
 
-  bool mat_mul_3x3(const float_vec_t a, const float_t* d, float_t*& x) {
-    const float_t *A = &(a[0]), *B = d;
-    float_t *C = x;
+  bool mat_mul_3x3(const real_vec_t a, const real_t* d, real_t*& x) {
+    const real_t *A = &(a[0]), *B = d;
+    real_t *C = x;
     return mat_mul_3x3(A, B, C);
   } // mat_mul_3x3()
 
-  bool mat_mul_3x3(const float_t* A, const float_t* B, float_t*& C) {
+  bool mat_mul_3x3(const real_t* A, const real_t* B, real_t*& C) {
     for(int i = 0; i < 3; i ++) {
       for(int j = 0; j < 3; j ++) {
         C[3 * i + j] = 0.0;
@@ -119,7 +119,7 @@ namespace hig {
   /**
    * scalar-matrix multiplication    WRONG ...
    */
-  /*std::vector<complex_t>& mat_mul(float_t scalar,
+  /*std::vector<complex_t>& mat_mul(real_t scalar,
                   //unsigned int x_size, unsigned int y_size, unsigned int z_size,
                   std::vector<complex_t>& matrix) {
     std::vector<complex_t> result;
@@ -139,7 +139,7 @@ namespace hig {
     return result;
   } // mat_mul()*/
 
-  /*std::vector<complex_t>& mat_mul(std::vector<complex_t>& matrix, float_t scalar) {
+  /*std::vector<complex_t>& mat_mul(std::vector<complex_t>& matrix, real_t scalar) {
     return mat_mul(scalar, matrix);
   } // mat_mul()
 
@@ -150,7 +150,7 @@ namespace hig {
   /**
    * scalar-matrix multiplication into result
    */
-  bool mat_mul(float_t scalar, const complex_vec_t& matrix, complex_vec_t& result) {
+  bool mat_mul(real_t scalar, const complex_vec_t& matrix, complex_vec_t& result) {
     result.clear();
     for(std::vector<complex_t>::const_iterator i = matrix.begin(); i != matrix.end(); ++ i) {
       result.push_back((*i) * scalar);
@@ -166,7 +166,7 @@ namespace hig {
     return true;
   } // mat_mul()
 
-  bool mat_mul(const complex_vec_t& matrix, float_t scalar, complex_vec_t& result) {
+  bool mat_mul(const complex_vec_t& matrix, real_t scalar, complex_vec_t& result) {
     return mat_mul(scalar, matrix, result);
   } // mat_mul()
 
@@ -177,7 +177,7 @@ namespace hig {
   /**
    * in-place scalar-matrix multiplication
    */
-  bool mat_mul_in(float_t scalar,  complex_vec_t& matrix) {
+  bool mat_mul_in(real_t scalar,  complex_vec_t& matrix) {
     for(complex_vec_t::iterator i = matrix.begin(); i != matrix.end(); ++ i) {
       *i = (*i) * scalar;
     } // for
@@ -191,7 +191,7 @@ namespace hig {
     return true;
   } // mat_mul()
 
-  bool mat_mul_in(complex_vec_t& matrix, float_t scalar) {
+  bool mat_mul_in(complex_vec_t& matrix, real_t scalar) {
     return mat_mul_in(scalar, matrix);
   } // mat_mul()
 

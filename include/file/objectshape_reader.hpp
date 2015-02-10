@@ -30,6 +30,7 @@
 #include <vector>
 #include <cmath>
 #include <boost/tokenizer.hpp>
+#include <common/typedefs.hpp>
 
 namespace hig {
 
@@ -48,10 +49,10 @@ namespace hig {
   }; //enum
 
   typedef struct {
-    float_t x;
-    float_t y;
-    float_t z;
-    float_t w;   // for format's completeness
+    real_t x;
+    real_t y;
+    real_t z;
+    real_t w;   // for format's completeness
   } vertex_t;
 
   typedef struct {
@@ -75,10 +76,10 @@ namespace hig {
                 std::vector<std::vector<int> > &face_list_4v);
     private:
       bool convert_to_shape(std::vector<std::vector<int> > face_list_3v,
-                std::vector<vertex_t> vertices, std::vector<float_t>&);
+                std::vector<vertex_t> vertices, std::vector<real_t>&);
   
       bool get_triangle_params(vertex_t v1, vertex_t v2, vertex_t v3,
-                float_t &s_area, vertex_t &normal, vertex_t &center);
+                real_t &s_area, vertex_t &normal, vertex_t &center);
       token_t token_hash(std::string const &str);
       void findall(std::string str, char c, std::vector<int> &pos_list);
       void display_vertices(std::vector<vertex_t> &vertices);

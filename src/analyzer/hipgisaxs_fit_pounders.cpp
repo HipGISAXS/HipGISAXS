@@ -116,11 +116,11 @@ namespace hig{
     xn_.clear();
     for(int j = 0; j < num_params_; ++ j){
       VecGetValues(x0, 1 , &j , y);
-      xn_.push_back((float) y[0]);
+      xn_.push_back(y[0]);
     }
 
     std::cout << "Converged vector: ";
-  for(float_vec_t::iterator i = xn_.begin(); i != xn_.end(); ++ i) std::cout << *i << " ";
+  for(real_vec_t::iterator i = xn_.begin(); i != xn_.end(); ++ i) std::cout << *i << " ";
   std::cout << std::endl;
 
     ierr = TaoDestroy(&tao);
@@ -136,3 +136,4 @@ namespace hig{
   }
 
 }
+

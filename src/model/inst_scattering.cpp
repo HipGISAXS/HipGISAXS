@@ -44,7 +44,7 @@ namespace hig {
   } // ScatteringParams::init()
 
 
-  bool ScatteringParams::update_param(const std::string& str, float_t new_val) {
+  bool ScatteringParams::update_param(const std::string& str, real_t new_val) {
     std::string keyword, rem_str;
     if(!extract_first_keyword(str, keyword, rem_str)) return false;
     std::string keyword2, rem_str2;
@@ -174,3 +174,4 @@ namespace hig {
 
 
 } // namespace hig
+

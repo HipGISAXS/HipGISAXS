@@ -12,7 +12,7 @@
 
 namespace hig {
 
-  bool AnalysisAlgorithm::init_params(const float_vec_t& x0) {
+  bool AnalysisAlgorithm::init_params(const real_vec_t& x0) {
     x0_.clear();
     x0_.insert(x0_.end(), x0.begin(), x0.end());
     num_params_ = x0_.size();
@@ -21,3 +21,4 @@ namespace hig {
   } // AnalysisAlgorithm::init_params()
 
 } // namespace hig
+

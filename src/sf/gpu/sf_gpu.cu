@@ -78,8 +78,8 @@ namespace hig {
             << ny_ << " x " << nz_ << " ..." << std::endl;
     } // if
 
-    std::complex<float_t> unit_c(1, 0);
-    std::complex<float_t> unit_ci(0, 1);
+    std::complex<real_t> unit_c(1, 0);
+    std::complex<real_t> unit_ci(0, 1);
 
     // big data to transer to gpu:
     // qx, qy, qz
@@ -91,10 +91,10 @@ namespace hig {
       for(unsigned int y = 0; y < ny_; ++ y) {
         for(unsigned int x = 0; x < nx_; ++ x) {
           complex_t temp1, temp_x2, temp_y3, temp_y4, temp_x5;
-          float_t temp_f;
+          real_t temp_f;
           complex_t sa, sb, sc;
-          float_t qx = QGrid::instance().qx(x);
-          float_t qy = QGrid::instance().qy(y);
+          real_t qx = QGrid::instance().qx(x);
+          real_t qy = QGrid::instance().qy(y);
           complex_t qz;
           if(expt == "saxs")
             qz = QGrid::instance().qz(z);
@@ -104,32 +104,32 @@ namespace hig {
           temp1 = exp(unit_ci * (arot[0] * qx + arot[1] * qy + arot[2] * qz));
           temp_x2 = unit_c - pow(temp1, repet[0]);
           temp_y3 = unit_c / (unit_c - temp1);
-          temp_f = (float_t)(!((boost::math::isfinite)(temp_y3.real()) &&
+          temp_f = (real_t)(!((boost::math::isfinite)(temp_y3.real()) &&
                       (boost::math::isfinite)(temp_y3.imag())));
           temp_y4 = unit_c / (unit_c / temp_y3 + temp_f);
-          temp_f = (float_t)(!((boost::math::isfinite)((unit_c / temp_x2).real()) &&
+          temp_f = (real_t)(!((boost::math::isfinite)((unit_c / temp_x2).real()) &&
                       (boost::math::isfinite)((unit_c / temp_x2).imag())));
           temp_x5 = temp_x2 + repet[0] * temp_f;
-          sa = pow(temp1, ((float_t)1.0 - repet[0]) / (float_t)2.0) * temp_y4 * temp_x5;
+          sa = pow(temp1, ((real_t)1.0 - repet[0]) / (real_t)2.0) * temp_y4 * temp_x5;
 
           temp1 = exp(unit_ci * (brot[0] * qx + brot[1] * qy + brot[2] * qz));
           temp_x2 = unit_c - pow(temp1, repet[1]);
           temp_y3 = unit_c / (unit_c - temp1);
-          temp_f = (float_t)(!((boost::math::isfinite)(temp_y3.real()) &&
+          temp_f = (real_t)(!((boost::math::isfinite)(temp_y3.real()) &&
                       (boost::math::isfinite)(temp_y3.imag())));
           temp_y4 = unit_c / (unit_c / temp_y3 + temp_f);
-          temp_f = (float_t)(!((boost::math::isfinite)((unit_c / temp_x2).real()) &&
+          temp_f = (real_t)(!((boost::math::isfinite)((unit_c / temp_x2).real()) &&
                       (boost::math::isfinite)((unit_c / temp_x2).imag())));
           temp_x5 = temp_x2 + repet[1] * temp_f;
-          sb = pow(temp1, ((float_t)1.0 - repet[1]) / (float_t)2.0) * temp_y4 * temp_x5;
+          sb = pow(temp1, ((real_t)1.0 - repet[1]) / (real_t)2.0) * temp_y4 * temp_x5;
 
           temp1 = exp(unit_ci * (crot[0] * qx + crot[1] * qy + crot[2] * qz));
           temp_x2 = unit_c - pow(temp1, repet[2]);
           temp_y3 = unit_c / (unit_c - temp1);
-          temp_f = (float_t)(!((boost::math::isfinite)(temp_y3.real()) &&
+          temp_f = (real_t)(!((boost::math::isfinite)(temp_y3.real()) &&
                       (boost::math::isfinite)(temp_y3.imag())));
           temp_y4 = unit_c / (unit_c / temp_y3 + temp_f);
-          temp_f = (float_t)(!((boost::math::isfinite)((unit_c / temp_x2).real()) &&
+          temp_f = (real_t)(!((boost::math::isfinite)((unit_c / temp_x2).real()) &&
                       (boost::math::isfinite)((unit_c / temp_x2).imag())));
           temp_x5 = temp_x2 + repet[2] * temp_f;
           sc = temp_y4 * temp_x5;
@@ -161,5 +161,4 @@ namespace hig {
 
     return true;
   } // StructureFactor::compute_structure_factor_gpu()
-
 } // namespace

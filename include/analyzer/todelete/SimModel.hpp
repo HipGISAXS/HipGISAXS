@@ -70,11 +70,12 @@ namespace hig{
 
 
 	virtual std::vector<std::string> get_fit_param_keys() = 0;
-	virtual bool update_params(std::map<std::string, float_t>) = 0;
-	virtual bool compute_gisaxs(float_t*) = 0;
+	virtual bool update_params(std::map<std::string, real_t>) = 0;
+	virtual bool compute_gisaxs(real_t*) = 0;
 
   }; /* class SimModel */
 
 } /* namespace hig */
 
 #endif /* SIMMODEL_HPP_ */
+/

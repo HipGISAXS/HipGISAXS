@@ -40,48 +40,48 @@ namespace hig {
 			bool init();	// TODO ...
 	
 		private:
-			void form_factor_kernel(float_t*, float_t*, scomplex_t*, float_t*,
+			void form_factor_kernel(real_t*, real_t*, scomplex_t*, real_t*,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									scomplex_t*);
 			__attribute__((target(mic:0)))
-			void form_factor_kernel_db(float_t*, float_t*, scomplex_t*, float_t*,
+			void form_factor_kernel_db(real_t*, real_t*, scomplex_t*, real_t*,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									scomplex_t*);
 			#ifndef FF_NUM_MIC_SWAP
 			__attribute__((target(mic:0)))
-			void form_factor_kernel_opt(float_t*, float_t*, scomplex_t*, float_t*,
+			void form_factor_kernel_opt(real_t*, real_t*, scomplex_t*, real_t*,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									scomplex_t*, scomplex_t*);
 			#else
 			__attribute__((target(mic:0)))
-			void form_factor_kernel_loopswap(float_t*, float_t*, scomplex_t*, float_t*,
+			void form_factor_kernel_loopswap(real_t*, real_t*, scomplex_t*, real_t*,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
-									float_t*,
+									real_t*,
 									scomplex_t*);
 			__attribute__((target(mic:0)))
-			void form_factor_kernel_loopswap_nqx1(float_t*, float_t*, scomplex_t*, float_t*,
+			void form_factor_kernel_loopswap_nqx1(real_t*, real_t*, scomplex_t*, real_t*,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
-									float_t*,
+									real_t*,
 									scomplex_t*);
 			__attribute__((target(mic:0)))
-			void form_factor_kernel_loopswap_vec_nqx1(float_t*, float_t*, scomplex_t*, float_t*,
+			void form_factor_kernel_loopswap_vec_nqx1(real_t*, real_t*, scomplex_t*, real_t*,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
-									float_t*,
+									real_t*,
 									scomplex_t*);
 
 			__attribute__((target(mic:0))) float2_t compute_fq_nqx1(float, float2_t, float2_t);
@@ -120,26 +120,26 @@ namespace hig {
 
 		public:
 
-			unsigned int compute_form_factor(int, float_vec_t&, complex_t*&,
-									float_t*, int, float_t*, int, complex_t* qz, int,
-									float_t*,
-									float_t&, float_t&, float_t&
+			unsigned int compute_form_factor(int, real_vec_t&, complex_t*&,
+									real_t*, int, real_t*, int, complex_t* qz, int,
+									real_t*,
+									real_t&, real_t&, real_t&
 									#ifdef FINDBLOCK
 										, const int, const int, const int, const int
 									#endif
 									);
-			unsigned int compute_form_factor_db(int, float_vec_t&, complex_t*&,
-									float_t*, int, float_t*, int, complex_t* qz, int,
-									float_t*,
-									float_t&, float_t&, float_t&
+			unsigned int compute_form_factor_db(int, real_vec_t&, complex_t*&,
+									real_t*, int, real_t*, int, complex_t* qz, int,
+									real_t*,
+									real_t&, real_t&, real_t&
 									#ifdef FINDBLOCK
 										, const int, const int, const int, const int
 									#endif
 									);
-			unsigned int compute_form_factor_kb(int, float_t*, unsigned int, complex_t*&,
-									float_t*, int, float_t*, int, complex_t* qz, int, int,
-									float_t*,
-									float_t&, float_t&, float_t&
+			unsigned int compute_form_factor_kb(int, real_t*, unsigned int, complex_t*&,
+									real_t*, int, real_t*, int, complex_t* qz, int, int,
+									real_t*,
+									real_t&, real_t&, real_t&
 									#ifdef FINDBLOCK
 										, const int, const int, const int, const int
 									#endif

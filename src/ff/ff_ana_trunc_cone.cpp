@@ -38,7 +38,7 @@ namespace hig {
    * truncated cone
    */
   complex_t FormFactorTrucatedCone(complex_t qx, complex_t qy, complex_t qz, 
-          float_t radius, float_t height, float_t angle){
+          real_t radius, real_t height, real_t angle){
       complex_t ff = C_ZERO;
       if ( height / radius >= tan(angle) )
         return ff;
@@ -48,7 +48,7 @@ namespace hig {
      return ff;
   }
 
-  bool AnalyticFormFactor::compute_truncated_cone(shape_param_list_t& params, float_t tau, float_t eta,
+  bool AnalyticFormFactor::compute_truncated_cone(shape_param_list_t& params, real_t tau, real_t eta,
                           std::vector<complex_t>& ff, vector3_t transvec) {
     std::cerr << "uh-oh: you reach an unimplemented part of the code, compute_truncated_cone"
                           << std::endl;
@@ -56,9 +56,9 @@ namespace hig {
 
     // this is not working ... something is not right in matlab code ...
 
-    std::vector <float_t> h, distr_h;  // for h dimension: param_height
-    std::vector <float_t> r, distr_r;  // for r dimension: param_radius
-    std::vector <float_t> a, distr_a;  // for a angle: param_baseangle
+    std::vector <real_t> h, distr_h;  // for h dimension: param_height
+    std::vector <real_t> r, distr_r;  // for r dimension: param_radius
+    std::vector <real_t> a, distr_a;  // for a angle: param_baseangle
     for(shape_param_iterator_t i = params.begin(); i != params.end(); ++ i) {
       if(!(*i).second.isvalid()) {
         std::cerr << "warning: ignoring invalid shape parameter" << std::endl;
@@ -106,14 +106,14 @@ namespace hig {
       complex_t temp_ff(0.0, 0.0);
 
       for(unsigned int i_a = 0; i_a < a.size(); ++ i_a) {
-        float_t temp1 = tan(a[i_a]);
+        real_t temp1 = tan(a[i_a]);
         for(unsigned int i_h = 0; i_h < h.size(); ++ i_h) {
-          float_t dz = h[i_h] / (float_t)(nz - 1);
+          real_t dz = h[i_h] / (real_t)(nz - 1);
           for(unsigned int i_r = 0; i_r < r.size(); ++ i_r) {
-            float_t z_val = 0.0;
+            real_t z_val = 0.0;
             complex_t temp_ffz(0.0, 0.0);
             for(unsigned int i_z = 0; i_z < nz; ++ i_z, z_val += dz) {
-              float_t rz = r[i_r] - z_val / temp1;
+              real_t rz = r[i_r] - z_val / temp1;
               complex_t temp2 = exp(complex_t(-(mqz * rz).imag(), (mqz * rz).real()));
               complex_t temp3 = cbessj(qpar * rz, 1) / (qpar * rz);
               temp_ffz += rz * rz * temp2 * temp3;
@@ -140,4 +140,3 @@ namespace hig {
   } // AnalyticFormFactor::compute_truncated_cone()
 
 } // namespace hig
-

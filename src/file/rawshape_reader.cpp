@@ -30,7 +30,7 @@ namespace hig {
    */
   RawShapeReader::RawShapeReader(const char* filename, double* &shape_def,
                   unsigned int& num_triangles) {
-    std::vector<float_t> temp_shape_def;
+    std::vector<real_t> temp_shape_def;
     load_raw(filename, temp_shape_def);
     num_triangles = temp_shape_def.size() / 7;
     shape_def = new (std::nothrow) double[temp_shape_def.size()];
@@ -41,7 +41,7 @@ namespace hig {
   /**
    * load input raw file into local data structures in memory
    */
-  bool RawShapeReader::load_raw(const char* filename, std::vector<float_t> &shape_def) {
+  bool RawShapeReader::load_raw(const char* filename, std::vector<real_t> &shape_def) {
     std::ifstream input(filename);
     if(!input.is_open()) {
       std::cout << "Unable to open raw shape definition file " << filename << std::endl;

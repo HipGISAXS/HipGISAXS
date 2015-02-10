@@ -38,10 +38,10 @@ namespace hig {
    * triangular grating in the x-direction
    */
   bool AnalyticFormFactor::compute_prism3x(shape_param_list_t& params, std::vector<complex_t>& ff,
-                        float_t tau, float_t eta, vector3_t transvec) {
-    std::vector <float_t> lx, distr_lx;
-    std::vector <float_t> ly, distr_ly;
-    std::vector <float_t> h, distr_h;
+                        real_t tau, real_t eta, vector3_t transvec) {
+    std::vector <real_t> lx, distr_lx;
+    std::vector <real_t> ly, distr_ly;
+    std::vector <real_t> h, distr_h;
     for(shape_param_iterator_t i = params.begin(); i != params.end(); ++ i) {
       switch((*i).second.type()) {
         case param_xsize:
@@ -69,33 +69,33 @@ namespace hig {
     // initialize ff
     ff.clear();  ff.resize (nqz_, C_ZERO);
 
-    float_t d = 0.85;  // FIXME: hardcoded? variable?
-    float_t gamma = 0.0;  // FIXME: hardcoded? variable?
+    real_t d = 0.85;  // FIXME: hardcoded? variable?
+    real_t gamma = 0.0;  // FIXME: hardcoded? variable?
     complex_t i(0.0, 1.0);
 
     #pragma omp parallel for
     for(unsigned int j_z = 0; j_z < nqz_; ++ j_z) {
       unsigned int j_y = j_z % nqy_;
-      float_t temp_qx = QGrid::instance().qx(j_y);
-      float_t temp_qy = QGrid::instance().qy(j_y);
+      real_t temp_qx = QGrid::instance().qx(j_y);
+      real_t temp_qy = QGrid::instance().qy(j_y);
       complex_t temp_qz = QGrid::instance().qz_extended(j_z);
       complex_t mqx, mqy, mqz;
       compute_meshpoints(temp_qx, temp_qy, temp_qz, rot_, mqx, mqy, mqz);
-      float_t sg = sin(gamma);
-      float_t cg = cos(gamma);
-      float_t qx_rot = temp_qx * cg + temp_qy * sg;
-      float_t qy_rot = temp_qy * cg - temp_qx * sg;
+      real_t sg = sin(gamma);
+      real_t cg = cos(gamma);
+      real_t qx_rot = temp_qx * cg + temp_qy * sg;
+      real_t qy_rot = temp_qy * cg - temp_qx * sg;
       complex_t temp_ff(0.0, 0.0);
       for(unsigned int i_h = 0; i_h < h.size(); ++ i_h) {        // H
         for(unsigned int i_y = 0; i_y < ly.size(); ++ i_y) {    // L
           for(unsigned int i_x = 0; i_x < lx.size(); ++ i_x) {  // Lx
-            float_t temp_lx = lx[i_x] * 2, temp_ly = ly[i_y] * 2;// multiply by 2 (why?)
-            float_t a1 = h[i_h] / (d * temp_ly);
-            float_t b1 = 0.0;
-            float_t a2 = h[i_h] / ((d - 1) * temp_ly);
-            float_t b2 = h[i_h] / (1 - d);
-            float_t temp1 = qx_rot * temp_lx / 2;
-            float_t fqx = temp_lx;
+            real_t temp_lx = lx[i_x] * 2, temp_ly = ly[i_y] * 2;// multiply by 2 (why?)
+            real_t a1 = h[i_h] / (d * temp_ly);
+            real_t b1 = 0.0;
+            real_t a2 = h[i_h] / ((d - 1) * temp_ly);
+            real_t b2 = h[i_h] / (1 - d);
+            real_t temp1 = qx_rot * temp_lx / 2;
+            real_t fqx = temp_lx;
             if(boost::math::fpclassify(qx_rot) != FP_ZERO) {
               fqx *= sin(temp1) / temp1;
             } // if

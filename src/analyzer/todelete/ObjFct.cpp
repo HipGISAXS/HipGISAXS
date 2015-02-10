@@ -74,7 +74,7 @@ namespace hig{
   }
 
 
-  float_mat_t ObjFct::compute(float_vec_t X){
+  float_mat_t ObjFct::compute(real_vec_t X){
     if(psim_)
       {
   //if (is_valid_ && pdata_ref_){
@@ -86,24 +86,24 @@ namespace hig{
       }
   }
 
-  float_vec_t ObjFct::operator()(float_vec_t x) {
-    float_t *gisaxs_data = NULL;
+  real_vec_t ObjFct::operator()(real_vec_t x) {
+    real_t *gisaxs_data = NULL;
     // construct param_vals ...
     std::vector <std::string> params = psim_->get_fit_param_keys();
-    std::map <std::string, float_t> param_vals;
+    std::map <std::string, real_t> param_vals;
     for(int i = 0; i < x.size(); ++ i) {
       param_vals[params[i]] = x[i];
     } // for
     psim_->update_params(param_vals);
     psim_->compute_gisaxs(gisaxs_data);
-    float_t* ref_data = (*pdata_ref_).data();
+    real_t* ref_data = (*pdata_ref_).data();
     (*pdist_)(gisaxs_data, ref_data, (*pdata_ref_).size(), f_x_);
     //std::cout << "@@ ERROR: " << err << std::endl;
     return f_x_;
   } // ObjFct::operator()()
 
 
-//  float_mat_t ObjFct::compute_jacobian(float_vec_t X, int dim){
+//  float_mat_t ObjFct::compute_jacobian(real_vec_t X, int dim){
 //    if(psim_)
 //      {
         //if (is_valid_ && pdata_ref_){
@@ -124,13 +124,13 @@ namespace hig{
 //      }
 //  }
 
-  float_mat_t ObjFct::compute_test(float_vec_t X){
+  float_mat_t ObjFct::compute_test(real_vec_t X){
     if (X.size() == 2){
       f_x_.clear();
       float x0= X[0];
       float x1= X[1];
       float fx= exp(-( (x0- 0 )*(x0 - 0) + (x1 - 0)*(x1 - 0) )/ 2 );
-      //float_vec_t v;
+      //real_vec_t v;
       f_x_.push_back(fx);
       //f_x_.push_back(v);
       return f_x_;
@@ -141,7 +141,7 @@ namespace hig{
     /* TODO: lots of overhead!!!! improve performance!!!  */
     //PetscFunctionBegin;
     PetscReal* pfx = new PetscReal[get_nobs()];
-    float_vec_t X;
+    real_vec_t X;
 
     for(int i=0; i < num_params_; i++){
       X.push_back(x[i]);
@@ -167,7 +167,7 @@ namespace hig{
     /* TODO: lots of overhead!!!! improve performance!!!  */
     //PetscFunctionBegin;
     Vec fx;
-    float_vec_t x;
+    real_vec_t x;
     //    PetscErrorCode ierr;
     PetscInt dim;
     PetscScalar y[1]={0};
@@ -237,5 +237,12 @@ namespace hig{
 
     */
   }
+
+}
+
+}
+}
+
+}
 
 }

@@ -55,7 +55,7 @@ namespace hig {
                         , woo::MultiNode&, std::string
                       #endif
                       );
-      bool compute_structure_factor_gpu(std::string, vector3_t, Lattice*, vector3_t, float_t,
+      bool compute_structure_factor_gpu(std::string, vector3_t, Lattice*, vector3_t, real_t,
                       vector3_t, vector3_t, vector3_t
                       #ifdef USE_MPI
                         , woo::MultiNode&, std::string
@@ -68,7 +68,7 @@ namespace hig {
 
       StructureFactor & operator=(const StructureFactor & rhs);
       StructureFactor & operator+=(const StructureFactor & rhs);
-      StructureFactor & operator*(const float_t val) {
+      StructureFactor & operator*(const real_t val) {
         for (int i = 0; i < nrow_ * ncol_; i++) sf_[i] *= val;
         return *this;
       }

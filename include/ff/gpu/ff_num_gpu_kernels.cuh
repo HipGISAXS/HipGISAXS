@@ -25,16 +25,16 @@
    * special case when b_nqx == 1
    */
   __global__ void form_factor_kernel_fused_nqx1(
-            const float_t* __restrict__ qx, const float_t* __restrict__ qy,
+            const real_t* __restrict__ qx, const real_t* __restrict__ qy,
             const cucomplex_t* __restrict__ qz,
-            const float_t* __restrict__ shape_def, const short int* __restrict__ axes,
+            const real_t* __restrict__ shape_def, const short int* __restrict__ axes,
             const unsigned int curr_nqx, const unsigned int curr_nqy,
             const unsigned int curr_nqz, const unsigned int curr_num_triangles,
             const unsigned int b_nqx, const unsigned int b_nqy,
             const unsigned int b_nqz, const unsigned int b_num_triangles,
             const unsigned int ib_x, const unsigned int ib_y,
             const unsigned int ib_z, const unsigned int ib_t,
-            const float_t* __restrict__ rot,
+            const real_t* __restrict__ rot,
             cucomplex_t* __restrict__ ff) {
     unsigned int i_y = blockDim.x * blockIdx.x + threadIdx.x;
     unsigned int i_z = blockDim.y * blockIdx.y + threadIdx.y;
@@ -46,10 +46,10 @@
     //         shared_qy = blockDim.y
     //         shared_qz = blockDim.z
     // reversed to fix alignment:
-    float_t *shared_shape_def = (float_t*) dynamic_shared;
+    real_t *shared_shape_def = (real_t*) dynamic_shared;
     cucomplex_t *shared_qz = (cucomplex_t*) &shared_shape_def[T_PROP_SIZE_ * curr_num_triangles];
-    float_t *shared_qy = (float_t*) &shared_qz[blockDim.y];
-    float_t *shared_qx = (float_t*) &shared_qy[blockDim.x];
+    real_t *shared_qy = (real_t*) &shared_qz[blockDim.y];
+    real_t *shared_qx = (real_t*) &shared_qy[blockDim.x];
 
     unsigned int i_shared, base_offset, num_loads;
 
@@ -87,10 +87,10 @@
 
     __syncthreads();  // sync to make sure all data is loaded and available
 
-    cucomplex_t ff_tot = make_cuC((float_t) 0.0, (float_t) 0.0);
+    cucomplex_t ff_tot = make_cuC((real_t) 0.0, (real_t) 0.0);
     if(i_y < curr_nqy && i_z < curr_nqz) {
-      float_t temp_qx = shared_qx[0];
-      float_t temp_qy = shared_qy[threadIdx.x];
+      real_t temp_qx = shared_qx[0];
+      real_t temp_qy = shared_qy[threadIdx.x];
       cucomplex_t temp_qz = shared_qz[threadIdx.y];
 
       // TODO: optimize this ... please ...
@@ -104,9 +104,13 @@
       cucomplex_t qy2 = temp_y * temp_y;
       cucomplex_t qxy2 = temp_x * temp_x + qy2;
       cucomplex_t q2 = cuCsqr(temp_z) + qxy2;
-      cucomplex_t q2_inv = cuCdivf(make_cuC((float_t) 1.0, (float_t) 0.0), q2);
+#ifdef DOUBLEP
+      cucomplex_t q2_inv = cuCdiv(make_cuC(1.0, 0.0), q2);
+#else
+      cucomplex_t q2_inv = cuCdivf(make_cuC(1.0f, 0.0f), q2);
+#endif
       //cucomplex_t q2_inv = cuCrcpf(q2);
-      //cucomplex_t q2_inv = (float_t) 1.0 / q2;
+      //cucomplex_t q2_inv = (real_t) 1.0 / q2;
 
       #if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ > 300)
         #pragma unroll 8
@@ -115,14 +119,14 @@
       #endif
       for(int i_t = 0; i_t < curr_num_triangles; ++ i_t) {
         unsigned int shape_off = T_PROP_SIZE_ * i_t;
-        float_t s = shared_shape_def[shape_off];
-        float_t nx = shared_shape_def[shape_off + 1];
-        float_t ny = shared_shape_def[shape_off + 2];
-        float_t nz = shared_shape_def[shape_off + 3];
-        float_t x = shared_shape_def[shape_off + 4];
-        float_t y = shared_shape_def[shape_off + 5];
-        float_t z = shared_shape_def[shape_off + 6];
-      /*  float_t s, nx, ny, nz, x, y, z;
+        real_t s = shared_shape_def[shape_off];
+        real_t nx = shared_shape_def[shape_off + 1];
+        real_t ny = shared_shape_def[shape_off + 2];
+        real_t nz = shared_shape_def[shape_off + 3];
+        real_t x = shared_shape_def[shape_off + 4];
+        real_t y = shared_shape_def[shape_off + 5];
+        real_t z = shared_shape_def[shape_off + 6];
+      /*  real_t s, nx, ny, nz, x, y, z;
         #ifndef DOUBLEP
         asm("{\n"
             " .reg .s64 rd1;\n"
@@ -185,7 +189,11 @@
         cucomplex_t qzt = temp_z * z;
 
         cucomplex_t qt_d = temp_x * x + qyt + qzt;
+#ifdef DOUBLEP
+        cucomplex_t qn_d = cuCmul(temp_x * nx + qyn + qzn, q2_inv);
+#else
         cucomplex_t qn_d = cuCmulf(temp_x * nx + qyn + qzn, q2_inv);
+#endif
 
         ff_tot = ff_tot + compute_fq(s, qt_d, qn_d);
       } // for
@@ -198,16 +206,16 @@
    * special case when b_nqx == 1, with dynamic parallelism
    */
   __global__ void form_factor_kernel_fused_dyn_nqx1(
-            const float_t* __restrict__ qx, const float_t* __restrict__ qy,
+            const real_t* __restrict__ qx, const real_t* __restrict__ qy,
             const cucomplex_t* __restrict__ qz,
-            const float_t* __restrict__ shape_def, const short int* __restrict__ axes,
+            const real_t* __restrict__ shape_def, const short int* __restrict__ axes,
             const unsigned int curr_nqx, const unsigned int curr_nqy,
             const unsigned int curr_nqz, const unsigned int curr_num_triangles,
             const unsigned int b_nqx, const unsigned int b_nqy,
             const unsigned int b_nqz, const unsigned int b_num_triangles,
             const unsigned int ib_x, const unsigned int ib_y,
             const unsigned int ib_z, const unsigned int ib_t,
-            const float_t* __restrict__ rot,
+            const real_t* __restrict__ rot,
             cucomplex_t* __restrict__ ff, cucomplex_t* fq) {
 /*    unsigned int i_y = blockDim.x * blockIdx.x + threadIdx.x;
     unsigned int i_z = blockDim.y * blockIdx.y + threadIdx.y;
@@ -215,7 +223,7 @@
     unsigned int i_qz = b_nqz * ib_z + i_z;
     unsigned int base_offset = T_PROP_SIZE_ * b_num_triangles * ib_t;
 
-    cucomplex_t ff_tot = make_cuC((float_t) 0.0, (float_t) 0.0);
+    cucomplex_t ff_tot = make_cuC((real_t) 0.0, (real_t) 0.0);
     if(i_y < curr_nqy && i_z < curr_nqz) {
       // assuming curr_num_triangles is multiple of 32
       int block_size = 32;
@@ -248,38 +256,42 @@
 */  } // form_factor_kernel_fused_nqx1()
 
 
-  __global__ void form_factor_kernel_innermost(const float_t* qx_d, const float_t* qy_d,
+  __global__ void form_factor_kernel_innermost(const real_t* qx_d, const real_t* qy_d,
       const cucomplex_t* qz_d,
-      const __restrict__ float_t* shape_def, __restrict__ cucomplex_t* fq) {
+      const __restrict__ real_t* shape_def, __restrict__ cucomplex_t* fq) {
 
     unsigned int i_t = blockDim.x * blockIdx.x + threadIdx.x;
     unsigned int shape_off = T_PROP_SIZE_ * i_t;
-    float_t s = shape_def[shape_off];
-    float_t nx = shape_def[shape_off + 1];
-    float_t ny = shape_def[shape_off + 2];
-    float_t nz = shape_def[shape_off + 3];
-    float_t x = shape_def[shape_off + 4];
-    float_t y = shape_def[shape_off + 5];
-    float_t z = shape_def[shape_off + 6];
+    real_t s = shape_def[shape_off];
+    real_t nx = shape_def[shape_off + 1];
+    real_t ny = shape_def[shape_off + 2];
+    real_t nz = shape_def[shape_off + 3];
+    real_t x = shape_def[shape_off + 4];
+    real_t y = shape_def[shape_off + 5];
+    real_t z = shape_def[shape_off + 6];
 
-    float_t qx = qx_d[0];
-    float_t qy = qy_d[0];
+    real_t qx = qx_d[0];
+    real_t qy = qy_d[0];
     cucomplex_t qz = qz_d[0];
 
-    float_t qx2 = qx * qx;
-    float_t qy2 = qy * qy;
+    real_t qx2 = qx * qx;
+    real_t qy2 = qy * qy;
     cucomplex_t qz2 = qz * qz;
     cucomplex_t q2 = qx2 + qy2 + qz2;
 
-    float_t qxn = qx * nx;
-    float_t qxt = qx * x;
-    float_t qyn = qy * ny;
-    float_t qyt = qy * y;
+    real_t qxn = qx * nx;
+    real_t qxt = qx * x;
+    real_t qyn = qy * ny;
+    real_t qyt = qy * y;
     cucomplex_t qzn = qz * nz;
     cucomplex_t qzt = qz * z;
 
     cucomplex_t qt_d = qxt + qyt + qzt;
+#ifdef DOUBLEP
+    cucomplex_t qn_d = cuCdiv(qxn + qyn + qzn, q2);
+#else
     cucomplex_t qn_d = cuCdivf(qxn + qyn + qzn, q2);
+#endif
 
     fq[i_t] = compute_fq(s, qt_d, qn_d);
   } // form_factor_kernel_innermost()
@@ -337,8 +349,8 @@
 
 
   __device__ __inline__ cuDoubleComplex compute_fq(double s, cuDoubleComplex qt_d, cuDoubleComplex qn_d) {
-    cuDoubleComplex v1 = cuCmul(qn_d, make_cuDoubleComplex(__cos(qt_d.x), __sin(qt_d.x)));
-    double v2 = s * __exp(qt_d.y);
+    cuDoubleComplex v1 = cuCmul(qn_d, make_cuDoubleComplex(cos(qt_d.x),sin(qt_d.x)));
+    double v2 = s * exp(qt_d.y);
     //return cuCmul(v1, make_cuDoubleComplex(v2, 0.0));
     return v1 * v2;
   } // compute_fq()
@@ -370,5 +382,3 @@
     qt_d = cuCadd(cuCadd(cuCmul(temp_x, make_cuDoubleComplex(x, 0.0f)), qyt), qzt);
     qn_d = cuCdiv(cuCadd(cuCadd(cuCmul(temp_x, make_cuDoubleComplex(nx, 0.0f)), qyn), qzn), q2);
   } // compute_x()
-
-

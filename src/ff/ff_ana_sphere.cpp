@@ -37,20 +37,20 @@ namespace hig {
   /**
    * sphere
    */
-  complex_t FormFactorSphere(complex_t qx, complex_t qy, complex_t qz, float_t radius){
+  complex_t FormFactorSphere(complex_t qx, complex_t qy, complex_t qz, real_t radius){
       complex_t qval = std::sqrt(qx * qx + qy * qy + qz * qz);
       complex_t qR   = qval * radius;
       complex_t qR3   = qR * qR * qR;
       complex_t t1   = std::conj(qR3) / std::norm(qR3);
       complex_t c0   = (std::sin(qR) - qR * std::cos(qR)) * t1;
       complex_t c1   = std::exp(C_ONE * qz * radius);
-      float_t   f0   = 4 * PI_ * radius * radius * radius;
+      real_t   f0   = 4 * PI_ * radius * radius * radius;
       return (f0 * c0 * c1);            
   }
 
   bool AnalyticFormFactor::compute_sphere(shape_param_list_t& params, std::vector<complex_t> &ff,
                       vector3_t transvec) {
-    std::vector<float_t> r, distr_r;
+    std::vector<real_t> r, distr_r;
     for(shape_param_iterator_t i = params.begin(); i != params.end(); ++ i) {
       switch((*i).second.type()) {
         case param_edge:
@@ -78,11 +78,11 @@ namespace hig {
     woo::BoostChronoTimer maintimer;
     maintimer.start();
 #endif // TIME_DETAIL_2
-#ifdef __FF_ANA_GPU
+#ifdef FF_ANA_GPU
     // on gpu
     std::cout << "-- Computing sphere FF on GPU ..." << std::endl;
 
-    std::vector<float_t> transvec_v;
+    std::vector<real_t> transvec_v;
     transvec_v.push_back(transvec[0]);
     transvec_v.push_back(transvec[1]);
     transvec_v.push_back(transvec[2]);
@@ -118,4 +118,3 @@ namespace hig {
     return true;
   } // AnalyticFormFactor::compute_sphere()
 } // namespace hig
-

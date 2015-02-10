@@ -1,9 +1,9 @@
 /**
  *  Project: HipGISAXS (High-Performance GISAXS)
  *
- *  File: common.hpp
- *  Created: Jun 13, 2012
- *  Modified: Wed 08 Oct 2014 12:13:02 PM PDT
+ *  File: cudafy.hpp
+ *  Created: Aug 25, 2012
+ *  Modified: Wed 08 Oct 2014 12:13:01 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -20,31 +20,18 @@
  *  NON-COMMERCIAL END USER LICENSE AGREEMENT.
  */
 
-#ifndef __MODEL_COMMON_HPP__
-#define __MODEL_COMMON_HPP__
+#ifndef __CUDAFY_HPP__
+#define __CUDAFY_HPP__
 
-namespace hig {
+#ifdef USE_GPU
+#define CUDAFY __host__ __device__
+#define INLINE __host__ __device__ __inline__
+#else
+#define CUDAFY
+#define INLINE inline
+#endif
 
-  class RefractiveIndex {
-    private:
-      real_t delta_;
-      real_t beta_;
 
-    public:
-      RefractiveIndex(): delta_(0.0), beta_(0.0) { }
-      RefractiveIndex(real_t delta, real_t beta): delta_(delta), beta_(beta) { }
-      ~RefractiveIndex() { }
 
-      real_t delta() { return delta_; }
-      real_t beta() { return beta_; }
+#endif // __CUDAFY_HPP__
 
-      void delta(real_t a) { delta_ = a; }
-      void beta(real_t a) { beta_ = a; }
-
-      void init();
-      void clear();
-  }; // class RefractiveIndex
-
-} // namespace hig
-
-#endif /* __MODEL_COMMON_HPP__ */

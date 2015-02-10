@@ -38,9 +38,9 @@ namespace hig {
    * prism - 3 face
    */
   bool AnalyticFormFactor::compute_prism(shape_param_list_t& params, std::vector<complex_t>& ff,
-                      float_t tau, float_t eta, vector3_t transvec) {
-    std::vector<float_t> l, distr_l;
-    std::vector<float_t> h, distr_h;
+                      real_t tau, real_t eta, vector3_t transvec) {
+    std::vector<real_t> l, distr_l;
+    std::vector<real_t> h, distr_h;
     for(shape_param_iterator_t i = params.begin(); i != params.end(); ++ i) {
       switch((*i).second.type()) {
         case param_edge:
@@ -72,11 +72,11 @@ namespace hig {
     woo::BoostChronoTimer maintimer;
     maintimer.start();
 #endif // TIME_DETAIL_2
-#ifdef __FF_ANA_GPU
+#ifdef FF_ANA_GPU
     // on gpu
     std::cout << "-- Computing prism3 FF on GPU ..." << std::endl;
 
-    std::vector<float_t> transvec_v;
+    std::vector<real_t> transvec_v;
     transvec_v.push_back(transvec[0]);
     transvec_v.push_back(transvec[1]);
     transvec_v.push_back(transvec[2]);
@@ -85,7 +85,7 @@ namespace hig {
     // on cpu
     std::cout << "-- Computing prism3 FF on CPU ..." << std::endl;
 
-    float_t sqrt3 = sqrt(3.0);
+    real_t sqrt3 = sqrt(3.0);
     complex_t unitc(0, 1.0);
     ff.clear(); ff.resize(nqz_, C_ZERO);
 

@@ -49,8 +49,8 @@
   
 namespace hig {
   
-  complex_t FormFactorTriangle(float_t qx, float_t qy, complex_t qz,
-          float_t * rot, triangle_t & tri) {
+  complex_t FormFactorTriangle(real_t qx, real_t qy, complex_t qz,
+          real_t * rot, triangle_t & tri) {
     complex_t ff = C_ZERO;
     complex_t unitc = C_ONE;
     complex_t n_unitc = C_NEG_ONE;
@@ -62,7 +62,7 @@ namespace hig {
     mq[2] = rot[6] * qx + rot[7] * qy + rot[8] * qz;
 
     // calculate q^2
-    float_t q_sqr = 0.;
+    real_t q_sqr = 0.;
     for(int i=0; i<3; i++)  q_sqr += std::norm(mq[i]);
           
     // form vertices
@@ -82,7 +82,7 @@ namespace hig {
 
     // calculate projection of n_t on q
     vector3_t n_t = cross_product(edge[0], edge[1]);
-    float_t t_area = 0.5 * n_t.norm2();
+    real_t t_area = 0.5 * n_t.norm2();
     n_t = n_t / n_t.norm2();
 
     // dot(q, n_t)
@@ -90,10 +90,10 @@ namespace hig {
     for (int i=0; i<3; i++) q_dot_nt += mq[i] * n_t[i];
 
     // proj_tq
-    float_t proj_tq = q_sqr - std::norm(q_dot_nt);
+    real_t proj_tq = q_sqr - std::norm(q_dot_nt);
 
     // CASE 1
-    if (std::abs(proj_tq) < 1.0E-06){
+    if (std::abs(proj_tq) < TINY){
         complex_t q_dot_v = C_ZERO;
         for (int i=0; i<3; i++) q_dot_v += mq[i] * tri.v1[i];
         // calculate form-factor (Case 1)
@@ -111,19 +111,20 @@ namespace hig {
         for (int i=0; i<3; i++) q_dot_ne += mq[i] * n_e[i];
 
         // proj_eq
-        float_t proj_eq = proj_tq - std::norm(q_dot_ne);
+        real_t proj_eq = proj_tq - std::norm(q_dot_ne);
         // CASE 2
-        if (std::abs(proj_eq) < 1.0E-08) {
+        if (std::abs(proj_eq) < TINY){
         // q_dot_v
           complex_t q_dot_v = C_ZERO;
           for (int i=0; i<3; i++) q_dot_v += mq[i] * vertex[e][i];
-          float_t f0 = edge[e].norm2() / (q_sqr * proj_tq);
+          real_t f0 = edge[e].norm2() / (q_sqr * proj_tq);
           complex_t c0 = - q_dot_nt * q_dot_ne;
           complex_t c1 = std::exp(n_unitc * q_dot_v);
           ff += f0 * c0 * c1;
         } else {
+          // CASE 3 (General case)
           // denominator
-          float_t   f0 = q_sqr * proj_tq * proj_eq;
+          real_t   f0 = q_sqr * proj_tq * proj_eq;
 
           // dot(q, v_a) vertex a
           complex_t q_dot_v = C_ZERO;
@@ -136,20 +137,21 @@ namespace hig {
           complex_t q_dot_nv = C_ZERO;
           for (int i=0; i<3; i++) q_dot_nv += mq[i] * n_v[i];
 
-          // calculate ff for vertex a
+          // calculate contribution of vertex a
           complex_t c0 = n_unitc * q_dot_nt * q_dot_ne * q_dot_nv;
           complex_t c1 = std::exp(n_unitc * q_dot_v);
           ff +=  c0 * c1 / f0;
 
-          // dot(q, v) vertex b
+          // dot(q, v) the other vertex in the edge
           q_dot_v = C_ZERO;
           int ep = (e+1)%3;
           for (int i=0; i<3; i++) q_dot_v += mq[i] * vertex[ep][i];
 
           // dot (q, n_v)
           q_dot_nv = C_ZERO;
-          for (int i=0; i<3; i++) q_dot_nv += mq[i] * (NEG_ONE * n_v[i]);
+          for (int i=0; i<3; i++) q_dot_nv -= mq[i] * n_v[i];
 
+          // calculate contribution of the other vertex
           c0 = n_unitc * q_dot_nt * q_dot_ne * q_dot_nv;
           c1 = std::exp(n_unitc * q_dot_v);
           ff += c0 * c1 / f0;
@@ -166,8 +168,8 @@ namespace hig {
   unsigned int NumericFormFactorC::compute_exact_triangle(
           triangle_t * shape_def, int num_triangles,
           complex_t* &ff,
-          int nqy, float_t * qx, float_t * qy, int nqz, complex_t * qz,
-          float_t * rot, float_t & compute_time) {
+          int nqy, real_t * qx, real_t * qy, int nqz, complex_t * qz,
+          real_t * rot, real_t & compute_time) {
 
     if(num_triangles < 1) return 0;
     unsigned long int total_qpoints = nqz;
@@ -205,10 +207,10 @@ namespace hig {
    * Approximated integration
    */
   unsigned int NumericFormFactorC::compute_approx_triangle(
-          float_vec_t &shape_def,
+          real_vec_t &shape_def,
           complex_t *& ff,
-          int nqy, float_t * qx, float_t * qy, 
-          int nqz, complex_t * qz, float_t * rot, float_t &comp_time){
+          int nqy, real_t * qx, real_t * qy, 
+          int nqz, complex_t * qz, real_t * rot, real_t &comp_time){
 
     int num_triangles = shape_def.size() / CPU_T_PROP_SIZE_;
     if (num_triangles < 1) return 0;
@@ -228,13 +230,13 @@ namespace hig {
       int i_y = i_z % nqy;
       for (int i_t = 0; i_t < num_triangles; i_t++){
         int offset = i_t * CPU_T_PROP_SIZE_;
-        float_t s  = shape_def[offset];
-        float_t nx = shape_def[offset + 1];
-        float_t ny = shape_def[offset + 2];
-        float_t nz = shape_def[offset + 3];
-        float_t x  = shape_def[offset + 4];
-        float_t y  = shape_def[offset + 5];
-        float_t z  = shape_def[offset + 6];
+        real_t s  = shape_def[offset];
+        real_t nx = shape_def[offset + 1];
+        real_t ny = shape_def[offset + 2];
+        real_t nz = shape_def[offset + 3];
+        real_t x  = shape_def[offset + 4];
+        real_t y  = shape_def[offset + 5];
+        real_t z  = shape_def[offset + 6];
 
         // TODO Fix it move it one place for all the rotations
         complex_t mqx, mqy, mqz;
@@ -242,7 +244,7 @@ namespace hig {
         mqy = rot[3] * qx[i_y] + rot[4] * qy[i_y] + rot[5] * qz[i_z];
         mqz = rot[6] * qx[i_y] + rot[7] * qy[i_y] + rot[8] * qz[i_z];
 
-        float_t q2 = std::norm(mqx) + std::norm(mqy) + std::norm(mqz);
+        real_t q2 = std::norm(mqx) + std::norm(mqy) + std::norm(mqz);
         complex_t qn = mqx * nx + mqy * ny + mqz * nz;
         complex_t qt = mqx * x  + mqy * y  + mqz * z;
         complex_t nj = C_NEG_ONE;

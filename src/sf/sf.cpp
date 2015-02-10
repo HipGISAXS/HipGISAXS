@@ -131,10 +131,10 @@ namespace hig {
 
     if(master) std::cout << "-- Computing structure factor ... " << std::flush;
 
-    std::complex<float_t> unit_c(1, 0);
-    std::complex<float_t> unit_ci(0, 1);
+    std::complex<real_t> unit_c(1, 0);
+    std::complex<real_t> unit_ci(0, 1);
 
-    float mach_eps = std::numeric_limits<float>::epsilon() ; //move to constants.hpp if not there
+    real_t mach_eps = std::numeric_limits<real_t>::epsilon() ; //move to constants.hpp if not there
 
     computetimer.start();
 
@@ -149,10 +149,10 @@ namespace hig {
     for(unsigned int i = 0; i < nz_; ++ i) {
       complex_t temp1, temp_x2, temp_y3, temp_y4, temp_x5;
       unsigned j = i % ny_;
-      float_t temp_f;
+      real_t temp_f;
       complex_t sa, sb, sc;
-      float_t qx = QGrid::instance().qx(j);
-      float_t qy = QGrid::instance().qy(j);
+      real_t qx = QGrid::instance().qx(j);
+      real_t qy = QGrid::instance().qy(j);
       complex_t qz;
       if(expt == "saxs") qz = QGrid::instance().qz(i);
       else if(expt == "gisaxs") qz = QGrid::instance().qz_extended(i);
@@ -161,10 +161,10 @@ namespace hig {
       complex_t Xa_0 = unit_c - pow(e_iqa, repet[0]);
       complex_t Ya_0 = unit_c - e_iqa;
 
-      float_t tempya = sqrt(Ya_0.real() * Ya_0.real() + Ya_0.imag() * Ya_0.imag());
+      real_t tempya = sqrt(Ya_0.real() * Ya_0.real() + Ya_0.imag() * Ya_0.imag());
       if(fabs(Ya_0.imag()) > mach_eps || fabs(Ya_0.real()) > mach_eps) sa = Xa_0 / Ya_0;
       else sa = repet[0];
-      sa = pow(e_iqa, ((float_t) 1.0 - repet[0]) / (float_t) 2.0) * sa;
+      sa = pow(e_iqa, ((real_t) 1.0 - repet[0]) / (real_t) 2.0) * sa;
 
       complex_t iqb = unit_ci *  (brot[0] * qx + brot[1] * qy + brot[2] * qz) ;
       complex_t iqNb =  repet[1] * iqb;
@@ -173,20 +173,20 @@ namespace hig {
       complex_t Xb_0 = unit_c - exp(iqNb);
       complex_t Yb_0 = unit_c - exp(iqb);
 
-      float_t tempyb = sqrt(Yb_0.real() * Yb_0.real() + Yb_0.imag() * Yb_0.imag());
+      real_t tempyb = sqrt(Yb_0.real() * Yb_0.real() + Yb_0.imag() * Yb_0.imag());
       if(fabs(Yb_0.imag()) > mach_eps || fabs(Yb_0.real()) > mach_eps) sb = Xb_0 / Yb_0;
       else sb = repet[1];
-      sb = pow(e_iqb, ((float_t) 1.0 - repet[1]) / (float_t) 2.0) * sb;
+      sb = pow(e_iqb, ((real_t) 1.0 - repet[1]) / (real_t) 2.0) * sb;
 
 
       complex_t e_iqc = exp(unit_ci * (crot[0] * qx + crot[1] * qy + crot[2] * qz));
       complex_t Xc_0 = unit_c - pow(e_iqc, repet[2]);
       complex_t Yc_0 = unit_c - e_iqc;
 
-      float_t tempyc = sqrt(Yc_0.real() * Yc_0.real() + Yc_0.imag() * Yc_0.imag());
+      real_t tempyc = sqrt(Yc_0.real() * Yc_0.real() + Yc_0.imag() * Yc_0.imag());
       if(fabs(Yc_0.imag()) > mach_eps || fabs(Yc_0.real()) > mach_eps) sc = Xc_0 / Yc_0;
       else sc = repet[2];
-      sc = pow(e_iqc, ((float_t) 1.0 - repet[2]) / (float_t) 2.0) * sc;
+      sc = pow(e_iqc, ((real_t) 1.0 - repet[2]) / (real_t) 2.0) * sc;
 
       if(!((boost::math::isfinite)(sa.real()) && (boost::math::isfinite)(sa.imag()))) {
         std::cout << "sa sa sa sa sa sa sa: " << i << ", " << j << std::endl; }

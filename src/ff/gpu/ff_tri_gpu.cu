@@ -29,152 +29,186 @@
 #include <ff/gpu/ff_num_gpu.cuh>
 #include <common/enums.hpp>
 #include <common/constants.hpp>
+#include <common/globals.hpp>
 #include <common/parameters.hpp>
+#include <numerics/numeric_utils.hpp>
 #include <numerics/gpu/cu_complex_numeric.cuh>
 #include <utils/gpu/cu_utilities.cuh>
 
 
 namespace hig {
 
-  extern __constant__ float_t rot_d[9];
+  extern __constant__ real_t rot_d[9];
   __constant__ int num_loads;
   __constant__ int buf_size;
-  extern __shared__ float_t dynamic_shared[];
 
-  /* calculates outward normal to the surface, using cross-product.
-   * Order of the edges is important (counter-clockwise)
-   */
-  __device__ __inline__ float_t surface_normal (triangle_t & tri, float_t * t_norm) {
-      int i;
-      float_t edge1[3], edge2[3];
-      // form edge vectors
-      for (i = 0; i < 3; i++ ) edge1[i] = tri.v2[i] - tri.v1[i];
-      for (i = 0; i < 3; i++ ) edge2[i] = tri.v3[i] - tri.v2[i];
-
-      // calculate cross-product
-      cross_prod (edge1, edge2, t_norm);
-
-      // normalize to get unit-vector
-      float_t nn = norm2 (t_norm);
-      for (i = 0; i < 3; i++) t_norm[i] /= nn;
-      return 0.5 * nn;
+  __device__ __inline__ cucomplex_t cuC_dot(cucomplex_t * a, real_t * b){
+      return (a[0] * b[0] + a[1] * b[1] + a[2] * b[2]);
   }
 
-  /* calculates normal to edge which lies in plane of the polygon */
-  __device__ __inline__ void edge_normal (float_t * vert1, float_t * vert2,
-          float_t * t_nrom, float_t * e_norm) {
-      int i;
-      float_t edge[3];
-
-      // form edge vector
-      for (int i = 0; i < 3; i++) edge[i] = vert2[i] - vert1[i];
-
-      //calulcate cross-product
-      cross_prod (edge, t_nrom, e_norm);
-
-      // normalize to get unit-vector
-      float_t nn = norm2 (e_norm);
-      for (i = 0; i < 3; i++) e_norm[i] /= nn;
+  __device__ __inline__ cucomplex_t cuC_dot(cucomplex_t * a, vector3_t b){
+      return (a[0] * b[0] + a[1] * b[1] + a[2] * b[2]);
   }
 
-  /* calculates normal to the vertex (whatever that means) */
-  __device__ __inline__ void vert_normal (float_t * vert1, float_t * vert2,
-          float_t * v_norm) {
-      int i;
-      for (i = 0; i < 3; i++) v_norm[i] = vert1[i] - vert2[i];
-      float_t nn = norm2 (v_norm);
-      for (i = 0; i < 3; i++) v_norm[i] /= nn;
-  }
+  __device__ cucomplex_t FormFactorTriangle (triangle_t & tri, 
+          cucomplex_t * mq){
+    cucomplex_t cuCZERO = make_cuC(ZERO, ZERO);
+    cucomplex_t jp = make_cuC(ZERO, ONE);
+    cucomplex_t jn = make_cuC(ZERO, NEG_ONE);
+    cucomplex_t ff = cuCZERO;
 
+    // calculate q^2
+    real_t q_sqr = cuCnorm3(mq[0], mq[1], mq[2]);
 
-  /* length of the edge */
-  __device__ __inline__ float_t length (float_t * v1, float_t * v2) {
-      float_t len = 0;
-      for (int i = 0; i < 3; i++) len += (v1[i] - v2[i]) * (v1[i] - v2[i]);
-      return sqrt(len);
-  }
+    // form vertices
+    vector3_t vertex[3];
+    vertex[0] = vector3_t(tri.v1[0], tri.v1[1], tri.v1[2]);
+    vertex[1] = vector3_t(tri.v2[0], tri.v2[1], tri.v2[2]);
+    vertex[2] = vector3_t(tri.v3[0], tri.v3[1], tri.v3[2]);
 
-  __device__ cucomplex_t FormFactorTriangle (triangle_t & tri,
-          cucomplex_t qx, cucomplex_t qy, cucomplex_t qz) {
-      
-      int i;
-      cucomplex_t ff = make_cuC ((float_t) 0.0, (float_t) 0.0);
-      cucomplex_t unitc = make_cuC ((float_t) 0., (float_t) 1.);
+    // form edges
+    vector3_t edge[3];
+    edge[0] = vertex[1] - vertex[0];
+    edge[1] = vertex[2] - vertex[1];
+    edge[2] = vertex[0] - vertex[2];
 
-      float_t t_norm[3];
-      float_t e_norm[3];
-      float_t v1_norm[3];
-      float_t v2_norm[3];
+    // calculate outward normal and area
+    vector3_t n_t = cross_product(edge[0], edge[1]);
+    real_t t_area = 0.5 * n_t.abs();
+    n_t =  n_t / n_t.abs(); // normalize vector
+ 
+    // dot (q, n_t)
+    cucomplex_t q_dot_nt = cuC_dot(mq, n_t);
 
-      // calculate outward normal
-      float_t area_t = surface_normal (tri, t_norm);
+    // calculate projection
+    real_t proj_tq = q_sqr - cuC_norm(q_dot_nt);
 
-      // calculate proj_tq norm
-      float_t qnorm = cuCnorm3 (qx, qy, qz);
-      float_t qnorm2 = qnorm * qnorm;
-      cucomplex_t q_dot_nt = qx * t_norm[0] + qy * t_norm[1] + qz * t_norm[2];
-      float_t temp = cuCabsolute (q_dot_nt);
-      float_t proj_tq = qnorm2 - temp * temp;
-      if (proj_tq < 1.0E-08) {
-           ff = unitc * q_dot_nt * cuCexpi (-1.0 * (qx * tri.v1[0] + qy * tri.v1[1] + qz * tri.v1[2])) 
-              * area_t / qnorm2;
-           return ff;
-      }
+    // CASE 1
+    if (abs(proj_tq) < TINY){
+      cucomplex_t q_dot_v = cuC_dot(mq, vertex[0]);
 
-      float_t edge[4][3];
-      edge[0][0] = tri.v1[0]; edge[0][1] = tri.v1[1]; edge[0][2] = tri.v1[2];
-      edge[1][0] = tri.v2[0]; edge[1][1] = tri.v2[1]; edge[1][2] = tri.v2[2];
-      edge[2][0] = tri.v3[0]; edge[2][1] = tri.v3[1]; edge[2][2] = tri.v3[2];
-      edge[3][0] = tri.v1[0]; edge[2][1] = tri.v1[1]; edge[3][2] = tri.v1[2];
-
-      // calculate form-factor
-      float_t p1[3], p2[3];
+      // calculate Form-Factor
+      ff = jp * q_dot_nt * t_area / q_sqr * cuCexp(jn * q_dot_v);
+    } else {
+      // iterate on each edge :
       for (int e = 0; e < 3; e++) {
-          for (i = 0; i < 3; i++) p1[i] = edge[e][i];
-          for (i = 0; i < 3; i++) p2[i] = edge[e+1][i];
-         
-          // edge-normal 
-          edge_normal (p1, p2, t_norm, e_norm);
 
-          // calculate proj_eq
-          cucomplex_t q_dot_ne = qx * e_norm[0] + qy * e_norm[1] + qz * e_norm[2];
-          float_t temp = cuCabsolute (q_dot_ne);
-          float_t proj_eq = proj_tq - temp * temp;
-          if ( proj_eq < 1.0E-08 ) {
-              float_t e_len  = length (p1, p2);
-              ff = ff - cuCexpi (-1.0 * (qx * p1[0] + qy * p1[1] + qz * p1[2])) * 
-                  q_dot_nt * q_dot_ne * e_len / qnorm2 / proj_tq;
-              ff = make_cuC(0.0f, 1.0f);
-          } else {
-              vert_normal (p1, p2, v1_norm);
-              vert_normal (p2, p1, v2_norm);
-              cucomplex_t q_dot_v1 = qx * v1_norm[0] + qy * v1_norm[1] + qz * v1_norm[2];
-              cucomplex_t q_dot_v2 = qx * v2_norm[0] + qy * v2_norm[1] + qz * v2_norm[2];
-              cucomplex_t tmpff = unitc * q_dot_nt * q_dot_ne 
-                  / qnorm2 / proj_tq / proj_eq;
-              ff = ff - tmpff * (cuCexpi(-1.0 * (qx * p1[0] + qy * p1[1] + qz * p1[2])) +
-                      cuCexpi (-1.0 * (qx * p2[0] + qy * p2[1] + qz * p2[2])));
-          }
+        // edge normal
+        vector3_t n_e = cross_product(edge[e], n_t);
+        n_e = n_e / n_e.abs(); // normalize
+
+        // dot(q, n_e)
+        cucomplex_t q_dot_ne = cuC_dot(mq, n_e);
+
+        // proj_ne
+        real_t proj_eq = proj_tq - cuC_norm(q_dot_ne);
+
+        // CASE 2
+        if (abs(proj_eq) < TINY){
+          // q_dot_v
+          cucomplex_t q_dot_v = cuC_dot(mq, vertex[e]);
+
+          // calculate contribution of edge
+          real_t f0 = edge[e].abs() / (q_sqr * proj_tq);
+          cucomplex_t c0 = -1 * q_dot_nt * q_dot_ne;
+          cucomplex_t c1 = cuCexp(jn * q_dot_v);
+          ff = ff + (f0 * c0 * c1);
+        } else {
+          // CASE 3 (General case)
+          real_t f0 = q_sqr * proj_tq * proj_eq;
+
+          // dot(q, v_a) vertex a
+          cucomplex_t q_dot_v = cuC_dot(mq, vertex[e]);
+
+          // vertex normal a ... whatever that means :-)
+          vector3_t n_v = edge[e] / edge[e].abs();
+
+          // dot (q, n_v)
+          cucomplex_t q_dot_nv = cuC_dot(mq, n_v);
+
+          // calculate contribution of vertex a
+          cucomplex_t c0 = jn * q_dot_nt * q_dot_ne * q_dot_nv;
+          cucomplex_t c1 = cuCexp(jn * q_dot_v);
+          ff = ff + c0 * c1 / f0;
+
+          // dot(q, v_b) the other vertex in the edge
+          int ep = (e+1) % 3; // it is cyclic
+          q_dot_v = cuC_dot(mq, vertex[ep]);
+
+          // dot(q, n_v)
+          q_dot_nv = cuC_dot(mq, n_v * NEG_ONE);
+
+          // calculate contribution of the other vertex
+          c0 = jn * q_dot_nt * q_dot_ne * q_dot_nv;
+          c1 = cuCexp(jn * q_dot_v);
+          ff = ff + c0 * c1 / f0;
+        }
       }
-      return ff;
+    }
+    return ff;
   }
 
   __global__ void ff_poly_kernel (unsigned int nqy, unsigned int nqz,
-                  float_t *qx, float_t *qy, cucomplex_t *qz,
+                  real_t *qx, real_t *qy, cucomplex_t *qz,
                   int num_triangles, triangle_t * triangles,
-                  cucomplex_t *ff) {
+                  cucomplex_t * ff) {
+
     unsigned int i_z = blockDim.x * blockIdx.x + threadIdx.x;
     if ( i_z < nqz ) {
       unsigned int i_y = i_z % nqy;
       cucomplex_t ff_temp = make_cuC(ZERO, ZERO);
-      cucomplex_t mqx, mqy, mqz;
+      cucomplex_t mq[3];
+      rotate_q (rot_d, qx[i_y], qy[i_y], qz[i_z], mq[0], mq[1], mq[2]);
 
-      rotate_q (rot_d, qx[i_y], qy[i_y], qz[i_z], mqx, mqy, mqz);
-      for (int i = 0; i < num_triangles; i++) {
-        ff_temp =  ff_temp + FormFactorTriangle (triangles[i], mqx, mqy, mqz);
+      for (int i=0; i < num_triangles; i++)
+        ff_temp = ff_temp + FormFactorTriangle(triangles[i], mq);
+
+/***************
+      // declare shared memory
+      extern __shared__ triangle_t shared_triangles[];
+      int i_thread = threadIdx.x;
+      int nthreads = blockDim.x;
+
+      // load triangles into shared memory
+      const int T_SIZE_ = sizeof(triangle_t);
+      int curr_num_tri = buf_size / T_SIZE_;
+      int repeats = curr_num_tri / nthreads;
+      int curr_pos = 0;
+
+      // start loading
+      for (int i_load = 0; i_load < num_loads; i_load++) {
+        int residual = num_triangles - curr_pos;
+        if ( residual * T_SIZE_ > buf_size ) {
+          for (int i = 0; i < repeats; i++) {
+            int i_shared = i * nthreads + i_thread;
+            shared_triangles[i_shared] = triangles[curr_pos + i_shared];
+          }
+          curr_pos += curr_num_tri;
+        } else {
+          repeats = residual / nthreads;
+          for (int i = 0; i < repeats; i++) {
+            int i_shared = i * nthreads + i_thread;
+            shared_triangles[i_shared] = triangles[curr_pos + i_shared];
+          }
+          int nn = residual % nthreads;
+          if (i_thread < nn) {
+            int i_shared = repeats * nthreads + i_thread;
+            shared_triangles[i_shared] = triangles[curr_pos + i_shared];
+          }
+          curr_num_tri = num_triangles - curr_pos;
+        }
+
+        // wait for everyone to join here
+        __syncthreads();
+
+        for (int i = 0; i < curr_num_tri; i++) {
+          ff_temp =  ff_temp + FormFactorTriangle (shared_triangles[i], mq);
+        }
       }
+***************/
+
       ff[i_z] = ff_temp;
-    }
+    } // if (i_z < nqz)
   } //ff_poly_kernel
 
   /**
@@ -183,130 +217,93 @@ namespace hig {
   unsigned int NumericFormFactorG::compute_exact_triangle(
             triangle_t * triangles, int num_triangles,
             cucomplex_t *& ff,
-            int nqy, float_t * qx_h, float_t * qy_h, 
+            int nqy, real_t * qx_h, real_t * qy_h, 
             int nqz, cucomplex_t * qz_h,
-            float_t * rot, float_t & kernel_time) { 
+            real_t * rot, real_t & kernel_time) { 
       
-    int i;
     cudaError_t err;
-    float_t *qx_d, *qy_d;
+    real_t *qx_d, *qy_d;
     cucomplex_t *qz_d;
     cucomplex_t * ff_d;
     triangle_t * triangles_d;
 
+    std::cout << "**        Computing FF on GPU ..." << std::endl;
     cudaEvent_t begin_event, end_event;
     cudaEventCreate(&begin_event); cudaEventCreate(&end_event);
     cudaEventRecord(begin_event, 0);
 
-    // allocate memory for the final FF matrix
-    ff = new (std::nothrow) cucomplex_t[nqz];  // allocate and initialize to 0
-    if(ff == NULL) {
-      std::cerr << "Memory allocation failed for ff. Size = "
-            << nqz * sizeof(cucomplex_t) << " b" << std::endl;
-      return 0;
-    } // if
-    for (int i = 0; i < nqy; i++) { 
-        ff[i].x = (float_t) 0.;
-        ff[i].y = (float_t) 0.;
+    ff = new (std::nothrow) cucomplex_t[nqz];
+    if (ff == NULL){
+      std::cerr << "Error: failed to allocate memory of size: " 
+          << nqz * sizeof(cucomplex_t) << std::endl;
+      return false;
     }
-
+ 
+    // Allocate memory for device-side ff 
     if(cudaMalloc((void **) &ff_d, nqz * sizeof(cucomplex_t)) != cudaSuccess) {
         std::cerr << "Device memory allocation failed for ff_d. " << std::endl;
-        delete [] ff;
         return 0;
     }
-
-    if(cudaMalloc((void **) &qx_d, nqy * sizeof(float_t)) != cudaSuccess) {
+    // Allocate memory for qx
+    if(cudaMalloc((void **) &qx_d, nqy * sizeof(real_t)) != cudaSuccess) {
       std::cerr << "Device memory allocation failed for qx_d. "
-            << "Size = " << nqy * sizeof(float_t) << " B" << std::endl;
-      delete[] ff;
-      cudaFree(ff_d);
+            << "Size = " << nqy * sizeof(real_t) << " B" << std::endl;
       return 0;
-    } // if
-
-    if(cudaMalloc((void **) &qy_d, nqy * sizeof(float_t)) != cudaSuccess) {
+    } 
+    // Allocate memory for qy
+    if(cudaMalloc((void **) &qy_d, nqy * sizeof(real_t)) != cudaSuccess) {
       std::cerr << "Device memory allocation failed for qy_d. "
-            << "Size = " << nqy * sizeof(float_t) << " B" << std::endl;
-      cudaFree(qx_d);
-      cudaFree(ff_d);
-      delete[] ff;
+            << "Size = " << nqy * sizeof(real_t) << " B" << std::endl;
       return 0;
-    } // if
-
+    } 
+    // Allocate memory for qz
     if(cudaMalloc((void **) &qz_d, nqz * sizeof(cucomplex_t)) != cudaSuccess) {
       std::cerr << "Device memory allocation failed for qz_d. "
             << "Size = " << nqz * sizeof(cucomplex_t) << " B" << std::endl;
-      cudaFree(qy_d);
-      cudaFree(qx_d);
-      cudaFree(ff_d);
-      delete[] ff;
       return 0;
-    } // if
-
-    cudaMemcpy(qx_d, qx_h, nqy * sizeof(float_t), cudaMemcpyHostToDevice);
-    cudaMemcpy(qy_d, qy_h, nqy * sizeof(float_t), cudaMemcpyHostToDevice);
-    cudaMemcpy(qz_d, qz_h, nqz * sizeof(cucomplex_t), cudaMemcpyHostToDevice);
-
-    // copy triangles
+    } 
+    // Allocate memory for triangles
     err = cudaMalloc((void **) &triangles_d, num_triangles * sizeof(triangle_t));
     if(err != cudaSuccess) {
       std::cerr << "Device memory allocation failed for triangles. "
             << "Size = " <<  num_triangles * sizeof(triangle_t) << " B" << std::endl;
-      cudaFree(qz_d);
-      cudaFree(qy_d);
-      cudaFree(qx_d);
-      cudaFree(ff_d);
-      delete[] ff;
-      return 0;
-    } // if
-    err = cudaMemcpy(triangles_d, triangles, num_triangles * sizeof(triangle_t), cudaMemcpyHostToDevice);
-    if(err != cudaSuccess) {
-      std::cerr << "CUDA Error [" << __FILE__ << ":" << __LINE__ << "]: "
-          << cudaGetErrorString(err) << std::endl;
       return 0;
     }
 
+    // copy buffers to device memory
+    cudaMemcpy(qx_d, qx_h, nqy * sizeof(real_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(qy_d, qy_h, nqy * sizeof(real_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(qz_d, qz_h, nqz * sizeof(cucomplex_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(triangles_d, triangles, num_triangles * sizeof(triangle_t), cudaMemcpyHostToDevice);
+
+    // number of cuda threads and blocks
+    int cuda_num_threads = 256;
+    int cuda_num_blocks = nqz / cuda_num_threads + 1;
+    
     // calculate shared memeory size
-    int num_threads = 256;
-    int num_blocks = nqz / num_threads + 1;
-    int max_shared_mem = 49152 / sizeof(triangle_t);
-    for (i = 0; i < num_triangles; i++) {
-      if ( i * sizeof(triangle_t) * num_threads > max_shared_mem)
-        break;
-    }
-    size_t shared_mem = (i-1) * sizeof(triangle_t) * num_threads;
-    int num_of_loads = i;
+    int max_load = 49152; // Maximum shared memory
+    int single_load = cuda_num_threads * sizeof(triangle_t);
+    int shared_buf = (max_load / single_load) * single_load;
+    int num_of_loads = num_triangles * sizeof(triangle_t) / shared_buf + 1;
 
     // copy the rotation matrix and other stuff to constant memory
-    /*
-    err = cudaMemcpyToSymbol (rot_d, rot, 9 * sizeof(float_t), 0, cudaMemcpyHostToDevice);
-    if(err != cudaSuccess) {
-      std::cerr << "CUDA Error [" << __FILE__ << ":" << __LINE__ << "]: "
-          << cudaGetErrorString(err) << std::endl;
-      return 0;
-    }
-
+    err = cudaMemcpyToSymbol (rot_d, rot, 9 * sizeof(real_t), 0, cudaMemcpyHostToDevice);
     err = cudaMemcpyToSymbol(num_loads, &num_of_loads, sizeof(int), 0, cudaMemcpyHostToDevice);
-    f(err != cudaSuccess) {
-      std::cerr << "CUDA Error [" << __FILE__ << ":" << __LINE__ << "]: "
-          << cudaGetErrorString(err) << std::endl;
-      return 0;
-    }
-    */
+    err = cudaMemcpyToSymbol(buf_size, &shared_buf, sizeof(int), 0, cudaMemcpyHostToDevice);
 
     // Kernel
-    ff_poly_kernel <<< num_blocks, num_threads >>> (nqy, nqz, qx_d, qy_d, qz_d, 
+    ff_poly_kernel <<< cuda_num_blocks, cuda_num_threads, shared_buf >>> (nqy, nqz, qx_d, qy_d, qz_d, 
             num_triangles, triangles_d, ff_d);
     err = cudaGetLastError();
     if(err != cudaSuccess) {
-      std::cerr << "CUDA Error [" << __FILE__ << ":" << __LINE__ << "]: "
+      std::cerr << "Error: ff_poly_kernel failed miserably!" 
           << cudaGetErrorString(err) << std::endl;
       return 0;
     }
 
     err = cudaMemcpy (ff, ff_d, nqz * sizeof(cucomplex_t), cudaMemcpyDeviceToHost);
     if(err != cudaSuccess) {
-      std::cerr << "CUDA Error [" << __FILE__ << ":" << __LINE__ << "]: "
+      std::cerr << "Error: failed to copy buffer from device" 
           << cudaGetErrorString(err) << std::endl;
       return 0;
     } 
@@ -328,8 +325,8 @@ namespace hig {
 
 
   __global__ void ff_tri_kernel (unsigned int nqy, unsigned int nqz,
-                  float_t *qx, float_t *qy, cucomplex_t *qz,
-                  int num_tri, float_t * shape_def,
+                  real_t *qx, real_t *qy, cucomplex_t *qz,
+                  int num_tri, real_t * shape_def,
                   cucomplex_t * ff) {
 
     unsigned int i_thread = threadIdx.x;
@@ -342,13 +339,12 @@ namespace hig {
       cucomplex_t ff_temp = make_cuC(ZERO, ZERO);
 
       // shared memory
-      extern __shared__ float_t shared_shape_def[];
+      extern __shared__ real_t shared_shape_def[];
 
       // do the rotations
       cucomplex_t mqx, mqy, mqz;
       rotate_q (rot_d, qx[i_y], qy[i_y], qz[i_z], mqx, mqy, mqz);
-      float_t q = cuCnorm3(mqx, mqy, mqz);
-      float_t q2 = q * q;
+      real_t q2 = cuCnorm3(mqx, mqy, mqz);
 
       // load triangles into shared memory
       int curr_pos = 0;
@@ -381,22 +377,23 @@ namespace hig {
         __syncthreads();
 
         for (int i = 0; i < curr_num_tri; i++) {
-          unsigned int shape_off = i * T_PROP_SIZE_;
-          float_t s = shared_shape_def[shape_off];
-          float_t nx = shared_shape_def[shape_off + 1];
-          float_t ny = shared_shape_def[shape_off + 2];
-          float_t nz = shared_shape_def[shape_off + 3];
-          float_t x = shared_shape_def[shape_off + 4];
-          float_t y = shared_shape_def[shape_off + 5];
-          float_t z = shared_shape_def[shape_off + 6];
+          unsigned int offset = i * T_PROP_SIZE_;
+          real_t s =  shared_shape_def[offset];
+          real_t nx = shared_shape_def[offset + 1];
+          real_t ny = shared_shape_def[offset + 2];
+          real_t nz = shared_shape_def[offset + 3];
+          real_t x  = shared_shape_def[offset + 4];
+          real_t y  = shared_shape_def[offset + 5];
+          real_t z  = shared_shape_def[offset + 6];
 
           cucomplex_t qn = mqx * nx + mqy * ny + mqz * nz;
-          cucomplex_t qt = mqx * x  + mqx * y  + mqz * z;
+          cucomplex_t qt = mqx * x  + mqy * y  + mqz * z;
           cucomplex_t nj = make_cuC(ZERO, NEG_ONE);
           ff_temp = ff_temp +  (nj * qn * s * cuCexpi(qt) / q2);
         } 
       } // for (i_load = 0; ...)
       ff[i_z] = ff_temp;
+      
     } // if(i_z < nqz)
   } // formfactor_tri_kernel
 
@@ -404,48 +401,32 @@ namespace hig {
    * The main host function called from outside, as part of the API for a single node.
    */
   unsigned int NumericFormFactorG::compute_approx_triangle(
-            std::vector<float_t> & shape_def, 
+            std::vector<real_t> & shape_def, 
             cucomplex_t * & ff,
-            int nqy, float_t * qx_h, float_t * qy_h,
+            int nqy, real_t * qx_h, real_t * qy_h,
             int nqz, cucomplex_t * qz_h,
-            float_t * rot_h, float_t & kernel_time) { 
+            real_t * rot_h, real_t & kernel_time) { 
       
 
     int i; 
     cudaError_t err;
-    float_t * qx_d, * qy_d;
+    real_t * qx_d, * qy_d;
     cucomplex_t *qz_d;
     cucomplex_t * ff_d;
 
     unsigned int num_triangles = shape_def.size() / T_PROP_SIZE_;
     if(num_triangles < 1) return 0;
 
+    std::cout << "**        Computing FF on GPU ..." << std::endl;
     cudaEvent_t begin_event, end_event;
     cudaEventCreate(&begin_event); cudaEventCreate(&end_event);
     cudaEventRecord(begin_event, 0);
-
-
-    /***
-    // Get all the compute 2+ GPUs on the node
-    int num_dev = 0;
-    std::vector<int> dev_id;
-    cudaDeviceProp dev_prop;
-    err = cudaGetDeviceCount (&num_dev);
-    for (i = 0; i < num_dev; i++) {
-      err = cudaGetDeviceProperties (&dev_prop, dev_id[i]);
-      if ( dev_prop.major >= 2 )
-          dev_id.push_back(i);
-    }
-    num_dev = dev_id.size();
-    
-    // distribute data amongst 'n' devices
-    ***/
 
     // calculate triangle load sizes
     unsigned int cuda_num_threads = 256;
     unsigned int cuda_num_blocks = nqz / cuda_num_threads + 1;
     // assuming shared mem = 48KB 
-    int max_per_load = 49152 / sizeof(float_t);
+    int max_per_load = 49152 / sizeof(real_t);
     for (i = 0; i < num_triangles; i++)
         if ( i * cuda_num_threads * T_PROP_SIZE_ > max_per_load)
             break;
@@ -460,93 +441,67 @@ namespace hig {
       return 0;
     } // if
     for (int i = 0; i < nqz; i++) { 
-        ff[i].x = (float_t) 0.;
-        ff[i].y = (float_t) 0.;
+        ff[i].x = (real_t) 0.;
+        ff[i].y = (real_t) 0.;
     }
 
     if(cudaMalloc((void **) &ff_d, nqz * sizeof(cucomplex_t)) != cudaSuccess) {
         std::cerr << "Device memory allocation failed for ff_d. " << std::endl;
-        delete [] ff;
         return 0;
     }
 
-    if(cudaMalloc((void **) &qx_d, nqy * sizeof(float_t)) != cudaSuccess) {
+    if(cudaMalloc((void **) &qx_d, nqy * sizeof(real_t)) != cudaSuccess) {
       std::cerr << "Device memory allocation failed for qx_d. "
-            << "Size = " << nqy * sizeof(float_t) << " B" << std::endl;
-      delete[] ff;
-      cudaFree(ff_d);
+            << "Size = " << nqy * sizeof(real_t) << " B" << std::endl;
       return 0;
     } // if
 
-    if(cudaMalloc((void **) &qy_d, nqy * sizeof(float_t)) != cudaSuccess) {
+    if(cudaMalloc((void **) &qy_d, nqy * sizeof(real_t)) != cudaSuccess) {
       std::cerr << "Device memory allocation failed for qy_d. "
-            << "Size = " << nqy * sizeof(float_t) << " B" << std::endl;
-      cudaFree(qx_d);
-      cudaFree(ff_d);
-      delete[] ff;
+            << "Size = " << nqy * sizeof(real_t) << " B" << std::endl;
       return 0;
     } // if
 
     if(cudaMalloc((void **) &qz_d, nqz * sizeof(cucomplex_t)) != cudaSuccess) {
       std::cerr << "Device memory allocation failed for qz_d. "
             << "Size = " << nqz * sizeof(cucomplex_t) << " B" << std::endl;
-      cudaFree(qy_d);
-      cudaFree(qx_d);
-      cudaFree(ff_d);
-      delete[] ff;
       return 0;
     } // if
 
-    cudaMemcpy(qx_d, qx_h, nqy * sizeof(float_t), cudaMemcpyHostToDevice);
-    cudaMemcpy(qy_d, qy_h, nqy * sizeof(float_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(qx_d, qx_h, nqy * sizeof(real_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(qy_d, qy_h, nqy * sizeof(real_t), cudaMemcpyHostToDevice);
     cudaMemcpy(qz_d, qz_h, nqz * sizeof(cucomplex_t), cudaMemcpyHostToDevice);
 
     // copy triangles
-    float_t * shape_def_d;
-    float_t * shape_def_h = &shape_def[0];
-    err = cudaMalloc((void **) &shape_def_d, T_PROP_SIZE_ * num_triangles * sizeof(float_t));
+    real_t * shape_def_d;
+    real_t * shape_def_h = &shape_def[0];
+    err = cudaMalloc((void **) &shape_def_d, T_PROP_SIZE_ * num_triangles * sizeof(real_t));
     if(err != cudaSuccess) {
       std::cerr << "Device memory allocation failed for triangles. "
             << "Size = " <<  num_triangles << std::endl;
-      cudaFree(qz_d);
-      cudaFree(qy_d);
-      cudaFree(qx_d);
-      cudaFree(ff_d);
-      delete[] ff;
       return 0;
     } // if
 
     err = cudaMemcpy(shape_def_d, shape_def_h, 
-            T_PROP_SIZE_ * num_triangles * sizeof(float_t), cudaMemcpyHostToDevice);
+            T_PROP_SIZE_ * num_triangles * sizeof(real_t), cudaMemcpyHostToDevice);
     if(err != cudaSuccess) {
       std::cerr << "CUDA Error [" << __FILE__ << ":" << __LINE__ << "]: "
           << cudaGetErrorString(err) << std::endl;
-      cudaFree(qz_d);
-      cudaFree(qy_d);
-      cudaFree(qx_d);
-      cudaFree(ff_d);
-      delete[] ff;
       return 0;
     }
 
 
-    //for (i = 0; i < num_dev; i++) {
-    //  err = cudaSetDevice (dev_id[i]);
-
-      /* copy symbols to constant memory */
+    /* copy symbols to constant memory */
      
-      // copy rotation matrix
-      err = cudaMemcpyToSymbol(rot_d, rot_h, 9 * sizeof(float_t), 0, cudaMemcpyHostToDevice);
-
-      // copy num_of_loads and shared_buffer_size to constant memeory
-      err = cudaMemcpyToSymbol(num_loads, &num_of_loads, sizeof(int), 0, cudaMemcpyHostToDevice);
-      err = cudaMemcpyToSymbol(buf_size, &shared_buf, sizeof(int), 0, cudaMemcpyHostToDevice);
-    //}
-
-
+    // copy rotation matrix, num_of_loads and shared_buffer_size to constant memeory
+    err = cudaMemcpyToSymbol(rot_d, rot_h, 9 * sizeof(real_t), 0, cudaMemcpyHostToDevice);
+    err = cudaMemcpyToSymbol(num_loads, &num_of_loads, sizeof(int), 0, cudaMemcpyHostToDevice);
+    err = cudaMemcpyToSymbol(buf_size, &shared_buf, sizeof(int), 0, cudaMemcpyHostToDevice);
+    
     // Kernel
-    ff_tri_kernel <<< cuda_num_blocks, cuda_num_threads, shared_buf * sizeof(float_t) >>> (nqy, nqz, qx_d, 
+    ff_tri_kernel <<< cuda_num_blocks, cuda_num_threads, shared_buf * sizeof(real_t) >>> (nqy, nqz, qx_d, 
             qy_d, qz_d, num_triangles, shape_def_d, ff_d);
+
     err = cudaGetLastError();
     if (err != cudaSuccess) {
         std::cerr << "CUDA Error: kernel crashed with message: " << cudaGetErrorString(err) << std::endl;
@@ -569,6 +524,7 @@ namespace hig {
     cudaFree(qy_d);
     cudaFree(qx_d);
     cudaFree(ff_d);
+    cudaFree(shape_def_d);
     return num_triangles;
 
   } // NumericFormFactorG::compute_approx_triangle()

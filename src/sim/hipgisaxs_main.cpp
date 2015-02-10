@@ -36,6 +36,7 @@
 #include <sim/hipgisaxs_main.hpp>
 #include <common/typedefs.hpp>
 #include <utils/utilities.hpp>
+#include <numerics/matrix.hpp>
 
 #if defined USE_GPU || defined FF_ANA_GPU || defined FF_NUM_GPU
   #include <init/gpu/init_gpu.cuh>
@@ -113,8 +114,8 @@ namespace hig {
     } // if
 
     //photon conversion
-    float_t photon = 0.0;
-    float_t lambda = 0.0;
+    real_t photon = 0.0;
+    real_t lambda = 0.0;
     std::string unit;
     freq_ = 0; k0_ = 0;
     HiGInput::instance().photon_energy(photon, unit);
@@ -146,7 +147,7 @@ namespace hig {
     #endif
 
     // create Q-grid
-    float_t min_alphai = HiGInput::instance().scattering_min_alpha_i() * PI_ / 180;
+    real_t min_alphai = HiGInput::instance().scattering_min_alpha_i() * PI_ / 180;
     if(!QGrid::instance().create(freq_, min_alphai, k0_, mpi_rank)) {
       if(master) std::cerr << "error: could not create Q-grid" << std::endl;
       return false;
@@ -183,7 +184,7 @@ namespace hig {
     } // if-else
 
     complex_t temp(substrate_refindex_.delta(), substrate_refindex_.beta());
-    dns2_ = ((float_t) 2.0) * temp - (complex_t) pow(temp, 2);
+    dns2_ = ((real_t) 2.0) * temp - (complex_t) pow(temp, 2);
 
     /* get initialization data from structures */
     
@@ -197,7 +198,7 @@ namespace hig {
 
     /* domain size */
     vector3_t min_vec(0.0, 0.0, 0.0), max_vec(0.0, 0.0, 0.0);
-    float_t z_min_0 = 0.0, z_max_0 = 0.0;
+    real_t z_min_0 = 0.0, z_max_0 = 0.0;
     if(!HiGInput::instance().compute_domain_size(min_vec, max_vec, z_min_0, z_max_0)) {
       if(master) std::cerr << "error: could not compute domain size" << std::endl;
       return false;
@@ -240,7 +241,7 @@ namespace hig {
   } // HipGISAXS::init()
 
 
-  bool HipGISAXS::run_init(float_t alphai, float_t phi, float_t tilt, SampleRotation& rot_matrix) {
+  bool HipGISAXS::run_init(real_t alphai, real_t phi, real_t tilt, SampleRotation& rot_matrix) {
           // this is called for each config-run during the main run
           // it does the following:
           //   + construct the illuminated volume
@@ -274,10 +275,10 @@ namespace hig {
   bool HipGISAXS::override_qregion(unsigned int ny, unsigned int nz, unsigned int i) {
 
     OutputRegionType type = HiGInput::instance().reference_region_type(i);
-    float_t miny = HiGInput::instance().reference_region_min_x(i);
-    float_t minz = HiGInput::instance().reference_region_min_y(i);
-    float_t maxy = HiGInput::instance().reference_region_max_x(i);
-    float_t maxz = HiGInput::instance().reference_region_max_y(i);
+    real_t miny = HiGInput::instance().reference_region_min_x(i);
+    real_t minz = HiGInput::instance().reference_region_min_y(i);
+    real_t maxy = HiGInput::instance().reference_region_max_x(i);
+    real_t maxz = HiGInput::instance().reference_region_max_y(i);
 
     #ifdef USE_MPI
       // this is done at the universal level
@@ -290,7 +291,7 @@ namespace hig {
 
     if(type == region_qspace) {
       // update Q-grid
-      float_t min_alphai = HiGInput::instance().scattering_min_alpha_i() * PI_ / 180;
+      real_t min_alphai = HiGInput::instance().scattering_min_alpha_i() * PI_ / 180;
       if(!QGrid::instance().update(ny, nz, miny, minz, maxy, maxz,
                       freq_, min_alphai, k0_, mpi_rank)) {
         if(master) std::cerr << "error: could not update Q-grid" << std::endl;
@@ -333,18 +334,18 @@ namespace hig {
 
     int num_alphai = 0, num_phi = 0, num_tilt = 0;;
 
-    float_t alphai_min, alphai_max, alphai_step;
+    real_t alphai_min, alphai_max, alphai_step;
     HiGInput::instance().scattering_alphai(alphai_min, alphai_max, alphai_step);
     if(alphai_max < alphai_min) alphai_max = alphai_min;
     if(alphai_min == alphai_max || alphai_step == 0) num_alphai = 1;
     else num_alphai = (alphai_max - alphai_min) / alphai_step + 1;
 
-    float_t phi_min, phi_max, phi_step;
+    real_t phi_min, phi_max, phi_step;
     HiGInput::instance().scattering_inplanerot(phi_min, phi_max, phi_step);
     if(phi_step == 0) num_phi = 1;
     else num_phi = (phi_max - phi_min) / phi_step + 1;
 
-    float_t tilt_min, tilt_max, tilt_step;
+    real_t tilt_min, tilt_max, tilt_step;
     HiGInput::instance().scattering_tilt(tilt_min, tilt_max, tilt_step);
     if(tilt_step == 0) num_tilt = 1;
     else num_tilt = (tilt_max - tilt_min) / tilt_step + 1;
@@ -385,11 +386,11 @@ namespace hig {
     #endif // USE_MPI
 
     // for each incidence angle
-    float_t alpha_i = alphai_min;
+    real_t alpha_i = alphai_min;
     for(int i = 0; i < num_alphai; i ++, alpha_i += alphai_step) {
-      float_t alphai = alpha_i * PI_ / 180;
+      real_t alphai = alpha_i * PI_ / 180;
 
-      float_t* averaged_data = NULL;    // to hold summation of all (if needed)
+      real_t* averaged_data = NULL;    // to hold summation of all (if needed)
 
       #ifdef USE_MPI
         // divide among processors
@@ -419,9 +420,9 @@ namespace hig {
       #endif // USE_MPI
 
       // for each inplane rotation angle
-      float_t phi = phi_min;
+      real_t phi = phi_min;
       for(int j = 0; j < num_phi; j ++, phi += phi_step) {
-        float_t phi_rad = phi * PI_ / 180;
+        real_t phi_rad = phi * PI_ / 180;
 
         #ifdef USE_MPI
           // divide among processors
@@ -451,9 +452,9 @@ namespace hig {
         #endif // USE_MPI
 
         // for each tilt angle
-        float_t tilt = tilt_min;
+        real_t tilt = tilt_min;
         for(int k = 0; k < num_tilt; k ++, tilt += tilt_step) {
-          float_t tilt_rad = tilt * PI_ / 180;
+          real_t tilt_rad = tilt * PI_ / 180;
 
           if(tmaster) {
             std::cout << "-- Computing GISAXS "
@@ -465,7 +466,7 @@ namespace hig {
 
           /* run a gisaxs simulation */
 
-          float_t* final_data = NULL;
+          real_t* final_data = NULL;
           if(!run_gisaxs(alpha_i, alphai, phi_rad, tilt_rad, final_data,
                 #ifdef USE_MPI
                   tilt_comm,
@@ -482,7 +483,7 @@ namespace hig {
           
           if(tmaster) {
             // convolute/smear the computed intensities
-            //float_t sigma = 5.0;  // TODO: to be read from input config
+            //real_t sigma = 5.0;  // TODO: to be read from input config
             //woo::BoostChronoTimer smear_timer;
             //std::cout << "-- Smearing the result ... " << std::flush;
             //smear_timer.start();
@@ -563,8 +564,8 @@ namespace hig {
           if(num_phi > 1 || num_tilt > 1) {
             if(tmaster) {
               if(averaged_data == NULL) {
-                averaged_data = new (std::nothrow) float_t[nrow_ * ncol_];
-                memset(averaged_data, 0, nrow_ * ncol_ * sizeof(float_t));
+                averaged_data = new (std::nothrow) real_t[nrow_ * ncol_];
+                memset(averaged_data, 0, nrow_ * ncol_ * sizeof(real_t));
               } // if
               int i = 0;
               add_data_elements(averaged_data, final_data, averaged_data, nrow_ * ncol_);
@@ -585,12 +586,12 @@ namespace hig {
 //          if(num_phi > 1 || num_tilt > 1) {
             // get data from all other phi_comm processors which were tmasters
             int psize = multi_node_.size(phi_comm);
-            float_t* temp_data = NULL;
+            real_t* temp_data = NULL;
             if(psize > 1) {
               int *proc_sizes = new (std::nothrow) int[psize];
               int *proc_displacements = new (std::nothrow) int[psize];
               if(pmaster) {
-                temp_data = new (std::nothrow) float_t[psize * nrow_ * ncol_];
+                temp_data = new (std::nothrow) real_t[psize * nrow_ * ncol_];
               } // if
               for(int i = 0; i < psize; ++ i) {
                 proc_sizes[i] = tmasters[i] * nrow_ * ncol_;
@@ -624,12 +625,12 @@ namespace hig {
 //        if(num_phi > 1 || num_tilt > 1) {
           // get data from all other phi_comm processors which were tmasters
           int asize = multi_node_.size(alphai_comm);
-          float_t* temp_data = NULL;
+          real_t* temp_data = NULL;
           if(asize > 1) {
             int *proc_sizes = new (std::nothrow) int[asize];
             int *proc_displacements = new (std::nothrow) int[asize];
             if(amaster) {
-              temp_data = new (std::nothrow) float_t[asize * nrow_ * ncol_];
+              temp_data = new (std::nothrow) real_t[asize * nrow_ * ncol_];
             } // if
             for(int i = 0; i < asize; ++ i) {
               proc_sizes[i] = pmasters[i] * nrow_ * ncol_;
@@ -707,7 +708,7 @@ namespace hig {
   bool HipGISAXS::fit_init() { return init(); }
 
 
-  bool HipGISAXS::compute_gisaxs(float_t* &final_data, woo::comm_t comm_key) {
+  bool HipGISAXS::compute_gisaxs(real_t* &final_data, woo::comm_t comm_key) {
     if(!comm_key.empty()) sim_comm_ = comm_key;        // communicator for this simulation
     #ifdef USE_MPI
       bool master = multi_node_.is_master(sim_comm_);
@@ -716,16 +717,16 @@ namespace hig {
     #endif
 
     int num_alphai = 0, num_phi = 0, num_tilt = 0;
-    float_t alphai_min, alphai_max, alphai_step;
+    real_t alphai_min, alphai_max, alphai_step;
     HiGInput::instance().scattering_alphai(alphai_min, alphai_max, alphai_step);
     if(alphai_max < alphai_min) alphai_max = alphai_min;
     if(alphai_min == alphai_max || alphai_step == 0) num_alphai = 1;
     else num_alphai = (alphai_max - alphai_min) / alphai_step + 1;
-    float_t phi_min, phi_max, phi_step;
+    real_t phi_min, phi_max, phi_step;
     HiGInput::instance().scattering_inplanerot(phi_min, phi_max, phi_step);
     if(phi_step == 0) num_phi = 1;
     else num_phi = (phi_max - phi_min) / phi_step + 1;
-    float_t tilt_min, tilt_max, tilt_step;
+    real_t tilt_min, tilt_max, tilt_step;
     HiGInput::instance().scattering_tilt(tilt_min, tilt_max, tilt_step);
     if(tilt_step == 0) num_tilt = 1;
     else num_tilt = (tilt_max - tilt_min) / tilt_step + 1;
@@ -740,10 +741,10 @@ namespace hig {
 
     woo::BoostChronoTimer sim_timer;
     sim_timer.start();
-    float_t alpha_i = alphai_min;
-    float_t alphai = alpha_i * PI_ / 180;
-    float_t phi_rad = phi_min * PI_ / 180;
-    float_t tilt_rad = tilt_min * PI_ / 180;
+    real_t alpha_i = alphai_min;
+    real_t alphai = alpha_i * PI_ / 180;
+    real_t phi_rad = phi_min * PI_ / 180;
+    real_t tilt_rad = tilt_min * PI_ / 180;
     if(master) std::cout << "-- Computing GISAXS ... " << std::endl << std::flush;
     /* run a gisaxs simulation */
     if(!run_gisaxs(alpha_i, alphai, phi_rad, tilt_rad, final_data,
@@ -785,13 +786,13 @@ namespace hig {
    */
 
   /* all the real juice is here */
-  bool HipGISAXS::run_gisaxs(float_t alpha_i, float_t alphai, float_t phi, float_t tilt,
-                float_t* &img3d, woo::comm_t comm_key, int corr_doms) {
+  bool HipGISAXS::run_gisaxs(real_t alpha_i, real_t alphai, real_t phi, real_t tilt,
+                real_t* &img3d, woo::comm_t comm_key, int corr_doms) {
 
     SampleRotation rotation_matrix;
     if(!run_init(alphai, phi, tilt, rotation_matrix)) return false;
 
-    QGrid::instance().save ("qgrid.out");
+    //QGrid::instance().save ("qgrid.out");
     #ifdef USE_MPI
       bool master = multi_node_.is_master(comm_key);
       int ss = multi_node_.size(comm_key);
@@ -846,10 +847,10 @@ namespace hig {
 
     // initialize memory for struct_intensity
     unsigned int size = nrow_ * ncol_;
-    float_t* struct_intensity = NULL;
+    real_t* struct_intensity = NULL;
     complex_t* c_struct_intensity = NULL;
     if(smaster) {
-      struct_intensity = new (std::nothrow) float_t[num_structs * size];
+      struct_intensity = new (std::nothrow) real_t[num_structs * size];
       c_struct_intensity = new (std::nothrow) complex_t[num_structs * size];
     } // master
 
@@ -875,9 +876,9 @@ namespace hig {
       Lattice *curr_lattice = (Lattice*) HiGInput::instance().lattice(*curr_struct);
       bool struct_in_layer = (*s).second.grain_in_layer();
 
-      float_t *dd = NULL, *nn = NULL, *wght = NULL;    // come back to this ...
+      real_t *dd = NULL, *nn = NULL, *wght = NULL;    // come back to this ...
                         // these structures can be improved ...
-      float_t tz = 0;
+      real_t tz = 0;
       int num_dimen = 3;
       int ndx = 0, ndy = 0;
       // compute dd and nn
@@ -909,7 +910,7 @@ namespace hig {
 
       /* grain scalings */
       std::vector<vector3_t> scaling_samples;
-      std::vector<float_t> scaling_weights;
+      std::vector<real_t> scaling_weights;
       bool is_scaling_distribution = false;
       if (s->second.grain_scaling_is_dist()) {
         is_scaling_distribution = true;
@@ -991,8 +992,8 @@ namespace hig {
                            // ... incomplete
       } // if-else
       ShapeName shape_name = HiGInput::instance().shape_name((*s).second);
-      float_t shape_tau = HiGInput::instance().shape_tau((*s).second);
-      float_t shape_eta = HiGInput::instance().shape_eta((*s).second);
+      real_t shape_tau = HiGInput::instance().shape_tau((*s).second);
+      real_t shape_eta = HiGInput::instance().shape_eta((*s).second);
       std::string shape_file = HiGInput::instance().shape_filename((*s).second);
       shape_param_list_t shape_params = HiGInput::instance().shape_params((*s).second);
 
@@ -1053,14 +1054,21 @@ namespace hig {
         // define r_norm (grain orientation by tau and eta)
         // define full grain rotation matrix r_total = r_phi * r_norm
         // TODO: ... i think these tau eta zeta can be computed on the fly to save memory ...
-        float_t rot1 = nn[0 * num_grains + grain_i];
-        float_t rot2 = nn[1 * num_grains + grain_i];
-        float_t rot3 = nn[2 * num_grains + grain_i];
-        float_t gauss_weight = 1.0;
+        real_t rot1 = nn[0 * num_grains + grain_i];
+        real_t rot2 = nn[1 * num_grains + grain_i];
+        real_t rot3 = nn[2 * num_grains + grain_i];
+        real_t gauss_weight = 1.0;
         if(struct_dist == "gaussian") {
           gauss_weight = wght[grain_i] * wght[num_grains + grain_i] *
                   wght[2 * num_grains + grain_i];
         } // if
+        RotMatrix_t r1(r1axis, rot1);
+        RotMatrix_t r2(r2axis, rot2);
+        RotMatrix_t r3(r3axis, rot3); 
+
+        // order of multiplication is important
+        RotMatrix_t rot = r3 * r2 * r1;
+
         vector3_t z1, z2, z3, e1, e2, e3, t1, t2, t3;
         switch(r1axis) {
           case 0:
@@ -1197,7 +1205,7 @@ namespace hig {
 
           /* set the scalig for this grain */
           vector3_t grain_scaling;
-          float_t scaling_wght = 1.0;
+          real_t scaling_wght = 1.0;
           if (is_scaling_distribution) {
             grain_scaling = scaling_samples[i_scale];
             scaling_wght = scaling_weights[i_scale];
@@ -1217,7 +1225,7 @@ namespace hig {
               << scaling_samples.size() << ".\n";
 
           /* calulate structure factor for the grain */
-          float_t weight = gauss_weight * scaling_wght;
+          real_t weight = gauss_weight * scaling_wght;
           StructureFactor sf;
           structure_factor(sf, HiGInput::instance().experiment(), center, curr_lattice,
                   grain_repeats, grain_scaling, r_tot1, r_tot2, r_tot3
@@ -1409,7 +1417,7 @@ namespace hig {
             soffset = s_num * nrow_ * ncol_;
             for(unsigned int i = 0; i < nrow_ * ncol_ ; ++ i) {
               unsigned int curr_index = i;
-              float_t sum = 0.0;
+              real_t sum = 0.0;
               for(int d = 0; d < num_grains; ++ d) {
                 unsigned int id_index = d * nrow_ * ncol_ + curr_index;
                 sum += id[id_index].real() * id[id_index].real() + 
@@ -1468,8 +1476,8 @@ namespace hig {
 
     } // for num_structs
 
-    std::vector<float_t> iratios;
-    float_t iratios_sum = 0.0;
+    std::vector<real_t> iratios;
+    real_t iratios_sum = 0.0;
     for(structure_iterator_t s = HiGInput::instance().structure_begin(); s != HiGInput::instance().structure_end(); ++ s) {
       iratios.push_back((*s).second.iratio());
       iratios_sum += (*s).second.iratio();
@@ -1481,7 +1489,7 @@ namespace hig {
       return false;
     } // if*/
 
-    float_t* all_struct_intensity = NULL;
+    real_t* all_struct_intensity = NULL;
     complex_t* all_c_struct_intensity = NULL;
     #ifdef USE_MPI
       if(multi_node_.size(comm_key) > 1) {
@@ -1492,7 +1500,7 @@ namespace hig {
                 new (std::nothrow) complex_t[num_structures_ * nrow_ * ncol_];
           } else {
             all_struct_intensity =
-                new (std::nothrow) float_t[num_structures_ * nrow_ * ncol_];
+                new (std::nothrow) real_t[num_structures_ * nrow_ * ncol_];
           } // if-else
         } // if
         int *proc_sizes = new (std::nothrow) int[multi_node_.size(comm_key)];
@@ -1536,7 +1544,7 @@ namespace hig {
       if(all_struct_intensity != NULL)
         normalize(all_struct_intensity, nrow_ * ncol_);
 
-      img3d = new (std::nothrow) float_t[nrow_ * ncol_];
+      img3d = new (std::nothrow) real_t[nrow_ * ncol_];
       if (img3d == nullptr) {
         std::cerr << "error: unable to allocate memeory." << std::endl;
         std::exit(1);
@@ -1550,7 +1558,7 @@ namespace hig {
           // struct_intensity = sum_grain(abs(grain_intensity)^2)
           // intensity = sum_struct(struct_intensity)
           for(unsigned int z = 0; z < nrow_ * ncol_; ++ z) {
-            float_t sum = 0.0;
+            real_t sum = 0.0;
             for(int s = 0; s < num_structures_; ++ s) {
               unsigned int index = s * nrow_ * ncol_ + z;
               sum += all_struct_intensity[index] * iratios[s];
@@ -1571,7 +1579,7 @@ namespace hig {
           // struct_intensity = abs(sum_grain(grain_intensity))^2
           // intensty = sum_struct(struct_intensity)
           for(unsigned int z = 0; z < nrow_ * ncol_; ++ z) {
-            float_t sum = 0.0;
+            real_t sum = 0.0;
             for(int s = 0; s < num_structures_; ++ s) {
               unsigned int index = s * nrow_ * ncol_ + z;
               sum += all_struct_intensity[index] * iratios[s];
@@ -1606,7 +1614,7 @@ namespace hig {
 
     if(master) {
       // convolute/smear the computed intensities
-      float_t sigma = HiGInput::instance().scattering_smearing();
+      real_t sigma = HiGInput::instance().scattering_smearing();
       if(sigma > 0.0) {
         woo::BoostChronoTimer smear_timer;
         std::cout << "-- Smearing the result with sigma = " << sigma << " ... " << std::flush;
@@ -1626,14 +1634,14 @@ namespace hig {
   } // HipGISAXS::run_gisaxs()
 
 
-  bool HipGISAXS::normalize(float_t*& data, unsigned int size) {
-    float_t min_val = data[0], max_val = data[0];
+  bool HipGISAXS::normalize(real_t*& data, unsigned int size) {
+    real_t min_val = data[0], max_val = data[0];
     #pragma omp parallel for
     for(unsigned int i = 1; i < size; ++ i) {
       min_val = std::min(min_val, data[i]);
       max_val = std::max(max_val, data[i]);
     } // for
-    float_t d = max_val - min_val;
+    real_t d = max_val - min_val;
     if(d < 1e-30) return false;
     #pragma omp parallel for
     for(unsigned int i = 1; i < size; ++ i) data[i] = (data[i] - min_val) / d;
@@ -1672,7 +1680,7 @@ namespace hig {
   bool HipGISAXS::form_factor(FormFactor& ff,
                 ShapeName shape_name, std::string shape_file,
                 shape_param_list_t& shape_params, vector3_t &curr_transvec,
-                float_t shp_tau, float_t shp_eta,
+                real_t shp_tau, real_t shp_eta,
                 vector3_t &r_tot1, vector3_t &r_tot2, vector3_t &r_tot3
                 #ifdef USE_MPI
                   , woo::comm_t comm_key
@@ -1698,10 +1706,10 @@ namespace hig {
   } // HipGISAXS::form_factor()
 
 
-  bool HipGISAXS::compute_rotation_matrix_z(float_t angle,
+  bool HipGISAXS::compute_rotation_matrix_z(real_t angle,
                         vector3_t& r1, vector3_t& r2, vector3_t& r3) {
-    float_t s = sin(angle);
-    float_t c = cos(angle);
+    real_t s = sin(angle);
+    real_t c = cos(angle);
 
     r1[0] = c; r1[1] = -s; r1[2] = 0.0;
     r2[0] = s; r2[1] = c; r2[2]  = 0.0;
@@ -1711,10 +1719,10 @@ namespace hig {
   } // HipGISAXS::comptue_rotation_matrix_z()
 
 
-  bool HipGISAXS::compute_rotation_matrix_y(float_t angle,
+  bool HipGISAXS::compute_rotation_matrix_y(real_t angle,
                         vector3_t& r1, vector3_t& r2, vector3_t& r3) {
-    float_t s = sin(angle);
-    float_t c = cos(angle);
+    real_t s = sin(angle);
+    real_t c = cos(angle);
 
     //r1[0] = c; r1[1] = 0.0; r1[2] = -s;
     r1[0] = c; r1[1] = 0.0; r1[2] = s;
@@ -1726,10 +1734,10 @@ namespace hig {
   } // HipGISAXS::compute_rotation_matrix_y()
 
 
-  bool HipGISAXS::compute_rotation_matrix_x(float_t angle,
+  bool HipGISAXS::compute_rotation_matrix_x(real_t angle,
                         vector3_t& r1, vector3_t& r2, vector3_t& r3) {
-    float_t s = sin(angle);
-    float_t c = cos(angle);
+    real_t s = sin(angle);
+    real_t c = cos(angle);
 
     r1[0] = 1.0; r1[1] = 0.0; r1[2] = 0.0;
     r2[0] = 0.0; r2[1] = c; r2[2]  = -s;
@@ -1739,11 +1747,11 @@ namespace hig {
   } // HipGISAXS::compute_rotation_matrix_x()
 
 
-  bool HipGISAXS::illuminated_volume(float_t alpha_i, float_t spot_area, int min_layer_order,
+  bool HipGISAXS::illuminated_volume(real_t alpha_i, real_t spot_area, int min_layer_order,
                     RefractiveIndex substrate_refindex) {
-    float_t spot_diameter = 2.0 * sqrt(spot_area / PI_) * 1e6;  // in nm
-    float_t substr_delta = substrate_refindex.delta();
-    float_t substr_beta = substrate_refindex.beta();
+    real_t spot_diameter = 2.0 * sqrt(spot_area / PI_) * 1e6;  // in nm
+    real_t substr_delta = substrate_refindex.delta();
+    real_t substr_beta = substrate_refindex.beta();
 
     if(HiGInput::instance().experiment() == "saxs") {  // SAXS
       vol_[0] = vol_[1] = vol_[2] = spot_diameter;
@@ -1752,12 +1760,12 @@ namespace hig {
       complex_t penetration_depth_layer;
       if(HiGInput::instance().is_single_layer()) {
         RefractiveIndex r1 = HiGInput::instance().single_layer().refindex();
-        float_t alpha_c = sqrt(2.0 * r1.delta());
+        real_t alpha_c = sqrt(2.0 * r1.delta());
         penetration_depth_layer = -1.0 /
                       (2.0 * k0_ * (sqrt(alpha_i * alpha_i - alpha_c * alpha_c -
                       complex_t(0, 2.0 * r1.beta()))).imag());
       } else if(HiGInput::instance().num_layers() == 0) {
-        float_t alpha_c = sqrt(2.0 * substr_delta);
+        real_t alpha_c = sqrt(2.0 * substr_delta);
         penetration_depth_layer = -1.0 /
                       (2.0 * k0_ * (sqrt(alpha_i * alpha_i - alpha_c * alpha_c -
                       complex_t(0, 2.0 * substr_beta))).imag());
@@ -1783,7 +1791,7 @@ namespace hig {
   } // HipGISAXS::illuminated_volume()
 
 
-  bool HipGISAXS::compute_propagation_coefficients(float_t alpha_i,
+  bool HipGISAXS::compute_propagation_coefficients(real_t alpha_i,
           complex_t* &amm, complex_t* &apm, complex_t* &amp, complex_t* &app,
           complex_t* &rk1, complex_t* &rk2, complex_t* &rk1rk2, complex_t* &tk1tk2,
           complex_t* &h0, complex_t* &fc) {
@@ -1845,9 +1853,9 @@ namespace hig {
   } // HipGISAXS::compute_propagation_coefficients()
 
 
-  bool HipGISAXS::layer_qgrid_qz(float_t alpha_i, complex_t dnl_j) {
-    float_t kzi_0 = -1.0 * k0_ * sin(alpha_i);
-    complex_t kzi_j = -1.0 * k0_ * sqrt((float_t)pow(sin(alpha_i), 2) - dnl_j);
+  bool HipGISAXS::layer_qgrid_qz(real_t alpha_i, complex_t dnl_j) {
+    real_t kzi_0 = -1.0 * k0_ * sin(alpha_i);
+    complex_t kzi_j = -1.0 * k0_ * sqrt((real_t)pow(sin(alpha_i), 2) - dnl_j);
 
     if(!QGrid::instance().create_qz_extended(k0_, kzi_0, kzi_j, dnl_j)) {
       std::cerr << "error: something went wrong while creating qz_extended" << std::endl;
@@ -1860,17 +1868,17 @@ namespace hig {
 
 
   // TODO optimize this later ...
-  bool HipGISAXS::compute_fresnel_coefficients_embedded(float_t alpha_i, complex_t* &fc) {
+  bool HipGISAXS::compute_fresnel_coefficients_embedded(real_t alpha_i, complex_t* &fc) {
     RefractiveIndex nl = single_layer_refindex_;
     RefractiveIndex ns = substrate_refindex_;
-    float_t lt = single_layer_thickness_;
+    real_t lt = single_layer_thickness_;
     size_t imsize = nrow_ * ncol_;
 
     complex_t dnl2(2.0 * nl.delta(), 2.0 * nl.beta());
     complex_t dns2(2.0 * ns.delta(), 2.0 * ns.beta());
 
-    float_t sinai = sin(alpha_i);
-    float_t kiz0 = -1.0 * k0_ * sinai;
+    real_t sinai = sin(alpha_i);
+    real_t kiz0 = -1.0 * k0_ * sinai;
     complex_t kiz1 = -1.0 * k0_ * sqrt(sinai * sinai - dnl2);
     complex_t kiz2 = -1.0 * k0_ * sqrt(sinai * sinai - dns2);
 
@@ -1879,7 +1887,7 @@ namespace hig {
     complex_t t01_kiz1 = 2.0 * (kiz0 / (kiz0 + kiz1));
 
     complex_t a1m_kiz1 = t01_kiz1 /
-              ((float_t) 1.0 + r01_kiz1 * r12_kiz1 * exp(complex_t(0, 2) * kiz1 * lt));
+              ((real_t) 1.0 + r01_kiz1 * r12_kiz1 * exp(complex_t(0, 2) * kiz1 * lt));
     complex_t a1p_kiz1 = a1m_kiz1 * r12_kiz1 * exp(complex_t(0, 2) * kiz1 * lt);
 
     complex_t *a1mi = NULL, *a1pi = NULL;
@@ -1913,7 +1921,7 @@ namespace hig {
 
     for(unsigned int z = 0; z < nqz_; ++ z) {
       complex_t a1m_nkfz1, a1p_nkfz1;
-      float_t kfz0 = QGrid::instance().qz(z) + kiz0;
+      real_t kfz0 = QGrid::instance().qz(z) + kiz0;
       unsigned int idx = 4 * imsize + z;
 
       if(kfz0 < 0) {
@@ -1921,7 +1929,7 @@ namespace hig {
         a1p_nkfz1 = complex_t(0.0, 0.0);
         fc[idx] = complex_t(0.0, 0.0);
       } else {  // kfz0 >= 0
-        float_t nkfz0 = -1.0 * kfz0;
+        real_t nkfz0 = -1.0 * kfz0;
         complex_t nkfz1 = -1.0 * sqrt(kfz0 * kfz0 - k0_ * k0_ * dnl2);
         complex_t nkfz2 = -1.0 * sqrt(kfz0 * kfz0 - k0_ * k0_ * dns2);
 
@@ -1931,12 +1939,12 @@ namespace hig {
 
         complex_t uniti = complex_t(0, 1);
         complex_t temp4 = 2.0 * nkfz1 * lt;
-        float_t temp3 = exp(-1.0 * temp4.imag());
+        real_t temp3 = exp(-1.0 * temp4.imag());
         complex_t temp5 = exp(uniti * temp4.real());
-                  //((float_t)cos(temp4.real()) + uniti * sin(temp4.real()));
+                  //((real_t)cos(temp4.real()) + uniti * sin(temp4.real()));
         complex_t temp6 = temp3 * temp5;
         a1m_nkfz1 = t01_nkfz1 /
-              ((float_t) 1.0 + r01_nkfz1 * r12_nkfz1 * temp6);
+              ((real_t) 1.0 + r01_nkfz1 * r12_nkfz1 * temp6);
         a1p_nkfz1 = a1m_nkfz1 * r12_nkfz1 * temp6;
 
         fc[idx] = complex_t(1.0, 0.0);
@@ -1964,11 +1972,11 @@ namespace hig {
 
 
   // optimize ...
-  bool HipGISAXS::compute_fresnel_coefficients_top_buried(float_t alpha_i, complex_t* &fc) {
-    //complex_t tk1 = ((float_t) 2.0 * sin(alpha_i)) / ((float_t)sin(alpha_i) +
-    //                    sqrt((float_t)pow(sin(alpha_i), 2) - dns2_));
-    complex_t tk1 = ((float_t) (2.0 * sin(alpha_i))) /
-            ((float_t) sin(alpha_i) + sqrt((float_t)pow(sin(alpha_i), 2) - dns2_));
+  bool HipGISAXS::compute_fresnel_coefficients_top_buried(real_t alpha_i, complex_t* &fc) {
+    //complex_t tk1 = ((real_t) 2.0 * sin(alpha_i)) / ((real_t)sin(alpha_i) +
+    //                    sqrt((real_t)pow(sin(alpha_i), 2) - dns2_));
+    complex_t tk1 = ((real_t) (2.0 * sin(alpha_i))) /
+            ((real_t) sin(alpha_i) + sqrt((real_t)pow(sin(alpha_i), 2) - dns2_));
     complex_t rk1 = tk1 - complex_t(1.0, 0.0);
     
     size_t imsize = nrow_ * ncol_;
@@ -1982,7 +1990,7 @@ namespace hig {
         fc[z] = rk1;
     } // for z
 
-    float_t k1z = -1.0 * k0_ * sin(alpha_i);
+    real_t k1z = -1.0 * k0_ * sin(alpha_i);
     complex_t tk2, rk2;
 
     for(unsigned int z = 0; z < nqz_; ++ z) {
@@ -1995,7 +2003,7 @@ namespace hig {
       } else {
         complex_t sf = k2z / k0_;
         tk2 = 2.0 * sf / (sf + sqrt(sf * sf - dns2_));
-        rk2 = tk2 - (float_t) 1.0;
+        rk2 = tk2 - (real_t) 1.0;
           fc[4 * imsize + z] = complex_t(1.0, 0.0);
       } // if-else
 
@@ -2008,8 +2016,8 @@ namespace hig {
   } // HipGISAXS::compute_fresnel_coefficients_top_buried()
 
 
-  bool HipGISAXS::spatial_distribution(structure_iterator_t s, float_t tz, int dim,
-                    int& rand_dim_x, int& rand_dim_y, float_t* &d) {
+  bool HipGISAXS::spatial_distribution(structure_iterator_t s, real_t tz, int dim,
+                    int& rand_dim_x, int& rand_dim_y, real_t* &d) {
     vector3_t spacing = (*s).second.ensemble_spacing();
     vector3_t maxgrains = (*s).second.ensemble_maxgrains();
     std::string distribution = (*s).second.ensemble_distribution();
@@ -2029,17 +2037,17 @@ namespace hig {
         rand_dim_y = 3;
 
         // construct random matrix
-        float_t *d_rand = new (std::nothrow) float_t[rand_dim_x * rand_dim_y];
+        real_t *d_rand = new (std::nothrow) real_t[rand_dim_x * rand_dim_y];
         srand(time(NULL));
         for(int i = 0; i < rand_dim_x * rand_dim_y; ++ i)
-          d_rand[i] = ((float_t)rand() / RAND_MAX);
+          d_rand[i] = ((real_t)rand() / RAND_MAX);
 
-        d = new (std::nothrow) float_t[rand_dim_x * rand_dim_y * 4];
+        d = new (std::nothrow) real_t[rand_dim_x * rand_dim_y * 4];
 
         //int base_index = 0;
-        float_t mul_val1 = vol_[0] / 2;
-        float_t mul_val2 = vol_[1] / 2;
-        float_t mul_val3 = vol_[2];
+        real_t mul_val1 = vol_[0] / 2;
+        real_t mul_val2 = vol_[1] / 2;
+        real_t mul_val3 = vol_[2];
 
         // D0
         if(maxgrains[0] == 1) {
@@ -2105,27 +2113,27 @@ namespace hig {
         vector3_t nd = maxgrains;
 
         int size = nd[0] * nd[1] * nd[2];
-        d = new (std::nothrow) float_t[3 * size];
-        float_t* d1 = d;
-        float_t* d2 = d + size;
-        float_t* d3 = d + 2 * size;
+        d = new (std::nothrow) real_t[3 * size];
+        real_t* d1 = d;
+        real_t* d2 = d + size;
+        real_t* d3 = d + 2 * size;
 
         rand_dim_x = size;    // total number of rows in d
         rand_dim_y = 3;      // 3 dims, number of cols in d
 
         // this is more correct I think:
-        float_t* dx = new (std::nothrow) float_t[(int)nd[0]];
-        float_t* dy = new (std::nothrow) float_t[(int)nd[1]];
-        float_t* dz = new (std::nothrow) float_t[(int)nd[2]];
-        float_t val_dx = 0, step_dx = spaced_cell[0], max_dx = spaced_cell[0] * (nd[0] - 1);
+        real_t* dx = new (std::nothrow) real_t[(int)nd[0]];
+        real_t* dy = new (std::nothrow) real_t[(int)nd[1]];
+        real_t* dz = new (std::nothrow) real_t[(int)nd[2]];
+        real_t val_dx = 0, step_dx = spaced_cell[0], max_dx = spaced_cell[0] * (nd[0] - 1);
         for(int i = 0; i < (int)nd[0]; ++ i, val_dx += step_dx) {
           dx[i] = val_dx - max_dx / 2;
         } // for
-        float_t val_dy = 0, step_dy = spaced_cell[1], max_dy = spaced_cell[1] * (nd[1] - 1);
+        real_t val_dy = 0, step_dy = spaced_cell[1], max_dy = spaced_cell[1] * (nd[1] - 1);
         for(int i = 0; i < (int)nd[1]; ++ i, val_dy += step_dy) {
           dy[i] = val_dy - max_dy / 2;
         } // for
-        float_t val_dz = 0, step_dz = spaced_cell[2];
+        real_t val_dz = 0, step_dz = spaced_cell[2];
         for(int i = 0; i < (int)nd[2]; ++ i, val_dz += step_dz) {
           dz[i] = val_dz + tz;
         } // for
@@ -2164,23 +2172,23 @@ namespace hig {
       } // if-else
     } else if(distribution == "gaussian" || distribution == "normal") {
       // gaussian distribution
-/*      float_t mean = (*s).second.ensemble_distribution_p1();
-      float_t sd = (*s).second.ensemble_distribution_p2();
+/*      real_t mean = (*s).second.ensemble_distribution_p1();
+      real_t sd = (*s).second.ensemble_distribution_p2();
       woo::MTNormalRandomNumberGenerator rgen(mean, sd);
       if(dim == 3) {
         vector3_t nd = maxgrains;
         unsigned int size = nd[0] * nd[1] * nd[2];
-        d = new (std::nothrow) float_t[dim * size];
-        float_t* d1 = d;
-        float_t* d2 = d + size;
-        float_t* d3 = d2 + size;
+        d = new (std::nothrow) real_t[dim * size];
+        real_t* d1 = d;
+        real_t* d2 = d + size;
+        real_t* d3 = d2 + size;
 
-        //float_t max_x = vol_[0];
-        //float_t max_y = vol_[1];
-        //float_t max_z = vol_[2];
-        float_t max_x = spaced_cell[0] * (nd[0] - 1);
-        float_t max_y = spaced_cell[1] * (nd[1] - 1);
-        float_t max_z = spaced_cell[2] * (nd[2] - 1);
+        //real_t max_x = vol_[0];
+        //real_t max_y = vol_[1];
+        //real_t max_z = vol_[2];
+        real_t max_x = spaced_cell[0] * (nd[0] - 1);
+        real_t max_y = spaced_cell[1] * (nd[1] - 1);
+        real_t max_z = spaced_cell[2] * (nd[2] - 1);
 
         // compute x for each grain
         for(unsigned int i = 0; i < size; ++ i);
@@ -2208,8 +2216,8 @@ namespace hig {
   } // HipGISAXS::spatial_distribution()
 
 
-  bool HipGISAXS::orientation_distribution(structure_iterator_t s, float_t* dd, int ndx, int ndy, 
-                        float_t* &nn, float_t* &wght) {
+  bool HipGISAXS::orientation_distribution(structure_iterator_t s, real_t* dd, int ndx, int ndy, 
+                        real_t* &nn, real_t* &wght) {
     std::string distribution = (*s).second.grain_orientation();
     //vector2_t tau = (*s).second.rotation_tau();
     //vector2_t eta = (*s).second.rotation_eta();
@@ -2218,12 +2226,12 @@ namespace hig {
     vector3_t rot2 = (*s).second.rotation_rot2();
     vector3_t rot3 = (*s).second.rotation_rot3();
 
-    nn = new (std::nothrow) float_t[ndx * ndy];
+    nn = new (std::nothrow) real_t[ndx * ndy];
     if (nn == NULL) {
       std::cerr << "error: could not allocate memory" << std::endl;
       return false;
     }
-    wght = new (std::nothrow) float_t[ndx * ndy];
+    wght = new (std::nothrow) real_t[ndx * ndy];
     if (wght == NULL) {
       std::cerr << "error: could not allocate memory" << std::endl;
       return false;
@@ -2244,48 +2252,48 @@ namespace hig {
       } // for x
     } else if(distribution == "random") {  // random
       for(int x = 0; x < 3 * ndx; ++ x) {
-        nn[x] = (float_t(rand()) / RAND_MAX) * 2 * PI_;
+        nn[x] = (real_t(rand()) / RAND_MAX) * 2 * PI_;
       } // for x
     } else if(distribution == "range") {  // range
-      //float_t dtau = fabs(tau[1] - tau[0]);
-      //float_t deta = fabs(eta[1] - eta[0]);
-      //float_t dzeta = fabs(zeta[1] - zeta[0]);
-      float_t drot1 = fabs(rot1[2] - rot1[1]);
-      float_t drot2 = fabs(rot2[2] - rot2[1]);
-      float_t drot3 = fabs(rot3[2] - rot3[1]);
+      //real_t dtau = fabs(tau[1] - tau[0]);
+      //real_t deta = fabs(eta[1] - eta[0]);
+      //real_t dzeta = fabs(zeta[1] - zeta[0]);
+      real_t drot1 = fabs(rot1[2] - rot1[1]);
+      real_t drot2 = fabs(rot2[2] - rot2[1]);
+      real_t drot3 = fabs(rot3[2] - rot3[1]);
       for(int x = 0; x < ndx; ++ x) {
-        //nn[x] = (tau[0] + (float_t(rand()) / RAND_MAX) * dtau) * PI_ / 180;
-        nn[x] = (rot1[1] + (float_t(rand()) / RAND_MAX) * drot1) * PI_ / 180;
+        //nn[x] = (tau[0] + (real_t(rand()) / RAND_MAX) * dtau) * PI_ / 180;
+        nn[x] = (rot1[1] + (real_t(rand()) / RAND_MAX) * drot1) * PI_ / 180;
       } // for x
       for(int x = 0; x < ndx; ++ x) {
-        //nn[ndx + x] = (eta[0] + (float_t(rand()) / RAND_MAX) * deta) * PI_ / 180;
-        nn[ndx + x] = (rot2[1] + (float_t(rand()) / RAND_MAX) * drot2) * PI_ / 180;
+        //nn[ndx + x] = (eta[0] + (real_t(rand()) / RAND_MAX) * deta) * PI_ / 180;
+        nn[ndx + x] = (rot2[1] + (real_t(rand()) / RAND_MAX) * drot2) * PI_ / 180;
       } // for x
       for(int x = 0; x < ndx; ++ x) {
-        //nn[2 * ndx + x] = (zeta[0] + (float_t(rand()) / RAND_MAX) * dzeta) * PI_ / 180;
-        nn[2 * ndx + x] = (rot3[1] + (float_t(rand()) / RAND_MAX) * drot3) * PI_ / 180;
+        //nn[2 * ndx + x] = (zeta[0] + (real_t(rand()) / RAND_MAX) * dzeta) * PI_ / 180;
+        nn[2 * ndx + x] = (rot3[1] + (real_t(rand()) / RAND_MAX) * drot3) * PI_ / 180;
       } // for x
-      /*float_t da = PI_ / (2 * (ndx - 1));
+      /*real_t da = PI_ / (2 * (ndx - 1));
       for(int x = 0; x < ndx; ++ x) {
         nn[x] = x * da;
       } // for x
       for(int x = 0; x < 2 * ndx; ++ x) nn[ndx + x] = 0;*/
     } else if(distribution == "gaussian" || distribution == "normal") {  // gaussian
-      float_t mean1 = (*s).second.rotation_rot1_anglemean();
-      float_t sd1 = (*s).second.rotation_rot1_anglesd();
-      float_t mean2 = (*s).second.rotation_rot2_anglemean();
-      float_t sd2 = (*s).second.rotation_rot2_anglesd();
-      float_t mean3 = (*s).second.rotation_rot3_anglemean();
-      float_t sd3 = (*s).second.rotation_rot3_anglesd();
+      real_t mean1 = (*s).second.rotation_rot1_anglemean();
+      real_t sd1 = (*s).second.rotation_rot1_anglesd();
+      real_t mean2 = (*s).second.rotation_rot2_anglemean();
+      real_t sd2 = (*s).second.rotation_rot2_anglesd();
+      real_t mean3 = (*s).second.rotation_rot3_anglemean();
+      real_t sd3 = (*s).second.rotation_rot3_anglesd();
       /*woo::MTNormalRandomNumberGenerator rgen1(mean1, sd1);
       woo::MTNormalRandomNumberGenerator rgen2(mean1, sd2);
       woo::MTNormalRandomNumberGenerator rgen3(mean1, sd3);
-      float_t drot1 = fabs(rot1[2] - rot1[1]);
-      float_t drot2 = fabs(rot2[2] - rot2[1]);
-      float_t drot3 = fabs(rot3[2] - rot3[1]);
+      real_t drot1 = fabs(rot1[2] - rot1[1]);
+      real_t drot2 = fabs(rot2[2] - rot2[1]);
+      real_t drot3 = fabs(rot3[2] - rot3[1]);
       if(drot1 > 1e-20) {
         for(int x = 0; x < ndx; ++ x) {
-          float_t temp;
+          real_t temp;
           while(1) {
             temp = rgen1.rand();
             if(temp > rot1[1] && temp < rot1[2]) break;
@@ -2297,7 +2305,7 @@ namespace hig {
       } // if
       if(drot2 > 1e-20) {
         for(int x = 0; x < ndx; ++ x) {
-          float_t temp;
+          real_t temp;
           while(1) {
             temp = rgen2.rand();
             if(temp > rot2[1] && temp < rot2[2]) break;
@@ -2309,7 +2317,7 @@ namespace hig {
       } // if
       if(drot3 > 1e-20) {
         for(int x = 0; x < ndx; ++ x) {
-          float_t temp;
+          real_t temp;
           while(1) {
             temp = rgen3.rand();
             if(temp > rot3[1] && temp < rot3[2]) break;
@@ -2321,14 +2329,14 @@ namespace hig {
       } // if*/
 
       // for the gaussian weighting with regular instead of gaussian sampling
-      float_t drot1 = rot1[2] - rot1[1];
-      float_t drot2 = rot2[2] - rot2[1];
-      float_t drot3 = rot3[2] - rot3[1];
+      real_t drot1 = rot1[2] - rot1[1];
+      real_t drot2 = rot2[2] - rot2[1];
+      real_t drot3 = rot3[2] - rot3[1];
       if(fabs(drot1) > 1e-20) {
         drot1 /= ndx;
         for(int x = 0; x < ndx; ++ x) {
-          float_t temp = rot1[1] + x * drot1;
-          //float_t temp = rot1[1] + (float_t(rand()) / RAND_MAX) * drot1;
+          real_t temp = rot1[1] + x * drot1;
+          //real_t temp = rot1[1] + (real_t(rand()) / RAND_MAX) * drot1;
           nn[x] = temp * PI_ / 180;
           wght[x] = gaussian(temp, mean1, sd1);
         } // for x
@@ -2341,7 +2349,7 @@ namespace hig {
       if(fabs(drot2) > 1e-20) {
         drot2 /= ndx;
         for(int x = 0; x < ndx; ++ x) {
-          float_t temp = rot2[1] + x * drot2;
+          real_t temp = rot2[1] + x * drot2;
           nn[ndx + x] =  temp * PI_ / 180;
           wght[ndx + x] = gaussian(temp, mean2, sd2);
         } // for x
@@ -2354,7 +2362,7 @@ namespace hig {
       if(fabs(drot3) > 1e-20) {
         drot3 /= ndx;
         for(int x = 0; x < ndx; ++ x) {
-          float_t temp = rot3[1] + x * drot3;
+          real_t temp = rot3[1] + x * drot3;
           nn[2 * ndx + x] = temp * PI_ / 180;
           wght[2 * ndx + x] = gaussian(temp, mean3, sd3);
         } // for x
@@ -2392,9 +2400,9 @@ namespace hig {
     unsigned int min_x = 0, max_x = 0;
     unsigned int min_y = 0, max_y = 0;
     unsigned int min_z = 0, max_z = 0;
-    float_t mean_x = 0, sd_x = 0;  // for gaussian
-    float_t mean_y = 0, sd_y = 0;  // for gaussian
-    float_t mean_z = 0, sd_z = 0;  // for gaussian
+    real_t mean_x = 0, sd_x = 0;  // for gaussian
+    real_t mean_y = 0, sd_y = 0;  // for gaussian
+    real_t mean_z = 0, sd_z = 0;  // for gaussian
     // vectors for values
     std::vector<unsigned int> vals_x, vals_y, vals_z;
 
@@ -2468,9 +2476,9 @@ namespace hig {
                           vector3_t mean, vector3_t stddev,
                           std::vector<int> nvals,
                           std::vector<vector3_t> &samples,
-                           std::vector<float_t> &weights) {
+                           std::vector<real_t> &weights) {
         woo::MTRandomNumberGenerator rng;
-    float_t width = 4;
+    real_t width = 4;
     for (int i = 0; i < 3; ++ i) {
       if (dist[i] != stat_gaussian) {
         std::cerr << "error: only Gaussian distribution for scaling is implemented."
@@ -2516,7 +2524,7 @@ namespace hig {
    * miscellaneous functions
    */
 
-  void HipGISAXS::save_gisaxs(float_t *final_data, std::string output) {
+  void HipGISAXS::save_gisaxs(real_t *final_data, std::string output) {
     std::ofstream f(output.c_str());
     for(unsigned int z = 0; z < nrow_; ++ z) {
       for(unsigned int y = 0; y < ncol_; ++ y) {
@@ -2529,7 +2537,7 @@ namespace hig {
   } // HipGISAXS::save_gisaxs()
   
   
-  void HipGISAXS::printfr(const char* name, float_t* arr, unsigned int size) {
+  void HipGISAXS::printfr(const char* name, real_t* arr, unsigned int size) {
     std::cout << name << ":" << std::endl;
     if(arr == NULL) { std::cout << "NULL" << std::endl; return; }
     for(unsigned int i = 0; i < size; ++ i) {
@@ -2576,6 +2584,4 @@ namespace hig {
   bool HipGISAXS::read_form_factor(FormFactor& ff, const char* filename) {
     return ff.read_form_factor(filename, nqx_, nqy_, nqz_extended_);
   } // HipGISAXS::read_form_factor()
-
-
 } // namespace hig

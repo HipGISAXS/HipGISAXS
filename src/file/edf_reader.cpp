@@ -136,7 +136,7 @@ namespace hig {
       infile.read(chunk, size);
       data = reinterpret_cast<real_t*>(chunk);
       int len = std::min(size, (num_bytes - count));
-      for(int i = 0; i < len / sizeof(real_t); ++ i) data_.push_back((float_t) data[i]);
+      for(int i = 0; i < len / sizeof(real_t); ++ i) data_.push_back((real_t) data[i]);
       count += len;
       //std::cout << "****** " << count << std::endl;
     } // while
@@ -151,7 +151,7 @@ namespace hig {
   } // EDFReader::extract_data()
 
 
-  bool EDFReader::get_data(float_t*& data, unsigned int& ny, unsigned int& nz) {
+  bool EDFReader::get_data(real_t*& data, unsigned int& ny, unsigned int& nz) {
     if(data_.size() < 1) return false;
     data = &(data_[0]);
     ny = cols_;

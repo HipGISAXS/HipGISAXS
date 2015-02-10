@@ -38,7 +38,7 @@ namespace hig{
 
   /* These types are taken form HipGISAXS. Will remove after merge */
 //#ifdef DOUBLEP                                          // double precision
-//  typedef double                                          float_t;
+//  typedef double                                          real_t;
 //#ifdef USE_GPU
 //  typedef cuDoubleComplex                 cucomplex_t;
 //#endif
@@ -46,7 +46,7 @@ namespace hig{
 //  typedef double2_t                               scomplex_t;
 //#endif
 //#else                                                           // single precision
-//  typedef float                                           float_t;
+//  typedef float                                           real_t;
 //#ifdef USE_GPU
 //  typedef cuFloatComplex                  cucomplex_t;
 //#endif
@@ -55,14 +55,15 @@ namespace hig{
 //#endif
 //#endif
 
-//  typedef std::complex<float_t>                   complex_t;
-//  typedef std::vector<float_t>                    float_vec_t;
+//  typedef std::complex<real_t>                   complex_t;
+//  typedef std::vector<real_t>                    float_vec_t;
 //  typedef std::vector<complex_t>                  complex_vec_t;
   //typedef std::vector<float_vec_t>                float_mat_t;
 //  typedef float_vec_t                float_mat_t;
 
-//  typedef std::pair <float_t, float_t> float_pair_t;
+//  typedef std::pair <real_t, real_t> float_pair_t;
 
 } /* namespace hig */
 
 #endif /* TYPEDEFS_HPP_ */
+P_ */

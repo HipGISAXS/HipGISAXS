@@ -34,10 +34,10 @@
 
 
 namespace hig {
-  extern __constant__ float_t tau_d;
-  extern __constant__ float_t eta_d;
-  extern __constant__ float_t transvec_d[3];
-  extern __constant__ float_t rot_d[9];
+  extern __constant__ real_t tau_d;
+  extern __constant__ real_t eta_d;
+  extern __constant__ real_t transvec_d[3];
+  extern __constant__ real_t rot_d[9];
 
   /** Form Factor of Cylinder:
    *  R : (real) Length of the cylinder
@@ -47,10 +47,10 @@ namespace hig {
    */
   __device__  __inline__ cucomplex_t FormFactorCylinder (
           cucomplex_t qx, cucomplex_t qy, cucomplex_t qz, 
-          float_t radius, float_t height){
+          real_t radius, real_t height){
     cucomplex_t qpar = cuCsqrt(qx * qx + qy * qy);
 
-    float_t     temp1 = 2 * PI_ * radius * radius * height;
+    real_t     temp1 = 2 * PI_ * radius * radius * height;
     cucomplex_t temp2 = cuCcbessj(qpar * radius, 1) / (qpar * radius);
     cucomplex_t temp3 = cuCsinc (0.5 * qz * height);
     cucomplex_t temp4 = cuCexpi(0.5 * qz * height);
@@ -58,9 +58,9 @@ namespace hig {
   }
  
   __global__ void ff_cylinder_kernel (unsigned int nqy, unsigned int nqz, 
-          float_t * qx, float_t * qy, cucomplex_t * qz, cucomplex_t * ff,
-          int nr, float_t * r, float_t * distr_r,
-          int nh, float_t * h, float_t * distr_h) {
+          real_t * qx, real_t * qy, cucomplex_t * qz, cucomplex_t * ff,
+          int nr, real_t * r, real_t * distr_r,
+          int nh, real_t * h, real_t * distr_h) {
     int i_z = blockDim.x * blockIdx.x + threadIdx.x;
     if (i_z < nqz){
       int i_y = i_z % nqy;
@@ -79,42 +79,42 @@ namespace hig {
   } // ff_cylinder_kernel()
 
    
-  bool AnalyticFormFactorG::compute_cylinder(const float_t tau, const float_t eta,
-                  const std::vector<float_t>& r,
-                  const std::vector<float_t>& distr_r,
-                  const std::vector<float_t>& h,
-                  const std::vector<float_t>& distr_h,
-                  const float_t* rot_h, const std::vector<float_t>& transvec,
+  bool AnalyticFormFactorG::compute_cylinder(const real_t tau, const real_t eta,
+                  const std::vector<real_t>& r,
+                  const std::vector<real_t>& distr_r,
+                  const std::vector<real_t>& h,
+                  const std::vector<real_t>& distr_h,
+                  const real_t* rot_h, const std::vector<real_t>& transvec,
                   std::vector<complex_t>& ff) {
     unsigned int n_r = r.size(), n_distr_r = distr_r.size();
     unsigned int n_h = h.size(), n_distr_h = distr_h.size();
 
-    const float_t *r_h = r.empty() ? NULL : &*r.begin();
-    const float_t *distr_r_h = distr_r.empty() ? NULL : &*distr_r.begin();
-    const float_t *h_h = h.empty() ? NULL : &*h.begin();
-    const float_t *distr_h_h = distr_h.empty() ? NULL : &*distr_h.begin();
-    float_t transvec_h[3] = {transvec[0], transvec[1], transvec[2]};
+    const real_t *r_h = r.empty() ? NULL : &*r.begin();
+    const real_t *distr_r_h = distr_r.empty() ? NULL : &*distr_r.begin();
+    const real_t *h_h = h.empty() ? NULL : &*h.begin();
+    const real_t *distr_h_h = distr_h.empty() ? NULL : &*distr_h.begin();
+    real_t transvec_h[3] = {transvec[0], transvec[1], transvec[2]};
 
     // construct device buffers
-    float_t *r_d, *distr_r_d;
-    float_t *h_d, *distr_h_d;
+    real_t *r_d, *distr_r_d;
+    real_t *h_d, *distr_h_d;
 
-    cudaMalloc((void**) &r_d, n_r * sizeof(float_t));
-    cudaMalloc((void**) &distr_r_d, n_distr_r * sizeof(float_t));
-    cudaMalloc((void**) &h_d, n_h * sizeof(float_t));
-    cudaMalloc((void**) &distr_h_d, n_distr_h * sizeof(float_t));
+    cudaMalloc((void**) &r_d, n_r * sizeof(real_t));
+    cudaMalloc((void**) &distr_r_d, n_distr_r * sizeof(real_t));
+    cudaMalloc((void**) &h_d, n_h * sizeof(real_t));
+    cudaMalloc((void**) &distr_h_d, n_distr_h * sizeof(real_t));
 
     // copy data to device buffers
-    cudaMemcpy(r_d, r_h, n_r * sizeof(float_t), cudaMemcpyHostToDevice);
-    cudaMemcpy(h_d, h_h, n_h * sizeof(float_t), cudaMemcpyHostToDevice);
-    cudaMemcpy(distr_r_d, distr_r_h, n_distr_r * sizeof(float_t), cudaMemcpyHostToDevice);
-    cudaMemcpy(distr_h_d, distr_h_h, n_distr_h * sizeof(float_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(r_d, r_h, n_r * sizeof(real_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(h_d, h_h, n_h * sizeof(real_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(distr_r_d, distr_r_h, n_distr_r * sizeof(real_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(distr_h_d, distr_h_h, n_distr_h * sizeof(real_t), cudaMemcpyHostToDevice);
 
     //run_init(rot_h, transvec);
-    cudaMemcpyToSymbol(tau_d, &tau, sizeof(float_t), 0, cudaMemcpyHostToDevice);
-    cudaMemcpyToSymbol(eta_d, &eta, sizeof(float_t), 0, cudaMemcpyHostToDevice);
-    cudaMemcpyToSymbol(rot_d, rot_h, 9*sizeof(float_t), 0, cudaMemcpyHostToDevice); 
-    cudaMemcpyToSymbol(transvec_d, transvec_h, 3*sizeof(float_t), 0, cudaMemcpyHostToDevice); 
+    cudaMemcpyToSymbol(tau_d, &tau, sizeof(real_t), 0, cudaMemcpyHostToDevice);
+    cudaMemcpyToSymbol(eta_d, &eta, sizeof(real_t), 0, cudaMemcpyHostToDevice);
+    cudaMemcpyToSymbol(rot_d, rot_h, 9*sizeof(real_t), 0, cudaMemcpyHostToDevice); 
+    cudaMemcpyToSymbol(transvec_d, transvec_h, 3*sizeof(real_t), 0, cudaMemcpyHostToDevice); 
 
     int num_threads = 256;
     int num_blocks =  nqz_ / num_threads + 1;
@@ -139,4 +139,3 @@ namespace hig {
   } // AnalyticFormFactorG::compute_cylinder()
 
 } // namespace hig
-

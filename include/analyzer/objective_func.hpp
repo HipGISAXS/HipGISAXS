@@ -34,13 +34,13 @@ namespace hig {
       virtual int num_fit_params() const = 0;
       virtual std::vector <std::string> fit_param_keys() const = 0;
       virtual std::vector <float_pair_t> fit_param_limits() const = 0;
-      virtual std::vector <float_t> fit_param_step_values() const { }
+      virtual std::vector <real_t> fit_param_step_values() const { }
       virtual float_vec_t fit_param_init_values() const = 0;
       virtual bool set_distance_measure(DistanceMeasure*) = 0;
       virtual bool set_reference_data(int) = 0;
       virtual bool set_reference_data(char*) = 0;
       virtual unsigned int data_size() const = 0;
-      float_t* get_reference_data() { return ref_data_->data(); }
+      real_t* get_reference_data() { return ref_data_->data(); }
       unsigned int* get_mask_data() { return &(mask_data_[0]); }
       //virtual unsigned int n_par() const { }
       //virtual unsigned int n_ver() const { }

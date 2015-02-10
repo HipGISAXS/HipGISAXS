@@ -51,14 +51,14 @@ namespace hig {
 	 * load store
 	 */
 
-	static inline sse_m128_t sse_load_rps(float_t* p) {
+	static inline sse_m128_t sse_load_rps(real_t* p) {
 		return _mm_load_ps(p);
 	} // sse_load_rps()
 
 	static inline void sse_addstore_css(complex_t* p, sse_m128c_t v) {
-		float_t real = _mm_cvtss_f32(v.xvec);
-		float_t imag = _mm_cvtss_f32(v.yvec);
-		//float_t real, imag;
+		real_t real = _mm_cvtss_f32(v.xvec);
+		real_t imag = _mm_cvtss_f32(v.yvec);
+		//real_t real, imag;
 		//_mm_store_ss(&real, v.xvec);
 		//_mm_store_ss(&imag, v.yvec);
 		(*p) += complex_t(real, imag);
@@ -76,7 +76,7 @@ namespace hig {
 		return vec;
 	} // sse_setzero_cps()
 
-	static inline sse_m128_t sse_set1_rps(float_t a) {
+	static inline sse_m128_t sse_set1_rps(real_t a) {
 		return _mm_set1_ps(a);
 	} // sse_load1_rps()
 
