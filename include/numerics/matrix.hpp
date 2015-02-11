@@ -104,7 +104,7 @@ namespace hig {
       }
 
       // Matrix-vector multiplication (Rotation)
-      __host__ std::vector<complex_t> rotate(real_t x, real_t y, complex_t z){
+      std::vector<complex_t> rotate(real_t x, real_t y, complex_t z){
         std::vector<complex_t> res;
         complex_t zero(0., 0.);
         res.resize(3);
@@ -114,12 +114,14 @@ namespace hig {
         return res;
       }
 
+#ifdef USE_GPU
       __device__ void rotate(real_t x, real_t y, cucomplex_t z, 
               cucomplex_t &mx, cucomplex_t &my, cucomplex_t &mz){
           mx.x = data_[0] * x + data_[1] * y + data_[2] * z.x; mx.y = data_[2] * z.y;
           my.x = data_[3] * x + data_[4] * y + data_[5] * z.x; my.y = data_[5] * z.y;
           mz.x = data_[6] * x + data_[7] * y + data_[8] * z.x; mz.y = data_[8] * z.y;
       }
+#endif
   };
 } // namespace hig
 #endif // _MATRIX_HPP_

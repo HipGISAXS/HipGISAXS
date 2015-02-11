@@ -179,7 +179,7 @@ namespace hig {
     complex_t * p_ff = new (std::nothrow) complex_t[nqz_];
     if (p_ff == NULL){
       std::cerr << "Error: failed to allocate memory of size: " 
-          << nqz_ * sizeof(cucomplex_t) << std::endl;
+          << nqz_ * sizeof(complex_t) << std::endl;
       return false;
     }
     if (num_triangles != cff_.compute_exact_triangle(triangles, num_triangles, 

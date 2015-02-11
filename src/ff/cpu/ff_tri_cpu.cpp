@@ -82,8 +82,8 @@ namespace hig {
 
     // calculate projection of n_t on q
     vector3_t n_t = cross_product(edge[0], edge[1]);
-    real_t t_area = 0.5 * n_t.norm2();
-    n_t = n_t / n_t.norm2();
+    real_t t_area = 0.5 * n_t.abs();
+    n_t = n_t / n_t.abs();
 
     // dot(q, n_t)
     complex_t q_dot_nt = C_ZERO;
@@ -104,7 +104,7 @@ namespace hig {
 
         // edge-normal
         vector3_t n_e = cross_product(edge[e], n_t);
-        n_e = n_e / n_e.norm2();
+        n_e = n_e / n_e.abs();
 
         // dot (q, n_e)
         complex_t q_dot_ne = C_ZERO;
@@ -117,7 +117,7 @@ namespace hig {
         // q_dot_v
           complex_t q_dot_v = C_ZERO;
           for (int i=0; i<3; i++) q_dot_v += mq[i] * vertex[e][i];
-          real_t f0 = edge[e].norm2() / (q_sqr * proj_tq);
+          real_t f0 = edge[e].abs() / (q_sqr * proj_tq);
           complex_t c0 = - q_dot_nt * q_dot_ne;
           complex_t c1 = std::exp(n_unitc * q_dot_v);
           ff += f0 * c0 * c1;
@@ -131,7 +131,7 @@ namespace hig {
           for (int i=0; i<3; i++) q_dot_v += mq[i] * vertex[e][i];
 
           // vertrex-normal a
-          vector3_t n_v = edge[e] / edge[e].norm2();
+          vector3_t n_v = edge[e] / edge[e].abs();
 
           // dot(q, n_v)
           complex_t q_dot_nv = C_ZERO;
