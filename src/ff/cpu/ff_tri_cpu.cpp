@@ -51,9 +51,9 @@ namespace hig {
   
   complex_t FormFactorTriangle(real_t qx, real_t qy, complex_t qz,
           real_t * rot, triangle_t & tri) {
-    complex_t ff = C_ZERO;
-    complex_t unitc = C_ONE;
-    complex_t n_unitc = C_NEG_ONE;
+    complex_t ff = CMPLX_ZERO_;
+    complex_t unitc = CMPLX_ONE_;
+    complex_t n_unitc = CMPLX_MINUS_ONE_;
 
     // do the rotation
     std::vector<complex_t> mq; mq.resize(3);
@@ -93,7 +93,7 @@ namespace hig {
     real_t proj_tq = q_sqr - std::norm(q_dot_nt);
 
     // CASE 1
-    if (std::abs(proj_tq) < TINY){
+    if (std::abs(proj_tq) < TINY_){
         complex_t q_dot_v = C_ZERO;
         for (int i=0; i<3; i++) q_dot_v += mq[i] * tri.v1[i];
         // calculate form-factor (Case 1)
@@ -113,7 +113,7 @@ namespace hig {
         // proj_eq
         real_t proj_eq = proj_tq - std::norm(q_dot_ne);
         // CASE 2
-        if (std::abs(proj_eq) < TINY){
+        if (std::abs(proj_eq) < TINY_){
         // q_dot_v
           complex_t q_dot_v = C_ZERO;
           for (int i=0; i<3; i++) q_dot_v += mq[i] * vertex[e][i];

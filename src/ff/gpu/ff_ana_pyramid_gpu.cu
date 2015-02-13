@@ -49,15 +49,15 @@ namespace hig {
     real_t a = angle * PI_ / 180.;
     real_t tan_a = cuRtan(a);
     if ((2*height/length >= tan_a) || (2*height/width >= tan_a)) 
-      return make_cuC(ZERO, ZERO);
+      return make_cuC(REAL_ZERO_, REAL_ZERO_);
 
     cucomplex_t tmp = (qx * qy);
     if (cuC_abs(tmp) < 1.0E-20)
-      return make_cuC(ZERO, ZERO);
+      return make_cuC(REAL_ZERO_, REAL_ZERO_);
 
     // define complex units
-    const cucomplex_t P_J = make_cuC(ZERO, ONE);
-    const cucomplex_t N_J = make_cuC(ZERO, NEG_ONE);
+    const cucomplex_t P_J = make_cuC(REAL_ZERO_, REAL_ONE_);
+    const cucomplex_t N_J = make_cuC(REAL_ZERO_, REAL_MINUS_ONE_);
 
     // compute q[1-4]
     cucomplex_t q1 = 0.5 * ((qx - qy)/tan_a + qz);
@@ -92,10 +92,10 @@ namespace hig {
     int i_z = blockDim.x * blockIdx.x + threadIdx.x;
     if (i_z < nqz){
       int i_y = i_z % nqy;
-      cucomplex_t c_neg_unit = make_cuC(ZERO, NEG_ONE);
+      cucomplex_t c_neg_unit = make_cuC(REAL_ZERO_, REAL_MINUS_ONE_);
       cucomplex_t mqx, mqy, mqz;
       compute_meshpoints(qx[i_y], qy[i_y], qz[i_z], rot_d, mqx, mqy, mqz);
-      cucomplex_t temp_ff = make_cuC(ZERO, ZERO);
+      cucomplex_t temp_ff = make_cuC(REAL_ZERO_, REAL_ZERO_);
       for (int i = 0; i < nx; i++){
         for (int j = 0; j < ny; j++){
           for (int k = 0; k < nz; k++){

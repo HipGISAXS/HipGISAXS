@@ -67,7 +67,7 @@ namespace hig {
     // on cpu
     std::cout << "-- Computing prism3x FF on CPU ..." << std::endl;
     // initialize ff
-    ff.clear();  ff.resize (nqz_, C_ZERO);
+    ff.clear();  ff.resize (nqz_, CMPLX_ZERO_);
 
     real_t d = 0.85;  // FIXME: hardcoded? variable?
     real_t gamma = 0.0;  // FIXME: hardcoded? variable?

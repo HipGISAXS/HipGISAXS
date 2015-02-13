@@ -40,7 +40,7 @@ namespace hig {
   complex_t FormFactorCylinder(complex_t qpar, complex_t qz, real_t radius, real_t height){
     real_t vol = 2. * PI_ * radius * radius * height;
     complex_t sinc_val = sinc(0.5 * qz * height);
-    complex_t expt_val = std::exp(C_ONE * 0.5 * qz * height);
+    complex_t expt_val = std::exp(CMPLX_ONE_ * 0.5 * qz * height);
     complex_t t1 = qpar * radius;
     complex_t bess_val = cbessj(t1, 1) * std::conj(t1) / std::norm(t1);
     return (vol * sinc_val * expt_val * bess_val);

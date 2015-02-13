@@ -23,32 +23,35 @@
 #ifndef __CONSTANTS_HPP__
 #define __CONSTANTS_HPP__
 
+#include <limits>
 #include <common/typedefs.hpp>
 
 namespace hig {
 
-#ifdef DOUBLEP
+/*#ifdef DOUBLEP
   const double TINY = 1.0E-18;
 #else
   const float  TINY = 1.0E-18;
-#endif
+#endif*/
 
-  const unsigned int LIGHT_SPEED_ = 3e+8;    /* speed of light in m/s */
-  const real_t PI_ = 3.141592653589793;    /* PI correct upto 15 decimal places */
+  const real_t TINY_ = std::numeric_limits<real_t>::min();
+  const real_t CUTINY_ = 1.0e-13;
+
+  const unsigned int LIGHT_SPEED_ = 3e+8;   /* speed of light in m/s */
+  const real_t PI_ = 3.141592653589793;     /* PI correct upto 15 decimal places */
   const real_t SQRT_2PI_ = 2.506628;
 
-  //const unsigned int MAX_DEPTH_ = 500;    /* maximum depth allowed */
-  const unsigned int MAX_DEPTH_ = 150;    /* maximum depth allowed */
+  const unsigned int MAX_DEPTH_ = 150;      /* maximum depth allowed */
 
   // real constants
-  const real_t ZERO = (real_t) 0.;
-  const real_t ONE  = (real_t) 1.;
-  const real_t NEG_ONE = (real_t) -1.;
+  const real_t REAL_ZERO_ = (real_t) 0.;
+  const real_t REAL_ONE_  = (real_t) 1.;
+  const real_t REAL_MINUS_ONE_ = (real_t) -1.;
 
   // complex constants
-  const complex_t C_ZERO = complex_t(ZERO,ZERO);
-  const complex_t C_ONE  = complex_t(ZERO, ONE);
-  const complex_t C_NEG_ONE = complex_t(ZERO, NEG_ONE);
+  const complex_t CMPLX_ZERO_ = complex_t(REAL_ZERO_, REAL_ZERO_);
+  const complex_t CMPLX_ONE_  = complex_t(REAL_ZERO_, REAL_ONE_);
+  const complex_t CMPLX_MINUS_ONE_ = complex_t(REAL_ZERO_, REAL_MINUS_ONE_);
 
 } // namespace
 

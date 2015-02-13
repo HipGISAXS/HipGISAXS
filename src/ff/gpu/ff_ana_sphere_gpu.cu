@@ -59,11 +59,11 @@ namespace hig {
     int i_z = blockDim.x * blockIdx.x + threadIdx.x;
     if (i_z < nqz){
       int i_y = i_z % nqy;
-      cucomplex_t c_neg_unit = make_cuC(ZERO, NEG_ONE);
+      cucomplex_t c_neg_unit = make_cuC(REAL_ZERO_, REAL_MINUS_ONE_);
       cucomplex_t mqx, mqy, mqz;
       compute_meshpoints(qx[i_y], qy[i_y], qz[i_z], rot_d, mqx, mqy, mqz);
-      cucomplex_t temp_ff = make_cuC(ZERO, ZERO);
-      for (int i = 0; i < nr; i++){
+      cucomplex_t temp_ff = make_cuC(REAL_ZERO_, REAL_ZERO_);
+      for (int i = 0; i < nr; i++) {
         temp_ff = temp_ff + FormFactorSphere(mqx, mqy, mqz, r[i]);
       }
       cucomplex_t temp1 = transvec_d[0] * mqx + transvec_d[1] * mqy + transvec_d[2] * mqz;

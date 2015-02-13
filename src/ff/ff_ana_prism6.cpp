@@ -78,7 +78,7 @@ namespace hig {
     // on cpu
     std::cout << "-- Computing prism6 FF on CPU ..." << std::endl;
 
-    ff.clear(); ff.resize(nqz_, C_ZERO);
+    ff.clear(); ff.resize(nqz_, CMPLX_ZERO_);
     real_t sqrt3 = sqrt(3.0);
 
     #pragma omp parallel for 

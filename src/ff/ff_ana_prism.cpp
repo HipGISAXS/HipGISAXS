@@ -87,7 +87,7 @@ namespace hig {
 
     real_t sqrt3 = sqrt(3.0);
     complex_t unitc(0, 1.0);
-    ff.clear(); ff.resize(nqz_, C_ZERO);
+    ff.clear(); ff.resize(nqz_, CMPLX_ZERO_);
 
     #pragma omp parallel for 
     for(unsigned int z = 0; z < nqz_; ++ z) {

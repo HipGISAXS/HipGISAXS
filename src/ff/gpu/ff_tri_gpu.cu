@@ -52,9 +52,9 @@ namespace hig {
 
   __device__ cucomplex_t FormFactorTriangle (triangle_t & tri, 
           cucomplex_t * mq){
-    cucomplex_t cuCZERO = make_cuC(ZERO, ZERO);
-    cucomplex_t jp = make_cuC(ZERO, ONE);
-    cucomplex_t jn = make_cuC(ZERO, NEG_ONE);
+    cucomplex_t cuCZERO = make_cuC(REAL_ZERO_, REAL_ZERO_);
+    cucomplex_t jp = make_cuC(REAL_ZERO_, REAL_ONE_);
+    cucomplex_t jn = make_cuC(REAL_ZERO_, REAL_MINUS_ONE_);
     cucomplex_t ff = cuCZERO;
 
     // calculate q^2
@@ -84,7 +84,7 @@ namespace hig {
     real_t proj_tq = q_sqr - cuC_norm(q_dot_nt);
 
     // CASE 1
-    if (abs(proj_tq) < TINY){
+    if (abs(proj_tq) < CUTINY_){
       cucomplex_t q_dot_v = cuC_dot(mq, vertex[0]);
 
       // calculate Form-Factor
@@ -104,7 +104,7 @@ namespace hig {
         real_t proj_eq = proj_tq - cuC_norm(q_dot_ne);
 
         // CASE 2
-        if (abs(proj_eq) < TINY){
+        if (abs(proj_eq) < CUTINY_){
           // q_dot_v
           cucomplex_t q_dot_v = cuC_dot(mq, vertex[e]);
 
@@ -136,7 +136,7 @@ namespace hig {
           q_dot_v = cuC_dot(mq, vertex[ep]);
 
           // dot(q, n_v)
-          q_dot_nv = cuC_dot(mq, n_v * NEG_ONE);
+          q_dot_nv = cuC_dot(mq, n_v * REAL_MINUS_ONE_);
 
           // calculate contribution of the other vertex
           c0 = jn * q_dot_nt * q_dot_ne * q_dot_nv;
@@ -156,7 +156,7 @@ namespace hig {
     unsigned int i_z = blockDim.x * blockIdx.x + threadIdx.x;
     if ( i_z < nqz ) {
       unsigned int i_y = i_z % nqy;
-      cucomplex_t ff_temp = make_cuC(ZERO, ZERO);
+      cucomplex_t ff_temp = make_cuC(REAL_ZERO_, REAL_ZERO_);
       cucomplex_t mq[3];
       rotate_q (rot_d, qx[i_y], qy[i_y], qz[i_z], mq[0], mq[1], mq[2]);
 
@@ -336,7 +336,7 @@ namespace hig {
     if ( i_z < nqz ) {
       unsigned int i_y = i_z % nqy;
 
-      cucomplex_t ff_temp = make_cuC(ZERO, ZERO);
+      cucomplex_t ff_temp = make_cuC(REAL_ZERO_, REAL_ZERO_);
 
       // shared memory
       extern __shared__ real_t shared_shape_def[];
@@ -388,7 +388,7 @@ namespace hig {
 
           cucomplex_t qn = mqx * nx + mqy * ny + mqz * nz;
           cucomplex_t qt = mqx * x  + mqy * y  + mqz * z;
-          cucomplex_t nj = make_cuC(ZERO, NEG_ONE);
+          cucomplex_t nj = make_cuC(REAL_ZERO_, REAL_MINUS_ONE_);
           ff_temp = ff_temp +  (nj * qn * s * cuCexpi(qt) / q2);
         } 
       } // for (i_load = 0; ...)

@@ -43,7 +43,7 @@ namespace hig {
       complex_t qR3   = qR * qR * qR;
       complex_t t1   = std::conj(qR3) / std::norm(qR3);
       complex_t c0   = (std::sin(qR) - qR * std::cos(qR)) * t1;
-      complex_t c1   = std::exp(C_ONE * qz * radius);
+      complex_t c1   = std::exp(CMPLX_ONE_ * qz * radius);
       real_t   f0   = 4 * PI_ * radius * radius * radius;
       return (f0 * c0 * c1);            
   }
@@ -92,7 +92,7 @@ namespace hig {
     // on cpu
     std::cout << "-- Computing sphere FF on CPU ..." << std::endl;
 
-    ff.clear(); ff.resize(nqz_, C_ZERO);
+    ff.clear(); ff.resize(nqz_, CMPLX_ZERO_);
 
 //    #pragma omp parallel for 
     for(unsigned int z = 0; z < nqz_; ++ z) {
@@ -101,7 +101,7 @@ namespace hig {
       compute_meshpoints(QGrid::instance().qx(y), QGrid::instance().qy(y),
                     QGrid::instance().qz_extended(z), rot_, mqx, mqy, mqz);
       
-      complex_t temp_ff = C_ZERO;
+      complex_t temp_ff = CMPLX_ZERO_;
       for(unsigned int i_r = 0; i_r < r.size(); ++ i_r) {
           temp_ff += distr_r[i_r], FormFactorSphere(mqx, mqy, mqz, r[i_r]);
       } // for r

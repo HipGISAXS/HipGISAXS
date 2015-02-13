@@ -43,14 +43,14 @@ namespace hig {
     real_t a = angle * PI_ / 180.;
     real_t tan_a = std::tan(a);
     if ((2*height/length >= tan_a) || (2*height/width >= tan_a))
-        return C_ZERO;
+        return CMPLX_ZERO_;
 
     complex_t tmp = qx * qy;
     if (std::abs(tmp) < 1.0E-20)
-        return C_ZERO;
+        return CMPLX_ZERO_;
 
-    const complex_t P_J = C_ONE;
-    const complex_t N_J = C_NEG_ONE;
+    const complex_t P_J = CMPLX_ONE_;
+    const complex_t N_J = CMPLX_MINUS_ONE_;
 
     // q1,q2,q3,q4
     complex_t q1 = 0.5 * ((qx - qy)/tan_a + qz);
@@ -126,7 +126,7 @@ namespace hig {
     #else
 
       std::cout << "-- Computing pyramid FF on CPU ..." << std::endl;
-      ff.clear(); ff.resize(nqz_, C_ZERO);
+      ff.clear(); ff.resize(nqz_, CMPLX_ZERO_);
 
       #pragma omp parallel for 
       for(int i = 0; i < nqz_; i++) {

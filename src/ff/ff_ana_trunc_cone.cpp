@@ -39,7 +39,7 @@ namespace hig {
    */
   complex_t FormFactorTrucatedCone(complex_t qx, complex_t qy, complex_t qz, 
           real_t radius, real_t height, real_t angle){
-      complex_t ff = C_ZERO;
+      complex_t ff = CMPLX_ZERO_;
       if ( height / radius >= tan(angle) )
         return ff;
    
@@ -94,7 +94,7 @@ namespace hig {
     std::cout << "-- Computing truncated cone FF on CPU ..." << std::endl;
 
     ff.clear();
-    ff.resize(nqz_, C_ZERO);
+    ff.resize(nqz_, CMPLX_ZERO_);
 
     unsigned int nz = 40;  // FIXME: hard-coded ... what is this???
     for(unsigned z = 0; z < nqz_; ++ z) {

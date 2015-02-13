@@ -107,7 +107,7 @@ namespace hig {
       // on cpu
       std::cout << "-- Computing box FF on CPU ..." << std::endl;
       // initialize ff
-      ff.clear();  ff.resize(nqz, C_ZERO);
+      ff.clear();  ff.resize(nqz, CMPLX_ZERO_);
 
       #pragma omp parallel for 
       for(unsigned int i = 0; i < nqz; ++ i) {
