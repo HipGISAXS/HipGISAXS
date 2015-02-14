@@ -37,10 +37,19 @@ namespace hig {
   /**
    * cylinder
    */
-  bool AnalyticFormFactor::compute_cylinder(shape_param_list_t& params, float_t tau, float_t eta,
+  complex_t FormFactorCylinder(complex_t qpar, complex_t qz, real_t radius, real_t height){
+    real_t vol = 2. * PI_ * radius * radius * height;
+    complex_t sinc_val = sinc(0.5 * qz * height);
+    complex_t expt_val = std::exp(CMPLX_ONE_ * 0.5 * qz * height);
+    complex_t t1 = qpar * radius;
+    complex_t bess_val = cbessj(t1, 1) * std::conj(t1) / std::norm(t1);
+    return (vol * sinc_val * expt_val * bess_val);
+  }  
+
+  bool AnalyticFormFactor::compute_cylinder(shape_param_list_t& params, real_t tau, real_t eta,
                                             std::vector<complex_t>& ff, vector3_t transvec) {
-    std::vector <float_t> h, distr_h;  // for h dimension: param_height
-    std::vector <float_t> r, distr_r;  // for r dimension: param_radius
+    std::vector <real_t> h, distr_h;  // for h dimension: param_height
+    std::vector <real_t> r, distr_r;  // for r dimension: param_radius
     for(shape_param_iterator_t i = params.begin(); i != params.end(); ++ i) {
       if(!(*i).second.isvalid()) {
         std::cerr << "warning: ignoring invalid shape parameter" << std::endl;
@@ -80,7 +89,7 @@ namespace hig {
       std::cout << "-- Computing cylinder FF on GPU ..." << std::endl;
     #endif
 
-    std::vector<float_t> transvec_v;
+    std::vector<real_t> transvec_v;
     transvec_v.push_back(transvec[0]);
     transvec_v.push_back(transvec[1]);
     transvec_v.push_back(transvec[2]);
@@ -89,40 +98,24 @@ namespace hig {
     // on cpu
     std::cout << "-- Computing cylinder FF on CPU ..." << std::endl;
 
-    ff.clear(); ff.reserve(nqx_ * nqy_ * nqz_);
-    for(int i = 0; i < nqx_ * nqy_ * nqz_; ++ i) ff.push_back(complex_t(0.0, 0.0));
+    ff.clear(); ff.resize(nqz_, complex_t(0.,0.));
 
-    #pragma omp parallel for collapse(3)
+    #pragma omp parallel for 
     for(unsigned z = 0; z < nqz_; ++ z) {
-      for(unsigned y = 0; y < nqy_; ++ y) {
-        for(unsigned x = 0; x < nqx_; ++ x) {
-          complex_t mqx, mqy, mqz;
-          compute_meshpoints(QGrid::instance().qx(x), QGrid::instance().qy(y),
-                    QGrid::instance().qz_extended(z), rot_, mqx, mqy, mqz);
-          complex_t qpar = sqrt(mqx * mqx + mqy * mqy);
-          complex_t qm = mqz + (mqx * sin(eta) + mqy * cos(eta)) * tan(tau);
-          complex_t temp_ff(0.0, 0.0);
-          for(unsigned int i_r = 0; i_r < r.size(); ++ i_r) {
-            for(unsigned int i_h = 0; i_h < h.size(); ++ i_h) {
-              complex_t temp1 = fq_inv(qm, h[i_h]);
-              complex_t temp2 = qpar * r[i_r];
-              complex_t temp4;
-              if(boost::math::fpclassify(qpar.real()) == FP_ZERO &&
-                  boost::math::fpclassify(qpar.imag()) == FP_ZERO) {
-                temp4 = complex_t(0.5, 0.0);  // J1(x)/x -> 1/2 as x -> 0
-              } else {
-                temp4 = (cbessj(temp2, 1) / temp2);
-              } // if-else
-              temp_ff += distr_r[i_r] * distr_h[i_h] * 2 * PI_ * r[i_r] * r[i_r] *
-                    temp4 * temp1;
-            } // for h
-          } // for r
-          complex_t temp1 = mqx * transvec[0] + mqy * transvec[1] + mqz * transvec[2];
-          complex_t temp2 = exp(complex_t(-temp1.imag(), temp1.real()));
-          unsigned int curr_index = nqx_ * nqy_ * z + nqx_ * y + x;
-          ff[curr_index] = temp_ff * temp2;
-        } // for x
-      } // for y
+      unsigned y = z % nqy_; 
+      complex_t mqx, mqy, mqz;
+      compute_meshpoints(QGrid::instance().qx(y), QGrid::instance().qy(y), 
+          QGrid::instance().qz_extended(z), rot_, mqx, mqy, mqz);
+      complex_t qpar = sqrt(mqx * mqx + mqy * mqy);
+      complex_t temp_ff(0.0, 0.0);
+      for(unsigned int i_r = 0; i_r < r.size(); ++ i_r) {
+        for(unsigned int i_h = 0; i_h < h.size(); ++ i_h) {
+          temp_ff += FormFactorCylinder(qpar, mqz, r[i_r], h[i_h]);
+        } // for h
+      } // for r
+      complex_t temp1 = mqx * transvec[0] + mqy * transvec[1] + mqz * transvec[2];
+      complex_t temp2 = exp(complex_t(-temp1.imag(), temp1.real()));
+      ff[z] = temp_ff * temp2;
     } // for z
 #endif // FF_ANA_GPU
 #ifdef TIME_DETAIL_2

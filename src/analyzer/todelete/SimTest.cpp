@@ -38,17 +38,17 @@ namespace hig{
 
   /******************************************************/
 
-  int SimTest::update_vars(float_vec_t X){
+  int SimTest::update_vars(real_vec_t X){
     fit_vars_.clear();
-    for(float_vec_t::iterator it=X.begin(); it!=X.end(); it++){
+    for(real_vec_t::iterator it=X.begin(); it!=X.end(); it++){
       fit_vars_.push_back( (*it) );
     }
   }
 
-  float SimTest::model(float qy,float qz, float_vec_t x){
+  float SimTest::model(float qy,float qz, real_vec_t x){
     float f=10;
     int n=0;
-    for(float_vec_t::iterator it=x.begin(); it!=x.end();it++){
+    for(real_vec_t::iterator it=x.begin(); it!=x.end();it++){
       float xi = (*it);
       f+=  xi  *  ( pow(qy,n) + pow(qz,n) );
       //      f+=  10* exp(-( (qy-xi)*(qy-xi) + (qz-xi)*(qz-xi) )/ 20 );
@@ -76,7 +76,7 @@ namespace hig{
 
     for(int iz=0;iz<nqz; iz++)
       {
-  //float_vec_t img_z;
+  //real_vec_t img_z;
   for(int iy=0;iy<nqy; iy++){
     img.push_back( model(qy_[iy],qz_[iz], fit_vars_) );
   }
@@ -87,5 +87,8 @@ namespace hig{
     //data_sim_.set_img(img);
     return 0;
   }
+
+}
+}
 
 }

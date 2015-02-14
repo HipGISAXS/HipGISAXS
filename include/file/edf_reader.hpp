@@ -37,7 +37,7 @@ namespace hig {
       EDFReader(const char*);
       ~EDFReader() { }
 
-      bool get_data(float*&, unsigned int&, unsigned int&);
+      bool get_data(real_t *&, unsigned int&, unsigned int&);
 
     private:
       bool is_white_space(char);
@@ -51,7 +51,7 @@ namespace hig {
 
     private:
       std::map <std::string, std::string> header_;  /* header key -> value map */
-      std::vector <float_t> data_;          /* the data as float_ts */
+      std::vector <real_t> data_;          /* the data as real_ts */
       unsigned int rows_;
       unsigned int cols_;
 

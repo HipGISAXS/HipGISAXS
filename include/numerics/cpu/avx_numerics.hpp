@@ -45,13 +45,13 @@ namespace hig {
 	 * load store
 	 */
 
-	static inline avx_m256_t avx_load_rps(float_t* p) {
+	static inline avx_m256_t avx_load_rps(real_t* p) {
 		return _mm256_load_ps(p);
 	} // avx_load_rps()
 
 	static inline void avx_addstore_css(complex_t* p, avx_m256c_t v) {
-		float_t real = _mm256_cvtss_f32(v.xvec);
-		float_t imag = _mm256_cvtss_f32(v.yvec);
+		real_t real = _mm256_cvtss_f32(v.xvec);
+		real_t imag = _mm256_cvtss_f32(v.yvec);
 		(*p) += complex_t(real, imag);
 	} // avx_store_css()
 
@@ -67,7 +67,7 @@ namespace hig {
 		return vec;
 	} // avx_setzero_cps()
 
-	static inline avx_m256_t avx_set1_rps(float_t a) {
+	static inline avx_m256_t avx_set1_rps(real_t a) {
 		return _mm256_set1_ps(a);
 	} // avx_load1_rps()
 

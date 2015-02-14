@@ -32,7 +32,7 @@ namespace hig {
     param_values_.clear();
     velocity_.clear();
     best_values_.clear();
-    best_fitness_ = std::numeric_limits<float_t>::max();
+    best_fitness_ = std::numeric_limits<real_t>::max();
     best_fitness_global_ = best_fitness_;
     switch(dist) {
       case PSO_DEFAULT:
@@ -56,10 +56,10 @@ namespace hig {
   bool PSOParticle::init_random_uniform(woo::MTRandomNumberGenerator& rng,
                       const PSOParticleConstraints& constraints) {
     for(int i = 0; i < num_parameters_; ++ i) {
-      float_t val = constraints.param_values_min_[i] +
+      real_t val = constraints.param_values_min_[i] +
               rng.rand() *
               (constraints.param_values_max_[i] - constraints.param_values_min_[i]);
-      float_t vel = constraints.velocity_min_[i] +
+      real_t vel = constraints.velocity_min_[i] +
               rng.rand() *
               (constraints.velocity_max_[i] - constraints.velocity_min_[i]);
       param_values_.push_back(val);
@@ -94,14 +94,14 @@ namespace hig {
 
 
   // basic
-  bool PSOParticle::update_particle(float_t omega, float_t phi1, float_t phi2,
+  bool PSOParticle::update_particle(real_t omega, real_t phi1, real_t phi2,
                     const parameter_data_list_t& global_best,
                     const PSOParticleConstraints& constraints,
                     woo::MTRandomNumberGenerator& rng) {
     for(int i = 0; i < num_parameters_; ++ i) {
-      float_t r1 = rng.rand();
-      float_t r2 = rng.rand();
-      float_t new_vel = omega * velocity_[i] +
+      real_t r1 = rng.rand();
+      real_t r2 = rng.rand();
+      real_t new_vel = omega * velocity_[i] +
                 phi1 * r1 * (best_values_[i] - param_values_[i]) +
                 phi2 * r2 * (global_best[i] - param_values_[i]);
       velocity_[i] = std::min(std::max(new_vel,
@@ -116,16 +116,16 @@ namespace hig {
 
 
   // FIPS
-  bool PSOParticle::update_fips_particle(float_t omega, float_t phi1, float_t phi2,
-                    const float_vec_t& best_values,
+  bool PSOParticle::update_fips_particle(real_t omega, real_t phi1, real_t phi2,
+                    const real_vec_t& best_values,
                     const PSOParticleConstraints& constraints,
                     woo::MTRandomNumberGenerator& rng) {
     int tot_num_parts = best_values.size() / num_parameters_;
     for(int i = 0; i < num_parameters_; ++ i) {
-      float_t new_vel = omega * velocity_[i];
-      float_t sum = 0.0;
+      real_t new_vel = omega * velocity_[i];
+      real_t sum = 0.0;
       for(int j = 0; j < tot_num_parts; ++ j) {
-        float_t r1 = rng.rand();
+        real_t r1 = rng.rand();
         sum += phi1 * r1 * (best_values[num_parameters_ * j + i] - param_values_[i]);
       } // for
       new_vel += sum / tot_num_parts;
@@ -141,10 +141,10 @@ namespace hig {
 
 
   // FDR
-  bool PSOParticle::update_fdr_particle(float_t omega, float_t phi1, float_t phi2,
+  bool PSOParticle::update_fdr_particle(real_t omega, real_t phi1, real_t phi2,
                       const parameter_data_list_t& global_best,
-                      const float_vec_t& all_values,
-                      const float_vec_t& all_fitness,
+                      const real_vec_t& all_values,
+                      const real_vec_t& all_fitness,
                       const PSOParticleConstraints& constraints,
                       woo::MTRandomNumberGenerator& rng) {
     // for each dimension i, find among all other particles p the one with largest FDR value
@@ -152,17 +152,17 @@ namespace hig {
     int tot_num_parts = all_values.size() / num_parameters_;  // total number of particles
     for(int i = 0; i < num_parameters_; ++ i) {
       // for each particle compute fdr and find best one
-      float_t best_fdr = 0, best_val = 0;
+      real_t best_fdr = 0, best_val = 0;
       for(int p = 0; p < tot_num_parts; ++ p) {
         // need to ignore self
         if(index_ == p) continue;  // make sure they are ordered in same way
-        float_t val = all_values[num_parameters_ * p + i];
-        float_t fdr = fabs(fitness_ - all_fitness[i]) / fabs(param_values_[i] - val);
+        real_t val = all_values[num_parameters_ * p + i];
+        real_t fdr = fabs(fitness_ - all_fitness[i]) / fabs(param_values_[i] - val);
         if(fdr > best_fdr) { best_fdr = fdr; best_val = val; }
       } // for
       // use best particle parameter to compute new velocity
-      float_t r1 = rng.rand(), r2 = rng.rand();
-      float_t new_vel = omega * velocity_[i] +
+      real_t r1 = rng.rand(), r2 = rng.rand();
+      real_t new_vel = omega * velocity_[i] +
                 phi1 * r1 * (best_val - param_values_[i]) +
                 phi2 * r2 * (global_best[i] - param_values_[i]);
       velocity_[i] = std::min(std::max(new_vel,
@@ -182,10 +182,10 @@ namespace hig {
                         woo::MTRandomNumberGenerator& rng) {
     for(int i = 0; i < num_parameters_; ++ i) {
       // generate random number with levy distribution
-      float_t r1 = rng.rand();
-      float_t sigma = fabs(best_values_[i] - global_best[i]);
-      float_t alpha = 1.4;
-      float_t new_val = 1.0 / (exp(pow(r1 / sigma, alpha) / 2.0) * sigma * sqrt(2 * PI_));
+      real_t r1 = rng.rand();
+      real_t sigma = fabs(best_values_[i] - global_best[i]);
+      real_t alpha = 1.4;
+      real_t new_val = 1.0 / (exp(pow(r1 / sigma, alpha) / 2.0) * sigma * sqrt(2 * PI_));
       param_values_[i] = constraints.param_values_min_[i] + new_val *
                 (constraints.param_values_max_[i] - constraints.param_values_min_[i]);
     } // for
@@ -195,14 +195,14 @@ namespace hig {
 
   bool PSOParticle::compute_and_set_values(const parameter_data_list_t& start_pos,
                     const parameter_data_list_t& start_vel,
-                    float_t omega, float_t phi1, float_t phi2,
+                    real_t omega, real_t phi1, real_t phi2,
                     const parameter_data_list_t& global_best,
                     const PSOParticleConstraints& constraints,
                     woo::MTRandomNumberGenerator& rng) {
     for(int i = 0; i < num_parameters_; ++ i) {
-      float_t r1 = rng.rand();
-      float_t r2 = rng.rand();
-      float_t new_vel = omega * start_vel[i] +
+      real_t r1 = rng.rand();
+      real_t r2 = rng.rand();
+      real_t new_vel = omega * start_vel[i] +
                 phi1 * r1 * (best_values_[i] - start_pos[i]) +
                 phi2 * r2 * (global_best[i] - start_pos[i]);
       velocity_[i] = std::min(std::max(new_vel,
@@ -216,3 +216,7 @@ namespace hig {
   } // PSOParticle::compute_and_set_values()
 
 } // namespace hig
+set_values()
+
+} // namespace hig
+ig

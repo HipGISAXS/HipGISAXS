@@ -66,13 +66,13 @@ extern "C" {
       } // hdf5_shape_reader()
 
       unsigned int shape_shape_reader(const char* filename,
-                    std::vector<float_t> &shape_def, unsigned int &num_triangles) {
+                    std::vector<real_t> &shape_def, unsigned int &num_triangles) {
         std::ifstream f(filename);
         if(!f.is_open()) {
           std::cout << "Cannot open file " << filename << std::endl;
           return 0;
         } // if
-        float_t s = 0.0, cx = 0.0, cy = 0.0, cz = 0.0, nx = 0.0, ny = 0.0, nz = 0.0;
+        real_t s = 0.0, cx = 0.0, cy = 0.0, cz = 0.0, nx = 0.0, ny = 0.0, nz = 0.0;
 
         while(true) {
           f >> s;

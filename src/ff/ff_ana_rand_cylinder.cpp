@@ -36,7 +36,7 @@ namespace hig {
   /**
    * random cylinders along z - for SAXS
    */
-  bool AnalyticFormFactor::compute_random_cylinders(shape_param_list_t& params,
+/*  bool AnalyticFormFactor::compute_random_cylinders(shape_param_list_t& params,
       std::vector<complex_t>& ff,  float_t tau, float_t eta, vector3_t transvec) {
     std::vector<float_t> r, distr_r;
     std::vector<float_t> h, distr_h;
@@ -109,7 +109,7 @@ namespace hig {
               complex_t temp2 = qz * r[i_r] * sqrt(1 - x_val * x_val);
               if(!(temp2.real() == 0 && temp2.imag() == 0))  // TODO improve fp comparison ...
                 temp_ffx += temp1 * cbessj(temp2, 1) / temp2;
-              /*if(!(boost::math::isfinite(temp_ffx.real()) &&
+*/              /*if(!(boost::math::isfinite(temp_ffx.real()) &&
                   boost::math::isfinite(temp_ffx.imag()))) {
                 std::cout << "&&&&&&&&&&&&& OHO OHOH OHOHO: "
                       << z << ", " << i_x <<  ", " << i_r << ", " << i_h
@@ -118,7 +118,7 @@ namespace hig {
                       << temp2.imag() << ")" << ", (" << qz.real() << "," << qz.imag()
                       << ")" << std::endl;
               } // if*/
-            } // for
+/*            } // for
             temp_ff += 4.0 * distr_r[i_r] * distr_h[i_h] * temp_ffx * temp_ffx;
           } // for h
         } // for r
@@ -139,5 +139,5 @@ namespace hig {
     return true;
 
   } // AnalyticFormFactor::compute_random_cylinders()
-
+*/
 } // namespace hig

@@ -33,9 +33,9 @@ namespace hig {
   class ScatteringParams {
     private:
       typedef struct StepRange_ {
-        float_t min_;
-        float_t max_;
-        float_t step_;
+        real_t min_;
+        real_t max_;
+        real_t step_;
       } StepRange;
 
       std::string expt_;    /* the kind of experiment: saxs, gisaxs, waxs, etc. */
@@ -43,14 +43,14 @@ namespace hig {
       StepRange inplane_rot_;
       StepRange tilt_;
       struct Photon {
-        float_t value_;
+        real_t value_;
         std::string unit_;
       } photon_;
       std::string polarization_;  // takes values "s", "p", and "sp"
-      float_t coherence_;
-      float_t spot_area_;
+      real_t coherence_;
+      real_t spot_area_;
       //vector3_t smearing_;
-      float_t smearing_;
+      real_t smearing_;
 
     public:
       ScatteringParams();
@@ -61,34 +61,34 @@ namespace hig {
 
       void expt(std::string s) { expt_ = s; }
 
-      void coherence(float_t d) { coherence_ = d; }
-      void spot_area(float_t d) { spot_area_ = d; }
+      void coherence(real_t d) { coherence_ = d; }
+      void spot_area(real_t d) { spot_area_ = d; }
 
       //void smearing(vector3_t v) { smearing_ = v; }
-      //void smearing(float_t v, float_t w, float_t x) {
+      //void smearing(real_t v, real_t w, real_t x) {
       //  smearing_[0] = v; smearing_[1] = w; smearing_[2] = x; }
-      void smearing(float_t s) { smearing_ = s; }
+      void smearing(real_t s) { smearing_ = s; }
 
-      void alphai_min(float_t d) { alpha_i_.min_ = d; }
-      void alphai_max(float_t d) { alpha_i_.max_ = d; }
-      void alphai_step(float_t d) { alpha_i_.step_ = d; }
+      void alphai_min(real_t d) { alpha_i_.min_ = d; }
+      void alphai_max(real_t d) { alpha_i_.max_ = d; }
+      void alphai_step(real_t d) { alpha_i_.step_ = d; }
 
-      void inplane_rot_min(float_t d) { inplane_rot_.min_ = d; }
-      void inplane_rot_max(float_t d) { inplane_rot_.max_ = d; }
-      void inplane_rot_step(float_t d) { inplane_rot_.step_ = d; }
+      void inplane_rot_min(real_t d) { inplane_rot_.min_ = d; }
+      void inplane_rot_max(real_t d) { inplane_rot_.max_ = d; }
+      void inplane_rot_step(real_t d) { inplane_rot_.step_ = d; }
 
-      void photon_value(float_t d) { photon_.value_ = d; }
+      void photon_value(real_t d) { photon_.value_ = d; }
       void photon_unit(std::string s) { photon_.unit_ = s; }
       void polarization(std::string s) { polarization_ = s; }
 
-      void tilt_min(float_t d) { tilt_.min_ = d; }
-      void tilt_max(float_t d) { tilt_.max_ = d; }
-      void tilt_step(float_t d) { tilt_.step_ = d; }
+      void tilt_min(real_t d) { tilt_.min_ = d; }
+      void tilt_max(real_t d) { tilt_.max_ = d; }
+      void tilt_step(real_t d) { tilt_.step_ = d; }
 
-      float_t spot_area() const { return spot_area_; }
+      real_t spot_area() const { return spot_area_; }
       Photon photon_energy() const { return photon_; }
 
-      bool update_param(const std::string&, float_t);
+      bool update_param(const std::string&, real_t);
 
 
       void print() {

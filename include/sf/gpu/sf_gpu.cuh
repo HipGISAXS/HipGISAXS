@@ -38,13 +38,13 @@ namespace hig {
       // device buffers
 
       cucomplex_t* sf_;
-      float_t* qx_;
-      float_t* qy_;
+      real_t* qx_;
+      real_t* qy_;
       cucomplex_t* qz_;
-      float_t* rot_;
-      float_t* repet_;
-      float_t* center_;
-      float_t* transvec_;
+      real_t* rot_;
+      real_t* repet_;
+      real_t* center_;
+      real_t* transvec_;
 
     public:
       StructureFactorG(unsigned int, unsigned int, unsigned int);
@@ -52,7 +52,7 @@ namespace hig {
       ~StructureFactorG();
 
       bool init(unsigned int, unsigned int, unsigned int);
-      //bool run_init(const float_t*, const std::vector<float_t>&);
+      //bool run_init(const real_t*, const std::vector<real_t>&);
       bool clear();
       bool destroy();
 
@@ -69,9 +69,9 @@ namespace hig {
   }; // class StructureFactorG
 
   __global__ void structure_factor_kernel(unsigned int nqx, unsigned int nqy, unsigned int nqz,
-                                          float_t* qx, float_t* qy, cucomplex_t* qz,
-                                          float_t* rot, float_t* repet,
-                                          float_t* center, float_t* transvec,
+                                          real_t* qx, real_t* qy, cucomplex_t* qz,
+                                          real_t* rot, real_t* repet,
+                                          real_t* center, real_t* transvec,
                                           cucomplex_t* sf);
 
 #endif // SF_GPU

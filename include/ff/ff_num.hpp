@@ -101,6 +101,12 @@ namespace hig {
               #endif
               );
   
+      bool compute2(const char* filename, std::vector<complex_t>& ff,
+              vector3_t&, vector3_t&, vector3_t&
+              #ifdef USE_MPI
+                , woo::MultiNode&, std::string
+              #endif
+              );
     private:
 
       // TODO: make these for gpu only ...
@@ -122,22 +128,22 @@ namespace hig {
       unsigned int nqy_;
       unsigned int nqz_;
 
-      float_t* rot_;
+      real_t* rot_;
   
       ShapeFileType get_shapes_file_format(const char*);
-      unsigned int read_shapes_file_dat(const char* filename, float_vec_t& shape_def);
+      unsigned int read_shapes_file_dat(const char* filename, real_vec_t& shape_def);
       unsigned int read_shapes_file(const char* filename,
                     #ifndef __SSE3__
-                      float_vec_t& shape_def
+                      real_vec_t& shape_def
                     #else
                       #ifdef USE_GPU
-                        float_vec_t &shape_def
+                        real_vec_t &shape_def
                       #else
-                        float_t* &shape_def
+                        real_t* &shape_def
                       #endif
                     #endif
                     );
-      void find_axes_orientation(std::vector<float_t> &shape_def, std::vector<short int> &axes);
+      void find_axes_orientation(std::vector<real_t> &shape_def, std::vector<short int> &axes);
       bool construct_ff(int p_nqx, int p_nqy, int p_nqz,
                 int nqx, int nqy, int nqz,
                 int p_y, int p_z,
@@ -150,7 +156,7 @@ namespace hig {
                 #ifdef USE_MPI
                   woo::MultiNode&, std::string,
                 #endif
-                float_t&, float_t&);
+                real_t&, real_t&);
       //void gather_all(std::complex<float> *cast_p_ff, unsigned long int local_qpoints,
       //          std::complex<float> *cast_ff,
       //          int *recv_counts, int *displacements, MPI::Comm &comm);
@@ -164,18 +170,18 @@ namespace hig {
   /**
    * main host function
    */
-  //template<typename float_t, typename complex_t, typename cucomplex_t>
-  //bool NumericFormFactor<float_t, complex_t, cucomplex_t>::compute(
+  //template<typename real_t, typename complex_t, typename cucomplex_t>
+  //bool NumericFormFactor<real_t, complex_t, cucomplex_t>::compute(
 /*  bool NumericFormFactor::compute(
       const char* filename, cucomplex_t* &ff,
-*/      /*float_t* &qx_h, unsigned int nqx,
-      float_t* &qy_h, unsigned int nqy,
+*/      /*real_t* &qx_h, unsigned int nqx,
+      real_t* &qy_h, unsigned int nqy,
       complex_t* qz_h, unsigned int nqz,*/
 /*      MPI::Intracomm& world_comm) {
-    float_t comp_start = 0.0, comp_end = 0.0, comm_start = 0.0, comm_end = 0.0;
-    float_t mem_start = 0.0, mem_end = 0.0;
-    float_t comp_time = 0.0, comm_time = 0.0, mem_time = 0.0, kernel_time = 0.0, red_time = 0.0;
-    float_t total_start = 0.0, total_end = 0.0, total_time = 0.0;
+    real_t comp_start = 0.0, comp_end = 0.0, comm_start = 0.0, comm_end = 0.0;
+    real_t mem_start = 0.0, mem_end = 0.0;
+    real_t comp_time = 0.0, comm_time = 0.0, mem_time = 0.0, kernel_time = 0.0, red_time = 0.0;
+    real_t total_start = 0.0, total_end = 0.0, total_time = 0.0;
 
     woo::BoostChronoTimer maintimer, computetimer;
 
@@ -198,7 +204,7 @@ namespace hig {
   
     // all procs read the shape file
     // TODO: improve to parallel IO, or one proc reading and sending to all ...
-    std::vector<float_t> shape_def;
+    std::vector<real_t> shape_def;
     // use the new file reader instead ...
 //    unsigned int num_triangles = read_shape_surface_file(filename, shape_def);
     unsigned int num_triangles = read_shapes_hdf5(filename, shape_def, world_comm);
@@ -229,7 +235,7 @@ namespace hig {
     } // if
   
     // decompose along y and z directions into blocks
-    int p_y = std::floor(sqrt((float_t)num_procs));  // some procs may be idle ...
+    int p_y = std::floor(sqrt((real_t)num_procs));  // some procs may be idle ...
     int p_z = num_procs / p_y;
     
     int p_nqx = nqx;
@@ -294,8 +300,8 @@ namespace hig {
       z_offset -= p_nqz;
 
       // FIXME: this is a temporary fix ... fix properly ...
-      float_t* qx = new (std::nothrow) float_t[nqx]();
-      float_t* qy = new (std::nothrow) float_t[nqy]();
+      real_t* qx = new (std::nothrow) real_t[nqx]();
+      real_t* qy = new (std::nothrow) real_t[nqy]();
       cucomplex_t* qz = new (std::nothrow) cucomplex_t[nqz]();
       // create qy_and qz using qgrid instance
       for(unsigned int i = 0; i < nqx; ++ i) {
@@ -310,10 +316,10 @@ namespace hig {
       } // for
       
       // create p_ff buffers  <----- TODO: IMPROVE for all procs!!!
-      float_t *p_qy = NULL;
-      p_qy = new (std::nothrow) float_t[p_nqy]();
+      real_t *p_qy = NULL;
+      p_qy = new (std::nothrow) real_t[p_nqy]();
       if(p_qy == NULL) { return 0; }
-      memcpy(p_qy, (void*) (qy + y_offset), p_nqy * sizeof(float_t));
+      memcpy(p_qy, (void*) (qy + y_offset), p_nqy * sizeof(real_t));
       cucomplex_t *p_qz = NULL;
       p_qz = new (std::nothrow) cucomplex_t[p_nqz]();
       if(p_qz == NULL) { delete[] p_qy; return 0; }
@@ -325,7 +331,7 @@ namespace hig {
       // compute local
       comp_start = MPI::Wtime();
       cucomplex_t *p_ff = NULL;
-      float_t temp_mem_time = 0.0, temp_comm_time = 0.0;
+      real_t temp_mem_time = 0.0, temp_comm_time = 0.0;
   
       computetimer.start();
 
@@ -434,16 +440,16 @@ namespace hig {
    * Function to gather partial FF arrays from all processes to construct the final FF.
    * This is a bottleneck for large num procs ...
    */
-  //template<typename float_t, typename complex_t, typename cucomplex_t>
-  //void NumericFormFactor<float_t, complex_t, cucomplex_t>::construct_ff(int rank, int num_procs,
+  //template<typename real_t, typename complex_t, typename cucomplex_t>
+  //void NumericFormFactor<real_t, complex_t, cucomplex_t>::construct_ff(int rank, int num_procs,
 /*  void NumericFormFactor::construct_ff(int rank, int num_procs,
       MPI::Comm &comm, MPI::Comm &col_comm, MPI::Comm &row_comm,
       int p_nqx, int p_nqy, int p_nqz,
       int nqx, int nqy, int nqz,
       int p_y, int p_z,
       cucomplex_t* p_ff, cucomplex_t* &ff,
-      float_t& mem_time, float_t& comm_time) {
-    float_t mem_start = 0, mem_end = 0, comm_start = 0, comm_end = 0;
+      real_t& mem_time, real_t& comm_time) {
+    real_t mem_start = 0, mem_end = 0, comm_start = 0, comm_end = 0;
     mem_time = 0; comm_time = 0;
   
     mem_start = MPI::Wtime();
@@ -474,9 +480,9 @@ namespace hig {
       std::cerr << "Error allocating memory for ff buffer" << std::endl;
       return;
     } // if
-    std::complex<float_t> *cast_p_ff, *cast_ff;
-    cast_p_ff = reinterpret_cast<std::complex<float_t>*>(p_ff);
-    cast_ff = reinterpret_cast<std::complex<float_t>*>(ff_buffer);
+    std::complex<real_t> *cast_p_ff, *cast_ff;
+    cast_p_ff = reinterpret_cast<std::complex<real_t>*>(p_ff);
+    cast_ff = reinterpret_cast<std::complex<real_t>*>(ff_buffer);
     mem_end = MPI::Wtime();
     mem_time += mem_end - mem_start;
   
@@ -517,8 +523,8 @@ namespace hig {
   } // NumericFormFactor::construct_ff()
   
   
-  //template<typename float_t, typename complex_t, typename cucomplex_t>
-  //void NumericFormFactor<float_t, complex_t, cucomplex_t>::gather_all(std::complex<float> *cast_p_ff,
+  //template<typename real_t, typename complex_t, typename cucomplex_t>
+  //void NumericFormFactor<real_t, complex_t, cucomplex_t>::gather_all(std::complex<float> *cast_p_ff,
   void NumericFormFactor::gather_all(std::complex<float> *cast_p_ff,
       unsigned long int local_qpoints,
       std::complex<float> *cast_ff, int *recv_counts, int *displacements, MPI::Comm &comm) {
@@ -527,8 +533,8 @@ namespace hig {
   } // NumericFormFactor::gather_all()
   
   
-  //template<typename float_t, typename complex_t, typename cucomplex_t>
-  //void NumericFormFactor<float_t, complex_t, cucomplex_t>::gather_all(std::complex<double> *cast_p_ff,
+  //template<typename real_t, typename complex_t, typename cucomplex_t>
+  //void NumericFormFactor<real_t, complex_t, cucomplex_t>::gather_all(std::complex<double> *cast_p_ff,
   void NumericFormFactor::gather_all(std::complex<double> *cast_p_ff,
       unsigned long int local_qpoints,
       std::complex<double> *cast_ff, int *recv_counts, int *displacements, MPI::Comm &comm) {
@@ -540,16 +546,16 @@ namespace hig {
 */  /**
    * Function to read the input shape file.
    */
-  //template<typename float_t, typename complex_t, typename cucomplex_t>
-  //unsigned int NumericFormFactor<float_t, complex_t, cucomplex_t>::read_shape_surface_file(const char* filename,
+  //template<typename real_t, typename complex_t, typename cucomplex_t>
+  //unsigned int NumericFormFactor<real_t, complex_t, cucomplex_t>::read_shape_surface_file(const char* filename,
 /*  unsigned int NumericFormFactor::read_shape_surface_file(const char* filename,
-      std::vector<float_t> &shape_def) {
+      std::vector<real_t> &shape_def) {
     std::ifstream f(filename);
     if(!f.is_open()) {
       std::cout << "Cannot open file " << filename << std::endl;
       return 1;
     } // if
-    float_t s = 0.0, cx = 0.0, cy = 0.0, cz = 0.0, nx = 0.0, ny = 0.0, nz = 0.0;
+    real_t s = 0.0, cx = 0.0, cy = 0.0, cz = 0.0, nx = 0.0, ny = 0.0, nz = 0.0;
   
     while(true) {
       f >> s;
@@ -570,13 +576,13 @@ namespace hig {
   } // NumericFormFactor::read_shape_surface_file()
   
   
-  //template<typename float_t, typename complex_t, typename cucomplex_t>
-  //void NumericFormFactor<float_t, complex_t, cucomplex_t>::find_axes_orientation(
+  //template<typename real_t, typename complex_t, typename cucomplex_t>
+  //void NumericFormFactor<real_t, complex_t, cucomplex_t>::find_axes_orientation(
   void NumericFormFactor::find_axes_orientation(
-      std::vector<float_t> &shape_def, std::vector<short int> &axes) {
-    float_t min_a = shape_def[4], max_a = shape_def[4];
-    float_t min_b = shape_def[5], max_b = shape_def[5];
-    float_t min_c = shape_def[6], max_c = shape_def[6];
+      std::vector<real_t> &shape_def, std::vector<short int> &axes) {
+    real_t min_a = shape_def[4], max_a = shape_def[4];
+    real_t min_b = shape_def[5], max_b = shape_def[5];
+    real_t min_c = shape_def[6], max_c = shape_def[6];
   
     for(unsigned int i = 0; i + 6 < shape_def.size(); i += 7) {
       min_a = (min_a > shape_def[i + 4]) ? shape_def[i + 4] : min_a ;
@@ -587,9 +593,9 @@ namespace hig {
       max_c = (max_c < shape_def[i + 6]) ? shape_def[i + 6] : max_c ;
     } // for
   
-    float_t diff_a = max_a - min_a;
-    float_t diff_b = max_b - min_b;
-    float_t diff_c = max_c - min_c;
+    real_t diff_a = max_a - min_a;
+    real_t diff_b = max_b - min_b;
+    real_t diff_c = max_c - min_c;
   
     // axes[i] = j
     // i: x=0 y=1 z=2
@@ -598,7 +604,7 @@ namespace hig {
     //std::cout << "++ diff_a = " << diff_a << ", diff_b = " << diff_b
     //      << ", diff_c = " << diff_c << std::endl;
 
-    std::vector<float_t> min_point, max_point;
+    std::vector<real_t> min_point, max_point;
   
     // the smallest one is x, other two are y and z
     if(diff_a < diff_b) {
@@ -641,21 +647,21 @@ namespace hig {
 */  /**
    * Function to read the shape definition input file in HDF5 format.
    */
-  //template<typename float_t, typename complex_t, typename cucomplex_t>
-  //unsigned int NumericFormFactor<float_t, complex_t, cucomplex_t>::read_shapes_hdf5(const char* filename,
+  //template<typename real_t, typename complex_t, typename cucomplex_t>
+  //unsigned int NumericFormFactor<real_t, complex_t, cucomplex_t>::read_shapes_hdf5(const char* filename,
 /*  unsigned int NumericFormFactor::read_shapes_hdf5(const char* filename,
-      std::vector<float_t> &shape_def, MPI::Intracomm& comm) {
+      std::vector<real_t> &shape_def, MPI::Intracomm& comm) {
     unsigned int num_triangles = 0;
     double* temp_shape_def = NULL;
   
     h5_shape_reader(filename, &temp_shape_def, &num_triangles);
 #ifndef KERNEL2
     for(unsigned int i = 0; i < num_triangles * 7; ++ i)
-      shape_def.push_back((float_t)temp_shape_def[i]);
+      shape_def.push_back((real_t)temp_shape_def[i]);
 #else // KERNEL2
     for(unsigned int i = 0, j = 0; i < num_triangles * T_PROP_SIZE_; ++ i) {
-      if((i + 1) % T_PROP_SIZE_ == 0) shape_def.push_back((float_t) 0.0);  // padding
-      else { shape_def.push_back((float_t)temp_shape_def[j]); ++ j; }
+      if((i + 1) % T_PROP_SIZE_ == 0) shape_def.push_back((real_t) 0.0);  // padding
+      else { shape_def.push_back((real_t)temp_shape_def[j]); ++ j; }
     } // for
 #endif // KERNEL2
 

@@ -29,12 +29,12 @@
 using namespace std;
 
 
-bool make(float_t* &m, unsigned int mx, unsigned int my) {
-  m = new (nothrow) float_t[mx * my];
-  for(int i = 0; i < mx * my; ++ i) m[i] = ((float_t)rand() / RAND_MAX);
+bool make(real_t* &m, unsigned int mx, unsigned int my) {
+  m = new (nothrow) real_t[mx * my];
+  for(int i = 0; i < mx * my; ++ i) m[i] = ((real_t)rand() / RAND_MAX);
 } // make()
 
-void printm(float_t* m, unsigned int mx, unsigned int my) {
+void printm(real_t* m, unsigned int mx, unsigned int my) {
   cout << "[";
   for(int y = 0; y < my; ++ y) {
     for(int x = 0; x < mx; ++ x) {
@@ -58,16 +58,16 @@ int main(int narg, char** args) {
     bsize = 2;
   } // if
 
-  float_t *a, *b;
+  real_t *a, *b;
   make(a, asize, asize);
   make(b, bsize, bsize);
-//  float_t a[] = {  0.7790, 0.1520, 0.6449,
+//  real_t a[] = {  0.7790, 0.1520, 0.6449,
 //          0.6142, 0.5742, 0.0352,
 //          0.0535, 0.2173, 0.7655};
-//  float_t b[] = {  0.4603, 0.8580,
+//  real_t b[] = {  0.4603, 0.8580,
 //          0.1763, 0.5797};
 
-  float_t *c;
+  real_t *c;
   unsigned int cx, cy;
   //c[] = {  0.3586, 0.7383, 0.4273, 0.5534,
   //      0.4201, 1.2697, 0.7106, 0.4041,
@@ -93,3 +93,4 @@ int main(int narg, char** args) {
 
   return 0;
 } // main()
+ main()

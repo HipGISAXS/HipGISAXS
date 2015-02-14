@@ -24,6 +24,7 @@
 #define __NUMERIC_FF_CPU_HPP__
 	
 #include <common/typedefs.hpp>
+#include <common/globals.hpp>
 	
 namespace hig {
 	
@@ -38,9 +39,18 @@ namespace hig {
 
 			bool init();	// TODO ...
 	
+            unsigned int compute_exact_triangle(triangle_t *, int,
+                    complex_t *&, 
+                    int, real_t *, real_t *, int, complex_t *,
+                    real_t *, real_t &);
+
+            unsigned int compute_approx_triangle(real_vec_t &,
+                    complex_t *&,
+                    int, real_t *, real_t *,
+                    int, complex_t *, real_t *, real_t &); 
 		private:
 			#ifndef FF_NUM_CPU_FUSED			
-				void form_factor_kernel(float_t*, float_t*, complex_t*, float_vec_t&,
+				void form_factor_kernel(real_t*, real_t*, complex_t*, real_vec_t&,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
@@ -52,16 +62,16 @@ namespace hig {
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									complex_t*, complex_t*);
 			#else
-				void form_factor_kernel_fused(float_t*, float_t*, complex_t*, float_vec_t&,
+				void form_factor_kernel_fused(real_t*, real_t*, complex_t*, real_vec_t&,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
-									float_t*,
+									real_t*,
 									complex_t*);
 				#ifndef __SSE3__
-					void form_factor_kernel_fused_unroll4(float_t*, float_t*, complex_t*,
-									float_vec_t&,
+					void form_factor_kernel_fused_unroll4(real_t*, real_t*, complex_t*,
+									real_vec_t&,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
@@ -69,14 +79,14 @@ namespace hig {
 										unsigned int, unsigned int, unsigned int,
 									#endif
 									unsigned int, unsigned int, unsigned int, unsigned int,
-									float_t*,
+									real_t*,
 									complex_t*);
 				#endif // __SSE3__
-				void form_factor_kernel_fused_nqx1(const float_t*, const float_t*, const complex_t*,
+				void form_factor_kernel_fused_nqx1(const real_t*, const real_t*, const complex_t*,
 									#ifndef __SSE3__
-										float_vec_t&,
+										real_vec_t&,
 									#else
-										float_t*,
+										real_t*,
 									#endif // __SSE3__
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
@@ -85,10 +95,10 @@ namespace hig {
 										unsigned int, unsigned int, unsigned int,
 									#endif
 									unsigned int, unsigned int, unsigned int, unsigned int,
-									float_t*,
+									real_t*,
 									complex_t*);
 
-				void form_factor_kernel_fused_nqx1_unroll4(float_t*, float_t*, complex_t*, float_vec_t&,
+				void form_factor_kernel_fused_nqx1_unroll4(real_t*, real_t*, complex_t*, real_vec_t&,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
@@ -96,13 +106,13 @@ namespace hig {
 										unsigned int, unsigned int, unsigned int,
 									#endif
 									unsigned int, unsigned int, unsigned int, unsigned int,
-									float_t*,
+									real_t*,
 									complex_t*);
 
 			#endif // FF_NUM_CPU_FUSED
 
 
-			complex_t compute_fq(float_t, complex_t, complex_t);
+			complex_t compute_fq(real_t, complex_t, complex_t);
 
 			#ifdef INTEL_SB_AVX
 				avx_m256c_t avx_compute_fq(avx_m256_t, avx_m256c_t, avx_m256c_t);
@@ -121,14 +131,14 @@ namespace hig {
 
 			unsigned int compute_form_factor(int,
 									#ifndef __SSE3__
-										float_vec_t&,
+										real_vec_t&,
 									#else
-										float_t*, unsigned int,
+										real_t*, unsigned int,
 									#endif
 									complex_t*&,
-									float_t*&, int, float_t*&, int, complex_t* &qz, int,
-									float_t*&,
-									float_t&, float_t&, float_t&
+									real_t*&, int, real_t*&, int, complex_t* &qz, int,
+									real_t*&,
+									real_t&, real_t&, real_t&
 									#ifdef FINDBLOCK
 										, const int, const int, const int, const int
 									#endif

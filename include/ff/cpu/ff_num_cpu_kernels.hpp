@@ -26,15 +26,15 @@
 	/**
 	 * the main Form Factor kernel with fused reduction function - for one hyperblock.
 	 */
-	void NumericFormFactorC::form_factor_kernel_fused_unroll4(float_t* qx, float_t* qy, complex_t* qz,
-					float_vec_t& shape_def,
+	void NumericFormFactorC::form_factor_kernel_fused_unroll4(real_t* qx, real_t* qy, complex_t* qz,
+					real_vec_t& shape_def,
 					unsigned int curr_nqx, unsigned int curr_nqy, unsigned int curr_nqz,
 					unsigned int curr_num_triangles,
 					unsigned int b_nqx, unsigned int b_nqy, unsigned int b_nqz,
 					unsigned int b_num_triangles,
 					unsigned int nqx, unsigned int nqy, unsigned int nqz, unsigned int num_triangles,
 					unsigned int ib_x, unsigned int ib_y, unsigned int ib_z, unsigned int ib_t,
-					float_t* rot,
+					real_t* rot,
 					complex_t* ff) {
 		if(ff == NULL || qx == NULL || qy == NULL || qz == NULL) return;
 
@@ -56,8 +56,8 @@
 						unsigned long int super_i = (unsigned long int) nqx * nqy * (ib_z * b_nqz + i_z) +
 													nqx * (ib_y * b_nqy + i_y) + ib_x * b_nqx + i_x;
 						complex_t temp_qz = qz[start_z + i_z];
-						float_t temp_qy = qy[start_y + i_y];
-						float_t temp_qx = qx[start_x + i_x];
+						real_t temp_qy = qy[start_y + i_y];
+						real_t temp_qx = qx[start_x + i_x];
 
 						// compute rotation stuff ... FIXME double check transposition etc ...
 						complex_t temp_x = rot[0] * temp_qx + rot[1] * temp_qy + rot[2] * temp_qz;
@@ -70,37 +70,37 @@
 
 						for(int i_t = 0; i_t < curr_num_triangles; i_t += 4) {
 							unsigned int shape_off1 = start_t + i_t * CPU_T_PROP_SIZE_;
-							float_t s1 = shape_def[shape_off1];
-							float_t nx1 = shape_def[shape_off1 + 1];
-							float_t ny1 = shape_def[shape_off1 + 2];
-							float_t nz1 = shape_def[shape_off1 + 3];
-							float_t x1 = shape_def[shape_off1 + 4];
-							float_t y1 = shape_def[shape_off1 + 5];
-							float_t z1 = shape_def[shape_off1 + 6];
+							real_t s1 = shape_def[shape_off1];
+							real_t nx1 = shape_def[shape_off1 + 1];
+							real_t ny1 = shape_def[shape_off1 + 2];
+							real_t nz1 = shape_def[shape_off1 + 3];
+							real_t x1 = shape_def[shape_off1 + 4];
+							real_t y1 = shape_def[shape_off1 + 5];
+							real_t z1 = shape_def[shape_off1 + 6];
 							unsigned int shape_off2 = start_t + (i_t + 1) * CPU_T_PROP_SIZE_;
-							float_t s2 = shape_def[shape_off2];
-							float_t nx2 = shape_def[shape_off2 + 1];
-							float_t ny2 = shape_def[shape_off2 + 2];
-							float_t nz2 = shape_def[shape_off2 + 3];
-							float_t x2 = shape_def[shape_off2 + 4];
-							float_t y2 = shape_def[shape_off2 + 5];
-							float_t z2 = shape_def[shape_off2 + 6];
+							real_t s2 = shape_def[shape_off2];
+							real_t nx2 = shape_def[shape_off2 + 1];
+							real_t ny2 = shape_def[shape_off2 + 2];
+							real_t nz2 = shape_def[shape_off2 + 3];
+							real_t x2 = shape_def[shape_off2 + 4];
+							real_t y2 = shape_def[shape_off2 + 5];
+							real_t z2 = shape_def[shape_off2 + 6];
 							unsigned int shape_off3 = start_t + (i_t + 2) * CPU_T_PROP_SIZE_;
-							float_t s3 = shape_def[shape_off3];
-							float_t nx3 = shape_def[shape_off3 + 1];
-							float_t ny3 = shape_def[shape_off3 + 2];
-							float_t nz3 = shape_def[shape_off3 + 3];
-							float_t x3 = shape_def[shape_off3 + 4];
-							float_t y3 = shape_def[shape_off3 + 5];
-							float_t z3 = shape_def[shape_off3 + 6];
+							real_t s3 = shape_def[shape_off3];
+							real_t nx3 = shape_def[shape_off3 + 1];
+							real_t ny3 = shape_def[shape_off3 + 2];
+							real_t nz3 = shape_def[shape_off3 + 3];
+							real_t x3 = shape_def[shape_off3 + 4];
+							real_t y3 = shape_def[shape_off3 + 5];
+							real_t z3 = shape_def[shape_off3 + 6];
 							unsigned int shape_off4 = start_t + (i_t + 3) * CPU_T_PROP_SIZE_;
-							float_t s4 = shape_def[shape_off4];
-							float_t nx4 = shape_def[shape_off4 + 1];
-							float_t ny4 = shape_def[shape_off4 + 2];
-							float_t nz4 = shape_def[shape_off4 + 3];
-							float_t x4 = shape_def[shape_off4 + 4];
-							float_t y4 = shape_def[shape_off4 + 5];
-							float_t z4 = shape_def[shape_off4 + 6];
+							real_t s4 = shape_def[shape_off4];
+							real_t nx4 = shape_def[shape_off4 + 1];
+							real_t ny4 = shape_def[shape_off4 + 2];
+							real_t nz4 = shape_def[shape_off4 + 3];
+							real_t x4 = shape_def[shape_off4 + 4];
+							real_t y4 = shape_def[shape_off4 + 5];
+							real_t z4 = shape_def[shape_off4 + 6];
 	
 							complex_t qzn1 = temp_z * nz1;
 							complex_t qzt1 = temp_z * z1;
@@ -138,7 +138,7 @@
 						} // for t
 
 						unsigned int shape_off;
-						float_t s, nx, ny, nz, x, y, z;
+						real_t s, nx, ny, nz, x, y, z;
 						complex_t qzn, qzt;
 						complex_t qyn, qyt;
 						complex_t qn, qt;
@@ -217,12 +217,12 @@
 	 * special case of nqx == 1 of Form Factor kernel with fused reduction
 	 */
 	void NumericFormFactorC::form_factor_kernel_fused_nqx1(
-					const float_t* __restrict__ qx, const float_t* __restrict__ qy,
+					const real_t* __restrict__ qx, const real_t* __restrict__ qy,
 					const complex_t* __restrict__ qz,
 					#ifndef __SSE3__
-						float_vec_t& shape_def,
+						real_vec_t& shape_def,
 					#else
-						float_t* __restrict__ shape_def,
+						real_t* __restrict__ shape_def,
 					#endif
 					unsigned int curr_nqx, unsigned int curr_nqy, unsigned int curr_nqz,
 					unsigned int curr_num_triangles,
@@ -230,7 +230,7 @@
 					unsigned int b_num_triangles,
 					unsigned int nqx, unsigned int nqy, unsigned int nqz, unsigned int num_triangles,
 					unsigned int ib_x, unsigned int ib_y, unsigned int ib_z, unsigned int ib_t,
-					float_t* rot,
+					real_t* rot,
 					complex_t* ff) {
 		if(ff == NULL || qx == NULL || qy == NULL || qz == NULL) return;
 
@@ -265,8 +265,8 @@
 						unsigned long int super_i = (unsigned long int) nqy * (ib_z * b_nqz + i_z) +
 													(ib_y * b_nqy + i_y);
 						complex_t temp_z = qz[start_z + i_z];
-						float_t temp_y = qy[start_y + i_y];
-						float_t temp_x = qx[0];
+						real_t temp_y = qy[start_y + i_y];
+						real_t temp_x = qx[0];
 
 						// compute rotation stuff ... FIXME double check transposition etc ...
 						complex_t mqx = rot[0] * temp_x + rot[1] * temp_y + rot[2] * temp_z;
@@ -274,32 +274,32 @@
 						complex_t mqz = rot[6] * temp_x + rot[7] * temp_y + rot[8] * temp_z;
 
 						//complex_t qz2 = temp_z * temp_z;
-						//float_t qy2 = temp_y * temp_y;
-						//float_t qx2 = temp_x * temp_x;
+						//real_t qy2 = temp_y * temp_y;
+						//real_t qx2 = temp_x * temp_x;
 						complex_t qz2 = mqz * mqz;
 						complex_t qy2 = mqy * mqy;
 						complex_t qx2 = mqx * mqx;
 						complex_t q2 = qx2 + qy2 + qz2;
-						complex_t q2_inv = ((float_t) 1.0) / q2;
+						complex_t q2_inv = ((real_t) 1.0) / q2;
 
 						complex_t total(0.0, 0.0);
 
 						for(int i_t = 0; i_t < curr_num_triangles; ++ i_t) {
 							unsigned int shape_off = start_t + i_t * CPU_T_PROP_SIZE_;
-							float_t s = shape_def[shape_off];
-							float_t nx = shape_def[shape_off + 1];
-							float_t ny = shape_def[shape_off + 2];
-							float_t nz = shape_def[shape_off + 3];
-							float_t x = shape_def[shape_off + 4];
-							float_t y = shape_def[shape_off + 5];
-							float_t z = shape_def[shape_off + 6];
+							real_t s = shape_def[shape_off];
+							real_t nx = shape_def[shape_off + 1];
+							real_t ny = shape_def[shape_off + 2];
+							real_t nz = shape_def[shape_off + 3];
+							real_t x = shape_def[shape_off + 4];
+							real_t y = shape_def[shape_off + 5];
+							real_t z = shape_def[shape_off + 6];
 
 							//complex_t qzn = temp_z * nz;
 							//complex_t qzt = temp_z * z;
-							//float_t qyn = temp_y * ny;
-							//float_t qyt = temp_y * y;
-							//float_t qxn = temp_x * nx;
-							//float_t qxt = temp_x * x;
+							//real_t qyn = temp_y * ny;
+							//real_t qyt = temp_y * y;
+							//real_t qxn = temp_x * nx;
+							//real_t qxt = temp_x * x;
 							complex_t qzn = mqz * nz;
 							complex_t qzt = mqz * z;
 							complex_t qyn = mqy * ny;
@@ -331,7 +331,7 @@
 
 			// FIXME: assuming only float for now (4 bytes per float)
 			unsigned int shape_padding = (8 - (num_triangles & 7)) & 7;
-			unsigned int vec_size = 8; // 32 / sizeof(float_t);
+			unsigned int vec_size = 8; // 32 / sizeof(real_t);
 			unsigned int padded_num_triangles = num_triangles + shape_padding;
 			start_t = b_num_triangles * ib_t;
 
@@ -362,7 +362,7 @@
 													(ib_y * b_nqy + i_y);
 
 						// rotation stuff ... TODO: optimize later
-						float_t temp_qx = qx[start_x], temp_qy = qy[start_y + i_y];
+						real_t temp_qx = qx[start_x], temp_qy = qy[start_y + i_y];
 						complex_t temp_qz = qz[start_z + i_z];
 						complex_t mqx = rot[0] * temp_qx + rot[1] * temp_qy + rot[2] * temp_qz;
 						complex_t mqy = rot[3] * temp_qx + rot[4] * temp_qy + rot[5] * temp_qz;
@@ -384,7 +384,7 @@
 
 						// FIXME: for now assuming curr_num_triangles is always multiple of 4 (vec size) ...
 						for(int i_t = 0; i_t < curr_num_triangles; i_t += vec_size) {
-							// load 16 / sizeof(float_t) entries at a time:
+							// load 16 / sizeof(real_t) entries at a time:
 							unsigned int shape_off = start_t + i_t;
 							avx_m256_t s = avx_load_rps(& shape_def[shape_off]);
 							shape_off += padded_num_triangles;
@@ -417,7 +417,7 @@
 						total = avx_hadd_ccps(total, total);
 						total = avx_hadd_ccps(total, total);
 
-						//float_t real, imag;
+						//real_t real, imag;
 						//_mm_store_ss(&real, total.xvec);
 						//_mm_store_ss(&imag, total.yvec);
 						//ff[super_i] += complex_t(real, imag);
@@ -518,7 +518,7 @@
 
 			// FIXME: assuming only float for now (4 bytes per float) do for double also
 			unsigned int shape_padding = (4 - (num_triangles & 3)) & 3;
-			unsigned int vec_size = 4; //16 / sizeof(float_t);	// FIXME: for now assuming SP (float) only ...
+			unsigned int vec_size = 4; //16 / sizeof(real_t);	// FIXME: for now assuming SP (float) only ...
 			unsigned int padded_num_triangles = num_triangles + shape_padding;
 			start_t = b_num_triangles * ib_t;
 
@@ -547,7 +547,7 @@
 													(ib_y * b_nqy + i_y);
 
 						// rotation stuff ... TODO: optimize later
-						float_t temp_qx = qx[start_x], temp_qy = qy[start_y + i_y];
+						real_t temp_qx = qx[start_x], temp_qy = qy[start_y + i_y];
 						complex_t temp_qz = qz[start_z + i_z];
 						complex_t mqx = rot[0] * temp_qx + rot[1] * temp_qy + rot[2] * temp_qz;
 						complex_t mqy = rot[3] * temp_qx + rot[4] * temp_qy + rot[5] * temp_qz;
@@ -579,7 +579,7 @@
 
 						// FIXME: for now assuming curr_num_triangles is always multiple of 4 (vec size) ...
 						for(int i_t = 0; i_t < curr_num_triangles; i_t += vec_size) {
-							// load 16 / sizeof(float_t) entries at a time:
+							// load 16 / sizeof(real_t) entries at a time:
 							unsigned int shape_off = start_t + i_t;
 							sse_m128_t s = sse_load_rps(& shape_def[shape_off]);
 							shape_off += padded_num_triangles;
@@ -612,7 +612,7 @@
 						total = sse_hadd_ccps(total, total);
 						total = sse_hadd_ccps(total, total);
 
-						//float_t real, imag;
+						//real_t real, imag;
 						//_mm_store_ss(&real, total.xvec);
 						//_mm_store_ss(&imag, total.yvec);
 						//ff[super_i] += complex_t(real, imag);
@@ -769,15 +769,15 @@
 	 * special case of nqx == 1 of Form Factor kernel with fused reduction, and loop unrolling
 	 */
 	void NumericFormFactorC::form_factor_kernel_fused_nqx1_unroll4(
-					float_t* qx, float_t* qy, complex_t* qz,
-					float_vec_t& shape_def,
+					real_t* qx, real_t* qy, complex_t* qz,
+					real_vec_t& shape_def,
 					unsigned int curr_nqx, unsigned int curr_nqy, unsigned int curr_nqz,
 					unsigned int curr_num_triangles,
 					unsigned int b_nqx, unsigned int b_nqy, unsigned int b_nqz,
 					unsigned int b_num_triangles,
 					unsigned int nqx, unsigned int nqy, unsigned int nqz, unsigned int num_triangles,
 					unsigned int ib_x, unsigned int ib_y, unsigned int ib_z, unsigned int ib_t,
-					float_t* rot,
+					real_t* rot,
 					complex_t* ff) {
 		if(ff == NULL || qx == NULL || qy == NULL || qz == NULL) return;
 
@@ -804,8 +804,8 @@
 					unsigned long int super_i = (unsigned long int) nqy * (ib_z * b_nqz + i_z) +
 													(ib_y * b_nqy + i_y);
 					complex_t temp_qz = qz[start_z + i_z];
-					float_t temp_qy = qy[start_y + i_y];
-					float_t temp_qx = qx[0];
+					real_t temp_qy = qy[start_y + i_y];
+					real_t temp_qx = qx[0];
 
 					// compute rotation stuff ... FIXME double check transposition etc ...
 					complex_t temp_x = rot[0] * temp_qx + rot[1] * temp_qy + rot[2] * temp_qz;
@@ -815,43 +815,43 @@
 					complex_t qz2 = temp_z * temp_z;
 					complex_t qy2 = temp_y * temp_y;
 					complex_t q2 = temp_x * temp_x + qy2 + qz2;
-					complex_t q2_inv = ((float_t) 1.0) / q2;
+					complex_t q2_inv = ((real_t) 1.0) / q2;
 
 					complex_t total(0.0, 0.0);
 
 					for(int i_t = 0; i_t < curr_num_triangles; i_t += 4) {
 						unsigned int shape_off1 = start_t + i_t * CPU_T_PROP_SIZE_;
-						float_t s1 = shape_def[shape_off1];
-						float_t nx1 = shape_def[shape_off1 + 1];
-						float_t ny1 = shape_def[shape_off1 + 2];
-						float_t nz1 = shape_def[shape_off1 + 3];
-						float_t x1 = shape_def[shape_off1 + 4];
-						float_t y1 = shape_def[shape_off1 + 5];
-						float_t z1 = shape_def[shape_off1 + 6];
+						real_t s1 = shape_def[shape_off1];
+						real_t nx1 = shape_def[shape_off1 + 1];
+						real_t ny1 = shape_def[shape_off1 + 2];
+						real_t nz1 = shape_def[shape_off1 + 3];
+						real_t x1 = shape_def[shape_off1 + 4];
+						real_t y1 = shape_def[shape_off1 + 5];
+						real_t z1 = shape_def[shape_off1 + 6];
 						unsigned int shape_off2 = start_t + (i_t + 1) * CPU_T_PROP_SIZE_;
-						float_t s2 = shape_def[shape_off2];
-						float_t nx2 = shape_def[shape_off2 + 1];
-						float_t ny2 = shape_def[shape_off2 + 2];
-						float_t nz2 = shape_def[shape_off2 + 3];
-						float_t x2 = shape_def[shape_off2 + 4];
-						float_t y2 = shape_def[shape_off2 + 5];
-						float_t z2 = shape_def[shape_off2 + 6];
+						real_t s2 = shape_def[shape_off2];
+						real_t nx2 = shape_def[shape_off2 + 1];
+						real_t ny2 = shape_def[shape_off2 + 2];
+						real_t nz2 = shape_def[shape_off2 + 3];
+						real_t x2 = shape_def[shape_off2 + 4];
+						real_t y2 = shape_def[shape_off2 + 5];
+						real_t z2 = shape_def[shape_off2 + 6];
 						unsigned int shape_off3 = start_t + (i_t + 2) * CPU_T_PROP_SIZE_;
-						float_t s3 = shape_def[shape_off3];
-						float_t nx3 = shape_def[shape_off3 + 1];
-						float_t ny3 = shape_def[shape_off3 + 2];
-						float_t nz3 = shape_def[shape_off3 + 3];
-						float_t x3 = shape_def[shape_off3 + 4];
-						float_t y3 = shape_def[shape_off3 + 5];
-						float_t z3 = shape_def[shape_off3 + 6];
+						real_t s3 = shape_def[shape_off3];
+						real_t nx3 = shape_def[shape_off3 + 1];
+						real_t ny3 = shape_def[shape_off3 + 2];
+						real_t nz3 = shape_def[shape_off3 + 3];
+						real_t x3 = shape_def[shape_off3 + 4];
+						real_t y3 = shape_def[shape_off3 + 5];
+						real_t z3 = shape_def[shape_off3 + 6];
 						unsigned int shape_off4 = start_t + (i_t + 3) * CPU_T_PROP_SIZE_;
-						float_t s4 = shape_def[shape_off4];
-						float_t nx4 = shape_def[shape_off4 + 1];
-						float_t ny4 = shape_def[shape_off4 + 2];
-						float_t nz4 = shape_def[shape_off4 + 3];
-						float_t x4 = shape_def[shape_off4 + 4];
-						float_t y4 = shape_def[shape_off4 + 5];
-						float_t z4 = shape_def[shape_off4 + 6];
+						real_t s4 = shape_def[shape_off4];
+						real_t nx4 = shape_def[shape_off4 + 1];
+						real_t ny4 = shape_def[shape_off4 + 2];
+						real_t nz4 = shape_def[shape_off4 + 3];
+						real_t x4 = shape_def[shape_off4 + 4];
+						real_t y4 = shape_def[shape_off4 + 5];
+						real_t z4 = shape_def[shape_off4 + 6];
 
 						complex_t qzn1 = temp_z * nz1;
 						complex_t qzt1 = temp_z * z1;
@@ -890,7 +890,7 @@
 					} // for t
 
 					unsigned int shape_off;
-					float_t s, nx, ny, nz, x, y, z;
+					real_t s, nx, ny, nz, x, y, z;
 					complex_t qzn, qzt;
 					complex_t qyn, qyt;
 					complex_t qn, qt;

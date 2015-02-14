@@ -25,11 +25,11 @@
 
 namespace hig{
   /*
-  float_t Dist::dist(const float_t** mat1, const float_t** mat2, frame_t frm){
+  real_t Dist::dist(const real_t** mat1, const real_t** mat2, frame_t frm){
     return 0;
   }
   */
-  float_mat_t Dist::dist(float_t* img1, float_t* img2, unsigned int np1){
+  float_mat_t Dist::dist(real_t* img1, real_t* img2, unsigned int np1){
     float_mat_t dm ;
   for(int ip=0; ip<np1; ip++)
     {
@@ -51,7 +51,7 @@ namespace hig{
 
     for(int iv=0; iv<nv1; iv++)
       {
-  float_vec_t dist_z ;
+  real_vec_t dist_z ;
   for(int ip=0; ip<np1; ip++)
     {
       dist_z.push_back( img1.img_p(iv,ip) -  img2.img_p(iv,ip) );
@@ -62,9 +62,13 @@ namespace hig{
   }*/
 
   /*
-  float_t** Dist::residual(const float_t** mat1, const float_t** mat2){
+  real_t** Dist::residual(const real_t** mat1, const real_t** mat2){
 
     return NULL;
   }
   */
 }
+
+  */
+}
+

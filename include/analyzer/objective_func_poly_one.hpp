@@ -22,12 +22,12 @@ namespace hig{
 
   class PolyOneObjectiveFunction : public ObjectiveFunction {
     private:
-      float_t q_min_, q_max_, q_step_;    // the q-range
-      float_t x1_, x2_;            // function parameters
-      float_t x1_init_, x2_init_;        // init parameter values
-      float_t x1_min_, x1_max_, x2_min_, x2_max_;    // parameter value ranges
+      real_t q_min_, q_max_, q_step_;    // the q-range
+      real_t x1_, x2_;            // function parameters
+      real_t x1_init_, x2_init_;        // init parameter values
+      real_t x1_min_, x1_max_, x2_min_, x2_max_;    // parameter value ranges
 
-      float_t func(float_t, float_t, float_t);    // the main function
+      real_t func(real_t, real_t, real_t);    // the main function
 
     public:
       PolyOneObjectiveFunction(int, char**, DistanceMeasure*);

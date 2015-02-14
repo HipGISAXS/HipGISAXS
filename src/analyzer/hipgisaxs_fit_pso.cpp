@@ -21,7 +21,7 @@
 namespace hig {
 
   ParticleSwarmOptimization::ParticleSwarmOptimization(int narg, char** args, ObjectiveFunction* obj,
-      float_t omega, float_t phi1, float_t phi2, int npart, int ngen,
+      real_t omega, real_t phi1, real_t phi2, int npart, int ngen,
       bool tune_omega = false, int type = 0) :
         rand_(time(NULL)), type_(type) {
     name_ = algo_pso;
@@ -65,7 +65,7 @@ namespace hig {
 
     foresee_num_ = 5;      // TODO: make it modifiable
 
-    float_t temp_val = 0.0;
+    real_t temp_val = 0.0;
 
     // mandatory PSO parameters
     if(!HiGInput::instance().analysis_algo_param(algo_num, "pso_omega", pso_omega_)) {
@@ -135,21 +135,21 @@ namespace hig {
     #endif
 
     best_values_.resize(num_params_, 0.0);
-    best_fitness_ = std::numeric_limits<float_t>::max();
+    best_fitness_ = std::numeric_limits<real_t>::max();
 
-    std::vector <std::pair <float_t, float_t> > limits = (*obj_func_).fit_param_limits();
+    std::vector <std::pair <real_t, real_t> > limits = (*obj_func_).fit_param_limits();
     parameter_data_list_t max_limits, min_limits;
-    for(std::vector <std::pair <float_t, float_t> >::iterator iter = limits.begin();
+    for(std::vector <std::pair <real_t, real_t> >::iterator iter = limits.begin();
         iter != limits.end(); ++ iter) {
-      float_t min_val = iter->first;
-      float_t max_val = iter->second;
+      real_t min_val = iter->first;
+      real_t max_val = iter->second;
       if(max_val < min_val) std::swap(min_val, max_val);
       min_limits.push_back(min_val);
       max_limits.push_back(max_val);
     } // for
     if(min_limits.size() < num_params_) min_limits.resize(num_params_, 0.0);
     if(max_limits.size() < num_params_) max_limits.resize(num_params_,
-                                std::numeric_limits<float_t>::max());
+                                std::numeric_limits<real_t>::max());
     constraints_.param_values_min_ = min_limits;
     constraints_.param_values_max_ = max_limits;
 
@@ -526,14 +526,14 @@ namespace hig {
       std::cout << myrank << ": Particle " << i << std::endl;
       // construct param map
       //parameter_map_t curr_particle;
-      float_vec_t curr_particle;
+      real_vec_t curr_particle;
       for(int j = 0; j < num_params_; ++ j)
         curr_particle.push_back(particles_[i].param_values_[j]);
         //curr_particle[params_[j]] = particles_[i].param_values_[j];
       // tell hipgisaxs about the communicator to work with
       (*obj_func_).update_sim_comm(particle_comm_);
       // compute the fitness
-      float_vec_t curr_fitness = (*obj_func_)(curr_particle);
+      real_vec_t curr_fitness = (*obj_func_)(curr_particle);
 
       // update particle fitness
       // this is meaningful only at the particle masters
@@ -561,7 +561,7 @@ namespace hig {
 
     #ifdef USE_MPI
       // communicate and find globally best fitness
-      float_t new_best_fitness; int best_rank;
+      real_t new_best_fitness; int best_rank;
       /*if((*multi_node_).size(particle_comm_) > 1 && num_particles_ == 1) {
         // in the case when multiple procs work on one particle,
         // only the master needs to communicate with other masters (for other particles)
@@ -673,12 +673,12 @@ namespace hig {
     for(int i = 0; i < num_particles_; ++ i) {
       std::cout << (*multi_node_).rank(root_comm_) << ": Particle " << i << std::endl;
       // construct param map
-      float_vec_t curr_particle;
+      real_vec_t curr_particle;
       for(int j = 0; j < num_params_; ++ j)
         curr_particle.push_back(particles_[i].param_values_[j]);
       // compute the fitness
       (*obj_func_).update_sim_comm(particle_comm_);
-      float_vec_t curr_fitness = (*obj_func_)(curr_particle);
+      real_vec_t curr_fitness = (*obj_func_)(curr_particle);
 
       // update particle fitness
       if(particles_[i].best_fitness_ > curr_fitness[0]) {
@@ -694,7 +694,7 @@ namespace hig {
 
     #ifdef USE_MPI
       // communicate and find globally best fitness
-      float_t new_best_fitness; int best_rank;
+      real_t new_best_fitness; int best_rank;
       if((*multi_node_).size("pso_particle") > 1 && num_particles_ == 1) {
         // in the case when multiple procs work on one particle,
         // only the master needs to communicate with other masters (for other particles)
@@ -745,13 +745,13 @@ namespace hig {
       std::cout << (*multi_node_).rank(root_comm_) << ": Particle " << i << std::endl;
       // construct param map
       //parameter_map_t curr_particle;
-      float_vec_t curr_particle;
+      real_vec_t curr_particle;
       for(int j = 0; j < num_params_; ++ j)
         curr_particle.push_back(particles_[i].param_values_[j]);
         //curr_particle[params_[j]] = particles_[i].param_values_[j];
       // compute the fitness
       (*obj_func_).update_sim_comm(particle_comm_);
-      float_vec_t curr_fitness = (*obj_func_)(curr_particle);
+      real_vec_t curr_fitness = (*obj_func_)(curr_particle);
       particles_[i].fitness_ = curr_fitness[0];    // in PSO we get only one fitness value
 
       // update particle fitness
@@ -766,10 +766,10 @@ namespace hig {
       } // if
     } // for
 
-    float_vec_t all_values, all_fitness;
+    real_vec_t all_values, all_fitness;
     #ifdef USE_MPI
       // communicate with everyone to get their current fitness and params (alltoall)
-      float_t new_best_fitness; int best_rank;
+      real_t new_best_fitness; int best_rank;
       if((*multi_node_).size("pso_particle") > 1 && num_particles_ == 1) {
         // TODO ...
         bool pmaster = (*multi_node_).is_master(particle_comm_);
@@ -778,8 +778,8 @@ namespace hig {
       } else {
         // communicate all the values to all
         // and the fitnesses
-        float_vec_t all_local_values(num_particles_ * num_params_);
-        float_vec_t all_local_fitness(num_particles_);
+        real_vec_t all_local_values(num_particles_ * num_params_);
+        real_vec_t all_local_fitness(num_particles_);
         for(int i = 0; i < num_particles_; ++ i) {
           for(int j = 0; j < num_params_; ++ j)
             all_local_values[i * num_params_ + j] = particles_[i].param_values_[j];
@@ -840,13 +840,13 @@ namespace hig {
       std::cout << (*multi_node_).rank(root_comm_) << ": Particle " << i << std::endl;
       // construct param map
       //parameter_map_t curr_particle;
-      float_vec_t curr_particle;
+      real_vec_t curr_particle;
       for(int j = 0; j < num_params_; ++ j)
         curr_particle.push_back(particles_[i].param_values_[j]);
         //curr_particle[params_[j]] = particles_[i].param_values_[j];
       // compute the fitness
       (*obj_func_).update_sim_comm(particle_comm_);
-      float_vec_t curr_fitness = (*obj_func_)(curr_particle);
+      real_vec_t curr_fitness = (*obj_func_)(curr_particle);
 
       // update particle fitness
       if(particles_[i].best_fitness_ > curr_fitness[0]) {
@@ -860,10 +860,10 @@ namespace hig {
       } // if
     } // for
 
-    float_vec_t all_best_values;
+    real_vec_t all_best_values;
     #ifdef USE_MPI
       // communicate with everyone to get their best (alltoall)
-      float_t new_best_fitness; int best_rank;
+      real_t new_best_fitness; int best_rank;
       if((*multi_node_).size("pso_particle") > 1 && num_particles_ == 1) {
         // TODO ...
         bool pmaster = (*multi_node_).is_master(particle_comm_);
@@ -871,7 +871,7 @@ namespace hig {
         return false;
       } else {
         // communicate all the values to all
-        float_vec_t all_local_best_values(num_particles_ * num_params_);
+        real_vec_t all_local_best_values(num_particles_ * num_params_);
         for(int i = 0; i < num_particles_; ++ i)
           for(int j = 0; j < num_params_; ++ j)
             all_local_best_values[i * num_params_ + j] = particles_[i].best_values_[j];
@@ -931,7 +931,7 @@ namespace hig {
       // first save the current state of the particle
       parameter_data_list_t orig_param_vals = particles_[i].param_values_;
       parameter_data_list_t orig_velocity = particles_[i].velocity_;
-      float_t foresee_best_fitness = std::numeric_limits<float_t>::max();
+      real_t foresee_best_fitness = std::numeric_limits<real_t>::max();
       parameter_data_list_t foresee_best_params, foresee_best_velocity;
       // for each forseeing step
       for(int k = 0; k < foresee_num_; ++ k) {
@@ -940,9 +940,9 @@ namespace hig {
                             pso_omega_, pso_phi1_, pso_phi2_,
                             best_values_, constraints_, rand_);
         // compute the fitness
-        float_vec_t curr_particle = particles_[i].param_values_;
+        real_vec_t curr_particle = particles_[i].param_values_;
         (*obj_func_).update_sim_comm(particle_comm_);
-        float_vec_t curr_fitness = (*obj_func_)(curr_particle);
+        real_vec_t curr_fitness = (*obj_func_)(curr_particle);
 
         if(foresee_best_fitness > curr_fitness[0]) {
           foresee_best_fitness = curr_fitness[0];
@@ -966,7 +966,7 @@ namespace hig {
 
     #ifdef USE_MPI
       // communicate and find globally best fitness
-      float_t new_best_fitness; int best_rank;
+      real_t new_best_fitness; int best_rank;
       if((*multi_node_).size("pso_particle") > 1 && num_particles_ == 1) {
         // in the case when multiple procs work on one particle,
         // only the master needs to communicate with other masters (for other particles)
@@ -1011,12 +1011,12 @@ namespace hig {
     // Irecv
     // first receive fitness values and parameter values
     std::vector<MPI_Request> rreq;
-    std::vector<float_t*> recv_bufs;
+    std::vector<real_t*> recv_bufs;
     int myrank = (*multi_node_).rank(root_comm_);
     for(comm_list_iter_t r = neighbor_recv_lists_.begin(); r != neighbor_recv_lists_.end(); ++ r) {
 //      if(myrank == (*r).first || (*r).second.size() == 0) continue;
-      float_t * recv_fitness = new (std::nothrow) float_t[(*r).second.size()];
-      float_t * recv_values = new (std::nothrow) float_t[(*r).second.size() * num_params_];
+      real_t * recv_fitness = new (std::nothrow) real_t[(*r).second.size()];
+      real_t * recv_values = new (std::nothrow) real_t[(*r).second.size() * num_params_];
       recv_bufs.push_back(recv_fitness); recv_bufs.push_back(recv_values);
       MPI_Request r1, r2;
       (*multi_node_).irecv(root_comm_, recv_fitness, (*r).second.size(), (*r).first, r1);
@@ -1028,12 +1028,12 @@ namespace hig {
     // Isend
     // first send fitness values, then send parameter values
     std::vector <MPI_Request> sreq;
-    std::vector<float_t*> send_bufs;
+    std::vector<real_t*> send_bufs;
     typedef std::map <int, std::set <unsigned int> >::const_iterator comm_list_iter;
     for(comm_list_iter s = neighbor_send_lists_.begin(); s != neighbor_send_lists_.end(); ++ s) {
 //      if(myrank == (*s).first || (*s).second.size() == 0) continue;
-      float_t * send_fitness = new (std::nothrow) float_t[(*s).second.size()];
-      float_t * send_values = new (std::nothrow) float_t[(*s).second.size() * num_params_];
+      real_t * send_fitness = new (std::nothrow) real_t[(*s).second.size()];
+      real_t * send_values = new (std::nothrow) real_t[(*s).second.size() * num_params_];
       send_bufs.push_back(send_fitness); send_bufs.push_back(send_values);
       std::set<unsigned int>::const_iterator iter = (*s).second.begin();
       for(int i = 0; iter != (*s).second.end(); ++ i, ++ iter) {
@@ -1089,9 +1089,9 @@ namespace hig {
     } // for particle
 
     // free all buffers
-    for(std::vector<float_t*>::iterator i = recv_bufs.begin(); i != recv_bufs.end(); ++ i)
+    for(std::vector<real_t*>::iterator i = recv_bufs.begin(); i != recv_bufs.end(); ++ i)
       delete[] *i;
-    for(std::vector<float_t*>::iterator i = send_bufs.begin(); i != send_bufs.end(); ++ i)
+    for(std::vector<real_t*>::iterator i = send_bufs.begin(); i != send_bufs.end(); ++ i)
       delete[] *i;
 
     return true;
@@ -1109,12 +1109,12 @@ namespace hig {
     for(int i = 0; i < num_particles_; ++ i) {
       std::cout << (*multi_node_).rank(root_comm_) << ": Particle " << i << std::endl;
       // construct param map
-      float_vec_t curr_particle;
+      real_vec_t curr_particle;
       for(int j = 0; j < num_params_; ++ j)
         curr_particle.push_back(particles_[i].param_values_[j]);
       // compute the fitness
       (*obj_func_).update_sim_comm(particle_comm_);
-      float_vec_t curr_fitness = (*obj_func_)(curr_particle);
+      real_vec_t curr_fitness = (*obj_func_)(curr_particle);
       // update particle fitness
       if(particles_[i].best_fitness_ > curr_fitness[0]) {
         particles_[i].best_fitness_ = curr_fitness[0];
@@ -1175,12 +1175,12 @@ namespace hig {
     for(int i = 0; i < num_particles_; ++ i) {
       std::cout << (*multi_node_).rank(root_comm_) << ": Particle " << i << std::endl;
       // construct param map
-      float_vec_t curr_particle;
+      real_vec_t curr_particle;
       for(int j = 0; j < num_params_; ++ j)
         curr_particle.push_back(particles_[i].param_values_[j]);
       // compute the fitness
       (*obj_func_).update_sim_comm(particle_comm_);
-      float_vec_t curr_fitness = (*obj_func_)(curr_particle);
+      real_vec_t curr_fitness = (*obj_func_)(curr_particle);
       // update particle fitness
       if(particles_[i].best_fitness_ > curr_fitness[0]) {
         particles_[i].best_fitness_ = curr_fitness[0];
@@ -1238,12 +1238,12 @@ namespace hig {
     for(int i = 0; i < num_particles_; ++ i) {
       std::cout << (*multi_node_).rank(root_comm_) << ": Particle " << i << std::endl;
       // construct param map
-      float_vec_t curr_particle;
+      real_vec_t curr_particle;
       for(int j = 0; j < num_params_; ++ j)
         curr_particle.push_back(particles_[i].param_values_[j]);
       // compute the fitness
       (*obj_func_).update_sim_comm(particle_comm_);
-      float_vec_t curr_fitness = (*obj_func_)(curr_particle);
+      real_vec_t curr_fitness = (*obj_func_)(curr_particle);
       // update particle fitness
       if(particles_[i].best_fitness_ > curr_fitness[0]) {
         particles_[i].best_fitness_ = curr_fitness[0];
@@ -1294,6 +1294,14 @@ namespace hig {
     return true;
   } // ParticleSwarmOptimization::simulate_random_generation()
 
+
+
+} // namespace hig
+ration()
+
+
+
+} // namespace hig
 
 
 } // namespace hig

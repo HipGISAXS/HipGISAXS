@@ -35,7 +35,6 @@ int main(int narg, char** args) {
 
   const char* filename = args[1];
   QGrid::instance().create_test();
-  //NumericFormFactor<float, cuFloatComplex> nff(4);
   NumericFormFactor nff(4);
   nff.init();
   cuFloatComplex *ff = NULL;

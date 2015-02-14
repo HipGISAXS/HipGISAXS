@@ -32,19 +32,20 @@
 
 namespace hig {
 
-  AnalyticFormFactorG::AnalyticFormFactorG(unsigned int nx, unsigned int ny, unsigned int nz):
-    nqx_(nx), nqy_(ny), nqz_(nz),
-    qx_(NULL), qy_(NULL), qz_(NULL), ff_(NULL),
-    ff_buff_d_(NULL), ff_buff_h_(NULL),
-    transvec_(NULL), rot_(NULL)  {
+  __constant__ real_t tau_d;
+  __constant__ real_t eta_d;
+  __constant__ real_t transvec_d[3];
+  __constant__ real_t rot_d[9];
+
+  AnalyticFormFactorG::AnalyticFormFactorG(unsigned int ny, unsigned int nz):
+    nqy_(ny), nqz_(nz),
+    qx_(NULL), qy_(NULL), qz_(NULL), ff_(NULL) {
   } // AnalyticFormFactorG::AnalyticFormFactorG();
 
 
   AnalyticFormFactorG::AnalyticFormFactorG():
-    nqx_(0), nqy_(0), nqz_(0),
-    qx_(NULL), qy_(NULL), qz_(NULL), ff_(NULL),
-    ff_buff_d_(NULL), ff_buff_h_(NULL),
-    transvec_(NULL), rot_(NULL)  {
+    nqy_(0), nqz_(0),
+    qx_(NULL), qy_(NULL), qz_(NULL), ff_(NULL){
   } // AnalyticFormFactorG::AnalyticFormFactorG()
 
 
@@ -54,49 +55,49 @@ namespace hig {
   } // AnalyticFormFactorG::~AnalyticFormFactorG()
 
 
-  void AnalyticFormFactorG::grid_size(unsigned int nx, unsigned int ny, unsigned int nz) {
-    nqx_ = nx; nqy_ = ny;  nqz_ = nz;
+  void AnalyticFormFactorG::grid_size(unsigned int ny, unsigned int nz) {
+    nqy_ = ny;  nqz_ = nz;
   } // AnalyticFormFactorG::grid_size()
 
 
-  bool AnalyticFormFactorG::init(unsigned int nqx, unsigned int nqy, unsigned int nqz) {
+  bool AnalyticFormFactorG::init(unsigned int nqy, unsigned int nqz) {
     // this does the following:
     //   + allocate device buffers
     //   + copy qgrid to device memory
-    nqx_ = nqx; nqy_ = nqy; nqz_ = nqz;
-    cudaMalloc((void**) &qx_, nqx_ * sizeof(float_t));
-    cudaMalloc((void**) &qy_, nqy_ * sizeof(float_t));
+    nqy_ = nqy; nqz_ = nqz;
+    cudaMalloc((void**) &qx_, nqy_ * sizeof(real_t));
+    cudaMalloc((void**) &qy_, nqy_ * sizeof(real_t));
     cudaMalloc((void**) &qz_, nqz_ * sizeof(cucomplex_t));
-    cudaMalloc((void**) &ff_, nqx_ * nqy_ * nqz_ * sizeof(cucomplex_t));
-    cudaMalloc((void**) &transvec_, 3 * sizeof(float_t));  // check this ...
-    cudaMalloc((void**) &rot_, 9 * sizeof(float_t));
-    if(qx_ == NULL || qy_ == NULL || qz_ == NULL || ff_ == NULL || transvec_ == NULL || rot_ == NULL) {
+    cudaMalloc((void**) &ff_, nqz_ * sizeof(cucomplex_t));
+
+    if(qx_ == NULL || qy_ == NULL || qz_ == NULL || ff_ == NULL) {
       std::cerr << "error: device memory allocation failed" << std::endl;
       return false;
     } // if
+
     cudaError_t err = cudaGetLastError();
     //std::cerr << "AFTER MALLOCS: " << cudaGetErrorString(err) << std::endl;
 
     // first need to construct host buffers
-    float_t* qx_h = new (std::nothrow) float_t[nqx_];
-    float_t* qy_h = new (std::nothrow) float_t[nqy_];
+    real_t* qx_h = new (std::nothrow) real_t[nqy_];
+    real_t* qy_h = new (std::nothrow) real_t[nqy_];
     cucomplex_t* qz_h = new (std::nothrow) cucomplex_t[nqz_];
     if(qx_h == NULL || qy_h == NULL || qz_h == NULL) {
       std::cerr << "error: memory allocation for host mesh grid failed" << std::endl;
       return false;
     } // if
-    for(unsigned int ix = 0; ix < nqx_; ++ ix) qx_h[ix] = QGrid::instance().qx(ix);
+    for(unsigned int ix = 0; ix < nqy_; ++ ix) qx_h[ix] = QGrid::instance().qx(ix);
     for(unsigned int iy = 0; iy < nqy_; ++ iy) qy_h[iy] = QGrid::instance().qy(iy);
     for(unsigned int iz = 0; iz < nqz_; ++ iz) {
       qz_h[iz].x = QGrid::instance().qz_extended(iz).real();
       qz_h[iz].y = QGrid::instance().qz_extended(iz).imag();
     } // for qz
 
-    cudaMemcpy(qx_, qx_h, nqx_ * sizeof(float_t), cudaMemcpyHostToDevice);
-    cudaMemcpy(qy_, qy_h, nqy_ * sizeof(float_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(qx_, qx_h, nqy_ * sizeof(real_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(qy_, qy_h, nqy_ * sizeof(real_t), cudaMemcpyHostToDevice);
     cudaMemcpy(qz_, qz_h, nqz_ * sizeof(cucomplex_t), cudaMemcpyHostToDevice);
 
-    size_t device_mem_avail, device_mem_total, device_mem_used;
+/*    size_t device_mem_avail, device_mem_total, device_mem_used;
     cudaMemGetInfo(&device_mem_avail, &device_mem_total);
 
     unsigned int est_device_mem_need = nqx_ * nqy_ * nqz_ * sizeof(cucomplex_t);
@@ -153,7 +154,12 @@ namespace hig {
 
     return run_init(rot_h, transvec);
   } // AnalyticFormFactorG::run_init()
-
+*/
+    delete [] qx_h;
+    delete [] qy_h;
+    delete [] qz_h;
+    return true;
+  } // AnalyticFormFactorG::init()
 
   bool AnalyticFormFactorG::clear() {
     return destroy();
@@ -162,37 +168,29 @@ namespace hig {
 
   // release all resources and init to 0
   bool AnalyticFormFactorG::destroy() {
-    if(ff_buff_h_ != NULL) delete[] ff_buff_h_;
-    if(ff_buff_d_ != NULL) cudaFree(ff_buff_d_);
-    if(rot_ != NULL) cudaFree(rot_);
-    if(transvec_ != NULL) cudaFree(transvec_);
     if(ff_ != NULL) cudaFree(ff_);
     if(qz_ != NULL) cudaFree(qz_);
     if(qy_ != NULL) cudaFree(qy_);
     if(qx_ != NULL) cudaFree(qx_);
 
-    ff_buff_h_ = NULL; ff_buff_d_ = NULL;
-    rot_ = NULL; transvec_ = NULL; ff_ = NULL;
+    ff_ = NULL;
     qz_ = NULL; qy_ = NULL; qx_ = NULL;
-    nqx_ = 0; nqy_ = 0; nqz_ = 0;
-
+    nqy_ = 0; nqz_ = 0;
     return true;
   } // AnalyticFormFactorG::destroy()
 
 
   bool AnalyticFormFactorG::construct_output_ff(std::vector<complex_t>& ff) {
-    unsigned int grid_size = nqx_ * nqy_ * nqz_;
+    unsigned int grid_size = nqz_;
     cucomplex_t* ff_h = new (std::nothrow) cucomplex_t[grid_size];
     cudaMemcpy(ff_h, ff_, grid_size * sizeof(cucomplex_t), cudaMemcpyDeviceToHost);
     ff.clear(); ff.reserve(grid_size);
     for(unsigned int i = 0; i < grid_size; ++ i) ff.push_back(complex_t(ff_h[i].x, ff_h[i].y));
-
     delete[] ff_h;
     return true;
   } // AnalyticFormFactorG::construct_output_ff()
 
-
-  bool AnalyticFormFactorG::move_ff_buff_to_host_ff(std::vector<complex_t>& ff,
+/*  bool AnalyticFormFactorG::move_ff_buff_to_host_ff(std::vector<complex_t>& ff,
                 unsigned int curr_b_nqx, unsigned int curr_b_nqy, unsigned int curr_b_nqz,
                 unsigned int b_nqx, unsigned int b_nqy, unsigned int b_nqz,
                 int ib_x, int ib_y, int ib_z) {
@@ -209,14 +207,14 @@ namespace hig {
           unsigned long int final_i = super_i + i_x;
           unsigned long int block_i = curr_b_nqx * curr_b_nqy * i_z + curr_b_nqx * i_y + i_x;
           ff[final_i] += complex_t(ff_buff_h_[block_i].x, ff_buff_h_[block_i].y);
-          /*if(!(boost::math::isnormal(ff_buff_h_[block_i].x) &&
+  */        /*if(!(boost::math::isnormal(ff_buff_h_[block_i].x) &&
                 boost::math::isnormal(ff_buff_h_[block_i].y))) {
             std::cerr << "********************* oh here ..... "
                   << i_x << ", " << i_y << ", " << i_z
                   << ": " << ff_buff_h_[block_i].x << ", " << ff_buff_h_[block_i].y
                   << std::endl;
           }*/
-        } // for x
+/*        } // for x
       } // for y
     } // for z
     return true;
@@ -240,6 +238,6 @@ namespace hig {
     #endif
     return true;
   } // AnalyticFormFactorG::compute_hyperblock_size()
+*/
 
 } // namespace hig
-

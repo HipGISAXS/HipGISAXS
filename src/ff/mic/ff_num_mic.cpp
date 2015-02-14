@@ -73,10 +73,10 @@ namespace hig {
    * DO NOT USE THIS!!! IT DOES NOT HAVE ROTATION IN IT, AND HAS SEPARATED KERNELS!
    */
   unsigned int NumericFormFactorM::compute_form_factor(int rank,
-            float_vec_t &shape_def_vec, complex_t* &ff,
-            float_t* qx, int nqx, float_t* qy, int nqy, complex_t* qz, int nqz,
-            float_t* rot,
-            float_t& pass_kernel_time, float_t& red_time, float_t& mem_time
+            real_vec_t &shape_def_vec, complex_t* &ff,
+            real_t* qx, int nqx, real_t* qy, int nqy, complex_t* qz, int nqz,
+            real_t* rot,
+            real_t& pass_kernel_time, real_t& red_time, real_t& mem_time
             #ifdef FINDBLOCK
               , const int block_x, const int block_y, const int block_z, const int block_t
             #endif
@@ -105,7 +105,7 @@ namespace hig {
     unsigned int num_triangles = shape_def_vec.size() / 7;
     if(num_triangles < 1) return 0;
 
-    float_t* shape_def = &shape_def_vec[0];
+    real_t* shape_def = &shape_def_vec[0];
   
     unsigned int total_qpoints = nqx * nqy * nqz;
   
@@ -129,10 +129,10 @@ namespace hig {
       qz_flat[i] = make_sC(qz[i].real(), qz[i].imag());
     } // for
 
-    unsigned int host_mem_usage = ((unsigned int) nqx + nqy) * sizeof(float_t) +  // qx, qy
+    unsigned int host_mem_usage = ((unsigned int) nqx + nqy) * sizeof(real_t) +  // qx, qy
                     (unsigned int) nqz * sizeof(complex_t) +    // qz
                     (unsigned int) nqz * sizeof(scomplex_t) +    // qz_flat
-                    (unsigned int) shape_def_vec.size() * sizeof(float_t) +  // shape_def
+                    (unsigned int) shape_def_vec.size() * sizeof(real_t) +  // shape_def
                     total_qpoints * sizeof(complex_t);        // ff
 
     // allocate memory buffers on the target and transfer data
@@ -142,9 +142,9 @@ namespace hig {
                 in(qz_flat: length(nqz) MIC_ALLOC) \
                 in(shape_def: length(7 * num_triangles) MIC_ALLOC)
   
-    unsigned int target_mem_usage = ((unsigned int) nqx + nqy) * sizeof(float_t) +
+    unsigned int target_mem_usage = ((unsigned int) nqx + nqy) * sizeof(real_t) +
                     (unsigned int) nqz * sizeof(scomplex_t) +
-                    (unsigned int) num_triangles * 7 * sizeof(float_t);
+                    (unsigned int) num_triangles * 7 * sizeof(real_t);
 
     unsigned int matrix_size = (unsigned int) nqx * nqy * nqz * num_triangles;
 
@@ -312,8 +312,8 @@ namespace hig {
   /**
    * the main Form Factor kernel function - for one hyperblock.
    */
-  void NumericFormFactorM::form_factor_kernel(float_t* qx, float_t* qy, scomplex_t* qz_flat,
-          float_t* shape_def,
+  void NumericFormFactorM::form_factor_kernel(real_t* qx, real_t* qy, scomplex_t* qz_flat,
+          real_t* shape_def,
           unsigned int curr_nqx, unsigned int curr_nqy, unsigned int curr_nqz,
           unsigned int curr_num_triangles,
           unsigned int b_nqx, unsigned int b_nqy, unsigned int b_nqz, unsigned int b_num_triangles,
@@ -334,13 +334,13 @@ namespace hig {
         #pragma omp for nowait //schedule(auto)
         for(unsigned int i_t = 0; i_t < curr_num_triangles; ++ i_t) {
           unsigned int shape_off = (ib_t * b_num_triangles + i_t) * 7;
-          float_t s = shape_def[shape_off];
-          float_t nx = shape_def[shape_off + 1];
-          float_t ny = shape_def[shape_off + 2];
-          float_t nz = shape_def[shape_off + 3];
-          float_t x = shape_def[shape_off + 4];
-          float_t y = shape_def[shape_off + 5];
-          float_t z = shape_def[shape_off + 6];
+          real_t s = shape_def[shape_off];
+          real_t nx = shape_def[shape_off + 1];
+          real_t ny = shape_def[shape_off + 2];
+          real_t nz = shape_def[shape_off + 3];
+          real_t x = shape_def[shape_off + 4];
+          real_t y = shape_def[shape_off + 5];
+          real_t z = shape_def[shape_off + 6];
   
           unsigned int xy_size = curr_nqx * curr_nqy;
           unsigned int matrix_off = xy_size * curr_nqz * i_t;
@@ -359,15 +359,15 @@ namespace hig {
             for(unsigned int i_y = 0, global_i_y = start_y; i_y < curr_nqy;
                 ++ i_y, ++ global_i_y) {
               unsigned int xy_off_start = curr_nqx * i_y;
-              float_t temp_y = qy[global_i_y];
-              float_t qy2 = temp_y * temp_y;
-              float_t qyn = temp_y * ny;
-              float_t qyt = temp_y * y;
+              real_t temp_y = qy[global_i_y];
+              real_t qy2 = temp_y * temp_y;
+              real_t qyn = temp_y * ny;
+              real_t qyt = temp_y * y;
   
               for(unsigned int i_x = 0, global_i_x = start_x; i_x < curr_nqx;
                   ++ i_x, ++ global_i_x) {
                 unsigned int off = off_start + xy_off_start + i_x;
-                float_t temp_x = qx[global_i_x];
+                real_t temp_x = qx[global_i_x];
                 scomplex_t q2 = temp_x * temp_x + qy2 + qz2;
                 scomplex_t qt = temp_x * x + qyt + qzt;
                 scomplex_t qn = (temp_x * nx + qyn + qzn) / q2;
@@ -422,7 +422,7 @@ namespace hig {
     {
       unsigned int curr_b_nqxyz = curr_b_nqx * curr_b_nqy * curr_b_nqz;
       unsigned int curr_b_nqxy = curr_b_nqx * curr_b_nqy;
-      scomplex_t temp_complex = make_sC((float_t) 0.0, (float_t) -1.0);
+      scomplex_t temp_complex = make_sC((real_t) 0.0, (real_t) -1.0);
 
       omp_set_num_threads(MIC_OMP_NUM_THREADS_);
   
@@ -433,7 +433,7 @@ namespace hig {
           #pragma omp for nowait //schedule(auto)
           for(unsigned int i_y = 0; i_y < curr_b_nqy; ++ i_y) {
             for(unsigned int i_z = 0; i_z < curr_b_nqz; ++ i_z) {
-              scomplex_t total = make_sC((float_t) 0.0, (float_t) 0.0);
+              scomplex_t total = make_sC((real_t) 0.0, (real_t) 0.0);
               for(unsigned int i_t = 0; i_t < curr_b_num_triangles; ++ i_t) {
                 unsigned int i_fq = curr_b_nqxyz * i_t + curr_b_nqxy * i_z +
                           curr_b_nqx * i_y + i_x;
@@ -455,10 +455,10 @@ namespace hig {
    * Double buffered version.
    */
   unsigned int NumericFormFactorM::compute_form_factor_db(int rank,
-            float_vec_t &shape_def_vec, complex_t* &ff,
-            float_t* qx, int nqx, float_t* qy, int nqy, complex_t* qz, int nqz,
-            float_t* rot,
-            float_t& pass_kernel_time, float_t& red_time, float_t& mem_time
+            real_vec_t &shape_def_vec, complex_t* &ff,
+            real_t* qx, int nqx, real_t* qy, int nqy, complex_t* qz, int nqz,
+            real_t* rot,
+            real_t& pass_kernel_time, real_t& red_time, real_t& mem_time
             #ifdef FINDBLOCK
               , const int block_x, const int block_y, const int block_z, const int block_t
             #endif
@@ -489,7 +489,7 @@ namespace hig {
     unsigned int num_triangles = shape_def_vec.size() / 7;
     if(num_triangles < 1) return 0;
 
-    float_t* shape_def = &shape_def_vec[0];
+    real_t* shape_def = &shape_def_vec[0];
   
     unsigned int total_qpoints = nqx * nqy * nqz;
   
@@ -515,10 +515,10 @@ namespace hig {
       qz_flat[i] = make_sC(qz[i].real(), qz[i].imag());
     } // for
 
-    host_mem_usage += ((unsigned int) nqx + nqy) * sizeof(float_t) +  // qx, qy
+    host_mem_usage += ((unsigned int) nqx + nqy) * sizeof(real_t) +  // qx, qy
               (unsigned int) nqz * sizeof(complex_t) +        // qz
               (unsigned int) nqz * sizeof(scomplex_t) +       // qz_flat
-              (unsigned int) shape_def_vec.size() * sizeof(float_t) + // shape_def
+              (unsigned int) shape_def_vec.size() * sizeof(real_t) + // shape_def
               total_qpoints * sizeof(complex_t);              // ff
 
     // allocate memory buffers on the target and transfer data asynchronously
@@ -530,9 +530,9 @@ namespace hig {
                 in(rot: length(9) MIC_ALLOC) \
                 signal(shape_def)
     
-    unsigned long int target_mem_usage = ((unsigned int) nqx + nqy) * sizeof(float_t) +
+    unsigned long int target_mem_usage = ((unsigned int) nqx + nqy) * sizeof(real_t) +
                       (unsigned int) nqz * sizeof(scomplex_t) +
-                      (unsigned int) num_triangles * 7 * sizeof(float_t);
+                      (unsigned int) num_triangles * 7 * sizeof(real_t);
 
     unsigned int matrix_size = (unsigned int) nqx * nqy * nqz * num_triangles;
 
@@ -1034,10 +1034,10 @@ namespace hig {
    * K-buffered version. This uses only the "loopswap" kernel.
    */
   unsigned int NumericFormFactorM::compute_form_factor_kb(int rank,
-            float_t* shape_def, unsigned int num_triangles, complex_t* &ff,
-            float_t* qx, int nqx, float_t* qy, int nqy, complex_t* qz, int nqz, int k,
-            float_t* rot,
-            float_t& kernel_time, float_t& red_time, float_t& mem_time
+            real_t* shape_def, unsigned int num_triangles, complex_t* &ff,
+            real_t* qx, int nqx, real_t* qy, int nqy, complex_t* qz, int nqz, int k,
+            real_t* rot,
+            real_t& kernel_time, real_t& red_time, real_t& mem_time
             #ifdef FINDBLOCK
               , const int block_x, const int block_y, const int block_z, const int block_t
             #endif
@@ -1092,10 +1092,10 @@ namespace hig {
     for(int i = 0; i < nqz; ++ i) qz_flat[i] = make_sC(qz[i].real(), qz[i].imag());
 
     // FIXME:
-    host_mem_usage += ((unsigned int) nqx + nqy) * sizeof(float_t) +  // qx, qy
+    host_mem_usage += ((unsigned int) nqx + nqy) * sizeof(real_t) +  // qx, qy
               (unsigned int) nqz * sizeof(complex_t) +        // qz
               (unsigned int) nqz * sizeof(scomplex_t) +       // qz_flat
-              (unsigned int) num_triangles * 8 * sizeof(float_t) + // shape_def
+              (unsigned int) num_triangles * 8 * sizeof(real_t) + // shape_def
               total_qpoints * sizeof(complex_t);              // ff
 
     // size of shape_def:
@@ -1113,9 +1113,9 @@ namespace hig {
                 signal(shape_def)
 
     // FIXME:    
-    unsigned long int target_mem_usage = ((unsigned int) nqx + nqy) * sizeof(float_t) +
+    unsigned long int target_mem_usage = ((unsigned int) nqx + nqy) * sizeof(real_t) +
                       (unsigned int) nqz * sizeof(scomplex_t) +
-                      (unsigned int) num_triangles * 7 * sizeof(float_t);
+                      (unsigned int) num_triangles * 7 * sizeof(real_t);
 
     unsigned int matrix_size = (unsigned int) nqx * nqy * nqz * num_triangles;
 
@@ -1665,8 +1665,8 @@ namespace hig {
    */
 
   __attribute__((target(mic:0)))
-  void NumericFormFactorM::form_factor_kernel_db(float_t* qx, float_t* qy, scomplex_t* qz_flat,
-          float_t* shape_def,
+  void NumericFormFactorM::form_factor_kernel_db(real_t* qx, real_t* qy, scomplex_t* qz_flat,
+          real_t* shape_def,
           unsigned int curr_nqx, unsigned int curr_nqy, unsigned int curr_nqz,
           unsigned int curr_num_triangles,
           unsigned int b_nqx, unsigned int b_nqy, unsigned int b_nqz, unsigned int b_num_triangles,
@@ -1681,13 +1681,13 @@ namespace hig {
       #pragma omp for nowait //schedule(auto)
       for(unsigned int i_t = 0; i_t < curr_num_triangles; ++ i_t) {
         unsigned int shape_off = (ib_t * b_num_triangles + i_t) * 7;
-        float_t s = shape_def[shape_off];
-        float_t nx = shape_def[shape_off + 1];
-        float_t ny = shape_def[shape_off + 2];
-        float_t nz = shape_def[shape_off + 3];
-        float_t x = shape_def[shape_off + 4];
-        float_t y = shape_def[shape_off + 5];
-        float_t z = shape_def[shape_off + 6];
+        real_t s = shape_def[shape_off];
+        real_t nx = shape_def[shape_off + 1];
+        real_t ny = shape_def[shape_off + 2];
+        real_t nz = shape_def[shape_off + 3];
+        real_t x = shape_def[shape_off + 4];
+        real_t y = shape_def[shape_off + 5];
+        real_t z = shape_def[shape_off + 6];
 
         unsigned int xy_size = curr_nqx * curr_nqy;
         unsigned int matrix_off = xy_size * curr_nqz * i_t;
@@ -1706,16 +1706,16 @@ namespace hig {
           for(unsigned int i_y = 0, global_i_y = start_y; i_y < curr_nqy;
               ++ i_y, ++ global_i_y) {
             unsigned int xy_off_start = curr_nqx * i_y;
-            float_t temp_y = qy[global_i_y];
-            float_t qy2 = temp_y * temp_y;
-            float_t qyn = temp_y * ny;
-            float_t qyt = temp_y * y;
+            real_t temp_y = qy[global_i_y];
+            real_t qy2 = temp_y * temp_y;
+            real_t qyn = temp_y * ny;
+            real_t qyt = temp_y * y;
 
             // ... not vectorized by compiler ... TODO
             for(unsigned int i_x = 0, global_i_x = start_x; i_x < curr_nqx;
                 ++ i_x, ++ global_i_x) {
               unsigned int off = off_start + xy_off_start + i_x;
-              float_t temp_x = qx[global_i_x];
+              real_t temp_x = qx[global_i_x];
               scomplex_t q2 = temp_x * temp_x + qy2 + qz2;
               scomplex_t qt = temp_x * x + qyt + qzt;
               scomplex_t qn = (temp_x * nx + qyn + qzn) / q2;
@@ -1740,7 +1740,7 @@ namespace hig {
 
     unsigned int curr_b_nqxyz = curr_b_nqx * curr_b_nqy * curr_b_nqz;
     unsigned int curr_b_nqxy = curr_b_nqx * curr_b_nqy;
-    scomplex_t temp_complex = make_sC((float_t) 0.0, (float_t) -1.0);
+    scomplex_t temp_complex = make_sC((real_t) 0.0, (real_t) -1.0);
 
     //#ifdef __INTEL_OFFLOAD
     //  omp_set_num_threads(MIC_OMP_NUM_THREADS_);
@@ -1753,7 +1753,7 @@ namespace hig {
         #pragma omp for nowait //schedule(auto)
         for(unsigned int i_y = 0; i_y < curr_b_nqy; ++ i_y) {
           for(unsigned int i_z = 0; i_z < curr_b_nqz; ++ i_z) {
-            scomplex_t total = make_sC((float_t) 0.0, (float_t) 0.0);
+            scomplex_t total = make_sC((real_t) 0.0, (real_t) 0.0);
             // ... not vectorized by compiler ... TODO
             for(unsigned int i_t = 0; i_t < curr_b_num_triangles; ++ i_t) {
               unsigned int i_fq = curr_b_nqxyz * i_t + curr_b_nqxy * i_z +
@@ -1778,8 +1778,8 @@ namespace hig {
   #ifndef FF_NUM_MIC_SWAP
 
   __attribute__((target(mic:0)))
-  void NumericFormFactorM::form_factor_kernel_opt(float_t* qx, float_t* qy, scomplex_t* qz_flat,
-          float_t* shape_def,
+  void NumericFormFactorM::form_factor_kernel_opt(real_t* qx, real_t* qy, scomplex_t* qz_flat,
+          real_t* shape_def,
           unsigned int curr_nqx, unsigned int curr_nqy, unsigned int curr_nqz,
           unsigned int curr_num_triangles,
           unsigned int b_nqx, unsigned int b_nqy, unsigned int b_nqz, unsigned int b_num_triangles,
@@ -1792,13 +1792,13 @@ namespace hig {
       #pragma omp for nowait //schedule(auto)
       for(unsigned int i_t = 0; i_t < curr_num_triangles; ++ i_t) {
         unsigned int shape_off = (ib_t * b_num_triangles + i_t) * 7;
-        float_t s = shape_def[shape_off];
-        float_t nx = shape_def[shape_off + 1];
-        float_t ny = shape_def[shape_off + 2];
-        float_t nz = shape_def[shape_off + 3];
-        float_t x = shape_def[shape_off + 4];
-        float_t y = shape_def[shape_off + 5];
-        float_t z = shape_def[shape_off + 6];
+        real_t s = shape_def[shape_off];
+        real_t nx = shape_def[shape_off + 1];
+        real_t ny = shape_def[shape_off + 2];
+        real_t nz = shape_def[shape_off + 3];
+        real_t x = shape_def[shape_off + 4];
+        real_t y = shape_def[shape_off + 5];
+        real_t z = shape_def[shape_off + 6];
 
         unsigned int xy_size = curr_nqxy;
         unsigned int matrix_off = xy_size * curr_nqz * i_t;
@@ -1817,16 +1817,16 @@ namespace hig {
           for(unsigned int i_y = 0, global_i_y = start_y; i_y < curr_nqy;
               ++ i_y, ++ global_i_y) {
             unsigned int xy_off_start = curr_nqx * i_y;
-            float_t temp_y = qy[global_i_y];
-            float_t qy2 = temp_y * temp_y;
-            float_t qyn = temp_y * ny;
-            float_t qyt = temp_y * y;
+            real_t temp_y = qy[global_i_y];
+            real_t qy2 = temp_y * temp_y;
+            real_t qyn = temp_y * ny;
+            real_t qyt = temp_y * y;
 
             // ... not vectorized by compiler ... TODO (-ipo vectorizes)
             for(unsigned int i_x = 0, global_i_x = start_x; i_x < curr_nqx;
                 ++ i_x, ++ global_i_x) {
               unsigned int off = off_start + xy_off_start + i_x;
-              float_t temp_x = qx[global_i_x];
+              real_t temp_x = qx[global_i_x];
               scomplex_t q2 = temp_x * temp_x + qy2 + qz2;
               scomplex_t qt = temp_x * x + qyt + qzt;
               scomplex_t qn = (temp_x * nx + qyn + qzn) / q2;
@@ -1848,14 +1848,14 @@ namespace hig {
     // doing reduction here itself
     // a separate reduction helps avoid use of atomics otherwise (which are SLOW!)
     unsigned int curr_nqxyz = curr_nqx * curr_nqy * curr_nqz;
-    //scomplex_t temp_complex = make_sC((float_t) 0.0, (float_t) -1.0);
+    //scomplex_t temp_complex = make_sC((real_t) 0.0, (real_t) -1.0);
     #pragma omp parallel
     {
       #pragma omp for nowait collapse(3) //schedule(auto)
       for(unsigned int i_x = 0; i_x < curr_nqx; ++ i_x) {
         for(unsigned int i_y = 0; i_y < curr_nqy; ++ i_y) {
           for(unsigned int i_z = 0; i_z < curr_nqz; ++ i_z) {
-            scomplex_t total = make_sC((float_t) 0.0, (float_t) 0.0);
+            scomplex_t total = make_sC((real_t) 0.0, (real_t) 0.0);
             // ... not vectorized by compiler ... TODO
             for(unsigned int i_t = 0; i_t < curr_num_triangles; ++ i_t) {
               unsigned int i_fq = curr_nqxyz * i_t + curr_nqxy * i_z +
@@ -1875,14 +1875,14 @@ namespace hig {
   
   __attribute__((target(mic:0)))
   void NumericFormFactorM::form_factor_kernel_loopswap(
-          float_t* qx, float_t* qy, scomplex_t* qz_flat,
-          float_t* shape_def,
+          real_t* qx, real_t* qy, scomplex_t* qz_flat,
+          real_t* shape_def,
           unsigned int curr_nqx, unsigned int curr_nqy, unsigned int curr_nqz,
           unsigned int curr_num_triangles,
           unsigned int b_nqx, unsigned int b_nqy, unsigned int b_nqz, unsigned int b_num_triangles,
           unsigned int nqx, unsigned int nqy, unsigned int nqz, unsigned int num_triangles,
           unsigned int ib_x, unsigned int ib_y, unsigned int ib_z, unsigned int ib_t,
-          float_t* rot,
+          real_t* rot,
           scomplex_t* ff_buffer) {
 
     if(nqx == 1) {  // call the optimized special case
@@ -1924,7 +1924,7 @@ namespace hig {
             int global_i_z = start_z + i_z;
             int global_i_y = start_y + i_y;
             int global_i_x = start_x + i_x;
-            scomplex_t total = make_sC((float_t) 0.0, (float_t) 0.0);
+            scomplex_t total = make_sC((real_t) 0.0, (real_t) 0.0);
 
             // TODO: do blocking for cache ... ?
             for(int i_t = 0; i_t < curr_num_triangles; ++ i_t) {
@@ -1934,17 +1934,17 @@ namespace hig {
               unsigned int off = off_start + xy_off_start + i_x;
 
               unsigned int shape_off = (ib_t * b_num_triangles + i_t) * 7;
-              float_t s = shape_def[shape_off];
-              float_t nx = shape_def[shape_off + 1];
-              float_t ny = shape_def[shape_off + 2];
-              float_t nz = shape_def[shape_off + 3];
-              float_t x = shape_def[shape_off + 4];
-              float_t y = shape_def[shape_off + 5];
-              float_t z = shape_def[shape_off + 6];
+              real_t s = shape_def[shape_off];
+              real_t nx = shape_def[shape_off + 1];
+              real_t ny = shape_def[shape_off + 2];
+              real_t nz = shape_def[shape_off + 3];
+              real_t x = shape_def[shape_off + 4];
+              real_t y = shape_def[shape_off + 5];
+              real_t z = shape_def[shape_off + 6];
 
               scomplex_t temp_qz = qz_flat[global_i_z];
-              float_t temp_qy = qy[global_i_y];
-              float_t temp_qx = qx[global_i_x];
+              real_t temp_qy = qy[global_i_y];
+              real_t temp_qx = qx[global_i_x];
 
               scomplex_t temp_x = rot[0] * temp_qx + rot[1] * temp_qy + rot[2] * temp_qz;
               scomplex_t temp_y = rot[3] * temp_qx + rot[4] * temp_qy + rot[5] * temp_qz;
@@ -2035,3 +2035,10 @@ namespace hig {
 
 
 } // namespace hig
+ : b_num_triangles;
+    #endif
+  } // NumericFormFactorM::compute_hyperblock_size()
+
+
+} // namespace hig
+g

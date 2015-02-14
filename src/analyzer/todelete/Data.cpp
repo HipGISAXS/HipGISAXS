@@ -25,8 +25,8 @@
 
 namespace hig{
 
-  float_vec_t Data::create_vec(float v0, float vN, float& stp, int& nv){
-    float_vec_t v;
+  real_vec_t Data::create_vec(float v0, float vN, float& stp, int& nv){
+    real_vec_t v;
     float min = (v0<=vN ? v0 : vN);
     float max = (v0<vN  ? vN : v0);
     if(stp>0){
@@ -49,4 +49,5 @@ namespace hig{
     return v;
   }
 
+}
 }

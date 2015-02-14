@@ -35,8 +35,8 @@ namespace hig {
 
     private:
       std::string origin_;   // change to enum - tl tr bl br
-      float_t pixel_size_;
-      float_t sd_distance_;    /* sample to detector distance */
+      real_t pixel_size_;
+      real_t sd_distance_;    /* sample to detector distance */
       vector2_t total_pixels_;  // make it vector3_t for 3d ? ...
       vector2_t direct_beam_;
 
@@ -51,13 +51,13 @@ namespace hig {
 
       void direct_beam(vector2_t v) { direct_beam_ = v; }
       void total_pixels(vector2_t v) { total_pixels_ = v; }
-      void direct_beam(float_t v, float_t w) { direct_beam_[0] = v; direct_beam_[1] = w; }
-      void total_pixels(float_t v, float_t w) { total_pixels_[0] = v; total_pixels_[1] = w; }
+      void direct_beam(real_t v, real_t w) { direct_beam_[0] = v; direct_beam_[1] = w; }
+      void total_pixels(real_t v, real_t w) { total_pixels_[0] = v; total_pixels_[1] = w; }
 
-      void sd_distance(float_t d) { sd_distance_ = d; }
-      void pixel_size(float_t d) { pixel_size_ = d; }
+      void sd_distance(real_t d) { sd_distance_ = d; }
+      void pixel_size(real_t d) { pixel_size_ = d; }
 
-      bool update_param(const std::string&, float_t);
+      bool update_param(const std::string&, real_t);
 
       void print() {
         std::cout << " origin_ = " << origin_ << std::endl

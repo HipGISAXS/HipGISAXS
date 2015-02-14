@@ -23,19 +23,29 @@
 #ifndef __CONSTANTS_HPP__
 #define __CONSTANTS_HPP__
 
-#include <boost/math/special_functions/fpclassify.hpp>
-
+#include <limits>
 #include <common/typedefs.hpp>
 
 namespace hig {
 
-  const unsigned int LIGHT_SPEED_ = 3e+8;    /* speed of light in m/s */
-  const float_t PI_ = 3.141592653589793;    /* PI correct upto 15 decimal places */
-  const float_t SQRT_2PI_ = 2.506628;
-  const float_t REAL_ZERO_ = std::numeric_limits<float_t>::epsilon();
+  const real_t TINY_ = std::numeric_limits<real_t>::min();
+  const real_t CUTINY_ = 1.0e-13;
 
-  //const unsigned int MAX_DEPTH_ = 500;    /* maximum depth allowed */
-  const unsigned int MAX_DEPTH_ = 150;    /* maximum depth allowed */
+  const unsigned int LIGHT_SPEED_ = 3e+8;   /* speed of light in m/s */
+  const real_t PI_ = 3.141592653589793;     /* PI correct upto 15 decimal places */
+  const real_t SQRT_2PI_ = 2.506628;
+
+  const unsigned int MAX_DEPTH_ = 150;      /* maximum depth allowed */
+
+  // real constants
+  const real_t REAL_ZERO_ = (real_t) 0.;
+  const real_t REAL_ONE_  = (real_t) 1.;
+  const real_t REAL_MINUS_ONE_ = (real_t) -1.;
+
+  // complex constants
+  const complex_t CMPLX_ZERO_ = complex_t(REAL_ZERO_, REAL_ZERO_);
+  const complex_t CMPLX_ONE_  = complex_t(REAL_ZERO_, REAL_ONE_);
+  const complex_t CMPLX_MINUS_ONE_ = complex_t(REAL_ZERO_, REAL_MINUS_ONE_);
 
 } // namespace
 

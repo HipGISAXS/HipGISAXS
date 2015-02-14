@@ -28,14 +28,14 @@
 #include "image.hpp"
 
 
-bool make_data(float* &data, int nx, int ny) {
+bool make_data(double* &data, int nx, int ny) {
   if(nx < 1 || ny < 1) return false;
 
   srand(time(NULL));
-  data = new (std::nothrow) float[nx * ny];
+  data = new (std::nothrow) double[nx * ny];
   for(int i = 0; i < ny; ++ i) {
     for(int j = 0 ; j < nx; ++ j) {
-      data[nx * i + j] = ((float)rand() / RAND_MAX) / (pow(10, rand() % 5));
+      data[nx * i + j] = ((double)rand() / RAND_MAX) / (pow(10, rand() % 5));
     } // for
   } // for
 
@@ -44,7 +44,7 @@ bool make_data(float* &data, int nx, int ny) {
 
 int main(int narg, char** args) {
   int nx = 10, ny = 10;
-  float *data = NULL;
+  double *data = NULL;
   if(!make_data(data, nx, ny)) return -1;
 
   for(int i = 0; i < ny; ++ i) {

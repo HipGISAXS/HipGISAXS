@@ -55,7 +55,7 @@ namespace hig {
   /**
    * apply log10 to all elements of the 2D matrix
    */
-  bool mat_log10_2d(unsigned int x_size, unsigned int y_size, float_t* &data) {
+  bool mat_log10_2d(unsigned int x_size, unsigned int y_size, real_t* &data) {
     if(data == NULL) {
       std::cerr << "error: data is null while calculating log10" << std::endl;
       return false;
@@ -84,12 +84,12 @@ namespace hig {
    * compute the transpose of a matrix
    * use boost libs ...
    */
-  bool transpose(unsigned int x_size, unsigned int y_size, const float_t *matrix, float_t* &transp) {
+  bool transpose(unsigned int x_size, unsigned int y_size, const real_t *matrix, real_t* &transp) {
     if(matrix == NULL) {
       std::cerr << "error: matrix is NULL while tranposing" << std::endl;
       return false;
     } // if
-    transp = new (std::nothrow) float_t[x_size * y_size];
+    transp = new (std::nothrow) real_t[x_size * y_size];
     for(unsigned int y = 0; y < y_size; ++ y) {
       for(unsigned int x = 0; x < x_size; ++ x) {
         transp[y_size * x + y] = matrix[x_size * y + x];
@@ -111,9 +111,9 @@ namespace hig {
 /*  bool mat_mul_3x3(vector3_t a, vector3_t b, vector3_t c,
           vector3_t d, vector3_t e, vector3_t f,
           vector3_t& x, vector3_t& y, vector3_t& z) {
-    float_t *A = new (std::nothrow) float_t[9];
-    float_t *B = new (std::nothrow) float_t[9];
-    float_t *C = new (std::nothrow) float_t[9];
+    real_t *A = new (std::nothrow) real_t[9];
+    real_t *B = new (std::nothrow) real_t[9];
+    real_t *C = new (std::nothrow) real_t[9];
 
     A[0] = a[0]; A[1] = a[1]; A[2] = a[2];
     A[3] = b[0]; A[4] = b[1]; A[5] = b[2];
@@ -151,17 +151,17 @@ namespace hig {
     return true;
   } // mat_mul_3x3()
 
-  bool mat_mul_3x3(float_vec_t a, float_vec_t d, float_vec_t& x) {
-    float_t *A = &(a[0]), *B = &(d[0]), *C = &(x[0]);
+  bool mat_mul_3x3(real_vec_t a, real_vec_t d, real_vec_t& x) {
+    real_t *A = &(a[0]), *B = &(d[0]), *C = &(x[0]);
     return mat_mul_3x3(A, B, C);
   } // mat_mul_3x3()
 
-  bool mat_mul_3x3(float_vec_t a, float_t* d, float_t*& x) {
-    float_t *A = &(a[0]), *B = d, *C = x;
+  bool mat_mul_3x3(real_vec_t a, real_t* d, real_t*& x) {
+    real_t *A = &(a[0]), *B = d, *C = x;
     return mat_mul_3x3(A, B, C);
   } // mat_mul_3x3()
 
-  bool mat_mul_3x3(float_t* A, float_t* B, float_t*& C) {
+  bool mat_mul_3x3(real_t* A, real_t* B, real_t*& C) {
     for(int i = 0; i < 3; i ++) {
       for(int j = 0; j < 3; j ++) {
         C[3 * i + j] = 0.0;
@@ -215,11 +215,11 @@ namespace hig {
    * arithmetic operators for complex types
    */
 
-  complex_t operator*(complex_t c, float_t s) {
+  complex_t operator*(complex_t c, real_t s) {
     return complex_t(c.real() * s, c.imag() * s);
   } // operator*()
 
-  complex_t operator*(float_t s, complex_t c) {
+  complex_t operator*(real_t s, complex_t c) {
     return complex_t(c.real() * s, c.imag() * s);
   } // operator*()
 
@@ -233,11 +233,11 @@ namespace hig {
       return complex_t(c.x * s.x - c.y * s.y, c.x * s.y + c.y * s.x);
     } // operator*()
 
-    complex_t operator*(cucomplex_t c, float_t s) {
+    complex_t operator*(cucomplex_t c, real_t s) {
       return complex_t(s * c.x, s * c.y);
     } // operator*()
 
-    complex_t operator*(float_t s, cucomplex_t c) {
+    complex_t operator*(real_t s, cucomplex_t c) {
       return complex_t(s * c.x, s * c.y);
     } // operator*()
 
@@ -257,11 +257,11 @@ namespace hig {
       return complex_t(s.real() + c.x, s.imag() + c.y);
     } // operator+()
 
-    complex_t operator+(cucomplex_t c, float_t s) {
+    complex_t operator+(cucomplex_t c, real_t s) {
       return complex_t(s + c.x, c.y);
     } // operator+()
 
-    complex_t operator+(float_t s, cucomplex_t c) {
+    complex_t operator+(real_t s, cucomplex_t c) {
       return complex_t(s + c.x, c.y);
     } // operator+()
 
@@ -340,7 +340,7 @@ namespace hig {
   /**
    * scalar-matrix multiplication    WRONG ...
    */
-  /*std::vector<complex_t>& mat_mul(float_t scalar,
+  /*std::vector<complex_t>& mat_mul(real_t scalar,
                   //unsigned int x_size, unsigned int y_size, unsigned int z_size,
                   std::vector<complex_t>& matrix) {
     std::vector<complex_t> result;
@@ -360,7 +360,7 @@ namespace hig {
     return result;
   } // mat_mul()*/
 
-  /*std::vector<complex_t>& mat_mul(std::vector<complex_t>& matrix, float_t scalar) {
+  /*std::vector<complex_t>& mat_mul(std::vector<complex_t>& matrix, real_t scalar) {
     return mat_mul(scalar, matrix);
   } // mat_mul()
 
@@ -371,7 +371,7 @@ namespace hig {
   /**
    * scalar-matrix multiplication into result
    */
-/*  bool mat_mul(float_t scalar, const complex_vec_t& matrix, complex_vec_t& result) {
+/*  bool mat_mul(real_t scalar, const complex_vec_t& matrix, complex_vec_t& result) {
     result.clear();
     for(std::vector<complex_t>::const_iterator i = matrix.begin(); i != matrix.end(); ++ i) {
       result.push_back((*i) * scalar);
@@ -387,7 +387,7 @@ namespace hig {
     return true;
   } // mat_mul()
 
-  bool mat_mul(const complex_vec_t& matrix, float_t scalar, complex_vec_t& result) {
+  bool mat_mul(const complex_vec_t& matrix, real_t scalar, complex_vec_t& result) {
     return mat_mul(scalar, matrix, result);
   } // mat_mul()
 
@@ -398,7 +398,7 @@ namespace hig {
   /**
    * in-place scalar-matrix multiplication
    */
-/*  bool mat_mul_in(float_t scalar,  complex_vec_t& matrix) {
+/*  bool mat_mul_in(real_t scalar,  complex_vec_t& matrix) {
     for(complex_vec_t::iterator i = matrix.begin(); i != matrix.end(); ++ i) {
       *i = (*i) * scalar;
     } // for
@@ -412,7 +412,7 @@ namespace hig {
     return true;
   } // mat_mul()
 
-  bool mat_mul_in(complex_vec_t& matrix, float_t scalar) {
+  bool mat_mul_in(complex_vec_t& matrix, real_t scalar) {
     return mat_mul_in(scalar, matrix);
   } // mat_mul()
 
@@ -659,8 +659,8 @@ namespace hig {
     GEN out_res = cgetc(64);
     out_res = jbessel(unit, inp_m, 64);
 
-    float_t out_real = rtodbl(gel(out_res, 1));
-    float_t out_imag = rtodbl(gel(out_res, 2));
+    real_t out_real = rtodbl(gel(out_res, 1));
+    real_t out_imag = rtodbl(gel(out_res, 2));
 
     pari_close();
 
@@ -689,7 +689,7 @@ namespace hig {
       delete[] cimag;
       return complex_t(0, 0);
     } // if
-    complex_t result((float_t)creal[0], (float_t)cimag[0]);
+    complex_t result((real_t)creal[0], (real_t)cimag[0]);
 
     delete[] creal;
     delete[] cimag;
@@ -700,7 +700,7 @@ namespace hig {
   }*/
 
   // adding two data sets into one
-  bool add_data_elements(float_t* &dst, const float_t* src1, const float_t* src2, int size) {
+  bool add_data_elements(real_t* &dst, const real_t* src1, const real_t* src2, int size) {
     if(dst == NULL || src1 == NULL || src2 == NULL) {
       std::cerr << "error: null pointer in adding data elements." << std::endl;
       return false;
@@ -738,24 +738,24 @@ namespace hig {
 
 
   // compute integral of e^(ikx) between x1 and x2
-  complex_t integral_e(float_t x1, float_t x2, complex_t k) {
+  complex_t integral_e(real_t x1, real_t x2, complex_t k) {
     if(boost::math::fpclassify(k.real()) == FP_ZERO &&
         boost::math::fpclassify(k.imag()) == FP_ZERO) {
       return complex_t(x2 - x1, 0);
     } else {
       complex_t ik = complex_t(0.0, 1.0) * k;
-      return (((float_t) 1.0 / ik) * (exp(ik * x2) - exp(ik * x1)));
+      return (((real_t) 1.0 / ik) * (exp(ik * x2) - exp(ik * x1)));
     } // if-else
   } // integral_e
 
   // compute integral of (ax + b) e^(ikx) between x1 and x2
-  complex_t integral_xe(float_t x1, float_t x2, float_t a, float_t b, complex_t k) {
+  complex_t integral_xe(real_t x1, real_t x2, real_t a, real_t b, complex_t k) {
     if(boost::math::fpclassify(k.real()) == FP_ZERO &&
         boost::math::fpclassify(k.imag()) == FP_ZERO) {
       return complex_t(a * (x2 * x2 - x1 * x1) / 2 + b * (x2 - x1), 0.0);
     } else {
       complex_t ik = complex_t(0.0, 1.0) * k;
-      return (((float_t) 1.0 / ik) * ((a * x2 + b - a / ik) * exp(ik * x2) -
+      return (((real_t) 1.0 / ik) * ((a * x2 + b - a / ik) * exp(ik * x2) -
                       (a * x1 + b - a / ik) * exp(ik * x1)));
     } // if-else
   } // integral_xe()
@@ -765,15 +765,15 @@ namespace hig {
    * some more operations on complex numbers
    */
 
-  //inline float_t magnitude(complex_t z) {
+  //inline real_t magnitude(complex_t z) {
   //  return sqrt(z.real() * z.real() + z.imag() * z.imag());
   //} // magnitude()
 
-  inline bool normalize(complex_t* x, float_t* xn, int size) {
+  inline bool normalize(complex_t* x, real_t* xn, int size) {
     if(x == NULL) return false;
-    if(xn == NULL) xn = new (std::nothrow) float_t[size];
+    if(xn == NULL) xn = new (std::nothrow) real_t[size];
 
-    float_t max = magnitude(x[0]);
+    real_t max = magnitude(x[0]);
     for(int i = 0; i < size; ++ i) {
       xn[i] = magnitude(x[i]);
       if(xn[i] > max) max = xn[i];
@@ -791,8 +791,8 @@ namespace hig {
   } // conjugate()
 
 
-  inline float_t gaussian(float_t x, float_t y, float_t mux, float_t muy, float_t sig, bool isnorm) {
-    float_t norm = -1.0;
+  inline real_t gaussian(real_t x, real_t y, real_t mux, real_t muy, real_t sig, bool isnorm) {
+    real_t norm = -1.0;
     if(isnorm) norm = sig * sqrt(2 * PI_);
     return exp(-((x - mux) * (x - mux) + (y - muy) * (y - muy)) / (2 * sig * sig)) / norm;
   } // gaussian()

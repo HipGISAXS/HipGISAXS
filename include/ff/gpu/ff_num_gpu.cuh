@@ -32,7 +32,7 @@ namespace hig {
   /**
    * Class for computing Form Factor in either single or double precision on a single GPU.
    */
-  //template<typename float_t, typename complex_t>
+  //template<typename real_t, typename complex_t>
   class NumericFormFactorG {
     public:
       NumericFormFactorG(int block_cuda):
@@ -49,17 +49,29 @@ namespace hig {
       NumericFormFactorG():  // called when not using this GPU version
         block_cuda_(0), block_cuda_t_(0), block_cuda_y_(0), block_cuda_z_(0) { }
 
-      ~NumericFormFactorG() { }
+      ~NumericFormFactorG() {}
 
+      /* Spherical Q_grid */
+      unsigned int compute_exact_triangle(triangle_t *, int, 
+              cucomplex_t * &, 
+              int, real_t *, real_t *, int,
+              cucomplex_t *, real_t *, real_t &);
+
+      unsigned int compute_approx_triangle(std::vector<real_t> &, 
+              cucomplex_t * &,
+              int, real_t *, real_t *, int, 
+              cucomplex_t *, real_t * , real_t &);
+
+      
       /* original */
       unsigned int compute_form_factor(int,
-          std::vector<float_t> &shape_def, std::vector<short int> &axes,
+          std::vector<real_t> &shape_def, std::vector<short int> &axes,
           cucomplex_t* &ff,
-          float_t* &qx_h, int nqx,
-          float_t* &qy_h, int nqy,
+          real_t* &qx_h, int nqx,
+          real_t* &qy_h, int nqy,
           cucomplex_t* &qz_h, int nqz,
-          float_t* &rot,
-          float_t&, float_t&, float_t&
+          real_t* &rot,
+          real_t&, real_t&, real_t&
           #ifdef FINDBLOCK
             , const int, const int, const int, const int
           #endif
@@ -67,13 +79,13 @@ namespace hig {
 
       /* with double buffering - default */
       unsigned int compute_form_factor_db(int,
-          std::vector<float_t> &shape_def, std::vector<short int> &axes,
+          std::vector<real_t> &shape_def, std::vector<short int> &axes,
           cucomplex_t* &ff,
-          float_t* &qx_h, int nqx,
-          float_t* &qy_h, int nqy,
+          real_t* &qx_h, int nqx,
+          real_t* &qy_h, int nqy,
           cucomplex_t* &qz_h, int nqz,
-          float_t* &rot,
-          float_t&, float_t&, float_t&
+          real_t* &rot,
+          real_t&, real_t&, real_t&
           #ifdef FINDBLOCK
             , const int, const int, const int, const int
           #endif
@@ -81,13 +93,13 @@ namespace hig {
 
       /* with fused kernels and double buffering */
       unsigned int compute_form_factor_db_fused(int,
-          std::vector<float_t> &shape_def, std::vector<short int> &axes,
+          std::vector<real_t> &shape_def, std::vector<short int> &axes,
           cucomplex_t* &ff,
-          float_t* &qx_h, int nqx,
-          float_t* &qy_h, int nqy,
+          real_t* &qx_h, int nqx,
+          real_t* &qy_h, int nqy,
           cucomplex_t* &qz_h, int nqz,
-          float_t* &rot,
-          float_t&, float_t&, float_t&
+          real_t* &rot,
+          real_t&, real_t&, real_t&
           #ifdef FINDBLOCK
             , const int, const int, const int, const int
           #endif
@@ -95,13 +107,13 @@ namespace hig {
 
       /* with fused kernels and triple buffering */
       unsigned int compute_form_factor_kb_fused(int,
-          std::vector<float_t> &shape_def, std::vector<short int> &axes,
+          std::vector<real_t> &shape_def, std::vector<short int> &axes,
           cucomplex_t* &ff,
-          float_t* &qx_h, int nqx,
-          float_t* &qy_h, int nqy,
+          real_t* &qx_h, int nqx,
+          real_t* &qy_h, int nqy,
           cucomplex_t* &qz_h, int nqz, int k,
-          float_t* &rot,
-          float_t&, float_t&, float_t&
+          real_t* &rot,
+          real_t&, real_t&, real_t&
           #ifdef FINDBLOCK
             , const int, const int, const int, const int
           #endif
@@ -109,13 +121,13 @@ namespace hig {
 
       /* with double buffering and optimized memory (incomplete ... TODO)*/
       unsigned int compute_form_factor_db_mem(int,
-          std::vector<float_t> &shape_def, std::vector<short int> &axes,
+          std::vector<real_t> &shape_def, std::vector<short int> &axes,
           cucomplex_t* &ff,
-          float_t* &qx_h, int nqx,
-          float_t* &qy_h, int nqy,
+          real_t* &qx_h, int nqx,
+          real_t* &qy_h, int nqy,
           cucomplex_t* &qz_h, int nqz,
-          float_t* &rot,
-          float_t&, float_t&, float_t&
+          real_t* &rot,
+          real_t&, real_t&, real_t&
           #ifdef FINDBLOCK
             , const int, const int, const int, const int
           #endif

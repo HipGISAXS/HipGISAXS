@@ -83,11 +83,11 @@ int main(int narg, char** args) {
 //  float stpv=0, stpp=0;
 //
 //  hig::Data data;
-//  hig::float_vec_t qy= data.create_vec(  -2, 2, stpp , n_par) ;
-//  hig::float_vec_t qz= data.create_vec(  0, 2, stpv , n_ver);
+//  hig::real_vec_t qy= data.create_vec(  -2, 2, stpp , n_par) ;
+//  hig::real_vec_t qz= data.create_vec(  0, 2, stpv , n_ver);
 //
 //  /*
-//  hig::float_vec_t X;
+//  hig::real_vec_t X;
 //  X.push_back(4);
 //  X.push_back(4);*/
 //  hig::SimTest test(dim,  qy, qz);
@@ -130,7 +130,7 @@ int main(int narg, char** args) {
 //
 //  /*   TEST: distance computation  */
 //  /*
-//  hig::float_vec_t X0;
+//  hig::real_vec_t X0;
 //  hig::frame_t frm;
 //  X0.push_back(5.34);
 //  X0.push_back(9.98);
@@ -171,4 +171,5 @@ int main(int narg, char** args) {
 //  ana.print_output();
 //
 //  return 0;
+//}
 //}

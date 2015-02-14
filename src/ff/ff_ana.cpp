@@ -46,11 +46,11 @@ namespace hig {
     ff.clear();
 
     #ifdef FF_ANA_GPU
-      gff_.init(nqx_, nqy_, nqz_);
+      gff_.init(nqy_, nqz_);
     #endif // FF_ANA_GPU
 
     // rotation matrices are new for each ff calculation
-    rot_ = new (std::nothrow) float_t[9];
+    rot_ = new (std::nothrow) real_t[9];
     rot_[0] = rot1[0]; rot_[1] = rot1[1]; rot_[2] = rot1[2];
     rot_[3] = rot2[0]; rot_[4] = rot2[1]; rot_[5] = rot2[2];
     rot_[6] = rot3[0]; rot_[7] = rot3[1]; rot_[8] = rot3[2];
@@ -67,9 +67,9 @@ namespace hig {
   } // AnalyticFormFactor::clear()
 
 
-  bool AnalyticFormFactor::compute(ShapeName shape, float_t tau, float_t eta, vector3_t transvec,
+  bool AnalyticFormFactor::compute(ShapeName shape, real_t tau, real_t eta, vector3_t transvec,
                                     std::vector<complex_t>& ff,
-                                    shape_param_list_t& params, float_t single_layer_thickness,
+                                    shape_param_list_t& params, real_t single_layer_thickness,
                                     vector3_t rot1, vector3_t rot2, vector3_t rot3
                                     #ifdef USE_MPI
                                       , woo::MultiNode& world_comm, std::string comm_key
@@ -101,19 +101,23 @@ namespace hig {
         } // if
         break;
       case shape_random_cylinders:    // randomly oriented cylinders, for saxs
+        /*
         if(!compute_random_cylinders(params, ff, tau, eta, transvec)) {
           std::cerr << "error: something went wrong while computing FF for random cylinders"
                 << std::endl;
           return false;
         } // if
+        */ 
         break;
       case shape_horizontal_cylinder:    // horizontal cylinder
+        /*
         if(!compute_horizontal_cylinder(tau, eta, params, transvec, ff)) {
           std::cerr << "error: something went wrong while computing FF for a "
                 << "horizontal cylinder"
                 << std::endl;
           return false;
         } // if
+        */
         break;
       case shape_sphere:          // simple sphere
         if(!compute_sphere(params, ff, transvec)) {
@@ -158,7 +162,7 @@ namespace hig {
         } // if
         break;
       case shape_pyramid:          // pyramid
-        if(!compute_pyramid()) {
+        if(!compute_pyramid(params, ff, tau, eta, transvec)){
           std::cerr << "error: something went wrong while computing FF for a pyramid"
                 << std::endl;
           return false;
@@ -167,13 +171,6 @@ namespace hig {
       case shape_trunccone:        // truncated cone
         if(!compute_truncated_cone(params, tau, eta, ff, transvec)) {
           std::cerr << "error: something went wrong while computing FF for a truncated cone"
-                << std::endl;
-          return false;
-        } // if
-        break;
-      case shape_truncpyr:        // truncated pyramid
-        if(!compute_truncated_pyramid(params, ff, transvec)) {
-          std::cerr << "error: something went wrong while computing FF for a truncated pyramid"
                 << std::endl;
           return false;
         } // if
@@ -189,9 +186,6 @@ namespace hig {
             << std::endl;
     #endif // TIME_DETAIL_1
 
-    //int naninfs = count_naninfs(nqx_, nqy_, nqz_, ff);
-    //std::cout << " ------ " << naninfs << " / " << nqx_ * nqy_ * nqz_
-    //      << " nans or infs" << std::endl;
     return true;
   } // AnalyticFormFactor::compute()
 
@@ -203,7 +197,7 @@ namespace hig {
   bool AnalyticFormFactor::mat_fq_inv_in(unsigned int x_size,
                       unsigned int y_size,
                       unsigned int z_size,
-                      complex_vec_t& matrix, float_t y) {
+                      complex_vec_t& matrix, real_t y) {
     for(complex_vec_t::iterator i = matrix.begin(); i != matrix.end(); ++ i) {
       *i = fq_inv(*i, y);
     } // for
@@ -213,7 +207,7 @@ namespace hig {
 
 
   bool AnalyticFormFactor::mat_fq_inv(unsigned int x_size, unsigned int y_size, unsigned int z_size,
-                    const complex_vec_t& matrix, float_t y, complex_vec_t& result) {
+                    const complex_vec_t& matrix, real_t y, complex_vec_t& result) {
     result.clear();
     for(complex_vec_t::const_iterator i = matrix.begin(); i != matrix.end(); ++ i) {
       result.push_back(fq_inv(*i, y));
@@ -222,10 +216,10 @@ namespace hig {
   } // AnalyticFormFactor::mat_fq_inv()
 
 
-  complex_t AnalyticFormFactor::fq_inv(complex_t value, float_t y) {
+  complex_t AnalyticFormFactor::fq_inv(complex_t value, real_t y) {
     complex_t unitc(0, 1.0);
-    complex_t temp = 2.0 * exp(unitc * value * y / (float_t) 2.0) *
-              sin(value * y / (float_t) 2.0) / value;
+    complex_t temp = 2.0 * exp(unitc * value * y / (real_t) 2.0) *
+              sin(value * y / (real_t) 2.0) / value;
     if(fabs(temp) <= 1e-14) temp = y;
     return temp;
   } // AnalyticFormFactor::fq_inv()
@@ -267,8 +261,8 @@ namespace hig {
   /**
    * generate parameter distribution
    */
-  bool AnalyticFormFactor::param_distribution(ShapeParam& param, std::vector<float_t>& dim,
-                        std::vector<float_t>& dim_vals) {
+  bool AnalyticFormFactor::param_distribution(ShapeParam& param, std::vector<real_t>& dim,
+                        std::vector<real_t>& dim_vals) {
     if(!param.isvalid()) {
       std::cerr << "error: invalid shape parameter encountered" << std::endl;
       return false;
@@ -278,11 +272,11 @@ namespace hig {
       std::cerr << "error: empty parameter found (nvalues = 0)" << std::endl;
       return false;
     } // if
-    float_t pmax = param.max(), pmin = param.min();
+    real_t pmax = param.max(), pmin = param.min();
     if(pmax < pmin) pmax = pmin;
     if(param.nvalues() > 1) {
-      float_t step = fabs(pmax - pmin) / (param.nvalues() - 1);
-      float_t curr = pmin;
+      real_t step = fabs(pmax - pmin) / (param.nvalues() - 1);
+      real_t curr = pmin;
       do {
         dim.push_back(curr);
         curr += step;
@@ -298,7 +292,7 @@ namespace hig {
         dim_vals.push_back(1.0);
       } // for
     } else if(param.stat() == stat_gaussian) {
-      float_t mean = param.mean();
+      real_t mean = param.mean();
       if(!boost::math::isfinite(mean)) {
         mean = (dim[0] + dim[dim.size() - 1]) / 2;
       } // if
@@ -318,10 +312,18 @@ namespace hig {
     return true;
   } // AnalyticFormFactor::param_distribution()
 
+  /*
+  void AnalyticFormFactor::compute_meshpoints(const real_t qx, const real_t qy, const complex_t qz,
+      complex_t & mqx, complex_t & mqy, complex_t & mqz) {
+    mqx = qx * rot_[0] + qy * rot_[1] + qz * rot_[2];
+    mqy = qx * rot_[3] + qy * rot_[4] + qz * rot_[5];
+    mqz = qx * rot_[6] + qy * rot_[7] + qz * rot_[8];
+  }
+  */
 
-  void AnalyticFormFactor::compute_meshpoints(const float_t qx, const float_t qy, const complex_t qz,
-                        const float_t* rot,
-                                          complex_t& mqx, complex_t& mqy, complex_t& mqz) {
+  void AnalyticFormFactor::compute_meshpoints(const real_t qx, const real_t qy, const complex_t qz,
+                        const real_t* rot,
+                        complex_t& mqx, complex_t& mqy, complex_t& mqz) {
     // FIXME: check which one is correct ...
     // x and y swapped
     mqx = qx * rot[0] + qy * rot[1] + qz * rot[2];
@@ -338,4 +340,3 @@ namespace hig {
   } // AnalyticFormFactor::compute_meshpoints()
 
 } // namespace hig
-

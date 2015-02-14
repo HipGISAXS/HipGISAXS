@@ -37,10 +37,10 @@ namespace hig {
       std::string type_name_;  // this is the key for a param
       ShapeParamType type_;  // change to this as the key ... ?
       StatisticType stat_;
-      float_t max_;
-      float_t min_;
-      float_t p1_;        /* mean */
-      float_t p2_;        /* deviation */
+      real_t max_;
+      real_t min_;
+      real_t p1_;        /* mean */
+      real_t p2_;        /* deviation */
       int nvalues_;
       bool isvalid_;
 
@@ -55,13 +55,13 @@ namespace hig {
       bool isvalid() const { return isvalid_; }
       const std::string& type_name() const { return type_name_; }
       ShapeParamType type() const { return type_; }
-      float_t max() const { return max_; }
-      float_t min() const { return min_; }
+      real_t max() const { return max_; }
+      real_t min() const { return min_; }
       StatisticType stat() const { return stat_; }
-      float_t p1() const { return p1_; }
-      float_t mean() const { return p1_; }
-      float_t p2() const { return p2_; }
-      float_t deviation() const { return p2_; }
+      real_t p1() const { return p1_; }
+      real_t mean() const { return p1_; }
+      real_t p2() const { return p2_; }
+      real_t deviation() const { return p2_; }
       int nvalues() const { return nvalues_; }
 
       /* setters */
@@ -70,16 +70,16 @@ namespace hig {
       void type_name(std::string s) { type_name_ = s; }
       void type(ShapeParamType s) { type_ = s; }
       void stat(StatisticType s) { stat_ = s; }
-      void max(float_t d) { max_ = d; }
-      void min(float_t d) { min_ = d; }
-      void p1(float_t d) { p1_ = d; }
-      void mean(float_t d) { p1_ = d; }
-      void p2(float_t d) { p2_ = d; }
-      void deviation(float_t d) { p2_ = d; }
-      void nvalues(float_t d) { nvalues_ = int(d); }
+      void max(real_t d) { max_ = d; }
+      void min(real_t d) { min_ = d; }
+      void p1(real_t d) { p1_ = d; }
+      void mean(real_t d) { p1_ = d; }
+      void p2(real_t d) { p2_ = d; }
+      void deviation(real_t d) { p2_ = d; }
+      void nvalues(real_t d) { nvalues_ = int(d); }
 
       /* modifiers (update) */
-      bool update_param(const std::string&, float_t);
+      bool update_param(const std::string&, real_t);
 
       /* copy constructor */
       ShapeParam& operator=(ShapeParam const& a) {
@@ -111,8 +111,8 @@ namespace hig {
       ShapeName name_;      /* name of a predefined shape, or custom file */
       std::string name_str_;    /* shape file name: used for custom shape only */
       vector3_t originvec_;
-      float_t ztilt_;        /* shape tau */
-      float_t xyrotation_;    /* shape eta */
+      real_t ztilt_;        /* shape tau */
+      real_t xyrotation_;    /* shape eta */
       shape_param_list_t params_;  // a map of all params (key is the type)
 
       bool parse_param(const ShapeParam& param) const;
@@ -121,7 +121,7 @@ namespace hig {
       Shape();
       Shape(const std::string& key, const ShapeName name);
       Shape(const std::string& key, const ShapeName name, const vector3_t& origin,
-        const float_t ztilt, const float_t xyrot, shape_param_list_t& param_list);
+        const real_t ztilt, const real_t xyrot, shape_param_list_t& param_list);
       ~Shape(void);
 
       void init();
@@ -134,11 +134,11 @@ namespace hig {
       void name_str(const std::string& s) { name_str_ = s; }
 
       void originvec(vector3_t vec) { originvec_ = vec; }
-      void originvec(float_t a, float_t b, float_t c) {
+      void originvec(real_t a, real_t b, real_t c) {
         originvec_[0] = a; originvec_[1] = b; originvec_[2] = c; }
 
-      void ztilt(float_t d) { ztilt_ = d; }
-      void xyrotation(float_t d) { xyrotation_ = d; }
+      void ztilt(real_t d) { ztilt_ = d; }
+      void xyrotation(real_t d) { xyrotation_ = d; }
 
       Shape& operator=(const Shape& sh) {
         key_ = sh.key_;
@@ -160,8 +160,8 @@ namespace hig {
 
       std::string key() const { return key_; }
       ShapeName name() const { return name_; }
-      float_t ztilt() const { return ztilt_; }
-      float_t xyrotation() const { return xyrotation_; }
+      real_t ztilt() const { return ztilt_; }
+      real_t xyrotation() const { return xyrotation_; }
       vector3_t originvec() const { return originvec_; }
       std::string filename() const { return name_str_; }
       shape_param_list_t& param_list() { return params_; }
@@ -169,7 +169,7 @@ namespace hig {
       shape_param_iterator_t param_end() { return params_.end(); }
 
       /* modifiers (updates) */
-      bool update_param(const std::string&, float_t);
+      bool update_param(const std::string&, real_t);
 
       void print();
 

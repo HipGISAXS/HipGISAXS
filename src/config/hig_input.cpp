@@ -185,7 +185,7 @@ namespace hig {
             break;
 
           case struct_grain_lattice_token:  // nothing to do :-/
-                    case struct_grain_scaling_token: 
+          case struct_grain_scaling_token: 
           case struct_grain_token:  // nothing to do :-/
             break;
 
@@ -226,14 +226,10 @@ namespace hig {
           case hipgisaxs_token:  // nothing to do :-/
             break;
 
-                     // scaling distibution
-                    //case stat_token:
-                    //case stat_mean_token:
-                    //case stat_stddev_token:
-                    case struct_grain_lattice_a_token:
-                    case struct_grain_lattice_b_token:
-                    case struct_grain_lattice_c_token:
-                        break;
+          case struct_grain_lattice_a_token:
+          case struct_grain_lattice_b_token:
+          case struct_grain_lattice_c_token:
+            break;
 
           case fit_token:
           case fit_param_range_token:
@@ -353,6 +349,16 @@ namespace hig {
             } // if
             curr_structure_.lattice_vec_c(curr_vector_[0], curr_vector_[1], curr_vector_[2]);
             curr_structure_.lattice_abc_set(true);
+            break;
+
+          case struct_grain_scaling_token:
+            if (curr_vector_.size() != 3){
+              std::cerr << "error : scaling can be a scaler, vector[3] or a distribution." << std::endl;
+              return false;
+            }
+            curr_structure_.grain_scaling_a_mean(curr_vector_[0]);
+            curr_structure_.grain_scaling_b_mean(curr_vector_[1]);
+            curr_structure_.grain_scaling_c_mean(curr_vector_[1]);
             break;
 
           case struct_grain_transvec_token:
@@ -672,9 +678,9 @@ namespace hig {
       case struct_ensemble_orient_rot_anglesd_token:
         break;
 
-            case mean_token:
-            case stddev_token:
-                break;
+      case mean_token:
+      case stddev_token:
+        break;
 
       case compute_token:
       case compute_path_token:
@@ -777,7 +783,7 @@ namespace hig {
   } // HiGInput::get_curr_grandparent()
 
 
-  bool HiGInput::process_number(const float_t& num) {
+  bool HiGInput::process_number(const real_t& num) {
     TokenType parent = null_token;
     TokenType gparent = null_token;
 
@@ -869,6 +875,19 @@ namespace hig {
         } // switch
         break;
 
+      case struct_grain_scaling_token:
+        if (past_token_.type_ == assignment_token){
+          curr_structure_.grain_scaling_a_mean(num);
+          curr_structure_.grain_scaling_b_mean(num);
+          curr_structure_.grain_scaling_c_mean(num);
+        } else {
+          curr_vector_.push_back(num);
+          if(curr_vector_.size() > 3){
+            std::cerr << "error : scaling can be a scaler, vector[3] or a distribution." << std::endl;
+            return false;
+          }
+        }
+        break;
       case step_token:
         // find out which step is this for
         // scattering alphai, inplanerot, tilt
@@ -1020,39 +1039,39 @@ namespace hig {
         } // if
         break;
 
-            case mean_token:
-                switch (get_curr_parent()) {
-                    case struct_grain_lattice_a_token:
-                curr_structure_.grain_scaling_a_mean(num);
-                break;
-                    case struct_grain_lattice_b_token:
-                curr_structure_.grain_scaling_b_mean(num);
-                        break;
-                    case struct_grain_lattice_c_token:
-                curr_structure_.grain_scaling_c_mean(num);
-                        break;
-                    default:
-                        std::cerr <<"error:distribution is not implemented for this type yet" << std::endl;
-                        return false;
-                }
-                break;
+      case mean_token:
+        switch (get_curr_parent()) {
+          case struct_grain_lattice_a_token:
+            curr_structure_.grain_scaling_a_mean(num);
+            break;
+          case struct_grain_lattice_b_token:
+            curr_structure_.grain_scaling_b_mean(num);
+            break;
+          case struct_grain_lattice_c_token:
+            curr_structure_.grain_scaling_c_mean(num);
+            break;
+          default:
+            std::cerr <<"error:distribution is not implemented for this type yet" << std::endl;
+            return false;
+        }
+        break;
 
-            case stddev_token:
-                switch (get_curr_parent()) {
-                    case struct_grain_lattice_a_token:
-                curr_structure_.grain_scaling_a_stddev(num);
-                        break;
-                    case struct_grain_lattice_b_token:
-                curr_structure_.grain_scaling_b_stddev(num);
-                        break;
-                    case struct_grain_lattice_c_token:
-                        curr_structure_.grain_scaling_c_stddev(num);
-                        break;
-                    default:
-                        std::cerr <<"error:distribution is not implemented for this type yet" << std::endl;
-                        return false;
-                }
-                break;
+      case stddev_token:
+        switch (get_curr_parent()) {
+          case struct_grain_lattice_a_token:
+            curr_structure_.grain_scaling_a_stddev(num);
+            break;
+          case struct_grain_lattice_b_token:
+            curr_structure_.grain_scaling_b_stddev(num);
+            break;
+          case struct_grain_lattice_c_token:
+            curr_structure_.grain_scaling_c_stddev(num);
+            break;
+          default:
+            std::cerr <<"error:distribution is not implemented for this type yet" << std::endl;
+            return false;
+        }
+        break;
 
       case struct_grain_repetition_token:
         curr_vector_.push_back(num);
@@ -1341,17 +1360,17 @@ namespace hig {
             curr_structure_.ensemble_orientation_stat(str);
             break;
 
-                    case struct_grain_lattice_a_token:
-                        curr_structure_.grain_scaling_a_stat (TokenMapper::instance().get_stattype_token(str));
-                        break;
+          case struct_grain_lattice_a_token:
+            curr_structure_.grain_scaling_a_stat (TokenMapper::instance().get_stattype_token(str));
+            break;
 
-                    case struct_grain_lattice_b_token:
-                        curr_structure_.grain_scaling_b_stat (TokenMapper::instance().get_stattype_token(str));
-                        break;
+          case struct_grain_lattice_b_token:
+            curr_structure_.grain_scaling_b_stat (TokenMapper::instance().get_stattype_token(str));
+            break;
 
-                    case struct_grain_lattice_c_token:
-                        curr_structure_.grain_scaling_c_stat (TokenMapper::instance().get_stattype_token(str));
-                        break;
+          case struct_grain_lattice_c_token:
+            curr_structure_.grain_scaling_c_stat (TokenMapper::instance().get_stattype_token(str));
+            break;
 
           default:
             std::cerr << "error: 'stat' token in wrong place" << std::endl;
@@ -1661,7 +1680,7 @@ namespace hig {
         } // while
         return true;
 
-      case shape_truncpyr:
+      case shape_pyramid:
         while(param != shape.param_end()) {
           switch((*param).second.type()) {
             case param_radius:
@@ -1883,9 +1902,9 @@ namespace hig {
 
 
   bool HiGInput::compute_shapedef_minmax(vector3_t& min_dim, vector3_t& max_dim) {
-    float_t min_a = shape_def_[4], max_a = shape_def_[4];
-    float_t min_b = shape_def_[5], max_b = shape_def_[5];
-    float_t min_c = shape_def_[6], max_c = shape_def_[6];
+    real_t min_a = shape_def_[4], max_a = shape_def_[4];
+    real_t min_b = shape_def_[5], max_b = shape_def_[5];
+    real_t min_c = shape_def_[6], max_c = shape_def_[6];
 
     for(int i = 0; i + 6 < shape_def_.size(); i += 7) {
       min_a = (min_a > shape_def_[i + 4]) ? shape_def_[i + 4] : min_a ;
@@ -1899,9 +1918,9 @@ namespace hig {
     //std::cout << "------ min = " << min_a << ", " << min_b << ", " << min_c << std::endl;
     //std::cout << "------ max = " << max_a << ", " << max_b << ", " << max_c << std::endl;
 
-    float_t diff_a = max_a - min_a;
-        float_t diff_b = max_b - min_b;
-        float_t diff_c = max_c - min_c;
+    real_t diff_a = max_a - min_a;
+        real_t diff_b = max_b - min_b;
+        real_t diff_c = max_c - min_c;
 
     //std::cout << "++ diff_a = " << diff_a << ", diff_b = " << diff_b
     //      << ", diff_c = " << diff_c << std::endl;
@@ -2022,7 +2041,7 @@ namespace hig {
       return 0;
     } // if
     for(unsigned int i = 0; i < 7 * num_triangles; ++ i) {
-      shape_def_.push_back((float_t)temp_shape_def[i]);
+      shape_def_.push_back((real_t)temp_shape_def[i]);
     } // for
 #else  // KERNEL2
     shape_def_.reserve(T_PROP_SIZE_ * num_triangles);
@@ -2033,8 +2052,8 @@ namespace hig {
       return 0;
     } // if
     for(unsigned int i = 0, count = 0; i < T_PROP_SIZE_ * num_triangles; ++ i) {
-      if((i + 1) % T_PROP_SIZE_ == 0) shape_def_.push_back((float_t)0.0); // for padding
-      else shape_def_.push_back((float_t)temp_shape_def[count ++]);
+      if((i + 1) % T_PROP_SIZE_ == 0) shape_def_.push_back((real_t)0.0); // for padding
+      else shape_def_.push_back((real_t)temp_shape_def[count ++]);
     } // for
 #endif // KERNEL2
     return num_triangles;
@@ -2057,7 +2076,7 @@ namespace hig {
       return 0;
     } // if
     for(unsigned int i = 0; i < 7 * num_triangles; ++ i) {
-      shape_def_.push_back((float_t)temp_shape_def[i]);
+      shape_def_.push_back((real_t)temp_shape_def[i]);
     } // for
 #else  // KERNEL2
     shape_def_.reserve(T_PROP_SIZE_ * num_triangles);
@@ -2068,8 +2087,8 @@ namespace hig {
       return 0;
     } // if
     for(unsigned int i = 0, count = 0; i < T_PROP_SIZE_ * num_triangles; ++ i) {
-      if((i + 1) % T_PROP_SIZE_ == 0) shape_def_.push_back((float_t)0.0); // for padding
-      else shape_def_.push_back((float_t)temp_shape_def[count ++]);
+      if((i + 1) % T_PROP_SIZE_ == 0) shape_def_.push_back((real_t)0.0); // for padding
+      else shape_def_.push_back((real_t)temp_shape_def[count ++]);
     } // for
 #endif // KERNEL2
     return num_triangles;
@@ -2212,7 +2231,7 @@ namespace hig {
     vacuum.z_val(0.0);
     layers_[vacuum.order()] = vacuum;
     // compute the cumulative z value
-    float_t curr_z = 0.0;
+    real_t curr_z = 0.0;
     for(layer_iterator_t i = layers_.begin(); i != layers_.end(); i ++) {
       if((*i).second.order() == -1) { (*i).second.z_val(0.0); continue; }
       if((*i).second.order() == 0) continue;
@@ -2231,8 +2250,8 @@ namespace hig {
   } // HiGInput::num_structures()
 
 
-  float_t HiGInput::layers_z_min() {    // check ... (*i).first is layer order, not position ...
-    float_t min_val = FLT_MAX;
+  real_t HiGInput::layers_z_min() {    // check ... (*i).first is layer order, not position ...
+    real_t min_val = FLT_MAX;
     for(layer_iterator_t i = layers_.begin(); i != layers_.end(); i ++) {
       if(min_val > (*i).first && (*i).first >= 0) min_val = (*i).first;
     } // for
@@ -2241,9 +2260,9 @@ namespace hig {
 
 
   bool HiGInput::compute_domain_size(vector3_t& min_vec, vector3_t& max_vec,
-                    float_t& z_min_0, float_t& z_max_0) {
-    float_t ma = FLT_MAX;
-    float_t mi = -FLT_MAX;
+                    real_t& z_min_0, real_t& z_max_0) {
+    real_t ma = FLT_MAX;
+    real_t mi = -FLT_MAX;
 
     vector3_t max_l(mi, mi, layers_z_min());
     vector3_t min_l(ma, ma, ma);
@@ -2266,7 +2285,7 @@ namespace hig {
             << shape_max[2] - shape_min[2] << std::endl;*/
 
       /* determine the structure's position in the sample configuration */
-      float_t zc_l = layer_origin_z((*s).second);
+      real_t zc_l = layer_origin_z((*s).second);
 
       vector3_t n = (*s).second.grain_repetition();
       -- n[0]; -- n[1]; -- n[2];
@@ -2403,7 +2422,7 @@ namespace hig {
   bool HiGInput::update_params(const map_t& params) {
     //print_all();
     for(map_t::const_iterator p = params.begin(); p != params.end(); ++ p) {
-      float_t new_val = (*p).second;
+      real_t new_val = (*p).second;
       // check if new_val is within the param space
       ParamSpace ps = param_space_key_map_.at((*p).first);  // if not exist, exception!!
       if(new_val < ps.min_ || new_val > ps.max_) {
@@ -2607,4 +2626,3 @@ namespace hig {
   } // HiGInput::print_fit_algos()
 
 } // namespace hig
-

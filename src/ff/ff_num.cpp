@@ -24,6 +24,7 @@
 #include <cmath>
 #include <cstring>
 #include <sstream>
+#include <algorithm>
 #if (defined(__SSE3__) || defined(INTEL_SB_AVX)) && !defined(USE_GPU) && !defined(__APPLE__)
   #include <malloc.h>
 #endif
@@ -42,25 +43,260 @@ namespace hig {
 
   bool NumericFormFactor::init(vector3_t& rot1, vector3_t& rot2, vector3_t& rot3,
                   std::vector<complex_t>& ff) {
-    nqx_ = QGrid::instance().nqx();
     nqy_ = QGrid::instance().nqy();
     nqz_ = QGrid::instance().nqz_extended();
 
     ff.clear();
 
-    rot_ = new (std::nothrow) float_t[9];
-    rot_[0] = rot1[0]; rot_[1] = rot1[1]; rot_[2] = rot1[2];
-    rot_[3] = rot2[0]; rot_[4] = rot2[1]; rot_[5] = rot2[2];
-    rot_[6] = rot3[0]; rot_[7] = rot3[1]; rot_[8] = rot3[2];
+    rot_ = new (std::nothrow) real_t[9];
+    //rot_[0] = rot1[0]; rot_[1] = rot1[1]; rot_[2] = rot1[2];
+    //rot_[3] = rot2[0]; rot_[4] = rot2[1]; rot_[5] = rot2[2];
+    //rot_[6] = rot3[0]; rot_[7] = rot3[1]; rot_[8] = rot3[2];
 
-    //rot_[0] = 1; rot_[1] = 0; rot_[2] = 0;
-    //rot_[3] = 0; rot_[4] = 1; rot_[5] = 0;
-    //rot_[6] = 0; rot_[7] = 0; rot_[8] = 1;
+    rot_[0] = 1; rot_[1] = 0; rot_[2] = 0;
+    rot_[3] = 0; rot_[4] = 1; rot_[5] = 0;
+    rot_[6] = 0; rot_[7] = 0; rot_[8] = 1;
 
     return true;
   } // NumericFormFactor::init()
 
+  bool NumericFormFactor::compute2(const char * filename, complex_vec_t &ff,
+          vector3_t & rot1, vector3_t & rot2, vector3_t & rot_3
+#ifdef USE_MPI
+          , woo::MultiNode & world_comm, std::string comm_key
+#endif
+          ) {
 
+    // initialize 
+    init (rot1, rot2, rot2, ff);
+
+    // read file
+    std::vector<vertex_t> vertices;
+    std::vector<std::vector<int>> faces;
+    std::vector<std::vector<int>> dummy;
+    ObjectShapeReader shape_reader;
+    if (!shape_reader.load_object (filename, vertices, faces, dummy)) {
+        std::cerr << "Error: shape reader failed to load triangles" << std::endl;
+        return false;
+    }
+
+    // create triangles
+    int num_triangles = faces.size();
+    triangle_t * triangles = new (std::nothrow) triangle_t [num_triangles];
+    for (int i = 0; i < num_triangles; i++) {
+      triangles[i].v1[0] = vertices[faces[i][0]-1].x;
+      triangles[i].v1[1] = vertices[faces[i][0]-1].y;
+      triangles[i].v1[2] = vertices[faces[i][0]-1].z;
+
+      triangles[i].v2[0] = vertices[faces[i][1]-1].x;
+      triangles[i].v2[1] = vertices[faces[i][1]-1].y;
+      triangles[i].v2[2] = vertices[faces[i][1]-1].z;
+
+      triangles[i].v3[0] = vertices[faces[i][2]-1].x;
+      triangles[i].v3[1] = vertices[faces[i][2]-1].y;
+      triangles[i].v3[2] = vertices[faces[i][2]-1].z;
+    }
+
+
+#ifndef __SSE3__
+    real_vec_t shape_def;
+#else
+#ifdef USE_GPU
+    real_vec_t shape_def;
+#else
+    real_t * shape_def = NULL;
+#endif
+#endif
+    //unsigned int num_triangles = read_shapes_file(filename, shape_def);
+
+#ifdef USE_MPI
+      int num_procs = world_comm.size(comm_key);
+      int rank = world_comm.rank(comm_key);
+      bool master = world_comm.is_master(comm_key);
+#else
+      bool master = true;
+
+#endif
+
+    if(master) {
+      std::cout << "-- Numerical form factor computation ..." << std::endl
+            << "**        Using input shape file: " << filename << std::endl
+            << "**     Number of input triangles: " << num_triangles << std::endl
+            << "**  Q-grid resolution (q-points): " << nqy_ << std::endl
+#ifdef USE_MPI
+              << "** Number of processes requested: " << num_procs << std::endl
+#endif
+            << std::flush;
+    } // if
+
+    // copy q-points
+    real_t * qx = new (std::nothrow) real_t [nqy_];
+    if (qx == NULL) {
+        std::cerr << "Error: failure in allocation memeroy." << std::endl;
+        return false;
+    }
+    for (int i = 0; i < nqy_; i++ ) qx[i] = QGrid::instance().qx(i);
+
+    real_t * qy = new (std::nothrow) real_t [nqy_];
+    if (qy == NULL) {
+        std::cerr << "Error: failure in allocation memeroy." << std::endl;
+        return false;
+    }
+    for (int i = 0; i < nqy_; i++) qy[i] = QGrid::instance().qy(i);
+
+#ifdef FF_NUM_GPU
+    cucomplex_t * qz = new (std::nothrow) cucomplex_t [nqz_];
+    if (qz == NULL) {
+      std::cerr << "Error: failure in memeroy allocation." << std::endl;
+      return 0;
+    }
+    for (int i = 0; i < nqz_; i++) {
+      qz[i].x = QGrid::instance().qz_extended(i).real();
+      qz[i].y = QGrid::instance().qz_extended(i).imag();
+    }
+#else
+    complex_t * qz = new (std::nothrow) complex_t [nqz_];
+    if (qz == NULL) {
+        std::cerr << "Error: failure in memeroy allocation." << std::endl;
+        return 0;
+    }
+    for (int i = 0; i < nqz_; i++) qz[i] = QGrid::instance().qz_extended(i);
+#endif
+
+    real_t compute_time = 0.;
+#ifdef FF_NUM_GPU
+    cucomplex_t * p_ff = NULL;
+    // call kernel
+    if (num_triangles != gff_.compute_exact_triangle(triangles, num_triangles,
+                p_ff, nqy_, qx, qy,
+                nqz_, qz, rot_, compute_time)) {
+        std::cerr << "Calculation of numerical form-factor failed" << std::endl;
+        return false;
+    }
+    for (int i = 0; i < nqz_; i++) ff.push_back (complex_t(p_ff[i].x, p_ff[i].y));
+    std::cout << "**        FF GPU compute time: " << compute_time << " ms." << std::endl;
+#else
+    complex_t * p_ff = new (std::nothrow) complex_t[nqz_];
+    if (p_ff == NULL){
+      std::cerr << "Error: failed to allocate memory of size: " 
+          << nqz_ * sizeof(complex_t) << std::endl;
+      return false;
+    }
+    if (num_triangles != cff_.compute_exact_triangle(triangles, num_triangles, 
+                p_ff, nqy_, qx, qy, 
+                nqz_, qz, rot_, compute_time)) {
+        std::cerr << "Calculation of numerical form-factor failed" << std::endl;
+        return false;
+    }
+    for (int i = 0; i < nqz_; i++) ff.push_back(p_ff[i]);
+    std::cout << "**        FF CPU compute time: " << compute_time << " ms." << std::endl;
+#endif
+    delete [] qx;
+    delete [] qy;
+    delete [] qz;
+    delete [] triangles;
+    if (p_ff != NULL) delete [] p_ff;
+    return true;
+  }
+
+
+  bool NumericFormFactor::compute(const char * filename, complex_vec_t & ff,
+          vector3_t & rot1, vector3_t & rot2, vector3_t & rot3
+#ifdef USE_MPI
+          , woo::MultiNode &world_comm, std::string comm_key
+#endif
+          ){
+    real_t comp_time = 0.0;
+
+    unsigned int nqy = QGrid::instance().nqy();
+    unsigned int nqz = QGrid::instance().nqz_extended();
+
+    // warning: all procs read the shape file!!!!
+    // TODO: improve to parallel IO, or one proc reading and sending to all ...
+    #ifndef __SSE3__
+      real_vec_t shape_def;
+    #else
+      #ifdef USE_GPU
+        real_vec_t shape_def;
+      #else
+        real_t* shape_def = NULL;
+      #endif
+    #endif
+    // use the new file reader instead ...
+    unsigned int num_triangles = read_shapes_file(filename, shape_def);
+            // TODO ... <--- sadly all procs read this! IMPROVE!!!
+  
+    #ifdef USE_MPI
+    int num_procs = world_comm.size(comm_key);
+    int rank = world_comm.rank(comm_key);
+    bool master = world_comm.is_master(comm_key);
+    #else
+    bool master = true;
+    #endif
+
+    if(master) {
+      std::cout << "-- Numerical form factor computation ..." << std::endl
+            << "**        Using input shape file: " << filename << std::endl
+            << "**     Number of input triangles: " << num_triangles << std::endl
+            << "**  Q-grid resolution (q-points): " <<  nqz << std::endl
+            #ifdef USE_MPI
+              << "** Number of processes requested: " << num_procs << std::endl
+            #endif
+            << std::flush;
+    } // if
+    if(num_triangles < 1) {
+      std::cerr << "error: no triangles found in specified definition file" << std::endl;
+      return false;
+    } // if
+  
+    // FIXME: this is a yucky temporary fix ... fix properly ...
+    real_t* qx = new (std::nothrow) real_t[nqy]();
+    real_t* qy = new (std::nothrow) real_t[nqy]();
+    #ifdef FF_NUM_GPU
+    cucomplex_t* qz = new (std::nothrow) cucomplex_t[nqz]();
+    #else
+    complex_t* qz = new (std::nothrow) complex_t[nqz]();
+    #endif
+   
+    // create qy_and qz using qgrid instance
+    for(unsigned int i = 0; i < nqy; ++ i) qx[i] = QGrid::instance().qx(i);
+    for(unsigned int i = 0; i < nqy; ++ i) qy[i] = QGrid::instance().qy(i);
+    for(unsigned int i = 0; i < nqz; ++ i) {
+    #ifdef FF_NUM_GPU
+      qz[i].x = QGrid::instance().qz_extended(i).real();
+      qz[i].y = QGrid::instance().qz_extended(i).imag();
+    #else
+      qz[i] = QGrid::instance().qz_extended(i);
+    #endif
+    } // for
+      
+    #ifdef FF_NUM_GPU
+    cucomplex_t *p_ff = NULL;
+    #else
+    complex_t *p_ff = NULL;
+    #endif
+  
+    real_t kernel_time = 0.;
+    unsigned int ret_numtriangles = 0;
+    #ifdef FF_NUM_GPU  // use GPU
+    ret_numtriangles = gff_.compute_approx_triangle(shape_def, 
+            p_ff, nqy, qx, qy, nqz, qz, rot_, kernel_time);
+    for (int i = 0; i < nqz; i++) ff.push_back(complex_t(p_ff[i].x, p_ff[i].y));
+    std::cout << "**        FF GPU compute time: " << kernel_time << " ms." << std::endl;
+    #else  // use only CPU
+    ret_numtriangles = cff_.compute_approx_triangle(shape_def, 
+            p_ff, nqy, qx, qy, nqz, qz, rot_, kernel_time);
+    for (int i = 0; i < nqz; i++) ff.push_back(p_ff[i]);
+    std::cout << "**        FF CPU compute time: " << kernel_time << " ms." << std::endl;
+    #endif
+
+      if(p_ff != NULL) delete[] p_ff;
+      delete[] qz;
+      delete[] qy;
+      delete[] qx;
+  }
+
+#ifdef OLD_Q_GRID
   /**
    * main host function
    */
@@ -70,10 +306,10 @@ namespace hig {
                     , woo::MultiNode& world_comm, std::string comm_key
                   #endif
                   ) {
-    float_t comp_start = 0.0, comp_end = 0.0, comm_start = 0.0, comm_end = 0.0;
-    float_t mem_start = 0.0, mem_end = 0.0;
-    float_t comp_time = 0.0, comm_time = 0.0, mem_time = 0.0, kernel_time = 0.0, red_time = 0.0;
-    float_t total_start = 0.0, total_end = 0.0, total_time = 0.0;
+    real_t comp_start = 0.0, comp_end = 0.0, comm_start = 0.0, comm_end = 0.0;
+    real_t mem_start = 0.0, mem_end = 0.0;
+    real_t comp_time = 0.0, comm_time = 0.0, mem_time = 0.0, kernel_time = 0.0, red_time = 0.0;
+    real_t total_start = 0.0, total_end = 0.0, total_time = 0.0;
 
     woo::BoostChronoTimer maintimer, computetimer;
     woo::BoostChronoTimer commtimer, memtimer;
@@ -96,12 +332,12 @@ namespace hig {
     // warning: all procs read the shape file!!!!
     // TODO: improve to parallel IO, or one proc reading and sending to all ...
     #ifndef __SSE3__
-      float_vec_t shape_def;
+      real_vec_t shape_def;
     #else
       #ifdef USE_GPU
-        float_vec_t shape_def;
+        real_vec_t shape_def;
       #else
-        float_t* shape_def = NULL;
+        real_t* shape_def = NULL;
       #endif
     #endif
     // use the new file reader instead ...
@@ -142,7 +378,7 @@ namespace hig {
   
     #ifdef USE_MPI
       // decompose along y and z directions into blocks
-      int p_y = std::floor(sqrt((float_t) num_procs));  // some procs may be idle ...
+      int p_y = std::floor(sqrt((real_t) num_procs));  // some procs may be idle ...
       int p_z = num_procs / p_y;
     
       int p_nqx = nqx;
@@ -222,8 +458,8 @@ namespace hig {
       memtimer.start();
 
       // FIXME: this is a yucky temporary fix ... fix properly ...
-      float_t* qx = new (std::nothrow) float_t[nqx]();
-      float_t* qy = new (std::nothrow) float_t[nqy]();
+      real_t* qx = new (std::nothrow) real_t[nqx]();
+      real_t* qy = new (std::nothrow) real_t[nqy]();
       #ifdef FF_NUM_GPU
         cucomplex_t* qz = new (std::nothrow) cucomplex_t[nqz]();
       #else
@@ -247,10 +483,10 @@ namespace hig {
       
       #ifdef USE_MPI
         // create p_ff buffers  <----- TODO: IMPROVE for all procs!!!
-        float_t *p_qy = NULL;
-        p_qy = new (std::nothrow) float_t[p_nqy]();
+        real_t *p_qy = NULL;
+        p_qy = new (std::nothrow) real_t[p_nqy]();
         if(p_qy == NULL) { return 0; }
-        memcpy(p_qy, (void*) (qy + y_offset), p_nqy * sizeof(float_t));
+        memcpy(p_qy, (void*) (qy + y_offset), p_nqy * sizeof(real_t));
         #ifdef FF_NUM_GPU
           cucomplex_t *p_qz = NULL;
           p_qz = new (std::nothrow) cucomplex_t[p_nqz]();
@@ -263,7 +499,7 @@ namespace hig {
           memcpy(p_qz, (void*) (qz + z_offset), p_nqz * sizeof(complex_t));
         #endif  // FF_NUM_GPU
       #else  // no MPI
-        float_t *p_qy = qy;
+        real_t *p_qy = qy;
         #ifdef FF_NUM_GPU
           cucomplex_t *p_qz = qz;
         #else
@@ -287,7 +523,7 @@ namespace hig {
 
       unsigned int ret_numtriangles = 0;
 
-      float_t temp_mem_time = 0.0;
+      real_t temp_mem_time = 0.0;
 
       #ifdef FF_NUM_GPU  // use GPU
         #ifdef FF_NUM_GPU_FUSED
@@ -352,7 +588,7 @@ namespace hig {
   
       // gather everything on proc 0
       if(ret_numtriangles > 0) {
-        float_t temp_mem_time = 0.0, temp_comm_time = 0.0;
+        real_t temp_mem_time = 0.0, temp_comm_time = 0.0;
         construct_ff(p_nqx, p_nqy, p_nqz, nqx, nqy, nqz, p_y, p_z, p_ff, ff,
                 #ifdef USE_MPI
                   world_comm, real_world,
@@ -403,7 +639,7 @@ namespace hig {
             << std::endl << std::flush;
         #endif // TIME_DETAIL_1
 
-        double mflop = 0.0; float_t gflops = 0.0;
+        double mflop = 0.0; real_t gflops = 0.0;
 
         #ifdef USE_GPU
           // flop count for GPU
@@ -446,7 +682,8 @@ namespace hig {
 
     return true;
   } // NumericFormFactor::compute()
-  
+
+#endif // OLD_Q_GRID
 
   /**
    * Function to gather partial FF arrays from all processes to construct the final FF.
@@ -464,8 +701,8 @@ namespace hig {
                       #ifdef USE_MPI
                         woo::MultiNode& world_comm, std::string comm_key,
                       #endif
-                      float_t& mem_time, float_t& comm_time) {
-    float_t mem_start = 0, mem_end = 0, comm_start = 0, comm_end = 0;
+                      real_t& mem_time, real_t& comm_time) {
+    real_t mem_start = 0, mem_end = 0, comm_start = 0, comm_end = 0;
     woo::BoostChronoTimer memtimer, commtimer;
     mem_time = 0; comm_time = 0;
 
@@ -629,13 +866,13 @@ namespace hig {
   /**
    * Function to read the input shape file.
    */
-  unsigned int NumericFormFactor::read_shapes_file_dat(const char* filename, float_vec_t &shape_def) {
+  unsigned int NumericFormFactor::read_shapes_file_dat(const char* filename, real_vec_t &shape_def) {
     std::ifstream f(filename);
     if(!f.is_open()) {
       std::cout << "Cannot open file " << filename << std::endl;
       return 1;
     } // if
-    float_t s = 0.0, cx = 0.0, cy = 0.0, cz = 0.0, nx = 0.0, ny = 0.0, nz = 0.0;
+    real_t s = 0.0, cx = 0.0, cy = 0.0, cz = 0.0, nx = 0.0, ny = 0.0, nz = 0.0;
   
     while(true) {
       f >> s;
@@ -656,10 +893,10 @@ namespace hig {
   } // NumericFormFactor::read_shapes_file_dat()
   
   
-  void NumericFormFactor::find_axes_orientation(float_vec_t &shape_def, std::vector<short int> &axes) {
-    float_t min_a = shape_def[4], max_a = shape_def[4];
-    float_t min_b = shape_def[5], max_b = shape_def[5];
-    float_t min_c = shape_def[6], max_c = shape_def[6];
+  void NumericFormFactor::find_axes_orientation(real_vec_t &shape_def, std::vector<short int> &axes) {
+    real_t min_a = shape_def[4], max_a = shape_def[4];
+    real_t min_b = shape_def[5], max_b = shape_def[5];
+    real_t min_c = shape_def[6], max_c = shape_def[6];
   
     for(unsigned int i = 0; i + 6 < shape_def.size(); i += 7) {
       min_a = (min_a > shape_def[i + 4]) ? shape_def[i + 4] : min_a ;
@@ -670,9 +907,9 @@ namespace hig {
       max_c = (max_c < shape_def[i + 6]) ? shape_def[i + 6] : max_c ;
     } // for
   
-    float_t diff_a = max_a - min_a;
-    float_t diff_b = max_b - min_b;
-    float_t diff_c = max_c - min_c;
+    real_t diff_a = max_a - min_a;
+    real_t diff_b = max_b - min_b;
+    real_t diff_c = max_c - min_c;
   
     // axes[i] = j
     // i: x=0 y=1 z=2
@@ -681,7 +918,7 @@ namespace hig {
     //std::cout << "++ diff_a = " << diff_a << ", diff_b = " << diff_b
     //      << ", diff_c = " << diff_c << std::endl;
 
-    float_vec_t min_point, max_point;
+    real_vec_t min_point, max_point;
   
     // the smallest one is x, other two are y and z
     if(diff_a < diff_b) {
@@ -747,12 +984,12 @@ namespace hig {
    */
   unsigned int NumericFormFactor::read_shapes_file(const char* filename,
                           #ifndef __SSE3__
-                            float_vec_t &shape_def
+                            real_vec_t &shape_def
                           #else
                             #ifdef USE_GPU
-                              float_vec_t &shape_def
+                              real_vec_t &shape_def
                             #else
-                              float_t* &shape_def
+                              real_t* &shape_def
                             #endif
                           #endif
                           ) {
@@ -782,21 +1019,21 @@ namespace hig {
     #ifdef FF_NUM_GPU
       #ifndef KERNEL2
         for(unsigned int i = 0; i < num_triangles * 7; ++ i)
-          shape_def.push_back((float_t)temp_shape_def[i]);
+          shape_def.push_back((real_t)temp_shape_def[i]);
       #else // KERNEL2
         for(unsigned int i = 0, j = 0; i < num_triangles * T_PROP_SIZE_; ++ i) {
-          if((i + 1) % T_PROP_SIZE_ == 0) shape_def.push_back((float_t) 0.0);  // padding
-          else { shape_def.push_back((float_t)temp_shape_def[j]); ++ j; }
+          if((i + 1) % T_PROP_SIZE_ == 0) shape_def.push_back((real_t) 0.0);  // padding
+          else { shape_def.push_back((real_t)temp_shape_def[j]); ++ j; }
         } // for
       #endif // KERNEL2
     //#elif defined USE_MIC  // using MIC
     //  for(unsigned int i = 0; i < num_triangles * 7; ++ i)
-    //    shape_def.push_back((float_t)temp_shape_def[i]);
+    //    shape_def.push_back((real_t)temp_shape_def[i]);
     #else          // using CPU or MIC
       #ifndef __SSE3__
         for(unsigned int i = 0, j = 0; i < num_triangles * CPU_T_PROP_SIZE_; ++ i) {
-          if((i + 1) % CPU_T_PROP_SIZE_ == 0) shape_def.push_back((float_t) 0.0);  // padding
-          else { shape_def.push_back((float_t)temp_shape_def[j]); ++ j; }
+          if((i + 1) % CPU_T_PROP_SIZE_ == 0) shape_def.push_back((real_t) 0.0);  // padding
+          else { shape_def.push_back((real_t)temp_shape_def[j]); ++ j; }
         } // for
       #else    // using SSE3, so store data differently: FOR CPU AND MIC (vectorization)
         #ifndef USE_MIC    // generic cpu version with SSE3 or AVX
@@ -807,13 +1044,13 @@ namespace hig {
             // 32 bytes = 8 floats or 4 doubles. FIXME: assuming float only for now ...
             unsigned int padding = (8 - (num_triangles & 7)) & 7;
             unsigned int shape_size = (num_triangles + padding) * 7;
-            shape_def = (float_t*) _mm_malloc(shape_size * sizeof(float_t), 32);
+            shape_def = (real_t*) _mm_malloc(shape_size * sizeof(real_t), 32);
             if(shape_def == NULL) {
               std::cerr << "error: failed to allocate aligned memory for shape_def"
                     << std::endl;
               return 0;
             } // if
-            memset(shape_def, 0, shape_size * sizeof(float_t));
+            memset(shape_def, 0, shape_size * sizeof(real_t));
             for(int i = 0; i < num_triangles; ++ i) {
               for(int j = 0; j < 7; ++ j) {
                 shape_def[(num_triangles + padding) * j + i] = temp_shape_def[7 * i + j];
@@ -826,13 +1063,13 @@ namespace hig {
             // 16 bytes = 4 floats or 2 doubles. FIXME: assuming float only for now ...
             unsigned int padding = (4 - (num_triangles & 3)) & 3;
             unsigned int shape_size = (num_triangles + padding) * 7;
-            shape_def = (float_t*) _mm_malloc(shape_size * sizeof(float_t), 16);
+            shape_def = (real_t*) _mm_malloc(shape_size * sizeof(real_t), 16);
             if(shape_def == NULL) {
               std::cerr << "error: failed to allocate aligned memory for shape_def"
                     << std::endl;
               return 0;
             } // if
-            memset(shape_def, 0, shape_size * sizeof(float_t));
+            memset(shape_def, 0, shape_size * sizeof(real_t));
             for(int i = 0; i < num_triangles; ++ i) {
               for(int j = 0; j < 7; ++ j) {
                 shape_def[(num_triangles + padding) * j + i] = temp_shape_def[7 * i + j];
@@ -843,13 +1080,13 @@ namespace hig {
             // FIXME: float only for now: 16 floats in one vector!
           unsigned int padding = (16 - (num_triangles & 15)) & 15;
           unsigned int shape_size = (num_triangles + padding) * 7;
-          shape_def = (float_t*) _mm_malloc(shape_size * sizeof(float_t), 64);
+          shape_def = (real_t*) _mm_malloc(shape_size * sizeof(real_t), 64);
           if(shape_def == NULL) {
             std::cerr << "error: failed to allocate aligned memory for shape_def"
                   << std::endl;
             return 0;
           } // if
-          memset(shape_def, 0, shape_size * sizeof(float_t));
+          memset(shape_def, 0, shape_size * sizeof(real_t));
           for(int i = 0; i < num_triangles; ++ i) {
             for(int j = 0; j < 7; ++ j) {
               shape_def[(num_triangles + padding) * j + i] = temp_shape_def[7 * i + j];
@@ -863,51 +1100,4 @@ namespace hig {
 
     return num_triangles;
   } // NumericFormFactor::read_shapes_file()
-  
-
-  #ifdef FF_NUM_GPU
-      /**
-       * Write a slice to output file
-       */
-      /*void write_slice_to_file(cucomplex_t *ff, int nqx, int nqy, int nqz,
-                  char* filename, int axis, int slice) {
-          if(ff == NULL) return;
-
-          std::cout << "** Writing slice to file ...";
-          switch(axis) {
-              case 0:
-                  break;
-              default:
-                  std::cout << "Given axis slice writing not implemented yet!" << std::endl;
-          } // switch
-
-          if(slice >= nqx || slice < 0) {
-              std::cout << "Given slice does not exist!" << std::endl;
-              return;
-          } // if
-
-          std::ofstream slice_file;
-          //char* outfilename = "output_ff.dat";
-          char outfilename[50];
-          sprintf(outfilename, "ff_p%d.dat", world_comm.rank());
-          std::cout << " " << outfilename << " ";
-          slice_file.open(outfilename);
-          if(!slice_file.is_open()) {
-              std::cerr << "Error opening slice file for writing." << std::endl;
-              return;
-          } // if
-
-          for(int y = 0; y < nqy; ++ y) {
-              for(int z = 0; z < nqz; ++ z) {
-                  unsigned long int index = nqx * nqy * z + nqx * y + slice;
-                  slice_file << ff[index].x << "," << ff[index].y << "\t";
-              } // for z
-              slice_file << std::endl;
-          } // for y
-          slice_file.close();
-          std::cout << " done." << std::endl;
-      } // write_slice_to_file()*/
-  #endif
-
-
 } // namespace hig

@@ -44,7 +44,7 @@ namespace hig {
     refindex_.delta(0.0); refindex_.beta(0.0);
   } // Layer::clear()
 
-  bool Layer::update_param(const std::string& str, float_t new_val) {
+  bool Layer::update_param(const std::string& str, real_t new_val) {
     std::string keyword, rem_str;
     if(!extract_first_keyword(str, keyword, rem_str)) return false;
       std::string keyword2, rem_str2;
@@ -100,3 +100,4 @@ namespace hig {
   } // Layer::print()
 
 } // namespace hig
+

@@ -28,17 +28,17 @@
 
 namespace hig {
 
-  extern complex_vec_t& mat_mul(float_t scalar, std::vector<complex_t>& matrix);
+  extern complex_vec_t& mat_mul(real_t scalar, std::vector<complex_t>& matrix);
   extern complex_vec_t& mat_mul(complex_t scalar, std::vector<complex_t>& matrix);
-  extern complex_vec_t& mat_mul(std::vector<complex_t>& matrix, float_t scalar);
+  extern complex_vec_t& mat_mul(std::vector<complex_t>& matrix, real_t scalar);
   extern complex_vec_t& mat_mul(std::vector<complex_t>& matrix, complex_t scalar);
-  extern bool mat_mul(float_t, const std::vector<complex_t>&, complex_vec_t&);
+  extern bool mat_mul(real_t, const std::vector<complex_t>&, complex_vec_t&);
   extern bool mat_mul(complex_t, const std::vector<complex_t>&, complex_vec_t&);
-  extern bool mat_mul(const std::vector<complex_t>&, float_t, complex_vec_t&);
+  extern bool mat_mul(const std::vector<complex_t>&, real_t, complex_vec_t&);
   extern bool mat_mul(const std::vector<complex_t>&, complex_t, complex_vec_t&);
-  extern bool mat_mul_in(float_t scalar, std::vector<complex_t>& matrix);
+  extern bool mat_mul_in(real_t scalar, std::vector<complex_t>& matrix);
   extern bool mat_mul_in(complex_t scalar, std::vector<complex_t>& matrix);
-  extern bool mat_mul_in(std::vector<complex_t>& matrix, float_t scalar);
+  extern bool mat_mul_in(std::vector<complex_t>& matrix, real_t scalar);
   extern bool mat_mul_in(std::vector<complex_t>& matrix, complex_t scalar);
 
   /** matrix multiplication for two 3x3 matrices
@@ -50,9 +50,9 @@ namespace hig {
    * use boost libs ... and make it general ...
   */
   extern bool mat_mul_3x3(vector3_t a, vector3_t b, vector3_t c, vector3_t d, vector3_t e, vector3_t f, vector3_t& x, vector3_t& y, vector3_t& z);
-  extern bool mat_mul_3x3(const float_vec_t a, const float_vec_t d, float_vec_t& x);
-  extern bool mat_mul_3x3(const float_vec_t a, const float_t* d, float_t*& x);
-  extern bool mat_mul_3x3(const float_t* a, const float_t* d, float_t*& x);
+  extern bool mat_mul_3x3(const real_vec_t a, const real_vec_t d, real_vec_t& x);
+  extern bool mat_mul_3x3(const real_vec_t a, const real_t* d, real_t*& x);
+  extern bool mat_mul_3x3(const real_t* a, const real_t* d, real_t*& x);
 
   /** matrix vector product for matrix of size 3x3 and vector of size 1x3
    * operation is:

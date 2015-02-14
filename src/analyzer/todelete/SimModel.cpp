@@ -28,7 +28,7 @@ namespace hig{
     return 0;
   }
 
-  int SimModel::update_vars(float_vec_t X){
+  int SimModel::update_vars(real_vec_t X){
     return 0;
   }
 
@@ -55,3 +55,4 @@ namespace hig{
   }
 
 }
+

@@ -18,8 +18,8 @@
 
 namespace hig {
 
-  typedef std::map <std::string, float_t>    parameter_map_t;
-  typedef std::vector <float_t>        parameter_data_list_t;
+  typedef std::map <std::string, real_t>    parameter_map_t;
+  typedef std::vector <real_t>        parameter_data_list_t;
   typedef std::vector <std::string>      parameter_name_list_t;
 
   enum PSOParameterDistribution {
@@ -47,3 +47,4 @@ namespace hig {
 } // namespace hig
 
 #endif // __HIPGISAXS_FIT_PSO_TYPEDEFS_HPP__
+_

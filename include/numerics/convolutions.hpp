@@ -58,9 +58,9 @@ namespace hig {
       } // instance()
 
       bool convolution_2d(shape_param_t type,
-                unsigned int a_xsize, unsigned int a_ysize, const float_t *a,
-                unsigned int b_xsize, unsigned int b_ysize, const float_t *b,
-                unsigned int& c_xsize, unsigned int& c_ysize, float_t* &c) {
+                unsigned int a_xsize, unsigned int a_ysize, const real_t *a,
+                unsigned int b_xsize, unsigned int b_ysize, const real_t *b,
+                unsigned int& c_xsize, unsigned int& c_ysize, real_t* &c) {
 
         switch(type) {
           case conv_valid:
@@ -97,18 +97,18 @@ namespace hig {
       } // convolution_2d()
 
 
-      inline float_t gaussian(int x, int y, float_t sigma) {
+      inline real_t gaussian(int x, int y, real_t sigma) {
         return 1.0 / (sigma * sigma * 2 * PI_ * exp((x * x + y * y) / (2 * sigma * sigma)));
       } // gaussian()
 
 
-      bool convolution_gaussian_2d_naive(float_t*& data, unsigned int nx, unsigned int ny,
-                      float_t sigma) {
-        float_t* conv_data = new (std::nothrow) float_t[nx * ny];
+      bool convolution_gaussian_2d_naive(real_t*& data, unsigned int nx, unsigned int ny,
+                      real_t sigma) {
+        real_t* conv_data = new (std::nothrow) real_t[nx * ny];
         #pragma omp parallel for collapse(2)
         for(unsigned int i = 0; i < nx; ++ i) {
           for(unsigned int j = 0; j < ny; ++ j) {
-            float_t sum = 0.0;
+            real_t sum = 0.0;
             for(unsigned int k = 0; k < nx; ++ k) {
               for(unsigned int l = 0; l < ny; ++ l) {
                 sum += data[l * nx + k] * gaussian(k - i, l - j, sigma);
@@ -124,40 +124,40 @@ namespace hig {
       } // convolution_gaussian_2d()
 
 
-      inline float_t gaussian(int x, float_t sigma) {
+      inline real_t gaussian(int x, real_t sigma) {
         return 1.0 / (sigma * sqrt(2 * PI_) * exp((x * x) / (2 * sigma * sigma)));
       } // gaussian()
 
 
-      bool convolution_gaussian_2d(float_t*& data, unsigned int nx, unsigned int ny,
-                        float_t sigma) {
-        float_t* conv_data = new (std::nothrow) float_t[nx * ny];
+      bool convolution_gaussian_2d(real_t*& data, unsigned int nx, unsigned int ny, 
+          real_t sigma) {
+        real_t* conv_data = new (std::nothrow) real_t[nx * ny];
 
         // compute the gaussian matrix to avoid computation of gaussian() every time
-                int i6sigma = (int) (6 * sigma);
+        int i6sigma = (int) (6 * sigma);
         int gn = 2 * i6sigma + 1;
-                float_t * gauss_map = new float_t[gn];
+        real_t * gauss_map = new real_t[gn];
         for(int i = 0;  i < gn; ++ i) { 
-                    gauss_map[i] = gaussian(i-i6sigma, sigma);
-                }
+          gauss_map[i] = gaussian(i-i6sigma, sigma); 
+        }
 
         // first do horizontal smearing
         #pragma omp parallel for collapse(2)
         for(int j = 0; j < ny; ++ j) {
           for(int i = 0; i < nx; ++ i) {
-            float_t sum = 0.0;
-                        float_t norm = 0;
-                        int ibeg = std::max(0, i-i6sigma);
-                        int iend = std::min((int) nx, i+i6sigma);
+            real_t sum = 0.0;
+            real_t norm = 0;
+            int ibeg = std::max(0, i-i6sigma);
+            int iend = std::min((int) nx, i+i6sigma);
             for(int k = ibeg; k < iend; ++ k) {
               //sum += data[j * nx + k] * gaussian(k - i, sigma);
               sum += data[j * nx + k] * gauss_map[k-ibeg];
-                            norm += gauss_map[k-ibeg];
+              norm += gauss_map[k-ibeg];
             } // for
-                        if ( norm > 0 )
-                conv_data[j * nx + i] = sum / norm;
-                        else
-                            conv_data[j * nx + i] = 0;
+            if ( norm > 0 )
+              conv_data[j * nx + i] = sum / norm;
+            else
+              conv_data[j * nx + i] = 0;
           } // for
         } // for
 
@@ -165,19 +165,19 @@ namespace hig {
         #pragma omp parallel for collapse(2)
         for(int i = 0; i < nx; ++ i) {
           for(int j = 0; j < ny; ++ j) {
-            float_t sum = 0.0;
-                        float_t norm = 0;
-                        int jbeg = std::max(0, j-i6sigma);
-                        int jend = std::min((int) ny, j+i6sigma);
+            real_t sum = 0.0;
+            real_t norm = 0;
+            int jbeg = std::max(0, j-i6sigma);
+            int jend = std::min((int) ny, j+i6sigma);
             for(int l = jbeg; l < jend; ++ l) {
               //sum += conv_data[l * nx + i] * gaussian(l - j, sigma);
               sum += conv_data[l * nx + i] * gauss_map[l-jbeg];
-                            norm+= gauss_map[l-jbeg];
+              norm+= gauss_map[l-jbeg];
             } // for
-                        if (norm > 0 )
-                data[j * nx + i] = sum / norm;
-                        else
-                            data[j * nx + i] = 0;
+            if (norm > 0 )
+              data[j * nx + i] = sum / norm;
+            else
+              data[j * nx + i] = 0;
           } // for
         } // for
 
@@ -187,9 +187,9 @@ namespace hig {
       } // convolution_gaussian_2d_new()
 
 
-            bool gaussian_fft ( float_t * &data, unsigned nx, unsigned ny, float_t sigma) {
-                float_t  * image_f;
-                float_t  * filter, * filter_f;
+            bool gaussian_fft ( real_t * &data, unsigned nx, unsigned ny, real_t sigma) {
+                real_t  * image_f;
+                real_t  * filter, * filter_f;
             }
 
 /*      bool compute_conv_2d_valid1(unsigned int a_xsize, unsigned int a_ysize, const double *a,
@@ -316,9 +316,9 @@ namespace hig {
       } // compute_conv_2d_valid()
 */
 
-      bool compute_conv_2d_valid(unsigned int a_xsize, unsigned int a_ysize, const float_t *a,
-                    unsigned int b_xsize, unsigned int b_ysize, const float_t *b,
-                    unsigned int& c_xsize, unsigned int& c_ysize, float_t* &c) {
+      bool compute_conv_2d_valid(unsigned int a_xsize, unsigned int a_ysize, const real_t *a,
+                    unsigned int b_xsize, unsigned int b_ysize, const real_t *b,
+                    unsigned int& c_xsize, unsigned int& c_ysize, real_t* &c) {
         unsigned int cmax_xsize = max(a_xsize + b_xsize - 1, a_xsize, b_xsize);
         unsigned int cmax_ysize = max(a_ysize + b_ysize - 1, a_ysize, b_ysize);
         c_xsize = max((int)a_xsize - max(0, (int)b_xsize - 1), 0);  // a_xsize - b_xsize + 1
@@ -339,13 +339,13 @@ namespace hig {
         //std::cout << "c_xmin: " << c_xmin << ", c_ymin: " << c_ymin << std::endl;
         //std::cout << "c_xmax: " << c_xmax << ", c_ymax: " << c_ymax << std::endl;
 
-        c = new (std::nothrow) float_t[c_xsize * c_ysize];
+        c = new (std::nothrow) real_t[c_xsize * c_ysize];
         int cx = 0, cy = 0;
         //std::cout << "  ";
         int count = 0;
         for(int i = c_ymin; i < c_ymax; ++ i) {
           for(int j = c_xmin; j < c_xmax; ++ j) {
-            float_t sum = 0.0;
+            real_t sum = 0.0;
             //for(int m = 0; m <= std::min(i, (int)a_ysize); ++ m) {
             //  for(int n = 0; n <= std::min(j, (int)a_xsize); ++ n) {
             for(unsigned int m = 0; m <= a_ysize; ++ m) {
@@ -380,9 +380,9 @@ namespace hig {
       } // compute_conv_2d_valid()
 
 
-      bool compute_conv_2d_full(unsigned int a_xsize, unsigned int a_ysize, const float_t *a,
-                    unsigned int b_xsize, unsigned int b_ysize, const float_t *b,
-                    unsigned int& c_xsize, unsigned int& c_ysize, float_t* &c) {
+      bool compute_conv_2d_full(unsigned int a_xsize, unsigned int a_ysize, const real_t *a,
+                    unsigned int b_xsize, unsigned int b_ysize, const real_t *b,
+                    unsigned int& c_xsize, unsigned int& c_ysize, real_t* &c) {
         unsigned int cmax_xsize = max(a_xsize + b_xsize - 1, a_xsize, b_xsize);
         unsigned int cmax_ysize = max(a_ysize + b_ysize - 1, a_ysize, b_ysize);
         c_xsize = cmax_xsize;
@@ -401,11 +401,11 @@ namespace hig {
 //        int c_ymin = ((int)cmax_ysize - (int)c_ysize) >> 1;
 //        int c_ymax = c_ymin + (int)c_ysize;
 
-        c = new (std::nothrow) float_t[c_xsize * c_ysize];
+        c = new (std::nothrow) real_t[c_xsize * c_ysize];
 //        int cx = 0, cy = 0;
         for(unsigned int i = 0; i < c_ysize; ++ i) {
           for(unsigned int j = 0; j < c_xsize; ++ j) {
-            float_t sum = 0.0;
+            real_t sum = 0.0;
             for(unsigned int m = 0; m < a_ysize; ++ m) {
               for(unsigned int n = 0; n < a_xsize; ++ n) {
                 int ax = (int)n;

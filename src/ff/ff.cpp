@@ -36,8 +36,8 @@ namespace hig {
 
 
   bool FormFactor::compute_form_factor(ShapeName shape, std::string shape_filename,
-                    shape_param_list_t& params, float_t single_thickness,
-                    vector3_t& transvec, float_t shp_tau, float_t shp_eta,
+                    shape_param_list_t& params, real_t single_thickness,
+                    vector3_t& transvec, real_t shp_tau, real_t shp_eta,
                     vector3_t& rot1, vector3_t& rot2, vector3_t& rot3
                     #ifdef USE_MPI
                       , woo::MultiNode& multi_node, std::string comm_key
@@ -47,7 +47,7 @@ namespace hig {
       /* compute numerically */
       is_analytic_ = false;
       numeric_ff_.init(rot1, rot2, rot3, ff_);
-      numeric_ff_.compute(shape_filename.c_str(), ff_, rot1, rot2, rot3
+      numeric_ff_.compute2(shape_filename.c_str(), ff_, rot1, rot2, rot3
                 #ifdef USE_MPI
                   , multi_node, comm_key
                 #endif
@@ -76,7 +76,7 @@ namespace hig {
     for(unsigned int z = 0; z < nqz; ++ z) {
       for(unsigned int y = 0; y < nqy; ++ y) {
         for(unsigned int x = 0; x < nqx; ++ x) {
-          float_t tempr, tempi;
+          real_t tempr, tempi;
           f >> tempr; f >> tempi;
           ff_.push_back(complex_t(tempr, tempi));
         } // for
@@ -102,20 +102,19 @@ namespace hig {
   } // FormFactor::print_ff()
 
 
-  void FormFactor::save_ff(unsigned int nqx, unsigned int nqy, unsigned int nqz,
-                const char* filename) {
+  void FormFactor::save (unsigned nrow, unsigned ncol, const char * filename) {
+    std::ofstream out (filename);
+    for (unsigned i = 0; i < nrow; i++){
+      for (unsigned j = 0; j < ncol; j++ ) out << std::norm (ff_[i*ncol + j]) << " ";
+      out << std::endl;
+    }
+    out.close();
+  }
+
+  void FormFactor::save_ff(unsigned int nqz, const char* filename) {
     std::ofstream f(filename);
     for(unsigned int z = 0; z < nqz; ++ z) {
-      for(unsigned int y = 0; y < nqy; ++ y) {
-        for(unsigned int x = 0; x < nqx; ++ x) {
-          unsigned int index = nqx * nqy * z + nqx * y + x;
-          //f << ff_[index].real() << "\t" << ff_[index].imag() << std::endl;
-          f << std::norm(ff_[index]);
-        } // for
-        //f << std::endl;
-        f << " ";
-      } // for
-      f << std::endl;
+      f << std::norm(ff_[z]) << std::endl;
     } // for
     f.close();
   } // FormFactor::save_ff()

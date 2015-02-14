@@ -37,7 +37,7 @@ namespace hig {
   /**
    * horizontal cylinder
    */
-  bool AnalyticFormFactor::compute_horizontal_cylinder(float_t tau, float_t eta, shape_param_list_t& params,
+/*  bool AnalyticFormFactor::compute_horizontal_cylinder(float_t tau, float_t eta, shape_param_list_t& params,
                             vector3_t transvec,
                             std::vector<complex_t>& ff) {
     std::vector<float_t> r, distr_r;
@@ -124,5 +124,5 @@ namespace hig {
 #endif // TIME_DETAIL_2
     return true;
   } // AnalyticFormFactor::compute_horizontal_cylinder()
-
+*/
 } // namespace hig

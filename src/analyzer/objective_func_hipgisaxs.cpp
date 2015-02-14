@@ -107,7 +107,7 @@ namespace hig{
             if(ref_data_ != NULL) delete ref_data_;
       std::string ref_filename = hipgisaxs_.reference_data_path(i);
       ReferenceFileType ref_type = get_reference_file_type(ref_filename);
-      float_t* temp_data = NULL;
+      real_t* temp_data = NULL;
       unsigned int temp_n_par = 0, temp_n_ver = 0;
       EDFReader* edfreader = NULL;
       switch(ref_type) {
@@ -191,7 +191,7 @@ namespace hig{
     //EDFReader edfreader(filename.c_str());
     std::cout << "***** READING MASK EDF FILE " << filename << std::endl;
     EDFReader* edfreader = new EDFReader(filename.c_str());
-    float_t* temp_data = NULL;
+    real_t* temp_data = NULL;
     unsigned int temp_n_par = 0, temp_n_ver = 0;
     edfreader->get_data(temp_data, temp_n_par, temp_n_ver);
     if(temp_data == NULL) {
@@ -205,19 +205,19 @@ namespace hig{
   } // HipGISAXSObjectiveFunction::read_edf_mask_data()
 
 
-  float_vec_t HipGISAXSObjectiveFunction::operator()(const float_vec_t& x) {
-    float_t *gisaxs_data = NULL;
+  real_vec_t HipGISAXSObjectiveFunction::operator()(const real_vec_t& x) {
+    real_t *gisaxs_data = NULL;
     // construct param_vals
     std::vector <std::string> params = hipgisaxs_.fit_param_keys();
     // TODO check if param values are within range ...
-    std::map <std::string, float_t> param_vals;
+    std::map <std::string, real_t> param_vals;
     for(int i = 0; i < x.size(); ++ i) param_vals[params[i]] = x[i];
 
-    for(std::map<std::string, float_t>::iterator i = param_vals.begin(); i != param_vals.end(); ++ i)
+    for(std::map<std::string, real_t>::iterator i = param_vals.begin(); i != param_vals.end(); ++ i)
       std::cout << (*i).first << ": " << (*i).second << "  ";
     std::cout << std::endl;
 
-    float_vec_t curr_dist;
+    real_vec_t curr_dist;
 
     // update and compute gisaxs
     hipgisaxs_.update_params(param_vals);
@@ -232,7 +232,7 @@ namespace hig{
 
       // compute error/distance
       std::cout << "+++++ computing distance ..." << std::endl;
-      float_t* ref_data = (*ref_data_).data();
+      real_t* ref_data = (*ref_data_).data();
       if(ref_data == NULL) std::cerr << "woops: ref_data is NULL" << std::endl;
       unsigned int* mask_data = &(mask_data_[0]);
 //      unsigned int* mask_data = new (std::nothrow) unsigned int[n_par_ * n_ver_];
@@ -245,7 +245,7 @@ namespace hig{
       std::string prefix(HiGInput::instance().param_pathprefix() + "/"
                 + HiGInput::instance().runname());
       std::ofstream out(prefix + "/convergance.dat", std::ios::app);
-      for(float_vec_t::const_iterator i = curr_dist.begin(); i != curr_dist.end(); ++ i)
+      for(real_vec_t::const_iterator i = curr_dist.begin(); i != curr_dist.end(); ++ i)
         out << (*i) << " ";
       out << std::endl;
       out.close();
@@ -255,15 +255,15 @@ namespace hig{
   } // ObjectiveFunction::operator()()
 
 
-  bool HipGISAXSObjectiveFunction::simulate_and_set_ref(const float_vec_t& x) {
-    float_t *gisaxs_data = NULL;
+  bool HipGISAXSObjectiveFunction::simulate_and_set_ref(const real_vec_t& x) {
+    real_t *gisaxs_data = NULL;
     if(x.size() > 0) {
       // construct param_vals
       std::vector <std::string> params = hipgisaxs_.fit_param_keys();
-      std::map <std::string, float_t> param_vals;
+      std::map <std::string, real_t> param_vals;
       for(int i = 0; i < x.size(); ++ i) param_vals[params[i]] = x[i];
 
-      for(std::map<std::string, float_t>::iterator i = param_vals.begin();
+      for(std::map<std::string, real_t>::iterator i = param_vals.begin();
           i != param_vals.end(); ++ i)
         std::cout << (*i).first << ": " << (*i).second << "  ";
       std::cout << std::endl;
@@ -281,3 +281,5 @@ namespace hig{
   } // ObjectiveFunction::operator()()
 
 } // namespace hig
+pace hig
+ hig

@@ -26,12 +26,12 @@ namespace hig {
     ierr = VecGetArray(X, &x); CHKERRQ(ierr);
         ierr = VecGetArray(F, &ff); CHKERRQ(ierr);
 
-    float_vec_t params;
+    real_vec_t params;
     for(int i = 0; i < num_params; ++ i) params.push_back(x[i]);
     // run objective function
-    float_vec_t temp = (*(ObjectiveFunction*) ptr)(params);
-    float_t err = 0.0;
-    float_t* ref_data = (*(ObjectiveFunction*) ptr).get_reference_data();
+    real_vec_t temp = (*(ObjectiveFunction*) ptr)(params);
+    real_t err = 0.0;
+    real_t* ref_data = (*(ObjectiveFunction*) ptr).get_reference_data();
     unsigned int* mask_data = (*(ObjectiveFunction*) ptr).get_mask_data();
     for(int i = 0; i < data_size; ++ i) {
       ff[i] = mask_data[i] * temp[i];
@@ -54,11 +54,14 @@ namespace hig {
 
 
   // used in lmvm
-  PetscReal EvaluateFunction(TaoSolver tao, float_vec_t X, void *ptr) {
+  PetscReal EvaluateFunction(TaoSolver tao, real_vec_t X, void *ptr) {
     std::cout << "evaluate function ..." << std::endl;
     // Compute F(X)
-    float_vec_t temp = (*(ObjectiveFunction*) ptr)(X);
+    real_vec_t temp = (*(ObjectiveFunction*) ptr)(X);
     std::cout << "*********************** " << temp[0] << std::endl;
         return  (PetscReal) temp[0];
   } // EvaluateFunction()
 } // namespace hig
+g
+g
+g

@@ -45,19 +45,19 @@ namespace hig {
       ColorMap new_color_map_;    /* new color mapping */
 
       bool scale_image(unsigned int, unsigned int, unsigned int, unsigned int,
-              float_t*, float_t*&);
-      bool resample_pixels(unsigned int, unsigned int, float_t*, unsigned int, unsigned int,
-              float_t*&, const boost::gil::matrix3x2<float_t>&);
-      bool convert_to_rgb_pixels(unsigned int, unsigned int, float_t*);
-      bool convert_to_rgb_palette(unsigned int, unsigned int, float_t*);
+              real_t*, real_t*&);
+      bool resample_pixels(unsigned int, unsigned int, real_t*, unsigned int, unsigned int,
+              real_t*&, const boost::gil::matrix3x2<real_t>&);
+      bool convert_to_rgb_pixels(unsigned int, unsigned int, real_t*);
+      bool convert_to_rgb_palette(unsigned int, unsigned int, real_t*);
       bool slice(Image* &img, unsigned int xval = 0);  /* obtain a slice at given x in case of 3D data */
 
-      bool translate_pixels_to_positive(unsigned int nx, unsigned int ny, float* &data);
-      bool normalize_pixels(unsigned int nx, unsigned int ny, float* &data);
-      vector2_t minmax(unsigned int n, float_t* data);
+      bool translate_pixels_to_positive(unsigned int nx, unsigned int ny, real_t * & data);
+      bool normalize_pixels(unsigned int nx, unsigned int ny, real_t * & data);
+      vector2_t minmax(unsigned int n, real_t* data);
 
       // temporary workaround ...
-      void remove_nans_infs(unsigned int nx, unsigned int ny, float_t* data);
+      void remove_nans_infs(unsigned int nx, unsigned int ny, real_t* data);
 
     public:
       Image(unsigned int ny, unsigned int nz);          /* initialize a 2D image object */
@@ -70,9 +70,9 @@ namespace hig {
           unsigned int r, unsigned int g, unsigned int b);
       ~Image();
 
-      bool construct_image(const float_t* data, int slice);
-      bool construct_image(float_t* data);
-      bool construct_palette(float_t* data);
+      bool construct_image(const real_t* data, int slice);
+      bool construct_image(real_t* data);
+      bool construct_palette(real_t* data);
       bool save(std::string filename);      /* save the current image buffer */
       bool save(char* filename);          /* if buffer has 3D data, it will
                                save all slices */

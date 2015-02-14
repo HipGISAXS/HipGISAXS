@@ -54,7 +54,7 @@ namespace hig {
       TokenType process_keyword_token(std::string& keyword);
       bool read_keyword(std::string& str);
       bool read_quoted_string(std::string& str);
-      bool read_number(float_t& val);
+      bool read_number(real_t& val);
       bool skip_white_spaces(void);
       bool skip_comments(void);
 

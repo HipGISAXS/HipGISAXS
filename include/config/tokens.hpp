@@ -75,12 +75,12 @@ namespace hig {
     key_token,            /* key value for various: shape, layer, structure, etc. */
     min_token,            /* min value for various: shape param, .. */
     max_token,            /* max value for various: shape param, .. */
-    step_token,            /* step from min to max for various */
+    step_token,           /* step from min to max for various */
     rot_token,            /* rotation value for various */
-    type_token,            /* various types */
-    stat_token,            /* statistic type: gaussian, uniform, random, etc. */
-        mean_token,                     /* mean value */
-        stddev_token,                   /* standard deviation */
+    type_token,           /* various types */
+    stat_token,           /* statistic type: gaussian, uniform, random, etc. */
+    mean_token,           /* mean value */
+    stddev_token,         /* standard deviation */
 
     /* refractive index components */
     refindex_token,          /* refractive index of various */
@@ -210,7 +210,7 @@ namespace hig {
 
       TokenType type_;    /* token type */
       std::string svalue_;  /* token's actual string value - if non-numeric */
-      float_t dvalue_;    /* token's actual numeric value */
+      real_t dvalue_;    /* token's actual numeric value */
   }; // class Token
 
 } // namespace hig

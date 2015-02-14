@@ -3,7 +3,6 @@
  *
  *  File: ff_ana_pyramid.cpp
  *  Created: Jul 12, 2012
- *  Modified: Wed 08 Oct 2014 12:17:43 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -25,6 +24,7 @@
 #include <woo/timer/woo_boostchronotimers.hpp>
 
 #include <ff/ff_ana.hpp>
+#include <common/constants.hpp>
 #include <common/enums.hpp>
 #include <model/shape.hpp>
 #include <model/qgrid.hpp>
@@ -36,116 +36,128 @@ namespace hig {
   /**
    * pyramid
    */
-  bool AnalyticFormFactor::compute_pyramid() {
-    std::cerr << "uh-oh: you reach an unimplemented part of the code, compute_pyramid"
-          << std::endl;
-    return false;
-    /*for(shape_param_iterator_t i = params.begin(); i != params.end(); ++ i) {
+
+  complex_t FormFactorPyramid (complex_t qx, complex_t qy, complex_t qz,
+      real_t length, real_t width, real_t height, real_t angle) {
+
+    real_t a = angle * PI_ / 180.;
+    real_t tan_a = std::tan(a);
+    if ((2*height/length >= tan_a) || (2*height/width >= tan_a))
+        return CMPLX_ZERO_;
+
+    complex_t tmp = qx * qy;
+    if (std::abs(tmp) < 1.0E-20)
+        return CMPLX_ZERO_;
+
+    const complex_t P_J = CMPLX_ONE_;
+    const complex_t N_J = CMPLX_MINUS_ONE_;
+
+    // q1,q2,q3,q4
+    complex_t q1 = 0.5 * ((qx - qy)/tan_a + qz);
+    complex_t q2 = 0.5 * ((qx - qy)/tan_a - qz);
+    complex_t q3 = 0.5 * ((qx + qy)/tan_a + qz);
+    complex_t q4 = 0.5 * ((qx + qy)/tan_a - qz);
+
+    // k1,k2,k3,k4
+    complex_t k1 = sinc(q1 * height) * std::exp(N_J * q1 * height) + 
+        sinc(q2 * height) * std::exp(P_J * q2 * height);
+    complex_t k2 = sinc(q1 * height) * std::exp(N_J * q1 * height) * N_J + 
+        sinc(q2 * height) * std::exp(P_J * q2 * height) * P_J;
+    complex_t k3 = sinc(q3 * height) * std::exp(N_J * q3 * height) + 
+        sinc(q4 * height) * std::exp(P_J * q4 * height);
+    complex_t k4 = sinc(q3 * height) * std::exp(N_J * q3 * height) * N_J +
+        sinc(q4 * height) * std::exp(P_J * q4 * height) * P_J;
+
+    // sins and cosines 
+    complex_t t1 = k1 * std::cos (0.5 * (qx * length - qy * width));
+    complex_t t2 = k2 * std::sin (0.5 * (qx * length - qy * width));
+    complex_t t3 = k3 * std::cos (0.5 * (qx * length + qy * width));
+    complex_t t4 = k4 * std::sin (0.5 * (qx * length + qy * width));
+
+    // formfactor
+    return ((height / tmp) * (t1 + t2 - t3 - t4));
+  }
+
+
+  bool AnalyticFormFactor::compute_pyramid(shape_param_list_t& params,
+                            std::vector<complex_t>& ff,
+                            real_t tau, real_t eta,
+                            vector3_t transvec) {
+    std::vector<real_t> x, distr_x;
+    std::vector<real_t> y, distr_y;
+    std::vector<real_t> h, distr_h;
+    std::vector<real_t> b, distr_b;
+    for(shape_param_iterator_t i = params.begin(); i != params.end(); ++ i) {
       switch((*i).second.type()) {
-        case param_edge:
         case param_xsize:
+          param_distribution((*i).second, x, distr_x);
+          break;
         case param_ysize:
+          param_distribution((*i).second, y, distr_y);
+          break;
         case param_height:
-        case param_radius:
+          param_distribution((*i).second, h, distr_h);
+          break;
         case param_baseangle:
+          param_distribution((*i).second, b, distr_b);
+          break;
+        case param_edge:
+        case param_radius:
+          std::cerr << "warning: ignoring unwanted parameters in pyramid" << std::endl;
+          break;
         default:
+          std::cerr << "error: unknown/invalid parameter given for pyramid" << std::endl;
+          return false;
       } // switch
-    } // for */
+    } // for
 
-    // what are AD/AA and AAD ... ???
-/*            RD = Dimension_Distr( dims(1,:) );[rows, NRR] = size(RD); RR = RD(1,:); RRD = RD(2,:);
-            HD = Dimension_Distr( dims(2,:) );[rows, NHH] = size(HD); HH = HD(1,:); HHD = HD(2,:);
-            WD = Dimension_Distr( dims(3,:) );[rows, NWW] = size(WD); WW = WD(1,:); WWD = WD(2,:);
-            AD = Dimension_Distr( dims(4,:) );[rows, NAA] = size(AD); AA = AD(1,:) * pi/180 ; AAD = AD(2,:);
+    #ifdef TIME_DETAIL_2
+      woo::BoostChronoTimer maintimer;
+      maintimer.start();
+    #endif
 
-            for id4=1:NAA
-                ang = AA(id4);
-                tanang = tan(ang);
-                qxy_s = (qx + qy)/tanang;
-                qxy_d = (qx - qy)/tanang;
-                q1 = ( qz + qxy_d )/2;
-                q2 = (-qz + qxy_d )/2;
-                q3 = ( qz + qxy_s )/2;
-                q4 = (-qz + qxy_s )/2;
+    #ifdef FF_ANA_GPU
+      std::cout << "-- Computing pyramid FF on GPU ..." << std::endl;
+      std::vector<real_t> transvec_v; 
+      transvec_v.push_back(transvec[0]);
+      transvec_v.push_back(transvec[1]);
+      transvec_v.push_back(transvec[2]);
+      gff_.compute_pyramid(tau, eta, x, distr_x, y, distr_y, h, distr_h, b, distr_b, rot_, transvec_v, ff);
+    #else
 
-                for id2=1:NHH
-                    H = HH(id2);
+      std::cout << "-- Computing pyramid FF on CPU ..." << std::endl;
+      ff.clear(); ff.resize(nqz_, CMPLX_ZERO_);
 
-                    sinceiq1 = SINC_Matrix(q1 * H) .* exp( 1i*q1*H) ;%./ (q1 *H);
-                    sinceiq2 = SINC_Matrix(q2 * H) .* exp(-1i*q2*H) ;%./ (q2 *H);
-                    sinceiq3 = SINC_Matrix(q3 * H) .* exp( 1i*q3*H) ;%./ (q3 *H);
-                    sinceiq4 = SINC_Matrix(q4 * H) .* exp(-1i*q4*H) ;%./ (q4 *H);
+      #pragma omp parallel for 
+      for(int i = 0; i < nqz_; i++) {
+        int j = i % nqy_;
+        complex_t mqx, mqy, mqz;
+        compute_meshpoints(QGrid::instance().qx(j), QGrid::instance().qy(j), 
+            QGrid::instance().qz_extended(i), rot_, mqx, mqy, mqz);
+        
+        complex_t temp_ff(0.0, 0.0);
+        for(int i_x = 0; i_x < x.size(); ++ i_x) {
+          for(int i_y = 0; i_y < y.size(); ++ i_y) {
+            for(int i_h = 0; i_h < h.size(); ++ i_h) {
+              for(int i_b = 0; i_b < b.size(); ++ i_b) {
+                real_t bb = b[i_b] * PI_ / 180;
+                real_t prob = distr_x[i_x] * distr_y[i_y] * distr_h[i_h] * distr_b[i_b];
+                temp_ff += FormFactorPyramid(mqx, mqy, mqz, x[i_x], y[i_y], h[i_h], b[i_b]) * prob;
+              } // for b
+            } // for h
+          } // for y
+        } // for x
+        complex_t temp1 = mqx * transvec[0] + mqy * transvec[1] + mqz * transvec[2];
+        ff[i] = temp_ff * exp(complex_t(0, 1) * temp1);
+      } // for z
+    #endif // FF_ANA_GPU
 
-                    K1 =      sinceiq1 + sinceiq2;
-                    K2 = -1i*(sinceiq1 - sinceiq2);
-                    K3 =      sinceiq3 + sinceiq4;
-                    K4 = -1i*(sinceiq3 - sinceiq4);
+    #ifdef TIME_DETAIL_2
+      maintimer.stop();
+      std::cout << "** Trunc Pyramid FF compute time: " << maintimer.elapsed_msec() << " ms."
+            << std::endl;
+    #endif
 
-                    for id1 =1: NRR
-                        R = RR(id1);
-
-                        for id3=1:NWW
-                            W = WW(id3);
-
-                            FF = FF +   RRD(id1) * HHD(id2) * WWD(id3) * AAD(id4) * (H ./ (qx .* qy ) ) .* ( ...
-                                cos(qx*R - qy*W ) .* K1 + ...
-                                sin(qx*R - qy*W ) .* K2 - ...
-                                cos(qx*R + qy*W ) .* K3 - ...
-                                sin(qx*R + qy*W ) .* K4 );
-                        end
-                    end
-                end
-            end
-
-
-            %%special points
-            dx= abs(qx);
-            Zx = find(dx < 1e-14 );
-            [Ix, Jx] = ind2sub(size(dx),Zx);
-
-            dy= abs(qy);
-            Zy = find(dy < 1e-14 );
-            [Iy, Jy , Ky] = ind2sub(size(dy),Zy);
-
-            dz= abs(qz);
-            Zz = find(dz < 1e-14 );
-            [Iz, Jz, Kz] = ind2sub(size(dz),Zz);
-
-            for n=1:length(Zy)
-                i0 = Iy(n); j0=Jy(n);  k0=Ky(n);
-                if abs(qy(i0,j0,k0)) < 1e-14  %% qy=0
-                    qy0  = 1e-6;
-                    qx0 =  qx(i0,j0,k0);
-                    qz0 =  qz(i0,j0,k0);
-
-                    qxy_s0 = (qx0 + qy0)/tanang;
-                    qxy_d0 = (qx0 - qy0)/tanang;
-                    q1 = ( qz0 + qxy_d0 )/2;
-                    q2 = (-qz0 + qxy_d0 )/2;
-                    q3 = ( qz0 + qxy_s0 )/2;
-                    q4 = (-qz0 + qxy_s0)/2;
-
-                    sinceiq1 = SINC_Matrix(q1 * H) .* exp( 1i*q1*H) ;%./ (q1 *H);
-                    sinceiq2 = SINC_Matrix(q2 * H) .* exp(-1i*q2*H) ;%./ (q2 *H);
-                    sinceiq3 = SINC_Matrix(q3 * H) .* exp( 1i*q3*H) ;%./ (q3 *H);
-                    sinceiq4 = SINC_Matrix(q4 * H) .* exp(-1i*q4*H) ;%./ (q4 *H);
-
-                    K1 =      sinceiq1 + sinceiq2;
-                    K2 = -1i*(sinceiq1 - sinceiq2);
-                    K3 =      sinceiq3 + sinceiq4;
-                    K4 = -1i*(sinceiq3 - sinceiq4);
-
-                    FF(i0,j0,k0) = (H ./ (qx0 .* qy0 ) ) .* ( ...
-                        cos(qx0*R - qy0*W ) .* K1 + ...
-                        sin(qx0*R - qy0*W ) .* K2 - ...
-                        cos(qx0*R + qy0*W ) .* K3 - ...
-                        sin(qx0*R + qy0*W ) .* K4 );
-                end
-            end
-            %%%%%%
-            FF = FF  .* exp(1i* (qx*T(1) + qy*T(2) + qz*T(3))); */
-
+    return true;
   } // AnalyticFormFactor::compute_pyramid()
-
 } // namespace hig
-

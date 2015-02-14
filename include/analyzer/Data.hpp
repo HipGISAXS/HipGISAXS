@@ -29,14 +29,14 @@ namespace hig{
 
   /* image point coords, parallel and vertical */
   typedef  struct {
-    float_t crd_par;
-    float_t crd_ver;
+    real_t crd_par;
+    real_t crd_ver;
   }  crd2_t;
 
   /* image point coord indices, parallel and vertical */
   typedef  struct {
-    float_t crd_ind_par;
-    float_t crd_ind_ver;
+    real_t crd_ind_par;
+    real_t crd_ind_ver;
   }  crd2_ind_t;
 
   /* frame rectangle values & indices to select a subset of image  */

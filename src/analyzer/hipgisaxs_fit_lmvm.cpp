@@ -131,13 +131,13 @@ namespace hig {
     xn_.clear();
     for (int j = 0; j < num_params_; j++) {
         VecGetValues(x0, 1, &j, y);
-        xn_.push_back((float) y[0]);
+        xn_.push_back(y[0]);
     }
 
     /* Compose output analysis */
     std::cout << "Converged vector: ";
     out << "Converged vector: ";
-    for (float_vec_t::iterator i = xn_.begin(); i != xn_.end(); ++i)
+    for (real_vec_t::iterator i = xn_.begin(); i != xn_.end(); ++i)
     {
         std::cout << *i << " ";
       out << *i << " ";
@@ -166,7 +166,7 @@ namespace hig {
     PetscInt i, j, size;
     PetscReal fxp, fxm, dx = 0.05;
     PetscReal *x, *g;
-    float_vec_t xvec, xpvec, xmvec;
+    real_vec_t xvec, xpvec, xmvec;
     PetscErrorCode ierr;
 
 
@@ -194,4 +194,5 @@ namespace hig {
     ierr = VecRestoreArray(G, &g);
     return 0;
   }
+}
 }

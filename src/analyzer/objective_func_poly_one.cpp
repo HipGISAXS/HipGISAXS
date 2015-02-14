@@ -42,26 +42,26 @@ namespace hig {
   PolyOneObjectiveFunction::~PolyOneObjectiveFunction() { delete ref_data_; }
 
 
-  float_vec_t PolyOneObjectiveFunction::operator()(const float_vec_t& x) {
+  real_vec_t PolyOneObjectiveFunction::operator()(const real_vec_t& x) {
     x1_ = x[0];
     x2_ = x[1];
 
     std::cout << " ** params: " << x1_ << " " << x2_ << std::endl;
 
-    float_vec_t data;
+    real_vec_t data;
     
     std::cout << " ** computed:\t";
-    for(float_t i = q_min_; i < q_max_; i += q_step_) {
-      float_t val = func(i, x1_, x2_);
+    for(real_t i = q_min_; i < q_max_; i += q_step_) {
+      real_t val = func(i, x1_, x2_);
       data.push_back(val);
       std::cout << val << " ";
     } // for
     std::cout << std::endl;
   
     //curr_dist_.clear();
-    float_vec_t curr_dist;
-    float_t* ref_data = ref_data_->data();
-    float_t* d = &data[0];
+    real_vec_t curr_dist;
+    real_t* ref_data = ref_data_->data();
+    real_t* d = &data[0];
     (*pdist_)(ref_data, d, data.size(), curr_dist);
 
     std::cout << " ** reference:\t";
@@ -81,9 +81,9 @@ namespace hig {
              std::cerr << "error: failed to open reference data file " << filename << std::endl;
              return false;
          } // if
-     float_vec_t data;
+     real_vec_t data;
          while(true) {
-             float_t temp = -1.0;
+             real_t temp = -1.0;
              fin >> temp;
              if(fin.eof() || !fin.good()) break;
              data.push_back(temp);
@@ -109,19 +109,21 @@ namespace hig {
   } // PolyOneObjectiveFunction::fit_param_limits()
 
 
-  float_vec_t PolyOneObjectiveFunction::fit_param_init_values() const {
-    std::vector <float_t> init_vals;
+  real_vec_t PolyOneObjectiveFunction::fit_param_init_values() const {
+    std::vector <real_t> init_vals;
     init_vals.push_back(x1_init_);
     init_vals.push_back(x2_init_);
     return init_vals;
   } // PolyOneObjectiveFunction::fit_param_init_values()
 
 
-  float_t PolyOneObjectiveFunction::func(float_t q, float_t x1, float_t x2) {
-         float_t q3 = q * q * q;
-         float_t q4 = q3 * q;
+  real_t PolyOneObjectiveFunction::func(real_t q, real_t x1, real_t x2) {
+         real_t q3 = q * q * q;
+         real_t q4 = q3 * q;
          float val = fabs(x1 * q4 + x2 * q3);
          return val;
      } // PolyOneFitness::func()
 
 } // namespace hig
+mespace hig
+e hig

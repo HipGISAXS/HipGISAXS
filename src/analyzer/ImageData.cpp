@@ -25,19 +25,19 @@
 
 namespace hig {
 
-  float_t ImageData::operator()(int i, int j) const {
+  real_t ImageData::operator()(int i, int j) const {
     if(i < 0 || i >= n_par_ || j < 0 || j >= n_ver_) return 0;
     return data_[j * n_par_ + i];
   } // ImageData::operator()()
 
 
-  float_t ImageData::operator()(unsigned int i, unsigned int j) const {
+  real_t ImageData::operator()(unsigned int i, unsigned int j) const {
     if(i >= n_par_ || j >= n_ver_) return 0;
     return data_[j * n_par_ + i];
   } // ImageData::operator()()
 
 
-  float_t ImageData::operator()(float_t qi, float_t qj) const {
+  real_t ImageData::operator()(real_t qi, real_t qj) const {
     // TODO ...
     return 0;
   } // ImageData::operator()()
@@ -70,11 +70,11 @@ namespace hig {
     file.close();
   }
 
-  float_vec_t ImageData::read_string_values(string_t line){
-    float_vec_t array;
+  real_vec_t ImageData::read_string_values(string_t line){
+    real_vec_t array;
     std::stringstream ssin(line);
-    std::copy(std::istream_iterator<float_t>(ssin),
-          std::istream_iterator<float_t>(),
+    std::copy(std::istream_iterator<real_t>(ssin),
+          std::istream_iterator<real_t>(),
           std::back_inserter(array));
     return array;
   } // ImageData::read_string_values()
@@ -94,7 +94,7 @@ namespace hig {
     while(!file.eof()) {
       getline(file,line);
       ++ nv;
-      float_vec_t img_z = read_string_values(line);
+      real_vec_t img_z = read_string_values(line);
       if(nv == 0) np = img_z.size();
       data_.insert(data_.end(), img_z.begin(), img_z.end());
     } // while
@@ -107,3 +107,5 @@ namespace hig {
   } // ImageData::read()
 
 } // namespace hig
+ce hig
+ig

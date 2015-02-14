@@ -35,7 +35,7 @@ namespace hig {
       RawShapeReader(const char*, double*&, unsigned int&);
       ~RawShapeReader() { }
     private:
-      bool load_raw(const char*, std::vector<float_t>&);
+      bool load_raw(const char*, std::vector<real_t>&);
   }; // class RawShapeReader
 
 } // namespace hig

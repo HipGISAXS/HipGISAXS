@@ -67,7 +67,7 @@ namespace hig {
       sum += temp2;
     } // for
     temp1 *= sum;
-    return complex_t((float_t) temp1.real(), (float_t) temp1.imag());
+    return complex_t((real_t) temp1.real(), (real_t) temp1.imag());
   } // cbessj()
 */
 

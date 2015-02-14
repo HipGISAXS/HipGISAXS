@@ -33,7 +33,7 @@
 #include <boost/tokenizer.hpp>
 
 extern "C" {
-void s2h_converter(float_t** shape_def, unsigned int num_triangles, char* hdf5_filename, MPI_Comm comm);
+void s2h_converter(real_t** shape_def, unsigned int num_triangles, char* hdf5_filename, MPI_Comm comm);
 }
 
 enum token_t {
@@ -51,10 +51,10 @@ enum token_t {
 }; //enum
 
 typedef struct {
-  float_t x;
-  float_t y;
-  float_t z;
-  float_t w;   // for format's completeness
+  real_t x;
+  real_t y;
+  real_t z;
+  real_t w;   // for format's completeness
 } vertex_t;
 
 typedef struct {
@@ -83,14 +83,14 @@ class o2s_converter {
     //void load_object(char* filename, std::vector<vertex_t> &vertices,
     //    std::vector<poly_index_t> &Vn3, std::vector<poly_index_t> &Vn4,
     //    std::vector<poly_index_t> &F3, std::vector<poly_index_t> &F4);
-    //float_t* convert(char* outfilename, std::vector<poly_index_t> F3,
+    //real_t* convert(char* outfilename, std::vector<poly_index_t> F3,
     //    std::vector<vertex_t> vertices, bool hdf5);
-    float_t* convert(char* outfilename,
+    real_t* convert(char* outfilename,
         std::vector<std::vector<int> > face_list_3v,
         std::vector<vertex_t> vertices, bool hdf5);
 
     bool get_triangle_params(vertex_t v1, vertex_t v2, vertex_t v3,
-        float_t &s_area, vertex_t &normal, vertex_t &center);
+        real_t &s_area, vertex_t &normal, vertex_t &center);
     token_t token_hash(std::string const &str);
     void findall(std::string str, char c, std::vector<int> &pos_list);
     void display_vertices(std::vector<vertex_t> &vertices);
@@ -98,7 +98,7 @@ class o2s_converter {
 
     std::string *filename_;
     std::string *outfilename_;
-    float_t* shape_def_;
+    real_t* shape_def_;
     MPI_Comm comm_;
 }; // class o2s_converter
 

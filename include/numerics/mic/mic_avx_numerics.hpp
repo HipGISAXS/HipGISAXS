@@ -56,7 +56,7 @@ namespace hig {
 	 * load store
 	 */
 
-	static inline mic_m512_t mic_load_rps(float_t* p) {
+	static inline mic_m512_t mic_load_rps(real_t* p) {
 		return _mm512_load_ps(p);
 	} // mic_load_rps()
 
@@ -72,7 +72,7 @@ namespace hig {
 		return vec;
 	} // mic_setzero_cps()
 
-	static inline mic_m512_t mic_set1_rps(float_t a) {
+	static inline mic_m512_t mic_set1_rps(real_t a) {
 		return _mm512_set1_ps(a);
 	} // mic_load1_rps()
 
@@ -205,5 +205,5 @@ namespace hig {
 
 #endif // __MIC_AVX_NUMERICS_HPP__
 
-#endif
+#endif // __MIC__
 #endif // USE_MIC

@@ -70,8 +70,8 @@ namespace hig {
 
       bool compute_form_factor(ShapeName shape, std::string shape_filename,
                   shape_param_list_t& params,
-                  float_t single_thickness,
-                  vector3_t& transvec, float_t shp_tau, float_t shp_eta,
+                  real_t single_thickness,
+                  vector3_t& transvec, real_t shp_tau, real_t shp_eta,
                   vector3_t& rot1, vector3_t& rot2, vector3_t& rot3
                   #ifdef USE_MPI
                     , woo::MultiNode&, std::string
@@ -84,7 +84,8 @@ namespace hig {
       bool read_form_factor(const char* filename,
                   unsigned int nqx, unsigned int nqy, unsigned int nqz);
       void print_ff(unsigned int nqx, unsigned int nqy, unsigned int nqz);
-      void save_ff(unsigned int nqx, unsigned int nqy, unsigned int nqz, const char* filename);
+      void save_ff(unsigned int nqz, const char* filename);
+      void save (unsigned, unsigned, const char *);
       void printff(unsigned int nqx, unsigned int nqy, unsigned int nqz) {
         std::cout << "ff:" << std::endl;
         for(unsigned int i = 0; i < nqx * nqy * nqz; ++ i)

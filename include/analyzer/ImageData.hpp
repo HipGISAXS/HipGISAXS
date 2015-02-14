@@ -86,9 +86,9 @@ namespace hig{
     /* getters */
     //float img_p (int iv, int ip) const;
     //float img_q  (float qv, float qp) const;
-    float_t operator()(int i, int j) const;
-    float_t operator()(unsigned int i, unsigned int j) const;
-    float_t operator()(float_t qi, float_t qj) const;
+    real_t operator()(int i, int j) const;
+    real_t operator()(unsigned int i, unsigned int j) const;
+    real_t operator()(real_t qi, real_t qj) const;
 
     //float_mat_t img() const {return img_;}
     unsigned int n_par() const { return n_par_;}
@@ -97,8 +97,8 @@ namespace hig{
     bool read(string_t filename);
     void save(string_t filename) const;
 
-    //float_t* convert_data();
-    float_t* data() { return &data_[0]; }  // TODO: remove this eventually ...
+    //real_t* convert_data();
+    real_t* data() { return &data_[0]; }  // TODO: remove this eventually ...
     //unsigned int size() { return n_par_ * n_ver_; }
     unsigned int size() { return data_.size(); }
 
@@ -108,3 +108,4 @@ namespace hig{
 } /* namespace hig */
 
 #endif /* IMAGEDATA_HPP_ */
+PP_ */

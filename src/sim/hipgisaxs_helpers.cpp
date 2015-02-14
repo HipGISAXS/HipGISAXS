@@ -26,8 +26,8 @@
 
 namespace hig {
 
-  bool HipGISAXS::gaussian_smearing(float_t*& data, float_t sigma) {
-    return Convolutions::instance().convolution_gaussian_2d(data, nqy_, nqz_, sigma);
+  bool HipGISAXS::gaussian_smearing(real_t*& data, real_t sigma) {
+    return Convolutions::instance().convolution_gaussian_2d(data, ncol_, nrow_, sigma);
   } // HipGISAXS::gaussian_smearing()
 
 } // namespace hig

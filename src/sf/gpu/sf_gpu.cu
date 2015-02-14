@@ -42,11 +42,13 @@ namespace hig {
                                    , woo::MultiNode& world_comm, std::string comm_key
                                  #endif
                                 ) {
-    nx_ = QGrid::instance().nqx();
-    ny_ = QGrid::instance().nqy();
-    if(expt == "saxs") nz_ = QGrid::instance().nqz();
-    else if(expt == "gisaxs") nz_ = QGrid::instance().nqz_extended();
-    else return false;
+    //nx_ = QGrid::instance().nqx();
+    //ny_ = QGrid::instance().nqy();
+    //if(expt == "saxs") nz_ = QGrid::instance().nqz();
+    //else if(expt == "gisaxs") nz_ = QGrid::instance().nqz_extended();
+    nx_ = 1;
+    ny_ = QGrid::instance().nrows();
+    nz_ = QGrid::instance().ncols();
     sf_ = new (std::nothrow) complex_t[nx_ * ny_ * nz_];
     if(sf_ == NULL) return false;
     gsf_.init(nx_, ny_, nz_);
@@ -72,21 +74,24 @@ namespace hig {
   } // StructureFactorG::~StructureFactorG()
 
 
-  bool StructureFactorG::init(unsigned int nqx, unsigned int nqy, unsigned int nqz) {
+  bool StructureFactorG::init(unsigned int nx, unsigned int ny, unsigned int nz) {
     // allocate device buffers
     // copy qgrid to device memory
 
     // TODO: unify ff and sf stuff. put separate qgrid for gpu ...
 
-    nqx_ = nqx; nqy_ = nqy; nqz_ = nqz;
-    cudaMalloc((void**) &qx_, nqx_ * sizeof(float_t));
-    cudaMalloc((void**) &qy_, nqy_ * sizeof(float_t));
-    cudaMalloc((void**) &qz_, nqz_ * sizeof(cucomplex_t));
+    nqx_ = nx; nqy_ = ny; nqz_ = nz;
+    unsigned int nqx = QGrid::instance().nqx();
+    unsigned int nqy = QGrid::instance().nqy();
+    unsigned int nqz = QGrid::instance().nqz_extended();
+    cudaMalloc((void**) &qx_, nqx * sizeof(real_t));
+    cudaMalloc((void**) &qy_, nqy * sizeof(real_t));
+    cudaMalloc((void**) &qz_, nqz * sizeof(cucomplex_t));
     cudaMalloc((void**) &sf_, nqx_ * nqy_ * nqz_ * sizeof(cucomplex_t));
-    cudaMalloc((void**) &repet_, 3 * sizeof(float_t));
-    cudaMalloc((void**) &rot_, 9 * sizeof(float_t));
-    cudaMalloc((void**) &center_, 3 * sizeof(float_t));
-    cudaMalloc((void**) &transvec_, 3 * sizeof(float_t));
+    cudaMalloc((void**) &repet_, 3 * sizeof(real_t));
+    cudaMalloc((void**) &rot_, 9 * sizeof(real_t));
+    cudaMalloc((void**) &center_, 3 * sizeof(real_t));
+    cudaMalloc((void**) &transvec_, 3 * sizeof(real_t));
     if(qx_ == NULL || qy_ == NULL || qz_ == NULL || sf_ == NULL || repet_ == NULL || rot_ == NULL) {
       std::cerr << "error: device memory allocation failed for structure factor" << std::endl;
       return false;
@@ -94,24 +99,24 @@ namespace hig {
     cudaError_t err = cudaGetLastError();
 
     // construct host buffers
-    float_t* qx_h = new (std::nothrow) float_t[nqx_];
-    float_t* qy_h = new (std::nothrow) float_t[nqz_];
-    cucomplex_t* qz_h = new (std::nothrow) cucomplex_t[nqz_];
+    real_t* qx_h = new (std::nothrow) real_t[nqx];
+    real_t* qy_h = new (std::nothrow) real_t[nqy];
+    cucomplex_t* qz_h = new (std::nothrow) cucomplex_t[nqz];
     if(qx_h == NULL || qy_h == NULL || qz_h == NULL) {
       std::cerr << "error: memory allocation for host grid in sf failed" << std::endl;
       return false;
     } // if
-    for(unsigned int ix = 0; ix < nqx_; ++ ix) qx_h[ix] = QGrid::instance().qx(ix);
-    for(unsigned int iy = 0; iy < nqy_; ++ iy) qy_h[iy] = QGrid::instance().qy(iy);
-    for(unsigned int iz = 0; iz < nqz_; ++ iz) {
+    for(unsigned int ix = 0; ix < nqx; ++ ix) qx_h[ix] = QGrid::instance().qx(ix);
+    for(unsigned int iy = 0; iy < nqy; ++ iy) qy_h[iy] = QGrid::instance().qy(iy);
+    for(unsigned int iz = 0; iz < nqz; ++ iz) {
       qz_h[iz].x = QGrid::instance().qz_extended(iz).real();
       qz_h[iz].y = QGrid::instance().qz_extended(iz).imag();
     } // for
 
     // TODO: make them async if it helps ...
-    cudaMemcpy(qx_, qx_h, nqx_ * sizeof(float_t), cudaMemcpyHostToDevice);
-    cudaMemcpy(qy_, qy_h, nqy_ * sizeof(float_t), cudaMemcpyHostToDevice);
-    cudaMemcpy(qz_, qz_h, nqz_ * sizeof(cucomplex_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(qx_, qx_h, nqx * sizeof(real_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(qy_, qy_h, nqy * sizeof(real_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(qz_, qz_h, nqz * sizeof(cucomplex_t), cudaMemcpyHostToDevice);
 
     // TODO: do hyperblocking if needed just as in ff ...
 
@@ -144,18 +149,18 @@ namespace hig {
   } // StructureFactorG::get_sf()
 
 
-/*  bool StructureFactorG::run_init(const float_t* rot_h, const std::vector<float_t>& repet) {
+/*  bool StructureFactorG::run_init(const real_t* rot_h, const std::vector<real_t>& repet) {
     // copy repet and rotation to device memory
     if(repet_ == NULL || rot_ == NULL) {
       std::cerr << "error: StructureFactorG is not initialized" << std::endl;
       return false;
     } // if
 
-    const float_t* repet_h = repet.empty() ? NULL : &*repet.begin();
+    const real_t* repet_h = repet.empty() ? NULL : &*repet.begin();
     if(repet_h == NULL) return false;
 
-    cudaMemcpy(repet_, repet_h, 3 * sizeof(float_t), cudaMemcpyHostToDevice);
-    cudaMemcpy(rot_, rot_h, 9 * sizeof(float_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(repet_, repet_h, 3 * sizeof(real_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(rot_, rot_h, 9 * sizeof(real_t), cudaMemcpyHostToDevice);
 
     return true;
   } // StructureFactorG::run_init()
@@ -212,20 +217,20 @@ namespace hig {
     mat_mul_3x1(rotation_1, rotation_2, rotation_3, temp_lc, crot);
     vector3_t l_t = lattice->t();
 
-    float_t rot_h[9];
+    real_t rot_h[9];
     rot_h[0] = arot[0]; rot_h[1] = arot[1]; rot_h[2] = arot[2];
     rot_h[3] = brot[0]; rot_h[4] = brot[1]; rot_h[5] = brot[2];
     rot_h[6] = crot[0]; rot_h[7] = crot[1]; rot_h[8] = crot[2];
 
     // copy current rot matrix and num repeats to device
-    cudaMemcpy(rot_, rot_h, 9 * sizeof(float_t), cudaMemcpyHostToDevice);
-    cudaMemcpy(repet_, &repet[0], 3 * sizeof(float_t), cudaMemcpyHostToDevice);
-    cudaMemcpy(center_, &center[0], 3 * sizeof(float_t), cudaMemcpyHostToDevice);
-    cudaMemcpy(transvec_, &l_t[0], 3 * sizeof(float_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(rot_, rot_h, 9 * sizeof(real_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(repet_, &repet[0], 3 * sizeof(real_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(center_, &center[0], 3 * sizeof(real_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(transvec_, &l_t[0], 3 * sizeof(real_t), cudaMemcpyHostToDevice);
 
     unsigned int cuda_block_y = 16, cuda_block_z = 8;
-    unsigned int cuda_num_blocks_y = ceil((float_t) nqy_ / cuda_block_y);
-    unsigned int cuda_num_blocks_z = ceil((float_t) nqz_ / cuda_block_z);
+    unsigned int cuda_num_blocks_y = ceil((real_t) nqy_ / cuda_block_y);
+    unsigned int cuda_num_blocks_z = ceil((real_t) nqz_ / cuda_block_z);
     dim3 sf_grid_size(cuda_num_blocks_y, cuda_num_blocks_z, 1);
     dim3 sf_block_size(cuda_block_y, cuda_block_z, 1);
 
@@ -243,23 +248,102 @@ namespace hig {
     return true;
   } // StructureFactorG::compute()
 
+/*    std::complex<real_t> unit_c(1, 0);
+    std::complex<real_t> unit_ci(0, 1);
+
+    // big data to transer to gpu:
+    // qx, qy, qz
+    // arot, brot, crot
+    // repet
+
+    // good for gpu ... TODO
+    for(unsigned int z = 0; z < nz_; ++ z) {
+      for(unsigned int y = 0; y < ny_; ++ y) {
+        for(unsigned int x = 0; x < nx_; ++ x) {
+          complex_t temp1, temp_x2, temp_y3, temp_y4, temp_x5;
+          real_t temp_f;
+          complex_t sa, sb, sc;
+          real_t qx = QGrid::instance().qx(x);
+          real_t qy = QGrid::instance().qy(y);
+          complex_t qz;
+          if(expt == "saxs")
+            qz = QGrid::instance().qz(z);
+          else if(expt == "gisaxs")
+            qz = QGrid::instance().qz_extended(z);
+
+          temp1 = exp(unit_ci * (arot[0] * qx + arot[1] * qy + arot[2] * qz));
+          temp_x2 = unit_c - pow(temp1, repet[0]);
+          temp_y3 = unit_c / (unit_c - temp1);
+          temp_f = (real_t)(!((boost::math::isfinite)(temp_y3.real()) &&
+                      (boost::math::isfinite)(temp_y3.imag())));
+          temp_y4 = unit_c / (unit_c / temp_y3 + temp_f);
+          temp_f = (real_t)(!((boost::math::isfinite)((unit_c / temp_x2).real()) &&
+                      (boost::math::isfinite)((unit_c / temp_x2).imag())));
+          temp_x5 = temp_x2 + repet[0] * temp_f;
+          sa = pow(temp1, ((real_t)1.0 - repet[0]) / (real_t)2.0) * temp_y4 * temp_x5;
+
+          temp1 = exp(unit_ci * (brot[0] * qx + brot[1] * qy + brot[2] * qz));
+          temp_x2 = unit_c - pow(temp1, repet[1]);
+          temp_y3 = unit_c / (unit_c - temp1);
+          temp_f = (real_t)(!((boost::math::isfinite)(temp_y3.real()) &&
+                      (boost::math::isfinite)(temp_y3.imag())));
+          temp_y4 = unit_c / (unit_c / temp_y3 + temp_f);
+          temp_f = (real_t)(!((boost::math::isfinite)((unit_c / temp_x2).real()) &&
+                      (boost::math::isfinite)((unit_c / temp_x2).imag())));
+          temp_x5 = temp_x2 + repet[1] * temp_f;
+          sb = pow(temp1, ((real_t)1.0 - repet[1]) / (real_t)2.0) * temp_y4 * temp_x5;
+
+          temp1 = exp(unit_ci * (crot[0] * qx + crot[1] * qy + crot[2] * qz));
+          temp_x2 = unit_c - pow(temp1, repet[2]);
+          temp_y3 = unit_c / (unit_c - temp1);
+          temp_f = (real_t)(!((boost::math::isfinite)(temp_y3.real()) &&
+                      (boost::math::isfinite)(temp_y3.imag())));
+          temp_y4 = unit_c / (unit_c / temp_y3 + temp_f);
+          temp_f = (real_t)(!((boost::math::isfinite)((unit_c / temp_x2).real()) &&
+                      (boost::math::isfinite)((unit_c / temp_x2).imag())));
+          temp_x5 = temp_x2 + repet[2] * temp_f;
+          sc = temp_y4 * temp_x5;
+
+*/          /*if(!((boost::math::isfinite)(sa.real()) && (boost::math::isfinite)(sa.imag()))) {
+            std::cout << "sa sa sa sa sa sa sa: " << x << ", " << y << ", " << z << std::endl; }
+          if(!((boost::math::isfinite)(sb.real()) && (boost::math::isfinite)(sb.imag()))) {
+            std::cout << "sb sb sb sb sb sb sb: " << x << ", " << y << ", " << z << std::endl; }
+          if(!((boost::math::isfinite)(sc.real()) && (boost::math::isfinite)(sc.imag()))) {
+            std::cout << "sc sc sc sc sc sc sc: " << x << ", " << y << ", " << z << std::endl; }*/
+/*
+          sf_[nx_ * ny_ * z + nx_ * y + x] = exp(unit_ci *
+                  (center[0] * qx + center[1] * qy + center[2] * qz)) *
+                  sa * sb * sc *
+                  (unit_c + exp(unit_ci * (l_t[0] * qx + l_t[1] * qy + l_t[2] * qz)));
+
+  */        /*if(!((boost::math::isfinite)(sf_[nx_ * ny_ * z + nx_ * y + x].real()) &&
+                (boost::math::isfinite)(sf_[nx_ * ny_ * z + nx_ * y + x].imag()))) {
+            std::cout << "sf sf sf sf sf sf sf: " << x << ", " << y << ", " << z << std::endl; }*/
+/*        } // for x
+      } // for y
+    } // for z
+
+    if(my_rank == 0) {
+      int naninfs = count_naninfs(nx_, ny_, nz_, sf_);
+      std::cout << " ------- " << naninfs << " / " << nx_ * ny_ * nz_ << " nans or infs" << std::endl;
+    } // if */
 
   __global__ void structure_factor_kernel(unsigned int nqx, unsigned int nqy, unsigned int nqz,
-                                          float_t* qx, float_t* qy, cucomplex_t* qz,
-                                          float_t* rot, float_t* repet,
-                                          float_t* center, float_t* transvec,
+                                          real_t* qx, real_t* qy, cucomplex_t* qz,
+                                          real_t* rot, real_t* repet,
+                                          real_t* center, real_t* transvec,
                                           cucomplex_t* sf) {
     unsigned int i_y = blockDim.x * blockIdx.x + threadIdx.x;
     unsigned int i_z = blockDim.y * blockIdx.y + threadIdx.y;
     unsigned int base_index = nqx * nqy * i_z + nqx * i_y;
 
-    cucomplex_t unit_c = make_cuC((float_t) 1, (float_t) 0);
+    cucomplex_t unit_c = make_cuC((real_t) 1, (real_t) 0);
 
     if(i_y < nqy && i_z < nqz) {
       for(unsigned int i_x = 0; i_x < nqx; ++ i_x) {
         cucomplex_t sa, sb, sc;
 
-        float_t q_x = qx[i_x], q_y = qy[i_y];
+        real_t q_x = qx[i_x], q_y = qy[i_y];
         cucomplex_t q_z = qz[i_z];
 
         cucomplex_t e_iqa = cuCexpi(rot[0] * q_x + rot[1] * q_y + rot[2] * q_z);
@@ -267,21 +351,21 @@ namespace hig {
         cucomplex_t ya_0 = unit_c - e_iqa;
         if(fabs(ya_0.y) > REAL_ZERO_ || fabs(ya_0.x) > REAL_ZERO_) sa = xa_0 / ya_0;
         else sa = make_cuC(repet[0], 0);
-        sa = cuCpow(e_iqa, ((float_t) 1.0 - repet[0]) / (float_t) 2.0) * sa;
+        sa = cuCpow(e_iqa, ((real_t) 1.0 - repet[0]) / (real_t) 2.0) * sa;
 
         cucomplex_t e_iqb = cuCexpi(rot[3] * q_x + rot[4] * q_y + rot[5] * q_z);
         cucomplex_t xb_0 = unit_c - cuCpow(e_iqb, repet[1]);
         cucomplex_t yb_0 = unit_c - e_iqb;
         if(fabs(yb_0.y) > REAL_ZERO_ || fabs(yb_0.x) > REAL_ZERO_) sb = xb_0 / yb_0;
         else sb = make_cuC(repet[1], 0);
-        sb = cuCpow(e_iqb, ((float_t) 1.0 - repet[1]) / (float_t) 2.0) * sb;
+        sb = cuCpow(e_iqb, ((real_t) 1.0 - repet[1]) / (real_t) 2.0) * sb;
 
         cucomplex_t e_iqc = cuCexpi(rot[6] * q_x + rot[7] * q_y + rot[8] * q_z);
         cucomplex_t xc_0 = unit_c - cuCpow(e_iqc, repet[2]);
         cucomplex_t yc_0 = unit_c - e_iqc;
         if(fabs(yc_0.y) > REAL_ZERO_ || fabs(yc_0.x) > REAL_ZERO_) sc = xc_0 / yc_0;
         else sc = make_cuC(repet[2], 0);
-        sc = cuCpow(e_iqc, ((float_t) 1.0 - repet[2]) / (float_t) 2.0) * sc;
+        sc = cuCpow(e_iqc, ((real_t) 1.0 - repet[2]) / (real_t) 2.0) * sc;
 
 
 /*        cucomplex_t iqa = rot[0] * q_x + rot[1] * q_y + rot[2] * q_z;
@@ -291,7 +375,7 @@ namespace hig {
         cucomplex_t ya_0 = unit_c - e_iqa;
         if(fabs(ya_0.y) > REAL_ZERO_ || fabs(ya_0.x) > REAL_ZERO_) sa = xa_0 / ya_0;
         else sa = make_cuC(repet[0], 0);
-        sa = cuCpow(e_iqa, ((float_t) 1.0 - repet[0]) / (float_t) 2.0) * sa;
+        sa = cuCpow(e_iqa, ((real_t) 1.0 - repet[0]) / (real_t) 2.0) * sa;
 
         cucomplex_t iqb = rot[3] * q_x + rot[4] * q_y + rot[5] * q_z;
         cucomplex_t iqnb = repet[1] * iqb;
@@ -300,7 +384,7 @@ namespace hig {
         cucomplex_t yb_0 = unit_c - e_iqb;
         if(fabs(yb_0.y) > REAL_ZERO_ || fabs(yb_0.x) > REAL_ZERO_) sb = xb_0 / yb_0;
         else sb = make_cuC(repet[1], 0);
-        sb = cuCpow(e_iqb, ((float_t) 1.0 - repet[1]) / (float_t) 2.0) * sb;
+        sb = cuCpow(e_iqb, ((real_t) 1.0 - repet[1]) / (real_t) 2.0) * sb;
 
         cucomplex_t iqc = rot[6] * q_x + rot[7] * q_y + rot[8] * q_z;
         cucomplex_t iqnc = repet[2] * iqc;
@@ -309,7 +393,7 @@ namespace hig {
         cucomplex_t yc_0 = unit_c - e_iqc;
         if(fabs(yc_0.y) > REAL_ZERO_ || fabs(yc_0.x) > REAL_ZERO_) sc = xc_0 / yc_0;
         else sc = make_cuC(repet[2], 0);
-        sc = cuCpow(e_iqc, ((float_t) 1.0 - repet[2]) / (float_t) 2.0) * sc;
+        sc = cuCpow(e_iqc, ((real_t) 1.0 - repet[2]) / (real_t) 2.0) * sc;
 */
         unsigned long int sf_i = base_index + i_x;
         cucomplex_t temp3 = cuCexpi(center[0] * q_x + center[1] * q_y + center[2] * q_z);

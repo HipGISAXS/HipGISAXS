@@ -225,7 +225,7 @@ namespace hig {
         KeyWords_[std::string("restart")]      = fit_algorithm_restart_token;
         KeyWords_[std::string("referencedata")]    = fit_reference_data_token;
         KeyWords_[std::string("refindex")]      = refindex_token;
-        KeyWords_[std::string("resolution")]    = compute_resolution_token;
+        KeyWords_[std::string("pixels")]    = compute_resolution_token;
         KeyWords_[std::string("rot")]        = rot_token;
         KeyWords_[std::string("rot1")]        = struct_ensemble_orient_rot1_token;
         KeyWords_[std::string("rot2")]        = struct_ensemble_orient_rot2_token;
@@ -265,7 +265,7 @@ namespace hig {
         ShapeKeyWords_[std::string("hcylinder")]  = shape_horizontal_cylinder;
         ShapeKeyWords_[std::string("randcylinders")]= shape_random_cylinders;
         ShapeKeyWords_[std::string("sphere")]    = shape_sphere;
-        ShapeKeyWords_[std::string("truncpyr")]    = shape_truncpyr;
+        ShapeKeyWords_[std::string("pyramid")]    = shape_pyramid;
         ShapeKeyWords_[std::string("trunccone")]  = shape_trunccone;
         ShapeKeyWords_[std::string("prism3")]    = shape_prism3;
         ShapeKeyWords_[std::string("prism6")]    = shape_prism6;

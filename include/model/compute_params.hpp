@@ -45,10 +45,9 @@ namespace hig {
         vector2_t maxpoint_;
         OutputRegion() { }
       } output_region_;
-      vector2_t resolution_;
+      std::vector<int> resolution_;
       std::string palette_;
       unsigned int nslices_;
-
       std::string timestamp();
 
     public:
@@ -69,21 +68,21 @@ namespace hig {
       void output_region_type(OutputRegionType o) { output_region_.type_ = o; }
       void output_region_minpoint(vector2_t v) { output_region_.minpoint_ = v; }
       void output_region_maxpoint(vector2_t v) { output_region_.maxpoint_ = v; }
-      void output_region_minpoint(float_t v, float_t w) {
+      void output_region_minpoint(real_t v, real_t w) {
         output_region_.minpoint_[0] = v; output_region_.minpoint_[1] = w; }
-      void output_region_maxpoint(float_t v, float_t w) {
+      void output_region_maxpoint(real_t v, real_t w) {
         output_region_.maxpoint_[0] = v; output_region_.maxpoint_[1] = w; }
-      void resolution(float_t a, float_t b) { resolution_[0] = a; resolution_[1] = b; }
+      void resolution(int a, int b) { resolution_[0] = a; resolution_[1] = b; }
 
       void palette(std::string p) { palette_ = p; }
-      void nslices(float_t d) { nslices_ = (unsigned int) d; }
+      void nslices(real_t d) { nslices_ = (unsigned int) d; }
       void structcorrelation(StructCorrelationType c) { correlation_ = c; }
 
       /* getters */
       //OutputRegion output_region() { return output_region_; }
 
       /* modifiers (updates) */
-      bool update_param(const std::string&, float_t);
+      bool update_param(const std::string&, real_t);
 
       void print() {
         std::cout << " pathprefix_ = " << pathprefix_ << std::endl

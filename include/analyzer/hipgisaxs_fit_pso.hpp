@@ -47,12 +47,12 @@ namespace hig {
       unsigned int num_parameters_;        // number of parameters
       parameter_data_list_t param_values_;    // list of all current parameter values
       parameter_data_list_t velocity_;      // current particle velocity componenets
-      float_t fitness_;              // fitness for current parameter values
+      real_t fitness_;              // fitness for current parameter values
       parameter_data_list_t best_values_;      // particle's best known parameter values
-      float_t best_fitness_;            // the fitness value for best parameter values
+      real_t best_fitness_;            // the fitness value for best parameter values
 
       // these are used with custom topologies only
-      float_t best_fitness_global_;        // best fitness globally wrt this particle
+      real_t best_fitness_global_;        // best fitness globally wrt this particle
       parameter_data_list_t best_values_global_;  // particle's global best values wrt this particle
 
       // for non-fully-connected topologies
@@ -82,17 +82,17 @@ namespace hig {
       PSOParticle(unsigned int, unsigned int, pso_parameter_dist_t,
             woo::MTRandomNumberGenerator&, const PSOParticleConstraints&);
       bool insert_neighbor(unsigned int, int);
-      bool update_particle(float_t, float_t, float_t, const parameter_data_list_t&,
+      bool update_particle(real_t, real_t, real_t, const parameter_data_list_t&,
             const PSOParticleConstraints&, woo::MTRandomNumberGenerator&);
-      bool update_fips_particle(float_t, float_t, float_t, const parameter_data_list_t&,
+      bool update_fips_particle(real_t, real_t, real_t, const parameter_data_list_t&,
             const PSOParticleConstraints&, woo::MTRandomNumberGenerator&);
-      bool update_fdr_particle(float_t, float_t, float_t, const parameter_data_list_t&,
+      bool update_fdr_particle(real_t, real_t, real_t, const parameter_data_list_t&,
             const float_vec_t&, const float_vec_t&, const PSOParticleConstraints&,
             woo::MTRandomNumberGenerator&);
       bool update_barebones_particle(const parameter_data_list_t&, const PSOParticleConstraints&,
             woo::MTRandomNumberGenerator&);
       bool compute_and_set_values(const parameter_data_list_t&, const parameter_data_list_t&,
-            float_t, float_t, float_t, const parameter_data_list_t&,
+            real_t, real_t, real_t, const parameter_data_list_t&,
             const PSOParticleConstraints&, woo::MTRandomNumberGenerator&);
       parameter_data_list_t get_param_values() { return param_values_; }
 
@@ -115,7 +115,7 @@ namespace hig {
       //unsigned int num_parameters_;        // number of parameters (particle dimension)
       parameter_name_list_t params_;        // list of parameter names
       parameter_data_list_t best_values_;      // current overall best parameter values
-      float_t best_fitness_;            // fitness value for best parameter values
+      real_t best_fitness_;            // fitness value for best parameter values
 
       unsigned int num_particles_global_;      // total number of particles globally
       unsigned int num_particles_;        // total number of local particles
@@ -125,9 +125,9 @@ namespace hig {
       PSOParticleConstraints constraints_;    // particle constraints
 
       // PSO related parameters
-      float_t pso_omega_;
-      float_t pso_phi1_;
-      float_t pso_phi2_;
+      real_t pso_omega_;
+      real_t pso_phi1_;
+      real_t pso_phi2_;
 
       bool tune_omega_;              // whether to vary omega or keep constant
       unsigned int type_;              // pso type
@@ -165,11 +165,11 @@ namespace hig {
       bool simulate_vonnewmann_generation();    // lbest grid/torus with K = 4
       bool simulate_random_generation();      // random connectivity with degree k
 
-      unsigned int decode_pso_algo_type(float_t val) { return (unsigned int) val; }
+      unsigned int decode_pso_algo_type(real_t val) { return (unsigned int) val; }
 
     public:
       ParticleSwarmOptimization(int, char**, ObjectiveFunction*,
-                    float_t, float_t, float_t, int, int, bool, int);
+                    real_t, real_t, real_t, int, int, bool, int);
       ParticleSwarmOptimization(int, char**, ObjectiveFunction*, unsigned int, bool, int);
       ~ParticleSwarmOptimization();
 

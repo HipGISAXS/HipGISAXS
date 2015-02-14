@@ -82,7 +82,7 @@ namespace hig {
   } // Image::~Image()
 
 
-  void print_arr_2d(float_t* data, unsigned int nx, unsigned int ny) {
+  void print_arr_2d(real_t* data, unsigned int nx, unsigned int ny) {
     for(unsigned int i = 0; i < ny; ++ i) {
       for(unsigned int j = 0; j < nx; ++ j) {
         std::cout << data[nx * i + j] << "\t";
@@ -107,10 +107,10 @@ namespace hig {
    * an overload of construct_image to first create a slice from data
    * and then contruct the image for that slice
    */
-  bool Image::construct_image(const float_t* data_3d, int xslice) {    // improve the structure here ...
+  bool Image::construct_image(const real_t* data_3d, int xslice) {    // improve the structure here ...
     if(ny_ < 1 || nz_ < 1) return false;
 
-    float_t* slice_data = new (std::nothrow) float_t[ny_ * nz_];
+    real_t* slice_data = new (std::nothrow) real_t[ny_ * nz_];
     for(unsigned int i = 0; i < nz_; ++ i) {
       for(unsigned int j = 0; j < ny_; ++ j) {
         slice_data[ny_ * i + j] = data_3d[nx_ * ny_ * i + nx_ * j + xslice];
@@ -128,7 +128,7 @@ namespace hig {
    * in case of 3d (not implemented), nx_ images will be created into image_buffer_
    */
   // parallelize this for multicore
-  bool Image::construct_image(float_t* data) {            // and here ...
+  bool Image::construct_image(real_t* data) {            // and here ...
     if(data == NULL) {
       std::cerr << "empty data found while constructing image" << std::endl;
       return false;
@@ -136,7 +136,7 @@ namespace hig {
     if(nx_ == 1) {  // a single slice
       // apply transpose on data
 //      std::cout << "  -- Transposing ..." << std::endl;
-//      float_t* data_transp = NULL;
+//      real_t* data_transp = NULL;
 //      transpose(ny_, nz_, data, data_transp);
 //      unsigned int temp = ny_;
 //      ny_ = nz_; nz_ = temp;
@@ -146,12 +146,12 @@ namespace hig {
   //    remove_nans_infs(ny_, nz_, data);
 
       // construct a gaussian matrix of size 5
-  /*    float_t* gaussian = NULL;
+  /*    real_t* gaussian = NULL;
       StatisticalDistributions::instance().gaussian_dist_2d(5, 5, 0, 0, 2, 2, gaussian);
       // apply convolution on resulting data
       std::cout << "  -- Applying convolution filter ...";
       unsigned int new_ny = 0, new_nz = 0;
-      float_t* new_data = NULL;
+      real_t* new_data = NULL;
       Convolutions::instance().convolution_2d(Convolutions::conv_valid, ny_, nz_, data_transp,
                           5, 5, gaussian, new_ny, new_nz, new_data);
 //      std::cout << "convoluted: " << std::endl;
@@ -180,7 +180,7 @@ namespace hig {
       // scale the data to image size
   //    ny_ = new_ny; nz_ = new_nz;
 //      std::cout << "  scaling ..." << std::endl;
-//      float_t* scaled_data;
+//      real_t* scaled_data;
 //      if(!scale_image(new_ny, new_nz, ny_, nz_, new_data, scaled_data)) {
 //        std::cerr << "error: something went wrong in scale_image" << std::endl;
 //        return false;
@@ -231,7 +231,7 @@ namespace hig {
   } // Image::construct_image()
 
 
-  bool Image::construct_palette(float_t* data) {            // and here ...
+  bool Image::construct_palette(real_t* data) {            // and here ...
     if(data == NULL) {
       std::cerr << "empty data found while constructing image" << std::endl;
       return false;
@@ -251,7 +251,7 @@ namespace hig {
   } // Image::construct_palette()
 
 
-  void Image::remove_nans_infs(unsigned int nx, unsigned int ny, float_t* data) {
+  void Image::remove_nans_infs(unsigned int nx, unsigned int ny, real_t* data) {
     unsigned int count = 0;
     for(unsigned int i = 0; i < nx * ny; ++ i) {
       if(!boost::math::isfinite(data[i])) { data[i] = 0; ++ count; }
@@ -260,7 +260,7 @@ namespace hig {
   } // Image::remove_nans_infs()
 
 
-  vector2_t Image::minmax(unsigned int n, float_t* data) {
+  vector2_t Image::minmax(unsigned int n, real_t* data) {
     vector2_t val(data[0], data[0]);
     for(unsigned int i = 0; i < n; ++ i) {
       val[0] = (val[0] > data[i]) ? data[i] : val[0];
@@ -272,7 +272,7 @@ namespace hig {
   } // Image::minmax()
 
 
-  bool Image::translate_pixels_to_positive(unsigned int nx, unsigned int ny, float_t* &pixels) {
+  bool Image::translate_pixels_to_positive(unsigned int nx, unsigned int ny, real_t* &pixels) {
     vector2_t pixel_minmax = minmax(nx * ny, pixels);
     if(pixel_minmax[0] < 0) {
       for(unsigned int i = 0; i < nx * ny; ++ i) {
@@ -289,7 +289,7 @@ namespace hig {
   } // Image::translate_pixels()
 
 
-  bool Image::normalize_pixels(unsigned int nx, unsigned int ny, float_t* &pixels) {
+  bool Image::normalize_pixels(unsigned int nx, unsigned int ny, real_t* &pixels) {
     vector2_t pixel_minmax = minmax(nx * ny, pixels);
     if(pixel_minmax[0] == pixel_minmax[1]) {  // all pixels have the same value
       if(pixel_minmax[0] < 0) for(unsigned int i = 0; i < nx * ny; ++ i) pixels[i] = 0;
@@ -319,16 +319,16 @@ namespace hig {
    */
   bool Image::scale_image(unsigned int old_x, unsigned int old_y,
               unsigned int new_x, unsigned int new_y,
-              float_t *old_data, float_t* &new_data) {
+              real_t *old_data, real_t* &new_data) {
     
-    typedef boost::gil::matrix3x2<float_t> matrix3x2;
+    typedef boost::gil::matrix3x2<real_t> matrix3x2;
 
     matrix3x2 temp1 = matrix3x2::get_translate(-new_x / 2.0, -new_y / 2.0);
-    matrix3x2 temp2  = matrix3x2::get_scale((float_t)old_x / new_x, (float_t)old_y / new_y);
+    matrix3x2 temp2  = matrix3x2::get_scale((real_t)old_x / new_x, (real_t)old_y / new_y);
     matrix3x2 temp3 = matrix3x2::get_rotate(0);
     matrix3x2 temp4 = matrix3x2::get_translate(old_x / 2.0, old_y / 2.0);
     matrix3x2 mat = temp1 * temp2 * temp3 * temp4;
-    new_data = new (std::nothrow) float_t[new_x * new_y];
+    new_data = new (std::nothrow) real_t[new_x * new_y];
     resample_pixels(old_x, old_y, old_data, new_x, new_y, new_data, mat);
 
     return true;
@@ -338,17 +338,17 @@ namespace hig {
   /**
    * nearest neighbor based sampling is used
    */
-  bool Image::resample_pixels(unsigned int old_x, unsigned int old_y, float_t* old_data,
-                unsigned int new_x, unsigned int new_y, float_t* &new_data,
-                const boost::gil::matrix3x2<float_t>& mat) {
+  bool Image::resample_pixels(unsigned int old_x, unsigned int old_y, real_t* old_data,
+                unsigned int new_x, unsigned int new_y, real_t* &new_data,
+                const boost::gil::matrix3x2<real_t>& mat) {
     // mapping from new to old
     boost::gil::point2 <int> new_p;
 
     for(new_p.y = 0; new_p.y < (int)new_y; ++ new_p.y) {
-      //float_t* curr_row = new_data + new_x * new_p.y;
+      //real_t* curr_row = new_data + new_x * new_p.y;
       for(new_p.x = 0; new_p.x < (int)new_x; ++ new_p.x) {
         //sample_pixel(old_x, old_y, old_data, boost::gil::transform(mat, new_p), curr_row[new_p.x]);
-        boost::gil::point2 <float_t> trans_p = boost::gil::transform(mat, new_p);
+        boost::gil::point2 <real_t> trans_p = boost::gil::transform(mat, new_p);
         boost::gil::point2 <int> center(boost::math::iround(trans_p.x), boost::math::iround(trans_p.y));
         if(center.x >= 0 && center.y >= 0 && center.x < (int)old_x && center.y < (int)old_y) //{
           new_data[new_x * new_p.y + new_p.x] = old_data[old_x * center.y + center.x];
@@ -364,8 +364,8 @@ namespace hig {
   /**
    * nearest neighbor based sampling (because this was easiest to implement)
    */
-  /*bool Image::sample_pixel(unsigned int old_x, unsigned int old_y, float_t* old_data,
-                boost::gil::point2 <unsigned int> mat_p, float_t& new_p) {
+  /*bool Image::sample_pixel(unsigned int old_x, unsigned int old_y, real_t* old_data,
+                boost::gil::point2 <unsigned int> mat_p, real_t& new_p) {
     boost::gil::point2 <int> center(boost::math::iround(mat_p));
     if(center.x >= 0 && center.y >= 0 && center.x < old_x && center.y < old_y) {
       result = old_data[old_x * center.y + center.x];
@@ -386,8 +386,8 @@ namespace hig {
         // Get a new buuffer to interpolate into
         unsigned char* newData = new unsigned char [newWidth * newHeight * 3];
 
-        float_t scaleWidth =  (float_t)newWidth / (float_t)_width;
-        float_t scaleHeight = (float_t)newHeight / (float_t)_height;
+        real_t scaleWidth =  (real_t)newWidth / (real_t)_width;
+        real_t scaleHeight = (real_t)newHeight / (real_t)_height;
 
         for(int cy = 0; cy < newHeight; cy++)
         {
@@ -415,9 +415,9 @@ namespace hig {
 
 
   /**
-   * convert the float_t values in image data to mapped color
+   * convert the real_t values in image data to mapped color
    */
-  bool Image::convert_to_rgb_pixels(unsigned int ny, unsigned int nz, float_t* image) {
+  bool Image::convert_to_rgb_pixels(unsigned int ny, unsigned int nz, real_t* image) {
     // assuming: values in image are in [0, 1]
 
     if(image_buffer_ != NULL) { delete[] image_buffer_; image_buffer_ = NULL; }
@@ -447,7 +447,7 @@ namespace hig {
   } // Image::convert_to_rgb_pixels()
 
 
-  bool Image::convert_to_rgb_palette(unsigned int ny, unsigned int nz, float_t* image) {
+  bool Image::convert_to_rgb_palette(unsigned int ny, unsigned int nz, real_t* image) {
     // assuming: values in image are in [0, 1]
 
     if(image_buffer_ != NULL) { delete[] image_buffer_; image_buffer_ = NULL; }

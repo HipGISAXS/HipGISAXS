@@ -26,14 +26,14 @@
 	
 	// for compiler vectorization
 	__attribute__((target(mic:0)))
-	void NumericFormFactorM::form_factor_kernel_loopswap_nqx1(float_t* qx, float_t* qy, scomplex_t* qz_flat,
-					float_t* shape_def,
+	void NumericFormFactorM::form_factor_kernel_loopswap_nqx1(real_t* qx, real_t* qy, scomplex_t* qz_flat,
+					real_t* shape_def,
 					unsigned int curr_nqx, unsigned int curr_nqy, unsigned int curr_nqz,
 					unsigned int curr_num_triangles,
 					unsigned int b_nqx, unsigned int b_nqy, unsigned int b_nqz, unsigned int b_num_triangles,
 					unsigned int nqx, unsigned int nqy, unsigned int nqz, unsigned int num_triangles,
 					unsigned int ib_x, unsigned int ib_y, unsigned int ib_z, unsigned int ib_t,
-					float_t* rot,
+					real_t* rot,
 					scomplex_t* ff_buffer) {
 
 		const unsigned int start_z = b_nqz * ib_z;
@@ -52,8 +52,8 @@
 				for(int i_y = 0; i_y < curr_nqy; ++ i_y) {
 
 					scomplex_t temp_qz = qz_flat[start_z + i_z];
-					float_t temp_qy = qy[start_y + i_y];
-					float_t temp_qx = qx[0];
+					real_t temp_qy = qy[start_y + i_y];
+					real_t temp_qx = qx[0];
 
 					scomplex_t temp_x = rot[0] * temp_qx + rot[1] * temp_qy + rot[2] * temp_qz;
 					scomplex_t temp_y = rot[3] * temp_qx + rot[4] * temp_qy + rot[5] * temp_qz;
@@ -64,26 +64,26 @@
 					scomplex_t qx2 = temp_x * temp_x;
 
 					scomplex_t q2 = qx2 + qy2 + qz2;
-					scomplex_t q2_inv = (float_t) 1.0 / q2;
+					scomplex_t q2_inv = (real_t) 1.0 / q2;
 
-					scomplex_t total = make_sC((float_t) 0.0, (float_t) 0.0);
+					scomplex_t total = make_sC((real_t) 0.0, (real_t) 0.0);
 
 					// TODO: do blocking for cache ... ?
 					for(int i_t = 0; i_t < curr_num_triangles; ++ i_t) {
 						unsigned int shape_off = start_t + i_t;
-						float_t s = shape_def[shape_off];
+						real_t s = shape_def[shape_off];
 						shape_off += padded_num_triangles;
-						float_t nx = shape_def[shape_off];
+						real_t nx = shape_def[shape_off];
 						shape_off += padded_num_triangles;
-						float_t ny = shape_def[shape_off];
+						real_t ny = shape_def[shape_off];
 						shape_off += padded_num_triangles;
-						float_t nz = shape_def[shape_off];
+						real_t nz = shape_def[shape_off];
 						shape_off += padded_num_triangles;
-						float_t x = shape_def[shape_off];
+						real_t x = shape_def[shape_off];
 						shape_off += padded_num_triangles;
-						float_t y = shape_def[shape_off];
+						real_t y = shape_def[shape_off];
 						shape_off += padded_num_triangles;
-						float_t z = shape_def[shape_off];
+						real_t z = shape_def[shape_off];
 
 						scomplex_t qzn = temp_z * nz;
 						scomplex_t qzt = temp_z * z;
@@ -118,14 +118,14 @@
 	// with manual vectorization:
 	__attribute__((target(mic:0)))
 	void NumericFormFactorM::form_factor_kernel_loopswap_vec_nqx1(
-					float_t* qx, float_t* qy, scomplex_t* qz_flat,
-					float_t* shape_def,
+					real_t* qx, real_t* qy, scomplex_t* qz_flat,
+					real_t* shape_def,
 					unsigned int curr_nqx, unsigned int curr_nqy, unsigned int curr_nqz,
 					unsigned int curr_num_triangles,
 					unsigned int b_nqx, unsigned int b_nqy, unsigned int b_nqz, unsigned int b_num_triangles,
 					unsigned int nqx, unsigned int nqy, unsigned int nqz, unsigned int num_triangles,
 					unsigned int ib_x, unsigned int ib_y, unsigned int ib_z, unsigned int ib_t,
-					float_t* rot,
+					real_t* rot,
 					scomplex_t* ff_buffer) {
 
 		const unsigned int start_z = b_nqz * ib_z;
@@ -226,8 +226,8 @@
 
 					// TODO: optimize rot computation ... 
 					scomplex_t temp_qz = qz_flat[start_z + i_z];
-					float_t temp_qy = qy[start_y + i_y];
-					float_t temp_qx = qx[0];
+					real_t temp_qy = qy[start_y + i_y];
+					real_t temp_qx = qx[0];
 					scomplex_t temp_sx = rot[0] * temp_qx + rot[1] * temp_qy + rot[2] * temp_qz;
 					scomplex_t temp_sy = rot[3] * temp_qx + rot[4] * temp_qy + rot[5] * temp_qz;
 					scomplex_t temp_sz = rot[6] * temp_qx + rot[7] * temp_qy + rot[8] * temp_qz;
@@ -328,7 +328,5 @@
 		return mic_mul_crps(v1, v2);
 	} // NumericFormFactorM::compute_fq()
 
-
 	#endif // __MIC__
-
 	#endif // FF_NUM_MIC_SWAP

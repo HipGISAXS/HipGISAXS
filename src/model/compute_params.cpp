@@ -38,15 +38,14 @@ namespace hig {
     output_region_.minpoint_[1] = -1;
     output_region_.maxpoint_[0] = -1;
     output_region_.maxpoint_[1] = -1;
-    resolution_[0] = 1;
-    resolution_[1] = 1;
+    resolution_.push_back(1); resolution_.push_back(1);
     nslices_ = 0;
     correlation_ = structcorr_null;
     palette_ = "default";
   } // ComputeParams::init()
 
 
-  bool ComputeParams::update_param(const std::string& str, float_t new_val) {
+  bool ComputeParams::update_param(const std::string& str, real_t new_val) {
     std::string keyword, rem_str;
     if(!extract_first_keyword(str, keyword, rem_str)) return false;
     switch(TokenMapper::instance().get_keyword_token(keyword)) {
@@ -85,3 +84,4 @@ namespace hig {
   } // ComputeParams::timestamp()
 
 } // namespace hig
+

@@ -32,13 +32,13 @@ namespace hig {
     public:
 //      PlotGISAXS(unsigned int nx, unsigned int ny, unsigned int nz):
 //          nx_(nx), ny_(ny), nz_(nz), plot_(nx, ny, nz) {
-//        raw_data_ = new (std::nothrow) float_t[nx * ny * nz];
+//        raw_data_ = new (std::nothrow) real_t[nx * ny * nz];
 //      } // Plot()
 
       PlotGISAXS(unsigned int nx, unsigned int ny, unsigned int nz,
           unsigned int r, unsigned int g, unsigned int b):
           nx_(nx), ny_(ny), nz_(nz), plot_(nx, ny, nz, r, g, b) {
-        raw_data_ = new (std::nothrow) float_t[nx * ny * nz];
+        raw_data_ = new (std::nothrow) real_t[nx * ny * nz];
       } // Plot()
 
       ~PlotGISAXS() {
@@ -57,7 +57,7 @@ namespace hig {
       unsigned int nx_;
       unsigned int ny_;
       unsigned int nz_;
-      float_t* raw_data_;
+      real_t* raw_data_;
       Image plot_;
 
 

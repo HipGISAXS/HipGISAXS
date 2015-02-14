@@ -151,7 +151,7 @@ namespace hig {
 
       case digit_token:
       case negative_token:
-        float_t n_value;
+        real_t n_value;
         input_stream_.unget();
         if(!read_number(n_value)) {
           std::cerr << "fatal error: failed while reading a number" << std::endl;
@@ -272,7 +272,7 @@ namespace hig {
   } // InputReader::read_quoted_string()
 
 
-  bool InputReader::read_number(float_t& val) {
+  bool InputReader::read_number(real_t& val) {
     input_stream_ >> val;
     return true;
   } // InputReader::read_number()

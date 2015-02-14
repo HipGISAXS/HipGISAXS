@@ -20,8 +20,8 @@ namespace hig {
       unsigned int np_parallel_;
       unsigned int np_perpendicular_;
       OutputRegionType region_type_;
-      float_t x_min_, y_min_;
-      float_t x_max_, y_max_;
+      real_t x_min_, y_min_;
+      real_t x_max_, y_max_;
 
     public:
       FitReferenceData() { }
@@ -30,8 +30,8 @@ namespace hig {
 
       bool path(std::string p) { image_path_ = p; return true; }
       bool mask(std::string m) { image_mask_ = m; return true; }
-      bool region_min(float_t x, float_t y) { x_min_ = x; y_min_ = y; return true; }
-      bool region_max(float_t x, float_t y) { x_max_ = x; y_max_ = y; return true; }
+      bool region_min(real_t x, real_t y) { x_min_ = x; y_min_ = y; return true; }
+      bool region_max(real_t x, real_t y) { x_max_ = x; y_max_ = y; return true; }
       bool npoints_parallel(unsigned int n) { np_parallel_ = n; return true; }
       bool npoints_perpendicular(unsigned int n) { np_perpendicular_ = n; return true; }
       bool region_type(OutputRegionType r) { region_type_ = r; return true; }
@@ -39,10 +39,10 @@ namespace hig {
       std::string image_path() const { return image_path_; }
       std::string image_mask() const { return image_mask_; }
       OutputRegionType get_region_type() const { return region_type_; }
-      float_t region_min_x() const { return x_min_; }
-      float_t region_min_y() const { return y_min_; }
-      float_t region_max_x() const { return x_max_; }
-      float_t region_max_y() const { return y_max_; }
+      real_t region_min_x() const { return x_min_; }
+      real_t region_min_y() const { return y_min_; }
+      real_t region_max_x() const { return x_max_; }
+      real_t region_max_y() const { return y_max_; }
 
       void print() {
         std::cout << "Reference Data:" << std::endl;
@@ -58,7 +58,7 @@ namespace hig {
 
   class AnalysisAlgorithmParamData {
     private:
-      float_t value_;
+      real_t value_;
       FitAlgorithmParamType type_;
       std::string type_name_;
 
@@ -68,12 +68,12 @@ namespace hig {
 
       bool init() { return clear(); }
       bool clear() { value_ = 0.0; type_ = algo_param_null; type_name_ = ""; return true; }
-      bool value(float_t v) { value_ = v; return true; }
+      bool value(real_t v) { value_ = v; return true; }
       bool type(FitAlgorithmParamType t) { type_ = t; return true; }
       bool type_name(std::string t) { type_name_ = t; return true; }
 
       FitAlgorithmParamType type() const { return type_; }
-      float_t value() const { return value_; }
+      real_t value() const { return value_; }
 
       void print() const {
         std::cout << "  " << type_name_ << " [" << type_ << "] = " << value_ << std::endl;
@@ -87,7 +87,7 @@ namespace hig {
       //std::vector <AnalysisAlgorithmParamData> params_;
       analysis_algo_param_map_t params_map_;
       int order_;
-      float_t tolerance_;
+      real_t tolerance_;
       FittingAlgorithmName name_;
       std::string name_str_;
       bool restart_;
@@ -111,14 +111,14 @@ namespace hig {
       } // add_param()
 
       bool order(int o) { order_ = o; return true; }
-      bool tolerance(float_t t) { tolerance_ = t; return true; }
+      bool tolerance(real_t t) { tolerance_ = t; return true; }
       bool name(FittingAlgorithmName n) { name_ = n; return true; }
       bool name_str(std::string n) { name_str_ = n; return true; }
       bool restart(bool r) { restart_ = r; return true; }
 
       FittingAlgorithmName name() const { return name_; }
 
-      bool param(const std::string pstr, float_t& val) const {
+      bool param(const std::string pstr, real_t& val) const {
         FitAlgorithmParamType type = TokenMapper::instance().get_fit_algorithm_param_token(pstr);
         if(type == algo_param_error) {
           std::cerr << "warning: non-existent analysis algorithm parameter type encountered ["

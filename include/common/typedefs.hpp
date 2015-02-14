@@ -50,7 +50,7 @@ namespace hig {
   #endif
 
   #ifdef DOUBLEP      // double precision
-    typedef double                          float_t;
+    typedef double                          real_t;
     #ifdef USE_GPU
       typedef cuDoubleComplex               cucomplex_t;
     #endif
@@ -58,7 +58,7 @@ namespace hig {
       typedef double2_t                     scomplex_t;
     #endif
   #else               // single precision
-    typedef float                           float_t;
+    typedef float                           real_t;
     #ifdef USE_GPU
       typedef cuFloatComplex                cucomplex_t;
     #endif
@@ -67,12 +67,12 @@ namespace hig {
     #endif
   #endif
 
-  typedef std::complex<float_t>             complex_t;
-  typedef std::vector<float_t>              float_vec_t;
-  typedef std::vector<complex_t>            complex_vec_t;
-  typedef std::vector<unsigned int>         uint_vec_t;
+  typedef std::complex<real_t>             complex_t;
+  typedef std::vector<real_t>              real_vec_t;
+  typedef std::vector<complex_t>           complex_vec_t;
+  typedef std::vector<unsigned int>        uint_vec_t;
 
-  typedef std::pair <float_t, float_t>      float_pair_t;
+  typedef std::pair <real_t, real_t>       real_pair_t;
 
   #ifdef USE_GPU
     typedef std::vector<cucomplex_t>        cucomplex_vec_t;
@@ -100,7 +100,16 @@ namespace hig {
   #endif
 
   typedef std::string                       string_t;
-  typedef std::map <std::string, float_t>   map_t;
+  typedef std::map <std::string, real_t>    map_t;
+
+
+  // Triangle with vertices counter-clockwise order
+  typedef struct Triangle {
+      real_t v1[3];
+      real_t v2[3];
+      real_t v3[3]; 
+  }                                         triangle_t;
+ 
 
   // TODO: handle multiprecision? ...
 
