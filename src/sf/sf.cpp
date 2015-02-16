@@ -47,14 +47,19 @@ namespace hig {
   } // StructureFactor::StructureFactor()
 */
 
-  StructureFactor::StructureFactor (int nqx, int nqy) {
+  StructureFactor::StructureFactor(int nqx, int nqy) {
     nrow_ = nqx;
     ncol_ = nqy;
     sf_ = new (std::nothrow) complex_t[nrow_ * ncol_];
     #ifdef SF_GPU
-      gsf_.init(1, nrow_, ncol_);
+      gsf_.init();
     #endif
   } // StructureFactor::StructureFactor()
+
+  StructureFactor::~StructureFactor() {
+    if(sf_ != NULL) delete[] sf_;
+    sf_ = NULL;
+  } // StructureFactor::~StructureFactor()
 
   StructureFactor & StructureFactor::operator=(const StructureFactor & rhs) {
     /*nx_ = rhs.nx_;
@@ -73,7 +78,7 @@ namespace hig {
     }
     memcpy(sf_, rhs.sf_, size * sizeof(complex_t));
     #ifdef SF_GPU
-      gsf_.init(1, nrow_, ncol_);
+      gsf_.init();
     #endif
     return *this;
   } // StructureFactor::operator=()
@@ -89,11 +94,6 @@ namespace hig {
     for(int i = 0; i < num_of_el; ++ i) sf_[i] += rhs.sf_[i];
     return *this;
   } // StructureFactor::operator+=()
-
-  StructureFactor::~StructureFactor() {
-    if(sf_ != NULL) delete[] sf_;
-    sf_ = NULL;
-  } // StructureFactor::~StructureFactor()
 
 
   void StructureFactor::clear() {

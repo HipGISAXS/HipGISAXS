@@ -131,7 +131,7 @@ namespace hig {
     int num_blocks =  nqz_ / num_threads + 1;
     dim3 ff_grid_size(num_blocks, 1, 1);
     dim3 ff_block_size(num_threads, 1, 1);
-    std::cerr << "Q-Grid size = " << nqz_ << std::endl;
+    //std::cerr << "Q-Grid size = " << nqz_ << std::endl;
 
     // the kernel
     ff_box_kernel <<<num_blocks, num_threads >>> (nqy_, nqz_, 

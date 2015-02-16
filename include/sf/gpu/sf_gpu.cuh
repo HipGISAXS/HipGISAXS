@@ -31,6 +31,7 @@ namespace hig {
 #ifdef SF_GPU
   class StructureFactorG {
     private:
+      bool inited_;
       unsigned int nqx_;
       unsigned int nqy_;
       unsigned int nqz_;
@@ -53,7 +54,7 @@ namespace hig {
       StructureFactorG();
       ~StructureFactorG();
 
-      bool init(unsigned int, unsigned int, unsigned int);
+      bool init();
       //bool run_init(const real_t*, const std::vector<real_t>&);
       bool clear();
       bool destroy();

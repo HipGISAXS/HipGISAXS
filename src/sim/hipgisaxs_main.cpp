@@ -1185,7 +1185,8 @@ namespace hig {
               );
         fftimer.stop();
         #ifndef FF_VERBOSE
-          std::cout << fftimer.elapsed_msec() << " ms." << std::endl;
+          std::cout << "**               FF compute time: "
+                    << fftimer.elapsed_msec() << " ms." << std::endl;
         #endif
 
         //ff.print_ff(nqx_, nqy_, nqz_extended_);
@@ -1372,11 +1373,12 @@ namespace hig {
             } // if-else
           } // if gmaster
 
-          sf.clear(); // clean structure factor
+          //sf.clear(); // clean structure factor
         } // for i_scale
         sftimer.stop();
         #ifndef SF_VERBOSE
-          std::cout << sftimer.elapsed_msec() << " ms." << std::endl;
+          std::cout << "**               SF compute time: "
+                    << sftimer.elapsed_msec() << " ms." << std::endl;
         #else
           std::cout << sftimer.elapsed_msec() << " ms." << std::endl;
         #endif

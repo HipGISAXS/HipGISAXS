@@ -42,16 +42,15 @@ namespace hig {
                                    , woo::MultiNode& world_comm, std::string comm_key
                                  #endif
                                 ) {
-    //nx_ = QGrid::instance().nqx();
-    //ny_ = QGrid::instance().nqy();
-    //if(expt == "saxs") nz_ = QGrid::instance().nqz();
-    //else if(expt == "gisaxs") nz_ = QGrid::instance().nqz_extended();
-    nx_ = 1;
-    ny_ = QGrid::instance().nrows();
-    nz_ = QGrid::instance().ncols();
-    sf_ = new (std::nothrow) complex_t[QGrid::instance().nqz()];
+    nx_ = QGrid::instance().nqx();
+    ny_ = QGrid::instance().nqy();
+    if(expt == "saxs") nz_ = QGrid::instance().nqz();
+    else if(expt == "gisaxs") nz_ = QGrid::instance().nqz_extended();
+    nrow_ = QGrid::instance().nrows();
+    ncol_ = QGrid::instance().ncols();
+    sf_ = new (std::nothrow) complex_t[nz_];
     if(sf_ == NULL) return false;
-    gsf_.init(nx_, ny_, nz_);
+    gsf_.init();
     bool ret = gsf_.compute(expt, center, lattice, repet, scaling, rotation_1, rotation_2, rotation_3
                         #ifdef USE_MPI
                           , world_comm, comm_key
@@ -63,6 +62,7 @@ namespace hig {
   } // StructureFactor::compute_structure_factor_gpu()
 
   StructureFactorG::StructureFactorG():
+                    inited_(false),
                     nqx_(0), nqy_(0), nqz_(0),
                     sf_(NULL), qx_(NULL), qy_(NULL), qz_(NULL),
                     repet_(NULL), rot_(NULL), center_(NULL), transvec_(NULL) {
@@ -74,11 +74,16 @@ namespace hig {
   } // StructureFactorG::~StructureFactorG()
 
 
-  bool StructureFactorG::init(unsigned int nx, unsigned int ny, unsigned int nz) {
+  bool StructureFactorG::init() {
     // allocate device buffers
     // copy qgrid to device memory
 
     // TODO: unify ff and sf stuff. put separate qgrid for gpu ...
+
+    if(inited_) {
+      std::cerr << "error: gpu sf already initialized" << std::endl;
+      return false;
+    } // if
 
     nqx_ = QGrid::instance().nqx();
     nqy_ = QGrid::instance().nqy();
@@ -130,6 +135,8 @@ namespace hig {
                 << " MB" << std::endl;
     #endif
 
+    inited_ = true;
+
     delete[] qz_h;
     delete[] qy_h;
     delete[] qx_h;
@@ -149,9 +156,16 @@ namespace hig {
 
     // TODO: doing blocking copy for now. lots of room to improve ...
     cudaMemcpy(temp_buf, sf_, nqz_ * sizeof(cucomplex_t), cudaMemcpyDeviceToHost);
-    //#pragma omp parallel for
-    for(unsigned int i = 0; i < nqz_; ++ i)
-      sf[i] = complex_t(temp_buf[i].x, temp_buf[i].y);
+
+    cudaDeviceSynchronize();
+    cudaError_t err = cudaGetLastError();
+    if(err != cudaSuccess) {
+      std::cerr << "error: structure factor memory copy failed: " << cudaGetErrorString(err) << std::endl;
+    } else {
+      #pragma omp parallel for
+      for(unsigned int i = 0; i < nqz_; ++ i)
+        sf[i] = complex_t(temp_buf[i].x, temp_buf[i].y);
+    } // if-else
 
     delete[] temp_buf;
   } // StructureFactorG::get_sf()
@@ -180,15 +194,18 @@ namespace hig {
 
 
   bool StructureFactorG::destroy() {
-    //if(transvec_ != NULL) cudaFree(transvec_); transvec_ = NULL;
-    //if(center_ != NULL) cudaFree(center_); center_ = NULL;
-    //if(rot_ != NULL) cudaFree(rot_); rot_ = NULL;
-    //if(repet_ != NULL) cudaFree(repet_); repet_ = NULL;
-    //if(sf_ != NULL) cudaFree(sf_); sf_ = NULL;
-    //if(qz_ != NULL) cudaFree(qz_); qz_ = NULL;
-    //if(qy_ != NULL) cudaFree(qy_); qy_ = NULL;
-    //if(qx_ != NULL) cudaFree(qx_); qx_ = NULL;
+    if(inited_) {
+      if(transvec_ != NULL) cudaFree(transvec_); transvec_ = NULL;
+      if(center_ != NULL) cudaFree(center_); center_ = NULL;
+      if(rot_ != NULL) cudaFree(rot_); rot_ = NULL;
+      if(repet_ != NULL) cudaFree(repet_); repet_ = NULL;
+      if(sf_ != NULL) cudaFree(sf_); sf_ = NULL;
+      if(qz_ != NULL) cudaFree(qz_); qz_ = NULL;
+      if(qy_ != NULL) cudaFree(qy_); qy_ = NULL;
+      if(qx_ != NULL) cudaFree(qx_); qx_ = NULL;
+    } // if
     nqx_ = nqy_ = nqz_ = 0;
+    inited_ = false;
     return true;
   } // StructureFactorG::destroy()
 
@@ -241,7 +258,7 @@ namespace hig {
     //unsigned int cuda_num_blocks_z = ceil((real_t) nqz_ / cuda_block_z);
     //dim3 sf_grid_size(cuda_num_blocks_y, cuda_num_blocks_z, 1);
     //dim3 sf_block_size(cuda_block_y, cuda_block_z, 1);
-    unsigned int cuda_block = 128;
+    unsigned int cuda_block = 256;
     unsigned int cuda_num_blocks = ceil((real_t) nqz_ / cuda_block);
     dim3 sf_grid_size(cuda_num_blocks, 1, 1);
     dim3 sf_block_size(cuda_block, 1, 1);
@@ -423,13 +440,14 @@ namespace hig {
                                           cucomplex_t* sf) {
     unsigned int i_z = blockDim.x * blockIdx.x + threadIdx.x;
     unsigned int i_y = i_z % nqy;
+    unsigned int i_x = i_z % nqx;
 
     cucomplex_t unit_c = make_cuC(REAL_ONE_, REAL_ZERO_);
 
     if(i_z < nqz) {
       cucomplex_t sa, sb, sc;
 
-      real_t q_x = qx[i_y], q_y = qy[i_y];
+      real_t q_x = qx[i_x], q_y = qy[i_y];
       cucomplex_t q_z = qz[i_z];
 
       cucomplex_t e_iqa = cuCexpi(rot[0] * q_x + rot[1] * q_y + rot[2] * q_z);
