@@ -130,7 +130,7 @@ namespace hig {
     } // if-else
 
     //k0_ = 2 * PI_ * freq_ / LIGHT_SPEED_;
-    std::cout << "**                    Wavelength: " << lambda << "         **" << std::endl;
+    std::cout << "**                    Wavelength: " << lambda << std::endl;
     k0_ = 2 * PI_ / lambda;
 
     // create output directory

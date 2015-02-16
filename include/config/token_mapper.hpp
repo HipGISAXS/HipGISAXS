@@ -225,7 +225,7 @@ namespace hig {
         KeyWords_[std::string("restart")]      = fit_algorithm_restart_token;
         KeyWords_[std::string("referencedata")]    = fit_reference_data_token;
         KeyWords_[std::string("refindex")]      = refindex_token;
-        KeyWords_[std::string("pixels")]    = compute_resolution_token;
+        KeyWords_[std::string("resolution")]    = compute_resolution_token;
         KeyWords_[std::string("rot")]        = rot_token;
         KeyWords_[std::string("rot1")]        = struct_ensemble_orient_rot1_token;
         KeyWords_[std::string("rot2")]        = struct_ensemble_orient_rot2_token;
