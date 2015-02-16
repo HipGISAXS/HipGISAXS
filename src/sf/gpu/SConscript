@@ -1,9 +1,11 @@
-Import('env')
+Import('gpuenv')
 
-gpuenv = env.Clone()
+#gpuenv = env.Clone()
 gpuenv.Tool('cuda')
 
-cuda_flags = ['-Xcompiler', '-fPIC', '-Xcompiler', '-fopenmp', '-m64', '-dc', '-std=c++11' ]
+#cuda_flags = ['-Xcompiler', '-fPIC', '-Xcompiler', '-fopenmp', '-m64', '-dc', '-std=c++11' ]
+cuda_flags = ['-Xcompiler', '-fPIC', '-Xcompiler', '-fopenmp', '-dc', '-std=c++11' ]
+cuda_flags += gpuenv['CCFLAGS']
 cuda_flags += ['-gencode', 'arch=compute_20,code=sm_20']
 cuda_flags += ['-gencode', 'arch=compute_20,code=compute_20']
 cuda_flags += ['-gencode', 'arch=compute_20,code=sm_21']

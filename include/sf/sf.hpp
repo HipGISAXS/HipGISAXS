@@ -39,11 +39,11 @@ namespace hig {
   class StructureFactor {
     private:
       complex_t *sf_;
-      unsigned nx_;
-      unsigned ny_;
-      unsigned nz_;
-      unsigned nrow_;
-      unsigned ncol_;
+      unsigned int nx_;
+      unsigned int ny_;
+      unsigned int nz_;
+      unsigned int nrow_;
+      unsigned int ncol_;
 
       #ifdef SF_GPU
         StructureFactorG gsf_;

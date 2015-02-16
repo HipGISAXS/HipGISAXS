@@ -49,7 +49,7 @@ namespace hig {
     nx_ = 1;
     ny_ = QGrid::instance().nrows();
     nz_ = QGrid::instance().ncols();
-    sf_ = new (std::nothrow) complex_t[nx_ * ny_ * nz_];
+    sf_ = new (std::nothrow) complex_t[QGrid::instance().nqz()];
     if(sf_ == NULL) return false;
     gsf_.init(nx_, ny_, nz_);
     bool ret = gsf_.compute(expt, center, lattice, repet, scaling, rotation_1, rotation_2, rotation_3
@@ -80,43 +80,43 @@ namespace hig {
 
     // TODO: unify ff and sf stuff. put separate qgrid for gpu ...
 
-    nqx_ = nx; nqy_ = ny; nqz_ = nz;
-    unsigned int nqx = QGrid::instance().nqx();
-    unsigned int nqy = QGrid::instance().nqy();
-    unsigned int nqz = QGrid::instance().nqz_extended();
-    cudaMalloc((void**) &qx_, nqx * sizeof(real_t));
-    cudaMalloc((void**) &qy_, nqy * sizeof(real_t));
-    cudaMalloc((void**) &qz_, nqz * sizeof(cucomplex_t));
-    cudaMalloc((void**) &sf_, nqx_ * nqy_ * nqz_ * sizeof(cucomplex_t));
+    nqx_ = QGrid::instance().nqx();
+    nqy_ = QGrid::instance().nqy();
+    nqz_ = QGrid::instance().nqz_extended();
+    cudaMalloc((void**) &qx_, nqx_ * sizeof(real_t));
+    cudaMalloc((void**) &qy_, nqy_ * sizeof(real_t));
+    cudaMalloc((void**) &qz_, nqz_ * sizeof(cucomplex_t));
+    cudaMalloc((void**) &sf_, nqz_ * sizeof(cucomplex_t));
     cudaMalloc((void**) &repet_, 3 * sizeof(real_t));
     cudaMalloc((void**) &rot_, 9 * sizeof(real_t));
     cudaMalloc((void**) &center_, 3 * sizeof(real_t));
     cudaMalloc((void**) &transvec_, 3 * sizeof(real_t));
-    if(qx_ == NULL || qy_ == NULL || qz_ == NULL || sf_ == NULL || repet_ == NULL || rot_ == NULL) {
+    if(qx_ == NULL || qy_ == NULL || qz_ == NULL || sf_ == NULL || repet_ == NULL || rot_ == NULL ||
+        center_ == NULL || transvec_ == NULL) {
       std::cerr << "error: device memory allocation failed for structure factor" << std::endl;
       return false;
     } // if
     cudaError_t err = cudaGetLastError();
 
     // construct host buffers
-    real_t* qx_h = new (std::nothrow) real_t[nqx];
-    real_t* qy_h = new (std::nothrow) real_t[nqy];
-    cucomplex_t* qz_h = new (std::nothrow) cucomplex_t[nqz];
+    real_t* qx_h = new (std::nothrow) real_t[nqx_];
+    real_t* qy_h = new (std::nothrow) real_t[nqy_];
+    cucomplex_t* qz_h = new (std::nothrow) cucomplex_t[nqz_];
     if(qx_h == NULL || qy_h == NULL || qz_h == NULL) {
       std::cerr << "error: memory allocation for host grid in sf failed" << std::endl;
       return false;
     } // if
-    for(unsigned int ix = 0; ix < nqx; ++ ix) qx_h[ix] = QGrid::instance().qx(ix);
-    for(unsigned int iy = 0; iy < nqy; ++ iy) qy_h[iy] = QGrid::instance().qy(iy);
-    for(unsigned int iz = 0; iz < nqz; ++ iz) {
+    for(unsigned int ix = 0; ix < nqx_; ++ ix) qx_h[ix] = QGrid::instance().qx(ix);
+    for(unsigned int iy = 0; iy < nqy_; ++ iy) qy_h[iy] = QGrid::instance().qy(iy);
+    for(unsigned int iz = 0; iz < nqz_; ++ iz) {
       qz_h[iz].x = QGrid::instance().qz_extended(iz).real();
       qz_h[iz].y = QGrid::instance().qz_extended(iz).imag();
     } // for
 
     // TODO: make them async if it helps ...
-    cudaMemcpy(qx_, qx_h, nqx * sizeof(real_t), cudaMemcpyHostToDevice);
-    cudaMemcpy(qy_, qy_h, nqy * sizeof(real_t), cudaMemcpyHostToDevice);
-    cudaMemcpy(qz_, qz_h, nqz * sizeof(cucomplex_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(qx_, qx_h, nqx_ * sizeof(real_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(qy_, qy_h, nqy_ * sizeof(real_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(qz_, qz_h, nqz_ * sizeof(cucomplex_t), cudaMemcpyHostToDevice);
 
     // TODO: do hyperblocking if needed just as in ff ...
 
@@ -130,6 +130,10 @@ namespace hig {
                 << " MB" << std::endl;
     #endif
 
+    delete[] qz_h;
+    delete[] qy_h;
+    delete[] qx_h;
+
     return true;
   } // StructureFactorG::init()
 
@@ -137,12 +141,16 @@ namespace hig {
   // TODO: avoid all this copying .........
   void StructureFactorG::get_sf(complex_t* &sf) {
     // copy sf to main memory from device mem
-    cucomplex_t * temp_buf = new (std::nothrow) cucomplex_t[nqx_ * nqy_ * nqz_];
+    cucomplex_t * temp_buf = new (std::nothrow) cucomplex_t[nqz_];
+    if(temp_buf == NULL) {
+      std::cerr << "error: memory allocation for temporary buffer failed" << std::endl;
+      return;
+    } // if
 
     // TODO: doing blocking copy for now. lots of room to improve ...
-    cudaMemcpy(temp_buf, sf_, nqx_ * nqy_ * nqz_ * sizeof(cucomplex_t), cudaMemcpyDeviceToHost);
-    #pragma omp parallel for
-    for(unsigned int i = 0; i < nqx_ * nqy_ * nqz_; ++ i)
+    cudaMemcpy(temp_buf, sf_, nqz_ * sizeof(cucomplex_t), cudaMemcpyDeviceToHost);
+    //#pragma omp parallel for
+    for(unsigned int i = 0; i < nqz_; ++ i)
       sf[i] = complex_t(temp_buf[i].x, temp_buf[i].y);
 
     delete[] temp_buf;
@@ -172,14 +180,14 @@ namespace hig {
 
 
   bool StructureFactorG::destroy() {
-    if(transvec_ != NULL) cudaFree(transvec_); transvec_ = NULL;
-    if(center_ != NULL) cudaFree(center_); center_ = NULL;
-    if(rot_ != NULL) cudaFree(rot_); rot_ = NULL;
-    if(repet_ != NULL) cudaFree(repet_); repet_ = NULL;
-    if(sf_ != NULL) cudaFree(sf_); sf_ = NULL;
-    if(qz_ != NULL) cudaFree(qz_); qz_ = NULL;
-    if(qy_ != NULL) cudaFree(qy_); qy_ = NULL;
-    if(qx_ != NULL) cudaFree(qx_); qx_ = NULL;
+    //if(transvec_ != NULL) cudaFree(transvec_); transvec_ = NULL;
+    //if(center_ != NULL) cudaFree(center_); center_ = NULL;
+    //if(rot_ != NULL) cudaFree(rot_); rot_ = NULL;
+    //if(repet_ != NULL) cudaFree(repet_); repet_ = NULL;
+    //if(sf_ != NULL) cudaFree(sf_); sf_ = NULL;
+    //if(qz_ != NULL) cudaFree(qz_); qz_ = NULL;
+    //if(qy_ != NULL) cudaFree(qy_); qy_ = NULL;
+    //if(qx_ != NULL) cudaFree(qx_); qx_ = NULL;
     nqx_ = nqy_ = nqz_ = 0;
     return true;
   } // StructureFactorG::destroy()
@@ -228,11 +236,15 @@ namespace hig {
     cudaMemcpy(center_, &center[0], 3 * sizeof(real_t), cudaMemcpyHostToDevice);
     cudaMemcpy(transvec_, &l_t[0], 3 * sizeof(real_t), cudaMemcpyHostToDevice);
 
-    unsigned int cuda_block_y = 16, cuda_block_z = 8;
-    unsigned int cuda_num_blocks_y = ceil((real_t) nqy_ / cuda_block_y);
-    unsigned int cuda_num_blocks_z = ceil((real_t) nqz_ / cuda_block_z);
-    dim3 sf_grid_size(cuda_num_blocks_y, cuda_num_blocks_z, 1);
-    dim3 sf_block_size(cuda_block_y, cuda_block_z, 1);
+    //unsigned int cuda_block_y = 16, cuda_block_z = 8;
+    //unsigned int cuda_num_blocks_y = ceil((real_t) nqy_ / cuda_block_y);
+    //unsigned int cuda_num_blocks_z = ceil((real_t) nqz_ / cuda_block_z);
+    //dim3 sf_grid_size(cuda_num_blocks_y, cuda_num_blocks_z, 1);
+    //dim3 sf_block_size(cuda_block_y, cuda_block_z, 1);
+    unsigned int cuda_block = 128;
+    unsigned int cuda_num_blocks = ceil((real_t) nqz_ / cuda_block);
+    dim3 sf_grid_size(cuda_num_blocks, 1, 1);
+    dim3 sf_block_size(cuda_block, 1, 1);
 
     // call the kernel
     structure_factor_kernel <<< sf_grid_size, sf_block_size >>>
@@ -328,7 +340,7 @@ namespace hig {
       std::cout << " ------- " << naninfs << " / " << nx_ * ny_ * nz_ << " nans or infs" << std::endl;
     } // if */
 
-  __global__ void structure_factor_kernel(unsigned int nqx, unsigned int nqy, unsigned int nqz,
+  /*__global__ void structure_factor_kernel(unsigned int nqx, unsigned int nqy, unsigned int nqz,
                                           real_t* qx, real_t* qy, cucomplex_t* qz,
                                           real_t* rot, real_t* repet,
                                           real_t* center, real_t* transvec,
@@ -367,7 +379,7 @@ namespace hig {
         else sc = make_cuC(repet[2], 0);
         sc = cuCpow(e_iqc, ((real_t) 1.0 - repet[2]) / (real_t) 2.0) * sc;
 
-
+*/
 /*        cucomplex_t iqa = rot[0] * q_x + rot[1] * q_y + rot[2] * q_z;
         cucomplex_t iqna = repet[0] * iqa;
         cucomplex_t e_iqa = cuCexpi(iqa);
@@ -395,11 +407,55 @@ namespace hig {
         else sc = make_cuC(repet[2], 0);
         sc = cuCpow(e_iqc, ((real_t) 1.0 - repet[2]) / (real_t) 2.0) * sc;
 */
-        unsigned long int sf_i = base_index + i_x;
+/*        unsigned long int sf_i = base_index + i_x;
         cucomplex_t temp3 = cuCexpi(center[0] * q_x + center[1] * q_y + center[2] * q_z);
         cucomplex_t temp2 = unit_c + cuCexpi(transvec[0] * q_x + transvec[1] * q_y + transvec[2] * q_z);
         sf[sf_i] = temp3 * temp2 * sa * sb * sc;
       } // for x
+    } // if
+  } // StructureFactor::compute_structure_factor_gpu()
+*/
+
+  __global__ void structure_factor_kernel(unsigned int nqx, unsigned int nqy, unsigned int nqz,
+                                          real_t* qx, real_t* qy, cucomplex_t* qz,
+                                          real_t* rot, real_t* repet,
+                                          real_t* center, real_t* transvec,
+                                          cucomplex_t* sf) {
+    unsigned int i_z = blockDim.x * blockIdx.x + threadIdx.x;
+    unsigned int i_y = i_z % nqy;
+
+    cucomplex_t unit_c = make_cuC(REAL_ONE_, REAL_ZERO_);
+
+    if(i_z < nqz) {
+      cucomplex_t sa, sb, sc;
+
+      real_t q_x = qx[i_y], q_y = qy[i_y];
+      cucomplex_t q_z = qz[i_z];
+
+      cucomplex_t e_iqa = cuCexpi(rot[0] * q_x + rot[1] * q_y + rot[2] * q_z);
+      cucomplex_t xa_0 = unit_c - cuCpow(e_iqa, repet[0]);
+      cucomplex_t ya_0 = unit_c - e_iqa;
+      if(fabs(ya_0.y) > REAL_ZERO_ || fabs(ya_0.x) > REAL_ZERO_) sa = xa_0 / ya_0;
+      else sa = make_cuC(repet[0], 0);
+      sa = cuCpow(e_iqa, ((real_t) 1.0 - repet[0]) / (real_t) 2.0) * sa;
+
+      cucomplex_t e_iqb = cuCexpi(rot[3] * q_x + rot[4] * q_y + rot[5] * q_z);
+      cucomplex_t xb_0 = unit_c - cuCpow(e_iqb, repet[1]);
+      cucomplex_t yb_0 = unit_c - e_iqb;
+      if(fabs(yb_0.y) > REAL_ZERO_ || fabs(yb_0.x) > REAL_ZERO_) sb = xb_0 / yb_0;
+      else sb = make_cuC(repet[1], 0);
+      sb = cuCpow(e_iqb, ((real_t) 1.0 - repet[1]) / (real_t) 2.0) * sb;
+
+      cucomplex_t e_iqc = cuCexpi(rot[6] * q_x + rot[7] * q_y + rot[8] * q_z);
+      cucomplex_t xc_0 = unit_c - cuCpow(e_iqc, repet[2]);
+      cucomplex_t yc_0 = unit_c - e_iqc;
+      if(fabs(yc_0.y) > REAL_ZERO_ || fabs(yc_0.x) > REAL_ZERO_) sc = xc_0 / yc_0;
+      else sc = make_cuC(repet[2], 0);
+      sc = cuCpow(e_iqc, ((real_t) 1.0 - repet[2]) / (real_t) 2.0) * sc;
+
+      cucomplex_t temp3 = cuCexpi(center[0] * q_x + center[1] * q_y + center[2] * q_z);
+      cucomplex_t temp2 = unit_c + cuCexpi(transvec[0] * q_x + transvec[1] * q_y + transvec[2] * q_z);
+      sf[i_z] = temp3 * temp2 * sa * sb * sc;
     } // if
   } // StructureFactor::compute_structure_factor_gpu()
 

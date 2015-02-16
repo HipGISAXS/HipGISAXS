@@ -546,26 +546,23 @@ print("Platform: %s" % sys.platform)
 if not get_option('clean'):
     env = do_post_configure(env)
 
-Export("env")
-
-objs, nvobjs, mainobjs = env.SConscript('src/SConscript', duplicate = False)
-
+gpuenv = env.Clone(CC = 'nvcc')
 if using_cuda:
-    gpuenv = env.Clone(CC = 'nvcc')
     gpuenv.Tool('cuda')
     ## remove openmp flag from CCFLAGS and LINKFLAGS
     old_ccflags = gpuenv['CCFLAGS']
     ccflags = []
-    flags_to_remove = ['-openmp']
+    flags_to_remove = ['-fopenmp', '-Wno-unused-local-typedefs']
     for flag in old_ccflags:
         if flag not in flags_to_remove:
-            ccflags += flag
+            ccflags += [ flag ]
+    print ccflags
     gpuenv.Replace(CCFLAGS = ccflags)
     old_linkflags = gpuenv['LINKFLAGS']
     linkflags = []
     for flag in old_linkflags:
         if flag not in flags_to_remove:
-            linkflags += flag
+            linkflags += [ flag ]
     gpuenv.Replace(LINKFLAGS = linkflags)
     ## add other flags
     gpuenv.Append(LINKFLAGS = ['-Xlinker', '-Wl,-rpath', '-Xlinker', '-Wl,$CUDA_TOOLKIT_PATH/lib64'])
@@ -573,6 +570,12 @@ if using_cuda:
     gpuenv.Append(LINKFLAGS = ['-arch=sm_35'])
     #gpuenv.Append(LINKFLAGS = ['-arch=sm_21'])
     gpuenv.Append(LINKFLAGS = ['-dlink'])
+Export('gpuenv')
+Export('env')
+
+objs, nvobjs, mainobjs = env.SConscript('src/SConscript', duplicate = False)
+
+if using_cuda:
     nvlibobj = gpuenv.Program('nv_hipgisaxs.o', nvobjs)
     objs += nvlibobj + nvobjs
 

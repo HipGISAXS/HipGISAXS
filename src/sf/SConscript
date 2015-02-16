@@ -8,10 +8,12 @@ objs += env.Object(Glob('*.cpp'))
 Export('env')
 using_accelerator = env['ACCELERATOR_TYPE']
 if using_accelerator == 'gpu':
-	nvobjs += SConscript('gpu/SConscript')
+    Import('gpuenv')
+    Export('gpuenv')
+    nvobjs += SConscript('gpu/SConscript')
 elif using_accelerator == 'mic':
-	objs += SConscript('mic/SConscript')
+    objs += SConscript('mic/SConscript')
 else:
-	objs += SConscript('cpu/SConscript')
+    objs += SConscript('cpu/SConscript')
 
 Return('objs', 'nvobjs')

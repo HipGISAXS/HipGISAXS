@@ -34,6 +34,8 @@ namespace hig {
       unsigned int nqx_;
       unsigned int nqy_;
       unsigned int nqz_;
+      unsigned int nrow_;
+      unsigned int ncol_;
 
       // device buffers
 

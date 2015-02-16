@@ -224,7 +224,8 @@ namespace hig {
           } // if
         } // for x
       } // for y
-      */
+    } // for z
+    */
 
     real_t mach_eps = std::numeric_limits<real_t>::epsilon() ; //move to constants.hpp if not there
 
@@ -236,7 +237,7 @@ namespace hig {
      *  will not change for the grain.
      */
 
-    #pragma omp parallel for 
+    #pragma omp parallel for
     for(unsigned int i = 0; i < nz_; ++ i) {
       complex_t temp1, temp_x2, temp_y3, temp_y4, temp_x5;
       unsigned j = i % ny_;

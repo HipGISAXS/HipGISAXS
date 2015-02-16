@@ -1,6 +1,6 @@
-Import('env')
+Import('env', 'gpuenv')
 
-Export('env')
+Export('env', 'gpuenv')
 
 subdirs = ['common', 'config', 'file', 'image', 'init', 'model', 'numerics', 'utils']
 acc_subdirs = ['ff', 'sf']
