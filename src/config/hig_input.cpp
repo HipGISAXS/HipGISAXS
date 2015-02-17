@@ -105,7 +105,7 @@ namespace hig {
       curr_token_ = InputReader::instance().get_next_token();
     } // while
 
-    print_all();
+    //print_all();
 
     return true;
   } // HiGInput::construct_input_config()
