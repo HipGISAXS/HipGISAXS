@@ -83,7 +83,7 @@ namespace hig {
 
     int pos = input_stream_.tellg();
     std::streampos spos = input_stream_.cur;
-    std::cout << "-----" << filename << "-------" << include_string.size() << "---------- " << include_string << std::endl;
+    //std::cout << "-----" << filename << "-------" << include_string.size() << "---------- " << include_string << std::endl;
     //std::cout << "---------------------- " << pos << std::endl;
 
     // find the total length
@@ -107,12 +107,12 @@ namespace hig {
     //std::cout << "++++++++++++++++++++++ " << temp_buf << " ++++++++++++++++++++++" << std::endl;
 
     std::istringstream temp_stream(temp_buf);
-    std::cout << temp_stream.str() << std::endl;
+    //std::cout << temp_stream.str() << std::endl;
     input_stream_.str(temp_stream.str());
 
     // set position in input_stream_ to correct place
     input_stream_.seekg(pos-ignore, input_stream_.beg);
-    std::cout << input_stream_.str() << std::endl;
+    //std::cout << input_stream_.str() << std::endl;
 
     return true;
   } // InputReader::read_include_file()

@@ -97,7 +97,6 @@ namespace hig {
         std::cerr << "aborting due to fatal error" << std::endl;
         return false;
       } // if
-      std::cout << curr_token_.type_ << std::endl;
       if(!process_curr_token()) {
         std::cerr << "aborting due to fatal error" << std::endl;
         return false;
