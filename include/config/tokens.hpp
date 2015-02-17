@@ -29,12 +29,12 @@ namespace hig {
    */
 
   enum ValueType {
-    null_value = 0,          /* an empty/non-existant/null value */
+    null_value = 0,       /* an empty/non-existant/null value */
     int_value,            /* integral number */
-    real_value,            /* real number */
-    string_value,          /* quoted strings */
-    vector2_value,          /* a pair of two real numbers */
-    vector3_value          /* a tuple of three real numbers */
+    real_value,           /* real number */
+    string_value,         /* quoted strings */
+    vector2_value,        /* a pair of two real numbers */
+    vector3_value         /* a tuple of three real numbers */
   }; // enum ValueType
 
 
@@ -44,20 +44,20 @@ namespace hig {
 
   enum TokenType {
     /* sanity */
-    null_token = 0,          /* when there is nothing yet */
-    error_token,          /* there is something that is not supposed to be there */
+    null_token = 0,         /* when there is nothing yet */
+    error_token,            /* there is something that is not supposed to be there */
 
     /* fundamental raw tokens: single character (they make bigger stuff) */
     character_token,        /* a single alphabet character */
-    digit_token,          /* a single digit [0-9\-] */
-    negative_token,          /* the negative sign '-' (for numbers only) */
-    white_space_token,        /* a white space character: ' ' '\n' '\t' '\r' '\v' etc. */
-    object_begin_token,        /* '{' */
-    object_end_token,        /* '}' */
-    array_begin_token,        /* '[' */
+    digit_token,            /* a single digit [0-9\-] */
+    negative_token,         /* the negative sign '-' (for numbers only) */
+    white_space_token,      /* a white space character: ' ' '\n' '\t' '\r' '\v' etc. */
+    object_begin_token,     /* '{' */
+    object_end_token,       /* '}' */
+    array_begin_token,      /* '[' */
     array_end_token,        /* ']' */
-    string_begin_end_token,      /* '"' */
-    assignment_token,        /* '=' */
+    string_begin_end_token, /* '"' */
+    assignment_token,       /* '=' */
     separator_token,        /* ',' */
     comment_token,          /* sign '#' for a comment start */
 
@@ -65,38 +65,39 @@ namespace hig {
      * hig tokens: valid keywords and values
      */
 
-    hipgisaxs_token,        /* the main keyword representing the input object */
+    hipgisaxs_token,            /* the main keyword representing the input object */
+    include_token,              /* keyword to include another file verbatim */
 
     /* value datatypes */
-    number_token,          /* a number: integeral or real */
-    string_token,          /* a quoted string */
+    number_token,               /* a number: integeral or real */
+    string_token,               /* a quoted string */
 
     /* miscellaneous, used in multiple places */
-    key_token,            /* key value for various: shape, layer, structure, etc. */
-    min_token,            /* min value for various: shape param, .. */
-    max_token,            /* max value for various: shape param, .. */
-    step_token,           /* step from min to max for various */
-    rot_token,            /* rotation value for various */
-    type_token,           /* various types */
-    stat_token,           /* statistic type: gaussian, uniform, random, etc. */
-    mean_token,           /* mean value */
-    stddev_token,         /* standard deviation */
+    key_token,                  /* key value for various: shape, layer, structure, etc. */
+    min_token,                  /* min value for various: shape param, .. */
+    max_token,                  /* max value for various: shape param, .. */
+    step_token,                 /* step from min to max for various */
+    rot_token,                  /* rotation value for various */
+    type_token,                 /* various types */
+    stat_token,                 /* statistic type: gaussian, uniform, random, etc. */
+    mean_token,                 /* mean value */
+    stddev_token,               /* standard deviation */
 
     /* refractive index components */
-    refindex_token,          /* refractive index of various */
-    refindex_delta_token,      /* delta value for a refractive index */
-    refindex_beta_token,      /* beta value for a refractive index */
+    refindex_token,             /* refractive index of various */
+    refindex_delta_token,       /* delta value for a refractive index */
+    refindex_beta_token,        /* beta value for a refractive index */
 
     /* shape name and parameters*/
-    shape_token,          /* a shape */
-    shape_name_token,        /* name of a shape: box, truncpyr, .., or [filename] */
+    shape_token,                /* a shape */
+    shape_name_token,           /* name of a shape: box, truncpyr, .., or [filename] */
     shape_originvec_token,      /* reference origin point for a shape */
-    shape_ztilt_token,        /* angle of shape tilt off the z-axis */
-    shape_xyrot_token,        /* rotation of a shape in xy-plane */
-    shape_param_token,        /* parameter of a shape */
-    shape_param_p1_token,      /* mean for a shape's statistic */
-    shape_param_p2_token,      /* deviation for a shape's statistic */
-    shape_param_nvalues_token,    /* ... */
+    shape_ztilt_token,          /* angle of shape tilt off the z-axis */
+    shape_xyrot_token,          /* rotation of a shape in xy-plane */
+    shape_param_token,          /* parameter of a shape */
+    shape_param_p1_token,       /* mean for a shape's statistic */
+    shape_param_p2_token,       /* deviation for a shape's statistic */
+    shape_param_nvalues_token,  /* ... */
 
     /* layer parameters */
     layer_token,
@@ -105,7 +106,7 @@ namespace hig {
 
     /* structure components */
     struct_token,
-    struct_iratio_token,      /* intensity ratio, used for multiple structures */
+    struct_iratio_token,                      /* intensity ratio, used for multiple structures */
     struct_grain_token,
     struct_grain_skey_token,
     struct_grain_lkey_token,

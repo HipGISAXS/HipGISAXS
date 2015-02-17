@@ -65,7 +65,9 @@ namespace hig {
       } // instance()
 
       bool read_input(const char* filename);
-      Token get_next_token();
+      bool read_include_file(const string_t& filename);
+      Token get_next_token(void);
+      void rewind(void);
 
   }; // class InputReader
 

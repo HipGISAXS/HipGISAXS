@@ -23,6 +23,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <cstring>
 
 #include <file/read_oo_input.hpp>
 
@@ -53,6 +54,68 @@ namespace hig {
 
     return true;
   } // InputReader::init()
+
+
+  void InputReader::rewind(void) {
+    //input_stream_.seekg(0);
+    input_stream_.clear();
+    std::istringstream temp_stream(input_stream_.str());
+    //std::cout << temp_stream.str() << std::endl;
+    input_stream_.str(temp_stream.str());
+    while(!structure_stack_.empty()) structure_stack_.pop();
+    current_token_.type_ = null_token;
+    previous_token_.type_ = null_token;
+    parent_token_.type_ = null_token;
+  } // InputReader::rewind()
+
+
+  bool InputReader::read_include_file(const string_t& filename) {
+    std::ifstream f(filename);
+    if(!f.is_open()) {
+      std::cerr << "fatal error: could not read include file "
+                << filename << ". aborting " << std::endl;
+      return false;
+    } // if
+
+    std::string include_string;
+    std::getline(f, include_string, (char)EOF);
+    f.close();
+
+    int pos = input_stream_.tellg();
+    std::streampos spos = input_stream_.cur;
+    std::cout << "-----" << filename << "-------" << include_string.size() << "---------- " << include_string << std::endl;
+    //std::cout << "---------------------- " << pos << std::endl;
+
+    // find the total length
+    input_stream_.seekg(0, input_stream_.end);
+    int len = input_stream_.tellg();
+    //std::cout << "================= " << len << std::endl;
+    // assuming the keyword is "include"
+    int ignore = filename.size() + 12;
+
+    // read until pos
+    char* temp_buf = new char[len + include_string.size() + 1];
+    input_stream_.seekg(0, input_stream_.beg);
+    input_stream_.read(temp_buf, pos-ignore);
+    input_stream_.ignore(ignore);
+    // copy include string
+    strncpy(temp_buf+pos-ignore, include_string.c_str(), include_string.size());
+
+    //std::cout << "++++++++++++++++++++++ " << temp_buf << " ++++++++++++++++++++++" << std::endl;
+    input_stream_.read(temp_buf+pos-ignore+include_string.size(), len - pos);
+    temp_buf[include_string.size()+len-ignore] = '\0';
+    //std::cout << "++++++++++++++++++++++ " << temp_buf << " ++++++++++++++++++++++" << std::endl;
+
+    std::istringstream temp_stream(temp_buf);
+    std::cout << temp_stream.str() << std::endl;
+    input_stream_.str(temp_stream.str());
+
+    // set position in input_stream_ to correct place
+    input_stream_.seekg(pos-ignore, input_stream_.beg);
+    std::cout << input_stream_.str() << std::endl;
+
+    return true;
+  } // InputReader::read_include_file()
 
 
   TokenType InputReader::raw_token_lookup(char c) {

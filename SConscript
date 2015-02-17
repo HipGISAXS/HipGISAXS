@@ -556,7 +556,6 @@ if using_cuda:
     for flag in old_ccflags:
         if flag not in flags_to_remove:
             ccflags += [ flag ]
-    print ccflags
     gpuenv.Replace(CCFLAGS = ccflags)
     old_linkflags = gpuenv['LINKFLAGS']
     linkflags = []

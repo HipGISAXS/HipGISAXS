@@ -72,6 +72,23 @@ namespace hig {
       return false;
     } // if
 
+    // make a pass and fill in with any include files
+    curr_token_ = InputReader::instance().get_next_token();
+    while(curr_token_.type_ != null_token) {
+      if(curr_token_.type_ == error_token) {
+        std::cerr << "aborting due to fatal error" << std::endl;
+        return false;
+      } // if
+      if(curr_token_.type_ == include_token) {
+        curr_token_ = InputReader::instance().get_next_token(); // assignement token
+        curr_token_ = InputReader::instance().get_next_token(); // string token
+        if(!InputReader::instance().read_include_file(curr_token_.svalue_)) return false;
+      } // if
+      curr_token_ = InputReader::instance().get_next_token();
+    } // while
+
+    InputReader::instance().rewind();
+
     curr_keyword_ = null_token; past_keyword_ = null_token;
     curr_token_ = InputReader::instance().get_next_token();
     past_token_.type_ = null_token;
@@ -80,6 +97,7 @@ namespace hig {
         std::cerr << "aborting due to fatal error" << std::endl;
         return false;
       } // if
+      std::cout << curr_token_.type_ << std::endl;
       if(!process_curr_token()) {
         std::cerr << "aborting due to fatal error" << std::endl;
         return false;
@@ -88,10 +106,10 @@ namespace hig {
       curr_token_ = InputReader::instance().get_next_token();
     } // while
 
-    //print_all();
+    print_all();
 
     return true;
-  } // HiGInput::read_input_config()
+  } // HiGInput::construct_input_config()
 
 
   bool HiGInput::process_curr_token() {
@@ -596,6 +614,9 @@ namespace hig {
         } // if
 
         init();    // initialize everything
+        break;
+
+      case include_token:
         break;
 
       case key_token:
@@ -1262,6 +1283,15 @@ namespace hig {
     ShapeName shp = shape_null;
 
     switch(curr_keyword_) {
+
+      case include_token:
+        if(!InputReader::instance().read_include_file(str)) {
+          std::cerr << "fatal error: some error happened in opening or reading "
+                    << "include config file " << str << ". aborting"
+                    << std::endl;
+          return false;
+        } // if
+        break;
 
       case key_token:
         // find out which key is this for
