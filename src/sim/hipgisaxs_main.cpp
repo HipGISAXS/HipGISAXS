@@ -158,6 +158,7 @@ namespace hig {
     nqx_ = QGrid::instance().nqx();
     nqy_ = QGrid::instance().nqy();
     nqz_ = QGrid::instance().nqz();
+    nqz_extended_ = QGrid::instance().nqz_extended();
 
     /* construct layer profile */
     if(!HiGInput::instance().construct_layer_profile()) {  // also can be done at input reading ...
@@ -303,6 +304,7 @@ namespace hig {
       nqx_ = QGrid::instance().nqx();
       nqy_ = QGrid::instance().nqy();
       nqz_ = QGrid::instance().nqz();
+      nqz_extended_ = QGrid::instance().nqz_extended();
 
     } else if(type == region_pixels) {
       std::cerr << "uh-oh: override option for pixels has not yet been implemented" << std::endl;
@@ -872,8 +874,8 @@ namespace hig {
       } // if
 
       Structure *curr_struct = &((*s).second);
-      Shape *curr_shape = HiGInput::instance().shape(*curr_struct);
       Lattice *curr_lattice = (Lattice*) HiGInput::instance().lattice(*curr_struct);
+      Unitcell *curr_unitcell = (Unitcell*) HiGInput::instance().unitcell(*curr_struct);
       bool struct_in_layer = (*s).second.grain_in_layer();
 
       real_t *dd = NULL, *nn = NULL, *wght = NULL;    // come back to this ...
@@ -991,11 +993,11 @@ namespace hig {
         curr_transvec[2] = curr_transvec[2]; // TODO/FIXME... for more than 1 layers ... 
                            // ... incomplete
       } // if-else
-      ShapeName shape_name = HiGInput::instance().shape_name((*s).second);
-      real_t shape_tau = HiGInput::instance().shape_tau((*s).second);
-      real_t shape_eta = HiGInput::instance().shape_eta((*s).second);
-      std::string shape_file = HiGInput::instance().shape_filename((*s).second);
-      shape_param_list_t shape_params = HiGInput::instance().shape_params((*s).second);
+      //ShapeName shape_name = HiGInput::instance().shape_name((*s).second);
+      //real_t shape_tau = HiGInput::instance().shape_tau((*s).second);
+      //real_t shape_eta = HiGInput::instance().shape_eta((*s).second);
+      //std::string shape_file = HiGInput::instance().shape_filename((*s).second);
+      //shape_param_list_t shape_params = HiGInput::instance().shape_params((*s).second);
 
       /* computing dwba ff for each grain in structure (*s) with
        * ensemble containing num_grains grains */
@@ -1141,48 +1143,62 @@ namespace hig {
 
         /* compute structure factor and form factor */
 
-        woo::BoostChronoTimer sftimer, fftimer;
-
-        #ifdef FF_NUM_GPU   // use GPU
-          #ifdef FF_NUM_GPU_FUSED
-            FormFactor ff(64, 8);
-          #elif defined KERNEL2
-            FormFactor ff(2, 4, 4);
-          #else
-            FormFactor ff(64);
-          #endif
-        #else   // use CPU or MIC
-          FormFactor ff;
-        #endif
-
-        // print rot matrix for debug
-        //std::cout << ">>>s1 " << r_tot1[0] << " " << r_tot1[1] << " " << r_tot1[2] << std::endl;
-        //std::cout << ">>>s2 " << r_tot2[0] << " " << r_tot2[1] << " " << r_tot2[2] << std::endl;
-        //std::cout << ">>>s3 " << r_tot3[0] << " " << r_tot3[1] << " " << r_tot3[2] << std::endl;
-
-
         // TODO: parallel tasks ...
 
-        /*vector3_t grain_scaling(1, 1, 1);
-        vector3_t grain_repeats;
-        if(is_grain_repetition_dist)
-          grain_repeats = all_grains_repeats[grain_i % all_grains_repeats.size()];
-        else grain_repeats = all_grains_repeats[0];  // same repeat for all grains
-        structure_factor(sf, HiGInput::instance().experiment(), center, curr_lattice,
-                  grain_repeats, grain_scaling, r_tot1, r_tot2, r_tot3
+        woo::BoostChronoTimer sftimer, fftimer;
+        fftimer.start(); fftimer.pause();
+
+        // temporarily do this ...
+        std::vector<complex_t> ff;
+        unsigned int sz = nqz_;
+        if(HiGInput::instance().experiment() == "gisaxs") sz = nqz_extended_;
+        ff.resize(sz, CMPLX_ZERO_);
+
+        // loop over all elements in the unit cell
+        for(Unitcell::element_iterator_t e = curr_unitcell->element_begin();
+            e != curr_unitcell->element_end(); ++ e) {
+
+          //ShapeName shape_name = HiGInput::instance().shape_name((*e).second);
+          //real_t shape_tau = HiGInput::instance().shape_tau((*e).second);
+          //real_t shape_eta = HiGInput::instance().shape_eta((*e).second);
+          //std::string shape_file = HiGInput::instance().shape_filename((*e).second);
+          //shape_param_list_t shape_params = HiGInput::instance().shape_params((*e).second);
+          ShapeName shape_name = HiGInput::instance().shape_name((*e).first);
+          real_t shape_tau = HiGInput::instance().shape_tau((*e).first);
+          real_t shape_eta = HiGInput::instance().shape_eta((*e).first);
+          std::string shape_file = HiGInput::instance().shape_filename((*e).first);
+          shape_param_list_t shape_params = HiGInput::instance().shape_params((*e).first);
+
+          for(Unitcell::location_iterator_t l = (*e).second.begin(); l != (*e).second.end(); ++ l) {
+            curr_transvec += (*l);
+            #ifdef FF_NUM_GPU   // use GPU
+              #ifdef FF_NUM_GPU_FUSED
+                FormFactor eff(64, 8);
+              #elif defined KERNEL2
+                FormFactor eff(2, 4, 4);
+              #else
+                FormFactor eff(64);
+              #endif
+            #else   // use CPU or MIC
+              FormFactor eff;
+            #endif
+
+            fftimer.resume();
+            //read_form_factor("curr_ff.out");
+            form_factor(eff, shape_name, shape_file, shape_params, curr_transvec,
+                  shape_tau, shape_eta, r_tot1, r_tot2, r_tot3
                   #ifdef USE_MPI
                     , grain_comm
                   #endif
-                  );*/
+                  );
+            fftimer.pause();
 
-        fftimer.start();
-        //read_form_factor("curr_ff.out");
-        form_factor(ff, shape_name, shape_file, shape_params, curr_transvec,
-              shape_tau, shape_eta, r_tot1, r_tot2, r_tot3
-              #ifdef USE_MPI
-                , grain_comm
-              #endif
-              );
+            // for each location, add the FFs
+            for(unsigned int i = 0; i < nqz_; ++ i) ff[i] += eff[i];  // insert distance factor thingy ...
+
+          } // for l
+        } // for e
+
         fftimer.stop();
         #ifndef FF_VERBOSE
           std::cout << "**               FF compute time: "

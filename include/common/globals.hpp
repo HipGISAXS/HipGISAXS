@@ -90,6 +90,13 @@ namespace hig {
       vec_[2] = a.vec_[2];
     } // vector3_t()
 
+    INLINE vector3_t(const std::vector<real_t>& a) {
+      if(a.size() != 3) return;
+      vec_[0] = a[0]; 
+      vec_[1] = a[1]; 
+      vec_[2] = a[2];
+    } // vector3_t()
+
     CUDAFY vector3_t(const vector3_t& a) {
       vec_[0] = a.vec_[0]; 
       vec_[1] = a.vec_[1]; 
@@ -123,6 +130,13 @@ namespace hig {
       vec_[0] = a.vec_[0]; 
       vec_[1] = a.vec_[1]; 
       vec_[2] = a.vec_[2]; 
+      return *this;
+    } // operator=
+
+    INLINE vector3_t& operator+=(vector3_t& a) {
+      vec_[0] += a.vec_[0]; 
+      vec_[1] += a.vec_[1]; 
+      vec_[2] += a.vec_[2]; 
       return *this;
     } // operator=
 

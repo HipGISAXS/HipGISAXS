@@ -170,6 +170,7 @@ namespace hig {
         KeyWords_[std::string("detector")]        = instrument_detector_token;
         KeyWords_[std::string("directbeam")]      = instrument_detector_dirbeam_token;
         KeyWords_[std::string("distribution")]    = struct_ensemble_distribution_token;
+        KeyWords_[std::string("element")]         = unitcell_element_token;
         KeyWords_[std::string("ensemble")]        = struct_ensemble_token;
         KeyWords_[std::string("expt")]            = instrument_scatter_expt_token;
         KeyWords_[std::string("fitparam")]        = fit_param_token;
@@ -187,6 +188,7 @@ namespace hig {
         KeyWords_[std::string("lattice")]         = struct_grain_lattice_token;
         KeyWords_[std::string("layer")]           = layer_token;
         KeyWords_[std::string("layer:key")]       = struct_grain_lkey_token;
+        KeyWords_[std::string("locations")]       = unitcell_element_locations_token;
         KeyWords_[std::string("mask")]            = fit_reference_data_mask_token;
         KeyWords_[std::string("max")]             = max_token;
         KeyWords_[std::string("maxgrains")]       = struct_ensemble_maxgrains_token;
@@ -236,7 +238,7 @@ namespace hig {
         KeyWords_[std::string("scattering")]      = instrument_scatter_token;
         KeyWords_[std::string("sdd")]             = instrument_detector_sdd_token;
         KeyWords_[std::string("shape")]           = shape_token;
-        KeyWords_[std::string("shape:key")]       = struct_grain_skey_token;
+        KeyWords_[std::string("shape:key")]       = unitcell_element_skey_token;
         KeyWords_[std::string("smearing")]        = instrument_scatter_smearing_token;
         KeyWords_[std::string("spacing")]         = struct_ensemble_spacing_token;
         KeyWords_[std::string("spotarea")]        = instrument_scatter_spotarea_token;
@@ -251,6 +253,8 @@ namespace hig {
         KeyWords_[std::string("transvec")]        = struct_grain_transvec_token;
         KeyWords_[std::string("type")]            = type_token;
         KeyWords_[std::string("unit")]            = instrument_scatter_photon_unit_token;
+        KeyWords_[std::string("unitcell")]        = unitcell_token;
+        KeyWords_[std::string("unitcell:key")]    = struct_grain_ukey_token;
         KeyWords_[std::string("value")]           = instrument_scatter_photon_value_token;
         KeyWords_[std::string("variable")]        = fit_param_variable_token;
         KeyWords_[std::string("xyrotation")]      = shape_xyrot_token;

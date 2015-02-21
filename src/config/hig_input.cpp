@@ -196,6 +196,18 @@ namespace hig {
             curr_layer_.clear();
             break;
 
+          case unitcell_token:
+            curr_unitcell_.element_list(curr_element_list_);
+            unitcells_[curr_unitcell_.key()] = curr_unitcell_;
+            curr_element_shape_key_.clear();
+            curr_element_list_.clear();
+            curr_unitcell_.clear();
+            break;
+
+          case unitcell_element_token:
+            curr_element_shape_key_.clear();
+            break;
+
           case struct_token:      /* insert the current structure */
             structures_[curr_structure_.key()] = curr_structure_;
             curr_structure_.clear();
@@ -305,19 +317,23 @@ namespace hig {
         keyword_stack_.pop();
         break;
 
-      case array_begin_token:  // should be preceeded by '='
-        if(past_token_.type_ != assignment_token) {
+      case array_begin_token:  // should be preceeded by '=' OR '[' OR ']'
+        if(past_token_.type_ != assignment_token &&
+            past_token_.type_ != array_begin_token &&
+            past_token_.type_ != array_end_token) {
           std::cerr << "fatal error: unexpected array begin token '['"
                 << std::endl;
           return false;
         } // if
-        keyword_stack_.push(curr_keyword_);
+        if(past_token_.type_ == assignment_token)
+          keyword_stack_.push(curr_keyword_);
         break;
 
       case array_end_token:  // preceeded by number_token or array_begin_token
         if(past_token_.type_ != number_token &&
             past_token_.type_ != array_begin_token &&
-            past_token_.type_ != comment_token) {
+            past_token_.type_ != comment_token &&
+            past_token_.type_ != array_end_token) {
           std::cerr << "fatal error: unexpected array close token ']'"
                 << std::endl;
           return false;
@@ -336,6 +352,25 @@ namespace hig {
               return false;
             } // if
             curr_shape_.originvec(curr_vector_[0], curr_vector_[1], curr_vector_[2]);
+            break;
+
+          case unitcell_element_locations_token:
+            if(past_token_.type_ != array_end_token) {
+              if(curr_vector_.size() != 3) {
+                std::cerr << "error: less than 3 values in unitcell element locations"
+                          << std::endl;
+                return false;
+              } // if
+              curr_element_list_[curr_element_shape_key_].push_back(vector3_t(curr_vector_));
+              curr_vector_.clear();
+            } else {
+              if(curr_element_list_[curr_element_shape_key_].size() < 1 || curr_vector_.size() > 0) {
+                std::cerr << "error: locations information is missing"
+                          << std::endl;
+                return false;
+              } // if
+              // nothing else to do
+            } // if-else
             break;
 
           case struct_grain_lattice_a_token:
@@ -519,9 +554,13 @@ namespace hig {
             return false;
         } // switch
         curr_vector_.clear();
-        keyword_stack_.pop();
-        past_keyword_ = curr_keyword_;
-        curr_keyword_ = keyword_stack_.top();
+        if(!(parent == unitcell_element_locations_token && past_token_.type_ == number_token)) {
+          keyword_stack_.pop();
+          past_keyword_ = curr_keyword_;
+          curr_keyword_ = keyword_stack_.top();
+        } else {
+          // nothing?
+        } // if-else
         break;
 
       case assignment_token:  // should be preceeded by a 'keyword',
@@ -651,6 +690,23 @@ namespace hig {
       case shape_param_nvalues_token:
         break;
 
+      case unitcell_token:
+        curr_unitcell_.init();
+        curr_element_list_.clear();
+        curr_element_shape_key_.clear();
+        break;
+
+      case unitcell_element_token:
+        curr_element_shape_key_.clear();
+        break;
+
+      case unitcell_element_skey_token:
+        curr_element_shape_key_.clear();
+        break;
+
+      case unitcell_element_locations_token:
+        break;
+
       case layer_token:
         curr_layer_.init();
         break;
@@ -665,7 +721,7 @@ namespace hig {
 
       case struct_iratio_token:
       case struct_grain_token:
-      case struct_grain_skey_token:
+      case struct_grain_ukey_token:
       case struct_grain_lkey_token:
       case struct_grain_lattice_token:
       case struct_grain_lattice_a_token:
@@ -1006,6 +1062,13 @@ namespace hig {
         curr_shape_param_.nvalues(num);
         break;
 
+      case unitcell_element_locations_token:
+        curr_vector_.push_back(num);
+        if(curr_vector_.size() > 3) {
+          std::cerr << "error: more than 3 values in a locations vector" << std::endl;
+          return false;
+        } // if
+        break;
 
       case layer_order_token:
         curr_layer_.order(num);
@@ -1269,7 +1332,7 @@ namespace hig {
 
       default:
         std::cerr << "fatal error: found a number '" << num
-              << "' where it should not be" << std::endl;
+              << "' where it should not be [" << curr_keyword_ << "]" << std::endl;
         return false;
     } // switch
 
@@ -1302,6 +1365,10 @@ namespace hig {
 
           case layer_token:
             curr_layer_.key(str);
+            break;
+
+          case unitcell_token:
+            curr_unitcell_.key(str);
             break;
 
           case struct_token:
@@ -1407,8 +1474,15 @@ namespace hig {
         } // switch
         break;
 
-      case struct_grain_skey_token:
-        curr_structure_.grain_shape_key(str);
+      case unitcell_element_skey_token:
+        curr_element_list_[str].clear();  // initiaize
+        curr_element_shape_key_ = str;
+        break;
+
+      //case struct_grain_skey_token:
+      case struct_grain_ukey_token:
+        //curr_structure_.grain_shape_key(str);
+        curr_structure_.grain_unitcell_key(str);
         break;
 
       case struct_grain_lkey_token:
@@ -2301,17 +2375,32 @@ namespace hig {
     // iterate over structures
     for(structure_iterator_t s = structures_.begin(); s != structures_.end(); s ++) {
 
-      Shape curr_shape = shapes_[(*s).second.grain_shape_key()];
-      vector3_t shape_min(0.0, 0.0, 0.0), shape_max(0.0, 0.0, 0.0);
-      compute_shape_domain(curr_shape, shape_min, shape_max);
+      Unitcell *curr_unitcell = &unitcells_.at((*s).second.grain_unitcell_key());
 
-      /*std::cout << "++ Shape min point: " << shape_min[0] << ", " << shape_min[1]
-            << ", " << shape_min[2] << std::endl;
-      std::cout << "++ Shape max point: " << shape_max[0] << ", " << shape_max[1]
-            << ", " << shape_max[2] << std::endl;
-      std::cout << "++ Shape dimensions: " << shape_max[0] - shape_min[0] << " x "
-            << shape_max[1] - shape_min[1] << " x "
-            << shape_max[2] - shape_min[2] << std::endl;*/
+      vector3_t element_min(REAL_ZERO_, REAL_ZERO_, REAL_ZERO_);
+      vector3_t element_max(REAL_ZERO_, REAL_ZERO_, REAL_ZERO_);
+      for(Unitcell::element_iterator_t e = curr_unitcell->element_begin();
+          e != curr_unitcell->element_end(); ++ e) {
+
+        Shape curr_shape = shapes_[(*e).first];
+        vector3_t shape_min(0.0, 0.0, 0.0), shape_max(0.0, 0.0, 0.0);
+        compute_shape_domain(curr_shape, shape_min, shape_max);
+
+        /*std::cout << "++ Shape min point: " << shape_min[0] << ", " << shape_min[1]
+              << ", " << shape_min[2] << std::endl;
+        std::cout << "++ Shape max point: " << shape_max[0] << ", " << shape_max[1]
+              << ", " << shape_max[2] << std::endl;
+        std::cout << "++ Shape dimensions: " << shape_max[0] - shape_min[0] << " x "
+              << shape_max[1] - shape_min[1] << " x "
+              << shape_max[2] - shape_min[2] << std::endl;*/
+
+        element_min[0] = std::min(element_min[0], shape_min[0]);
+        element_min[1] = std::min(element_min[1], shape_min[1]);
+        element_min[2] = std::min(element_min[2], shape_min[2]);
+        element_max[0] = std::max(element_max[0], shape_max[0]);
+        element_max[1] = std::max(element_max[1], shape_max[1]);
+        element_max[2] = std::max(element_max[2], shape_max[2]);
+      } // for elements
 
       /* determine the structure's position in the sample configuration */
       real_t zc_l = layer_origin_z((*s).second);
@@ -2333,77 +2422,77 @@ namespace hig {
 
       // a along x
       if(a[0] > 0) {
-        a_max[0] = n[0] * a[0] + transvec[0] + shape_max[0];
-        a_min[0] = transvec[0] + shape_min[0];
+        a_max[0] = n[0] * a[0] + transvec[0] + element_max[0];
+        a_min[0] = transvec[0] + element_min[0];
       } else {
-        a_max[0] = transvec[0] + shape_max[0];
-        a_min[0] = n[0] * a[0] + transvec[0] + shape_min[0];
+        a_max[0] = transvec[0] + element_max[0];
+        a_min[0] = n[0] * a[0] + transvec[0] + element_min[0];
       } // if-else
       // a along y
       if(a[1] > 0) {
-        a_max[1] = n[0] * a[1] + transvec[1] + shape_max[1];
-        a_min[1] = transvec[1] + shape_min[1];
+        a_max[1] = n[0] * a[1] + transvec[1] + element_max[1];
+        a_min[1] = transvec[1] + element_min[1];
       } else {
-        a_max[1] = transvec[1] + shape_max[1];
-        a_min[1] = n[0] * a[1] + transvec[1] + shape_min[1];
+        a_max[1] = transvec[1] + element_max[1];
+        a_min[1] = n[0] * a[1] + transvec[1] + element_min[1];
       } // if-else
       // a along z
       if(a[2] > 0) {
-        a_max[2] = n[0] * a[2] + zc_l + shape_max[2];
-        a_min[2] = zc_l + shape_min[2];
+        a_max[2] = n[0] * a[2] + zc_l + element_max[2];
+        a_min[2] = zc_l + element_min[2];
       } else {
-        a_max[2] = zc_l + shape_max[2];
-        a_min[2] = n[0] * a[2] + zc_l + shape_min[2];
+        a_max[2] = zc_l + element_max[2];
+        a_min[2] = n[0] * a[2] + zc_l + element_min[2];
       } // if-else
       
       // b along x
       if(b[0] > 0) {
-        b_max[0] = n[1] * b[0] + transvec[0] + shape_max[0];
-        b_min[0] = transvec[0] + shape_min[0];
+        b_max[0] = n[1] * b[0] + transvec[0] + element_max[0];
+        b_min[0] = transvec[0] + element_min[0];
       } else {
-        b_max[0] = transvec[0] + shape_max[0];
-        b_min[0] = n[1] * b[0] + transvec[0] + shape_min[0];
+        b_max[0] = transvec[0] + element_max[0];
+        b_min[0] = n[1] * b[0] + transvec[0] + element_min[0];
       } // if-else
       // b along y
       if(b[1] > 0) {
-        b_max[1] = n[1] * b[1] + transvec[1] + shape_max[1];
-        b_min[1] = transvec[1] + shape_min[1];
+        b_max[1] = n[1] * b[1] + transvec[1] + element_max[1];
+        b_min[1] = transvec[1] + element_min[1];
       } else {
-        b_max[1] = transvec[1] + shape_max[1];
-        b_min[1] = n[1] * b[1] + transvec[1] + shape_min[1];
+        b_max[1] = transvec[1] + element_max[1];
+        b_min[1] = n[1] * b[1] + transvec[1] + element_min[1];
       } // if-else
       // b along z
       if(b[2] > 0) {
-        b_max[2] = n[1] * b[2] + zc_l + shape_max[2];
-        b_min[2] = zc_l + shape_min[2];
+        b_max[2] = n[1] * b[2] + zc_l + element_max[2];
+        b_min[2] = zc_l + element_min[2];
       } else {
-        b_max[2] = zc_l + shape_max[2];
-        b_min[2] = n[1] * b[2] + zc_l + shape_min[2];
+        b_max[2] = zc_l + element_max[2];
+        b_min[2] = n[1] * b[2] + zc_l + element_min[2];
       } // if-else
       
       // c along x
       if(c[0] > 0) {
-        c_max[0] = n[2] * c[0] + transvec[0] + shape_max[0];
-        c_min[0] = transvec[0] + shape_min[0];
+        c_max[0] = n[2] * c[0] + transvec[0] + element_max[0];
+        c_min[0] = transvec[0] + element_min[0];
       } else {
-        c_max[0] = transvec[0] + shape_max[0];
-        c_min[0] = n[2] * c[0] + transvec[0] + shape_min[0];
+        c_max[0] = transvec[0] + element_max[0];
+        c_min[0] = n[2] * c[0] + transvec[0] + element_min[0];
       } // if-else
       // c along y
       if(c[1] > 0) {
-        c_max[1] = n[2] * c[1] + transvec[1] + shape_max[1];
-        c_min[1] = transvec[1] + shape_min[1];
+        c_max[1] = n[2] * c[1] + transvec[1] + element_max[1];
+        c_min[1] = transvec[1] + element_min[1];
       } else {
-        c_max[1] = transvec[1] + shape_max[1];
-        c_min[1] = n[2] * c[1] + transvec[1] + shape_min[1];
+        c_max[1] = transvec[1] + element_max[1];
+        c_min[1] = n[2] * c[1] + transvec[1] + element_min[1];
       } // if-else
       // c along z
       if(c[2] > 0) {
-        c_max[2] = n[2] * c[2] + zc_l + shape_max[2];
-        c_min[2] = zc_l + shape_min[2];
+        c_max[2] = n[2] * c[2] + zc_l + element_max[2];
+        c_min[2] = zc_l + element_min[2];
       } else {
-        c_max[2] = zc_l + shape_max[2];
-        c_min[2] = n[2] * c[2] + zc_l + shape_min[2];
+        c_max[2] = zc_l + element_max[2];
+        c_min[2] = n[2] * c[2] + zc_l + element_min[2];
       } // if-else
 
       vector3_t d_min, d_max;
@@ -2428,7 +2517,7 @@ namespace hig {
       min_l[0] = min(min_l[0], d_min[0]);
       min_l[1] = min(min_l[1], d_min[1]);
       min_l[2] = min(min_l[2], d_min[2]);
-    } // for
+    } // for structures
 
     max_vec[0] = max_l[0];
     max_vec[1] = max_l[1];
@@ -2441,7 +2530,7 @@ namespace hig {
     z_max_0 = max(max_l[2], z_max_0);
 
     return true;
-  } // HiGInput::construct_domain_size()
+  } // HiGInput::compute_domain_size()
 
 
   /**
@@ -2578,6 +2667,7 @@ namespace hig {
   void HiGInput::print_all() {
     std::cout << "HipGISAXS Inputs: " << std::endl;
     print_shapes();
+    print_unitcells();
     print_layers();
     print_structures();
     print_scattering_params();
@@ -2595,6 +2685,14 @@ namespace hig {
       (*i).second.print();
     } // for
   } // HiGInput::print_shapes()
+
+
+  void HiGInput::print_unitcells() {
+    std::cout << "Unitcells:" << std::endl;
+    for(unitcell_iterator_t u = unitcells_.begin(); u != unitcells_.end(); ++ u) {
+      (*u).second.print();
+    } // for
+  } // HiGInput::print_unitcells()
 
 
   void HiGInput::print_layers() {

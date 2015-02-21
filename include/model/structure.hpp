@@ -34,20 +34,6 @@ namespace hig {
 
   // make stuff private (with help of friend) ...
 
-  class GrainScaling {
-    private:
-      vector3_t mean_;
-      vector3_t stddev_;
-      std::vector<StatisticType> dist_;
-      std::vector<int> nvals_;
-    public:
-      GrainScaling();
-      void init();
-      void clear();
-    friend class Grain;
-    friend class Structure;
-  };
-
   class Lattice {
     private:
       LatticeType type_;  /* overrides a_ b_ c_ vectors */
@@ -108,6 +94,22 @@ namespace hig {
       friend class Grain;
 
   }; // class Lattice
+
+
+  class GrainScaling {
+    private:
+      vector3_t mean_;
+      vector3_t stddev_;
+      std::vector<StatisticType> dist_;
+      std::vector<int> nvals_;
+    public:
+      GrainScaling();
+      void init();
+      void clear();
+    friend class Grain;
+    friend class Structure;
+  }; // class GrainScaling
+
 
   class GrainOrientations {
 
@@ -252,7 +254,8 @@ namespace hig {
 
   class Grain {
     private:
-      std::string shape_key_;
+      //std::string shape_key_;
+      std::string unitcell_key_;
       std::string layer_key_;
       bool in_layer_;
       GrainScaling scaling_;  
@@ -274,7 +277,7 @@ namespace hig {
 
       bool lattice_abc_set() { return lattice_.abc_set(); }
 
-      void shape_key(std::string s) { shape_key_ = s; }
+      void unitcell_key(std::string s) { unitcell_key_ = s; }
       void layer_key(std::string s) { layer_key_ = s; in_layer_ = true; }
 
       void lattice_vec_a(vector3_t v) { lattice_.a(v); }
@@ -400,7 +403,7 @@ namespace hig {
       void lattice_vec_c(real_t a, real_t b, real_t c) { grain_.lattice_vec_c(a, b, c); }
       void lattice_abc_set(bool v) { grain_.lattice_abc_set(v); }
 
-      void grain_shape_key(std::string s) { grain_.shape_key(s); }
+      void grain_unitcell_key(std::string s) { grain_.unitcell_key(s); }
       void grain_layer_key(std::string s) { grain_.layer_key(s); }
 
       void grain_transvec(vector3_t v) { grain_.transvec(v); }
@@ -447,12 +450,12 @@ namespace hig {
       void grain_scaling_a_stat (StatisticType s) { grain_.scaling_.dist_[0] = s; }
       void grain_scaling_b_stat (StatisticType s) { grain_.scaling_.dist_[1] = s; }
       void grain_scaling_c_stat (StatisticType s) { grain_.scaling_.dist_[2] = s; }
-            void grain_scaling_a_mean (real_t num) { grain_.scaling_.mean_[0] = num; } 
-            void grain_scaling_b_mean (real_t num) { grain_.scaling_.mean_[1] = num; } 
-            void grain_scaling_c_mean (real_t num) { grain_.scaling_.mean_[2] = num; }
-            void grain_scaling_a_stddev (real_t num) { grain_.scaling_.stddev_[0] = num; }
-            void grain_scaling_b_stddev (real_t num) { grain_.scaling_.stddev_[1] = num; } 
-            void grain_scaling_c_stddev (real_t num) { grain_.scaling_.stddev_[2] = num; }
+      void grain_scaling_a_mean (real_t num) { grain_.scaling_.mean_[0] = num; } 
+      void grain_scaling_b_mean (real_t num) { grain_.scaling_.mean_[1] = num; } 
+      void grain_scaling_c_mean (real_t num) { grain_.scaling_.mean_[2] = num; }
+      void grain_scaling_a_stddev (real_t num) { grain_.scaling_.stddev_[0] = num; }
+      void grain_scaling_b_stddev (real_t num) { grain_.scaling_.stddev_[1] = num; } 
+      void grain_scaling_c_stddev (real_t num) { grain_.scaling_.stddev_[2] = num; }
 
       void ensemble_spacing(vector3_t v) { ensemble_.spacing(v); }
       void ensemble_maxgrains(vector3_t v) { ensemble_.maxgrains(v); }
@@ -485,7 +488,7 @@ namespace hig {
       const GrainRepetitions& grain_repetitiondist() const { return grain_.repetitiondist_; }
       std::string grain_orientation() { return ensemble_.orientations_.stat(); }
       RefractiveIndex grain_refindex() { return grain_.refindex_; }
-      const std::string& grain_shape_key() { return grain_.shape_key_; }
+      const std::string& grain_unitcell_key() { return grain_.unitcell_key_; }
       const std::string& grain_layer_key() { return grain_.layer_key_; }
       bool grain_in_layer() { return grain_.in_layer_; }
       vector3_t grain_transvec() { return grain_.transvec_; }

@@ -104,12 +104,19 @@ namespace hig {
     layer_order_token,
     layer_thickness_token,
 
+    /* unitcell components */
+    unitcell_token,
+    unitcell_element_token,
+    unitcell_element_skey_token,
+    unitcell_element_locations_token,
+
     /* structure components */
     struct_token,
     struct_iratio_token,                      /* intensity ratio, used for multiple structures */
     struct_grain_token,
-    struct_grain_skey_token,
+    //struct_grain_skey_token,
     struct_grain_lkey_token,
+    struct_grain_ukey_token,
     struct_grain_lattice_token,
     struct_grain_lattice_a_token,
     struct_grain_lattice_b_token,

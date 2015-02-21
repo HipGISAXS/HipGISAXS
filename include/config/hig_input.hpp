@@ -28,10 +28,12 @@
 #include <string>
 
 #include <common/globals.hpp>
+#include <common/constants.hpp>
 #include <config/tokens.hpp>
 #include <config/token_mapper.hpp>
 #include <model/shape.hpp>
 #include <model/layer.hpp>
+#include <model/unitcell.hpp>
 #include <model/structure.hpp>
 #include <model/inst_scattering.hpp>
 #include <model/inst_detector.hpp>
@@ -54,6 +56,7 @@ namespace hig {
       shape_list_t shapes_;
       layer_list_t layers_;
       layer_key_t layer_key_map_;
+      unitcell_list_t unitcells_;
       structure_list_t structures_;
       ScatteringParams scattering_;
       DetectorParams detector_;
@@ -75,6 +78,9 @@ namespace hig {
                           // and popped on '}' and ']'
       Shape curr_shape_;
       ShapeParam curr_shape_param_;
+      Unitcell curr_unitcell_;
+      Unitcell::element_list_t curr_element_list_;
+      string_t curr_element_shape_key_;
       Layer curr_layer_;
       Structure curr_structure_;
       std::vector <real_t> curr_vector_;    // to store values in a vector while parsing it
@@ -183,6 +189,7 @@ namespace hig {
       /* testers */
 
       void print_shapes();
+      void print_unitcells();
       void print_layers();
       void print_structures();
       void print_scattering_params();
@@ -259,15 +266,23 @@ namespace hig {
       StructCorrelationType param_structcorrelation() const { return compute_.correlation_; }
       std::string palette() const { return compute_.palette_; }
 
-      Shape* shape(Structure& s) { return &(shapes_[s.grain_shape_key()]); }
       const Lattice* lattice(Structure& s) { return s.lattice(); }
-      ShapeName shape_name(Structure& s) { return shapes_[s.grain_shape_key()].name(); }
-      real_t  shape_tau(Structure& s) { return shapes_[s.grain_shape_key()].ztilt(); }
-      real_t shape_eta(Structure& s) { return shapes_[s.grain_shape_key()].xyrotation(); }
-      vector3_t shape_originvec(Structure& s) { return shapes_[s.grain_shape_key()].originvec(); }
-      std::string shape_filename(Structure& s) { return shapes_[s.grain_shape_key()].filename(); }
-      shape_param_list_t& shape_params(Structure& s) {
-        return shapes_[s.grain_shape_key()].param_list(); }
+      const Unitcell* unitcell(Structure& s) { return &(unitcells_.at(s.grain_unitcell_key())); }
+      //Shape* shape(Structure& s) { return &(shapes_[s.grain_shape_key()]); }
+      //ShapeName shape_name(Structure& s) { return shapes_[s.grain_shape_key()].name(); }
+      //real_t shape_tau(Structure& s) { return shapes_[s.grain_shape_key()].ztilt(); }
+      //real_t shape_eta(Structure& s) { return shapes_[s.grain_shape_key()].xyrotation(); }
+      //vector3_t shape_originvec(Structure& s) { return shapes_[s.grain_shape_key()].originvec(); }
+      //std::string shape_filename(Structure& s) { return shapes_[s.grain_shape_key()].filename(); }
+      //shape_param_list_t& shape_params(Structure& s) {
+      //  return shapes_[s.grain_shape_key()].param_list(); }
+      ShapeName shape_name(const string_t& key) { return shapes_[key].name(); }
+      real_t shape_tau(const string_t& key) { return shapes_[key].ztilt(); }
+      real_t shape_eta(const string_t& key) { return shapes_[key].xyrotation(); }
+      vector3_t shape_originvec(const string_t& key) { return shapes_[key].originvec(); }
+      std::string shape_filename(const string_t& key) { return shapes_[key].filename(); }
+      shape_param_list_t& shape_params(const string_t& key) {
+        return shapes_[key].param_list(); }
       bool struct_in_layer() { return struct_in_layer_; }
 
       unsigned int read_shape_file_data(const char*);

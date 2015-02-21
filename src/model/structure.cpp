@@ -299,7 +299,7 @@ namespace hig {
 
 
   void Grain::clear() {
-    shape_key_.clear();
+    unitcell_key_.clear();
     layer_key_.clear();
     in_layer_ = false;
         scaling_.clear();
@@ -361,7 +361,7 @@ namespace hig {
   void Structure::print() {
     std::cout << " key_ = " << key_ << std::endl;
     std::cout << " grain_: " << std::endl
-          << "  shape_key_ = " << grain_.shape_key_ << std::endl
+          << "  unitcell_key_ = " << grain_.unitcell_key_ << std::endl
           << "  layer_ley_ = " << grain_.layer_key_ << std::endl
           << "  scaling_a_ = " << grain_.scaling_.mean_[0] << std::endl
           << "  scaling_b_ = " << grain_.scaling_.mean_[1] << std::endl

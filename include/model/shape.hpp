@@ -175,7 +175,7 @@ namespace hig {
 
   }; // class Shape
 
-  typedef std::unordered_map <std::string, Shape> shape_list_t;  // ??????
+  typedef std::unordered_map <std::string, Shape> shape_list_t;
   typedef shape_list_t::iterator shape_iterator_t;
 
 } // namespace hig
