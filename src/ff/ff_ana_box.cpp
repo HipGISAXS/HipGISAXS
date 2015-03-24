@@ -41,7 +41,7 @@ namespace hig {
   inline complex_t FormFactorBox(complex_t qx, complex_t qy, complex_t qz, 
           real_t length, real_t width, real_t height) {
       real_t vol = length * width * height;
-      complex_t exp_val = std::exp(complex_t(0,1) * 0.5 * qz * height);
+      complex_t exp_val = std::exp(CMPLX_ONE_ * 0.5 * qz * height);
       complex_t sinc_val = sinc(0.5 * qx * length) * sinc(0.5 * qy * width) 
           * sinc(0.5 * qz * height);
       return (vol * exp_val * sinc_val);
@@ -50,8 +50,7 @@ namespace hig {
   bool AnalyticFormFactor::compute_box(unsigned int nqx, unsigned int nqy, unsigned int nqz,
                     std::vector<complex_t>& ff,
                     ShapeName shape, shape_param_list_t& params,
-                    real_t tau, real_t eta, vector3_t &transvec,
-                    vector3_t &rot1, vector3_t &rot2, vector3_t &rot3) {
+                    real_t tau, real_t eta, vector3_t &transvec){
     std::vector <real_t> x, distr_x;  // for x dimension: param_xsize  param_edge
     std::vector <real_t> y, distr_y;  // for y dimension: param_ysize  param_edge
     std::vector <real_t> z, distr_z;  // for z dimension: param_height param_edge
@@ -115,19 +114,18 @@ namespace hig {
       #pragma omp parallel for 
       for(unsigned int i = 0; i < nqz; ++ i) {
         unsigned int j = i % nqy;
-        complex_t mqx, mqy, mqz;
-        compute_meshpoints(QGrid::instance().qx(j), QGrid::instance().qy(j),
-                   QGrid::instance().qz_extended(i), rot_, mqx, mqy, mqz);
+        std::vector<complex_t> mq = rot_.rotate(QGrid::instance().qx(j), 
+                QGrid::instance().qy(j), QGrid::instance().qz_extended(i));
         complex_t temp_ff(0.0, 0.0);
         for(unsigned int i_z = 0; i_z < z.size(); ++ i_z) {
           for(unsigned int i_y = 0; i_y < y.size(); ++ i_y) {
             for(unsigned int i_x = 0; i_x < x.size(); ++ i_x) {
               real_t wght = distr_x[i_x] * distr_y[i_y] * distr_z[i_z];
-              temp_ff += FormFactorBox(mqx, mqy, mqz, x[i_x], y[i_y], z[i_z]) * wght;
+              temp_ff += FormFactorBox(mq[0], mq[1], mq[2], x[i_x], y[i_y], z[i_z]) * wght;
             } // for i_x
           } // for i_y
         } // for i_z
-        complex_t temp7 = (mqx * transvec[0] + mqy * transvec[1] + mqz * transvec[2]);
+        complex_t temp7 = (mq[0] * transvec[0] + mq[1] * transvec[1] + mq[2] * transvec[2]);
         /*if(!(boost::math::isfinite(temp7.real()) && boost::math::isfinite(temp7.imag()))) {
           std::cerr << "---------------- here it is ------ " << j_x << ", "
                 << j_y << ", " << j_z << std::endl;

@@ -41,34 +41,23 @@
 
 namespace hig {
 
-  bool NumericFormFactor::init(vector3_t& rot1, vector3_t& rot2, vector3_t& rot3,
-                  std::vector<complex_t>& ff) {
+  bool NumericFormFactor::init(RotMatrix_t & rot, std::vector<complex_t>& ff) {
     nqy_ = QGrid::instance().nqy();
     nqz_ = QGrid::instance().nqz_extended();
-
     ff.clear();
-
-    rot_ = new (std::nothrow) real_t[9];
-    //rot_[0] = rot1[0]; rot_[1] = rot1[1]; rot_[2] = rot1[2];
-    //rot_[3] = rot2[0]; rot_[4] = rot2[1]; rot_[5] = rot2[2];
-    //rot_[6] = rot3[0]; rot_[7] = rot3[1]; rot_[8] = rot3[2];
-
-    rot_[0] = 1; rot_[1] = 0; rot_[2] = 0;
-    rot_[3] = 0; rot_[4] = 1; rot_[5] = 0;
-    rot_[6] = 0; rot_[7] = 0; rot_[8] = 1;
-
+    rot_ = rot;
     return true;
   } // NumericFormFactor::init()
 
   bool NumericFormFactor::compute2(const char * filename, complex_vec_t &ff,
-          vector3_t & rot1, vector3_t & rot2, vector3_t & rot_3
+          RotMatrix_t & rot
 #ifdef USE_MPI
           , woo::MultiNode & world_comm, std::string comm_key
 #endif
           ) {
 
     // initialize 
-    init (rot1, rot2, rot2, ff);
+    init (rot, ff);
 
     // read file
     std::vector<vertex_t> vertices;
@@ -201,12 +190,15 @@ namespace hig {
 
 
   bool NumericFormFactor::compute(const char * filename, complex_vec_t & ff,
-          vector3_t & rot1, vector3_t & rot2, vector3_t & rot3
+          RotMatrix_t & rot
 #ifdef USE_MPI
           , woo::MultiNode &world_comm, std::string comm_key
 #endif
           ){
     real_t comp_time = 0.0;
+
+    // initialize 
+    init (rot, ff);
 
     unsigned int nqy = QGrid::instance().nqy();
     unsigned int nqz = QGrid::instance().nqz_extended();

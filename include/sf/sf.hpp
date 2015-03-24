@@ -30,6 +30,8 @@
 #include <common/typedefs.hpp>
 #include <common/globals.hpp>
 #include <model/structure.hpp>
+#include <numerics/matrix.hpp>
+
 #ifdef USE_GPU
   #include <sf/gpu/sf_gpu.cuh>
 #endif
@@ -57,14 +59,14 @@ namespace hig {
       void clear(void);
 
       bool compute_structure_factor(std::string, vector3_t, Lattice*, vector3_t, vector3_t,
-                      vector3_t, vector3_t, vector3_t
+                      RotMatrix_t &
                       #ifdef USE_MPI
                         , woo::MultiNode&, std::string
                       #endif
                       );
       #ifdef SF_GPU
       bool compute_structure_factor_gpu(std::string, vector3_t, Lattice*, vector3_t, vector3_t,
-                      vector3_t, vector3_t, vector3_t
+                      RotMatrix_t &
                       #ifdef USE_MPI
                         , woo::MultiNode&, std::string
                       #endif

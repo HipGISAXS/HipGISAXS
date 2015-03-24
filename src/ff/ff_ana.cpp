@@ -36,8 +36,7 @@ namespace hig {
   // TODO: decompose into two init functions:
   //   one for overall (sets qgrid in gff_),
   //   other for each run/invocation (sets rotation matrices)
-  bool AnalyticFormFactor::init(vector3_t &rot1, vector3_t &rot2, vector3_t &rot3,
-                  std::vector<complex_t> &ff) {
+  bool AnalyticFormFactor::init(RotMatrix_t & rot, std::vector<complex_t> &ff) {
     nqx_ = QGrid::instance().nqx();
     nqy_ = QGrid::instance().nqy();
     nqz_ = QGrid::instance().nqz_extended();
@@ -50,10 +49,7 @@ namespace hig {
     #endif // FF_ANA_GPU
 
     // rotation matrices are new for each ff calculation
-    rot_ = new (std::nothrow) real_t[9];
-    rot_[0] = rot1[0]; rot_[1] = rot1[1]; rot_[2] = rot1[2];
-    rot_[3] = rot2[0]; rot_[4] = rot2[1]; rot_[5] = rot2[2];
-    rot_[6] = rot3[0]; rot_[7] = rot3[1]; rot_[8] = rot3[2];
+    rot_ = rot;
 
     return true;
   } // AnalyticFormFactor::init()
@@ -70,7 +66,7 @@ namespace hig {
   bool AnalyticFormFactor::compute(ShapeName shape, real_t tau, real_t eta, vector3_t transvec,
                                     std::vector<complex_t>& ff,
                                     shape_param_list_t& params, real_t single_layer_thickness,
-                                    vector3_t rot1, vector3_t rot2, vector3_t rot3
+                                    RotMatrix_t & rot
                                     #ifdef USE_MPI
                                       , woo::MultiNode& world_comm, std::string comm_key
                                     #endif
@@ -86,8 +82,7 @@ namespace hig {
 
     switch(shape) {
       case shape_box:            // cube or box
-        if(!compute_box(nqx_, nqy_, nqz_, ff, shape, params, tau, eta, transvec,
-                rot1, rot2, rot3)) {
+        if(!compute_box(nqx_, nqy_, nqz_, ff, shape, params, tau, eta, transvec)) {
           std::cerr << "error: something went wrong while computing FF for a box"
                 << std::endl;
           return false;
@@ -311,32 +306,5 @@ namespace hig {
 
     return true;
   } // AnalyticFormFactor::param_distribution()
-
-  /*
-  void AnalyticFormFactor::compute_meshpoints(const real_t qx, const real_t qy, const complex_t qz,
-      complex_t & mqx, complex_t & mqy, complex_t & mqz) {
-    mqx = qx * rot_[0] + qy * rot_[1] + qz * rot_[2];
-    mqy = qx * rot_[3] + qy * rot_[4] + qz * rot_[5];
-    mqz = qx * rot_[6] + qy * rot_[7] + qz * rot_[8];
-  }
-  */
-
-  void AnalyticFormFactor::compute_meshpoints(const real_t qx, const real_t qy, const complex_t qz,
-                        const real_t* rot,
-                        complex_t& mqx, complex_t& mqy, complex_t& mqz) {
-    // FIXME: check which one is correct ...
-    // x and y swapped
-    mqx = qx * rot[0] + qy * rot[1] + qz * rot[2];
-    mqy = qx * rot[3] + qy * rot[4] + qz * rot[5];
-    mqz = qx * rot[6] + qy * rot[7] + qz * rot[8];
-    // original
-    /*mqx = qy * rot[0] + qx * rot[1] + qz * rot[2];
-    mqy = qy * rot[3] + qx * rot[4] + qz * rot[5];
-    mqz = qy * rot[6] + qx * rot[7] + qz * rot[8];*/
-    // rotation transposed
-    /*mqx = qx * rot[0] + qy * rot[3] + qz * rot[6];
-    mqy = qx * rot[1] + qy * rot[4] + qz * rot[7];
-    mqz = qx * rot[2] + qy * rot[5] + qz * rot[8];*/
-  } // AnalyticFormFactor::compute_meshpoints()
 
 } // namespace hig

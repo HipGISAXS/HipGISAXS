@@ -27,6 +27,7 @@
 
 #include <common/typedefs.hpp>
 #include <common/constants.hpp>
+#include <numerics/matrix.hpp>
 
 namespace hig {
 
@@ -60,29 +61,29 @@ namespace hig {
                 const std::vector<real_t>&, const std::vector<real_t>&,
                 const std::vector<real_t>&, const std::vector<real_t>&,
                 const std::vector<real_t>&, const std::vector<real_t>&,
-                const real_t*, const std::vector<real_t>&, std::vector<complex_t>&);
+                const RotMatrix_t &, const std::vector<real_t>&, std::vector<complex_t>&);
       bool compute_cylinder(const real_t, const real_t,
                 const std::vector<real_t>&, const std::vector<real_t>&,
                 const std::vector<real_t>&, const std::vector<real_t>&,
-                const real_t*, const std::vector<real_t>&, std::vector<complex_t>&);
+                const RotMatrix_t &, const std::vector<real_t>&, std::vector<complex_t>&);
       bool compute_horizontal_cylinder(const real_t, const real_t,
                 const std::vector<real_t>&, const std::vector<real_t>&,
                 const std::vector<real_t>&, const std::vector<real_t>&,
-                const real_t*, const std::vector<real_t>&, std::vector<complex_t>&);
+                const RotMatrix_t &, const std::vector<real_t>&, std::vector<complex_t>&);
       bool compute_random_cylinders(const real_t, const real_t,
                 const std::vector<real_t>&, const std::vector<real_t>&,
                 const std::vector<real_t>&, const std::vector<real_t>&,
-                const real_t*, const std::vector<real_t>&, std::vector<complex_t>&);
+                const RotMatrix_t &, const std::vector<real_t>&, std::vector<complex_t>&);
       bool compute_sphere(const std::vector<real_t>&, const std::vector<real_t>&,
-                const real_t*, const std::vector<real_t>&, std::vector<complex_t>&);
+                const RotMatrix_t &, const std::vector<real_t>&, std::vector<complex_t>&);
       bool compute_prism3(const real_t, const real_t,
                 const std::vector<real_t>&, const std::vector<real_t>&,
                 const std::vector<real_t>&, const std::vector<real_t>&,
-                const real_t*, const std::vector<real_t>&, std::vector<complex_t>&);
+                const RotMatrix_t &, const std::vector<real_t>&, std::vector<complex_t>&);
       bool compute_prism6(const real_t, const real_t,
                 const std::vector<real_t>&, const std::vector<real_t>&,
                 const std::vector<real_t>&, const std::vector<real_t>&,
-                const real_t*, const std::vector<real_t>&, std::vector<complex_t>&);
+                const RotMatrix_t &, const std::vector<real_t>&, std::vector<complex_t>&);
       bool compute_prism3x();
       bool compute_sawtooth_up();
       bool compute_sawtooth_down();
@@ -91,7 +92,7 @@ namespace hig {
                 const std::vector<real_t>&, const std::vector<real_t>&,
                 const std::vector<real_t>&, const std::vector<real_t>&,
                 const std::vector<real_t>&, const std::vector<real_t>&,
-                const real_t*, const std::vector<real_t>&, std::vector<complex_t>&);
+                const RotMatrix_t &, const std::vector<real_t>&, std::vector<complex_t>&);
       bool compute_truncated_cone();
 
   }; // class AnalyticFormFactorG

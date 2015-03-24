@@ -79,8 +79,7 @@ namespace hig {
       real_t temp_qx = QGrid::instance().qx(j_y);
       real_t temp_qy = QGrid::instance().qy(j_y);
       complex_t temp_qz = QGrid::instance().qz_extended(j_z);
-      complex_t mqx, mqy, mqz;
-      compute_meshpoints(temp_qx, temp_qy, temp_qz, rot_, mqx, mqy, mqz);
+      std::vector<complex_t> mq = rot_.rotate(temp_qx, temp_qy, temp_qz);
       real_t sg = sin(gamma);
       real_t cg = cos(gamma);
       real_t qx_rot = temp_qx * cg + temp_qy * sg;
@@ -120,7 +119,7 @@ namespace hig {
           } // for i_x
         } // for i_y
       } // for i_h
-      complex_t temp7 = (mqx * transvec[0] + mqy * transvec[1] + mqz * transvec[2]);
+      complex_t temp7 = (mq[0] * transvec[0] + mq[1] * transvec[1] + mq[2] * transvec[2]);
       ff[j_z] = temp_ff * exp(complex_t(-temp7.imag(), temp7.real()));
     } // for z
 

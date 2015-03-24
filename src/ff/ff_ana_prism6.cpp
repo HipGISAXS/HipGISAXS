@@ -86,25 +86,24 @@ namespace hig {
     #pragma omp parallel for 
     for(unsigned int z = 0; z < nqz_; ++ z) {
       unsigned int y = z % nqy_;
-      complex_t mqx, mqy, mqz;
-      compute_meshpoints(QGrid::instance().qx(y), QGrid::instance().qy(y),
-                QGrid::instance().qz_extended(z), rot_, mqx, mqy, mqz);
-      complex_t qm = tan(tau) * (mqx * sin(eta) + mqy * cos(eta));
-      complex_t temp1 = ((real_t) 4.0 * sqrt3) / (3.0 * mqy * mqy - mqx * mqx);
+      std::vector<complex_t> mq = rot_.rotate(QGrid::instance().qx(y), 
+              QGrid::instance().qy(y), QGrid::instance().qz_extended(z));
+      complex_t qm = tan(tau) * (mq[0] * sin(eta) + mq[1] * cos(eta));
+      complex_t temp1 = ((real_t) 4.0 * sqrt3) / (3.0 * mq[1] * mq[1] - mq[0] * mq[0]);
       complex_t temp_ff(0.0, 0.0);
       for(unsigned int i_h = 0; i_h < h.size(); ++ i_h) {
         for(unsigned int i_l = 0; i_l < l.size(); ++ i_l) {
-          complex_t rmqx = l[i_l] * mqx / sqrt3;
-          complex_t rmqy = l[i_l] * mqy;
+          complex_t rmqx = l[i_l] * mq[0] / sqrt3;
+          complex_t rmqy = l[i_l] * mq[1];
           complex_t temp2 = rmqy * rmqy *  sinc(rmqx) * sinc(rmqy);
           complex_t temp3 = cos(2.0 * rmqx);
           complex_t temp4 = cos(rmqy) * cos(rmqx);
           complex_t temp5 = temp1 * (temp2 + temp3 - temp4);
-          complex_t temp6 = fq_inv(mqz + qm, h[i_h]);
+          complex_t temp6 = fq_inv(mq[2] + qm, h[i_h]);
           temp_ff += temp5 * temp6;
         } // for l
       } // for h
-      complex_t temp7 = (mqx * transvec[0] + mqy * transvec[1] + mqz * transvec[2]);
+      complex_t temp7 = (mq[0] * transvec[0] + mq[1] * transvec[1] + mq[2] * transvec[2]);
       ff[z] = temp_ff * exp(complex_t(-temp7.imag(), temp7.real()));
     } // for z
 #endif // FF_ANA_GPU

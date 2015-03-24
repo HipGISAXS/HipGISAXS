@@ -97,7 +97,7 @@ namespace hig {
 
       /* wrapper over sf function */
       bool structure_factor(StructureFactor&, std::string, vector3_t&, Lattice*&, 
-                    vector3_t&, vector3_t&, vector3_t&, vector3_t&, vector3_t&
+                    vector3_t&, vector3_t&, RotMatrix_t &
                   #ifdef USE_MPI
                     , std::string
                   #endif
@@ -105,7 +105,7 @@ namespace hig {
 
       /* wrapper over ff function */
       bool form_factor(FormFactor&, ShapeName, std::string, shape_param_list_t&, vector3_t&,
-                  real_t, real_t, vector3_t&, vector3_t&, vector3_t&
+                  real_t, real_t, RotMatrix_t &
                   #ifdef USE_MPI
                     , std::string
                   #endif

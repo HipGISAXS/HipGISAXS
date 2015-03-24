@@ -63,7 +63,7 @@ namespace hig {
 
       /* create the Q-grid */
       bool create(real_t, real_t, real_t, int);
-      bool create_qz_extended(real_t, real_t, complex_t, complex_t);
+      bool create_qz_extended(real_t, real_t, complex_t); 
       bool create_test();
 
       /* for fitting */

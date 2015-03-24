@@ -38,7 +38,6 @@ namespace hig {
   extern __constant__ real_t tau_d;
   extern __constant__ real_t eta_d;
   extern __constant__ real_t transvec_d[3];
-  extern __constant__ real_t rot_d[9];
 
   /** Form Factor of Box:
    *  L : (real) Length of the box 
@@ -58,6 +57,7 @@ namespace hig {
  
   __global__ void ff_box_kernel (unsigned int nqy, unsigned int nqz, 
           real_t * qx, real_t * qy, cucomplex_t * qz, cucomplex_t * ff,
+          RotMatrix_t rot,
           int nx, real_t * x, real_t * distr_x,
           int ny, real_t * y, real_t * distr_y,
           int nz, real_t * z, real_t * distr_z) {
@@ -66,7 +66,7 @@ namespace hig {
       int i_y = i_z % nqy;
       cucomplex_t c_neg_unit = make_cuC(REAL_ZERO_, REAL_MINUS_ONE_);
       cucomplex_t mqx, mqy, mqz;
-      compute_meshpoints(qx[i_y], qy[i_y], qz[i_z], rot_d, mqx, mqy, mqz);
+      rot.rotate(qx[i_y], qy[i_y], qz[i_z], mqx, mqy, mqz);
       cucomplex_t temp_ff = make_cuC(REAL_ZERO_, REAL_ZERO_);
       for (int i = 0; i < nx; i++){
         for (int j = 0; j < ny; j++){
@@ -88,7 +88,7 @@ namespace hig {
                   const std::vector<real_t>& distr_y,
                   const std::vector<real_t>& z,
                   const std::vector<real_t>& distr_z,
-                  const real_t* rot_h, const std::vector<real_t>& transvec,
+                  const RotMatrix_t & rot, const std::vector<real_t>& transvec,
                   std::vector<complex_t>& ff) {
     unsigned int n_x = x.size(), n_distr_x = distr_x.size();
     unsigned int n_y = y.size(), n_distr_y = distr_y.size();
@@ -122,9 +122,6 @@ namespace hig {
     cudaMemcpy(distr_z_d, distr_z_h, n_distr_z * sizeof(real_t), cudaMemcpyHostToDevice);
 
     //run_init(rot_h, transvec);
-    cudaMemcpyToSymbol(tau_d, &tau, sizeof(real_t), 0, cudaMemcpyHostToDevice);
-    cudaMemcpyToSymbol(eta_d, &eta, sizeof(real_t), 0, cudaMemcpyHostToDevice);
-    cudaMemcpyToSymbol(rot_d, rot_h, 9*sizeof(real_t), 0, cudaMemcpyHostToDevice); 
     cudaMemcpyToSymbol(transvec_d, transvec_h, 3*sizeof(real_t), 0, cudaMemcpyHostToDevice); 
 
     int num_threads = 256;
@@ -136,6 +133,7 @@ namespace hig {
     // the kernel
     ff_box_kernel <<<num_blocks, num_threads >>> (nqy_, nqz_, 
             qx_, qy_, qz_, ff_, 
+            rot,
             n_x, x_d, distr_x_d, 
             n_y, y_d, distr_y_d,
             n_z, z_d, distr_z_d);

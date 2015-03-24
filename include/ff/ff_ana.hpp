@@ -35,6 +35,8 @@
 #include <common/enums.hpp>
 #include <model/shape.hpp>
 
+#include <numerics/matrix.hpp>
+
 #ifdef USE_GPU
   #include <ff/gpu/ff_ana_gpu.cuh>
 #endif
@@ -46,8 +48,8 @@ namespace hig {
       unsigned int nqx_;
       unsigned int nqy_;
       unsigned int nqz_;
-
-      real_t *rot_;
+      RotMatrix_t rot_;
+      
 
       #ifdef FF_ANA_GPU
         AnalyticFormFactorG gff_;
@@ -57,13 +59,12 @@ namespace hig {
       AnalyticFormFactor() { }
       ~AnalyticFormFactor() { }
 
-      bool init(vector3_t&, vector3_t&, vector3_t&, std::vector<complex_t> &ff);
+      bool init(RotMatrix_t &, std::vector<complex_t> &);
       void clear();
 
-      bool compute(ShapeName shape, real_t tau, real_t eta, vector3_t transvec,
+      bool compute(ShapeName , real_t , real_t , vector3_t ,
             std::vector<complex_t>&,
-            shape_param_list_t& params, real_t single_layer_thickness_,
-            vector3_t rot1, vector3_t rot2, vector3_t rot3
+            shape_param_list_t& , real_t , RotMatrix_t &
             #ifdef USE_MPI
               , woo::MultiNode& multi_node, std::string comm_key
             #endif
@@ -74,8 +75,7 @@ namespace hig {
       bool compute_box(unsigned int nqx, unsigned int nqy, unsigned int nqz,
               std::vector<complex_t>& ff,
               ShapeName shape, shape_param_list_t& params,
-              real_t tau, real_t eta, vector3_t &transvec,
-              vector3_t &rot1, vector3_t &rot2, vector3_t &rot3);
+              real_t tau, real_t eta, vector3_t &transvec);
       bool compute_cylinder(shape_param_list_t&, real_t, real_t,
               std::vector<complex_t>&, vector3_t);
       bool compute_horizontal_cylinder(real_t, real_t, shape_param_list_t&, vector3_t,

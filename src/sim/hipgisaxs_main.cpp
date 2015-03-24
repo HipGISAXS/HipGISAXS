@@ -26,6 +26,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <cmath>
+#include <iomanip>
 #ifdef _OPENMP
 #include <omp.h>
 #endif // _OPENMP
@@ -37,6 +38,7 @@
 #include <common/typedefs.hpp>
 #include <utils/utilities.hpp>
 #include <numerics/matrix.hpp>
+#include <numerics/numeric_utils.hpp>
 
 #if defined USE_GPU || defined FF_ANA_GPU || defined FF_NUM_GPU
   #include <init/gpu/init_gpu.cuh>
@@ -1186,7 +1188,7 @@ namespace hig {
             fftimer.resume();
             //read_form_factor("curr_ff.out");
             form_factor(eff, shape_name, shape_file, shape_params, curr_transvec,
-                  shape_tau, shape_eta, r_tot1, r_tot2, r_tot3
+                  shape_tau, shape_eta, rot
                   #ifdef USE_MPI
                     , grain_comm
                   #endif
@@ -1194,8 +1196,8 @@ namespace hig {
             fftimer.pause();
 
             // for each location, add the FFs
-            for(unsigned int i = 0; i < nqz_; ++ i) ff[i] += eff[i];  // insert distance factor thingy ...
-
+            
+            for(unsigned int i = 0; i < nqz_extended_; ++ i) ff[i] += eff[i];  // insert distance factor thingy ...
           } // for l
         } // for e
 
@@ -1207,7 +1209,6 @@ namespace hig {
 
         //ff.print_ff(nqx_, nqy_, nqz_extended_);
         //ff.printff(nqx_, nqy_, nqz_extended_);
-        //ff.save (nrow_, ncol_, "ff.out");
 
         // save form factor data on disk
         /*if(master) {
@@ -1256,7 +1257,7 @@ namespace hig {
           StructureFactor sf;
           sftimer.resume();
           structure_factor(sf, HiGInput::instance().experiment(), center, curr_lattice,
-                  grain_repeats, grain_scaling, r_tot1, r_tot2, r_tot3
+                  grain_repeats, grain_scaling, rot
                   #ifdef USE_MPI
                     , grain_comm
                   #endif
@@ -1348,10 +1349,10 @@ namespace hig {
 //                                          rk2[curr_index] * ff[curr_index_1] +
 //                                          rk1[curr_index] * ff[curr_index_2] +
 //                                          rk1rk2[curr_index] * ff[curr_index_3]);
-                                      (h0[curr_index] * sf[curr_index_0] * ff[curr_index_0] +
-                                      rk2[curr_index] * sf[curr_index_1] * ff[curr_index_1] +
-                                      rk1[curr_index] * sf[curr_index_2] * ff[curr_index_2] +
-                                      rk1rk2[curr_index] * sf[curr_index_3] * ff[curr_index_3]);
+                                      (fc[curr_index_0] * sf[curr_index_0] * ff[curr_index_0] +
+                                       fc[curr_index_1] * sf[curr_index_1] * ff[curr_index_1] +
+                                       fc[curr_index_2] * sf[curr_index_2] * ff[curr_index_2] +
+                                       fc[curr_index_3] * sf[curr_index_3] * ff[curr_index_3]);
                       #ifdef DEBUG
                       if(std::isnan(base_id[curr_index].real()) ||
                           std::isnan(base_id[curr_index].imag())) {
@@ -1687,23 +1688,21 @@ namespace hig {
   bool HipGISAXS::structure_factor(StructureFactor& sf,
                   std::string expt, vector3_t& center, Lattice* &curr_lattice,
                   vector3_t& grain_repeats, vector3_t& grain_scaling,
-                  vector3_t& r_tot1, vector3_t& r_tot2, vector3_t& r_tot3
+                  RotMatrix_t & rot
                   #ifdef USE_MPI
                     , woo::comm_t comm_key
                   #endif
                   ) {
     #ifndef SF_GPU
       return sf.compute_structure_factor(expt, center, curr_lattice, grain_repeats,
-                      grain_scaling,
-                      r_tot1, r_tot2, r_tot3
+                      grain_scaling, rot
                       #ifdef USE_MPI
                         , multi_node_, comm_key
                       #endif
                       );
     #else
       return sf.compute_structure_factor_gpu(expt, center, curr_lattice, grain_repeats,
-                      grain_scaling,
-                      r_tot1, r_tot2, r_tot3
+                      grain_scaling, rot
                       #ifdef USE_MPI
                         , multi_node_, comm_key
                       #endif
@@ -1716,7 +1715,7 @@ namespace hig {
                 ShapeName shape_name, std::string shape_file,
                 shape_param_list_t& shape_params, vector3_t &curr_transvec,
                 real_t shp_tau, real_t shp_eta,
-                vector3_t &r_tot1, vector3_t &r_tot2, vector3_t &r_tot3
+                RotMatrix_t & rot
                 #ifdef USE_MPI
                   , woo::comm_t comm_key
                 #endif
@@ -1724,7 +1723,7 @@ namespace hig {
     #ifndef GPUSF
       return ff.compute_form_factor(shape_name, shape_file, shape_params,
                       single_layer_thickness_,
-                      curr_transvec, shp_tau, shp_eta, r_tot1, r_tot2, r_tot3
+                      curr_transvec, shp_tau, shp_eta, rot
                       #ifdef USE_MPI
                         , multi_node_, comm_key
                       #endif
@@ -1732,7 +1731,7 @@ namespace hig {
     #else
       return ff.compute_form_factor_gpu(shape_name, shape_file, shape_params,
                       single_layer_thickness_,
-                      curr_transvec, shp_tau, shp_eta, r_tot1, r_tot2, r_tot3
+                      curr_transvec, shp_tau, shp_eta, rot
                       #ifdef USE_MPI
                         , multi_node_, comm_key
                       #endif
@@ -1868,11 +1867,10 @@ namespace hig {
           return false;
         } // if
         // set aliases
-        rk1 = fc;              // re-check these ...
+        h0 = fc;              // re-check these ...
         rk2 = fc + imsize;
-        rk1rk2 = fc + 2 * imsize;
-        tk1tk2 = fc + 3 * imsize;
-        h0 = fc + 4 * imsize;
+        rk1 = fc + 2 * imsize;
+        rk1rk2 = fc + 3 * imsize;
       } else {
         std::cerr << "error: invalid number of layers in non-slicing scheme" << std::endl;
         return false;
@@ -1889,15 +1887,12 @@ namespace hig {
 
 
   bool HipGISAXS::layer_qgrid_qz(real_t alpha_i, complex_t dnl_j) {
-    real_t kzi_0 = -1.0 * k0_ * sin(alpha_i);
-    complex_t kzi_j = -1.0 * k0_ * sqrt((real_t)pow(sin(alpha_i), 2) - dnl_j);
 
-    if(!QGrid::instance().create_qz_extended(k0_, kzi_0, kzi_j, dnl_j)) {
+    if(!QGrid::instance().create_qz_extended(k0_, alpha_i, dnl_j)){
       std::cerr << "error: something went wrong while creating qz_extended" << std::endl;
       return false;
     } // if
     nqz_extended_ = QGrid::instance().nqz_extended();
-
     return true;
   } // HipGISAXS::layer_qgrid_qz()
 
@@ -1954,6 +1949,7 @@ namespace hig {
       return false;
     } // if
 
+
     for(unsigned int z = 0; z < nqz_; ++ z) {
       complex_t a1m_nkfz1, a1p_nkfz1;
       real_t kfz0 = QGrid::instance().qz(z) + kiz0;
@@ -1976,7 +1972,7 @@ namespace hig {
         complex_t temp4 = 2.0 * nkfz1 * lt;
         real_t temp3 = exp(-1.0 * temp4.imag());
         complex_t temp5 = exp(uniti * temp4.real());
-                  //((real_t)cos(temp4.real()) + uniti * sin(temp4.real()));
+                 
         complex_t temp6 = temp3 * temp5;
         a1m_nkfz1 = t01_nkfz1 /
               ((real_t) 1.0 + r01_nkfz1 * r12_nkfz1 * temp6);
@@ -1985,8 +1981,8 @@ namespace hig {
         fc[idx] = complex_t(1.0, 0.0);
       } // if-else
 
-      a1mf[idx] = a1m_nkfz1;
-      a1pf[idx] = a1p_nkfz1;
+      a1mf[z] = a1m_nkfz1;
+      a1pf[z] = a1p_nkfz1;
     } // for z
 
     // the element-element products
@@ -2008,12 +2004,16 @@ namespace hig {
 
   // optimize ...
   bool HipGISAXS::compute_fresnel_coefficients_top_buried(real_t alpha_i, complex_t* &fc) {
-    //complex_t tk1 = ((real_t) 2.0 * sin(alpha_i)) / ((real_t)sin(alpha_i) +
-    //                    sqrt((real_t)pow(sin(alpha_i), 2) - dns2_));
-    complex_t tk1 = ((real_t) (2.0 * sin(alpha_i))) /
-            ((real_t) sin(alpha_i) + sqrt((real_t)pow(sin(alpha_i), 2) - dns2_));
-    complex_t rk1 = tk1 - complex_t(1.0, 0.0);
-    
+
+    RefractiveIndex ns = substrate_refindex_;
+    complex_t ns2 = 2 * complex_t(ns.delta(), ns.beta());
+
+    // incoming wave
+    real_t sin_ai = std::sin(alpha_i);
+    real_t kzi  = -1 * k0_ * sin_ai;
+    complex_t tmp = std::sqrt(sin_ai * sin_ai - ns2);
+    complex_t rki = (sin_ai - tmp)/(sin_ai + tmp);
+
     size_t imsize = nrow_ * ncol_;
     fc = new (std::nothrow) complex_t[5 * imsize];
     if(fc == NULL) {
@@ -2021,30 +2021,19 @@ namespace hig {
       return false;
     } // if
 
-    for(unsigned int z = 0; z < nqz_; z ++) {
-        fc[z] = rk1;
-    } // for z
-
-    real_t k1z = -1.0 * k0_ * sin(alpha_i);
-    complex_t tk2, rk2;
-
     for(unsigned int z = 0; z < nqz_; ++ z) {
-      complex_t k2z = QGrid::instance().qz(z) + k1z;
-      if(k2z < 0) {
-        tk2 = complex_t(0.0, 0.0);
-        rk2 = complex_t(0.0, 0.0);
-        fc[0 * imsize + z] = complex_t(0.0, 0.0);
-        fc[4 * imsize + z] = complex_t(0.0, 0.0);
+      real_t kzf = QGrid::instance().qz(z) + kzi;
+      if(kzf < 0) {
+        fc[z] = fc[imsize + z] = fc[2*imsize + z] = fc[3*imsize + z] = CMPLX_ZERO_;
       } else {
-        complex_t sf = k2z / k0_;
-        tk2 = 2.0 * sf / (sf + sqrt(sf * sf - dns2_));
-        rk2 = tk2 - (real_t) 1.0;
-          fc[4 * imsize + z] = complex_t(1.0, 0.0);
-      } // if-else
-
-      fc[1 * imsize + z] = rk2;
-      fc[2 * imsize + z] = rk1 * rk2;
-      fc[3 * imsize + z] = tk1 * tk2;
+        real_t sin_af = kzf / k0_;
+        tmp = std::sqrt(sin_af * sin_af - ns2);
+        complex_t rkf = (sin_af - tmp)/(sin_af + tmp);
+        fc[z] = complex_t(1.0, 0);
+        fc[imsize + z] = rkf;
+        fc[2 * imsize + z] = rki;
+        fc[3 * imsize + z] = rki * rkf;
+      }
     } // for z
 
     return true;
@@ -2595,7 +2584,7 @@ namespace hig {
   // for testing
   bool HipGISAXS::write_qgrid(char* filename) {
     std::ofstream qout(filename);
-
+ 
     qout << nqx_ << " " << nqy_ << " " << nqz_extended_ << std::endl;
     for(unsigned int i = 0; i < nqx_; ++ i) {
       qout << QGrid::instance().qx(i) << " ";
@@ -2607,10 +2596,8 @@ namespace hig {
     qout << std::endl;
     for(unsigned int i = 0; i < nqz_extended_; ++ i) {
       qout << QGrid::instance().qz_extended(i).real() << " "
-          << QGrid::instance().qz_extended(i).imag() << " ";
-    } // for
-    qout << std::endl;
-
+          << QGrid::instance().qz_extended(i).imag();
+    }
     qout.close();
     return true;
   } // HipGISAXS::write_qgrid()

@@ -32,9 +32,17 @@
 namespace hig {
 
   /**
+   * sign of a type
+   */
+  template<typename type_t>
+  int sgn(type_t a){
+    if (a < 0) return -1;
+    else return 1;
+  }
+
+  /**
    * various min and max functions
    */
-
   /** compute the minimum of a and b
    * requires operator '>' to be defined for type_t
    */
