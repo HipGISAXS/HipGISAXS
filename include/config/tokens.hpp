@@ -147,6 +147,13 @@ namespace hig {
     struct_ensemble_orient_rot_angles_token,
     struct_ensemble_orient_rot_anglemean_token,
     struct_ensemble_orient_rot_anglesd_token,
+    struct_paracrystal,
+    struct_percusyevick,
+    struct_dims,
+    struct_paracrystal_xspacing,
+    struct_paracrystal_yspacing,
+    struct_paracrystal_domain_size,
+    struct_percusyevick_volfract,
 
     /* compute parameters */
     compute_token,
