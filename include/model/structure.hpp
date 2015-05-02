@@ -24,6 +24,7 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 #include <unordered_map>
 
 #include <common/globals.hpp>
@@ -33,6 +34,57 @@
 namespace hig {
 
   // make stuff private (with help of friend) ...
+
+  class Paracrystal {
+    private:
+      int dims_;
+      real_t dist_[2];
+      real_t sdev_[2];
+      real_t domsize_;
+      Paracrystal(const Paracrystal &){}
+      Paracrystal& operator= (const Paracrystal &){}
+    public:
+      Paracrystal() : dims_(1) {};
+
+      // the puts
+      void putDims(int d)          { dims_ = d;    }
+      void putDistYMean(real_t d)  { dist_[0] = d; }
+      void putDistXMean(real_t d)  { dist_[1] = d; }
+      void putDistYStddev(real_t d){ sdev_[0] = d; }
+      void putDistXStddev(real_t d){ sdev_[1] = d; }
+      void putDomainSize(real_t d) { domsize_ = d; }
+  
+      // ... and the gets
+      int    getDims()       { return dims_;    }
+      real_t getDomSize()    { return domsize_; }
+      real_t getDistYMean()  { return dist_[0]; }
+      real_t getDistXMean()  { return dist_[1]; }
+      real_t getDistYStddev(){ return sdev_[0]; }
+      real_t getDistXStddev(){ return sdev_[1]; }
+  };
+
+  class PercusYevick {
+    private:
+      int dims_;
+      real_t dia_;
+      real_t volf_;
+      PercusYevick(const PercusYevick &){}
+      PercusYevick& operator= (const PercusYevick &){}
+
+    public:
+      PercusYevick() : dims_(2) {}
+
+      // puts
+      void putDims(int d)       { dims_ = d;}
+      void putDiameter(real_t d){ dia_ = d; }
+      void putVolfract(real_t f){ volf_ = f;}
+
+      // gets
+      int getDims() { return dims_; }
+      real_t getDiameter(){ return dia_; }
+      real_t getVolfract(){ return volf_;}
+  };
+
 
   class Lattice {
     private:
@@ -378,10 +430,14 @@ namespace hig {
 
   class Structure {
     private:
+      int dims_;
       std::string key_;
       Grain grain_;
       Ensemble ensemble_;
       real_t iratio_;
+      StructureType type_;
+      std::shared_ptr<Paracrystal> paracrystal_;
+      std::shared_ptr<PercusYevick> percusyevick_;
 
     public:
       Structure();
@@ -471,6 +527,40 @@ namespace hig {
       void lattice_type(LatticeType l) { grain_.lattice_type(l); }
       void lattice_hkl(std::string l) { grain_.lattice_hkl(l); }
 
+      // **** liquids / begin ****
+      // paracrystal
+      
+      void putStructureType (StructureType d)    { type_ = d;                              }
+      StructureType getStructureType() const     { return type_;                           }
+      void paracrystal_init()                    { paracrystal_.reset(new Paracrystal());  
+                                                   type_ = paracrystal_type;               }
+      void paracrystal_putDimensions(int d)      { paracrystal_->putDims(d);               }
+      void paracrystal_putDistYMean(real_t d)    { paracrystal_->putDistYMean(d);          }
+      void paracrystal_putDistXMean(real_t d)    { paracrystal_->putDistXMean(d);          }
+      void paracrystal_putDistYStddev(real_t d)  { paracrystal_->putDistYStddev(d);        }
+      void paracrystal_putDistXStddev(real_t d)  { paracrystal_->putDistXStddev(d);        }
+      void paracrystal_putDomainSize(real_t d)   { paracrystal_->putDomainSize(d);         }
+      int  paracrystal_getDimensions() const     { return paracrystal_->getDims();         }
+      real_t paracrystal_getDomsSize() const     { return paracrystal_->getDomSize();      }
+      real_t paracrystal_getDistXMean() const    { return paracrystal_->getDistXMean();    }
+      real_t paracrystal_getDistYMean() const    { return paracrystal_->getDistYMean();    }
+      real_t paracrystal_getDistXStddev() const  { return paracrystal_->getDistXStddev();  }
+      real_t paracrystal_getDistYStddev() const  { return paracrystal_->getDistYStddev();  }
+
+      // percus-yevick
+      void percusyevick_init()                { percusyevick_.reset(new PercusYevick());   
+                                                type_ = percusyevick_type;                 }
+      void percusyevick_putDimensions(int d)  { percusyevick_->putDims(d);                 }
+      void percusyevick_putDiameter(real_t d) { percusyevick_->putDiameter(d);             }
+      void percusyevick_putVolf(real_t d)     { percusyevick_->putVolfract(d);             }
+      int  percusyevick_getDimensions() const { return percusyevick_->getDims();           }
+      real_t percusyevick_getDiameter() const { return percusyevick_->getDiameter();       }
+      real_t percusyevick_getVolfract() const { return percusyevick_->getVolfract();       }
+
+      std::shared_ptr<Paracrystal> paracrystal() const   { return paracrystal_; }
+      std::shared_ptr<PercusYevick> percusyevick() const { return percusyevick_;}
+      // **** liquids / end ****
+
       /* computers */
 
       bool construct_lattice_vectors() { return grain_.construct_lattice_vectors(); }
@@ -546,6 +636,10 @@ namespace hig {
       /* modifiers (updates) */
       bool update_param(const std::string&, real_t);
 
+
+      // copy constructor and assignment
+      Structure(const Structure & );
+      Structure & operator=(const Structure & );
       /* testers */
 
       void print();

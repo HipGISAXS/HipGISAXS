@@ -31,15 +31,11 @@
 #include <common/constants.hpp>
 
 namespace hig {
-
-  StructureFactor::StructureFactor(): sf_(NULL), nrow_(0), ncol_(0) {
-  } // StructureFactor::StructureFactor()
-
-
-  StructureFactor::StructureFactor(int nqx, int nqy) {
-    nrow_ = nqx;
-    ncol_ = nqy;
-    sf_ = new (std::nothrow) complex_t[nrow_ * ncol_];
+  StructureFactor::StructureFactor(){
+    ny_ = 0;
+    nz_ = 0;
+    type_ = default_type;
+    sf_ = nullptr;
     #ifdef SF_GPU
       gsf_.init();
     #endif
@@ -51,21 +47,17 @@ namespace hig {
   } // StructureFactor::~StructureFactor()
 
   StructureFactor & StructureFactor::operator=(const StructureFactor & rhs) {
-    /*nx_ = rhs.nx_;
     ny_ = rhs.ny_;
     nz_ = rhs.nz_;
-    size_t size = nx_ * ny_ * nz_;*/
-    nrow_ = rhs.nrow_;
-    ncol_ = rhs.ncol_;
-    size_t size = nrow_ * ncol_;
+    type_ = rhs.type_;
     if(sf_ != NULL) delete[] sf_;
-    sf_ = new (std::nothrow) complex_t[size];
+    sf_ = new (std::nothrow) complex_t[nz_];
     if(sf_ == NULL) {
       std::cerr << "error: could not allocate memeory" << std::endl;
-      // TODO should call MPI_Abort
+      // TODO should call MPI_Abort or raise exception
       std::exit(1);
     }
-    memcpy(sf_, rhs.sf_, size * sizeof(complex_t));
+    memcpy(sf_, rhs.sf_, nz_ * sizeof(complex_t));
     #ifdef SF_GPU
       gsf_.init();
     #endif
@@ -73,14 +65,12 @@ namespace hig {
   } // StructureFactor::operator=()
 
   StructureFactor & StructureFactor::operator+= (const StructureFactor & rhs) {
-    if(nrow_ != rhs.nrow_ || ncol_ != rhs.ncol_ ) {
+    if(nz_ != rhs.nz_){
       std::cerr << "error: cannot add non-similar shaped arrays" << std::endl;
       std::exit(1);
     }
-    //int num_of_el = nx_ * ny_ * nz_;
-    int num_of_el = nrow_ * ncol_;
     #pragma omp parallel for
-    for(int i = 0; i < num_of_el; ++ i) sf_[i] += rhs.sf_[i];
+    for(int i = 0; i < nz_; ++ i) sf_[i] += rhs.sf_[i];
     return *this;
   } // StructureFactor::operator+=()
 
@@ -88,8 +78,6 @@ namespace hig {
   void StructureFactor::clear() {
     if(sf_ != NULL) delete[] sf_;
     sf_ = NULL;
-    //nx_ = ny_ = nz_ = 0;
-    nrow_ = ncol_ = 0;
     #ifdef SF_GPU
       gsf_.destroy();
     #endif
@@ -100,7 +88,8 @@ namespace hig {
    */
   bool StructureFactor::compute_structure_factor(std::string expt, vector3_t center,
                Lattice* lattice, vector3_t repet, vector3_t scaling,
-               RotMatrix_t & rot
+               RotMatrix_t & rot,
+               std::shared_ptr<Paracrystal> pc, std::shared_ptr<PercusYevick> py
                #ifdef USE_MPI
                  , woo::MultiNode& world_comm, std::string comm_key
                #endif
@@ -111,16 +100,71 @@ namespace hig {
       bool master = true;
     #endif
 
-    woo::BoostChronoTimer maintimer, computetimer;
-
-    maintimer.start();
-
-    nrow_ = QGrid::instance().nrows();
-    ncol_ = QGrid::instance().ncols();
     ny_ = QGrid::instance().nqy();
     if(expt == "saxs") nz_ = QGrid::instance().nqz();
     else if(expt == "gisaxs") nz_ = QGrid::instance().nqz_extended();
     else return false;
+
+    woo::BoostChronoTimer maintimer, computetimer;
+    maintimer.start();
+
+    if(sf_ == NULL) {
+      sf_ = new (std::nothrow) complex_t[nz_];
+      if(sf_ == NULL) {
+        if(master)
+          std::cerr << "error: could not allocate memory for structure factor" << std::endl;
+        return false;
+      }
+    } // if
+
+    if (type_ == paracrystal_type){
+      if (pc == nullptr){
+        std::cerr <<"Error: no paracrystal data found" << std::endl;
+        return false;
+      }
+      if (pc->getDims() == 1){
+        if(!paracrystal1d(pc->getDistYMean(), pc->getDistYStddev(), pc->getDomSize())){
+          std::cerr << "Error: failed to calculate 1-D Paracrystal" << std::endl;
+          return false;
+        }
+        return true;
+      } else if (pc->getDims() == 2){
+        switch(lattice->type()){
+          case lattice_cubic:
+            if(!paracrystal2d_cubic(pc->getDistXMean(), pc->getDistYMean(), 
+                  pc->getDistXStddev(), pc->getDistYStddev(), pc->getDomSize())){
+              std::cerr<<"Error: falied to calculate 2-D Paracrystal" << std::endl;
+              return false;
+            }
+            break;
+          case lattice_hex:
+            if(!paracrystal2d_hex(pc->getDistXMean(), pc->getDistYMean(),
+                  pc->getDistXStddev(), pc->getDistYStddev(), pc->getDomSize())){
+              std::cerr<< "Error: failed to calculate 2-D Paracrystal" << std::endl; 
+              return false; 
+            }
+            break;
+          default:
+            std::cerr << "Error: Paracrystal is defined for \"cubic\" and \"hex\" lattice types only." << std::endl;
+            return false;
+        }
+        return true;
+      } else {
+        std::cerr <<"Error: something wrong with paracrystal data" << std::endl;
+        return false;
+      }
+    }
+    if (type_ == percusyevick_type){
+      if(py == nullptr){
+        std::cerr << "Error: no Percus-Yevick data found" << std::endl;
+        return false;
+      }
+      if(!percus_yevik(py->getDiameter(), py->getVolfract(), py->getDims())){
+        std::cerr << "Error: failed to calculate Percus-Yevick" << std::endl;
+        return false;
+      }
+      return true;
+    }
 
     if(repet[0] < 1) repet[0] = 1;
     if(repet[1] < 1) repet[1] = 1;
@@ -135,14 +179,6 @@ namespace hig {
 
     //vector3_t l_t = lattice->t() * scaling;
     vector3_t l_t = lattice->t();
-
-    sf_ = NULL;
-    sf_ = new (std::nothrow) complex_t[nz_];
-    if(sf_ == NULL) {
-      if(master)
-        std::cerr << "error: could not allocate memory for structure factor" << std::endl;
-      return false;
-    } // if
 
     #ifdef SF_VERBOSE
       if(master) std::cout << "-- Computing structure factor on CPU ... " << std::flush;
@@ -257,8 +293,6 @@ namespace hig {
     std::ofstream f(filename);
     for(int i = 0; i < nz_; i++){
       f << sf_[i].real() << ", " << sf_[i].imag() << std::endl;
-      //if ((i+1) % ncol_ == 0)
-      //  f << std::endl;
     } // for
     f.close();
   } // StructureFactor::save_sf()

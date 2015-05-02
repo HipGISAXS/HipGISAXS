@@ -1227,13 +1227,19 @@ namespace hig {
           /* calulate structure factor for the grain */
           real_t weight = gauss_weight * scaling_wght;
           StructureFactor sf;
+          sf.putStructureType(curr_struct->getStructureType());
+          std::shared_ptr<Paracrystal> pc = curr_struct->paracrystal();
+          std::shared_ptr<PercusYevick> py = curr_struct->percusyevick();
           sftimer.resume();
-          structure_factor(sf, HiGInput::instance().experiment(), center, curr_lattice,
-                  grain_repeats, grain_scaling, rot
+          if(!structure_factor(sf, HiGInput::instance().experiment(), center, curr_lattice,
+                  grain_repeats, grain_scaling, rot, pc, py
                   #ifdef USE_MPI
                     , grain_comm
                   #endif
-                  );
+                  )){
+              std::cerr << "Error: aborting run due to previous errors" << std::endl;
+              std::exit(1);
+          }
           sftimer.pause();
 
           /*if(master) {
@@ -1660,21 +1666,22 @@ namespace hig {
   bool HipGISAXS::structure_factor(StructureFactor& sf,
                   std::string expt, vector3_t& center, Lattice* &curr_lattice,
                   vector3_t& grain_repeats, vector3_t& grain_scaling,
-                  RotMatrix_t & rot
+                  RotMatrix_t & rot, 
+                  std::shared_ptr<Paracrystal> pc, std::shared_ptr<PercusYevick> py
                   #ifdef USE_MPI
                     , woo::comm_t comm_key
                   #endif
                   ) {
     #ifndef SF_GPU
       return sf.compute_structure_factor(expt, center, curr_lattice, grain_repeats,
-                      grain_scaling, rot
+                      grain_scaling, rot, pc, py
                       #ifdef USE_MPI
-                        , multi_node_, comm_key
+                        , multi_node_, comm_key 
                       #endif
                       );
     #else
       return sf.compute_structure_factor_gpu(expt, center, curr_lattice, grain_repeats,
-                      grain_scaling, rot
+                      grain_scaling, rot, pc, py
                       #ifdef USE_MPI
                         , multi_node_, comm_key
                       #endif

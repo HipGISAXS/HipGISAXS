@@ -261,6 +261,13 @@ namespace hig {
         KeyWords_[std::string("ztilt")]           = shape_ztilt_token;
         KeyWords_[std::string("mean")]            = mean_token;
         KeyWords_[std::string("stddev")]          = stddev_token;
+        KeyWords_[std::string("paracrystal")]     = struct_paracrystal;
+        KeyWords_[std::string("percusyevick")]   = struct_percusyevick;
+        KeyWords_[std::string("dimensions")]      = struct_dims;
+        KeyWords_[std::string("xspacing")]        = struct_paracrystal_xspacing;
+        KeyWords_[std::string("yspacing")]        = struct_paracrystal_yspacing;
+        KeyWords_[std::string("domain")]          = struct_paracrystal_domain_size;
+        KeyWords_[std::string("volfraction")]     = struct_percusyevick_volfract;
 
       
         /* shape name keywords */
@@ -287,6 +294,8 @@ namespace hig {
         ShapeParamKeyWords_[std::string("edge")]    = param_edge;
         ShapeParamKeyWords_[std::string("baseangle")]  = param_baseangle;
       
+
+
         /* statistic type keywords */
 
         StatisticKeyWords_[std::string("none")]    = stat_none;

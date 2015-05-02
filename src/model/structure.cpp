@@ -335,7 +335,7 @@ namespace hig {
   /** structure functions
    */
 
-  Structure::Structure() { iratio_ = 1.0; }
+  Structure::Structure() { iratio_ = 1.0; type_ = default_type; }
   Structure::~Structure() { }
 
 
@@ -344,6 +344,7 @@ namespace hig {
     grain_.init();
     ensemble_.init();
     iratio_ = 1.0;
+    type_ = default_type;
   } // Structure::init()
 
 
@@ -353,6 +354,30 @@ namespace hig {
     ensemble_.clear();
     iratio_ = 1.0;
   } // Structure::clear()
+
+
+  // copy
+  Structure::Structure(const Structure & rhs){
+    key_ = rhs.key_;
+    grain_ = rhs.grain_;
+    ensemble_ = rhs.ensemble_;
+    iratio_ = rhs.iratio_;
+    type_ = rhs.type_;
+    paracrystal_ = std::move(rhs.paracrystal_);
+    percusyevick_ = std::move(rhs.percusyevick_);
+  }
+
+  //assignment
+  Structure &
+  Structure::operator=(const Structure & rhs){
+    key_ = rhs.key_;
+    grain_ = rhs.grain_;
+    ensemble_ = rhs.ensemble_;
+    iratio_ = rhs.iratio_;
+    type_ = rhs.type_;
+    paracrystal_ = std::move(rhs.paracrystal_);
+    percusyevick_ = std::move(rhs.percusyevick_);
+  }
 
 
   /** printing for testing

@@ -97,7 +97,8 @@ namespace hig {
 
       /* wrapper over sf function */
       bool structure_factor(StructureFactor&, std::string, vector3_t&, Lattice*&, 
-                    vector3_t&, vector3_t&, RotMatrix_t &
+                    vector3_t&, vector3_t&, RotMatrix_t &,
+                    std::shared_ptr<Paracrystal>, std::shared_ptr<PercusYevick>
                   #ifdef USE_MPI
                     , std::string
                   #endif

@@ -114,6 +114,7 @@ namespace hig {
   bool HiGInput::process_curr_token() {
     TokenType parent = null_token;
     TokenType gparent = null_token;
+    int dims;
 
     // process the token, do some basic syntax checking (improve with AST later) ...
     switch(curr_token_.type_) {
@@ -208,15 +209,45 @@ namespace hig {
             curr_element_shape_key_.clear();
             break;
 
+          case struct_grain_token:
+            switch(curr_structure_.getStructureType()){
+              case paracrystal_type:
+                dims = curr_structure_.paracrystal_getDimensions();
+                if (dims != 1 && dims != 2){
+                  std::cerr<< "Error: dimensions=" << dims << ". Should be either 1 or 2 for paracrystals" << std::endl;
+                  return false;
+                }
+                break;
+              case percusyevick_type:
+                dims = curr_structure_.percusyevick_getDimensions();
+                if (dims != 2 && dims != 3){
+                  std::cerr<< "Error: \"dimensions\" can be either 2 or 3 for Percus-Yevick" << std::endl;
+                  return false;
+                }
+            }
+            break;
+           
           case struct_token:      /* insert the current structure */
+            /*
+            switch(curr_structure_.getStructureType()){
+              case paracrystal_type:
+                if(!curr_structure_.paracrystal_sanity_check())
+                  return false;
+                break;
+              case percusyevick_type:
+                if(!curr_structure_.percusyevick_sanity_check())
+                  return false;
+                break;
+            }
+            */
             structures_[curr_structure_.key()] = curr_structure_;
             curr_structure_.clear();
             break;
 
           case struct_grain_lattice_token:  // nothing to do :-/
           case struct_grain_scaling_token: 
-          case struct_grain_token:  // nothing to do :-/
             break;
+
 
           case struct_grain_repetitiondist_token:  // nothing to do :-/
             // TODO: check if all three repetitions were defined
@@ -235,6 +266,16 @@ namespace hig {
           case struct_grain_zrepetition_token:
             // TODO: check for correctness of this repetition definition
             break;
+
+          case struct_paracrystal_yspacing:
+            break; // do nothing
+
+          case struct_paracrystal_xspacing:
+            if (curr_structure_.paracrystal_getDimensions() == 1){
+              std::cerr << "Error: \"xspacing\" can\'t be used with 1D Paracrystals." << std::endl;
+              return false;
+            }
+            break; // do nothing
 
           case struct_ensemble_orient_stat_token:  // nothing to do :-/
           case struct_ensemble_orient_rot1_token:  // nothing to do :-/
@@ -719,6 +760,13 @@ namespace hig {
         curr_structure_.init();
         break;
 
+      case struct_dims:
+      case struct_paracrystal_yspacing:
+      case struct_paracrystal_xspacing:
+      case struct_paracrystal_domain_size:
+      case struct_percusyevick_volfract:
+        break;
+
       case struct_iratio_token:
       case struct_grain_token:
       case struct_grain_ukey_token:
@@ -1078,6 +1126,24 @@ namespace hig {
         curr_layer_.thickness(num);
         break;
 
+      case struct_dims:
+        switch (curr_structure_.getStructureType()){
+          case paracrystal_type:
+            curr_structure_.paracrystal_putDimensions(num);
+            break;
+          case percusyevick_type:
+            curr_structure_.percusyevick_putDimensions(num);
+            break;
+        }
+        break;
+      
+      case struct_paracrystal_domain_size:
+        curr_structure_.paracrystal_putDomainSize(num);
+        break;
+
+      case struct_percusyevick_volfract:
+        curr_structure_.percusyevick_putVolf(num);
+
       case struct_iratio_token:
         curr_structure_.iratio(num);
         break;
@@ -1133,6 +1199,12 @@ namespace hig {
           case struct_grain_lattice_c_token:
             curr_structure_.grain_scaling_c_mean(num);
             break;
+          case struct_paracrystal_xspacing:
+            curr_structure_.paracrystal_putDistXMean(num);
+            break;
+          case struct_paracrystal_yspacing:
+            curr_structure_.paracrystal_putDistYMean(num);
+            break;
           default:
             std::cerr <<"error:distribution is not implemented for this type yet" << std::endl;
             return false;
@@ -1149,6 +1221,12 @@ namespace hig {
             break;
           case struct_grain_lattice_c_token:
             curr_structure_.grain_scaling_c_stddev(num);
+            break;
+          case struct_paracrystal_xspacing:
+            curr_structure_.paracrystal_putDistXStddev(num);
+            break;
+          case struct_paracrystal_yspacing:
+            curr_structure_.paracrystal_putDistYStddev(num);
             break;
           default:
             std::cerr <<"error:distribution is not implemented for this type yet" << std::endl;
@@ -1426,6 +1504,43 @@ namespace hig {
             curr_fit_algo_param_.type_name(str);
             break;
 
+          case struct_grain_token:
+            switch(TokenMapper::instance().get_keyword_token(str)){
+              case struct_paracrystal:
+                curr_structure_.paracrystal_init();
+                break;
+              case struct_percusyevick:
+                curr_structure_.percusyevick_init();
+                if(shapes_.size() == 1){
+                  shape_iterator_t s = shapes_.begin(); 
+                  if(s->second.name() != shape_sphere){
+                    std::cerr << "Error: Percus-Yevick is defined for hard spheres only" << std::endl;
+                    return false;
+                  }
+                  // get diameter
+                  shape_param_list_t sp_list = s->second.param_list();
+                  // it should only have radius nothing else
+                  curr_structure_.percusyevick_putDiameter(2. * sp_list["radius"].min());
+                } else if (shapes_.size() > 1){
+                  Unitcell::element_iterator_t i_el = 
+                      unitcells_[curr_structure_.grain_unitcell_key()].element_end();
+                  if (i_el != unitcells_[curr_structure_.grain_unitcell_key()].element_end()){
+                    std::cerr << "Unit cell in Percus-Yevick can't have more than one shape" << std::endl;
+                    return false;
+                  }
+                  shape_param_list_t sp_list = shapes_[i_el->first].param_list();
+                  curr_structure_.percusyevick_putDiameter(2. * sp_list["radius"].min());
+                } else {
+                    std::cerr << "error: something wrong here!" << std::endl;
+                    return false;
+                }
+                break;
+            }
+            break;
+
+          case struct_token:
+            break;
+
           default:
             std::cerr << "error: 'type' token in wrong place" << std::endl;
             return false;
@@ -1441,7 +1556,6 @@ namespace hig {
             break;
 
           case struct_grain_xrepetition_token:
-            curr_structure_.grain_xrepetition_stat(TokenMapper::instance().get_stattype_token(str));
             break;
 
           case struct_grain_yrepetition_token:
