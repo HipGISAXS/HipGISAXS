@@ -481,36 +481,8 @@ namespace hig {
             return false;
           } // if
 
-          // for future - 3d image ...
-          //Image img3d(nqx_, nqy_, nqz_);
-          //if(!run_gisaxs(alphai, phi, tilt, img3d))
-          
           if(tmaster) {
-            // convolute/smear the computed intensities
-            //real_t sigma = 5.0;  // TODO: to be read from input config
-            //woo::BoostChronoTimer smear_timer;
-            //std::cout << "-- Smearing the result ... " << std::flush;
-            //smear_timer.start();
-            //gaussian_smearing(final_data, sigma);
-            //smear_timer.stop();
-            //std::cout << "done." << std::endl;
-            //std::cout << "**                 Smearing time: "
-            //      << smear_timer.elapsed_msec() << " ms." << std::endl;
-
-            // note that final_data stores 3d info
-            // for 2d, just take a slice of the data
             std::cout << "-- Constructing GISAXS image ... " << std::flush;
-            //Image img(nqx_, nqy_, nqz_);
-            // testing ...
-            //Image img(nqx_, nqy_, nqz_, 37, 36, 27);
-            //Image img(nqx_, nqy_, nqz_, 7, 5, 15);
-            //Image img(nqx_, nqy_, nqz_, 3, 11, 6);
-            //Image img(nqx_, nqy_, nqz_, 23, 28, 3);
-            //Image img(nqx_, nqy_, nqz_, 21, 22, 23);
-            //Image img(nqx_, nqy_, nqz_, 30, 31, 32);
-            //Image img(nqx_, nqy_, nqz_, 33, 13, 10);
-            //Image img(nqx_, nqy_, nqz_, 34, 35, 36);
-            //Image img(nqx_, nqy_, nqz_, 3, 2, 2);
             Image img(ncol_, nrow_, HiGInput::instance().palette());
             img.construct_image(final_data, 0); // merge this into the contructor ...
             std::cout << "done." << std::endl;

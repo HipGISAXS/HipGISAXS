@@ -1,12 +1,12 @@
 Import('env')
 
 objs = [ ]
-sources = ['read_oo_input.cpp', 'objectshape_reader.cpp', 'rawshape_reader.cpp', 'edf_reader.cpp']
+sources = ['read_oo_input.cpp', 'objectshape_reader.cpp', 'rawshape_reader.cpp', 'edf_reader.cpp', 'hdf5shape_reader.c']
 objs += env.Object(sources)
 
-h5sources = ['hdf5shape_reader.c']
-h5env = env.Clone(CC = 'h5pcc -c')		## a hack
-objs += h5env.Object(h5sources)
+#h5sources = ['hdf5shape_reader.c']
+#h5env = env.Clone(CC = 'h5pcc -c')		## a hack
+#objs += h5env.Object(h5sources)
 
 Return('objs')
 
