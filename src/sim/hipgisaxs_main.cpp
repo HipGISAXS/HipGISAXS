@@ -177,6 +177,7 @@ namespace hig {
     } // if-else
 
     num_layers_ = HiGInput::instance().num_layers();  // this excludes substrate layer
+    std::cout << "Number of layers = " << num_layers_ << std::endl;
     if(num_layers_ == 1) {    // is this really needed? ...
       single_layer_refindex_ = HiGInput::instance().single_layer().refindex();
       single_layer_thickness_ = HiGInput::instance().single_layer().thickness();
@@ -481,10 +482,6 @@ namespace hig {
             return false;
           } // if
 
-          // for future - 3d image ...
-          //Image img3d(nqx_, nqy_, nqz_);
-          //if(!run_gisaxs(alphai, phi, tilt, img3d))
-          
           if(tmaster) {
             // convolute/smear the computed intensities
             //real_t sigma = 5.0;  // TODO: to be read from input config
@@ -499,18 +496,8 @@ namespace hig {
 
             // note that final_data stores 3d info
             // for 2d, just take a slice of the data
+
             std::cout << "-- Constructing GISAXS image ... " << std::flush;
-            //Image img(nqx_, nqy_, nqz_);
-            // testing ...
-            //Image img(nqx_, nqy_, nqz_, 37, 36, 27);
-            //Image img(nqx_, nqy_, nqz_, 7, 5, 15);
-            //Image img(nqx_, nqy_, nqz_, 3, 11, 6);
-            //Image img(nqx_, nqy_, nqz_, 23, 28, 3);
-            //Image img(nqx_, nqy_, nqz_, 21, 22, 23);
-            //Image img(nqx_, nqy_, nqz_, 30, 31, 32);
-            //Image img(nqx_, nqy_, nqz_, 33, 13, 10);
-            //Image img(nqx_, nqy_, nqz_, 34, 35, 36);
-            //Image img(nqx_, nqy_, nqz_, 3, 2, 2);
             Image img(ncol_, nrow_, HiGInput::instance().palette());
             img.construct_image(final_data, 0); // merge this into the contructor ...
             std::cout << "done." << std::endl;
@@ -543,25 +530,6 @@ namespace hig {
                 << std::flush;
             save_gisaxs(final_data, data_file);
             std::cout << "done." << std::endl;
-
-            // for future ...
-            /*for(int x = x_min; x <= x_max; x += x_step) {
-              Image *img2d = NULL;
-              img3d.slice(x, img2d);
-  
-              // define output names ...
-              std::ostream temp;
-              std::string x_s, alphai_s, phi_s, tilt_s;
-              temp << std::setw(4) << x; temp >> x_s;
-              temp << alphai; temp >> alphai_s;
-              temp << phi; temp >> phi_s;
-              temp << tilt; temp >> tilt_s;
-              std::string output(HiGInput::instance().outputdir() +
-                      "/img" + x_s + "_ai=" + alphai_s + "_rot=" + phi_s +
-                      "_tilt=" + tilt_s + ".img");
-              img2d.save(output);
-                // save in buffer too ... ? not for now
-             //} for x */
           } // if
 
           // also compute averaged values over phi and tilt
