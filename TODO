@@ -1,4 +1,3 @@
 * Parallelize using MPI
 * Fix cone integration
-* Add switch to select between Approx and excat methods for triangles
-* Replace dnl_j with sin^2(critical angle) for computing qz_extended and coefficients
+* Add switch to select between Approx and exact methods for triangles

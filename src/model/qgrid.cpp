@@ -73,34 +73,34 @@ namespace hig {
     } else if(type == region_qspace) {
 
       /* calculate the angles */
-      real_t alpha[2];
-      alpha[0] = std::asin(min_point[1]/k0 - std::sin(alpha_i));
-      alpha[1] = std::asin(max_point[1]/k0 - std::sin(alpha_i));
+      // calculate angles in vertical direction
+      real_t dq = (max_point[1] - min_point[0])/(pixels[1]-1);
+      alpha_.resize(pixels[1]);
+      for (int i = 0; i < pixels[1]; i++){
+        real_t qpt = min_point[1] + i * dq;
+        alpha_[i] = std::asin(qpt/k0 - std::sin(alpha_i));
+      }
 
-      // min q_par
-      real_t theta[2];
-      real_t cos_af = std::cos(alpha[0]);
+      // calculate angles in horizontal direction
+      dq = (max_point[0] - min_point[0])/(pixels[0]-1);
       real_t cos_ai = std::cos(alpha_i);
-      real_t kf2    = std::pow(min_point[0]/k0, 2);
-      real_t tmp = (cos_af * cos_af + cos_ai * cos_ai - kf2)/(2 * cos_af * cos_ai);
-      theta[0] = sgn(min_point[0]) * std::acos(tmp);
+      real_t cos_af = std::cos(alpha_[0]);
+      real_vec_t theta; theta.resize(pixels[0]);
+      for (int i = 0; i < pixels[0]; i++){
+        real_t qpt = min_point[0] + i * dq;
+        real_t kf2    = std::pow(qpt / k0, 2);
+        real_t tmp = (cos_af * cos_af + cos_ai * cos_ai - kf2)/(2 * cos_af * cos_ai);
+        theta[i] = sgn(qpt) * std::acos(tmp);
+      }
 
-      // max q_par
-      cos_af = std::cos(alpha[1]);
-      kf2    = std::pow(max_point[0]/k0, 2);
-      tmp = (cos_af * cos_af + cos_ai * cos_ai - kf2)/(2 * cos_af * cos_ai);
-      theta[1] = sgn(max_point[0]) * std::acos(tmp);
-
-      // discritize q-space
-      step[0] = (theta[1] - theta[0]) / (pixels[0]-1);
-      step[1] = (alpha[1] - alpha[0]) / (pixels[1]-1);
       /* calculate q-vectors on the Ewald sphere for every pixel
        * on the detector.
        */
+      std::reverse(alpha_.begin(), alpha_.end());
       for (int i = 0; i < pixels[1]; i++) {
         for (int j = 0; j < pixels[0]; j++) {
-          real_t tth = theta[0] + j * step[0];
-          real_t alf = alpha[1] - i * step[1];
+          real_t tth = theta[j];
+          real_t alf = alpha_[i];
           qx_.push_back (k0 * (std::cos(alf) * std::cos(tth) - std::cos(alpha_i)));
           qy_.push_back (k0 * (std::cos(alf) * std::sin(tth)));
           qz_.push_back (k0 * (std::sin(alf) + std::sin(alpha_i)));
@@ -128,23 +128,24 @@ namespace hig {
     // reset qz_extended_ 
     size_t imsize = nrow_ * ncol_;
     qz_extended_.clear();
+    qz_extended_.reserve(4 * imsize);
 
     // incoming vectors
     real_t sin_ai = std::sin(alpha_i);
     real_t kzi_0 = -1 * k0 * sin_ai;
-    complex_t kzi_j = -1 * k0 * std::sqrt(sin_ai * sin_ai - dnl_q);
+    complex_t kzi = -1 * k0 * std::sqrt(sin_ai * sin_ai - dnl_q);
 
-    std::vector<complex_t> kzf_j;
+    std::vector<complex_t> kzf;
     for (int i = 0; i < imsize; i++){
       real_t kzf_0 = qz_[i] + kzi_0;
-      kzf_j.push_back(sgn(kzf_0)*std::sqrt(kzf_0 * kzf_0 - k0 * k0 * dnl_q));
+      kzf.push_back(sgn(kzf_0)*std::sqrt(kzf_0 * kzf_0 - k0 * k0 * dnl_q));
     }
   
     // calculate 4 components
-    for (int i = 0; i < imsize; i++) qz_extended_.push_back( kzf_j[i] - kzi_j);
-    for (int i = 0; i < imsize; i++) qz_extended_.push_back(-kzf_j[i] - kzi_j);
-    for (int i = 0; i < imsize; i++) qz_extended_.push_back( kzf_j[i] + kzi_j);
-    for (int i = 0; i < imsize; i++) qz_extended_.push_back(-kzf_j[i] + kzi_j);
+    for (int i = 0; i < imsize; i++) qz_extended_.push_back( kzf[i] - kzi);
+    for (int i = 0; i < imsize; i++) qz_extended_.push_back(-kzf[i] - kzi);
+    for (int i = 0; i < imsize; i++) qz_extended_.push_back( kzf[i] + kzi);
+    for (int i = 0; i < imsize; i++) qz_extended_.push_back(-kzf[i] + kzi);
 
     return true;
   } // QGrid::create_qz_extended()

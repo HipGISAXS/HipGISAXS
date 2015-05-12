@@ -29,8 +29,7 @@
 
 namespace hig {
 
-  class QGrid {                // should these all be complex ... ???
-                        // use the new 'std::array<>' instead ... ?
+  class QGrid {       
     /* data types for qgrid data */
     typedef std::vector<real_t> qvec_t;
     typedef std::vector<complex_t> cqvec_t;
@@ -41,9 +40,11 @@ namespace hig {
     private:
       int nrow_;
       int ncol_;
+
       qvec_t qx_;
       qvec_t qy_;
       qvec_t qz_;
+      qvec_t alpha_;
       cqvec_t qz_extended_;
 
       /* singleton */
@@ -74,12 +75,13 @@ namespace hig {
       bool create_z_cut(real_t, real_t, real_t, real_t);
 
       /* sizes */
-      int nqx() const { return qx_.size(); }
-      int nqy() const { return qy_.size(); }
-      int nqz() const { return qz_.size(); }
+      int nqx() const          { return qx_.size();          }
+      int nqy() const          { return qy_.size();          }
+      int nqz() const          { return qz_.size();          }
       int nqz_extended() const { return qz_extended_.size(); }
-      int nrows() const { return nrow_; }
-      int ncols() const { return ncol_; }
+      int nrows() const        { return nrow_;               }
+      int ncols() const        { return ncol_;               }
+      int nalpha() const       { return alpha_.size();       }
 
 
       /* NOTE: delta are not constants in q-space */
@@ -97,6 +99,7 @@ namespace hig {
       real_t qy(unsigned int i) const { return qy_[i]; }
       real_t qz(unsigned int i) const { return qz_[i]; }
       complex_t qz_extended(unsigned int i) const { return qz_extended_[i]; }
+      real_t alpha(unsigned int i) const { return alpha_[i]; }
 
       /* iterator helpers */
       qvec_iter_t qx_begin() const { return qx_.begin(); }

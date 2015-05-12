@@ -2437,9 +2437,7 @@ namespace hig {
     // if there is substrate, its the first one, followed by others
     // insert layer 0, with refindex 0, 0
     
-    std::cout << "layers = " << layers_.size() << std::endl;
     if(has_vacuum_layer()) return true;
-
     Layer vacuum;
     vacuum.key(std::string("vacuum"));
     vacuum.refindex_delta(0.0);

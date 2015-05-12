@@ -578,6 +578,7 @@ namespace hig {
       const GrainRepetitions& grain_repetitiondist() const { return grain_.repetitiondist_; }
       std::string grain_orientation() { return ensemble_.orientations_.stat(); }
       RefractiveIndex grain_refindex() { return grain_.refindex_; }
+      complex_t one_minus_n2() { return grain_.refindex_.one_minus_n2(); }
       const std::string& grain_unitcell_key() { return grain_.unitcell_key_; }
       const std::string& grain_layer_key() { return grain_.layer_key_; }
       bool grain_in_layer() { return grain_.in_layer_; }

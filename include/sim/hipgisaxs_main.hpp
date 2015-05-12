@@ -32,6 +32,7 @@
 #include <common/globals.hpp>
 #include <config/hig_input.hpp>
 #include <model/common.hpp>
+#include <model/layer.hpp>
 #include <model/qgrid.hpp>
 #include <ff/ff.hpp>
 #include <sf/sf.hpp>
@@ -58,6 +59,7 @@ namespace hig {
 
       vector3_t vol_;      /* represents the illuminated volume */
       vector3_t cell_;    /* stores the domain size in each dimension */
+      MultiLayer multilayer_; 
 
       class SampleRotation {
         friend class HipGISAXS;

@@ -176,8 +176,8 @@ namespace hig {
       substrate_refindex_.delta(0); substrate_refindex_.beta(0);
     } // if-else
 
+
     num_layers_ = HiGInput::instance().num_layers();  // this excludes substrate layer
-    std::cout << "Number of layers = " << num_layers_ << std::endl;
     if(num_layers_ == 1) {    // is this really needed? ...
       single_layer_refindex_ = HiGInput::instance().single_layer().refindex();
       single_layer_thickness_ = HiGInput::instance().single_layer().thickness();
@@ -187,6 +187,7 @@ namespace hig {
       single_layer_thickness_ = 0.0;
     } // if-else
 
+    multilayer_.init();
     complex_t temp(substrate_refindex_.delta(), substrate_refindex_.beta());
     dns2_ = ((real_t) 2.0) * temp - (complex_t) pow(temp, 2);
 
@@ -207,15 +208,6 @@ namespace hig {
       if(master) std::cerr << "error: could not compute domain size" << std::endl;
       return false;
     } // if
-//    std::cout << "++ Domain min point: " << min_vec[0] << ", " << min_vec[1]
-//          << ", " << min_vec[2] << std::endl;
-//    std::cout << "++ Domain max point: " << max_vec[0] << ", " << max_vec[1]
-//          << ", " << max_vec[2] << std::endl;
-//    std::cout << "++ Domain z max and min: " << z_max_0 << ", " << z_min_0 << std::endl;
-//    std::cout << "++ Domain dimensions: " << max_vec[0] - min_vec[0] << " x "
-//          << max_vec[1] - min_vec[1] << " x "
-//          << max_vec[2] - min_vec[2] << " ("
-//          << z_max_0 - z_min_0 << ")" << std::endl;
 
     // cell size ... check ... FIXME
     cell_[0] = fabs(max_vec[0] - min_vec[0]);
@@ -257,11 +249,13 @@ namespace hig {
       bool master = true;
     #endif
 
+    /*
     if(!illuminated_volume(alphai, HiGInput::instance().scattering_spot_area(),
         HiGInput::instance().min_layer_order(), HiGInput::instance().substrate_refindex())) {
       if(master) std::cerr << "error: something went wrong in illuminated_volume()" << std::endl;
       return false;
     } // if
+    */
 
     /* rotation matrices */
     // compute r_phi = sample rotation by phi
@@ -316,7 +310,6 @@ namespace hig {
       std::cerr << "uh-oh: override option for angles has not yet been implemented" << std::endl;
       return false;
     } // if-else
-
     return true;
   } // HipGISAXS::override_qregion()
 
@@ -483,20 +476,6 @@ namespace hig {
           } // if
 
           if(tmaster) {
-            // convolute/smear the computed intensities
-            //real_t sigma = 5.0;  // TODO: to be read from input config
-            //woo::BoostChronoTimer smear_timer;
-            //std::cout << "-- Smearing the result ... " << std::flush;
-            //smear_timer.start();
-            //gaussian_smearing(final_data, sigma);
-            //smear_timer.stop();
-            //std::cout << "done." << std::endl;
-            //std::cout << "**                 Smearing time: "
-            //      << smear_timer.elapsed_msec() << " ms." << std::endl;
-
-            // note that final_data stores 3d info
-            // for 2d, just take a slice of the data
-
             std::cout << "-- Constructing GISAXS image ... " << std::flush;
             Image img(ncol_, nrow_, HiGInput::instance().palette());
             img.construct_image(final_data, 0); // merge this into the contructor ...
@@ -773,6 +752,7 @@ namespace hig {
       bool master = true;
     #endif
 
+    /**************************
     // compute propagation coefficients/fresnel coefficients
     // this can also go into run_init() ...
     complex_t *amm = NULL, *apm = NULL, *amp = NULL, *app = NULL;
@@ -784,6 +764,7 @@ namespace hig {
       if(master) std::cerr << "error: failed to compute propogation coefficients" << std::endl;
       return false;
     } // if
+    ****************************/
 
     /* loop over all structures and grains/grains */
     structure_iterator_t s = HiGInput::instance().structure_begin();
@@ -847,6 +828,23 @@ namespace hig {
       Lattice *curr_lattice = (Lattice*) HiGInput::instance().lattice(*curr_struct);
       Unitcell *curr_unitcell = (Unitcell*) HiGInput::instance().unitcell(*curr_struct);
       bool struct_in_layer = (*s).second.grain_in_layer();
+
+      /* calulate propagation coefficients for current layer*/
+      int order = HiGInput::instance().structure_layer_order(*curr_struct);
+      layer_qgrid_qz(alphai, multilayer_[order].one_minus_n2());
+      complex_vec_t fc; 
+      if (!multilayer_.propagation_coeffs(fc, k0_, alphai, order)){
+        //TODO call mpi abort
+        std::exit(1);
+      }
+
+#ifdef DEBUG
+      std::ofstream fcoef("coeffs.out", std::ios::out);
+      for (int i = 0; i < nqz_extended_; i++){
+        fcoef << std::abs(fc[i]) << std::endl;
+      }
+      fcoef.close();
+#endif
 
       real_t *dd = NULL, *nn = NULL, *wght = NULL;    // come back to this ...
                         // these structures can be improved ...
@@ -1170,29 +1168,16 @@ namespace hig {
         } // for e
 
         fftimer.stop();
-        #ifndef FF_VERBOSE
+#ifndef FF_VERBOSE
           std::cout << "**               FF compute time: "
                     << fftimer.elapsed_msec() << " ms." << std::endl;
-        #endif
-
-        //ff.print_ff(nqx_, nqy_, nqz_extended_);
-        //ff.printff(nqx_, nqy_, nqz_extended_);
-
-        // save form factor data on disk
-        /*if(master) {
-          std::stringstream alphai_b, phi_b, tilt_b;
-          std::string alphai_s, phi_s, tilt_s;
-          alphai_b << alpha_i; alphai_s = alphai_b.str();
-          phi_b << phi; phi_s = phi_b.str();
-          tilt_b << tilt; tilt_s = tilt_b.str();
-          std::string ff_output(HiGInput::instance().param_pathprefix() +
-                  "/" + HiGInput::instance().runname() +
-                  "/ff_ai=" + alphai_s + "_rot=" + phi_s +
-                  "_tilt=" + tilt_s + ".out");
-          std::cout << "-- Saving form factor in " << ff_output << " ... " << std::flush;
-          ff.save_ff(nqx_, nqy_, nqz_extended_, ff_output.c_str());
-          std::cout << "done." << std::endl;
-        } // if*/
+#endif
+#ifdef DEBUG
+          std::ofstream fout("ff.out", std::ios::out);
+          for (int i = 0; i < nqz_extended_; i++)
+            fout << std::abs(ff[i]) << std::endl;
+          fout.close();
+#endif
 
         sftimer.start(); sftimer.pause();
         for (int i_scale = 0; i_scale < num_repeat_scaling; i_scale++) {
@@ -1215,10 +1200,10 @@ namespace hig {
           else
             grain_repeats = all_grains_repeats[0]; // same repeat for all grains
 
-        #ifdef SF_VERBOSE
+#ifdef SF_VERBOSE
           std::cout << "-- Distribution sample " << i_scale + 1 << " / "
               << scaling_samples.size() << ".\n";
-        #endif
+ #endif
 
           /* calulate structure factor for the grain */
           real_t weight = gauss_weight * scaling_wght;
@@ -1238,48 +1223,21 @@ namespace hig {
           }
           sftimer.pause();
 
-          /*if(master) {
-            std::stringstream alphai_b, phi_b, tilt_b;
-            std::string alphai_s, phi_s, tilt_s;
-            alphai_b << alpha_i; alphai_s = alphai_b.str();
-            phi_b << phi; phi_s = phi_b.str();
-            tilt_b << tilt; tilt_s = tilt_b.str();
-            std::string sf_output(HiGInput::instance().param_pathprefix() +
-                    "/" + HiGInput::instance().runname() +
-                    "/sf_ai=" + alphai_s + "_rot=" + phi_s +
-                    "_tilt=" + tilt_s + ".out");
-            std::cout << "-- Saving structure factor in " << sf_output << " ... " << std::flush;
-            sf.save_sf(nqx_, nqy_, nqz_extended_, sf_output.c_str());
-            std::cout << "done." << std::endl;
-          } // if*/
-
-          // print rot matrix for debug
-          //std::cout << ">>>f1 " << r_tot1[0] << " " << r_tot1[1] << " " << r_tot1[2] << std::endl;
-          //std::cout << ">>>f2 " << r_tot2[0] << " " << r_tot2[1] << " " << r_tot2[2] << std::endl;
-          //std::cout << ">>>f3 " << r_tot3[0] << " " << r_tot3[1] << " " << r_tot3[2] << std::endl;
-
         /* compute intensities using sf and ff */
         // TODO: parallelize ...
           if(gmaster) {  // grain master
             complex_t* base_id = grain_ids + (grain_i - grain_min) * nrow_ * ncol_;
-
             unsigned int nslices = HiGInput::instance().param_nslices();
             unsigned int imsize = nrow_ * ncol_;
             if(nslices <= 1) {
               /* without slicing */
-              if(struct_in_layer &&
-                  HiGInput::instance().structure_layer_order((*s).second) == 1) {
-                            // structure is inside a layer, on top of substrate
                 if(single_layer_refindex_.delta() < 0 || single_layer_refindex_.beta() < 0) {
                   // this should never happen
                   std::cerr << "error: single layer information not correctly set"
                       << std::endl;
                   return false;
                 } // if
-                complex_t dn2(-2.0 * ((*s).second.grain_refindex().delta() - 
-                      single_layer_refindex_.delta()),
-                      -2.0 * ((*s).second.grain_refindex().beta() -
-                      single_layer_refindex_.beta()));
+                complex_t dn2 = multilayer_[order].one_minus_n2() - curr_struct->one_minus_n2();
                 for(unsigned int i = 0; i < imsize; ++ i) {
                   unsigned int curr_index   = i;
                   unsigned int curr_index_0 = i; 
@@ -1287,83 +1245,19 @@ namespace hig {
                   unsigned int curr_index_2 = 2 * imsize + i;
                   unsigned int curr_index_3 = 3 * imsize + i;
                   base_id[curr_index] = dn2 * weight * 
-                    (amm[curr_index] * sf[curr_index_0] * ff[curr_index_0] +
-                    amp[curr_index] * sf[curr_index_1] * ff[curr_index_1] +
-                    apm[curr_index] * sf[curr_index_2] * ff[curr_index_2] +
-                    app[curr_index] * sf[curr_index_3] * ff[curr_index_3]);
+                    (fc[curr_index_0] * sf[curr_index_0] * ff[curr_index_0] +
+                     fc[curr_index_1] * sf[curr_index_1] * ff[curr_index_1] +
+                     fc[curr_index_2] * sf[curr_index_2] * ff[curr_index_2] +
+                     fc[curr_index_3] * sf[curr_index_3] * ff[curr_index_3]);
                 } // for i
-              } else if(HiGInput::instance().structure_layer_order((*s).second) == -1) {
-                // structure burried in substrate
-                complex_t dn2(-2.0 * (substrate_refindex_.delta() -
-                        (*s).second.grain_refindex().delta()),
-                        -2.0 * (substrate_refindex_.beta() -
-                        (*s).second.grain_refindex().beta()));
-
-                for(unsigned int i = 0; i < imsize; ++ i) {
-                      unsigned int curr_index = i;
-                      base_id[curr_index] = dn2 * weight * sf[curr_index] * ff[curr_index];
-                } // for i
-              } else if(HiGInput::instance().structure_layer_order((*s).second) == 0) {
-                // structure on top of substrate
-                complex_t dn2(-2.0 * (*s).second.grain_refindex().delta(),
-                        -2.0 * (*s).second.grain_refindex().beta());
-
-                for(unsigned int i = 0; i < imsize; ++ i) {
-                      unsigned int curr_index   = i;
-                      unsigned int curr_index_0 = i;
-                      unsigned int curr_index_1 = 1 * imsize + i;
-                      unsigned int curr_index_2 = 2 * imsize + i;
-                      unsigned int curr_index_3 = 3 * imsize + i;
-                      base_id[curr_index] = dn2 * weight *
-//                                          (h0[curr_index] * sf[curr_index_0] +
-//                                          rk2[curr_index] * sf[curr_index_1] +
-//                                          rk1[curr_index] * sf[curr_index_2] +
-//                                          rk1rk2[curr_index] * sf[curr_index_3]);
-//                                          (h0[curr_index] * ff[curr_index_0] +
-//                                          rk2[curr_index] * ff[curr_index_1] +
-//                                          rk1[curr_index] * ff[curr_index_2] +
-//                                          rk1rk2[curr_index] * ff[curr_index_3]);
-                                      (fc[curr_index_0] * sf[curr_index_0] * ff[curr_index_0] +
-                                       fc[curr_index_1] * sf[curr_index_1] * ff[curr_index_1] +
-                                       fc[curr_index_2] * sf[curr_index_2] * ff[curr_index_2] +
-                                       fc[curr_index_3] * sf[curr_index_3] * ff[curr_index_3]);
-                      #ifdef DEBUG
-                      if(std::isnan(base_id[curr_index].real()) ||
-                          std::isnan(base_id[curr_index].imag())) {
-
-                        std::cerr << "Base id : " << std::endl;
-                        std::cerr << base_id[curr_index] << std::endl;
-                        std::cerr << "Wght = " << weight << std::endl;
-                        std::cerr << "Index = " << curr_index_0 << ", " << curr_index_1 << ", "
-                          << curr_index_2 << ", " << curr_index_3 << std::endl;
-                        std::cerr << "FF = " << std::endl;
-                        std::cerr << ff[curr_index_0] << ", " << ff[curr_index_1] << ", "
-                            << ff[curr_index_2] << ", " << ff[curr_index_3] << std::endl;
-                        std::cerr << "SF = " << std::endl;
-                        std::cerr << sf[curr_index_0] << ", " << sf[curr_index_1] << ", "
-                            << sf[curr_index_2] << ", " << sf[curr_index_3] << std::endl;
-                        std::cerr << "Coefs: " << std::endl;
-                        std::cerr << h0[curr_index] << ", " << rk2[curr_index] << ", "
-                            << rk1[curr_index] << ", " << rk1rk2[curr_index] << std::endl;
-                        return false;
-                      } // if
-                      #endif
-                } // for i
-              } else {
-                if(gmaster)
-                  std::cerr << "error: unable to determine sample structure. "
-                        << "make sure the layer order is correct" << std::endl;
-                return false;
-              } // if-else
             } else {
-            /* perform slicing */
-            // not yet implemented ...
-            std::cout << "uh-oh: ever thought about implementing the slicing scheme?"
-                  << std::endl;
-            return false;
+              /* perform slicing */
+              // not yet implemented ...
+              std::cout << "uh-oh: ever thought about implementing the slicing scheme?"
+                    << std::endl;
+              return false;
             } // if-else
           } // if gmaster
-
           //sf.clear(); // clean structure factor
         } // for i_scale
         sftimer.stop();
@@ -1619,8 +1513,6 @@ namespace hig {
       delete[] all_c_struct_intensity;
       delete[] all_struct_intensity;
     } // if master
-
-    delete[] fc;
 
     if(master) {
       // convolute/smear the computed intensities
@@ -2044,9 +1936,9 @@ namespace hig {
         d = new (std::nothrow) real_t[rand_dim_x * rand_dim_y * 4];
 
         //int base_index = 0;
-        real_t mul_val1 = vol_[0] / 2;
-        real_t mul_val2 = vol_[1] / 2;
-        real_t mul_val3 = vol_[2];
+        real_t mul_val1 = 1.; //vol_[0] / 2;
+        real_t mul_val2 = 1.; //vol_[1] / 2;
+        real_t mul_val3 = 1.; //vol_[2];
 
         // D0
         if(maxgrains[0] == 1) {
