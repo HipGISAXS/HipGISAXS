@@ -471,6 +471,9 @@ env['NIX_LIB_DIR'] = nix_lib_prefix
 
 #add_ld_library_path(env, os.environ['LD_LIBRARY_PATH'])
 
+if _has_option("cpppath"):
+    env.Append(CPPPATH = [get_option("cpppath")])
+
 #print env['LIBPATH']
 #print env['ENV']
 
@@ -481,7 +484,7 @@ if not get_option('clean'):
 using_accelerator = None
 ## required libs
 boost_libs = ["boost_system", "boost_filesystem", "boost_timer", "boost_chrono"]
-hdf5_libs = ["hdf5", "z", "sz"]
+hdf5_libs = ["hdf5", "z"]
 #hdf5_libs = ["hdf5", "z"]
 tiff_libs = ["tiff"]
 other_libs = ["m", "gomp"]
