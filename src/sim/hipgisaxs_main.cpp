@@ -1569,7 +1569,7 @@ namespace hig {
                       );
     #else
       return sf.compute_structure_factor_gpu(expt, center, curr_lattice, grain_repeats,
-                      grain_scaling, rot, pc, py
+                      grain_scaling, rot//, pc, py    // FIXME
                       #ifdef USE_MPI
                         , multi_node_, comm_key
                       #endif

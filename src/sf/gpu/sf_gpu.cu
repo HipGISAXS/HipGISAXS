@@ -42,12 +42,12 @@ namespace hig {
                                    , woo::MultiNode& world_comm, std::string comm_key
                                  #endif
                                 ) {
-    nx_ = QGrid::instance().nqx();
+    //nx_ = QGrid::instance().nqx();
     ny_ = QGrid::instance().nqy();
     if(expt == "saxs") nz_ = QGrid::instance().nqz();
     else if(expt == "gisaxs") nz_ = QGrid::instance().nqz_extended();
-    nrow_ = QGrid::instance().nrows();
-    ncol_ = QGrid::instance().ncols();
+    //nrow_ = QGrid::instance().nrows();
+    //ncol_ = QGrid::instance().ncols();
     sf_ = new (std::nothrow) complex_t[nz_];
     if(sf_ == NULL) return false;
     gsf_.init();
@@ -81,7 +81,7 @@ namespace hig {
     // TODO: unify ff and sf stuff. put separate qgrid for gpu ...
 
     if(inited_) {
-      std::cerr << "error: gpu sf already initialized" << std::endl;
+      std::cerr << "warning: gpu sf already initialized" << std::endl;
       return false;
     } // if
 
