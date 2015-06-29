@@ -51,7 +51,6 @@ namespace hig {
     vector3_t q1 = pixel_to_kspace(vector2_t(1, 1), k0, alpha_i, pixel_size, sd_distance, beam);
 
     vector3_t qmax, qmin, step;
-    real_t theta[2], alpha[2];
 
     qmin[0] = 0.0; qmax[0] = 0.0;
 
@@ -72,33 +71,45 @@ namespace hig {
         qmax[0] = qmax[1] = 0;
       } // if
     } else if(type == region_qspace) {
+
       /* calculate the angles */
-      theta[0] = acos (1. - 0.5 * pow(min_point[0] / k0, 2));
-      if ( min_point[0] < 0 ) theta[0] *= -1;
-      theta[1] = acos (1. - 0.5 * pow(max_point[0] / k0, 2));
-      if ( max_point[0] < 0 ) theta[1] *= -1;
-      alpha[0] = acos (1. - 0.5 * pow(max_point[1] / k0, 2)) - alpha_i;
-      alpha[1] = acos (1. - 0.5 * pow(min_point[1] / k0, 2)) - alpha_i;
-      step[0] = (theta[1] - theta[0]) / pixels[0];
-      step[1] = (alpha[1] - alpha[0]) / pixels[1];
+      // calculate angles in vertical direction
+      real_t dq = (max_point[1] - min_point[0])/(pixels[1]-1);
+      alpha_.resize(pixels[1]);
+      for (int i = 0; i < pixels[1]; i++){
+        real_t qpt = min_point[1] + i * dq;
+        alpha_[i] = std::asin(qpt/k0 - std::sin(alpha_i));
+      }
+
+      // calculate angles in horizontal direction
+      dq = (max_point[0] - min_point[0])/(pixels[0]-1);
+      real_t cos_ai = std::cos(alpha_i);
+      real_t cos_af = std::cos(alpha_[0]);
+      real_vec_t theta; theta.resize(pixels[0]);
+      for (int i = 0; i < pixels[0]; i++){
+        real_t qpt = min_point[0] + i * dq;
+        real_t kf2    = std::pow(qpt / k0, 2);
+        real_t tmp = (cos_af * cos_af + cos_ai * cos_ai - kf2)/(2 * cos_af * cos_ai);
+        theta[i] = sgn(qpt) * std::acos(tmp);
+      }
+
+      /* calculate q-vectors on the Ewald sphere for every pixel
+       * on the detector.
+       */
+      std::reverse(alpha_.begin(), alpha_.end());
+      for (int i = 0; i < pixels[1]; i++) {
+        for (int j = 0; j < pixels[0]; j++) {
+          real_t tth = theta[j];
+          real_t alf = alpha_[i];
+          qx_.push_back (k0 * (std::cos(alf) * std::cos(tth) - std::cos(alpha_i)));
+          qy_.push_back (k0 * (std::cos(alf) * std::sin(tth)));
+          qz_.push_back (k0 * (std::sin(alf) + std::sin(alpha_i)));
+        }
+      }
     } else {
       std::cerr << "error: unknown output region type" << std::endl;
       return false;
     } // if-else
-
-
-    /* calculate q-vectors on the Ewald sphere for every pixel
-     * on the detector.
-     */
-    for (int i = 0; i < pixels[1]; i++) {
-        for (int j = 0; j < pixels[0]; j++) {
-            real_t tth = theta[0] + j * step[0];
-            real_t alf = alpha[0] + i * step[1];
-            qx_.push_back (k0 * (cos(alf) * cos(tth) - cos(alpha_i)));
-            qy_.push_back (k0 * (cos(alf) * sin(tth)));
-            qz_.push_back (k0 * (sin(alf) + sin(alpha_i)));
-        }
-    }
 
     if(mpi_rank == 0) {
       std::cout << "**                  Q-grid range: ("
@@ -112,28 +123,29 @@ namespace hig {
   } // QGrid::create()
 
 
-  bool QGrid::create_qz_extended(real_t k0, real_t kzi_0, complex_t kzi_q, complex_t dnl_q) {
-    cqvec_t qz_temp0, qz_temp1, qz_temp2, qz_temp3;
-    qz_extended_.clear(); qz_temp0.clear(); qz_temp1.clear(); qz_temp2.clear(); qz_temp3.clear();
-    for(qvec_iter_t q = qz_.begin(); q != qz_.end(); ++ q) {
-      real_t temp0 = (*q) + kzi_0;
-      real_t temp1 = temp0 * temp0;
-      complex_t temp2 = k0 * k0 * dnl_q;
-      complex_t temp3 = sqrt(temp1 - temp2);
-      complex_t temp4 = temp3 - kzi_q;
-      qz_temp0.push_back(temp4);
-      complex_t temp5 = - temp3 - kzi_q;
-      qz_temp1.push_back(temp5);
-      complex_t temp6 = temp3 + kzi_q;
-      qz_temp2.push_back(temp6);
-      complex_t temp7 = - temp3 + kzi_q;
-      qz_temp3.push_back(temp7);
-    } // for
-    // the 4 vectors be concatenated instead of copying ...
-    for(cqvec_iter_t q = qz_temp0.begin(); q != qz_temp0.end(); ++ q) qz_extended_.push_back(*q);
-    for(cqvec_iter_t q = qz_temp1.begin(); q != qz_temp1.end(); ++ q) qz_extended_.push_back(*q);
-    for(cqvec_iter_t q = qz_temp2.begin(); q != qz_temp2.end(); ++ q) qz_extended_.push_back(*q);
-    for(cqvec_iter_t q = qz_temp3.begin(); q != qz_temp3.end(); ++ q) qz_extended_.push_back(*q);
+  bool QGrid::create_qz_extended(real_t k0, real_t alpha_i, complex_t dnl_q) {
+
+    // reset qz_extended_ 
+    size_t imsize = nrow_ * ncol_;
+    qz_extended_.clear();
+    qz_extended_.reserve(4 * imsize);
+
+    // incoming vectors
+    real_t sin_ai = std::sin(alpha_i);
+    real_t kzi_0 = -1 * k0 * sin_ai;
+    complex_t kzi = -1 * k0 * std::sqrt(sin_ai * sin_ai - dnl_q);
+
+    std::vector<complex_t> kzf;
+    for (int i = 0; i < imsize; i++){
+      real_t kzf_0 = qz_[i] + kzi_0;
+      kzf.push_back(sgn(kzf_0)*std::sqrt(kzf_0 * kzf_0 - k0 * k0 * dnl_q));
+    }
+  
+    // calculate 4 components
+    for (int i = 0; i < imsize; i++) qz_extended_.push_back( kzf[i] - kzi);
+    for (int i = 0; i < imsize; i++) qz_extended_.push_back(-kzf[i] - kzi);
+    for (int i = 0; i < imsize; i++) qz_extended_.push_back( kzf[i] + kzi);
+    for (int i = 0; i < imsize; i++) qz_extended_.push_back(-kzf[i] + kzi);
 
     return true;
   } // QGrid::create_qz_extended()

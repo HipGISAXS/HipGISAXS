@@ -30,20 +30,21 @@
 #include <common/typedefs.hpp>
 #include <common/globals.hpp>
 #include <model/structure.hpp>
+#include <numerics/matrix.hpp>
+
 #ifdef USE_GPU
   #include <sf/gpu/sf_gpu.cuh>
 #endif
+
 
 namespace hig {
   
   class StructureFactor {
     private:
       complex_t *sf_;
-      unsigned int nx_;
       unsigned int ny_;
       unsigned int nz_;
-      unsigned int nrow_;
-      unsigned int ncol_;
+      StructureType type_;
 
       #ifdef SF_GPU
         StructureFactorG gsf_;
@@ -51,20 +52,19 @@ namespace hig {
 
     public:
       StructureFactor();
-      StructureFactor(int, int);
       ~StructureFactor();
-
+      void putStructureType(StructureType d){ type_ = d; }
       void clear(void);
 
       bool compute_structure_factor(std::string, vector3_t, Lattice*, vector3_t, vector3_t,
-                      vector3_t, vector3_t, vector3_t
+                      RotMatrix_t &, std::shared_ptr<Paracrystal> , std::shared_ptr<PercusYevick> 
                       #ifdef USE_MPI
                         , woo::MultiNode&, std::string
                       #endif
                       );
       #ifdef SF_GPU
       bool compute_structure_factor_gpu(std::string, vector3_t, Lattice*, vector3_t, vector3_t,
-                      vector3_t, vector3_t, vector3_t
+                      RotMatrix_t &
                       #ifdef USE_MPI
                         , woo::MultiNode&, std::string
                       #endif
@@ -78,20 +78,26 @@ namespace hig {
       StructureFactor & operator=(const StructureFactor & rhs);
       StructureFactor & operator+=(const StructureFactor & rhs);
       StructureFactor & operator*(const real_t val) {
-        for (int i = 0; i < nrow_ * ncol_; i++) sf_[i] *= val;
+        for (int i = 0; i < nz_; i++) sf_[i] *= val;
         return *this;
       }
+
+      //! 1-D Paracrystal
+      bool paracrystal1d(real_t, real_t, real_t);
+
+      //! 2-D Paracrystal Cubic
+      bool paracrystal2d_cubic(real_t, real_t, real_t, real_t, real_t);
+
+      //! 2-D Paracrystal Hex
+      bool paracrystal2d_hex(real_t, real_t, real_t, real_t, real_t);
+
+      //! Percus-Yevik
+      real_t PYFcn(real_t, real_t, real_t, real_t);
+      bool percus_yevik(real_t, real_t, int);
 
       // only for testing - remove it ...
       // complex_t* sf() { return sf_; }
  
-      void print() {
-        std::cout << "sf:" << std::endl;
-        for(unsigned int i = 0; i < nrow_ * ncol_; ++ i) {
-          std::cout << sf_[i].real() << "," << sf_[i].imag() << "\t";
-        } // for
-        std::cout << std::endl;
-      } // print()
   }; // class StructureFactor
 
 } // namespace hig

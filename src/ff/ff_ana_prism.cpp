@@ -94,9 +94,12 @@ namespace hig {
     #pragma omp parallel for 
     for(unsigned int z = 0; z < nqz_; ++ z) {
       unsigned int y = z % nqy_;
-      complex_t mqx, mqy, mqz;
-      compute_meshpoints(QGrid::instance().qx(y), QGrid::instance().qy(y),
-                QGrid::instance().qz_extended(z), rot_, mqx, mqy, mqz);
+      std::vector<complex_t> mq = rot_.rotate(QGrid::instance().qx(y), 
+              QGrid::instance().qy(y), QGrid::instance().qz_extended(z));
+      complex_t mqx = mq[0];
+      complex_t mqy = mq[1];
+      complex_t mqz = mq[2];
+
       complex_t temp1 = mqx * (mqx * mqx - 3.0 * mqy * mqy);
       complex_t temp2 = mqz + tan(tau) * (mqx * sin(eta) + mqy * cos(eta));
       complex_t temp_ff(0.0, 0.0);

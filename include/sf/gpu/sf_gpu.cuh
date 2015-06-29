@@ -25,6 +25,7 @@
 
 #include <common/typedefs.hpp>
 #include <common/constants.hpp>
+#include <numerics/matrix.hpp>
 
 namespace hig {
 
@@ -63,7 +64,7 @@ namespace hig {
       void get_sf(complex_t*&);
 
       bool compute(std::string, vector3_t, Lattice*, vector3_t, vector3_t,
-                   vector3_t, vector3_t, vector3_t
+                   RotMatrix_t
                    #ifdef USE_MPI
                     , woo::MultiNode&, std::string
                    #endif

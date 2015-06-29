@@ -53,6 +53,7 @@ namespace hig {
       real_t thickness() const { return thickness_; }
       int order() const { return order_; }
       real_t z_val() const { return z_val_; }
+      complex_t one_minus_n2() { return refindex_.one_minus_n2(); }
 
       /* setters */
       void key(std::string s) { key_ = s; }
@@ -74,6 +75,33 @@ namespace hig {
   typedef layer_list_t::const_iterator layer_citerator_t;
   typedef std::unordered_map <std::string, int> layer_key_t;
 
+  // Defilne multilayer
+  class MultiLayer {
+    private:
+      std::vector<Layer> layers_;
+
+    public:
+      // constructors
+      MultiLayer();
+      
+      // index operator
+      Layer operator[] (int j) const {
+        return layers_[j];
+      }
+
+      // hipgisaxs style init and clear
+      void init();
+      void clear();
+
+      //gets
+      int count(){ return layers_.size(); }
+      
+      // calculate Ts and Rs of an angle
+      complex_vec_t parratt_recursion(real_t, real_t, int);
+
+      // calculate transmission and reflection coefficents
+      bool propagation_coeffs(complex_vec_t &, real_t, real_t, int);
+  };
 } // namespace hig
 
 #endif /* _LAYER_HPP_ */

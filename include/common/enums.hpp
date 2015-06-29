@@ -74,6 +74,13 @@ namespace hig {
     lattice_hex        /* hex */
   }; // enum LatticeType
 
+  // support for liquid crustals
+  enum StructureType {
+    paracrystal_type,
+    percusyevick_type,
+    default_type
+  };
+
   enum StatisticType {
     stat_null,
     stat_error,

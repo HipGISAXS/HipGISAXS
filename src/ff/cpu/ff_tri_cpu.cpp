@@ -50,16 +50,13 @@
 namespace hig {
   
   complex_t FormFactorTriangle(real_t qx, real_t qy, complex_t qz,
-          real_t * rot, triangle_t & tri) {
+          RotMatrix_t & rot, triangle_t & tri) {
     complex_t ff = CMPLX_ZERO_;
     complex_t unitc = CMPLX_ONE_;
     complex_t n_unitc = CMPLX_MINUS_ONE_;
 
     // do the rotation
-    std::vector<complex_t> mq; mq.resize(3);
-    mq[0] = rot[0] * qx + rot[1] * qy + rot[2] * qz;
-    mq[1] = rot[3] * qx + rot[4] * qy + rot[5] * qz;
-    mq[2] = rot[6] * qx + rot[7] * qy + rot[8] * qz;
+    std::vector<complex_t> mq = rot.rotate (qx, qy, qz);
 
     // calculate q^2
     real_t q_sqr = 0.;
@@ -86,7 +83,7 @@ namespace hig {
     n_t = n_t / n_t.abs();
 
     // dot(q, n_t)
-    complex_t q_dot_nt = C_ZERO;
+    complex_t q_dot_nt = CMPLX_ZERO_;
     for (int i=0; i<3; i++) q_dot_nt += mq[i] * n_t[i];
 
     // proj_tq
@@ -94,7 +91,7 @@ namespace hig {
 
     // CASE 1
     if (std::abs(proj_tq) < TINY_){
-        complex_t q_dot_v = C_ZERO;
+        complex_t q_dot_v = CMPLX_ZERO_;
         for (int i=0; i<3; i++) q_dot_v += mq[i] * tri.v1[i];
         // calculate form-factor (Case 1)
         ff = unitc * q_dot_nt * t_area / q_sqr * std::exp(n_unitc * q_dot_v);
@@ -107,7 +104,7 @@ namespace hig {
         n_e = n_e / n_e.abs();
 
         // dot (q, n_e)
-        complex_t q_dot_ne = C_ZERO;
+        complex_t q_dot_ne = CMPLX_ZERO_;
         for (int i=0; i<3; i++) q_dot_ne += mq[i] * n_e[i];
 
         // proj_eq
@@ -115,7 +112,7 @@ namespace hig {
         // CASE 2
         if (std::abs(proj_eq) < TINY_){
         // q_dot_v
-          complex_t q_dot_v = C_ZERO;
+          complex_t q_dot_v = CMPLX_ZERO_;
           for (int i=0; i<3; i++) q_dot_v += mq[i] * vertex[e][i];
           real_t f0 = edge[e].abs() / (q_sqr * proj_tq);
           complex_t c0 = - q_dot_nt * q_dot_ne;
@@ -127,14 +124,14 @@ namespace hig {
           real_t   f0 = q_sqr * proj_tq * proj_eq;
 
           // dot(q, v_a) vertex a
-          complex_t q_dot_v = C_ZERO;
+          complex_t q_dot_v = CMPLX_ZERO_;
           for (int i=0; i<3; i++) q_dot_v += mq[i] * vertex[e][i];
 
           // vertrex-normal a
           vector3_t n_v = edge[e] / edge[e].abs();
 
           // dot(q, n_v)
-          complex_t q_dot_nv = C_ZERO;
+          complex_t q_dot_nv = CMPLX_ZERO_;
           for (int i=0; i<3; i++) q_dot_nv += mq[i] * n_v[i];
 
           // calculate contribution of vertex a
@@ -143,12 +140,12 @@ namespace hig {
           ff +=  c0 * c1 / f0;
 
           // dot(q, v) the other vertex in the edge
-          q_dot_v = C_ZERO;
+          q_dot_v = CMPLX_ZERO_;
           int ep = (e+1)%3;
           for (int i=0; i<3; i++) q_dot_v += mq[i] * vertex[ep][i];
 
           // dot (q, n_v)
-          q_dot_nv = C_ZERO;
+          q_dot_nv = CMPLX_ZERO_;
           for (int i=0; i<3; i++) q_dot_nv -= mq[i] * n_v[i];
 
           // calculate contribution of the other vertex
@@ -169,7 +166,7 @@ namespace hig {
           triangle_t * shape_def, int num_triangles,
           complex_t* &ff,
           int nqy, real_t * qx, real_t * qy, int nqz, complex_t * qz,
-          real_t * rot, real_t & compute_time) {
+          RotMatrix_t & rot, real_t & compute_time) {
 
     if(num_triangles < 1) return 0;
     unsigned long int total_qpoints = nqz;
@@ -194,7 +191,7 @@ namespace hig {
 #pragma omp parallel for
     for (int i_z = 0; i_z < nqz; i_z++) {
         int i_y = i_z % nqy; 
-        complex_t ff_temp = C_ZERO;
+        complex_t ff_temp = CMPLX_ZERO_;
         for (int i_t = 0; i_t < num_triangles; i_t++) {
             ff_temp += FormFactorTriangle (qx[i_y], qy[i_y], qz[i_z], rot, shape_def[i_t]);
         }
@@ -210,7 +207,7 @@ namespace hig {
           real_vec_t &shape_def,
           complex_t *& ff,
           int nqy, real_t * qx, real_t * qy, 
-          int nqz, complex_t * qz, real_t * rot, real_t &comp_time){
+          int nqz, complex_t * qz, RotMatrix_t & rot, real_t &comp_time){
 
     int num_triangles = shape_def.size() / CPU_T_PROP_SIZE_;
     if (num_triangles < 1) return 0;
@@ -238,17 +235,14 @@ namespace hig {
         real_t y  = shape_def[offset + 5];
         real_t z  = shape_def[offset + 6];
 
-        // TODO Fix it move it one place for all the rotations
-        complex_t mqx, mqy, mqz;
-        mqx = rot[0] * qx[i_y] + rot[1] * qy[i_y] + rot[2] * qz[i_z];
-        mqy = rot[3] * qx[i_y] + rot[4] * qy[i_y] + rot[5] * qz[i_z];
-        mqz = rot[6] * qx[i_y] + rot[7] * qy[i_y] + rot[8] * qz[i_z];
+        // rotate q-vector
+        std::vector<complex_t> mq = rot.rotate(qx[i_y], qy[i_y], qz[i_z]);
 
-        real_t q2 = std::norm(mqx) + std::norm(mqy) + std::norm(mqz);
-        complex_t qn = mqx * nx + mqy * ny + mqz * nz;
-        complex_t qt = mqx * x  + mqy * y  + mqz * z;
-        complex_t nj = C_NEG_ONE;
-        complex_t np = C_ONE;
+        real_t q2 = std::norm(mq[0]) + std::norm(mq[1]) + std::norm(mq[2]);
+        complex_t qn = mq[0] * nx + mq[1] * ny + mq[2] * nz;
+        complex_t qt = mq[0] * x  + mq[1] * y  + mq[2] * z;
+        complex_t nj = CMPLX_MINUS_ONE_;
+        complex_t np = CMPLX_ONE_;
         ff[i_z] += (nj * qn * s * std::exp(np * qt) / q2);
       }
     }

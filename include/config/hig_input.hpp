@@ -225,6 +225,7 @@ namespace hig {
         unit = scattering_.photon_energy().unit_;
       } // photon_energy()
 
+      int num_of_layers() const  { return layers_.size(); }
       unsigned int num_layers() const;
       bool is_single_layer() const;
       int min_layer_order();
@@ -288,6 +289,9 @@ namespace hig {
       unsigned int read_shape_file_data(const char*);
       unsigned int read_shape_file_hdf5(const char*);
       unsigned int read_shape_file_object(const char*);
+
+      layer_citerator_t layers_begin() const { return layers_.begin(); }
+      layer_citerator_t layers_end() const { return layers_.end(); }
 
       int structure_layer_order(Structure& s) { return layer_key_map_[s.grain_layer_key()]; }
       real_t layer_z_val(int order) { return layers_[order].z_val(); }

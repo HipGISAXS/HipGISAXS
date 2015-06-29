@@ -67,8 +67,6 @@ namespace hig {
             data_[3] = s;  data_[4] = c;  data_[5] = 0.;
             data_[6] = 0.; data_[7] = 0.; data_[8] = 1.;
             break;
-          default:
-            throw std::invalid_argument("Illegal rotation axis.");
         }
       }
 
@@ -76,6 +74,7 @@ namespace hig {
       CUDAFY RotMatrix_t(const RotMatrix_t & obj){
         for(int i=0; i<9; i++) data_[i] = obj.data_[i];
       } 
+
 
       // assignment operator
       CUDAFY RotMatrix_t operator= (const RotMatrix_t & rhs){
@@ -103,10 +102,18 @@ namespace hig {
         return res;
       }
 
+      // rotate real vector
+      CUDAFY vector3_t operator*(const vector3_t & rhs){
+        vector3_t lhs;
+        lhs[0] = data_[0] * rhs.vec_[0] + data_[1] * rhs.vec_[1] + data_[2] * rhs.vec_[2];
+        lhs[0] = data_[3] * rhs.vec_[0] + data_[4] * rhs.vec_[1] + data_[5] * rhs.vec_[2];
+        lhs[0] = data_[6] * rhs.vec_[0] + data_[7] * rhs.vec_[1] + data_[8] * rhs.vec_[2];
+        return lhs;
+      }
+
       // Matrix-vector multiplication (Rotation)
       std::vector<complex_t> rotate(real_t x, real_t y, complex_t z){
         std::vector<complex_t> res;
-        complex_t zero(0., 0.);
         res.resize(3);
         res[0] = data_[0] * x + data_[1] * y + data_[2] * z;
         res[1] = data_[3] * x + data_[4] * y + data_[5] * z;

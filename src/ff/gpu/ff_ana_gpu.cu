@@ -29,13 +29,13 @@
 #include <ff/gpu/ff_ana_gpu.cuh>
 #include <model/qgrid.hpp>
 #include <common/enums.hpp>
+#include <numerics/matrix.hpp>
 
 namespace hig {
 
   __constant__ real_t tau_d;
   __constant__ real_t eta_d;
   __constant__ real_t transvec_d[3];
-  __constant__ real_t rot_d[9];
 
   AnalyticFormFactorG::AnalyticFormFactorG(unsigned int ny, unsigned int nz):
     nqy_(ny), nqz_(nz),

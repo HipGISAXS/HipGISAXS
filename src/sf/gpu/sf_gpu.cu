@@ -37,21 +37,21 @@ namespace hig {
 #ifdef SF_GPU
   bool StructureFactor::compute_structure_factor_gpu(std::string expt, vector3_t center,
                                  Lattice* lattice, vector3_t repet, vector3_t scaling,
-                                 vector3_t rotation_1, vector3_t rotation_2, vector3_t rotation_3
+                                 RotMatrix_t & rot
                                  #ifdef USE_MPI
                                    , woo::MultiNode& world_comm, std::string comm_key
                                  #endif
                                 ) {
-    nx_ = QGrid::instance().nqx();
+    //nx_ = QGrid::instance().nqx();
     ny_ = QGrid::instance().nqy();
     if(expt == "saxs") nz_ = QGrid::instance().nqz();
     else if(expt == "gisaxs") nz_ = QGrid::instance().nqz_extended();
-    nrow_ = QGrid::instance().nrows();
-    ncol_ = QGrid::instance().ncols();
+    //nrow_ = QGrid::instance().nrows();
+    //ncol_ = QGrid::instance().ncols();
     sf_ = new (std::nothrow) complex_t[nz_];
     if(sf_ == NULL) return false;
     gsf_.init();
-    bool ret = gsf_.compute(expt, center, lattice, repet, scaling, rotation_1, rotation_2, rotation_3
+    bool ret = gsf_.compute(expt, center, lattice, repet, scaling, rot
                         #ifdef USE_MPI
                           , world_comm, comm_key
                         #endif
@@ -81,7 +81,7 @@ namespace hig {
     // TODO: unify ff and sf stuff. put separate qgrid for gpu ...
 
     if(inited_) {
-      std::cerr << "error: gpu sf already initialized" << std::endl;
+      std::cerr << "warning: gpu sf already initialized" << std::endl;
       return false;
     } // if
 
@@ -212,7 +212,7 @@ namespace hig {
 
   bool StructureFactorG::compute(std::string expt, vector3_t center,
                                  Lattice* lattice, vector3_t repet, vector3_t scaling,
-                                 vector3_t rotation_1, vector3_t rotation_2, vector3_t rotation_3
+                                 RotMatrix_t rot
                                  #ifdef USE_MPI
                                    , woo::MultiNode& world_comm, std::string comm_key
                                  #endif
@@ -233,14 +233,13 @@ namespace hig {
     if(repet[1] < 1) repet[1] = 1;
     if(repet[2] < 1) repet[2] = 1;
 
-    vector3_t arot(0, 0, 0), brot(0, 0, 0), crot(0, 0, 0);
     vector3_t temp_la(lattice->a() * scaling[0]),
               temp_lb(lattice->b() * scaling[1]),
               temp_lc(lattice->c() * scaling[2]);
-    mat_mul_3x1(rotation_1, rotation_2, rotation_3, temp_la, arot);
-    mat_mul_3x1(rotation_1, rotation_2, rotation_3, temp_lb, brot);
-    mat_mul_3x1(rotation_1, rotation_2, rotation_3, temp_lc, crot);
     vector3_t l_t = lattice->t();
+    vector3_t arot = rot * temp_la;
+    vector3_t brot = rot * temp_lb;
+    vector3_t crot = rot * temp_lc;
 
     real_t rot_h[9];
     rot_h[0] = arot[0]; rot_h[1] = arot[1]; rot_h[2] = arot[2];

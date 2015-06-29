@@ -38,7 +38,6 @@
 
 namespace hig {
 
-  extern __constant__ real_t rot_d[9];
   __constant__ int num_loads;
   __constant__ int buf_size;
 
@@ -151,14 +150,14 @@ namespace hig {
   __global__ void ff_poly_kernel (unsigned int nqy, unsigned int nqz,
                   real_t *qx, real_t *qy, cucomplex_t *qz,
                   int num_triangles, triangle_t * triangles,
-                  cucomplex_t * ff) {
+                  RotMatrix_t rot, cucomplex_t * ff) {
 
     unsigned int i_z = blockDim.x * blockIdx.x + threadIdx.x;
     if ( i_z < nqz ) {
       unsigned int i_y = i_z % nqy;
       cucomplex_t ff_temp = make_cuC(REAL_ZERO_, REAL_ZERO_);
       cucomplex_t mq[3];
-      rotate_q (rot_d, qx[i_y], qy[i_y], qz[i_z], mq[0], mq[1], mq[2]);
+      rot.rotate(qx[i_y], qy[i_y], qz[i_z], mq[0], mq[1], mq[2]);
 
       for (int i=0; i < num_triangles; i++)
         ff_temp = ff_temp + FormFactorTriangle(triangles[i], mq);
@@ -219,7 +218,7 @@ namespace hig {
             cucomplex_t *& ff,
             int nqy, real_t * qx_h, real_t * qy_h, 
             int nqz, cucomplex_t * qz_h,
-            real_t * rot, real_t & kernel_time) { 
+            RotMatrix_t & rot, real_t & kernel_time) { 
       
     cudaError_t err;
     real_t *qx_d, *qy_d;
@@ -287,13 +286,12 @@ namespace hig {
     int num_of_loads = num_triangles * sizeof(triangle_t) / shared_buf + 1;
 
     // copy the rotation matrix and other stuff to constant memory
-    err = cudaMemcpyToSymbol (rot_d, rot, 9 * sizeof(real_t), 0, cudaMemcpyHostToDevice);
     err = cudaMemcpyToSymbol(num_loads, &num_of_loads, sizeof(int), 0, cudaMemcpyHostToDevice);
     err = cudaMemcpyToSymbol(buf_size, &shared_buf, sizeof(int), 0, cudaMemcpyHostToDevice);
 
     // Kernel
     ff_poly_kernel <<< cuda_num_blocks, cuda_num_threads, shared_buf >>> (nqy, nqz, qx_d, qy_d, qz_d, 
-            num_triangles, triangles_d, ff_d);
+            num_triangles, triangles_d, rot, ff_d);
     err = cudaGetLastError();
     if(err != cudaSuccess) {
       std::cerr << "Error: ff_poly_kernel failed miserably!" 
@@ -326,7 +324,7 @@ namespace hig {
 
   __global__ void ff_tri_kernel (unsigned int nqy, unsigned int nqz,
                   real_t *qx, real_t *qy, cucomplex_t *qz,
-                  int num_tri, real_t * shape_def,
+                  int num_tri, real_t * shape_def, RotMatrix_t rot,
                   cucomplex_t * ff) {
 
     unsigned int i_thread = threadIdx.x;
@@ -343,7 +341,7 @@ namespace hig {
 
       // do the rotations
       cucomplex_t mqx, mqy, mqz;
-      rotate_q (rot_d, qx[i_y], qy[i_y], qz[i_z], mqx, mqy, mqz);
+      rot.rotate(qx[i_y], qy[i_y], qz[i_z], mqx, mqy, mqz);
       real_t q2 = cuCnorm3(mqx, mqy, mqz);
 
       // load triangles into shared memory
@@ -405,7 +403,7 @@ namespace hig {
             cucomplex_t * & ff,
             int nqy, real_t * qx_h, real_t * qy_h,
             int nqz, cucomplex_t * qz_h,
-            real_t * rot_h, real_t & kernel_time) { 
+            RotMatrix_t & rot, real_t & kernel_time) { 
       
 
     int i; 
@@ -494,13 +492,12 @@ namespace hig {
     /* copy symbols to constant memory */
      
     // copy rotation matrix, num_of_loads and shared_buffer_size to constant memeory
-    err = cudaMemcpyToSymbol(rot_d, rot_h, 9 * sizeof(real_t), 0, cudaMemcpyHostToDevice);
     err = cudaMemcpyToSymbol(num_loads, &num_of_loads, sizeof(int), 0, cudaMemcpyHostToDevice);
     err = cudaMemcpyToSymbol(buf_size, &shared_buf, sizeof(int), 0, cudaMemcpyHostToDevice);
     
     // Kernel
     ff_tri_kernel <<< cuda_num_blocks, cuda_num_threads, shared_buf * sizeof(real_t) >>> (nqy, nqz, qx_d, 
-            qy_d, qz_d, num_triangles, shape_def_d, ff_d);
+            qy_d, qz_d, num_triangles, shape_def_d, rot, ff_d);
 
     err = cudaGetLastError();
     if (err != cudaSuccess) {

@@ -131,9 +131,8 @@ namespace hig {
       #pragma omp parallel for 
       for(int i = 0; i < nqz_; i++) {
         int j = i % nqy_;
-        complex_t mqx, mqy, mqz;
-        compute_meshpoints(QGrid::instance().qx(j), QGrid::instance().qy(j), 
-            QGrid::instance().qz_extended(i), rot_, mqx, mqy, mqz);
+        std::vector<complex_t> mq = rot_.rotate(QGrid::instance().qx(j), 
+                QGrid::instance().qy(j), QGrid::instance().qz_extended(i));
         
         complex_t temp_ff(0.0, 0.0);
         for(int i_x = 0; i_x < x.size(); ++ i_x) {
@@ -142,12 +141,12 @@ namespace hig {
               for(int i_b = 0; i_b < b.size(); ++ i_b) {
                 real_t bb = b[i_b] * PI_ / 180;
                 real_t prob = distr_x[i_x] * distr_y[i_y] * distr_h[i_h] * distr_b[i_b];
-                temp_ff += FormFactorPyramid(mqx, mqy, mqz, x[i_x], y[i_y], h[i_h], b[i_b]) * prob;
+                temp_ff += FormFactorPyramid(mq[0], mq[1], mq[2], x[i_x], y[i_y], h[i_h], b[i_b]) * prob;
               } // for b
             } // for h
           } // for y
         } // for x
-        complex_t temp1 = mqx * transvec[0] + mqy * transvec[1] + mqz * transvec[2];
+        complex_t temp1 = mq[0] * transvec[0] + mq[1] * transvec[1] + mq[2] * transvec[2];
         ff[i] = temp_ff * exp(complex_t(0, 1) * temp1);
       } // for z
     #endif // FF_ANA_GPU

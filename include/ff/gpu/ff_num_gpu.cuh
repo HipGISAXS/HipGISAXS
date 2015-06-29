@@ -26,6 +26,7 @@
 #include <vector>
 
 #include <common/typedefs.hpp>
+#include <numerics/matrix.hpp>
 
 namespace hig {
 
@@ -55,12 +56,12 @@ namespace hig {
       unsigned int compute_exact_triangle(triangle_t *, int, 
               cucomplex_t * &, 
               int, real_t *, real_t *, int,
-              cucomplex_t *, real_t *, real_t &);
+              cucomplex_t *, RotMatrix_t &, real_t &);
 
       unsigned int compute_approx_triangle(std::vector<real_t> &, 
               cucomplex_t * &,
               int, real_t *, real_t *, int, 
-              cucomplex_t *, real_t * , real_t &);
+              cucomplex_t *, RotMatrix_t &, real_t &);
 
       
       /* original */

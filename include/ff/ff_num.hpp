@@ -48,6 +48,8 @@
   #include <ff/cpu/ff_num_cpu.hpp>  // for cpu version
 #endif // FF_NUM_GPU
 
+#include <numerics/matrix.hpp>
+
 #include <woo/timer/woo_boostchronotimers.hpp>
 
 namespace hig {
@@ -91,18 +93,18 @@ namespace hig {
 
       ~NumericFormFactor() { }
 
-      bool init(vector3_t&, vector3_t&, vector3_t&, std::vector<complex_t>&);
+      bool init(RotMatrix_t &, std::vector<complex_t>&);
       void clear() { }        // TODO ...
 
       bool compute(const char* filename, std::vector<complex_t>& ff,
-              vector3_t&, vector3_t&, vector3_t&
+              RotMatrix_t &
               #ifdef USE_MPI
                 , woo::MultiNode&, std::string
               #endif
               );
   
       bool compute2(const char* filename, std::vector<complex_t>& ff,
-              vector3_t&, vector3_t&, vector3_t&
+              RotMatrix_t &
               #ifdef USE_MPI
                 , woo::MultiNode&, std::string
               #endif
@@ -128,7 +130,7 @@ namespace hig {
       unsigned int nqy_;
       unsigned int nqz_;
 
-      real_t* rot_;
+      RotMatrix_t rot_;
   
       ShapeFileType get_shapes_file_format(const char*);
       unsigned int read_shapes_file_dat(const char* filename, real_vec_t& shape_def);

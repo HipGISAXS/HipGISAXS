@@ -30,6 +30,7 @@
 #endif
 
 #include <common/typedefs.hpp>
+#include <numerics/matrix.hpp>
 #include <ff/ff_ana.hpp>
 #include <ff/ff_num.hpp>
 
@@ -72,7 +73,7 @@ namespace hig {
                   shape_param_list_t& params,
                   real_t single_thickness,
                   vector3_t& transvec, real_t shp_tau, real_t shp_eta,
-                  vector3_t& rot1, vector3_t& rot2, vector3_t& rot3
+                  RotMatrix_t &
                   #ifdef USE_MPI
                     , woo::MultiNode&, std::string
                   #endif

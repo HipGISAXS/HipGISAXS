@@ -32,6 +32,7 @@
 #include <common/globals.hpp>
 #include <config/hig_input.hpp>
 #include <model/common.hpp>
+#include <model/layer.hpp>
 #include <model/qgrid.hpp>
 #include <ff/ff.hpp>
 #include <sf/sf.hpp>
@@ -58,6 +59,7 @@ namespace hig {
 
       vector3_t vol_;      /* represents the illuminated volume */
       vector3_t cell_;    /* stores the domain size in each dimension */
+      MultiLayer multilayer_; 
 
       class SampleRotation {
         friend class HipGISAXS;
@@ -97,7 +99,8 @@ namespace hig {
 
       /* wrapper over sf function */
       bool structure_factor(StructureFactor&, std::string, vector3_t&, Lattice*&, 
-                    vector3_t&, vector3_t&, vector3_t&, vector3_t&, vector3_t&
+                    vector3_t&, vector3_t&, RotMatrix_t &,
+                    std::shared_ptr<Paracrystal>, std::shared_ptr<PercusYevick>
                   #ifdef USE_MPI
                     , std::string
                   #endif
@@ -105,7 +108,7 @@ namespace hig {
 
       /* wrapper over ff function */
       bool form_factor(FormFactor&, ShapeName, std::string, shape_param_list_t&, vector3_t&,
-                  real_t, real_t, vector3_t&, vector3_t&, vector3_t&
+                  real_t, real_t, RotMatrix_t &
                   #ifdef USE_MPI
                     , std::string
                   #endif

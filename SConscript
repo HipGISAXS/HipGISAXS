@@ -475,6 +475,9 @@ env['NIX_LIB_DIR'] = nix_lib_prefix
 
 #add_ld_library_path(env, os.environ['LD_LIBRARY_PATH'])
 
+if _has_option("cpppath"):
+    env.Append(CPPPATH = [get_option("cpppath")])
+
 #print env['LIBPATH']
 #print env['ENV']
 

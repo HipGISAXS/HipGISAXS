@@ -25,7 +25,8 @@
 	
 #include <common/typedefs.hpp>
 #include <common/globals.hpp>
-	
+#include <numerics/matrix.hpp>	
+
 namespace hig {
 	
 	/**
@@ -42,12 +43,12 @@ namespace hig {
             unsigned int compute_exact_triangle(triangle_t *, int,
                     complex_t *&, 
                     int, real_t *, real_t *, int, complex_t *,
-                    real_t *, real_t &);
+                    RotMatrix_t &, real_t &);
 
             unsigned int compute_approx_triangle(real_vec_t &,
                     complex_t *&,
                     int, real_t *, real_t *,
-                    int, complex_t *, real_t *, real_t &); 
+                    int, complex_t *, RotMatrix_t &, real_t &); 
 		private:
 			#ifndef FF_NUM_CPU_FUSED			
 				void form_factor_kernel(real_t*, real_t*, complex_t*, real_vec_t&,

@@ -38,7 +38,7 @@ namespace hig {
   bool FormFactor::compute_form_factor(ShapeName shape, std::string shape_filename,
                     shape_param_list_t& params, real_t single_thickness,
                     vector3_t& transvec, real_t shp_tau, real_t shp_eta,
-                    vector3_t& rot1, vector3_t& rot2, vector3_t& rot3
+                    RotMatrix_t & rot
                     #ifdef USE_MPI
                       , woo::MultiNode& multi_node, std::string comm_key
                     #endif
@@ -46,8 +46,8 @@ namespace hig {
     if(shape == shape_custom) {
       /* compute numerically */
       is_analytic_ = false;
-      numeric_ff_.init(rot1, rot2, rot3, ff_);
-      numeric_ff_.compute2(shape_filename.c_str(), ff_, rot1, rot2, rot3
+      numeric_ff_.init(rot, ff_);
+      numeric_ff_.compute2(shape_filename.c_str(), ff_, rot
                 #ifdef USE_MPI
                   , multi_node, comm_key
                 #endif
@@ -55,9 +55,9 @@ namespace hig {
     } else {
       /* compute analytically */
       is_analytic_ = true;
-      analytic_ff_.init(rot1, rot2, rot3, ff_);
+      analytic_ff_.init(rot, ff_);
       analytic_ff_.compute(shape, shp_tau, shp_eta, transvec,
-                  ff_, params, single_thickness, rot1, rot2, rot3
+                  ff_, params, single_thickness, rot
                   #ifdef USE_MPI
                     , multi_node, comm_key
                   #endif
@@ -103,10 +103,12 @@ namespace hig {
 
 
   void FormFactor::save (unsigned nrow, unsigned ncol, const char * filename) {
+    int size = 4 * ncol * nrow;
     std::ofstream out (filename);
-    for (unsigned i = 0; i < nrow; i++){
-      for (unsigned j = 0; j < ncol; j++ ) out << std::norm (ff_[i*ncol + j]) << " ";
-      out << std::endl;
+    for (unsigned i = 0; i < size; i++){
+      out << ff_[i].real() << ", " << ff_[i].imag() << std::endl;
+      //if ((i+1)%ncol == 0)
+      //  out << std::endl;
     }
     out.close();
   }
@@ -114,7 +116,7 @@ namespace hig {
   void FormFactor::save_ff(unsigned int nqz, const char* filename) {
     std::ofstream f(filename);
     for(unsigned int z = 0; z < nqz; ++ z) {
-      f << std::norm(ff_[z]) << std::endl;
+      f << std::abs(ff_[z]) << std::endl;
     } // for
     f.close();
   } // FormFactor::save_ff()
