@@ -1166,6 +1166,7 @@ namespace hig {
                   #endif
                   );
             fftimer.pause();
+            //eff.save_ff(nqz_extended_, "ff.out");
 
             // for each location, add the FFs
             
@@ -1174,6 +1175,7 @@ namespace hig {
         } // for e
 
         fftimer.stop();
+    
         #ifndef FF_VERBOSE
           std::cout << "**               FF compute time: "
                     << fftimer.elapsed_msec() << " ms." << std::endl;
@@ -1681,7 +1683,7 @@ namespace hig {
                       );
     #else
       return sf.compute_structure_factor_gpu(expt, center, curr_lattice, grain_repeats,
-                      grain_scaling, rot, pc, py
+                      grain_scaling, rot
                       #ifdef USE_MPI
                         , multi_node_, comm_key
                       #endif
