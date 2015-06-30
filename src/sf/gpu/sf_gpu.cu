@@ -78,7 +78,7 @@ namespace hig {
     // TODO: unify ff and sf stuff. put separate qgrid for gpu ...
 
     if(inited_) {
-      std::cerr << "error: gpu sf already initialized" << std::endl;
+      std::cerr << "warning: gpu sf already initialized" << std::endl;
       return false;
     } // if
 

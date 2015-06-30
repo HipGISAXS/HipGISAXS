@@ -23,6 +23,8 @@
 #ifndef __MODEL_COMMON_HPP__
 #define __MODEL_COMMON_HPP__
 
+#include <common/typedefs.hpp>
+
 namespace hig {
 
   class RefractiveIndex {
@@ -37,6 +39,7 @@ namespace hig {
 
       real_t delta() { return delta_; }
       real_t beta() { return beta_; }
+      complex_t one_minus_n2(){ return (complex_t(2*delta_, 2*beta_)); }
 
       void delta(real_t a) { delta_ = a; }
       void beta(real_t a) { beta_ = a; }

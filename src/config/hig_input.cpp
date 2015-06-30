@@ -2438,7 +2438,6 @@ namespace hig {
     // insert layer 0, with refindex 0, 0
     
     if(has_vacuum_layer()) return true;
-
     Layer vacuum;
     vacuum.key(std::string("vacuum"));
     vacuum.refindex_delta(0.0);
