@@ -3,7 +3,6 @@
  *
  *  File: convolutions.hpp
  *  Created: Jul 03, 2012
- *  Modified: Wed 08 Oct 2014 12:13:09 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -24,7 +23,9 @@
 #define _CONVOLUTIONS_HPP_
 
 #include <cmath>
+#ifdef _OPENMP
 #include <omp.h>
+#endif
 #include <vector>
 
 #include <utils/utilities.hpp>
