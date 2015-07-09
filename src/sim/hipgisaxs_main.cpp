@@ -1039,12 +1039,75 @@ namespace hig {
         // order of multiplication is important
         RotMatrix_t rot = r3 * r2 * r1;
 
+        vector3_t z1, z2, z3, e1, e2, e3, t1, t2, t3;
+        switch(r1axis) {
+          case 0:
+            compute_rotation_matrix_x(rot1, z1, z2, z3);
+            break;
+          case 1:
+            compute_rotation_matrix_y(rot1, z1, z2, z3);
+            break;
+          case 2:
+            compute_rotation_matrix_z(rot1, z1, z2, z3);
+            break;
+          default:
+            std::cerr << "error: unknown axis: " << r1axis << std::endl;
+            return false;
+        } // switch
+        switch(r2axis) {
+          case 0:
+            compute_rotation_matrix_x(rot2, e1, e2, e3);
+            break;
+          case 1:
+            compute_rotation_matrix_y(rot2, e1, e2, e3);
+            break;
+          case 2:
+            compute_rotation_matrix_z(rot2, e1, e2, e3);
+            break;
+          default:
+            std::cerr << "error: unknown axis: " << r2axis << std::endl;
+            return false;
+        } // switch
+        switch(r3axis) {
+          case 0:
+            compute_rotation_matrix_x(rot3, t1, t2, t3);
+            break;
+          case 1:
+            compute_rotation_matrix_y(rot3, t1, t2, t3);
+            break;
+          case 2:
+            compute_rotation_matrix_z(rot3, t1, t2, t3);
+            break;
+          default:
+            std::cerr << "error: unknown axis: " << r3axis << std::endl;
+            return false;
+        } // switch
+
+        vector3_t temp1, temp2, temp3;
+        vector3_t r_norm1, r_norm2, r_norm3;
+        mat_mul_3x3(z1, z2, z3, e1, e2, e3, temp1, temp2, temp3);
+        mat_mul_3x3(temp1, temp2, temp3, t1, t2, t3, r_norm1, r_norm2, r_norm3);
+
+        vector3_t r_tot1, r_tot2, r_tot3;
+        mat_mul_3x3(rotation_matrix.r1_, rotation_matrix.r2_, rotation_matrix.r3_,
+              r_norm1, r_norm2, r_norm3, r_tot1, r_tot2, r_tot3);
+        //mat_mul_3x3(r_norm1, r_norm2, r_norm3,
+        //      rotation_matrix.r1_, rotation_matrix.r2_, rotation_matrix.r3_,
+        //      r_tot1, r_tot2, r_tot3);
+        //std::cout << "--> " << r_tot1[0] << " " << r_tot1[1] << " " << r_tot1[2] << std::endl;
+        //std::cout << "--> " << r_tot2[0] << " " << r_tot2[1] << " " << r_tot2[2] << std::endl;
+        //std::cout << "--> " << r_tot3[0] << " " << r_tot3[1] << " " << r_tot3[2] << std::endl;
+
         /* center of unit cell replica */
         vector3_t curr_dd_vec(dd[grain_i + 0],
                     dd[grain_i + num_grains],
                     dd[grain_i + 2 * num_grains]);
-        vector3_t result = rot * curr_dd_vec;
+        vector3_t result(0.0, 0.0, 0.0);
+
+        mat_mul_3x1(rotation_matrix.r1_, rotation_matrix.r2_, rotation_matrix.r3_,
+              curr_dd_vec, result);
         vector3_t center = result + curr_transvec;
+
 
         /* compute structure factor and form factor */
 
@@ -1075,7 +1138,7 @@ namespace hig {
           shape_param_list_t shape_params = HiGInput::instance().shape_params((*e).first);
 
           for(Unitcell::location_iterator_t l = (*e).second.begin(); l != (*e).second.end(); ++ l) {
-            curr_transvec += (*l);
+            vector3_t transvec = curr_transvec + (*l);
             #ifdef FF_NUM_GPU   // use GPU
               #ifdef FF_NUM_GPU_FUSED
                 FormFactor eff(64, 8);
@@ -1089,6 +1152,7 @@ namespace hig {
             #endif
 
             fftimer.resume();
+            //read_form_factor("curr_ff.out");
             form_factor(eff, shape_name, shape_file, shape_params, transvec,
                   shape_tau, shape_eta, rot
                   #ifdef USE_MPI
@@ -1096,16 +1160,14 @@ namespace hig {
                   #endif
                   );
             fftimer.pause();
-            //eff.save_ff(nqz_extended_, "ff.out");
 
             // for each location, add the FFs
-            for(unsigned int i = 0; i < nqz_extended_; ++ i) ff[i] += eff[i];
+            for(unsigned int i = 0; i < sz; ++ i) ff[i] += eff[i]; 
           } // for l
         } // for e
 
         fftimer.stop();
-    
-        #ifndef FF_VERBOSE
+#ifndef FF_VERBOSE
           std::cout << "**               FF compute time: "
                     << fftimer.elapsed_msec() << " ms." << std::endl;
 #endif
@@ -1168,15 +1230,14 @@ namespace hig {
             unsigned int imsize = nrow_ * ncol_;
             if(nslices <= 1) {
               /* without slicing */
-                /*
-                if(single_layer_refindex_.delta() < 0 || single_layer_refindex_.beta() < 0) {
-                  // this should never happen
-                  std::cerr << "error: single layer information not correctly set"
-                      << std::endl;
-                  return false;
-                } // if
-                */
-                complex_t dn2 = multilayer_[order].one_minus_n2() - curr_struct->one_minus_n2();
+              if(single_layer_refindex_.delta() < 0 || single_layer_refindex_.beta() < 0) {
+                // this should never happen
+                std::cerr << "error: single layer information not correctly set"
+                          << std::endl;
+                return false;
+              } // if
+              complex_t dn2 = multilayer_[order].one_minus_n2() - curr_struct->one_minus_n2();
+              if(HiGInput::instance().experiment() == "gisaxs") {  // GISAXS
                 for(unsigned int i = 0; i < imsize; ++ i) {
                   unsigned int curr_index   = i;
                   unsigned int curr_index_0 = i; 
@@ -1184,20 +1245,41 @@ namespace hig {
                   unsigned int curr_index_2 = 2 * imsize + i;
                   unsigned int curr_index_3 = 3 * imsize + i;
                   base_id[curr_index] = dn2 * weight * 
-                    (fc[curr_index_0] * sf[curr_index_0] * ff[curr_index_0] +
-                     fc[curr_index_1] * sf[curr_index_1] * ff[curr_index_1] +
-                     fc[curr_index_2] * sf[curr_index_2] * ff[curr_index_2] +
-                     fc[curr_index_3] * sf[curr_index_3] * ff[curr_index_3]);
+                                       (fc[curr_index_0] * sf[curr_index_0] * ff[curr_index_0] +
+                                        fc[curr_index_1] * sf[curr_index_1] * ff[curr_index_1] +
+                                        fc[curr_index_2] * sf[curr_index_2] * ff[curr_index_2] +
+                                        fc[curr_index_3] * sf[curr_index_3] * ff[curr_index_3]);
                 } // for i
+              } else { // SAXS
+                for(unsigned int i = 0; i < imsize; ++ i) {
+                  unsigned int curr_index   = i;
+                  unsigned int curr_index_0 = i; 
+                  base_id[curr_index] = dn2 * weight * 
+                                       (fc[curr_index_0] * sf[curr_index_0] * ff[curr_index_0]);
+                } // for i
+              } // if-else
+              if(HiGInput::instance().saveff()) {
+                std::string ffoutput(HiGInput::instance().param_pathprefix() +
+                                     "/" + HiGInput::instance().runname() +
+                                     "/ff.out");
+                //ff.save_ff(4 * imsize, ffoutput);
+                std::ofstream fout(ffoutput, std::ios::out);
+                for (int i = 0; i < nqz_extended_; i++)
+                  fout << std::abs(ff[i]) << std::endl;
+                fout.close();
+              } // if
+              if(HiGInput::instance().savesf()) {
+                std::string sfoutput(HiGInput::instance().param_pathprefix() +
+                                     "/" + HiGInput::instance().runname() +
+                                     "/sf.out");
+                sf.save_sf(sfoutput);
+              } // if
             } else {
               /* perform slicing */
               // not yet implemented ...
               std::cout << "uh-oh: ever thought about implementing the slicing scheme?"
-                    << std::endl;
+                        << std::endl;
               return false;
-            } // if-else
-          } // if gmaster
-          //sf.clear(); // clean structure factor
             } // if-else
           } // if gmaster
           //sf.clear(); // clean structure factor
@@ -1510,7 +1592,7 @@ namespace hig {
                       #endif
                       );
     #else
-      if ((pc == nullptr) && (py == nullptr))
+      if (pc == nullptr && py == nullptr)
         return sf.compute_structure_factor_gpu(expt, center, curr_lattice, grain_repeats,
                       grain_scaling, rot
                       #ifdef USE_MPI
