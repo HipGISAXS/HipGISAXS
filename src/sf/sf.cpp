@@ -29,6 +29,7 @@
 #include <model/qgrid.hpp> 
 #include <utils/utilities.hpp>
 #include <common/constants.hpp>
+#include <config/hig_input.hpp>
 
 namespace hig {
   StructureFactor::StructureFactor(){
@@ -37,7 +38,7 @@ namespace hig {
     type_ = default_type;
     sf_ = nullptr;
     #ifdef SF_GPU
-      gsf_.init();
+      gsf_.init(HiGInput::instance().experiment());
     #endif
   } // StructureFactor::StructureFactor()
 
@@ -59,7 +60,7 @@ namespace hig {
     }
     memcpy(sf_, rhs.sf_, nz_ * sizeof(complex_t));
     #ifdef SF_GPU
-      gsf_.init();
+      gsf_.init(HiGInput::instance().experiment());
     #endif
     return *this;
   } // StructureFactor::operator=()

@@ -50,7 +50,7 @@ namespace hig {
     //ncol_ = QGrid::instance().ncols();
     sf_ = new (std::nothrow) complex_t[nz_];
     if(sf_ == NULL) return false;
-    gsf_.init();
+    gsf_.init(expt);
     bool ret = gsf_.compute(expt, center, lattice, repet, scaling, rot
                         #ifdef USE_MPI
                           , world_comm, comm_key
@@ -74,7 +74,7 @@ namespace hig {
   } // StructureFactorG::~StructureFactorG()
 
 
-  bool StructureFactorG::init() {
+  bool StructureFactorG::init(std::string expt) {
     // allocate device buffers
     // copy qgrid to device memory
 
@@ -87,7 +87,11 @@ namespace hig {
 
     nqx_ = QGrid::instance().nqx();
     nqy_ = QGrid::instance().nqy();
-    nqz_ = QGrid::instance().nqz_extended();
+    if(expt == "gisaxs") {
+      nqz_ = QGrid::instance().nqz_extended();
+    } else {
+      nqz_ = QGrid::instance().nqz();
+    } // if-else
     cudaMalloc((void**) &qx_, nqx_ * sizeof(real_t));
     cudaMalloc((void**) &qy_, nqy_ * sizeof(real_t));
     cudaMalloc((void**) &qz_, nqz_ * sizeof(cucomplex_t));

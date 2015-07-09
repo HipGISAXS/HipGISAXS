@@ -1163,7 +1163,8 @@ namespace hig {
 
             // for each location, add the FFs
             
-            for(unsigned int i = 0; i < nqz_extended_; ++ i) ff[i] += eff[i];  // insert distance factor thingy ...
+            //for(unsigned int i = 0; i < nqz_extended_; ++ i) ff[i] += eff[i];  // insert distance factor thingy ...
+            for(unsigned int i = 0; i < sz; ++ i) ff[i] += eff[i];  // insert distance factor thingy ...
           } // for l
         } // for e
 
@@ -1174,7 +1175,7 @@ namespace hig {
 #endif
 #ifdef DEBUG
           std::ofstream fout("ff.out", std::ios::out);
-          for (int i = 0; i < nqz_extended_; i++)
+          for (int i = 0; i < sz; i++)
             fout << std::abs(ff[i]) << std::endl;
           fout.close();
 #endif
@@ -1238,18 +1239,27 @@ namespace hig {
                 return false;
               } // if
               complex_t dn2 = multilayer_[order].one_minus_n2() - curr_struct->one_minus_n2();
-              for(unsigned int i = 0; i < imsize; ++ i) {
-                unsigned int curr_index   = i;
-                unsigned int curr_index_0 = i; 
-                unsigned int curr_index_1 = 1 * imsize + i;
-                unsigned int curr_index_2 = 2 * imsize + i;
-                unsigned int curr_index_3 = 3 * imsize + i;
-                base_id[curr_index] = dn2 * weight * 
-                                     (fc[curr_index_0] * sf[curr_index_0] * ff[curr_index_0] +
-                                      fc[curr_index_1] * sf[curr_index_1] * ff[curr_index_1] +
-                                      fc[curr_index_2] * sf[curr_index_2] * ff[curr_index_2] +
-                                      fc[curr_index_3] * sf[curr_index_3] * ff[curr_index_3]);
-              } // for i
+              if(HiGInput::instance().experiment() == "gisaxs") {  // GISAXS
+                for(unsigned int i = 0; i < imsize; ++ i) {
+                  unsigned int curr_index   = i;
+                  unsigned int curr_index_0 = i; 
+                  unsigned int curr_index_1 = 1 * imsize + i;
+                  unsigned int curr_index_2 = 2 * imsize + i;
+                  unsigned int curr_index_3 = 3 * imsize + i;
+                  base_id[curr_index] = dn2 * weight * 
+                                       (fc[curr_index_0] * sf[curr_index_0] * ff[curr_index_0] +
+                                        fc[curr_index_1] * sf[curr_index_1] * ff[curr_index_1] +
+                                        fc[curr_index_2] * sf[curr_index_2] * ff[curr_index_2] +
+                                        fc[curr_index_3] * sf[curr_index_3] * ff[curr_index_3]);
+                } // for i
+              } else { // SAXS
+                for(unsigned int i = 0; i < imsize; ++ i) {
+                  unsigned int curr_index   = i;
+                  unsigned int curr_index_0 = i; 
+                  base_id[curr_index] = dn2 * weight * 
+                                       (fc[curr_index_0] * sf[curr_index_0] * ff[curr_index_0]);
+                } // for i
+              } // if-else
               if(HiGInput::instance().saveff()) {
                 std::string ffoutput(HiGInput::instance().param_pathprefix() +
                                      "/" + HiGInput::instance().runname() +
