@@ -807,6 +807,12 @@ namespace hig {
       c_struct_intensity = new (std::nothrow) complex_t[num_structs * size];
     } // master
 
+    int num_devs = 0;
+    // get number of cuda devices
+    #ifdef USE_GPU
+      cudaGetDeviceCount(&num_devs);
+    #endif
+
     // loop over structures
     for(int s_num = 0; s_num < num_structs && s != HiGInput::instance().structure_end();
         ++ s, ++ s_num) {
@@ -826,6 +832,10 @@ namespace hig {
 
       Structure *curr_struct = &((*s).second);
       Lattice *curr_lattice = (Lattice*) HiGInput::instance().lattice(*curr_struct);
+      vector3_t a = curr_lattice->a();
+      vector3_t b = curr_lattice->b();
+      vector3_t c = curr_lattice->c();
+
       Unitcell *curr_unitcell = (Unitcell*) HiGInput::instance().unitcell(*curr_struct);
       bool struct_in_layer = (*s).second.grain_in_layer();
 
@@ -1012,14 +1022,29 @@ namespace hig {
         memset(grain_ids, 0 , num_gr * nrow_ * ncol_ * sizeof(complex_t));
       } // if
 
+      // set OpenMP threads to num of CUDA devices
+      #ifdef USE_GPU
+        omp_set_num_threads(num_devs);
+      #endif 
 
       // loop over grains - each process processes num_gr grains
+      #pragma omp parallel for
       for(int grain_i = grain_min; grain_i < grain_max; grain_i ++) {  // or distributions
 
         if(gmaster) {
           std::cout << "-- Processing grain " << grain_i + 1 << " / " << num_grains << " ..."
                 << std::endl;
         } // if
+
+        #ifdef USE_GPU
+        int dev_id;
+        if ( num_gr < num_devs) {
+           dev_id = grain_i - grain_min;
+        } else {
+           dev_id = omp_get_thread_num();
+        }
+        cudaSetDevice(dev_id);
+        #endif
 
         // define r_norm (grain orientation by tau and eta)
         // define full grain rotation matrix r_total = r_phi * r_norm
@@ -1075,7 +1100,8 @@ namespace hig {
           shape_param_list_t shape_params = HiGInput::instance().shape_params((*e).first);
 
           for(Unitcell::location_iterator_t l = (*e).second.begin(); l != (*e).second.end(); ++ l) {
-            curr_transvec += (*l);
+            vector3_t transvec = curr_transvec + (*l);
+            //curr_transvec += (*l);
             #ifdef FF_NUM_GPU   // use GPU
               #ifdef FF_NUM_GPU_FUSED
                 FormFactor eff(64, 8);
@@ -1089,7 +1115,7 @@ namespace hig {
             #endif
 
             fftimer.resume();
-            form_factor(eff, shape_name, shape_file, shape_params, curr_transvec,
+            form_factor(eff, shape_name, shape_file, shape_params, transvec,
                   shape_tau, shape_eta, rot
                   #ifdef USE_MPI
                     , grain_comm
@@ -1099,8 +1125,7 @@ namespace hig {
             //eff.save_ff(nqz_extended_, "ff.out");
 
             // for each location, add the FFs
-            
-            for(unsigned int i = 0; i < nqz_extended_; ++ i) ff[i] += eff[i];  // insert distance factor thingy ...
+            for(unsigned int i = 0; i < nqz_extended_; ++ i) ff[i] += eff[i];
           } // for l
         } // for e
 
@@ -1169,12 +1194,14 @@ namespace hig {
             unsigned int imsize = nrow_ * ncol_;
             if(nslices <= 1) {
               /* without slicing */
+                /*
                 if(single_layer_refindex_.delta() < 0 || single_layer_refindex_.beta() < 0) {
                   // this should never happen
                   std::cerr << "error: single layer information not correctly set"
                       << std::endl;
                   return false;
                 } // if
+                */
                 complex_t dn2 = multilayer_[order].one_minus_n2() - curr_struct->one_minus_n2();
                 for(unsigned int i = 0; i < imsize; ++ i) {
                   unsigned int curr_index   = i;
@@ -1193,7 +1220,7 @@ namespace hig {
               // not yet implemented ...
               std::cout << "uh-oh: ever thought about implementing the slicing scheme?"
                     << std::endl;
-              return false;
+              //return false;
             } // if-else
           } // if gmaster
           //sf.clear(); // clean structure factor

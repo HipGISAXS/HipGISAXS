@@ -530,7 +530,7 @@ if using_accelerator != None:
 #env.Append(CCFLAGS = ["-mavx -msse4.1 -msse4.2 -mssse3"])
 
 if using_debug:
-    env.Append(CCFLAGS = ['-g'])
+    env.Append(CCFLAGS = ['-g', '-O0'])
     #env.Append(CPPDEFINES = ['DEBUG'])
 else:
     env.Append(CCFLAGS = ['-O3'])
