@@ -234,6 +234,8 @@ namespace hig {
         KeyWords_[std::string("rot2")]            = struct_ensemble_orient_rot2_token;
         KeyWords_[std::string("rot3")]            = struct_ensemble_orient_rot3_token;
         KeyWords_[std::string("runname")]         = compute_runname_token;
+        KeyWords_[std::string("saveff")]          = compute_saveff_token;
+        KeyWords_[std::string("savesf")]          = compute_savesf_token;
         KeyWords_[std::string("scaling")]         = struct_grain_scaling_token;
         KeyWords_[std::string("scattering")]      = instrument_scatter_token;
         KeyWords_[std::string("sdd")]             = instrument_detector_sdd_token;

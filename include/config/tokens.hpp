@@ -167,6 +167,8 @@ namespace hig {
     compute_outregion_maxpoint_token,
     compute_nslices_token,
     compute_structcorr_token,      /* defined grain/ensemble correlations */
+    compute_saveff_token,
+    compute_savesf_token,
 
     /* experiment instrumentation - scatter and detector */
     instrument_token,

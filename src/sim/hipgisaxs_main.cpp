@@ -1223,38 +1223,54 @@ namespace hig {
           }
           sftimer.pause();
 
-        /* compute intensities using sf and ff */
-        // TODO: parallelize ...
+          /* compute intensities using sf and ff */
+          // TODO: parallelize ...
           if(gmaster) {  // grain master
             complex_t* base_id = grain_ids + (grain_i - grain_min) * nrow_ * ncol_;
             unsigned int nslices = HiGInput::instance().param_nslices();
             unsigned int imsize = nrow_ * ncol_;
             if(nslices <= 1) {
               /* without slicing */
-                if(single_layer_refindex_.delta() < 0 || single_layer_refindex_.beta() < 0) {
-                  // this should never happen
-                  std::cerr << "error: single layer information not correctly set"
-                      << std::endl;
-                  return false;
-                } // if
-                complex_t dn2 = multilayer_[order].one_minus_n2() - curr_struct->one_minus_n2();
-                for(unsigned int i = 0; i < imsize; ++ i) {
-                  unsigned int curr_index   = i;
-                  unsigned int curr_index_0 = i; 
-                  unsigned int curr_index_1 = 1 * imsize + i;
-                  unsigned int curr_index_2 = 2 * imsize + i;
-                  unsigned int curr_index_3 = 3 * imsize + i;
-                  base_id[curr_index] = dn2 * weight * 
-                    (fc[curr_index_0] * sf[curr_index_0] * ff[curr_index_0] +
-                     fc[curr_index_1] * sf[curr_index_1] * ff[curr_index_1] +
-                     fc[curr_index_2] * sf[curr_index_2] * ff[curr_index_2] +
-                     fc[curr_index_3] * sf[curr_index_3] * ff[curr_index_3]);
-                } // for i
+              if(single_layer_refindex_.delta() < 0 || single_layer_refindex_.beta() < 0) {
+                // this should never happen
+                std::cerr << "error: single layer information not correctly set"
+                          << std::endl;
+                return false;
+              } // if
+              complex_t dn2 = multilayer_[order].one_minus_n2() - curr_struct->one_minus_n2();
+              for(unsigned int i = 0; i < imsize; ++ i) {
+                unsigned int curr_index   = i;
+                unsigned int curr_index_0 = i; 
+                unsigned int curr_index_1 = 1 * imsize + i;
+                unsigned int curr_index_2 = 2 * imsize + i;
+                unsigned int curr_index_3 = 3 * imsize + i;
+                base_id[curr_index] = dn2 * weight * 
+                                     (fc[curr_index_0] * sf[curr_index_0] * ff[curr_index_0] +
+                                      fc[curr_index_1] * sf[curr_index_1] * ff[curr_index_1] +
+                                      fc[curr_index_2] * sf[curr_index_2] * ff[curr_index_2] +
+                                      fc[curr_index_3] * sf[curr_index_3] * ff[curr_index_3]);
+              } // for i
+              if(HiGInput::instance().saveff()) {
+                std::string ffoutput(HiGInput::instance().param_pathprefix() +
+                                     "/" + HiGInput::instance().runname() +
+                                     "/ff.out");
+                //ff.save_ff(4 * imsize, ffoutput);
+                std::ofstream fout(ffoutput, std::ios::out);
+                for (int i = 0; i < nqz_extended_; i++)
+                  fout << std::abs(ff[i]) << std::endl;
+                fout.close();
+              } // if
+              if(HiGInput::instance().savesf()) {
+                std::string sfoutput(HiGInput::instance().param_pathprefix() +
+                                     "/" + HiGInput::instance().runname() +
+                                     "/sf.out");
+                sf.save_sf(sfoutput);
+              } // if
             } else {
               /* perform slicing */
               // not yet implemented ...
               std::cout << "uh-oh: ever thought about implementing the slicing scheme?"
-                    << std::endl;
+                        << std::endl;
               return false;
             } // if-else
           } // if gmaster

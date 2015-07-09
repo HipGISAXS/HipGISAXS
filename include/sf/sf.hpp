@@ -72,7 +72,7 @@ namespace hig {
       #endif
       complex_t & operator[](unsigned int i) const { return sf_[i]; }
 
-      //void save_sf(unsigned int nqx, unsigned int nqy, unsigned int nqz, const char* filename);
+      void save_sf(const std::string& filename);
       void save(const char* filename);
 
       StructureFactor & operator=(const StructureFactor & rhs);

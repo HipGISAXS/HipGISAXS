@@ -297,4 +297,11 @@ namespace hig {
     f.close();
   } // StructureFactor::save_sf()
 
+  void StructureFactor::save_sf(const std::string& filename) {
+    std::ofstream f(filename);
+    for(unsigned int z = 0; z < nz_; ++ z) {
+      f << std::abs(sf_[z]) << std::endl;
+    } // for
+    f.close();
+  } // StructureFactor::save_sf()
 } // namespace hig

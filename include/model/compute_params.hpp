@@ -49,6 +49,8 @@ namespace hig {
       std::string palette_;
       unsigned int nslices_;
       std::string timestamp();
+      bool saveff_;
+      bool savesf_;
 
     public:
       ComputeParams();
@@ -56,14 +58,18 @@ namespace hig {
       void init();
       void clear();
 
-      /* setters */
-
       const std::string& pathprefix() const { return pathprefix_; }
       const std::string& runname() const { return runname_; }
+      bool saveff() const { return saveff_; }
+      bool savesf() const { return savesf_; }
+
+      /* setters */
 
       void pathprefix(std::string s) { pathprefix_ = s; }
       void runname(std::string s) { runname_ = s + "_" + timestamp(); }
       void method(std::string s) { method_ = s; }
+      void saveff(bool b) { saveff_ = b; }
+      void savesf(bool b) { savesf_ = b; }
 
       void output_region_type(OutputRegionType o) { output_region_.type_ = o; }
       void output_region_minpoint(vector2_t v) { output_region_.minpoint_ = v; }

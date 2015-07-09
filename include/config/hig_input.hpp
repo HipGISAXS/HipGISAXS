@@ -219,6 +219,8 @@ namespace hig {
 
       const std::string& path() const { return compute_.pathprefix(); }
       const std::string& runname() const { return compute_.runname(); }
+      bool saveff() const { return compute_.saveff(); }
+      bool savesf() const { return compute_.savesf(); }
 
       void photon_energy(real_t& value, std::string& unit) const {
         value = scattering_.photon_energy().value_;

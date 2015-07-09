@@ -293,6 +293,8 @@ namespace hig {
           case compute_outregion_token:  // nothing to do :-/
           case compute_token:  // nothing to do :-/
           case compute_structcorr_token:  // nothing to do :-/
+          case compute_saveff_token:  // nothing to do :-/
+          case compute_savesf_token:  // nothing to do :-/
           case hipgisaxs_token:  // nothing to do :-/
             break;
 
@@ -817,6 +819,8 @@ namespace hig {
       case compute_outregion_minpoint_token:
       case compute_structcorr_token:
       case compute_palette_token:
+      case compute_saveff_token:
+      case compute_savesf_token:
         break;
 
       case instrument_token:
@@ -1668,6 +1672,14 @@ namespace hig {
 
       case compute_palette_token:
         compute_.palette(str);
+        break;
+
+      case compute_saveff_token:
+        compute_.saveff(TokenMapper::instance().get_boolean(str));
+        break;
+
+      case compute_savesf_token:
+        compute_.savesf(TokenMapper::instance().get_boolean(str));
         break;
 
       case fit_param_variable_token:
