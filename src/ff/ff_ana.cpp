@@ -95,25 +95,6 @@ namespace hig {
           return false;
         } // if
         break;
-      case shape_random_cylinders:    // randomly oriented cylinders, for saxs
-        /*
-        if(!compute_random_cylinders(params, ff, tau, eta, transvec)) {
-          std::cerr << "error: something went wrong while computing FF for random cylinders"
-                << std::endl;
-          return false;
-        } // if
-        */ 
-        break;
-      case shape_horizontal_cylinder:    // horizontal cylinder
-        /*
-        if(!compute_horizontal_cylinder(tau, eta, params, transvec, ff)) {
-          std::cerr << "error: something went wrong while computing FF for a "
-                << "horizontal cylinder"
-                << std::endl;
-          return false;
-        } // if
-        */
-        break;
       case shape_sphere:          // simple sphere
         if(!compute_sphere(params, ff, transvec)) {
           std::cerr << "error: something went wrong while computing FF for a sphere"

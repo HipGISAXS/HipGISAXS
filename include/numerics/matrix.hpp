@@ -78,13 +78,12 @@ namespace hig {
 
       // assignment operator
       CUDAFY RotMatrix_t operator= (const RotMatrix_t & rhs){
-        RotMatrix_t res;
-        for(int i=0; i<9; i++) res.data_[i] = rhs.data_[i];
-        return res;
+        for(int i=0; i<9; i++) data_[i] = rhs.data_[i];
+        return *this;
       }
 
       // DEBUG -- print 
-      void print(){
+      void print() const {
         for (int i = 0; i < 9; i++){
           std::cout << "  " << data_[i];
           if (i % 3 == 2) std::cout << std::endl;
@@ -106,8 +105,8 @@ namespace hig {
       CUDAFY vector3_t operator*(const vector3_t & rhs){
         vector3_t lhs;
         lhs[0] = data_[0] * rhs.vec_[0] + data_[1] * rhs.vec_[1] + data_[2] * rhs.vec_[2];
-        lhs[0] = data_[3] * rhs.vec_[0] + data_[4] * rhs.vec_[1] + data_[5] * rhs.vec_[2];
-        lhs[0] = data_[6] * rhs.vec_[0] + data_[7] * rhs.vec_[1] + data_[8] * rhs.vec_[2];
+        lhs[1] = data_[3] * rhs.vec_[0] + data_[4] * rhs.vec_[1] + data_[5] * rhs.vec_[2];
+        lhs[2] = data_[6] * rhs.vec_[0] + data_[7] * rhs.vec_[1] + data_[8] * rhs.vec_[2];
         return lhs;
       }
 

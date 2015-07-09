@@ -59,7 +59,7 @@ namespace hig {
     string_begin_end_token, /* '"' */
     assignment_token,       /* '=' */
     separator_token,        /* ',' */
-    comment_token,          /* sign '#' for a comment start */
+    comment_token,          /* sign '#' for a comment start #13 */ 
 
     /**
      * hig tokens: valid keywords and values
@@ -77,11 +77,11 @@ namespace hig {
     min_token,                  /* min value for various: shape param, .. */
     max_token,                  /* max value for various: shape param, .. */
     step_token,                 /* step from min to max for various */
-    rot_token,                  /* rotation value for various */
+    rot_token,                  /* rotation value for various  */
     type_token,                 /* various types */
     stat_token,                 /* statistic type: gaussian, uniform, random, etc. */
     mean_token,                 /* mean value */
-    stddev_token,               /* standard deviation */
+    stddev_token,               /* standard deviation #26 */
 
     /* refractive index components */
     refindex_token,             /* refractive index of various */
@@ -97,7 +97,7 @@ namespace hig {
     shape_param_token,          /* parameter of a shape */
     shape_param_p1_token,       /* mean for a shape's statistic */
     shape_param_p2_token,       /* deviation for a shape's statistic */
-    shape_param_nvalues_token,  /* ... */
+    shape_param_nvalues_token,  /* ... #38 */
 
     /* layer parameters */
     layer_token,
@@ -108,7 +108,7 @@ namespace hig {
     unitcell_token,
     unitcell_element_token,
     unitcell_element_skey_token,
-    unitcell_element_locations_token,
+    unitcell_element_locations_token, // #45
 
     /* structure components */
     struct_token,
@@ -146,7 +146,7 @@ namespace hig {
     struct_ensemble_orient_rot_axis_token,
     struct_ensemble_orient_rot_angles_token,
     struct_ensemble_orient_rot_anglemean_token,
-    struct_ensemble_orient_rot_anglesd_token,
+    struct_ensemble_orient_rot_anglesd_token, //#80
     struct_paracrystal,
     struct_percusyevick,
     struct_dims,

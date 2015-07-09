@@ -1427,7 +1427,6 @@ namespace hig {
     ShapeName shp = shape_null;
 
     switch(curr_keyword_) {
-
       case include_token:
         if(!InputReader::instance().read_include_file(str)) {
           std::cerr << "fatal error: some error happened in opening or reading "
@@ -1634,6 +1633,11 @@ namespace hig {
         } // switch
         break;
 
+      case struct_grain_lattice_token:
+        curr_structure_.lattice_type(
+            TokenMapper::instance().get_lattice_type(str));
+        break;
+ 
       case struct_grain_lattice_hkl_token:
         curr_structure_.lattice_hkl(str);
         break;

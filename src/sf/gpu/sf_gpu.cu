@@ -42,12 +42,9 @@ namespace hig {
                                    , woo::MultiNode& world_comm, std::string comm_key
                                  #endif
                                 ) {
-    //nx_ = QGrid::instance().nqx();
     ny_ = QGrid::instance().nqy();
     if(expt == "saxs") nz_ = QGrid::instance().nqz();
     else if(expt == "gisaxs") nz_ = QGrid::instance().nqz_extended();
-    //nrow_ = QGrid::instance().nrows();
-    //ncol_ = QGrid::instance().ncols();
     sf_ = new (std::nothrow) complex_t[nz_];
     if(sf_ == NULL) return false;
     gsf_.init(expt);
