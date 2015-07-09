@@ -5,7 +5,7 @@ sources = ['read_oo_input.cpp', 'objectshape_reader.cpp', 'rawshape_reader.cpp',
 objs += env.Object(sources)
 
 #h5sources = ['hdf5shape_reader.c']
-#h5env = env.Clone(CC = 'h5pcc -c')		## a hack
+#h5env = env.Clone(CC = 'h5pcc -c')
 #objs += h5env.Object(h5sources)
 
 Return('objs')

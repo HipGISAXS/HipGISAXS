@@ -449,6 +449,10 @@ if _has_option("prefix"):
     install_dir = get_option("prefix")
 env['INSTALL_DIR'] = install_dir
 
+
+if _has_option("cpppath"):
+    env.Append(CPPPATH =  get_option("cpppath"))
+
 ## extra paths and libs
 working_dir = env['ENV']['PWD']
 env.Append(CPPPATH = [working_dir + "/include"])
@@ -531,7 +535,7 @@ if using_accelerator != None:
 
 if using_debug:
     env.Append(CCFLAGS = ['-g'])
-    #env.Append(CPPDEFINES = ['DEBUG'])
+    env.Append(CPPDEFINES = ['DEBUG'])
 else:
     env.Append(CCFLAGS = ['-O3'])
     env.Append(CPPDEFINES = ['NDEBUG'])
