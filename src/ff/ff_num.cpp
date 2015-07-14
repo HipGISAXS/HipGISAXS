@@ -25,9 +25,9 @@
 #include <cstring>
 #include <sstream>
 #include <algorithm>
-#if (defined(__SSE3__) || defined(INTEL_SB_AVX)) && !defined(USE_GPU) && !defined(__APPLE__)
-  #include <malloc.h>
-#endif
+//#if (defined(__SSE3__) || defined(INTEL_SB_AVX)) && !defined(USE_GPU) && !defined(__APPLE__)
+//  #include <malloc.h>
+//#endif
 
 #include <woo/timer/woo_boostchronotimers.hpp>
 
@@ -87,15 +87,15 @@ namespace hig {
     }
 
 
-#ifndef __SSE3__
+//#ifndef __SSE3__
     real_vec_t shape_def;
-#else
-#ifdef USE_GPU
-    real_vec_t shape_def;
-#else
-    real_t * shape_def = NULL;
-#endif
-#endif
+//#else
+//#ifdef USE_GPU
+//    real_vec_t shape_def;
+//#else
+//    real_t * shape_def = NULL;
+//#endif
+//#endif
     //unsigned int num_triangles = read_shapes_file(filename, shape_def);
 
 #ifdef USE_MPI
@@ -205,15 +205,15 @@ namespace hig {
 
     // warning: all procs read the shape file!!!!
     // TODO: improve to parallel IO, or one proc reading and sending to all ...
-    #ifndef __SSE3__
+//    #ifndef __SSE3__
       real_vec_t shape_def;
-    #else
-      #ifdef USE_GPU
-        real_vec_t shape_def;
-      #else
-        real_t* shape_def = NULL;
-      #endif
-    #endif
+//    #else
+//      #ifdef USE_GPU
+//        real_vec_t shape_def;
+//      #else
+//        real_t* shape_def = NULL;
+//      #endif
+//    #endif
     // use the new file reader instead ...
     unsigned int num_triangles = read_shapes_file(filename, shape_def);
             // TODO ... <--- sadly all procs read this! IMPROVE!!!
@@ -323,15 +323,15 @@ namespace hig {
   
     // warning: all procs read the shape file!!!!
     // TODO: improve to parallel IO, or one proc reading and sending to all ...
-    #ifndef __SSE3__
+//    #ifndef __SSE3__
       real_vec_t shape_def;
-    #else
-      #ifdef USE_GPU
-        real_vec_t shape_def;
-      #else
-        real_t* shape_def = NULL;
-      #endif
-    #endif
+//    #else
+//      #ifdef USE_GPU
+//        real_vec_t shape_def;
+//      #else
+//        real_t* shape_def = NULL;
+//      #endif
+//    #endif
     // use the new file reader instead ...
     unsigned int num_triangles = read_shapes_file(filename, shape_def);
             // TODO ... <--- sadly all procs read this! IMPROVE!!!
@@ -537,7 +537,7 @@ namespace hig {
                         #endif
                         );
         #endif
-      #elif defined USE_MIC  // use MIC
+/*      #elif defined USE_MIC  // use MIC
         #ifndef FF_NUM_MIC_KB
           ret_numtriangles = mff_.compute_form_factor_db(rank, shape_def, p_ff,
                         qx, p_nqx, p_qy, p_nqy, p_qz, p_nqz,
@@ -558,12 +558,12 @@ namespace hig {
                           , block_x, block_y, block_z, block_t
                         #endif
                         );
-        #endif
+        #endif */
       #else  // use only CPU
         ret_numtriangles = cff_.compute_form_factor(rank, shape_def,
-                        #ifdef __SSE3__
-                          num_triangles,
-                        #endif
+//                        #ifdef __SSE3__
+//                          num_triangles,
+//                        #endif
                         p_ff,
                         qx, p_nqx, p_qy, p_nqy, p_qz, p_nqz,
                         rot_,
@@ -975,15 +975,15 @@ namespace hig {
    * Function to read the shape definition input file in HDF5 format.
    */
   unsigned int NumericFormFactor::read_shapes_file(const char* filename,
-                          #ifndef __SSE3__
+//                          #ifndef __SSE3__
                             real_vec_t &shape_def
-                          #else
-                            #ifdef USE_GPU
-                              real_vec_t &shape_def
-                            #else
-                              real_t* &shape_def
-                            #endif
-                          #endif
+//                          #else
+//                            #ifdef USE_GPU
+//                              real_vec_t &shape_def
+//                            #else
+//                              real_t* &shape_def
+//                            #endif
+//                          #endif
                           ) {
     unsigned int num_triangles = 0;
     double* temp_shape_def = NULL;
@@ -1022,12 +1022,12 @@ namespace hig {
     //  for(unsigned int i = 0; i < num_triangles * 7; ++ i)
     //    shape_def.push_back((real_t)temp_shape_def[i]);
     #else          // using CPU or MIC
-      #ifndef __SSE3__
+//      #ifndef __SSE3__
         for(unsigned int i = 0, j = 0; i < num_triangles * CPU_T_PROP_SIZE_; ++ i) {
           if((i + 1) % CPU_T_PROP_SIZE_ == 0) shape_def.push_back((real_t) 0.0);  // padding
           else { shape_def.push_back((real_t)temp_shape_def[j]); ++ j; }
         } // for
-      #else    // using SSE3, so store data differently: FOR CPU AND MIC (vectorization)
+/*      #else    // using SSE3, so store data differently: FOR CPU AND MIC (vectorization)
         #ifndef USE_MIC    // generic cpu version with SSE3 or AVX
           #ifdef INTEL_SB_AVX    // CPU version with AVX
             // group all 's', 'nx', 'ny', 'nz', 'x', 'y', 'z' together
@@ -1087,7 +1087,7 @@ namespace hig {
           // TODO: try grouping 16 triangles together ...
           // that will give completely sequential memory access!
         #endif
-      #endif // __SSE3__
+      #endif // __SSE3__  */
     #endif // FF_NUM_GPU
 
     return num_triangles;

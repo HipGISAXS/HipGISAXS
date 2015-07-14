@@ -19,6 +19,7 @@
  */
 
 #include <iostream>
+#include <cstdlib>
 
 #include <file/edf_reader.hpp>
 

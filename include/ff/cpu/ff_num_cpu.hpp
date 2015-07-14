@@ -3,7 +3,7 @@
  *
  *  File: ff_num_cpu.hpp
  *  Created: Nov 05, 2011
- *  Modified: Sun 26 Jan 2014 09:47:15 AM PST
+ *  Modified: Mon 13 Jul 2015 09:41:39 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -70,7 +70,7 @@ namespace hig {
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									real_t*,
 									complex_t*);
-				#ifndef __SSE3__
+//				#ifndef __SSE3__
 					void form_factor_kernel_fused_unroll4(real_t*, real_t*, complex_t*,
 									real_vec_t&,
 									unsigned int, unsigned int, unsigned int, unsigned int,
@@ -82,13 +82,13 @@ namespace hig {
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									real_t*,
 									complex_t*);
-				#endif // __SSE3__
+//				#endif // __SSE3__
 				void form_factor_kernel_fused_nqx1(const real_t*, const real_t*, const complex_t*,
-									#ifndef __SSE3__
+//									#ifndef __SSE3__
 										real_vec_t&,
-									#else
-										real_t*,
-									#endif // __SSE3__
+//									#else
+//										real_t*,
+//									#endif // __SSE3__
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
 									unsigned int, unsigned int, unsigned int, unsigned int,
@@ -115,12 +115,12 @@ namespace hig {
 
 			complex_t compute_fq(real_t, complex_t, complex_t);
 
-			#ifdef INTEL_SB_AVX
+/*			#ifdef INTEL_SB_AVX
 				avx_m256c_t avx_compute_fq(avx_m256_t, avx_m256c_t, avx_m256c_t);
 			#elif defined __SSE3__
 				sse_m128c_t sse_compute_fq(sse_m128_t, sse_m128c_t, sse_m128c_t);
 			#endif // __SSE3__
-
+*/
 			void compute_block_size(int, int, int, int, unsigned int&, unsigned int&, unsigned int&,
 									unsigned int&
 									#ifdef FINDBLOCK
@@ -131,11 +131,11 @@ namespace hig {
 		public:
 
 			unsigned int compute_form_factor(int,
-									#ifndef __SSE3__
+//									#ifndef __SSE3__
 										real_vec_t&,
-									#else
-										real_t*, unsigned int,
-									#endif
+//									#else
+//										real_t*, unsigned int,
+//									#endif
 									complex_t*&,
 									real_t*&, int, real_t*&, int, complex_t* &qz, int,
 									real_t*&,

@@ -3,7 +3,7 @@
  *
  *  File: ff_num_cpu.hpp
  *  Created: Nov 05, 2011
- *  Modified: Sun 15 Sep 2013 05:30:01 PM PDT
+ *  Modified: Mon 13 Jul 2015 09:35:44 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -21,7 +21,7 @@
  */
 
 
-	#ifndef __SSE3__	// when not using sse3 optimizations
+//  #ifndef __SSE3__	// when not using sse3 optimizations
 
 	/**
 	 * the main Form Factor kernel with fused reduction function - for one hyperblock.
@@ -211,7 +211,7 @@
 		} // pragma omp parallel
 	} // NumericFormFactorC::form_factor_kernel_fused_unroll4()
 
-	#endif
+//	#endif
 	
 	/**
 	 * special case of nqx == 1 of Form Factor kernel with fused reduction
@@ -219,11 +219,11 @@
 	void NumericFormFactorC::form_factor_kernel_fused_nqx1(
 					const real_t* __restrict__ qx, const real_t* __restrict__ qy,
 					const complex_t* __restrict__ qz,
-					#ifndef __SSE3__
+//					#ifndef __SSE3__
 						real_vec_t& shape_def,
-					#else
-						real_t* __restrict__ shape_def,
-					#endif
+//					#else
+//						real_t* __restrict__ shape_def,
+//					#endif
 					unsigned int curr_nqx, unsigned int curr_nqy, unsigned int curr_nqz,
 					unsigned int curr_num_triangles,
 					unsigned int b_nqx, unsigned int b_nqy, unsigned int b_nqz,
@@ -251,7 +251,7 @@
 			//long long papi_counter_vals[3];
 		//#endif
 
-		#ifndef __SSE3__	// fallback
+//		#ifndef __SSE3__	// fallback
 
 			#pragma omp parallel
 			{
@@ -327,7 +327,7 @@
 				} // for z
 			} // pragma omp parallel
 
-		#elif defined INTEL_SB_AVX	// avx specific optimizations for intel sandy bridge (edison)
+/*		#elif defined INTEL_SB_AVX	// avx specific optimizations for intel sandy bridge (edison)
 
 			// FIXME: assuming only float for now (4 bytes per float)
 			unsigned int shape_padding = (8 - (num_triangles & 7)) & 7;
@@ -380,50 +380,6 @@
 						avx_m256c_t q2 = avx_add_ccps(qxy2, qz2);
 						avx_m256c_t q2_inv = avx_rcp_cps(q2);
 
-/*						avx_m256c_t total = avx_setzero_cps();
-
-						// FIXME: for now assuming curr_num_triangles is always multiple of 4 (vec size) ...
-						for(int i_t = 0; i_t < curr_num_triangles; i_t += vec_size) {
-							// load 16 / sizeof(real_t) entries at a time:
-							unsigned int shape_off = start_t + i_t;
-							avx_m256_t s = avx_load_rps(& shape_def[shape_off]);
-							shape_off += padded_num_triangles;
-							avx_m256_t nx = avx_load_rps(& shape_def[shape_off]);
-							shape_off += padded_num_triangles;
-							avx_m256_t ny = avx_load_rps(& shape_def[shape_off]);
-							shape_off += padded_num_triangles;
-							avx_m256_t nz = avx_load_rps(& shape_def[shape_off]);
-							shape_off += padded_num_triangles;
-							avx_m256_t x = avx_load_rps(& shape_def[shape_off]);
-							shape_off += padded_num_triangles;
-							avx_m256_t y = avx_load_rps(& shape_def[shape_off]);
-							shape_off += padded_num_triangles;
-							avx_m256_t z = avx_load_rps(& shape_def[shape_off]);
-
-							avx_m256c_t qzn = avx_mul_crps(temp_z, nz);
-							avx_m256c_t qzt = avx_mul_crps(temp_z, z);
-							avx_m256_t qyn = avx_mul_rrps(temp_y, ny);
-							avx_m256_t qyt = avx_mul_rrps(temp_y, y);
-							avx_m256_t qxn = avx_mul_rrps(temp_x, nx);
-							avx_m256_t qxt = avx_mul_rrps(temp_x, x);
-							avx_m256c_t qt = avx_add_rcps(avx_add_rrps(qxt, qyt), qzt);
-							avx_m256c_t temp_qn = avx_add_rcps(avx_add_rrps(qxn, qyn), qzn);
-							avx_m256c_t qn = avx_mul_ccps(temp_qn, q2_inv);
-							avx_m256c_t fq = avx_compute_fq(s, qt, qn);
-
-							total = avx_add_ccps(total, fq);
-						} // for t
-
-						total = avx_hadd_ccps(total, total);
-						total = avx_hadd_ccps(total, total);
-
-						//real_t real, imag;
-						//_mm_store_ss(&real, total.xvec);
-						//_mm_store_ss(&imag, total.yvec);
-						//ff[super_i] += complex_t(real, imag);
-						avx_addstore_css(&(ff[super_i]), total);
-
-*/
 						// unrolling twice, using function call fusion!
 
 						avx_m256c_t total1 = avx_setzero_cps();
@@ -575,50 +531,6 @@
 						sse_m128c_t q2 = sse_add_ccps(qxy2, qz2);
 						sse_m128c_t q2_inv = sse_rcp_cps(q2);
 
-/*						sse_m128c_t total = sse_setzero_cps();
-
-						// FIXME: for now assuming curr_num_triangles is always multiple of 4 (vec size) ...
-						for(int i_t = 0; i_t < curr_num_triangles; i_t += vec_size) {
-							// load 16 / sizeof(real_t) entries at a time:
-							unsigned int shape_off = start_t + i_t;
-							sse_m128_t s = sse_load_rps(& shape_def[shape_off]);
-							shape_off += padded_num_triangles;
-							sse_m128_t nx = sse_load_rps(& shape_def[shape_off]);
-							shape_off += padded_num_triangles;
-							sse_m128_t ny = sse_load_rps(& shape_def[shape_off]);
-							shape_off += padded_num_triangles;
-							sse_m128_t nz = sse_load_rps(& shape_def[shape_off]);
-							shape_off += padded_num_triangles;
-							sse_m128_t x = sse_load_rps(& shape_def[shape_off]);
-							shape_off += padded_num_triangles;
-							sse_m128_t y = sse_load_rps(& shape_def[shape_off]);
-							shape_off += padded_num_triangles;
-							sse_m128_t z = sse_load_rps(& shape_def[shape_off]);
-
-							sse_m128c_t qzn = sse_mul_crps(temp_z, nz);
-							sse_m128c_t qzt = sse_mul_crps(temp_z, z);
-							sse_m128_t qyn = sse_mul_rrps(temp_y, ny);
-							sse_m128_t qyt = sse_mul_rrps(temp_y, y);
-							sse_m128_t qxn = sse_mul_rrps(temp_x, nx);
-							sse_m128_t qxt = sse_mul_rrps(temp_x, x);
-							sse_m128c_t qt = sse_add_rcps(sse_add_rrps(qxt, qyt), qzt);
-							sse_m128c_t temp_qn = sse_add_rcps(sse_add_rrps(qxn, qyn), qzn);
-							sse_m128c_t qn = sse_mul_ccps(temp_qn, q2_inv);
-							sse_m128c_t fq = sse_compute_fq(s, qt, qn);
-
-							total = sse_add_ccps(total, fq);
-						} // for t
-
-						total = sse_hadd_ccps(total, total);
-						total = sse_hadd_ccps(total, total);
-
-						//real_t real, imag;
-						//_mm_store_ss(&real, total.xvec);
-						//_mm_store_ss(&imag, total.yvec);
-						//ff[super_i] += complex_t(real, imag);
-						sse_addstore_css(&(ff[super_i]), total);
-*/
-
 						// unrolling twice, using function call fusion!
 
 						sse_m128c_t total1 = sse_setzero_cps();
@@ -729,11 +641,11 @@
 				} // for z
 			} // pragma omp parallel
 
-		#endif // SSE3 AVX etc
+		#endif // SSE3 AVX etc */
 	} // NumericFormFactorC::form_factor_kernel_fused_nqx1()
 
 
-	#ifdef INTEL_SB_AVX
+/*	#ifdef INTEL_SB_AVX
 
 		inline avx_m256c_t NumericFormFactorC::avx_compute_fq(avx_m256_t s,
 												avx_m256c_t qt, avx_m256c_t qn) {
@@ -760,10 +672,10 @@
 		} // NumericFormFactorC::sse_compute_fq()
 
 	#endif
+*/
 
 
-
-	#ifndef __SSE3__	// not using sse3 optimizations
+//	#ifndef __SSE3__	// not using sse3 optimizations
 
 	/**
 	 * special case of nqx == 1 of Form Factor kernel with fused reduction, and loop unrolling
@@ -964,4 +876,4 @@
 		} // pragma omp parallel
 	} // NumericFormFactorC::form_factor_kernel_fused_nqx1_unroll4()
 
-	#endif
+//	#endif

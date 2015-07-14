@@ -3,7 +3,7 @@
  *
  *  File: image.cpp
  *  Created: Jun 18, 2012
- *  Modified: Wed 08 Oct 2014 12:17:46 PM PDT
+ *  Modified: Mon 13 Jul 2015 09:16:55 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -23,8 +23,8 @@
 #include <boost/math/special_functions/round.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
 #include <boost/gil/extension/io/tiff_io.hpp>
-#include <boost/gil/extension/numeric/sampler.hpp>
-#include <boost/gil/extension/numeric/resample.hpp>
+//#include <boost/gil/extension/numeric/sampler.hpp>
+//#include <boost/gil/extension/numeric/resample.hpp>
 
 #include <image/image.hpp>
 #include <numerics/distributions.hpp>
@@ -317,7 +317,7 @@ namespace hig {
    * NOTE: this requires the boost gil numeric library (it is not an official part of boost)
    * let the coordinates of old and new be from min (0, 0) to max (old_x-1, old_y-1) (new_x-1, new_y-1)
    */
-  bool Image::scale_image(unsigned int old_x, unsigned int old_y,
+/*  bool Image::scale_image(unsigned int old_x, unsigned int old_y,
               unsigned int new_x, unsigned int new_y,
               real_t *old_data, real_t* &new_data) {
     
@@ -333,12 +333,12 @@ namespace hig {
 
     return true;
   } // Image::scale_image()
-
+*/
 
   /**
    * nearest neighbor based sampling is used
    */
-  bool Image::resample_pixels(unsigned int old_x, unsigned int old_y, real_t* old_data,
+/*  bool Image::resample_pixels(unsigned int old_x, unsigned int old_y, real_t* old_data,
                 unsigned int new_x, unsigned int new_y, real_t* &new_data,
                 const boost::gil::matrix3x2<real_t>& mat) {
     // mapping from new to old
@@ -359,7 +359,7 @@ namespace hig {
     } // for y
     return true;
   } // Image::resample_pixels()
-
+*/
 
   /**
    * nearest neighbor based sampling (because this was easiest to implement)

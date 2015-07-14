@@ -270,7 +270,14 @@ namespace hig {
       std::string palette() const { return compute_.palette_; }
 
       const Lattice* lattice(Structure& s) { return s.lattice(); }
+//#ifdef __INTEL_COMPILER
+//      const Unitcell* unitcell(Structure& s) {
+//		  if(unitcells_.count(s.grain_unitcell_key()) > 0) return &(unitcells_[s.grain_unitcell_key()]);
+//		  else return nullptr;
+//	  } // unitcell()
+//#else
       const Unitcell* unitcell(Structure& s) { return &(unitcells_.at(s.grain_unitcell_key())); }
+//#endif
       //Shape* shape(Structure& s) { return &(shapes_[s.grain_shape_key()]); }
       //ShapeName shape_name(Structure& s) { return shapes_[s.grain_shape_key()].name(); }
       //real_t shape_tau(Structure& s) { return shapes_[s.grain_shape_key()].ztilt(); }

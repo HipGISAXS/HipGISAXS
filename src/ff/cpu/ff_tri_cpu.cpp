@@ -3,7 +3,7 @@
  *
  *  File: ff_num_cpu.hpp
  *  Created: Nov 05, 2011
- *  Modified: Wed 08 Oct 2014 12:17:47 PM PDT
+ *  Modified: Mon 13 Jul 2015 09:42:50 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -32,11 +32,11 @@
 #include <papi.h>
 #endif
 
-#ifdef INTEL_SB_AVX
-#include <numerics/cpu/avx_numerics.hpp>
-#elif defined __SSE3__
-#include <numerics/cpu/sse3_numerics.hpp>
-#endif
+//#ifdef INTEL_SB_AVX
+//#include <numerics/cpu/avx_numerics.hpp>
+//#elif defined __SSE3__
+//#include <numerics/cpu/sse3_numerics.hpp>
+//#endif
 #include <numerics/numeric_utils.hpp>
 
 #include <woo/timer/woo_boostchronotimers.hpp>

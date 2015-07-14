@@ -299,7 +299,7 @@ namespace hig {
   } // StructureFactor::save_sf()
 
   void StructureFactor::save_sf(const std::string& filename) {
-    std::ofstream f(filename);
+    std::ofstream f(filename.c_str());
     for(unsigned int z = 0; z < nz_; ++ z) {
       f << std::abs(sf_[z]) << std::endl;
     } // for

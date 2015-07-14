@@ -3,7 +3,7 @@
  *
  *  File: ff_num.hpp
  *  Created: Nov 05, 2011
- *  Modified: Wed 08 Oct 2014 12:13:01 PM PDT
+ *  Modified: Mon 13 Jul 2015 09:36:15 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -135,15 +135,15 @@ namespace hig {
       ShapeFileType get_shapes_file_format(const char*);
       unsigned int read_shapes_file_dat(const char* filename, real_vec_t& shape_def);
       unsigned int read_shapes_file(const char* filename,
-                    #ifndef __SSE3__
+//                    #ifndef __SSE3__
                       real_vec_t& shape_def
-                    #else
-                      #ifdef USE_GPU
-                        real_vec_t &shape_def
-                      #else
-                        real_t* &shape_def
-                      #endif
-                    #endif
+//                    #else
+//                      #ifdef USE_GPU
+//                        real_vec_t &shape_def
+//                      #else
+//                        real_t* &shape_def
+//                      #endif
+//                    #endif
                     );
       void find_axes_orientation(std::vector<real_t> &shape_def, std::vector<short int> &axes);
       bool construct_ff(int p_nqx, int p_nqy, int p_nqz,

@@ -2504,7 +2504,14 @@ namespace hig {
     // iterate over structures
     for(structure_iterator_t s = structures_.begin(); s != structures_.end(); s ++) {
 
+//#ifdef __INTEL_COMPILER
+//      Unitcell *curr_unitcell = NULL;
+//      if(unitcells_.count((*s).second.grain_unitcell_key()) > 0)
+//        curr_unitcell = &unitcells_[(*s).second.grain_unitcell_key()];
+//      else return false;
+//#else
       Unitcell *curr_unitcell = &unitcells_.at((*s).second.grain_unitcell_key());
+//#endif
 
       vector3_t element_min(REAL_ZERO_, REAL_ZERO_, REAL_ZERO_);
       vector3_t element_max(REAL_ZERO_, REAL_ZERO_, REAL_ZERO_);

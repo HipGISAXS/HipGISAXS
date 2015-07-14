@@ -38,8 +38,8 @@ hipGisaxsInput = {
 		}
 	},
 	computation = {
-    saveff = "true",
-    savesf = "true",
+    #saveff = "true",
+    #savesf = "true",
 		pathprefix = ".",					# path to output directory
 		runname = "cyl",					# name for current run and folder name for outputs
 		method = "dwba",					# theorical approach (see list)
