@@ -33,7 +33,7 @@ syn keyword higShapeComponents key name originvec ztilt xyrotation param
 syn keyword higLayerComponents key order thickness refindex
 syn keyword higUnitcellComponents key element locations
 syn keyword higStructureComponents key grain ensemble
-syn keyword higGrainComponents shape:key layer:key refindex lattice scaling transvec repetition
+syn keyword higGrainComponents shape:key layer:key refindex lattice scaling transvec repetition dimensions xspacing yspacing domain volfraction
 syn keyword higEnsembleComponents spacing maxgrains distribution orientations
 syn keyword higInstrumentationComponents scattering detector
 syn keyword higScatteringComponents expt alphai inplanerot tilt photon polarization coherence spotarea smearing
@@ -48,6 +48,7 @@ syn keyword higOrientationParam rot1 rot2 rot3
 syn keyword higTiltParam min max step
 syn keyword higPhotonParam value unit
 syn keyword higOutputParam type minpoint maxpoint
+syn keyword higDistributionParam mean stddev
 syn keyword higFittingParam type regmin regmax parallel perpendicular pvalue
 
 let b:current_syntax = "hig"
@@ -73,6 +74,7 @@ hi def link higRotationParam				Type
 hi def link higTiltParam					Type
 hi def link higPhotonParam					Type
 hi def link higOutputParam					Type
+hi def link higDistributionParam    Type
 hi def link higFittingParam					Type
 "highlight link higQuoted					String
 hi def link higEscape						Special
