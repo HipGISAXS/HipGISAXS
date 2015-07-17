@@ -409,8 +409,12 @@ variant_dir = "obj"
 ## set the environment ##
 #########################
 
-CXXCOMPILER = "CC"
-CCCOMPILER = "cc"
+## general
+CXXCOMPILER = "mpicxx"
+CCCOMPILER = "mpicc"
+## edison
+#CXXCOMPILER = "CC"
+#CCCOMPILER = "cc"
 
 # initialize the environment with gathered stuff so far
 env = Environment(BUILD_DIR=variant_dir,
@@ -494,7 +498,8 @@ tiff_libs = ["tiff"]
 other_libs = ["m", "gomp"]
 all_libs = boost_libs + hdf5_libs + tiff_libs + other_libs
 ## optional libs
-mpi_libs = [] #["mpi_cxx", "mpi"]
+#mpi_libs = []
+mpi_libs = ["mpi_cxx", "mpi"]
 #gpu_libs = ["cudart", "cufft", "cudadevrt", "nvToolsExt"]
 gpu_libs = ["cudart"]
 papi_libs = ["papi"]
