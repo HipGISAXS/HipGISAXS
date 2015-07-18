@@ -304,9 +304,10 @@ def do_configure(myenv):
 #   else:
 #       print("CUDA found. Proceeding with GPU support.")
 
-    ## check for types
-    if conf.CheckType('float_t') or conf.CheckType('complex_t'):
-        print("warning: Some types used are already defined. Overwriting them.")
+    if not using_tau:
+      ## check for types
+      if conf.CheckType('float_t') or conf.CheckType('complex_t'):
+          print("warning: Some types used are already defined. Overriding them.")
 
     myenv = conf.Finish()
 
@@ -363,12 +364,13 @@ add_option("extrapath", "comma separated list of additional paths", 1, True)
 add_option("extralib", "comma separated list of additional libraries", 1, True)
 ## debug options
 add_option("release", "release build, full optimizations, no debug", 0, True, default = 0)
+add_option("dbgo", "optimized build with debug symbols", 0, True, "opt_debug_build", default = 0)
 add_option("dbg", "debug build, no optimization", 0, True, "debug_build", default = 0)
 add_option("dbgl", "debug build, no optimization, debug logging", 0, True,
             "debug_build_and_log", default = 0)
 ## optional packages and support
 add_option("with-cuda", "Enable GPU support", 0, False)
-add_option("with-mic", "Enable Intel MIC support", 0, False)
+#add_option("with-mic", "Enable Intel MIC support", 0, False)
 add_option("with-mpi", "Enable MPI parallelization", 0, False)
 add_option("with-papi", "Enable PAPI profiling", 0, False)
 add_option("use-single", "Use single precision floating point arithmatic", 0, False)
@@ -376,6 +378,7 @@ add_option("use-single", "Use single precision floating point arithmatic", 0, Fa
 add_option("detail-time", "Output detailed timings", 0, False)
 add_option("detail-mem", "Output detailed memory usage", 0, False)
 add_option("verbose", "Be verbose", 0, False)
+add_option("with-tau", "Compile with TAU for profiling", 0, False)
 
 printLocalInfo()
 
@@ -390,14 +393,17 @@ msarch = "amd64"
 ## get the optional command line parameters
 release_build = _has_option("release")
 using_debug = _has_option("debug_build") or _has_option("debug_build_and_log")
+using_opt_debug = _has_option("opt_debug_build")
 if release_build and using_debug:
     print("error: release build cannot have debug enabled. make a choice first.")
     Exit(1)
 using_cuda = _has_option("with-cuda")
-using_mic = _has_option("with-mic")
+using_mic = 0 ## _has_option("with-mic")      ## disabling MIC version
 using_mpi = _has_option("with-mpi")
 using_papi = _has_option("with-papi")
 using_single = _has_option("use-single")
+using_tau = _has_option("with-tau")
+
 if using_cuda and using_mic:
     print("error: currently GPU and MIC are not supported simultaneously. select one of them.")
     Exit(1)
@@ -415,6 +421,9 @@ CCCOMPILER = "mpicc"
 ## edison
 #CXXCOMPILER = "CC"
 #CCCOMPILER = "cc"
+if using_tau:
+  CXXCOMPILER = "tau_cxx.sh"
+  CCCOMPILER = "tau_cc.sh"
 
 # initialize the environment with gathered stuff so far
 env = Environment(BUILD_DIR=variant_dir,
@@ -489,6 +498,12 @@ if _has_option("cpppath"):
 if not get_option('clean'):
     env = do_configure(env)
 
+## stuff for TAU
+if using_tau:
+  if 'TAU_MAKEFILE' not in env['ENV']:
+    print "error: please specify TAU_MAKEFILE environment variable to enable use of TAU"
+    sys.exit(1)
+
 using_accelerator = None
 ## required libs
 boost_libs = ["boost_system", "boost_filesystem", "boost_timer", "boost_chrono"]
@@ -541,6 +556,10 @@ if using_accelerator != None:
 if using_debug:
     env.Append(CCFLAGS = ['-g'])
     env.Append(CPPDEFINES = ['DEBUG'])
+elif using_opt_debug:
+    #env.Append(CCFLAGS = ['-O3 -g -dynamic'])
+    env.Append(CCFLAGS = ['-O3', '-g', '-dynamic'])
+    env.Append(CPPDEFINES = ['NDEBUG'])
 else:
     env.Append(CCFLAGS = ['-O3'])
     env.Append(CPPDEFINES = ['NDEBUG'])
