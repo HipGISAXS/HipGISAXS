@@ -738,7 +738,11 @@ namespace hig {
 
   /* all the real juice is here */
   bool HipGISAXS::run_gisaxs(real_t alpha_i, real_t alphai, real_t phi, real_t tilt,
-                real_t* &img3d, woo::comm_t comm_key, int corr_doms) {
+                real_t* &img3d,
+                #ifdef USE_MPI
+                  woo::comm_t comm_key,
+                #endif
+                int corr_doms) {
 
     SampleRotation rotation_matrix;
     if(!run_init(alphai, phi, tilt, rotation_matrix)) return false;
