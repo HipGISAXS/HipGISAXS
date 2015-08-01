@@ -142,6 +142,7 @@ namespace hig {
 
       void abangle(real_t d) { abangle_ = d; }
       void caratio(real_t d) { caratio_ = d; }
+      void bragg_angles(int, real_vec_t &);
 
       friend class Grain;
 

@@ -74,7 +74,7 @@ namespace hig {
 
       /* calculate the angles */
       // calculate angles in vertical direction
-      real_t dq = (max_point[1] - min_point[0])/(pixels[1]-1);
+      real_t dq = (max_point[1] - min_point[1])/(pixels[1]-1);
       alpha_.resize(pixels[1]);
       for (int i = 0; i < pixels[1]; i++){
         real_t qpt = min_point[1] + i * dq;

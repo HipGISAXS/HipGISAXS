@@ -67,7 +67,7 @@ namespace hig {
         temp_ff = temp_ff + FormFactorSphere(mqx, mqy, mqz, r[i]);
       }
       cucomplex_t temp1 = transvec_d[0] * mqx + transvec_d[1] * mqy + transvec_d[2] * mqz;
-      ff[i_z] =  temp_ff * cuCexpi(temp1);
+      ff[i_z] =  temp_ff; // * cuCexpi(temp1);
     }
   } // ff_sphere_kernel()
 
@@ -94,6 +94,7 @@ namespace hig {
     cudaMemcpy(distr_x_d, distr_x_h, n_distr_x * sizeof(real_t), cudaMemcpyHostToDevice);
 
     //run_init(rot_h, transvec);
+    //std::cout << "FF transv = [ " << transvec_h[0] << " " << transvec_h[1] << " " << transvec_h[2] << " ] " << std::endl;
     cudaMemcpyToSymbol(transvec_d, transvec_h, 3*sizeof(real_t), 0, cudaMemcpyHostToDevice); 
 
     int num_threads = 256;

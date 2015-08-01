@@ -20,10 +20,14 @@
  */
 
 #include <iostream>
+#include <set>
 
 #include <model/structure.hpp>
 #include <utils/string_utils.hpp>
 #include <config/token_mapper.hpp>
+#include <numerics/matrix.hpp>
+#include <numerics/numeric_utils.hpp>
+#include <common/constants.hpp>
 
 
 namespace hig {
@@ -170,6 +174,35 @@ namespace hig {
     return true;
   } // Lattice::construct_vectors()
 
+  void Lattice::bragg_angles(int order, real_vec_t & angles){
+    angles.clear();
+    // compute reciprocal lattice
+    vector3_t bc = cross(b_, c_);
+    real_t vol = std::abs(dot(a_, bc));
+    real_t t1 = 2. * PI_ / vol;
+    vector3_t mra = cross(b_, c_) * t1;
+    vector3_t mrb = cross(c_, a_) * t1;
+    vector3_t mrc = cross(a_, b_) * t1;
+
+    /// Form a matrix
+    RotMatrix_t m(mra, mrb, mrc);
+    m.transpose();
+
+    std::set<real_t> angs;
+    for (real_t i = -order; i <= order; i++){
+      for (real_t j = -order; j <= order; j++){
+        for (real_t k = -order; k <= order; k++){
+          vector3_t v(i, j, k);
+          vector3_t r = m * v;
+          real_t a = std::atan2(r[1], r[0]);
+          angs.insert(a);
+        }
+      }
+    }
+    for (std::set<real_t>::iterator it = angs.begin(); it != angs.end(); it++){
+      angles.push_back(*it);
+    }
+  }
 
 
   /** grainorientations functions

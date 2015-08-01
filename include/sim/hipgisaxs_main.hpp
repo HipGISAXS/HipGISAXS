@@ -132,7 +132,7 @@ namespace hig {
 
       bool illuminated_volume(real_t, real_t, int, RefractiveIndex);
       bool spatial_distribution(structure_iterator_t, real_t, int, int&, int&, real_t*&);
-      bool orientation_distribution(structure_iterator_t, real_t*, int, int, real_t*&, real_t *&);
+      bool orientation_distribution(structure_iterator_t, real_t*, int &, int, real_t*&, real_t *&);
       bool generate_repetition_range(unsigned int, unsigned int, int, std::vector<unsigned int>&);
       bool construct_repetition_distribution(const GrainRepetitions&, int, std::vector<vector3_t>&);
       bool construct_scaling_distribution(std::vector<StatisticType>, 
