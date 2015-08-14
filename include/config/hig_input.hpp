@@ -273,15 +273,14 @@ namespace hig {
       const Unitcell* unitcell(Structure& s) { return &(unitcells_.at(s.grain_unitcell_key())); }
       //Shape* shape(Structure& s) { return &(shapes_[s.grain_shape_key()]); }
       //ShapeName shape_name(Structure& s) { return shapes_[s.grain_shape_key()].name(); }
-      //real_t shape_tau(Structure& s) { return shapes_[s.grain_shape_key()].ztilt(); }
-      //real_t shape_eta(Structure& s) { return shapes_[s.grain_shape_key()].xyrotation(); }
       //vector3_t shape_originvec(Structure& s) { return shapes_[s.grain_shape_key()].originvec(); }
       //std::string shape_filename(Structure& s) { return shapes_[s.grain_shape_key()].filename(); }
       //shape_param_list_t& shape_params(Structure& s) {
       //  return shapes_[s.grain_shape_key()].param_list(); }
       ShapeName shape_name(const string_t& key) { return shapes_[key].name(); }
-      real_t shape_tau(const string_t& key) { return shapes_[key].ztilt(); }
-      real_t shape_eta(const string_t& key) { return shapes_[key].xyrotation(); }
+      real_t shape_zrot(const string_t& key) { return shapes_[key].zrot(); }
+      real_t shape_yrot(const string_t& key) { return shapes_[key].yrot(); }
+      real_t shape_xrot(const string_t& key) { return shapes_[key].xrot(); }
       vector3_t shape_originvec(const string_t& key) { return shapes_[key].originvec(); }
       std::string shape_filename(const string_t& key) { return shapes_[key].filename(); }
       shape_param_list_t& shape_params(const string_t& key) {

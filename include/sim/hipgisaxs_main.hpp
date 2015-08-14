@@ -59,6 +59,7 @@ namespace hig {
 
       vector3_t vol_;      /* represents the illuminated volume */
       vector3_t cell_;    /* stores the domain size in each dimension */
+      RotMatrix_t rot_;
       MultiLayer multilayer_; 
 
       class SampleRotation {

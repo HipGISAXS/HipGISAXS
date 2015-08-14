@@ -451,36 +451,32 @@ namespace hig {
 
       real_t q_x = qx[i_x], q_y = qy[i_y];
       //check for the missing wedge
-      if (isnan(q_x) || isnan(q_y)){
-        sf[i_z] = make_cuC(REAL_ZERO_, REAL_ZERO_);
-      } else { 
-        cucomplex_t q_z = qz[i_z];
+      cucomplex_t q_z = qz[i_z];
 
-        cucomplex_t e_iqa = cuCexpi(rot[0] * q_x + rot[1] * q_y + rot[2] * q_z);
-        cucomplex_t xa_0 = unit_c - cuCpow(e_iqa, repet[0]);
-        cucomplex_t ya_0 = unit_c - e_iqa;
-        if(fabs(ya_0.y) > REAL_ZERO_ || fabs(ya_0.x) > REAL_ZERO_) sa = xa_0 / ya_0;
-        else sa = make_cuC(repet[0], 0);
-        sa = cuCpow(e_iqa, ((real_t) 1.0 - repet[0]) / (real_t) 2.0) * sa;
+      cucomplex_t e_iqa = cuCexpi(rot[0] * q_x + rot[1] * q_y + rot[2] * q_z);
+      cucomplex_t xa_0 = unit_c - cuCpow(e_iqa, repet[0]);
+      cucomplex_t ya_0 = unit_c - e_iqa;
+      if(fabs(ya_0.y) > REAL_ZERO_ || fabs(ya_0.x) > REAL_ZERO_) sa = xa_0 / ya_0;
+      else sa = make_cuC(repet[0], 0);
+      sa = cuCpow(e_iqa, ((real_t) 1.0 - repet[0]) / (real_t) 2.0) * sa;
 
-        cucomplex_t e_iqb = cuCexpi(rot[3] * q_x + rot[4] * q_y + rot[5] * q_z);
-        cucomplex_t xb_0 = unit_c - cuCpow(e_iqb, repet[1]);
-        cucomplex_t yb_0 = unit_c - e_iqb;
-        if(fabs(yb_0.y) > REAL_ZERO_ || fabs(yb_0.x) > REAL_ZERO_) sb = xb_0 / yb_0;
-        else sb = make_cuC(repet[1], 0);
-        sb = cuCpow(e_iqb, ((real_t) 1.0 - repet[1]) / (real_t) 2.0) * sb;
+      cucomplex_t e_iqb = cuCexpi(rot[3] * q_x + rot[4] * q_y + rot[5] * q_z);
+      cucomplex_t xb_0 = unit_c - cuCpow(e_iqb, repet[1]);
+      cucomplex_t yb_0 = unit_c - e_iqb;
+      if(fabs(yb_0.y) > REAL_ZERO_ || fabs(yb_0.x) > REAL_ZERO_) sb = xb_0 / yb_0;
+      else sb = make_cuC(repet[1], 0);
+      sb = cuCpow(e_iqb, ((real_t) 1.0 - repet[1]) / (real_t) 2.0) * sb;
 
-        cucomplex_t e_iqc = cuCexpi(rot[6] * q_x + rot[7] * q_y + rot[8] * q_z);
-        cucomplex_t xc_0 = unit_c - cuCpow(e_iqc, repet[2]);
-        cucomplex_t yc_0 = unit_c - e_iqc;
-        if(fabs(yc_0.y) > REAL_ZERO_ || fabs(yc_0.x) > REAL_ZERO_) sc = xc_0 / yc_0;
-        else sc = make_cuC(repet[2], 0);
-        sc = cuCpow(e_iqc, ((real_t) 1.0 - repet[2]) / (real_t) 2.0) * sc;
+      cucomplex_t e_iqc = cuCexpi(rot[6] * q_x + rot[7] * q_y + rot[8] * q_z);
+      cucomplex_t xc_0 = unit_c - cuCpow(e_iqc, repet[2]);
+      cucomplex_t yc_0 = unit_c - e_iqc;
+      if(fabs(yc_0.y) > REAL_ZERO_ || fabs(yc_0.x) > REAL_ZERO_) sc = xc_0 / yc_0;
+      else sc = make_cuC(repet[2], 0);
+      sc = cuCpow(e_iqc, ((real_t) 1.0 - repet[2]) / (real_t) 2.0) * sc;
 
-        cucomplex_t temp3 = cuCexpi(center[0] * q_x + center[1] * q_y + center[2] * q_z);
-        cucomplex_t temp2 = unit_c + cuCexpi(transvec[0] * q_x + transvec[1] * q_y + transvec[2] * q_z);
-        sf[i_z] = temp3 * temp2 * sa * sb * sc;
-      } // if (isnan)
+      cucomplex_t temp3 = cuCexpi(center[0] * q_x + center[1] * q_y + center[2] * q_z);
+      cucomplex_t temp2 = unit_c + cuCexpi(transvec[0] * q_x + transvec[1] * q_y + transvec[2] * q_z);
+      sf[i_z] = temp3 * temp2 * sa * sb * sc;
     } // if
   } // StructureFactor::compute_structure_factor_gpu()
 

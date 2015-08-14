@@ -35,6 +35,9 @@
 namespace hig {
   class RotMatrix_t {
     private:
+      INLINE void swapit(real_t & a, real_t & b){
+        real_t t = a; a = b; b = t;
+      }
       real_t data_[9];
       INLINE void set(real_t v){ for (int i=0; i<9; i++) data_[i] = v; }
 
@@ -83,9 +86,9 @@ namespace hig {
 
       // transpose
       CUDAFY void transpose(){
-        std::swap(data_[1],data_[3]);
-        std::swap(data_[2],data_[6]);
-        std::swap(data_[5],data_[7]);
+        swapit(data_[1],data_[3]);
+        swapit(data_[2],data_[6]);
+        swapit(data_[5],data_[7]);
       }
 
       // assignment operator

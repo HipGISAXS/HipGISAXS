@@ -28,6 +28,7 @@
 #include <numerics/matrix.hpp>
 #include <numerics/numeric_utils.hpp>
 #include <common/constants.hpp>
+#include <model/qgrid.hpp>
 
 
 namespace hig {
@@ -174,28 +175,40 @@ namespace hig {
     return true;
   } // Lattice::construct_vectors()
 
-  void Lattice::bragg_angles(int order, real_vec_t & angles){
+  void Lattice::bragg_angles(vector3_t repeats, vector3_t scaling, real_t k0, real_vec_t & angles){
     angles.clear();
+
+    vector3_t a = a_ * scaling[0];
+    vector3_t b = b_ * scaling[1];
+    vector3_t c = c_ * scaling[1];
+
     // compute reciprocal lattice
-    vector3_t bc = cross(b_, c_);
-    real_t vol = std::abs(dot(a_, bc));
+    vector3_t bc = cross(b, c);
+    real_t vol = std::abs(dot(a, bc));
     real_t t1 = 2. * PI_ / vol;
-    vector3_t mra = cross(b_, c_) * t1;
-    vector3_t mrb = cross(c_, a_) * t1;
-    vector3_t mrc = cross(a_, b_) * t1;
+    vector3_t mra = cross(b, c) * t1;
+    vector3_t mrb = cross(c, a) * t1;
+    vector3_t mrc = cross(a, b) * t1;
+    vector2_t qmin = QGrid::instance().qmin();
+    vector2_t qmax = QGrid::instance().qmax();
 
-    /// Form a matrix
-    RotMatrix_t m(mra, mrb, mrc);
-    m.transpose();
-
+    const real_t d_ang = PI_ / 180. * 0.5;
     std::set<real_t> angs;
-    for (real_t i = -order; i <= order; i++){
-      for (real_t j = -order; j <= order; j++){
-        for (real_t k = -order; k <= order; k++){
-          vector3_t v(i, j, k);
-          vector3_t r = m * v;
-          real_t a = std::atan2(r[1], r[0]);
-          angs.insert(a);
+    for (real_t h = 0; h < repeats[0]; h++){
+      for (real_t k = 0; k < repeats[1]; k++){
+        for (real_t l = 0; l < repeats[1]; l++){
+          vector3_t G = mra * h + mrb * k + mrc * l;
+          if ((G[0] < qmin[0]) || (G[0] > qmax[0])) continue;
+          if ((G[2] < qmin[1]) || (G[2] > qmax[1])) continue;
+          if (G.norm() > 0 ){
+            real_t G_proj = std::sqrt(G[0] * G[0] + G[1] * G[1]);
+            if ( G_proj < TINY_ ) continue;
+            real_t k_proj = std::sqrt(k0 * k0 - G[2] * G[2]);
+            real_t t1 = std::atan2(G[1], G[0]);
+            real_t t2 = std::acos((k0 * k0 + G_proj * G_proj - k_proj * k_proj)/(2. * k0 * G_proj));
+            real_t a = t1 - t2;
+            angs.insert(a);
+          }
         }
       }
     }
@@ -203,6 +216,7 @@ namespace hig {
       angles.push_back(*it);
     }
   }
+
 
 
   /** grainorientations functions

@@ -126,8 +126,11 @@ namespace hig {
       photon = photon / 1000;    // in keV
       lambda = 1.23984 / photon;
       freq_ = 1e-9 * photon * 1.60217646e-19 * 1000 / 6.626068e-34;
+    } else if (unit == "kev") {
+      lambda = 1.23984 / photon;
+      freq_ = 1e-9 * photon * 1.60217646e-19 * 1000 / 6.626068e-34;
     } else { /* do something else ? ... */
-      if(master) std::cerr << "error: photon energy is not given in 'ev'" << std::endl;
+      if(master) std::cerr << "error: photon energy is not given in 'ev' or 'kev'" << std::endl;
       return false;
     } // if-else
 
@@ -740,14 +743,15 @@ namespace hig {
   bool HipGISAXS::run_gisaxs(real_t alpha_i, real_t alphai, real_t phi, real_t tilt,
                 real_t* &img3d, woo::comm_t comm_key, int corr_doms) {
 
-    SampleRotation rotation_matrix;
-    if(!run_init(alphai, phi, tilt, rotation_matrix)) return false;
+    //SampleRotation rotation_matrix;
+    // if(!run_init(alphai, phi, tilt, rotation_matrix)) return false;
+    rot_ = RotMatrix_t(2, phi);
 
     //QGrid::instance().save ("qgrid.out");
     #ifdef USE_MPI
       bool master = multi_node_.is_master(comm_key);
       int ss = multi_node_.size(comm_key);
-      std::cout << "****************** MPI size for this simulation: " << ss << std::endl;
+      //std::cout << "****************** MPI size for this simulation: " << ss << std::endl;
     #else
       bool master = true;
     #endif
@@ -862,6 +866,10 @@ namespace hig {
         r1axis = 2;
         r2axis = 0;
         r3axis = 1;
+        // TODO this is a hack
+        if (dd) delete [] dd;
+        dd = new real_t[ndx * 3];
+        for (int i = 0; i < ndx * 3; i++) dd[i] = REAL_ZERO_;
       } else {
         r1axis = (int) (*s).second.rotation_rot1()[0];
         r2axis = (int) (*s).second.rotation_rot2()[0];
@@ -962,8 +970,6 @@ namespace hig {
                            // ... incomplete
       } // if-else
       //ShapeName shape_name = HiGInput::instance().shape_name((*s).second);
-      //real_t shape_tau = HiGInput::instance().shape_tau((*s).second);
-      //real_t shape_eta = HiGInput::instance().shape_eta((*s).second);
       //std::string shape_file = HiGInput::instance().shape_filename((*s).second);
       //shape_param_list_t shape_params = HiGInput::instance().shape_params((*s).second);
 
@@ -1047,14 +1053,13 @@ namespace hig {
         RotMatrix_t r3(r3axis, rot3); 
 
         // order of multiplication is important
-        RotMatrix_t rot = r3 * r2 * r1;
+        RotMatrix_t rot = rot_ * r3 * r2 * r1;
 
         /* center of unit cell replica */
         vector3_t curr_dd_vec(dd[grain_i + 0],
                     dd[grain_i + num_grains],
                     dd[grain_i + 2 * num_grains]);
         vector3_t center = rot * curr_dd_vec + curr_transvec;
-
 
         /* compute structure factor and form factor */
 
@@ -1073,19 +1078,18 @@ namespace hig {
         for(Unitcell::element_iterator_t e = curr_unitcell->element_begin();
             e != curr_unitcell->element_end(); ++ e) {
 
-          //ShapeName shape_name = HiGInput::instance().shape_name((*e).second);
-          //real_t shape_tau = HiGInput::instance().shape_tau((*e).second);
-          //real_t shape_eta = HiGInput::instance().shape_eta((*e).second);
-          //std::string shape_file = HiGInput::instance().shape_filename((*e).second);
-          //shape_param_list_t shape_params = HiGInput::instance().shape_params((*e).second);
           ShapeName shape_name = HiGInput::instance().shape_name((*e).first);
-          real_t shape_tau = HiGInput::instance().shape_tau((*e).first);
-          real_t shape_eta = HiGInput::instance().shape_eta((*e).first);
+          real_t zrot = HiGInput::instance().shape_zrot((*e).first);
+          real_t yrot = HiGInput::instance().shape_yrot((*e).first);
+          real_t xrot = HiGInput::instance().shape_xrot((*e).first);
           std::string shape_file = HiGInput::instance().shape_filename((*e).first);
           shape_param_list_t shape_params = HiGInput::instance().shape_params((*e).first);
 
+          // update rotation matrix
+          rot = rot *  RotMatrix_t(0, xrot) * RotMatrix_t(1, yrot) * RotMatrix_t(2, zrot);
+
           for(Unitcell::location_iterator_t l = (*e).second.begin(); l != (*e).second.end(); ++ l) {
-            vector3_t transvec = curr_transvec + (*l);
+            vector3_t transvec = (*l);
             #ifdef FF_NUM_GPU   // use GPU
               #ifdef FF_NUM_GPU_FUSED
                 FormFactor eff(64, 8);
@@ -1098,6 +1102,8 @@ namespace hig {
               FormFactor eff;
             #endif
 
+            // TODO remove these later
+            real_t shape_tau = 0., shape_eta = 0.;
             fftimer.resume();
             //read_form_factor("curr_ff.out");
             form_factor(eff, shape_name, shape_file, shape_params, transvec,
@@ -2092,9 +2098,10 @@ namespace hig {
 
     if (distribution == "bragg"){
       real_vec_t angles;
-      int order = 3;
       Lattice * lattice = (Lattice *) HiGInput::instance().lattice(s->second);
-      lattice->bragg_angles(order, angles);
+      vector3_t gr_scaling = s->second.grain_scaling();
+      vector3_t gr_repetitions = s->second.grain_repetition();
+      lattice->bragg_angles(gr_repetitions, gr_scaling, k0_, angles);
       if (angles.size() > 0 ) {
         ndx = angles.size();
         nn = new (std::nothrow) real_t[ndx * 3];

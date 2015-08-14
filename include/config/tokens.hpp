@@ -92,8 +92,9 @@ namespace hig {
     shape_token,                /* a shape */
     shape_name_token,           /* name of a shape: box, truncpyr, .., or [filename] */
     shape_originvec_token,      /* reference origin point for a shape */
-    shape_ztilt_token,          /* angle of shape tilt off the z-axis */
-    shape_xyrot_token,          /* rotation of a shape in xy-plane */
+    shape_zrot_token,          /* angle of shape tilt off the z-axis */
+    shape_yrot_token,          /* rotation of a shape in xy-plane */
+    shape_xrot_token,          /* rotation of a shape in xy-plane */
     shape_param_token,          /* parameter of a shape */
     shape_param_p1_token,       /* mean for a shape's statistic */
     shape_param_p2_token,       /* deviation for a shape's statistic */

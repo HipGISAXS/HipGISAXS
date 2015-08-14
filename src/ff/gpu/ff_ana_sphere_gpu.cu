@@ -31,7 +31,6 @@
 #include <numerics/gpu/cu_complex_numeric.cuh>
 #include <utils/gpu/cu_utilities.cuh>
 
-
 namespace hig {
 
   extern __constant__ real_t transvec_d[3];
@@ -44,7 +43,9 @@ namespace hig {
   __device__  __inline__ cucomplex_t FormFactorSphere(cucomplex_t qx, cucomplex_t qy, cucomplex_t qz, 
           real_t radius){
     cucomplex_t qR    = cuCsqrt(qx * qx + qy * qy + qz * qz) * radius;
-
+    if (cuC_abs(qR) < CUTINY_){
+        return make_cuC(REAL_ZERO_, REAL_ZERO_);
+    }
     real_t     vol = 4 * PI_ * radius * radius * radius;
     cucomplex_t sincos = cuCsin(qR) - cuCcos(qR) * qR; 
     cucomplex_t expval = cuCexpi(qz * radius);
@@ -67,7 +68,7 @@ namespace hig {
         temp_ff = temp_ff + FormFactorSphere(mqx, mqy, mqz, r[i]);
       }
       cucomplex_t temp1 = transvec_d[0] * mqx + transvec_d[1] * mqy + transvec_d[2] * mqz;
-      ff[i_z] =  temp_ff; // * cuCexpi(temp1);
+      ff[i_z] =  temp_ff * cuCexpi(temp1);
     }
   } // ff_sphere_kernel()
 

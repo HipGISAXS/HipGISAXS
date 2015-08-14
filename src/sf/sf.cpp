@@ -37,9 +37,9 @@ namespace hig {
     nz_ = 0;
     type_ = default_type;
     sf_ = nullptr;
-    #ifdef SF_GPU
-      gsf_.init(HiGInput::instance().experiment());
-    #endif
+    // #ifdef SF_GPU
+    //  gsf_.init(HiGInput::instance().experiment());
+    //#endif
   } // StructureFactor::StructureFactor()
 
   StructureFactor::~StructureFactor() {
@@ -197,9 +197,7 @@ namespace hig {
      *  will not change for the grain.
      */
 
-    #ifndef DEBUG
     #pragma omp parallel for
-    #endif
     for(unsigned int i = 0; i < nz_; ++ i) {
       complex_t temp1, temp_x2, temp_y3, temp_y4, temp_x5;
       unsigned j = i % ny_;
@@ -207,12 +205,6 @@ namespace hig {
       complex_t sa, sb, sc;
       real_t qx = QGrid::instance().qx(j);
       real_t qy = QGrid::instance().qy(j);
-
-      // qx and qy are are nan above the origin, aka the missing wedge
-      if (boost::math::isnan(qx) || boost::math::isnan(qy)){
-        sf_[i] = CMPLX_ZERO_;
-        continue;
-      }
 
       complex_t qz;
       if(expt == "saxs") qz = QGrid::instance().qz(i);

@@ -69,9 +69,9 @@ namespace hig {
 
   // not used
   Shape::Shape(const std::string& key, const ShapeName name, const vector3_t& origin,
-          const real_t ztilt, const real_t xyrot, shape_param_list_t& param_list) :
+          const real_t zrot, const real_t yrot, const real_t xrot, shape_param_list_t& param_list) :
           key_(key), name_(name), originvec_(origin),
-          ztilt_(ztilt), xyrotation_(xyrot) {
+          zrot_(zrot), yrot_(yrot), xrot_(xrot) {
     for(shape_param_iterator_t i = param_list.begin(); i != param_list.end(); i ++) {
       parse_param((*i).second);
       insert_param((*i));
@@ -81,8 +81,7 @@ namespace hig {
   // not used
   Shape::Shape(const std::string& key, const ShapeName name) : key_(key), name_(name) {
     originvec_[0] = originvec_[1] = originvec_[2] = 0.0;
-    ztilt_ = 0;
-    xyrotation_ = 0;
+    zrot_ = yrot_ = xrot_ = 0.;
   } // Shape::Shape()
 
 
@@ -92,7 +91,8 @@ namespace hig {
     name_ = shape_error;
     name_str_.clear();
     originvec_[0] = originvec_[1] = originvec_[2] = 0.0;
-    ztilt_ = xyrotation_ = 0.0;
+    zrot_ = yrot_ = xrot_ = 0.;
+    
   } // Shape::init()
 
 
@@ -102,7 +102,7 @@ namespace hig {
     name_ = shape_null;
     name_str_.clear();
     originvec_[0] = originvec_[1] = originvec_[2] = 0.0;
-    ztilt_ = xyrotation_ = 0.0;
+    zrot_ = yrot_ = xrot_ = 0.;
   } // Shape::clear()
 
 
@@ -132,8 +132,9 @@ namespace hig {
           << " name_str_ = " << name_str_ << std::endl
           << " originvec_ = [" << originvec_[0] << ", " << originvec_[1]
           << ", " << originvec_[2] << "]" << std::endl
-          << " ztilt_ = " << ztilt_ << std::endl
-          << " xyrotation_ = " << xyrotation_ << std::endl
+          << " zrot_ = " << zrot_ << std::endl
+          << " yrot_ = " << yrot_ << std::endl
+          << " xrot_ = " << xrot_ << std::endl
           << " params_: " << params_.size() << std::endl;
     for(shape_param_iterator_t i = params_.begin(); i != params_.end(); i ++) {
       (*i).second.print();
@@ -217,13 +218,16 @@ namespace hig {
         } // if-else
         break;
 
-      case shape_ztilt_token:
-        ztilt_ = new_val;
+      case shape_zrot_token:
+        zrot_ = new_val;
         break;
 
-      case shape_xyrot_token:
-        xyrotation_ = new_val;
+      case shape_yrot_token:
+        yrot_ = new_val;
         break;
+
+      case shape_xrot_token:
+        xrot_ = new_val;
 
       case shape_param_token:
         #ifdef __INTEL_COMPILER

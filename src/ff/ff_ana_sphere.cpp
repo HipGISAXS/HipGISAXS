@@ -31,7 +31,6 @@
 #include <model/qgrid.hpp>
 #include <utils/utilities.hpp>
 #include <numerics/numeric_utils.hpp>
-
 namespace hig {
 
   /**
@@ -39,6 +38,9 @@ namespace hig {
    */
   complex_t FormFactorSphere(complex_t qx, complex_t qy, complex_t qz, real_t radius){
       complex_t qval = std::sqrt(qx * qx + qy * qy + qz * qz);
+      if (std::abs(qval) < TINY_){
+        return CMPLX_ZERO_;
+      }
       complex_t qR   = qval * radius;
       complex_t qR3   = qR * qR * qR;
       complex_t t1   = std::conj(qR3) / std::norm(qR3);
