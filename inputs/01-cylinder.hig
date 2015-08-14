@@ -2,7 +2,7 @@ hipGisaxsInput = {
 	shape = {
 		key = "s1",	 		# a unique key to identify this shape in this file
 		name = "cylinder",		# shape name
-		originvec = [0 0 0],
+#		originvec = [0 0 0],
 		param = { type = "height", min = 5 },
 		param = { type = "radius", min = 20 }
 	},
@@ -11,15 +11,22 @@ hipGisaxsInput = {
 		order = -1 ,	 	# special order code for the substrate layer
 		refindex = { delta = 4.88E-06, beta = 7.37E-08 }
 	},
+  unitcell = {
+    key = "u1",
+    element = {
+      shape:key = "s1",
+      locations = [ [ 0 0 0 ] ]
+  },
 	structure = {
 		key = "st1",
 		grain = {
-			shape:key = "s1",
+			unitcell:key = "u1",
 			refindex = { delta = 9.4E-06, beta = 3.37E-08 }
 		}
 	},
 	instrumentation = {
 		scattering = {
+#			expt = "saxs",
 			expt = "gisaxs",
 			alphai = { min = 0.14 },					# incidence angles
 			photon = { value = 10000, unit = "ev" }		# photon energy
@@ -31,11 +38,13 @@ hipGisaxsInput = {
 		}
 	},
 	computation = {
+    #saveff = "true",
+    #savesf = "true",
 		pathprefix = ".",					# path to output directory
 		runname = "cyl",					# name for current run and folder name for outputs
 		method = "dwba",					# theorical approach (see list)
-		outputregion = { type = "qspace" , minpoint = [ 0 0 ], maxpoint = [ 3 3 ] },
-		resolution = [ 500 500 ],			# number of q points per pixel
+		outputregion = { type = "qspace" , minpoint = [ -3 0 ], maxpoint = [ 3 3 ] },
+		resolution = [ 1000 500 ],			# number of q points per pixel
 		nslices = 0							# max number of slices for slicing algorithm
 	}
 }

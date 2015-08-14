@@ -2,7 +2,7 @@ hipGisaxsInput = {
 	shape = {
 		key = "s1",	 		# a unique key to identify this shape in this file
 		name = "hcylinder",		# shape name
-		originvec = [0 0 0],
+#		originvec = [0 0 0],
 		param = { type = "height", min = 50 },
 		param = { type = "radius", min = 5 },
 		xyrotation = 90
@@ -12,10 +12,14 @@ hipGisaxsInput = {
 		order = -1 ,	 	# special order code for the substrate layer
 		refindex = { delta = 4.88E-06, beta = 7.37E-08 }
 	},
+  unitcell = {
+    key = "u1",
+    locations = [ [ 0 0 0 ] ]
+  },
 	structure = {
 		key = "st1",
 		grain = {
-			shape:key = "s1",
+		  unitcell:key = "u1",
 			refindex = { delta = 9.4E-06, beta = 3.37E-08 }
 		}
 	},

@@ -3,7 +3,7 @@
  *
  *  File: image.hpp
  *  Created: Jun 18, 2012
- *  Modified: Wed 08 Oct 2014 12:13:02 PM PDT
+ *  Modified: Mon 13 Jul 2015 09:17:08 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -24,7 +24,7 @@
 #define _IMAGE_HPP_
 
 #include <boost/gil/gil_all.hpp>
-#include <boost/gil/extension/numeric/affine.hpp>
+//#include <boost/gil/extension/numeric/affine.hpp>
 
 #include <common/globals.hpp>
 #include <image/colormap.hpp>
@@ -44,10 +44,10 @@ namespace hig {
       ColorMap8 color_map_;      /* defines mapping to colors in the defined palette */
       ColorMap new_color_map_;    /* new color mapping */
 
-      bool scale_image(unsigned int, unsigned int, unsigned int, unsigned int,
+/*      bool scale_image(unsigned int, unsigned int, unsigned int, unsigned int,
               real_t*, real_t*&);
       bool resample_pixels(unsigned int, unsigned int, real_t*, unsigned int, unsigned int,
-              real_t*&, const boost::gil::matrix3x2<real_t>&);
+              real_t*&, const boost::gil::matrix3x2<real_t>&); */
       bool convert_to_rgb_pixels(unsigned int, unsigned int, real_t*);
       bool convert_to_rgb_palette(unsigned int, unsigned int, real_t*);
       bool slice(Image* &img, unsigned int xval = 0);  /* obtain a slice at given x in case of 3D data */

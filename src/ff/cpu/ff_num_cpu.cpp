@@ -3,7 +3,7 @@
  *
  *  File: ff_num_cpu.hpp
  *  Created: Nov 05, 2011
- *  Modified: Wed 08 Oct 2014 12:17:47 PM PDT
+ *  Modified: Mon 13 Jul 2015 09:37:52 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -32,11 +32,11 @@
 #include <papi.h>
 #endif
 
-#ifdef INTEL_SB_AVX
-#include <numerics/cpu/avx_numerics.hpp>
-#elif defined __SSE3__
-#include <numerics/cpu/sse3_numerics.hpp>
-#endif
+//#ifdef INTEL_SB_AVX
+//#include <numerics/cpu/avx_numerics.hpp>
+//#elif defined __SSE3__
+//#include <numerics/cpu/sse3_numerics.hpp>
+//#endif
 
 #include <woo/timer/woo_boostchronotimers.hpp>
 
@@ -59,11 +59,11 @@ namespace hig {
    * The main host function called from outside, as part of the API for a single node.
    */
   unsigned int NumericFormFactorC::compute_form_factor(int rank,
-            #ifndef __SSE3__
+//            #ifndef __SSE3__
               real_vec_t &shape_def,
-            #else
-              real_t* shape_def, unsigned int num_triangles,
-            #endif
+//            #else
+//              real_t* shape_def, unsigned int num_triangles,
+//            #endif
             complex_t* &ff,
             real_t* &qx, int nqx, real_t* &qy, int nqy, complex_t* &qz, int nqz,
             real_t* &rot,
@@ -78,16 +78,16 @@ namespace hig {
         std::cout << "++      Number of OpenMP threads: " << omp_get_max_threads() << std::endl;
     #endif
   
-    #ifndef __SSE3__
+//    #ifndef __SSE3__
       unsigned int num_triangles = shape_def.size() / CPU_T_PROP_SIZE_;
-    #endif
+//    #endif
     if(num_triangles < 1) return 0;
 
-    #ifdef INTEL_SB_AVX
-      unsigned int shape_padding = (32 - (num_triangles & 31)) & 31;
-    #elif defined __SSE3__
-      unsigned int shape_padding = (16 - (num_triangles & 15)) & 15;
-    #endif
+//    #ifdef INTEL_SB_AVX
+//      unsigned int shape_padding = (32 - (num_triangles & 31)) & 31;
+//    #elif defined __SSE3__
+//      unsigned int shape_padding = (16 - (num_triangles & 15)) & 15;
+//    #endif
   
     //#ifndef FF_NUM_CPU_PADDING
       unsigned long int total_qpoints = nqx * nqy * nqz;
@@ -327,10 +327,10 @@ namespace hig {
                     rot,
                     ff);
               } else {
-                #ifdef __SSE3__
-                  if(rank == 0)
-                    std::cout << "uh-oh: no SSE3 version!" << std::endl;
-                #else
+//                #ifdef __SSE3__
+//                  if(rank == 0)
+//                    std::cout << "uh-oh: no SSE3 version!" << std::endl;
+//                #else
                   form_factor_kernel_fused_unroll4(qx, qy, qz, shape_def,
                     curr_b_nqx, curr_b_nqy, curr_b_nqz, curr_b_num_triangles,
                     b_nqx, b_nqy, b_nqz, b_num_triangles,
@@ -338,7 +338,7 @@ namespace hig {
                     ib_x, ib_y, ib_z, ib_t,
                     rot,
                     ff);
-                #endif // __SSE3__
+//                #endif // __SSE3__
               } // if-else
             #endif
 

@@ -3,7 +3,7 @@
  *
  *  File: read_oo_input.cpp
  *  Created: Jul 04, 2012
- *  Modified: Wed 08 Oct 2014 12:17:44 PM PDT
+ *  Modified: Mon 13 Jul 2015 09:13:34 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Slim Chourou <stchourou@lbl.gov>
@@ -70,7 +70,7 @@ namespace hig {
 
 
   bool InputReader::read_include_file(const string_t& filename) {
-    std::ifstream f(filename);
+    std::ifstream f(filename.c_str());
     if(!f.is_open()) {
       std::cerr << "fatal error: could not read include file "
                 << filename << ". aborting " << std::endl;

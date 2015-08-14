@@ -23,10 +23,7 @@
 #define _HIPGISAXS_MAIN_HPP_
 
 #include <complex>
-#ifdef USE_MPI
-#include <mpi.h>
 #include <woo/comm/multi_node_comm.hpp>
-#endif
 
 #include <common/typedefs.hpp>
 #include <common/globals.hpp>
@@ -84,18 +81,22 @@ namespace hig {
 
 //      complex_t* fc_;        /* fresnel coefficients */
 //      FormFactor ff_;        /* form factor object */
-//      StructureFactor sf_;    /* structure factor object */
+//      StructureFactor sf_;   /* structure factor object */
 
       #ifdef USE_MPI
-        woo::MultiNode multi_node_;  /* for multi node communication */
+        woo::MultiNode multi_node_; /* for multi node communication */
       #endif
-      woo::comm_t root_comm_;    /* the universe */
-      woo::comm_t sim_comm_;    /* communicator for simulations */
+      woo::comm_t root_comm_;     /* the universe */
+      woo::comm_t sim_comm_;      /* communicator for simulations */
 
       bool init();  /* global initialization for all runs */
       //bool init_steepest_fit(real_t);  /* init for steepest descent fitting */
       bool run_init(real_t, real_t, real_t, SampleRotation&);   /* init for a single run */
-      bool run_gisaxs(real_t, real_t, real_t, real_t, real_t*&, std::string, int c = 0);
+      bool run_gisaxs(real_t, real_t, real_t, real_t, real_t*&,
+                      #ifdef USE_MPI
+                        woo::comm_t,
+                      #endif
+                      int c = 0);
                     /* a single GISAXS run */
 
       /* wrapper over sf function */
@@ -186,7 +187,13 @@ namespace hig {
       bool fit_init();
       bool compute_gisaxs(real_t*&, std::string = "");
 
-      bool is_master() { return multi_node_.is_master(sim_comm_); }
+      bool is_master() {
+        #ifdef USE_MPI
+          return multi_node_.is_master(sim_comm_);
+        #else
+          return true;
+        #endif
+      } // is_master()
       // fitting related ... TODO: improve
       std::vector <std::string> fit_param_keys() const {
         return HiGInput::instance().fit_param_keys();

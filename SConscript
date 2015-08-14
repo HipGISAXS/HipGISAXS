@@ -256,6 +256,8 @@ def do_configure(myenv):
     if not conf.check_for_toolchain(toolchain, "C", "CC", ".c"):
         print("error: C toolchain does not match the identified C++ toolchain")
         Exit(1)
+    conf.env['TOOLCHAIN'] = toolchain
+    print toolchain
 
     if not conf.CheckCHeader('assert.h'):
         print("error: C header 'assert.h' missing in your compiler installation!")
@@ -287,12 +289,13 @@ def do_configure(myenv):
     if not conf.CheckCXXHeader('vector'):
         print("error: you need 'std::vector' to build")
         Exit(1)
-    if not conf.CheckCHeader('hdf5.h'):
-        print("error: you need HDF5 header to build")
-        Exit(1)
     if not conf.CheckCXXHeader("boost/filesystem/operations.hpp"):
         print( "can't find boost headers" )
         Exit(1)
+    if using_parallel_hdf5:
+        if not conf.CheckCHeader('hdf5.h'):
+            print("error: you need HDF5 header to build")
+            Exit(1)
     conf.env.Append(CPPDEFINES = [("BOOST_THREAD_VERSION", "2")])
     #for b in boost_libs:
     #   l = "boost_" + b
@@ -304,9 +307,10 @@ def do_configure(myenv):
 #   else:
 #       print("CUDA found. Proceeding with GPU support.")
 
-    ## check for types
-    if conf.CheckType('float_t') or conf.CheckType('complex_t'):
-        print("warning: Some types used are already defined. Overwriting them.")
+    if not using_tau:
+      ## check for types
+      if conf.CheckType('float_t') or conf.CheckType('complex_t'):
+          print("warning: Some types used are already defined. Overriding them.")
 
     myenv = conf.Finish()
 
@@ -363,19 +367,22 @@ add_option("extrapath", "comma separated list of additional paths", 1, True)
 add_option("extralib", "comma separated list of additional libraries", 1, True)
 ## debug options
 add_option("release", "release build, full optimizations, no debug", 0, True, default = 0)
+add_option("dbgo", "optimized build with debug symbols", 0, True, "opt_debug_build", default = 0)
 add_option("dbg", "debug build, no optimization", 0, True, "debug_build", default = 0)
 add_option("dbgl", "debug build, no optimization, debug logging", 0, True,
             "debug_build_and_log", default = 0)
 ## optional packages and support
 add_option("with-cuda", "Enable GPU support", 0, False)
-add_option("with-mic", "Enable Intel MIC support", 0, False)
+#add_option("with-mic", "Enable Intel MIC support", 0, False)
 add_option("with-mpi", "Enable MPI parallelization", 0, False)
+add_option("with-parallel-hdf5", "Enable parallel HDF5 data format support", 0, False)
 add_option("with-papi", "Enable PAPI profiling", 0, False)
 add_option("use-single", "Use single precision floating point arithmatic", 0, False)
 ## other stuff
 add_option("detail-time", "Output detailed timings", 0, False)
 add_option("detail-mem", "Output detailed memory usage", 0, False)
 add_option("verbose", "Be verbose", 0, False)
+add_option("with-tau", "Compile with TAU for profiling", 0, False)
 
 printLocalInfo()
 
@@ -390,14 +397,22 @@ msarch = "amd64"
 ## get the optional command line parameters
 release_build = _has_option("release")
 using_debug = _has_option("debug_build") or _has_option("debug_build_and_log")
+using_opt_debug = _has_option("opt_debug_build")
 if release_build and using_debug:
     print("error: release build cannot have debug enabled. make a choice first.")
     Exit(1)
 using_cuda = _has_option("with-cuda")
-using_mic = _has_option("with-mic")
+using_mic = 0 ## _has_option("with-mic")      ## disabling MIC version
 using_mpi = _has_option("with-mpi")
+using_parallel_hdf5 = _has_option("with-parallel-hdf5")
 using_papi = _has_option("with-papi")
 using_single = _has_option("use-single")
+using_tau = _has_option("with-tau")
+
+if not using_mpi and using_parallel_hdf5:
+    print("error: to enable parallel HDF5 support, you need to enable MPI as well.")
+    Exit(1)
+
 if using_cuda and using_mic:
     print("error: currently GPU and MIC are not supported simultaneously. select one of them.")
     Exit(1)
@@ -409,8 +424,19 @@ variant_dir = "obj"
 ## set the environment ##
 #########################
 
-CXXCOMPILER = "mpicxx"
-CCCOMPILER = "mpicc"
+if using_mpi:
+    ## general
+    CXXCOMPILER = "mpicxx"
+    CCCOMPILER = "mpicc"
+    ## edison
+    #CXXCOMPILER = "CC"
+    #CCCOMPILER = "cc"
+else:
+    CXXCOMPILER = "g++"
+    CCCOMPILER = "gcc"
+if using_tau:
+  CXXCOMPILER = "tau_cxx.sh"
+  CCCOMPILER = "tau_cc.sh"
 
 # initialize the environment with gathered stuff so far
 env = Environment(BUILD_DIR=variant_dir,
@@ -485,15 +511,20 @@ if _has_option("cpppath"):
 if not get_option('clean'):
     env = do_configure(env)
 
+## stuff for TAU
+if using_tau:
+  if 'TAU_MAKEFILE' not in env['ENV']:
+    print "error: please specify TAU_MAKEFILE environment variable to enable use of TAU"
+    sys.exit(1)
+
 using_accelerator = None
 ## required libs
 boost_libs = ["boost_system", "boost_filesystem", "boost_timer", "boost_chrono"]
-hdf5_libs = ["hdf5", "z"]
-#hdf5_libs = ["hdf5", "z"]
+parallel_hdf5_libs = ["hdf5", "z"]
 tiff_libs = ["tiff"]
 other_libs = ["m", "gomp"]
-all_libs = boost_libs + hdf5_libs + tiff_libs + other_libs
 ## optional libs
+#mpi_libs = []
 mpi_libs = ["mpi_cxx", "mpi"]
 #gpu_libs = ["cudart", "cufft", "cudadevrt", "nvToolsExt"]
 gpu_libs = ["cudart"]
@@ -503,13 +534,17 @@ detail_flags = []
 if _has_option("detail-time"): detail_flags += ['TIME_DETAIL_1', 'TIME_DETAIL_2']
 if _has_option("detail-mem"): detail_flags += ['MEM_DETAIL']
 if _has_option("verbose"): detail_flags += ['FF_VERBOSE', 'SF_VERBOSE']
-all_flags = detail_flags
 ## optional flags
 gpu_flags = ['USE_GPU', 'GPUR', 'KERNEL2', 'FF_ANA_GPU', 'FF_NUM_GPU', 'FF_NUM_GPU_FUSED', 'SF_GPU']
 mic_flags = ['USE_MIC', 'FF_MIC_OPT', 'FF_NUM_MIC_SWAP', 'FF_NUM_MIC_KB']
 cpu_flags = ['FF_NUM_CPU_FUSED']
 mpi_flags = ['USE_MPI']
+parallel_hdf5_flags = ['USE_PARALLEL_HDF5']
 papi_flags = ['PROFILE_PAPI']
+
+all_flags = detail_flags
+all_libs = boost_libs + tiff_libs + other_libs
+
 if using_cuda:
     all_libs += gpu_libs
     all_flags += gpu_flags
@@ -519,12 +554,22 @@ elif using_mic:
     using_accelerator = 'mic'
 else:
     all_flags += cpu_flags
+
 if using_mpi:
     all_libs += mpi_libs
     all_flags += mpi_flags
+
+if using_parallel_hdf5:
+    all_libs += parallel_hdf5_libs
+    all_flags += parallel_hdf5_flags
+    env['USE_PARALLEL_HDF5'] = True
+else:
+    env['USE_PARALLEL_HDF5'] = False
+
 if using_papi:
     all_libs += papi_libs
     all_flags += papi_flags
+
 env.Append(LIBS = all_libs)
 env.Append(CPPDEFINES = all_flags)
 env['ACCELERATOR_TYPE'] = using_accelerator
@@ -536,6 +581,11 @@ if using_accelerator != None:
 if using_debug:
     env.Append(CCFLAGS = ['-g'])
     env.Append(CPPDEFINES = ['DEBUG'])
+elif using_opt_debug:
+    odbg_flags = ['-O3', '-g']
+    if env['TOOLCHAIN'] == toolchain_intel: odbg_flags += ['-dynamic']
+    env.Append(CCFLAGS = odbg_flags)
+    env.Append(CPPDEFINES = ['NDEBUG'])
 else:
     env.Append(CCFLAGS = ['-O3'])
     env.Append(CPPDEFINES = ['NDEBUG'])
@@ -574,7 +624,6 @@ if using_cuda:
     gpuenv.Append(LINKFLAGS = ['-Xlinker', '-Wl,-rpath', '-Xlinker', '-Wl,$CUDA_TOOLKIT_PATH/lib64'])
     gpuenv.Append(LINKFLAGS = ['-Xlinker', '-lgomp'])
     gpuenv.Append(LINKFLAGS = ['-arch=sm_35'])
-    #gpuenv.Append(LINKFLAGS = ['-arch=sm_21'])
     gpuenv.Append(LINKFLAGS = ['-dlink'])
 Export('gpuenv')
 Export('env')

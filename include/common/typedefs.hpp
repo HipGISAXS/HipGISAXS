@@ -29,12 +29,12 @@
 
 #ifdef USE_GPU
   #include <cuComplex.h>
-#elif defined USE_MIC
-  #include <immintrin.h>
-#elif defined INTEL_SB_AVX
-  #include <immintrin.h>
-#elif defined __SSE3__
-  #include <pmmintrin.h>
+//#elif defined USE_MIC
+//  #include <immintrin.h>
+//#elif defined INTEL_SB_AVX
+//  #include <immintrin.h>
+//#elif defined __SSE3__
+//  #include <pmmintrin.h>
 #endif
 
 namespace hig {
@@ -76,7 +76,7 @@ namespace hig {
 
   #ifdef USE_GPU
     typedef std::vector<cucomplex_t>        cucomplex_vec_t;
-  #elif defined INTEL_SB_AVX
+/*  #elif defined INTEL_SB_AVX
     // SSE/AVX vector types:
     typedef __m256                          avx_m256_t;
     typedef struct {
@@ -88,16 +88,16 @@ namespace hig {
     typedef struct {
       __m128 xvec;
       __m128 yvec;
-    }                                       sse_m128c_t;
+    }                                       sse_m128c_t; */
   #endif
 
-  #ifdef USE_MIC
+/*  #ifdef USE_MIC
     typedef __m512                          mic_m512_t;
     typedef struct {
       __m512 xvec;
       __m512 yvec;
     }                                       mic_m512c_t;
-  #endif
+  #endif */
 
   typedef std::string                       string_t;
   typedef std::map <std::string, real_t>    map_t;

@@ -270,7 +270,14 @@ namespace hig {
       std::string palette() const { return compute_.palette_; }
 
       const Lattice* lattice(Structure& s) { return s.lattice(); }
+//#ifdef __INTEL_COMPILER
+//      const Unitcell* unitcell(Structure& s) {
+//		  if(unitcells_.count(s.grain_unitcell_key()) > 0) return &(unitcells_[s.grain_unitcell_key()]);
+//		  else return nullptr;
+//	  } // unitcell()
+//#else
       const Unitcell* unitcell(Structure& s) { return &(unitcells_.at(s.grain_unitcell_key())); }
+//#endif
       //Shape* shape(Structure& s) { return &(shapes_[s.grain_shape_key()]); }
       //ShapeName shape_name(Structure& s) { return shapes_[s.grain_shape_key()].name(); }
       //vector3_t shape_originvec(Structure& s) { return shapes_[s.grain_shape_key()].originvec(); }
@@ -288,8 +295,10 @@ namespace hig {
       bool struct_in_layer() { return struct_in_layer_; }
 
       unsigned int read_shape_file_data(const char*);
-      unsigned int read_shape_file_hdf5(const char*);
       unsigned int read_shape_file_object(const char*);
+      #ifdef USE_PARALLEL_HDF5
+      unsigned int read_shape_file_hdf5(const char*);
+      #endif
 
       layer_citerator_t layers_begin() const { return layers_.begin(); }
       layer_citerator_t layers_end() const { return layers_.end(); }
