@@ -1,3 +1,7 @@
 * Parallelize using MPI
 * Fix cone integration
 * Add switch to select between Approx and exact methods for triangles
+* Improve object rotation
+    - add stochastic rotations
+    - add capabiilty to independently rotate objects in the unit cell
+* Form Factor should be added in real space not complex space, when calulating distributions
