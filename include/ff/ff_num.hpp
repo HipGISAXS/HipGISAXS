@@ -37,7 +37,9 @@
 
 #include <common/parameters.hpp>
 #include <common/enums.hpp>
+#ifdef USE_PARALLEL_HDF5
 #include <file/hdf5shape_reader.h>
+#endif
 #include <model/qgrid.hpp>
 #include <utils/utilities.hpp>
 #ifdef FF_NUM_GPU
