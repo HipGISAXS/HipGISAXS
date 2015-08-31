@@ -583,6 +583,14 @@ namespace woo {
 
 } // namespace woo
 
+#else
+
+namespace woo {
+
+	typedef std::string comm_t;
+
+} // namespace woo
+
 #endif // USE_MPI
 
 #endif // __MULTI_NODE_COMM_HPP__

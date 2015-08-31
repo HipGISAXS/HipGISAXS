@@ -2219,7 +2219,13 @@ namespace hig {
     if(file_type == shape_file_data) {
       return read_shape_file_data(shape_file);
     } else if(file_type == shape_file_hdf5) {
-      return read_shape_file_hdf5(shape_file);
+      #ifdef USE_PARALLEL_HDF5
+        return read_shape_file_hdf5(shape_file);
+      #else
+        std::cerr << "error: use of parallel hdf5 format has not been enabled in your installation. "
+                  << "Please reinstal with the support enabled." << std::endl;
+        return false;
+      #endif
     } else if(file_type == shape_file_object) {
       return read_shape_file_object(shape_file);
     } else {
@@ -2293,6 +2299,7 @@ namespace hig {
   } // HiGInput::read_shape_file_object()
 
 
+  #ifdef USE_PARALLEL_HDF5
   unsigned int HiGInput::read_shape_file_hdf5(const char* filename) {
     unsigned int num_triangles = 0;
     double* temp_shape_def;
@@ -2300,7 +2307,7 @@ namespace hig {
     // ASSUMING THERE ARE 7 ENTRIES FOR EACH TRIANGLE ... IMPROVE/GENERALIZE ...
     HiGFileReader::instance().hdf5_shape_reader(filename, temp_shape_def, num_triangles);
     shape_def_.clear();
-#ifndef KERNEL2
+    #ifndef KERNEL2
     shape_def_.reserve(7 * num_triangles);
     unsigned int max_size = shape_def_.max_size();
     if(7 * num_triangles > max_size) {
@@ -2311,7 +2318,7 @@ namespace hig {
     for(unsigned int i = 0; i < 7 * num_triangles; ++ i) {
       shape_def_.push_back((real_t)temp_shape_def[i]);
     } // for
-#else  // KERNEL2
+    #else  // KERNEL2
     shape_def_.reserve(T_PROP_SIZE_ * num_triangles);
     unsigned int max_size = shape_def_.max_size();
     if(T_PROP_SIZE_ * num_triangles > max_size) {
@@ -2323,9 +2330,10 @@ namespace hig {
       if((i + 1) % T_PROP_SIZE_ == 0) shape_def_.push_back((real_t)0.0); // for padding
       else shape_def_.push_back((real_t)temp_shape_def[count ++]);
     } // for
-#endif // KERNEL2
+    #endif // KERNEL2
     return num_triangles;
   } // HiGInput::read_shape_file_hdf5()
+  #endif // USE_PARALLEL_HDF5
 
 
   unsigned int HiGInput::read_shape_file_data(const char* filename) {

@@ -93,7 +93,7 @@ namespace hig {
     transvec_v.push_back(transvec[0]);
     transvec_v.push_back(transvec[1]);
     transvec_v.push_back(transvec[2]);
-    gff_.compute_cylinder(tau, eta, h, distr_h, r, distr_r, rot_, transvec_v, ff);
+    gff_.compute_cylinder(tau, eta, r, distr_r, h, distr_h, rot_, transvec_v, ff);
 #else
     // on cpu
     std::cout << "-- Computing cylinder FF on CPU ..." << std::endl;

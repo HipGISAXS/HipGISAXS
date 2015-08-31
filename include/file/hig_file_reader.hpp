@@ -26,11 +26,16 @@
 #include <fstream>
 
 #include <common/typedefs.hpp>
-#include <file/hdf5shape_reader.h>
 #include <file/objectshape_reader.hpp>
+
+#ifdef USE_PARALLEL_HDF5
+#include <file/hdf5shape_reader.h>
+#endif
 
 
 namespace hig {
+
+#ifdef USE_PARALLEL_HDF5
 
 #ifdef __cplusplus
 extern "C" {
@@ -47,6 +52,8 @@ extern "C" {
 } // extern "C"
 #endif
 
+#endif // USE_PARALLEL_HDF5
+
   // this is a singleton stateless class
   class HiGFileReader {
     private:
@@ -60,10 +67,12 @@ extern "C" {
         return hig_file_reader;
       } // instance()
 
+      #ifdef USE_PARALLEL_HDF5
       unsigned int hdf5_shape_reader(const char* filename,
                     double* &shape_def, unsigned int &num_triangles) {
         return c_hdf5_shape_reader(filename, &shape_def, &num_triangles);
       } // hdf5_shape_reader()
+      #endif
 
       unsigned int shape_shape_reader(const char* filename,
                     std::vector<real_t> &shape_def, unsigned int &num_triangles) {
@@ -98,8 +107,6 @@ extern "C" {
         ObjectShapeReader obj(filename, shape_def, num_triangles);
         return num_triangles;
       } // obj_shape_reader()
-
-      // ...
 
   }; // class HiGFileReader
 

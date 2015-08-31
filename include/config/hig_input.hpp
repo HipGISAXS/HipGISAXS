@@ -296,8 +296,10 @@ namespace hig {
       bool struct_in_layer() { return struct_in_layer_; }
 
       unsigned int read_shape_file_data(const char*);
-      unsigned int read_shape_file_hdf5(const char*);
       unsigned int read_shape_file_object(const char*);
+      #ifdef USE_PARALLEL_HDF5
+      unsigned int read_shape_file_hdf5(const char*);
+      #endif
 
       layer_citerator_t layers_begin() const { return layers_.begin(); }
       layer_citerator_t layers_end() const { return layers_.end(); }
