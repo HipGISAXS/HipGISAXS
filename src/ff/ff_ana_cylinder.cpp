@@ -21,7 +21,6 @@
  */
 
 #include <boost/math/special_functions/fpclassify.hpp>
-
 #include <woo/timer/woo_boostchronotimers.hpp>
 
 #include <ff/ff_ana.hpp>
@@ -37,14 +36,16 @@ namespace hig {
   /**
    * cylinder
    */
-  complex_t FormFactorCylinder(complex_t qpar, complex_t qz, real_t radius, real_t height){
+
+  complex_t AnalyticFormFactor::ff_cylinder_kernel(
+                   complex_t qpar, complex_t qz, real_t radius, real_t height) {
     real_t vol = 2. * PI_ * radius * radius * height;
     complex_t sinc_val = sinc(0.5 * qz * height);
     complex_t expt_val = std::exp(CMPLX_ONE_ * 0.5 * qz * height);
     complex_t t1 = qpar * radius;
     complex_t bess_val = cbessj(t1, 1) * std::conj(t1) / std::norm(t1);
     return (vol * sinc_val * expt_val * bess_val);
-  }  
+  } // ff_cylinder_kernel()
 
   bool AnalyticFormFactor::compute_cylinder(shape_param_list_t& params, real_t tau, real_t eta,
                                             std::vector<complex_t>& ff, vector3_t transvec) {
@@ -100,6 +101,11 @@ namespace hig {
 
     ff.clear(); ff.resize(nqz_, complex_t(0.,0.));
 
+    std::cout << "****** " << QGrid::instance().nqx() << ", " << QGrid::instance().nqy() << ", " << QGrid::instance().nqz() << ", " << QGrid::instance().nqz_extended() << " .... " << nqy_ << ", " << nqz_ << std::endl;
+
+#ifdef FF_CPU_OPT
+    cylinder_opt(r, h, transvec, ff);
+#else
     #pragma omp parallel for 
     for(unsigned z = 0; z < nqz_; ++ z) {
       unsigned y = z % nqy_; 
@@ -109,13 +115,14 @@ namespace hig {
       complex_t temp_ff(0.0, 0.0);
       for(unsigned int i_r = 0; i_r < r.size(); ++ i_r) {
         for(unsigned int i_h = 0; i_h < h.size(); ++ i_h) {
-          temp_ff += FormFactorCylinder(qpar, mq[2], r[i_r], h[i_h]);
+          temp_ff += ff_cylinder_kernel(qpar, mq[2], r[i_r], h[i_h]);
         } // for h
       } // for r
       complex_t temp1 = mq[0] * transvec[0] + mq[1] * transvec[1] + mq[2] * transvec[2];
       complex_t temp2 = exp(complex_t(-temp1.imag(), temp1.real()));
       ff[z] = temp_ff * temp2;
     } // for z
+#endif // FF_CPU_OPT
 #endif // FF_ANA_GPU
 #ifdef TIME_DETAIL_2
     maintimer.stop();

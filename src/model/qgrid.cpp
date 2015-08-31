@@ -120,6 +120,8 @@ namespace hig {
             << ") x ("
             << qx_.back() << ", " << qy_.back() << ", " << qz_[0]
             << ")" << std::endl;
+
+      std::cout << "**                  Q-grid size: " << qx_.size() << " x " << qy_.size() << " x " << qz_.size() << " (" << qz_extended_.size() << ")" << std::endl;
     } // if
 
     return true;

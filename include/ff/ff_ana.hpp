@@ -70,6 +70,14 @@ namespace hig {
             #endif
             );
 
+      // optimized for CPU
+      #ifdef FF_CPU_OPT
+        bool cylinder_opt(std::vector<real_t>&, std::vector<real_t>&, vector3_t, std::vector<complex_t>&);
+      #endif
+
+      // helper kernels
+      complex_t ff_cylinder_kernel(complex_t qpar, complex_t qz, real_t radius, real_t height);
+
     private:
       /* compute ff for various shapes */
       bool compute_box(unsigned int nqx, unsigned int nqy, unsigned int nqz,
