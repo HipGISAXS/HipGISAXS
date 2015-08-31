@@ -33,12 +33,17 @@ namespace hig {
   extern complex_t cbessj(complex_t zz, int order);
 
   INLINE
-  vector3_t cross_product(vector3_t & u, vector3_t & v){
+  vector3_t cross(vector3_t & u, vector3_t & v){
     vector3_t w;
     w[0] = u[1] * v[2] - u[2] * v[1];
     w[1] = u[2] * v[0] - u[0] * v[2];
     w[2] = u[0] * v[1] - u[1] * v[0];
     return w;
+  }
+
+  INLINE
+  real_t dot(vector3_t & a, vector3_t & b){
+   return (a[0] * b[0] + a[1] * b[1] + a[2] * b[2]);
   }
 
   // sinc function

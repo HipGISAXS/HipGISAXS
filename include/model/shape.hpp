@@ -111,8 +111,7 @@ namespace hig {
       ShapeName name_;      /* name of a predefined shape, or custom file */
       std::string name_str_;    /* shape file name: used for custom shape only */
       vector3_t originvec_;
-      real_t ztilt_;        /* shape tau */
-      real_t xyrotation_;    /* shape eta */
+      real_t xrot_, yrot_, zrot_;
       shape_param_list_t params_;  // a map of all params (key is the type)
 
       bool parse_param(const ShapeParam& param) const;
@@ -121,7 +120,7 @@ namespace hig {
       Shape();
       Shape(const std::string& key, const ShapeName name);
       Shape(const std::string& key, const ShapeName name, const vector3_t& origin,
-        const real_t ztilt, const real_t xyrot, shape_param_list_t& param_list);
+        const real_t zrot, const real_t yrot, real_t xrot, shape_param_list_t& param_list);
       ~Shape(void);
 
       void init();
@@ -137,16 +136,18 @@ namespace hig {
       void originvec(real_t a, real_t b, real_t c) {
         originvec_[0] = a; originvec_[1] = b; originvec_[2] = c; }
 
-      void ztilt(real_t d) { ztilt_ = d; }
-      void xyrotation(real_t d) { xyrotation_ = d; }
+      void zrot(real_t d) { zrot_ = d; }
+      void yrot(real_t d) { yrot_ = d; }
+      void xrot(real_t d) { xrot_ = d; }
 
       Shape& operator=(const Shape& sh) {
         key_ = sh.key_;
         name_ = sh.name_;
         name_str_ = sh.name_str_;
         originvec_ = sh.originvec_;
-        ztilt_ = sh.ztilt_;
-        xyrotation_ = sh.xyrotation_;
+        zrot_ = sh.zrot_;
+        yrot_ = sh.yrot_;
+        xrot_ = sh.xrot_;
         for(auto i = sh.params_.begin(); i != sh.params_.end(); i ++) {
           params_[(*i).first] = (*i).second;
         } // for
@@ -160,8 +161,9 @@ namespace hig {
 
       std::string key() const { return key_; }
       ShapeName name() const { return name_; }
-      real_t ztilt() const { return ztilt_; }
-      real_t xyrotation() const { return xyrotation_; }
+      real_t zrot() const { return zrot_; }
+      real_t yrot() const { return yrot_; }
+      real_t xrot() const { return xrot_; }
       vector3_t originvec() const { return originvec_; }
       std::string filename() const { return name_str_; }
       shape_param_list_t& param_list() { return params_; }

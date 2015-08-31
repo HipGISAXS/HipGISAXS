@@ -720,8 +720,9 @@ namespace hig {
 
       case shape_name_token:
       case shape_originvec_token:
-      case shape_ztilt_token:
-      case shape_xyrot_token:
+      case shape_zrot_token:
+      case shape_yrot_token:
+      case shape_xrot_token:
         break;
 
       case shape_param_token:
@@ -1093,14 +1094,17 @@ namespace hig {
         } // if
         break;
 
-      case shape_ztilt_token:
-        curr_shape_.ztilt(num);
+      case shape_zrot_token:
+        curr_shape_.zrot(num * PI_ / 180.);
         break;
 
-      case shape_xyrot_token:
-        curr_shape_.xyrotation(num);
+      case shape_yrot_token:
+        curr_shape_.yrot(num * PI_ / 180.);
         break;
 
+      case shape_xrot_token:
+        curr_shape_.xrot(num * PI_ / 180.);
+        break;
 
       case shape_param_p1_token:
         curr_shape_param_.p1(num);

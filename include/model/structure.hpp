@@ -142,6 +142,7 @@ namespace hig {
 
       void abangle(real_t d) { abangle_ = d; }
       void caratio(real_t d) { caratio_ = d; }
+      void bragg_angles(vector3_t, vector3_t, real_t, real_vec_t &);
 
       friend class Grain;
 
@@ -376,6 +377,7 @@ namespace hig {
 
       void lattice_type(LatticeType l) { lattice_.type(l); }
       void lattice_hkl(std::string l) { lattice_.hkl(l); }
+
 
       friend class Structure;
 

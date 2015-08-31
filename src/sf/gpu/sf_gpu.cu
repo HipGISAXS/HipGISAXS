@@ -253,6 +253,8 @@ namespace hig {
     cudaMemcpy(center_, &center[0], 3 * sizeof(real_t), cudaMemcpyHostToDevice);
     cudaMemcpy(transvec_, &l_t[0], 3 * sizeof(real_t), cudaMemcpyHostToDevice);
 
+    //std::cerr << "SF center = [ " << center[0] << " " << center[1] << " " << center[2] << " ] " << std::endl;
+    //std::cerr << "SF l_t = [ " << l_t[0] << " " << l_t[1] << " " << l_t[2] << " ] " << std::endl;
     //unsigned int cuda_block_y = 16, cuda_block_z = 8;
     //unsigned int cuda_num_blocks_y = ceil((real_t) nqy_ / cuda_block_y);
     //unsigned int cuda_num_blocks_z = ceil((real_t) nqz_ / cuda_block_z);
@@ -448,6 +450,7 @@ namespace hig {
       cucomplex_t sa, sb, sc;
 
       real_t q_x = qx[i_x], q_y = qy[i_y];
+      //check for the missing wedge
       cucomplex_t q_z = qz[i_z];
 
       cucomplex_t e_iqa = cuCexpi(rot[0] * q_x + rot[1] * q_y + rot[2] * q_z);

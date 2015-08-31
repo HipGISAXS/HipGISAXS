@@ -41,6 +41,8 @@ namespace hig {
       int nrow_;
       int ncol_;
 
+      vector2_t qmin_;
+      vector2_t qmax_;
       qvec_t qx_;
       qvec_t qy_;
       qvec_t qz_;
@@ -82,6 +84,8 @@ namespace hig {
       int nrows() const        { return nrow_;               }
       int ncols() const        { return ncol_;               }
       int nalpha() const       { return alpha_.size();       }
+      vector2_t qmin() const   { return qmin_;               }
+      vector2_t qmax() const   { return qmax_;               }
 
 
       /* NOTE: delta are not constants in q-space */
