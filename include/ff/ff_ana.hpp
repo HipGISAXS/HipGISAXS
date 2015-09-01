@@ -73,6 +73,7 @@ namespace hig {
       // optimized for CPU
       #ifdef FF_CPU_OPT
         bool cylinder_opt(std::vector<real_t>&, std::vector<real_t>&, vector3_t, std::vector<complex_t>&);
+        bool cylinder_kernel_opt(std::vector<real_t>&, std::vector<real_t>&, vector3_t, std::vector<complex_t>&);
         complex_t ff_cylinder_kernel_opt(complex_t qpar, complex_t qz, real_t radius, real_t height);
       #endif
 

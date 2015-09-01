@@ -37,6 +37,53 @@ namespace hig {
     return (vol * sinc_val * expt_val * bess_val);
   } // ff_cylinder_kernel()
 
+
+  inline bool AnalyticFormFactor::cylinder_kernel_opt(std::vector<real_t>& r, std::vector<real_t>& h,
+                                                      vector3_t transvec, std::vector<complex_t>& ff) {
+    #pragma omp for schedule(runtime)
+    for(unsigned z = 0; z < nqz_; ++ z) {
+      unsigned int y = z % nqy_;
+      std::vector<complex_t> mq = rot_.rotate(QGrid::instance().qx(y), QGrid::instance().qy(y),
+                                              QGrid::instance().qz_extended(z));
+      complex_t qpar = sqrt(mq[0] * mq[0] + mq[1] * mq[1]);
+      complex_t temp_ff(0.0, 0.0);
+      for(unsigned int i_r = 0; i_r < r.size(); ++ i_r) {
+        for(unsigned int i_h = 0; i_h < h.size(); ++ i_h) {
+          temp_ff += ff_cylinder_kernel_opt(qpar, mq[2], r[i_r], h[i_h]);
+        } // for h
+      } // for r
+      complex_t temp1 = mq[0] * transvec[0] + mq[1] * transvec[1] + mq[2] * transvec[2];
+      complex_t temp2 = exp(complex_t(-temp1.imag(), temp1.real()));
+      ff[z] = temp_ff * temp2;
+    } // for z
+
+#if 0
+    #pragma omp parallel shared(transvec, r, h, ff)
+    {
+    for(unsigned int i_r = 0; i_r < r.size(); ++ i_r) {
+      for(unsigned int i_h = 0; i_h < h.size(); ++ i_h) {
+
+        #pragma omp for schedule(runtime)
+        for(unsigned z = 0; z < nqz_; ++ z) {
+          unsigned int y = z % nqy_;
+          std::vector<complex_t> mq = rot_.rotate(QGrid::instance().qx(y), QGrid::instance().qy(y),
+                  QGrid::instance().qz_extended(z));
+          complex_t qpar = sqrt(mq[0] * mq[0] + mq[1] * mq[1]);
+          complex_t temp_ff = ff_cylinder_kernel(qpar, mq[2], r[i_r], h[i_h]);
+          complex_t temp1 = mq[0] * transvec[0] + mq[1] * transvec[1] + mq[2] * transvec[2];
+          complex_t temp2 = exp(complex_t(-temp1.imag(), temp1.real()));
+          ff[z] += temp_ff * temp2;
+        } // for z
+
+      } // for h
+    } // for r
+    }
+#endif
+
+    return true;
+  } // AnalyticFormFactor::cylinder_kernel_opt()
+
+
   bool AnalyticFormFactor::cylinder_opt(std::vector<real_t>& r, std::vector<real_t>& h, vector3_t transvec,
                                    std::vector<complex_t>& ff) {
 
@@ -77,45 +124,7 @@ namespace hig {
     PAPI_start_counters(papi_events, 3);
     #endif // PROFILE_PAPI
 
-    #pragma omp for schedule(runtime)
-    for(unsigned z = 0; z < nqz_; ++ z) {
-      unsigned int y = z % nqy_;
-      std::vector<complex_t> mq = rot_.rotate(QGrid::instance().qx(y), QGrid::instance().qy(y),
-                                              QGrid::instance().qz_extended(z));
-      complex_t qpar = sqrt(mq[0] * mq[0] + mq[1] * mq[1]);
-      complex_t temp_ff(0.0, 0.0);
-      for(unsigned int i_r = 0; i_r < r.size(); ++ i_r) {
-        for(unsigned int i_h = 0; i_h < h.size(); ++ i_h) {
-          temp_ff += ff_cylinder_kernel_opt(qpar, mq[2], r[i_r], h[i_h]);
-        } // for h
-      } // for r
-      complex_t temp1 = mq[0] * transvec[0] + mq[1] * transvec[1] + mq[2] * transvec[2];
-      complex_t temp2 = exp(complex_t(-temp1.imag(), temp1.real()));
-      ff[z] = temp_ff * temp2;
-    } // for z
-
-#if 0
-    #pragma omp parallel shared(transvec, r, h, ff)
-    {
-    for(unsigned int i_r = 0; i_r < r.size(); ++ i_r) {
-      for(unsigned int i_h = 0; i_h < h.size(); ++ i_h) {
-
-        #pragma omp for schedule(runtime)
-        for(unsigned z = 0; z < nqz_; ++ z) {
-          unsigned int y = z % nqy_;
-          std::vector<complex_t> mq = rot_.rotate(QGrid::instance().qx(y), QGrid::instance().qy(y),
-                  QGrid::instance().qz_extended(z));
-          complex_t qpar = sqrt(mq[0] * mq[0] + mq[1] * mq[1]);
-          complex_t temp_ff = ff_cylinder_kernel(qpar, mq[2], r[i_r], h[i_h]);
-          complex_t temp1 = mq[0] * transvec[0] + mq[1] * transvec[1] + mq[2] * transvec[2];
-          complex_t temp2 = exp(complex_t(-temp1.imag(), temp1.real()));
-          ff[z] += temp_ff * temp2;
-        } // for z
-
-      } // for h
-    } // for r
-    }
-#endif
+    cylinder_kernel_opt(r, h, transvec, ff);
 
     #ifdef PROFILE_PAPI
     PAPI_stop_counters(papi_counter_values[thread_id], 3);
