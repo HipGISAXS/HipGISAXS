@@ -2,5 +2,6 @@
 ## cray-petsc 3.4.4 gives errors
 
 module load python scons
-module load gcc/4.8.2
+module load gcc
 module load boost szip cray-petsc/3.4.3.0
+module load papi
