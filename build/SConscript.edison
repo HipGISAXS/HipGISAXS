@@ -110,6 +110,7 @@ def add_ld_library_path(env, s):
 def setup_configuration_tests(conf):
     def FindSysLibDep(context, name, libs, **kwargs):
         var = "LIBDEPS_" + name.upper() + "_SYSLIBDEP"
+        var = var.replace("++", "PP")
         kwargs['autoadd'] = False
         for lib in libs:
             result = context.sconf.CheckLib(lib, **kwargs)
@@ -546,7 +547,7 @@ mkl_libs = []
 if use_mkl:
   mkl_libs = ["mkl_core"]
 if env['TOOLCHAIN'] == toolchain_intel:
-  other_libs = ["m"]
+  other_libs = ["m", "stdc++"]
 else:
   other_libs = ["m", "gomp"]
 ## optional libs
