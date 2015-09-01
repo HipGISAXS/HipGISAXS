@@ -12,6 +12,10 @@
 #include <papi.h>
 #endif // PROFILE_PAPI
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif // _OPENMP
+
 #include <woo/timer/woo_boostchronotimers.hpp>
 
 #include <common/constants.hpp>
@@ -38,21 +42,41 @@ namespace hig {
 
     woo::BoostChronoTimer timer;
 
+    int num_threads = 1, thread_id = 0;
+    #ifdef _OPENMP
+      #pragma omp parallel
+      {
+      if(omp_get_thread_num() == 0) num_threads = omp_get_num_threads();
+      }
+    #endif
+
     #ifdef PROFILE_PAPI
-    long long int papi_total_cycles = 0, papi_total_inst = 0, papi_total_flop = 0;
     double overall_ipc = 0.0;
-    int papi_events[3] = { PAPI_TOT_CYC, PAPI_TOT_INS, PAPI_FP_OPS };
-    long long papi_counter_values[3];
+    int papi_events[3] = { PAPI_TOT_CYC, PAPI_TOT_INS, PAPI_DP_OPS };
+    long long papi_counter_values[num_threads][3];
+    if(PAPI_library_init(PAPI_VER_CURRENT) != PAPI_VER_CURRENT) {
+      std::cerr << "error: failed in PAPI_library_init()" << std::endl;
+      return false;
+    } // if
+    if(PAPI_thread_init((unsigned long (*)(void))(omp_get_thread_num)) != PAPI_OK) {
+      std::cerr << "error: failed in PAPI_thread_init()" << std::endl;
+      return false;
+    } // if
     #endif  // PROFILE_PAPI
 
     timer.start();
+
+    #pragma omp parallel shared(transvec, r, h, ff) private(thread_id)
+    {
+
+    #ifdef _OPENMP
+      thread_id = omp_get_thread_num();
+    #endif
 
     #ifdef PROFILE_PAPI
     PAPI_start_counters(papi_events, 3);
     #endif // PROFILE_PAPI
 
-    #pragma omp parallel shared(transvec, r, h, ff)
-    {
     #pragma omp for schedule(runtime)
     for(unsigned z = 0; z < nqz_; ++ z) {
       unsigned int y = z % nqy_;
@@ -69,7 +93,6 @@ namespace hig {
       complex_t temp2 = exp(complex_t(-temp1.imag(), temp1.real()));
       ff[z] = temp_ff * temp2;
     } // for z
-    } // omp parallel
 
 #if 0
     #pragma omp parallel shared(transvec, r, h, ff)
@@ -95,23 +118,34 @@ namespace hig {
 #endif
 
     #ifdef PROFILE_PAPI
-    PAPI_stop_counters(papi_counter_values, 3);
+    PAPI_stop_counters(papi_counter_values[thread_id], 3);
     #endif
+
+    } // omp parallel
 
     timer.stop();
     std::cout << "++                  Compute time: " << timer.elapsed_msec() << " ms." << std::endl;
 
     #ifdef PROFILE_PAPI
-    papi_total_cycles += papi_counter_values[0];
-    papi_total_inst += papi_counter_values[1];
-    papi_total_flop += papi_counter_values[2];
-    std::cout << "++                  PAPI_TOT_CYC: " << papi_total_cycles << std::endl;
-    std::cout << "++                  PAPI_TOT_INS: " << papi_total_inst << std::endl;
-    std::cout << "++                   PAPI_FP_OPS: " << papi_total_flop << std::endl;
-    std::cout << "++                           IPC: "
-              << (double) papi_total_inst / papi_total_cycles << std::endl;
-    std::cout << "++                        MFLOPS: "
-              << papi_total_flop / timer.elapsed_msec() / 1000. << std::endl;
+    long long int papi_cycles = 0, papi_inst = 0, papi_flop = 0;
+    long long int papi_total_cycles = 0, papi_total_inst = 0, papi_total_flop = 0;
+    for(int i = 0; i < num_threads; ++ i) {
+      papi_cycles = papi_counter_values[i][0];
+      papi_inst = papi_counter_values[i][1];
+      papi_flop = papi_counter_values[i][2];
+      papi_total_cycles += papi_cycles;
+      papi_total_inst += papi_inst;
+      papi_total_flop += papi_flop;
+      std::cout << "++                  PAPI_TOT_CYC: " << papi_cycles << std::endl;
+      std::cout << "++                  PAPI_TOT_INS: " << papi_inst << std::endl;
+      std::cout << "++                   PAPI_DP_OPS: " << papi_flop << std::endl;
+      std::cout << "++                           IPC: "
+                << (double) papi_inst / papi_cycles << std::endl;
+      std::cout << "++                        MFLOPS: "
+                << papi_flop / timer.elapsed_msec() / 1000. << std::endl;
+    } // for
+    std::cout << "++                  Total GFLOPS: "
+              << papi_total_flop / timer.elapsed_msec() / 1000. / 1000. << std::endl;
     #endif // PROFILE_PAPI
 
     return true;
