@@ -135,6 +135,12 @@ namespace hig {
         return res;
       } // rotate()
 
+      inline void rotate_new(real_t x, real_t y, complex_t z, complex_t* res) {
+        res[0] = data_[0] * x + data_[1] * y + data_[2] * z;
+        res[1] = data_[3] * x + data_[4] * y + data_[5] * z;
+        res[2] = data_[6] * x + data_[7] * y + data_[8] * z;
+      } // rotate()
+
 #ifdef USE_GPU
       __device__ void rotate(real_t x, real_t y, cucomplex_t z, 
               cucomplex_t &mx, cucomplex_t &my, cucomplex_t &mz){

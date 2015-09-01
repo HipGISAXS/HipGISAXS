@@ -23,6 +23,18 @@
 #include <ff/ff_ana.hpp>
 #include <model/qgrid.hpp>
 
+#ifdef FF_CPU_OPT
+
+#ifdef DOUBLEP
+#define MKL_Complex16 hig::complex_t
+#else
+#define MKL_Complex8 hig::complex_t
+#endif
+
+#include <mkl.h>
+
+#endif // FF_CPU_OPT
+
 namespace hig {
 
 #ifdef FF_CPU_OPT
@@ -38,6 +50,44 @@ namespace hig {
   } // ff_cylinder_kernel()
 
 
+  inline bool AnalyticFormFactor::cylinder_kernel_opt(std::vector<real_t>& r, std::vector<real_t>& h,
+                                                      vector3_t transvec, std::vector<complex_t>& ff) {
+
+    real_t* qx = QGrid::instance().qx();
+    real_t* qy = QGrid::instance().qy();
+    complex_t* qz_extended = QGrid::instance().qz_extended();
+    complex_t mq[3];
+
+    real_t *rp = &r[0], *hp = &h[0];
+    int rsize = r.size(), hsize = h.size();
+
+    // vectorizing with 4 (double precision)
+    unsigned int loop_limit = nqz_ / 4;
+    int loop_rem = nqz_ % 4;
+    #pragma omp for schedule(runtime) collapse(2)
+    for(unsigned int l = 0; l < loop_limit; ++ l) {
+      for(int i = 0; i < 4; ++ i) {
+        unsigned int z = 4 * l + i;
+        unsigned int y = z % nqy_;
+        rot_.rotate_new(qx[y], qy[y], qz_extended[z], mq);
+        complex_t qpar = sqrt(mq[0] * mq[0] + mq[1] * mq[1]);
+        complex_t temp_ff(0.0, 0.0);
+        for(int i_r = 0; i_r < rsize; ++ i_r) {
+          for(int i_h = 0; i_h < hsize; ++ i_h) {
+              temp_ff += ff_cylinder_kernel_opt(qpar, mq[2], rp[i_r], hp[i_h]);
+          } // for h
+        } // for r
+        complex_t temp1 = mq[0] * transvec[0] + mq[1] * transvec[1] + mq[2] * transvec[2];
+        complex_t temp2 = exp(complex_t(-temp1.imag(), temp1.real()));
+        ff[z] = temp_ff * temp2;
+      } // for i
+    } // for z
+
+    return true;
+  } // AnalyticFormFactor::cylinder_kernel_opt()
+
+
+#if 0
   inline bool AnalyticFormFactor::cylinder_kernel_opt(std::vector<real_t>& r, std::vector<real_t>& h,
                                                       vector3_t transvec, std::vector<complex_t>& ff) {
     #pragma omp for schedule(runtime)
@@ -82,6 +132,7 @@ namespace hig {
 
     return true;
   } // AnalyticFormFactor::cylinder_kernel_opt()
+#endif
 
 
   bool AnalyticFormFactor::cylinder_opt(std::vector<real_t>& r, std::vector<real_t>& h, vector3_t transvec,

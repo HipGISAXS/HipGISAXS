@@ -91,6 +91,12 @@ def add_paths(s):
         path = env['ENV']['PATH'] + ":" + x + "/bin"
         env['ENV']['PATH'] = path
 
+def add_include_path(p):
+  env.Append(CPPPATH = [ p ])
+
+def add_library_path(p):
+  env.Append(LIBPATH = [ p ])
+
 def add_libs(s):
     for x in s.split(","):
         env.Append(LIBS = [x])
@@ -487,6 +493,7 @@ if _has_option("extrapath"):
 if _has_option("extralib"):
     add_libs(get_option("extralib"))
 
+
 nix_lib_prefix = "lib"
 if processor == "x86_64":
     linux64 = True
@@ -511,6 +518,19 @@ if _has_option("cpppath"):
 if not get_option('clean'):
     env = do_configure(env)
 
+
+## MKL with intel only (Edison)
+use_mkl = False
+if env['TOOLCHAIN'] == toolchain_intel:
+  use_mkl = True
+  if 'MKL_INC' in env['ENV']:
+    add_include_path(env['ENV']['MKL_INC'])
+  if 'MKL_LIBDIR' in env['ENV']:
+    add_library_path(env['ENV']['MKL_LIBDIR'])
+  if 'MKL_HOME' in env['ENV']:
+    print env['ENV']['MKL_HOME']
+
+
 ## stuff for TAU
 if using_tau:
   if 'TAU_MAKEFILE' not in env['ENV']:
@@ -522,7 +542,13 @@ using_accelerator = None
 boost_libs = ["boost_system", "boost_filesystem", "boost_timer", "boost_chrono"]
 parallel_hdf5_libs = ["hdf5", "z"]
 tiff_libs = ["tiff"]
-other_libs = ["m", "gomp"]
+mkl_libs = []
+if use_mkl:
+  mkl_libs = ["mkl_core"]
+if env['TOOLCHAIN'] == toolchain_intel:
+  other_libs = ["m"]
+else:
+  other_libs = ["m", "gomp"]
 ## optional libs
 mpi_libs = []
 #mpi_libs = ["mpi_cxx", "mpi"]
@@ -543,7 +569,7 @@ parallel_hdf5_flags = ['USE_PARALLEL_HDF5']
 papi_flags = ['PROFILE_PAPI']
 
 all_flags = detail_flags
-all_libs = boost_libs + tiff_libs + other_libs
+all_libs = boost_libs + tiff_libs + mkl_libs + other_libs
 
 if using_cuda:
     all_libs += gpu_libs
