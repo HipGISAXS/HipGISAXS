@@ -9,8 +9,8 @@ Export('env')
 using_accelerator = env['ACCELERATOR_TYPE']
 if using_accelerator == 'gpu':
 	nvobjs += SConscript('gpu/SConscript')
-elif using_accelerator == 'mic':
-	objs += SConscript('mic/SConscript')
+#elif using_accelerator == 'mic':
+#	objs += SConscript('mic/SConscript')
 else:
 	objs += SConscript('cpu/SConscript')
 
