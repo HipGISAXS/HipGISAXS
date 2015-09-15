@@ -54,11 +54,13 @@ namespace hig {
   } // ff_cylinder_kernel_opt()
 
 
-  inline void AnalyticFormFactor::ff_cylinder_kernel_opt_vec(
-                   complex_t* qpar, complex_t* qz, real_t radius, real_t height, complex_t* ff) {
+  void AnalyticFormFactor::ff_cylinder_kernel_opt_vec(complex_t *buf2,
+                   const complex_t* qpar, const complex_t* qz, real_t radius, real_t height, complex_t* ff) {
     real_t vol = 2. * PI_ * radius * radius * height;
-    complex_t temp0[VEC_LEN], temp1[VEC_LEN], temp2[VEC_LEN];
-    complex_t sinc_val[VEC_LEN], exp_val[VEC_LEN], bess_val[VEC_LEN];
+    complex_t *temp0, *temp1, *temp2;
+    complex_t *sinc_val, *exp_val, *bess_val;
+    temp0 = buf2; temp1 = temp0 + VEC_LEN; temp2 = temp1 + VEC_LEN;
+    sinc_val = temp2 + VEC_LEN; exp_val = sinc_val + VEC_LEN; bess_val = exp_val + VEC_LEN;
     cblas_zcopy(VEC_LEN, qz, 1, temp0, 1);
     cblas_zdscal(VEC_LEN, 0.5 * height, temp0, 1);
     sinc_vec(VEC_LEN, temp0, sinc_val);
@@ -76,7 +78,7 @@ namespace hig {
   } // ff_cylinder_kernel_opt_vec()
 
 
-  inline bool AnalyticFormFactor::cylinder_kernel_opt(std::vector<real_t>& r, std::vector<real_t>& h,
+  bool AnalyticFormFactor::cylinder_kernel_opt(std::vector<real_t>& r, std::vector<real_t>& h,
                                                       vector3_t transvec, std::vector<complex_t>& ff_vec) {
 
     real_t* qx = QGrid::instance().qx();
@@ -87,9 +89,13 @@ namespace hig {
     real_t *rp = &r[0], *hp = &h[0];
     int rsize = r.size(), hsize = h.size();
 
-    complex_t mq[VEC_LEN * 3], *mq0, *mq1, *mq2;
-    mq0 = mq; mq1 = mq + VEC_LEN; mq2 = mq + 2 * VEC_LEN;
-    complex_t temp0[VEC_LEN], temp1[VEC_LEN], temp2[VEC_LEN], temp_ff[VEC_LEN];
+    complex_t *buf = new (std::nothrow) complex_t[VEC_LEN * 14];
+    complex_t *temp0, *temp1, *temp2, *temp_ff, *qpar;
+    temp0 = buf; temp1 = temp0 + VEC_LEN; temp2 = temp1 + VEC_LEN; temp_ff = temp2 + VEC_LEN;
+    qpar = temp_ff + VEC_LEN;
+    complex_t *mq, *mq0, *mq1, *mq2;
+    mq = qpar + VEC_LEN; mq0 = mq; mq1 = mq + VEC_LEN; mq2 = mq + 2 * VEC_LEN;
+    complex_t *buf2 = mq + 3 * VEC_LEN;
 
     unsigned int loop_limit = nqz_ / VEC_LEN;
     int loop_rem = nqz_ % VEC_LEN;  // TODO ...
@@ -98,7 +104,6 @@ namespace hig {
     for(unsigned int l = 0; l < loop_limit; ++ l) {
       unsigned int z = VEC_LEN * l;
       unsigned int y = z % nqy_;
-      complex_t qpar[VEC_LEN];
       rot_.rotate_vec(VEC_LEN, qx + y, qy + y, qz_extended + z, mq);
       vzMul(VEC_LEN, mq0, mq0, temp0);
       vzMul(VEC_LEN, mq1, mq1, temp1);
@@ -107,21 +112,20 @@ namespace hig {
       memset(temp_ff, 0, VEC_LEN * sizeof(complex_t));
       for(int i_r = 0; i_r < rsize; ++ i_r) {
         for(int i_h = 0; i_h < hsize; ++ i_h) {
-          ff_cylinder_kernel_opt_vec(qpar, mq2, rp[i_r], hp[i_r], temp_ff);
+          ff_cylinder_kernel_opt_vec(buf2, qpar, mq2, rp[i_r], hp[i_r], temp_ff);
         } // for h
       } // for r
-      cblas_zcopy(VEC_LEN, mq0, 1, temp0, 1);
-      cblas_zdscal(VEC_LEN, transvec[0], temp0, 1);
-      cblas_zcopy(VEC_LEN, mq1, 1, temp1, 1);
-      cblas_zdscal(VEC_LEN, transvec[1], temp1, 1);
-      vzAdd(VEC_LEN, temp0, temp1, temp2);
-      cblas_zcopy(VEC_LEN, mq2, 1, temp0, 1);
-      cblas_zdscal(VEC_LEN, transvec[2], temp0, 1);
-      vzAdd(VEC_LEN, temp0, temp2, temp1);
+      cblas_zdscal(VEC_LEN, transvec[0], mq0, 1);
+      cblas_zdscal(VEC_LEN, transvec[1], mq1, 1);
+      cblas_zdscal(VEC_LEN, transvec[2], mq2, 1);
+      vzAdd(VEC_LEN, mq0, mq1, temp2);
+      vzAdd(VEC_LEN, mq2, temp2, temp1);
       cblas_zscal(VEC_LEN, &CMPLX_ONE_, temp1, 1);
       vzExp(VEC_LEN, temp1, temp2);
       vzMul(VEC_LEN, temp_ff, temp2, ff + z);
     } // for z
+
+    delete[] buf;
 
 #if 0
     #pragma omp for schedule(runtime)

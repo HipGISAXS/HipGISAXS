@@ -75,7 +75,7 @@ namespace hig {
         bool cylinder_opt(std::vector<real_t>&, std::vector<real_t>&, vector3_t, std::vector<complex_t>&);
         bool cylinder_kernel_opt(std::vector<real_t>&, std::vector<real_t>&, vector3_t, std::vector<complex_t>&);
         complex_t ff_cylinder_kernel_opt(complex_t qpar, complex_t qz, real_t radius, real_t height);
-        void ff_cylinder_kernel_opt_vec(complex_t*, complex_t*, real_t, real_t, complex_t*);
+        void ff_cylinder_kernel_opt_vec(complex_t*, const complex_t*, const complex_t*, real_t, real_t, complex_t*);
       #endif
 
       // helper kernels
