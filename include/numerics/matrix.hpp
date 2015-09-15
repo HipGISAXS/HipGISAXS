@@ -31,6 +31,10 @@
 #include <common/globals.hpp>
 #include <common/cudafy.hpp>
 
+#ifdef FF_CPU_OPT
+#include <mkl_cblas.h>
+#endif // FF_CPU_OPT
+
 
 namespace hig {
   class RotMatrix_t {
@@ -140,6 +144,28 @@ namespace hig {
         res[1] = data_[3] * x + data_[4] * y + data_[5] * z;
         res[2] = data_[6] * x + data_[7] * y + data_[8] * z;
       } // rotate()
+
+#ifdef FF_CPU_OPT
+      inline void rotate_vec(const int VEC_LEN, real_t* x, real_t* y, complex_t* z, complex_t* res) {
+        complex_t *res0 = res, *res1 = res + VEC_LEN, *res2 = res + 2 * VEC_LEN;
+        real_t temp[VEC_LEN];
+
+        cblas_dcopy(VEC_LEN, y, 1, temp, 1);
+        cblas_daxpby(VEC_LEN, data_[0], x, 1, data_[1], temp, 1);
+        for(int i = 0; i < VEC_LEN; ++ i) res0[i] = complex_t(temp[i], (real_t) 0.0);
+        cblas_zaxpy(VEC_LEN, &data_[2], z, 1, res0, 1);
+
+        cblas_dcopy(VEC_LEN, y, 1, temp, 1);
+        cblas_daxpby(VEC_LEN, data_[3], x, 1, data_[4], temp, 1);
+        for(int i = 0; i < VEC_LEN; ++ i) res1[i] = complex_t(temp[i], (real_t) 0.0);
+        cblas_zaxpy(VEC_LEN, &data_[5], z, 1, res1, 1);
+
+        cblas_dcopy(VEC_LEN, y, 1, temp, 1);
+        cblas_daxpby(VEC_LEN, data_[6], x, 1, data_[7], temp, 1);
+        for(int i = 0; i < VEC_LEN; ++ i) res2[i] = complex_t(temp[i], (real_t) 0.0);
+        cblas_zaxpy(VEC_LEN, &data_[8], z, 1, res2, 1);
+      } // rotate()
+#endif // FF_CPU_OPT
 
 #ifdef USE_GPU
       __device__ void rotate(real_t x, real_t y, cucomplex_t z, 

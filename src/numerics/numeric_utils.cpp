@@ -76,4 +76,12 @@ namespace hig {
     return complex_t(j1(zz.real()), 0.0);
   } // cbessj()
 
+
+#ifdef FF_CPU_OPT
+  // TODO ...
+  void cbessj_vec(const int VEC_LEN, complex_t* zz, int order, complex_t* res) {
+    for(int i = 0; i < VEC_LEN; ++ i) res[i] = complex_t(j1(zz[i].real()), 0.0);
+  } // cbessj()
+#endif // FF_CPU_OPT
+
 } // namespace hig

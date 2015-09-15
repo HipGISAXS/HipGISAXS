@@ -55,4 +55,13 @@ namespace hig {
       return (1.- x*x/6. + x*x*x*x/120.);
   }
 
+#ifdef FF_CPU_OPT
+  extern void cbessj_vec(const int, complex_t*, int, complex_t*);
+
+  // TODO ...
+  inline void sinc_vec(const int VEC_LEN, complex_t* x, complex_t* res) {
+    for(int i = 0; i < VEC_LEN; ++ i) res[i] = sinc(x[i]);
+  } // sinc_vec()
+#endif // FF_CPU_OPT
+
 } // namespace hig

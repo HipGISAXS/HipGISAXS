@@ -31,7 +31,11 @@
 #define MKL_Complex8 hig::complex_t
 #endif
 
+const int VEC_LEN = 400;  // vector length
+
+#include <cstring>
 #include <mkl.h>
+#include <mkl_cblas.h>
 
 #endif // FF_CPU_OPT
 
@@ -47,27 +51,83 @@ namespace hig {
     complex_t t1 = qpar * radius;
     complex_t bess_val = cbessj(t1, 1) * std::conj(t1) / std::norm(t1);
     return (vol * sinc_val * expt_val * bess_val);
-  } // ff_cylinder_kernel()
+  } // ff_cylinder_kernel_opt()
+
+
+  inline void AnalyticFormFactor::ff_cylinder_kernel_opt_vec(
+                   complex_t* qpar, complex_t* qz, real_t radius, real_t height, complex_t* ff) {
+    real_t vol = 2. * PI_ * radius * radius * height;
+    complex_t temp0[VEC_LEN], temp1[VEC_LEN], temp2[VEC_LEN];
+    complex_t sinc_val[VEC_LEN], exp_val[VEC_LEN], bess_val[VEC_LEN];
+    cblas_zcopy(VEC_LEN, qz, 1, temp0, 1);
+    cblas_zdscal(VEC_LEN, 0.5 * height, temp0, 1);
+    sinc_vec(VEC_LEN, temp0, sinc_val);
+    cblas_zscal(VEC_LEN, &CMPLX_ONE_, temp0, 1);
+    vzExp(VEC_LEN, temp0, exp_val);
+    cblas_zcopy(VEC_LEN, qpar, 1, temp1, 1);
+    cblas_zdscal(VEC_LEN, radius, temp1, 1);
+    cbessj_vec(VEC_LEN, temp1, 1, temp2);
+    vzDiv(VEC_LEN, temp2, temp1, bess_val);
+    vzMul(VEC_LEN, sinc_val, exp_val, temp0);
+    vzMul(VEC_LEN, temp0, bess_val, temp1);
+    cblas_zdscal(VEC_LEN, vol, bess_val, 1);
+    vzAdd(VEC_LEN, ff, bess_val, temp0);
+    cblas_zcopy(VEC_LEN, temp0, 1, ff, 1);
+  } // ff_cylinder_kernel_opt_vec()
 
 
   inline bool AnalyticFormFactor::cylinder_kernel_opt(std::vector<real_t>& r, std::vector<real_t>& h,
-                                                      vector3_t transvec, std::vector<complex_t>& ff) {
+                                                      vector3_t transvec, std::vector<complex_t>& ff_vec) {
 
     real_t* qx = QGrid::instance().qx();
     real_t* qy = QGrid::instance().qy();
     complex_t* qz_extended = QGrid::instance().qz_extended();
-    complex_t mq[3];
+    complex_t* ff = &ff_vec[0];
 
     real_t *rp = &r[0], *hp = &h[0];
     int rsize = r.size(), hsize = h.size();
 
-    // vectorizing with 4 (double precision)
-    unsigned int loop_limit = nqz_ / 4;
-    int loop_rem = nqz_ % 4;
-    #pragma omp for schedule(runtime) collapse(2)
+    complex_t mq[VEC_LEN * 3], *mq0, *mq1, *mq2;
+    mq0 = mq; mq1 = mq + VEC_LEN; mq2 = mq + 2 * VEC_LEN;
+    complex_t temp0[VEC_LEN], temp1[VEC_LEN], temp2[VEC_LEN], temp_ff[VEC_LEN];
+
+    unsigned int loop_limit = nqz_ / VEC_LEN;
+    int loop_rem = nqz_ % VEC_LEN;  // TODO ...
+
+    #pragma omp for schedule(runtime)
     for(unsigned int l = 0; l < loop_limit; ++ l) {
-      for(int i = 0; i < 4; ++ i) {
-        unsigned int z = 4 * l + i;
+      unsigned int z = VEC_LEN * l;
+      unsigned int y = z % nqy_;
+      complex_t qpar[VEC_LEN];
+      rot_.rotate_vec(VEC_LEN, qx + y, qy + y, qz_extended + z, mq);
+      vzMul(VEC_LEN, mq0, mq0, temp0);
+      vzMul(VEC_LEN, mq1, mq1, temp1);
+      vzAdd(VEC_LEN, temp0, temp1, temp2);
+      vzSqrt(VEC_LEN, temp2, qpar);
+      memset(temp_ff, 0, VEC_LEN * sizeof(complex_t));
+      for(int i_r = 0; i_r < rsize; ++ i_r) {
+        for(int i_h = 0; i_h < hsize; ++ i_h) {
+          ff_cylinder_kernel_opt_vec(qpar, mq2, rp[i_r], hp[i_r], temp_ff);
+        } // for h
+      } // for r
+      cblas_zcopy(VEC_LEN, mq0, 1, temp0, 1);
+      cblas_zdscal(VEC_LEN, transvec[0], temp0, 1);
+      cblas_zcopy(VEC_LEN, mq1, 1, temp1, 1);
+      cblas_zdscal(VEC_LEN, transvec[1], temp1, 1);
+      vzAdd(VEC_LEN, temp0, temp1, temp2);
+      cblas_zcopy(VEC_LEN, mq2, 1, temp0, 1);
+      cblas_zdscal(VEC_LEN, transvec[2], temp0, 1);
+      vzAdd(VEC_LEN, temp0, temp2, temp1);
+      cblas_zscal(VEC_LEN, &CMPLX_ONE_, temp1, 1);
+      vzExp(VEC_LEN, temp1, temp2);
+      vzMul(VEC_LEN, temp_ff, temp2, ff + z);
+    } // for z
+
+#if 0
+    #pragma omp for schedule(runtime)
+    for(unsigned int l = 0; l < loop_limit; ++ l) {
+      for(int i = 0; i < VEC_LEN; ++ i) {
+        unsigned int z = VEC_LEN * l + i;
         unsigned int y = z % nqy_;
         rot_.rotate_new(qx[y], qy[y], qz_extended[z], mq);
         complex_t qpar = sqrt(mq[0] * mq[0] + mq[1] * mq[1]);
@@ -82,6 +142,7 @@ namespace hig {
         ff[z] = temp_ff * temp2;
       } // for i
     } // for z
+#endif // 0
 
     return true;
   } // AnalyticFormFactor::cylinder_kernel_opt()

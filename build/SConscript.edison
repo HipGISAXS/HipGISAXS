@@ -541,7 +541,7 @@ if not get_option('clean'):
     tiff_libs = ["tiff"]
     mkl_libs = []
     if use_mkl:
-      mkl_libs = ["mkl_core"]
+      mkl_libs = ["mkl_intel_lp64", "mkl_sequential", "mkl_core"]
     if env['TOOLCHAIN'] == toolchain_intel:
       other_libs = ["m", "stdc++"]
     else:
@@ -599,7 +599,7 @@ if not get_option('clean'):
     if using_accelerator != None:
         print("Enabling use of accelerator: %s" % using_accelerator)
 
-    #env.Append(CCFLAGS = ["-mavx -msse4.1 -msse4.2 -mssse3"])
+    env.Append(CCFLAGS = ["-mavx", "-mtune=core-avx2"]) #, "-msse4.1", "-msse4.2", "-mssse3"])
 
     if using_debug:
         env.Append(CCFLAGS = ['-g'])
