@@ -608,6 +608,7 @@ if not get_option('clean'):
         odbg_flags = ['-O3', '-g']
         if env['TOOLCHAIN'] == toolchain_intel: odbg_flags += ['-dynamic']
         env.Append(CCFLAGS = odbg_flags)
+        env.Append(LINKFLAGS = odbg_flags)
         env.Append(CPPDEFINES = ['NDEBUG'])
     else:
         env.Append(CCFLAGS = ['-O3'])
