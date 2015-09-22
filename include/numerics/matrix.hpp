@@ -146,6 +146,7 @@ namespace hig {
       } // rotate()
 
 #ifdef FF_CPU_OPT
+  #ifdef FF_CPU_OPT_MKL
       inline void rotate_vec(const int VEC_LEN, real_t* x, real_t* y, complex_t* z, complex_t* res) {
         complex_t *res0 = res, *res1 = res + VEC_LEN, *res2 = res + 2 * VEC_LEN;
         real_t temp[VEC_LEN];
@@ -165,6 +166,7 @@ namespace hig {
         for(int i = 0; i < VEC_LEN; ++ i) res2[i] = complex_t(temp[i], (real_t) 0.0);
         cblas_zaxpy(VEC_LEN, &data_[8], z, 1, res2, 1);
       } // rotate()
+  #endif // FF_CPU_OPT_MKL
 #endif // FF_CPU_OPT
 
 #ifdef USE_GPU

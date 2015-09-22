@@ -8,16 +8,17 @@
   */
 
 
+#include <cstring>
+
 #ifdef PROFILE_PAPI
-#include <papi.h>
+# include <papi.h>
 #endif // PROFILE_PAPI
 
 #ifdef _OPENMP
-#include <omp.h>
+# include <omp.h>
 #endif // _OPENMP
 
 #include <woo/timer/woo_boostchronotimers.hpp>
-
 #include <common/constants.hpp>
 #include <numerics/numeric_utils.hpp>
 #include <ff/ff_ana.hpp>
@@ -25,17 +26,20 @@
 
 #ifdef FF_CPU_OPT
 
-#ifdef DOUBLEP
-#define MKL_Complex16 hig::complex_t
-#else
-#define MKL_Complex8 hig::complex_t
-#endif
+# if defined FF_CPU_OPT_MKL
 
-const int VEC_LEN = 400;  // vector length
+#   ifdef DOUBLEP
+#     define MKL_Complex16 hig::complex_t
+#   else
+#     define MKL_Complex8 hig::complex_t
+#   endif // DOUBLEP
 
-#include <cstring>
-#include <mkl.h>
-#include <mkl_cblas.h>
+    const int VEC_LEN = 400;  // vector length
+
+#   include <mkl.h>
+#   include <mkl_cblas.h>
+
+# endif // FF_CPU_OPT_MKL
 
 #endif // FF_CPU_OPT
 
@@ -54,8 +58,15 @@ namespace hig {
   } // ff_cylinder_kernel_opt()
 
 
-  void AnalyticFormFactor::ff_cylinder_kernel_opt_vec(complex_t *buf2,
-                   const complex_t* qpar, const complex_t* qz, real_t radius, real_t height, complex_t* ff) {
+#if defined FF_CPU_OPT_AVX      // to use manual avx intrinsics vectorization
+
+  // ...
+
+#elif defined FF_CPU_OPT_MKL    // to use Intel MKL vector functions (VML and CBLAS)
+
+  inline void AnalyticFormFactor::ff_cylinder_kernel_opt_vec(complex_t *buf2,
+                                                             const complex_t* qpar, const complex_t* qz,
+                                                             real_t radius, real_t height, complex_t* ff) {
     real_t vol = 2. * PI_ * radius * radius * height;
     complex_t *temp0, *temp1, *temp2;
     complex_t *sinc_val, *exp_val, *bess_val;
@@ -78,9 +89,8 @@ namespace hig {
   } // ff_cylinder_kernel_opt_vec()
 
 
-  bool AnalyticFormFactor::cylinder_kernel_opt(std::vector<real_t>& r, std::vector<real_t>& h,
+  inline bool AnalyticFormFactor::cylinder_kernel_opt(std::vector<real_t>& r, std::vector<real_t>& h,
                                                       vector3_t transvec, std::vector<complex_t>& ff_vec) {
-
     real_t* qx = QGrid::instance().qx();
     real_t* qy = QGrid::instance().qy();
     complex_t* qz_extended = QGrid::instance().qz_extended();
@@ -99,6 +109,9 @@ namespace hig {
 
     unsigned int loop_limit = nqz_ / VEC_LEN;
     int loop_rem = nqz_ % VEC_LEN;  // TODO ...
+
+    vmlSetMode(VML_EP);
+    //vmlSetMode(VML_LA);
 
     #pragma omp for schedule(runtime)
     for(unsigned int l = 0; l < loop_limit; ++ l) {
@@ -151,8 +164,8 @@ namespace hig {
     return true;
   } // AnalyticFormFactor::cylinder_kernel_opt()
 
+#else   // default is the original case FF_CPU_OPT_ORIG
 
-#if 0
   inline bool AnalyticFormFactor::cylinder_kernel_opt(std::vector<real_t>& r, std::vector<real_t>& h,
                                                       vector3_t transvec, std::vector<complex_t>& ff) {
     #pragma omp for schedule(runtime)
@@ -173,7 +186,7 @@ namespace hig {
     } // for z
 
 #if 0
-    #pragma omp parallel shared(transvec, r, h, ff)
+    #pragma omp shared(transvec, r, h, ff)
     {
     for(unsigned int i_r = 0; i_r < r.size(); ++ i_r) {
       for(unsigned int i_h = 0; i_h < h.size(); ++ i_h) {
@@ -197,9 +210,13 @@ namespace hig {
 
     return true;
   } // AnalyticFormFactor::cylinder_kernel_opt()
-#endif
+
+#endif // FF_CPU_OPT_XXX
 
 
+  /**
+   * The main wrapper function for cylinder form factor
+   */
   bool AnalyticFormFactor::cylinder_opt(std::vector<real_t>& r, std::vector<real_t>& h, vector3_t transvec,
                                    std::vector<complex_t>& ff) {
 
