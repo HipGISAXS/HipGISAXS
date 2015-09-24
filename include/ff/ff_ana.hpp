@@ -73,9 +73,17 @@ namespace hig {
       // optimized for CPU
       #ifdef FF_CPU_OPT
         bool cylinder_opt(std::vector<real_t>&, std::vector<real_t>&, vector3_t, std::vector<complex_t>&);
-        bool cylinder_kernel_opt(std::vector<real_t>&, std::vector<real_t>&, vector3_t, std::vector<complex_t>&);
+        bool cylinder_kernel_opt(std::vector<real_t>&, std::vector<real_t>&, vector3_t,
+                                 std::vector<complex_t>&);
+        #if defined FF_CPU_OPT_AVX
+        void ff_cylinder_kernel_opt_vec(complex_t*, const complex_t*, const complex_t*, real_t, real_t,
+                                        complex_t*);
+        #elif defined FF_CPU_OPT_MKL
+        void ff_cylinder_kernel_opt_vec(complex_t*, const complex_t*, const complex_t*, real_t, real_t,
+                                        complex_t*);
+        #else   // default FF_CPU_OPT_ORIG
         complex_t ff_cylinder_kernel_opt(complex_t qpar, complex_t qz, real_t radius, real_t height);
-        void ff_cylinder_kernel_opt_vec(complex_t*, const complex_t*, const complex_t*, real_t, real_t, complex_t*);
+        #endif  // FF_CPU_OPT_XXX
       #endif
 
       // helper kernels

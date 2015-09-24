@@ -47,20 +47,20 @@ namespace hig {
 
 #ifdef FF_CPU_OPT
 
-  inline complex_t AnalyticFormFactor::ff_cylinder_kernel_opt(
-                   complex_t qpar, complex_t qz, real_t radius, real_t height) {
-    real_t vol = 2. * PI_ * radius * radius * height;
-    complex_t sinc_val = sinc(0.5 * qz * height);
-    complex_t expt_val = std::exp(CMPLX_ONE_ * 0.5 * qz * height);
-    complex_t t1 = qpar * radius;
-    complex_t bess_val = cbessj(t1, 1) * std::conj(t1) / std::norm(t1);
-    return (vol * sinc_val * expt_val * bess_val);
-  } // ff_cylinder_kernel_opt()
-
-
 #if defined FF_CPU_OPT_AVX      // to use manual avx intrinsics vectorization
 
-  // ...
+  inline void AnalyticFormFactor::ff_cylinder_kernel_opt_vec(complex_t *buf2,
+                                                             const complex_t* qpar, const complex_t* qz,
+                                                             real_t radius, real_t height, complex_t* ff) {
+    // ...
+  } // AnalyticFormFactor::ff_cylinder_kernel_opt_vec()
+
+
+  inline bool AnalyticFormFactor::cylinder_kernel_opt(std::vector<real_t>& r, std::vector<real_t>& h,
+                                                      vector3_t transvec, std::vector<complex_t>& ff_vec) {
+    // ...
+    return true;
+  } // AnalyticFormFactor::cylinder_kernel_opt()
 
 #elif defined FF_CPU_OPT_MKL    // to use Intel MKL vector functions (VML and CBLAS)
 
@@ -165,6 +165,17 @@ namespace hig {
   } // AnalyticFormFactor::cylinder_kernel_opt()
 
 #else   // default is the original case FF_CPU_OPT_ORIG
+
+  inline complex_t AnalyticFormFactor::ff_cylinder_kernel_opt(
+                   complex_t qpar, complex_t qz, real_t radius, real_t height) {
+    real_t vol = 2. * PI_ * radius * radius * height;
+    complex_t sinc_val = sinc(0.5 * qz * height);
+    complex_t expt_val = std::exp(CMPLX_ONE_ * 0.5 * qz * height);
+    complex_t t1 = qpar * radius;
+    complex_t bess_val = cbessj(t1, 1) * std::conj(t1) / std::norm(t1);
+    return (vol * sinc_val * expt_val * bess_val);
+  } // ff_cylinder_kernel_opt()
+
 
   inline bool AnalyticFormFactor::cylinder_kernel_opt(std::vector<real_t>& r, std::vector<real_t>& h,
                                                       vector3_t transvec, std::vector<complex_t>& ff) {

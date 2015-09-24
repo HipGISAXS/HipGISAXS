@@ -75,32 +75,40 @@ namespace hig {
   typedef std::pair <real_t, real_t>       real_pair_t;
 
   #ifdef USE_GPU
-    typedef std::vector<cucomplex_t>        cucomplex_vec_t;
+    typedef std::vector<cucomplex_t>       cucomplex_vec_t;
   #elif defined INTEL_AVX
-    // AVX vector types:
-    typedef __m256                          avx_m256_t;
-    typedef struct {
-      __m256 xvec;
-      __m256 yvec;
-    }                                       avx_m256c_t;
+    // AVX vector types
+    #ifdef DOUBLEP  // double precision
+      typedef __m256d                      avx_m256_t;
+      typedef struct {  // complex
+        __m256d real;
+        __m256d imag;
+      }                                    avx_m256c_t;
+    #else           // single precision
+      typedef __m256                       avx_m256_t;
+      typedef struct {  // complex
+        __m256 real;
+        __m256 imag;
+      }                                    avx_m256c_t;
+    #endif  // DOUBLEP
 /*  #elif defined __SSE3__
-    typedef __m128                          sse_m128_t;
+    typedef __m128                         sse_m128_t;
     typedef struct {
       __m128 xvec;
       __m128 yvec;
-    }                                       sse_m128c_t; */
+    }                                      sse_m128c_t; */
   #endif
 
 /*  #ifdef USE_MIC
-    typedef __m512                          mic_m512_t;
+    typedef __m512                         mic_m512_t;
     typedef struct {
       __m512 xvec;
       __m512 yvec;
-    }                                       mic_m512c_t;
+    }                                      mic_m512c_t;
   #endif */
 
-  typedef std::string                       string_t;
-  typedef std::map <std::string, real_t>    map_t;
+  typedef std::string                      string_t;
+  typedef std::map <std::string, real_t>   map_t;
 
 
   // Triangle with vertices counter-clockwise order
@@ -108,7 +116,7 @@ namespace hig {
       real_t v1[3];
       real_t v2[3];
       real_t v3[3]; 
-  }                                         triangle_t;
+  }                                        triangle_t;
  
 
   // TODO: handle multiprecision? ...

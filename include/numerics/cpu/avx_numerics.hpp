@@ -1,16 +1,10 @@
 /**
  *  Project: HipGISAXS (High-Performance GISAXS)
  *
- *  File: sse3_numerics.hpp
+ *  File: avx_numerics.hpp
  *  Created: Apr 19, 2013
- *  Modified: Sun 26 Jan 2014 10:02:19 AM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
- *  Developers: Slim Chourou <stchourou@lbl.gov>
- *              Abhinav Sarje <asarje@lbl.gov>
- *              Elaine Chan <erchan@lbl.gov>
- *              Alexander Hexemer <ahexemer@lbl.gov>
- *              Xiaoye Li <xsli@lbl.gov>
  *
  *  Licensing: The HipGISAXS software is only available to be downloaded and
  *  used by employees of academic research institutions, not-for-profit
@@ -20,12 +14,10 @@
  *  NON-COMMERCIAL END USER LICENSE AGREEMENT.
  */
 
-#ifdef INTEL_SB_AVX
+#ifdef INTEL_AVX
 
 #ifndef __AVX_NUMERICS_HPP__
 #define __AVX_NUMERICS_HPP__
-
-#include <immintrin.h>
 
 #include <common/typedefs.hpp>
 #include <numerics/cpu/avx_mathfun.hpp>
@@ -189,4 +181,4 @@ namespace hig {
 
 #endif // __AVX_NUMERICS_HPP__
 
-#endif // INTEL_SB_AVX
+#endif // INTEL_AVX

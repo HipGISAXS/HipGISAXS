@@ -3,14 +3,8 @@
  *
  *  File: avx_mathfun.hpp
  *  Created: May 03, 2013
- *  Modified: Tue 16 Jul 2013 12:13:35 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
- *  Developers: Slim Chourou <stchourou@lbl.gov>
- *              Abhinav Sarje <asarje@lbl.gov>
- *              Elaine Chan <erchan@lbl.gov>
- *              Alexander Hexemer <ahexemer@lbl.gov>
- *              Xiaoye Li <xsli@lbl.gov>
  *
  *  Licensing: The HipGISAXS software is only available to be downloaded and
  *  used by employees of academic research institutions, not-for-profit
@@ -19,6 +13,8 @@
  *  the software, you are agreeing to be bound by the terms of this
  *  NON-COMMERCIAL END USER LICENSE AGREEMENT.
  */
+
+#ifdef INTEL_AVX
 
 #ifndef __AVX_MATHFUN_HPP__
 #define __AVX_MATHFUN_HPP__
@@ -654,3 +650,5 @@ inline void newsincos_ps_dual(avx_m256_t x1, avx_m256_t x2, avx_m256_t *s1, avx_
 } // namespace avx_mathfun
 
 #endif // __AVX_MATHFUN_HPP__
+
+#endif // INTEL_AVX
