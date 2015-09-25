@@ -245,6 +245,13 @@ def do_configure(myenv):
     ## setup configuration tests
     setup_configuration_tests(conf)
     
+    if 'CXX' in os.environ:
+        conf.env.Replace(CXX = os.environ['CXX'])
+        print(">> Using C++ compiler " + os.environ['CXX'])
+    if 'CC' in os.environ:
+        conf.env.Replace(CC = os.environ['CC'])
+        print(">> Using C compiler " + os.environ['CC'])
+
     ## select compiler toolchain
     toolchain = None
     have_toolchain = lambda: toolchain != None
@@ -270,15 +277,9 @@ def do_configure(myenv):
         Exit(1)
 
     ## check if compilers work
-    #if 'CXX' in os.environ:
-    #    conf.env.Replace(CXX = os.environ['CXX'])
-    #    print(">> Using C++ compiler " + os.environ['CXX'])
     if not conf.CheckCXX():
         print("error: your C++ compiler '%s' doesn't seem to work!" % conf.env["CXX"])
         Exit(1)
-    #if 'CC' in os.environ:
-    #    conf.env.Replace(CC = os.environ['CC'])
-    #    print(">> Using C compiler " + os.environ['CC'])
     if not conf.CheckCC():
         print("error: your C compiler '%s' doesn't seem to work!" % conf.env["CC"])
         Exit(1)
@@ -447,15 +448,6 @@ if using_tau:
   CXXCOMPILER = "tau_cxx.sh"
   CCCOMPILER = "tau_cc.sh"
 
-## check if compilers work
-if 'CXX' in os.environ:
-  CXXCOMPILER = os.environ['CXX']
-  print(">> Using C++ compiler from env CXX " + os.environ['CXX'])
-if 'CC' in os.environ:
-  CCCOMPILER = os.environ['CC']
-  print(">> Using C compiler from env CC " + os.environ['CC'])
-
-
 # initialize the environment with gathered stuff so far
 env = Environment(BUILD_DIR=variant_dir,
                     ENV = os.environ,
@@ -556,23 +548,32 @@ if not get_option('clean'):
       mkl_libs = ["mkl_core"]
     if env['TOOLCHAIN'] == toolchain_intel:
       other_libs = ["m", "stdc++"]
+      if using_mic:
+        other_libs.append("pfm")
     else:
       other_libs = ["m", "gomp"]
+
     ## optional libs
     mpi_libs = []
     #mpi_libs = ["mpi_cxx", "mpi"]
     #gpu_libs = ["cudart", "cufft", "cudadevrt", "nvToolsExt"]
     gpu_libs = ["cudart"]
     papi_libs = ["papi"]
-    ## required flags
+
+    ## performance detail flags
     detail_flags = []
     if _has_option("detail-time"): detail_flags += ['TIME_DETAIL_1', 'TIME_DETAIL_2']
     if _has_option("detail-mem"): detail_flags += ['MEM_DETAIL']
     if _has_option("verbose"): detail_flags += ['FF_VERBOSE', 'SF_VERBOSE']
+
     ## optional flags
     gpu_flags = ['USE_GPU', 'GPUR', 'KERNEL2', 'FF_ANA_GPU', 'FF_NUM_GPU', 'FF_NUM_GPU_FUSED', 'SF_GPU']
     mic_flags = [] # ['USE_MIC', 'FF_MIC_OPT', 'FF_NUM_MIC_SWAP', 'FF_NUM_MIC_KB']
     cpu_flags = ['FF_NUM_CPU_FUSED', 'FF_CPU_OPT']
+    ## choose at most one of the following
+    if use_mkl: cpu_flags += [ 'FF_CPU_OPT_MKL' ]
+    #cpu_flags += [ 'INTEL_AVX', 'FF_CPU_OPT_AVX' ]
+
     mpi_flags = ['USE_MPI']
     parallel_hdf5_flags = ['USE_PARALLEL_HDF5']
     papi_flags = ['PROFILE_PAPI']
@@ -585,10 +586,10 @@ if not get_option('clean'):
         all_flags += gpu_flags
         using_accelerator = 'gpu'
     elif using_mic:
-        all_flags += mic_flags
+        all_flags += mic_flags + cpu_flags
         using_accelerator = 'mic'
-        env.Append(CCFLAGS = ["-mmic"])
-        env.Append(LINKFLAGS = ["-mmic"])
+        env.Append(CCFLAGS = ["-mmic", "-mt_mpi"])
+        env.Append(LINKFLAGS = ["-mmic", "-mt_mpi", "-mkl"])
     else:
         all_flags += cpu_flags
 
@@ -613,7 +614,9 @@ if not get_option('clean'):
     if using_accelerator != None:
         print("Enabling use of accelerator: %s" % using_accelerator)
 
-    #env.Append(CCFLAGS = ["-mavx -msse4.1 -msse4.2 -mssse3"])
+    if not using_mic:
+      env.Append(CCFLAGS = ["-mavx", "-mtune=core-avx2"]) #, "-msse4.1", "-msse4.2", "-mssse3"])
+      #env.Append(CCFLAGS = ["-no-vec"])
 
     if using_debug:
         env.Append(CCFLAGS = ['-g'])
@@ -622,6 +625,7 @@ if not get_option('clean'):
         odbg_flags = ['-O3', '-g']
         if env['TOOLCHAIN'] == toolchain_intel: odbg_flags += ['-dynamic']
         env.Append(CCFLAGS = odbg_flags)
+        env.Append(LINKFLAGS = odbg_flags)
         env.Append(CPPDEFINES = ['NDEBUG'])
     else:
         env.Append(CCFLAGS = ['-O3'])
@@ -678,6 +682,8 @@ if not get_option('clean'):
 
 ## to clean everything
 Clean('.', '#/' + env['BUILD_DIR'])
+Clean('.', '#/bin/hipgisaxs')
+Clean('.', '#/lib/libhipgisaxs.a')
 Clean('.', env['CONFIGUREDIR'])
 Clean('.', env['CONFIGURELOG'])
 Clean('.', '#/' + SCONSIGN_FILE + ".dblite")
