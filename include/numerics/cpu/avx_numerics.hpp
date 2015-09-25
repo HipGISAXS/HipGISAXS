@@ -14,13 +14,15 @@
  *  NON-COMMERCIAL END USER LICENSE AGREEMENT.
  */
 
-#ifdef INTEL_AVX
-
 #ifndef __AVX_NUMERICS_HPP__
 #define __AVX_NUMERICS_HPP__
 
+#ifdef INTEL_AVX
+
 #include <common/typedefs.hpp>
-#include <numerics/cpu/avx_mathfun.hpp>
+#include <common/constants.hpp>
+#include <numerics/numeric_utils.hpp>
+//#include <numerics/cpu/avx_mathfun.hpp>
 
 namespace hig {
 
@@ -32,6 +34,242 @@ namespace hig {
 	// p = packed (vector),  s = scalar,
 	// s = single-precision, d = double-precision
 	// ////////////////////////////////////////////////////
+
+#ifdef DOUBLEP    // TODO: improve and put it within each functions instead
+
+  /**
+   * load/store/initialize
+   */
+
+  static inline avx_m256c_t avx_load_cp(complex_t* p) {
+    // TODO: use _mm256_i64scatter_pd() instead to directly store into p ...
+    avx_m256c_t v;
+    __attribute__((aligned(32))) real_t real[AVX_VEC_LEN_], imag[AVX_VEC_LEN_];
+    for(int i = 0; i < AVX_VEC_LEN_; ++ i) {
+      real[i] = p[i].real(); imag[i] = p[i].imag();
+    } // for
+    v.real = _mm256_load_pd(real);
+    v.imag = _mm256_load_pd(imag);
+    return v;
+  } // avx_load_cp()
+
+  static inline void avx_store_cp(complex_t* p, avx_m256c_t v) {
+    // TODO: use _mm256_i64scatter_pd() instead to directly store into p ...
+    __attribute__((aligned(32))) real_t real[AVX_VEC_LEN_], imag[AVX_VEC_LEN_];
+    _mm256_store_pd(real, v.real);
+    _mm256_store_pd(imag, v.imag);
+    for(int i = 0; i < AVX_VEC_LEN_; ++ i) p[i] = complex_t(real[i], imag[i]);
+  } // avx_store_cp()
+
+  static inline avx_m256c_t avx_setzero_cp(void) {
+    avx_m256c_t v;
+    v.real = _mm256_setzero_pd();
+    v.imag = _mm256_setzero_pd();
+    return v;
+  } // avx_setzero_cp()
+
+  /**
+   * absolute value
+   */
+
+  static inline avx_m256_t avx_fabs_rp(avx_m256_t v) {
+    avx_m256_t m = _mm256_set1_pd(-0.0);
+    return _mm256_andnot_pd(m, v);
+  } // avx_fabs_rp()
+
+  /**
+   * addition
+   */
+
+  static inline avx_m256_t avx_add_rrp(avx_m256_t a, avx_m256_t b) {
+    return _mm256_add_pd(a, b);
+  } // avx_add_rrp()
+
+  static inline avx_m256c_t avx_add_crp(avx_m256c_t a, avx_m256_t b) {
+    avx_m256c_t v;
+    v.real = _mm256_add_pd(a.real, b);
+    v.imag = a.imag;
+    return v;
+  } // avx_add_crp()
+
+  static inline avx_m256c_t avx_add_ccp(avx_m256c_t a, avx_m256c_t b) {
+    avx_m256c_t v;
+    v.real = _mm256_add_pd(a.real, b.real);
+    v.imag = _mm256_add_pd(a.imag, b.imag);
+    return v;
+  } // avx_add_ccp()
+
+  /**
+   * multiplication
+   */
+
+  static inline avx_m256c_t avx_mul_crp(avx_m256c_t a, real_t b) {
+    avx_m256c_t v;
+    //avx_m256_t temp = _mm256_broadcast_sd(&b);
+    avx_m256_t temp = _mm256_set1_pd(b);
+    v.real = _mm256_mul_pd(a.real, temp);
+    v.imag = _mm256_mul_pd(a.imag, temp);
+    return v;
+  } // avx_mul_crp()
+
+  static inline avx_m256c_t avx_mul_ccp(complex_t a, avx_m256c_t b) {
+    avx_m256c_t v;
+    avx_m256c_t tempa;
+    tempa.real = _mm256_set1_pd(a.real());
+    tempa.imag = _mm256_set1_pd(a.imag());
+    avx_m256_t temp1 = _mm256_mul_pd(tempa.real, b.real);
+    avx_m256_t temp2 = _mm256_mul_pd(tempa.imag, b.imag);
+    avx_m256_t temp3 = _mm256_mul_pd(tempa.real, b.imag);
+    avx_m256_t temp4 = _mm256_mul_pd(tempa.imag, b.real);
+    v.real = _mm256_sub_pd(temp1, temp2);
+    v.imag = _mm256_add_pd(temp3, temp4);
+    return v;
+  } // avx_mul_ccp()
+
+  static inline avx_m256c_t avx_mul_ccp(avx_m256c_t a, avx_m256c_t b) {
+    avx_m256c_t v;
+    avx_m256_t temp1 = _mm256_mul_pd(a.real, b.real);
+    avx_m256_t temp2 = _mm256_mul_pd(a.imag, b.imag);
+    avx_m256_t temp3 = _mm256_mul_pd(a.real, b.imag);
+    avx_m256_t temp4 = _mm256_mul_pd(a.imag, b.real);
+    v.real = _mm256_sub_pd(temp1, temp2);
+    v.imag = _mm256_add_pd(temp3, temp4);
+    return v;
+  } // avx_mul_ccp()
+
+  static inline avx_m256c_t avx_fma_rccp(real_t a, avx_m256c_t b, avx_m256c_t c) {
+    // a * b + c
+    avx_m256c_t v;
+    //avx_m256_t temp = _mm256_broadcast_sd(&a);
+    avx_m256_t temp = _mm256_set1_pd(a);
+    //v.real = _mm256_fmadd_pd(temp, b.real, c.real);
+    v.real = _mm256_add_pd(_mm256_mul_pd(temp, b.real), c.real);
+    //v.imag = _mm256_fmadd_pd(temp, b.imag, c.imag);
+    v.imag = _mm256_add_pd(_mm256_mul_pd(temp, b.imag), c.imag);
+    return v;
+  } // avx_fma_rccp()
+
+  static inline avx_m256_t avx_mul_rrp(avx_m256_t a, real_t b) {
+    return _mm256_mul_pd(a, _mm256_set1_pd(b));
+  } // avx_mul_rrp()
+
+  /**
+   * division
+   */
+
+  static inline avx_m256c_t avx_div_ccp(avx_m256c_t a, avx_m256c_t b) {
+    avx_m256c_t v;
+    avx_m256_t temp1 = _mm256_mul_pd(a.real, b.real);
+    avx_m256_t temp2 = _mm256_mul_pd(a.imag, b.imag);
+    avx_m256_t temp3 = _mm256_mul_pd(a.real, b.imag);
+    avx_m256_t temp4 = _mm256_mul_pd(a.imag, b.real);
+    avx_m256_t temp5 = _mm256_hypot_pd(b.real, b.imag);
+    v.real = _mm256_div_pd(_mm256_add_pd(temp1, temp2), temp5);
+    v.imag = _mm256_div_pd(_mm256_sub_pd(temp4, temp3), temp5);
+    return v;
+  } // avx_div_ccp()
+
+  static inline avx_m256_t avx_div_rrp(avx_m256_t a, real_t b) {
+    return _mm256_div_pd(a, _mm256_set1_pd(b));
+  } // avx_div_rrp()
+
+  /**
+   * square-root
+   */
+
+  static inline avx_m256c_t avx_sqrt_cp(avx_m256c_t v) {
+    avx_m256c_t res;
+    avx_m256_t x = v.real;
+    avx_m256_t y = v.imag;
+    // TODO: improve and implement the special cases ...
+    //if (x == 0) {
+    //  double t = sqrt(fabs(y) / 2);
+    //  return make_cuC(t, y < 0 ? -t : t);
+    //} else if (y == 0) {
+    //  return x < 0 ? make_cuC(0, sqrt(fabs(x))) : make_cuC(sqrt(x), 0);
+    //} else {
+    avx_m256_t hypv = _mm256_hypot_pd(x, y);
+    avx_m256_t absx = avx_fabs_rp(x);
+    avx_m256_t absy = avx_fabs_rp(y);
+    avx_m256_t t = _mm256_sqrt_pd(avx_mul_rrp(_mm256_add_pd(hypv, absx), 2.0));
+    avx_m256_t u = avx_div_rrp(t, 2.0);
+    avx_m256_t ybt = _mm256_div_pd(y, t);
+    avx_m256_t absybt = _mm256_div_pd(absy, t);
+    avx_m256_t maskx = _mm256_cmp_pd(x, _mm256_set1_pd(0.0), _CMP_GT_OS);
+    avx_m256_t masky = _mm256_cmp_pd(y, _mm256_set1_pd(0.0), _CMP_LT_OS);
+
+    avx_m256_t r1 = _mm256_and_pd(maskx, u);
+    avx_m256_t r2 = _mm256_andnot_pd(maskx, absybt);
+    res.real = _mm256_or_pd(r1, r2);
+
+    avx_m256_t i1 = _mm256_and_pd(maskx, ybt);
+    avx_m256_t i21 = _mm256_and_pd(masky, _mm256_mul_pd(u, _mm256_set1_pd(-1.0)));
+    avx_m256_t i22 = _mm256_andnot_pd(masky, u);
+    avx_m256_t i2 = _mm256_or_pd(i21, i22);
+    i2 = _mm256_andnot_pd(maskx, i2);
+    res.imag = _mm256_or_pd(i1, i2);
+
+    return res;
+    //} // if-else
+  } // avx_sqrt_cp()
+
+  /**
+   * exponential
+   */
+
+  static inline avx_m256c_t avx_exp_cp(avx_m256c_t v) {
+    avx_m256c_t res;
+    avx_m256_t expa = _mm256_exp_pd(v.real);
+    avx_m256_t cosb = _mm256_cos_pd(v.imag);
+    avx_m256_t sinb = _mm256_sin_pd(v.imag);
+    res.real = _mm256_mul_pd(expa, cosb);
+    res.imag = _mm256_mul_pd(expa, sinb);
+    return res;
+  } // avx_exp_cp()
+
+  /**
+   * sinc
+   */
+
+  static inline avx_m256c_t avx_sinc_cp(avx_m256c_t v) {
+    // TODO: properly vectorize ...
+    // currently it converts to scalar, computes, and converts back to vector
+    avx_m256c_t res;
+    __attribute__((aligned(32))) real_t real[AVX_VEC_LEN_], imag[AVX_VEC_LEN_];
+    _mm256_store_pd(real, v.real);
+    _mm256_store_pd(imag, v.imag);
+    for(int i = 0; i < AVX_VEC_LEN_; ++ i) {
+      complex_t temp = sinc(complex_t(real[i], imag[i]));
+      real[i] = temp.real();
+      imag[i] = temp.imag();
+    } // for
+    res.real = _mm256_load_pd(real);
+    res.imag = _mm256_load_pd(imag);
+    return res;
+  } // avx_sinc_cp()
+
+  /**
+   * bessel function
+   */
+
+  static inline avx_m256c_t avx_cbessj_cp(avx_m256c_t v, int o) {
+    // TODO: properly vectorize ...
+    // currently it converts to scalar, computes, and converts back to vector
+    avx_m256c_t res;
+    __attribute__((aligned(32))) real_t real[AVX_VEC_LEN_], imag[AVX_VEC_LEN_];
+    _mm256_store_pd(real, v.real);
+    _mm256_store_pd(imag, v.imag);
+    for(int i = 0; i < AVX_VEC_LEN_; ++ i) {
+      complex_t temp = cbessj(complex_t(real[i], imag[i]), o);
+      real[i] = temp.real();
+      imag[i] = temp.imag();
+    } // for
+    res.real = _mm256_load_pd(real);
+    res.imag = _mm256_load_pd(imag);
+    return res;
+  } // avx_cbessj_cp()
+
+#else
 
 	/**
 	 * load store
@@ -177,8 +415,10 @@ namespace hig {
 		avx_mathfun::newsincos_ps_dual(a1, a2, s1, s2, c1, c2);
 	} // avx_exp_rps()
 
+#endif // DOUBLEP
+
 } // namespace hig
 
-#endif // __AVX_NUMERICS_HPP__
-
 #endif // INTEL_AVX
+
+#endif // __AVX_NUMERICS_HPP__

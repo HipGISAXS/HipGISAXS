@@ -32,36 +32,36 @@ namespace hig {
   extern double gamma(double x);
   extern complex_t cbessj(complex_t zz, int order);
 
-  INLINE
-  vector3_t cross(vector3_t & u, vector3_t & v){
-    vector3_t w;
+//  INLINE
+  extern vector3_t cross(vector3_t & u, vector3_t & v); //{
+/*    vector3_t w;
     w[0] = u[1] * v[2] - u[2] * v[1];
     w[1] = u[2] * v[0] - u[0] * v[2];
     w[2] = u[0] * v[1] - u[1] * v[0];
     return w;
-  }
+  }*/
 
-  INLINE
-  real_t dot(vector3_t & a, vector3_t & b){
-   return (a[0] * b[0] + a[1] * b[1] + a[2] * b[2]);
-  }
+//  INLINE
+  extern real_t dot(vector3_t & a, vector3_t & b); //{
+/*   return (a[0] * b[0] + a[1] * b[1] + a[2] * b[2]);
+  }*/
 
   // sinc function
-  inline complex_t sinc(complex_t x){
-    if (std::abs(x) > 1.0E-14)
+  extern complex_t sinc(complex_t x); //{
+/*    if (std::abs(x) > 1.0E-14)
       return std::sin(x) / x;
     else
       // Taylor series approx
       return (1.- x*x/6. + x*x*x*x/120.);
-  }
+  }*/
 
 #ifdef FF_CPU_OPT
   extern void cbessj_vec(const int, complex_t*, int, complex_t*);
 
   // TODO ...
-  inline void sinc_vec(const int VEC_LEN, complex_t* x, complex_t* res) {
-    for(int i = 0; i < VEC_LEN; ++ i) res[i] = sinc(x[i]);
-  } // sinc_vec()
+  extern void sinc_vec(const int VEC_LEN, complex_t* x, complex_t* res); // {
+/*    for(int i = 0; i < VEC_LEN; ++ i) res[i] = sinc(x[i]);
+  } // sinc_vec() */
 #endif // FF_CPU_OPT
 
 } // namespace hig

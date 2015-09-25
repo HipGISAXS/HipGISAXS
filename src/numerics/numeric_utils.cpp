@@ -84,4 +84,21 @@ namespace hig {
   } // cbessj()
 #endif // FF_CPU_OPT
 
+  real_t dot(vector3_t& a, vector3_t& b) {
+    return (a[0] * b[0] + a[1] * b[1] + a[2] * b[2]);
+  } // dot()
+
+  vector3_t cross(vector3_t & u, vector3_t & v) {
+    vector3_t w;
+    w[0] = u[1] * v[2] - u[2] * v[1];
+    w[1] = u[2] * v[0] - u[0] * v[2];
+    w[2] = u[0] * v[1] - u[1] * v[0];
+    return w;
+  } // cross()
+
+  complex_t sinc(complex_t x) {
+    if(std::abs(x) > 1.0E-14) return std::sin(x) / x;
+    else return (1.- x*x/6. + x*x*x*x/120.);  // taylor series approx
+  } // sinc()
+
 } // namespace hig

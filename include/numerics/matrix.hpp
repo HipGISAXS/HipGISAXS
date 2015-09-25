@@ -32,7 +32,11 @@
 #include <common/cudafy.hpp>
 
 #ifdef FF_CPU_OPT
-#include <mkl_cblas.h>
+# if defined FF_CPU_OPT_MKL         // using Intel MKL's VML and CBLAS for computations
+#   include <mkl_cblas.h>
+# elif defined FF_CPU_OPT_AVX       // using Intel AVX intrinsics for computations
+#   include <numerics/cpu/avx_numerics.hpp>
+# endif // FF_CPU_OPT_XXX
 #endif // FF_CPU_OPT
 
 
@@ -146,7 +150,29 @@ namespace hig {
       } // rotate()
 
 #ifdef FF_CPU_OPT
-  #ifdef FF_CPU_OPT_MKL
+  #if defined FF_CPU_OPT_AVX
+
+      inline void rotate_vec(real_t* x, real_t* y, complex_t* z,
+                             avx_m256c_t& resx, avx_m256c_t& resy, avx_m256c_t& resz) {
+        avx_m256_t vx = _mm256_loadu_pd(x);
+        avx_m256_t vy = _mm256_loadu_pd(y);
+        avx_m256c_t vz = avx_load_cp(z);
+        avx_m256_t temp1, temp2; avx_m256c_t temp3;
+        temp1 = avx_mul_rrp(vx, data_[0]);
+        temp2 = avx_mul_rrp(vy, data_[1]);
+        temp3 = avx_mul_crp(vz, data_[2]);
+        resx = avx_add_crp(temp3, avx_add_rrp(temp1, temp2));
+        temp1 = avx_mul_rrp(vx, data_[3]);
+        temp2 = avx_mul_rrp(vy, data_[4]);
+        temp3 = avx_mul_crp(vz, data_[5]);
+        resy = avx_add_crp(temp3, avx_add_rrp(temp1, temp2));
+        temp1 = avx_mul_rrp(vx, data_[6]);
+        temp2 = avx_mul_rrp(vy, data_[7]);
+        temp3 = avx_mul_crp(vz, data_[8]);
+        resz = avx_add_crp(temp3, avx_add_rrp(temp1, temp2));
+      } // rotate_vec()
+
+  #elif defined FF_CPU_OPT_MKL
       inline void rotate_vec(const int VEC_LEN, real_t* x, real_t* y, complex_t* z, complex_t* res) {
         complex_t *res0 = res, *res1 = res + VEC_LEN, *res2 = res + 2 * VEC_LEN;
         real_t temp[VEC_LEN];
@@ -165,7 +191,7 @@ namespace hig {
         cblas_daxpby(VEC_LEN, data_[6], x, 1, data_[7], temp, 1);
         for(int i = 0; i < VEC_LEN; ++ i) res2[i] = complex_t(temp[i], (real_t) 0.0);
         cblas_zaxpy(VEC_LEN, &data_[8], z, 1, res2, 1);
-      } // rotate()
+      } // rotate_vec()
   #endif // FF_CPU_OPT_MKL
 #endif // FF_CPU_OPT
 

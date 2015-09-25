@@ -1,12 +1,18 @@
 /***
-  *  Project:
+  *  Project: HipGISAXS (High-Performance GISAXS)
   *
-  *  File:
+  *  File: ff_ana_cylinder_opt.cpp
   *  Created: Aug 31, 2015
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
+  *
+  *  Licensing: The HipGISAXS software is only available to be downloaded and
+  *  used by employees of academic research institutions, not-for-profit
+  *  research laboratories, or governmental research facilities. Please read the
+  *  accompanying LICENSE file before downloading the software. By downloading
+  *  the software, you are agreeing to be bound by the terms of this
+  *  NON-COMMERCIAL END USER LICENSE AGREEMENT.
   */
-
 
 #include <cstring>
 
@@ -25,22 +31,21 @@
 #include <model/qgrid.hpp>
 
 #ifdef FF_CPU_OPT
-
-# if defined FF_CPU_OPT_MKL
+# if defined FF_CPU_OPT_MKL         // using Intel MKL's VML and CBLAS for computations
 
 #   ifdef DOUBLEP
 #     define MKL_Complex16 hig::complex_t
 #   else
 #     define MKL_Complex8 hig::complex_t
 #   endif // DOUBLEP
-
-    const int VEC_LEN = 400;  // vector length
-
 #   include <mkl.h>
 #   include <mkl_cblas.h>
 
-# endif // FF_CPU_OPT_MKL
+# elif defined FF_CPU_OPT_AVX       // using Intel AVX intrinsics for computations
 
+#   include <numerics/cpu/avx_numerics.hpp>
+
+# endif // FF_CPU_OPT_XXX
 #endif // FF_CPU_OPT
 
 namespace hig {
@@ -49,16 +54,73 @@ namespace hig {
 
 #if defined FF_CPU_OPT_AVX      // to use manual avx intrinsics vectorization
 
-  inline void AnalyticFormFactor::ff_cylinder_kernel_opt_vec(complex_t *buf2,
-                                                             const complex_t* qpar, const complex_t* qz,
-                                                             real_t radius, real_t height, complex_t* ff) {
-    // ...
+  // TODO: directly overload operations instead of all the avx_* functions ...
+
+  // ////////////////////////////////////////////////////
+  // intrinsic wrapper naming (only for floating-point)
+  // avx_xxx_ab  => a = r|c, b = p|s
+  // avx_xxx_abc => a = r|c, b = r|c
+  // r = real,             c = complex,
+  // p = packed (vector),  s = scalar,
+  // ////////////////////////////////////////////////////
+
+  inline avx_m256c_t AnalyticFormFactor::ff_cylinder_kernel_opt_vec(const avx_m256c_t& qpar,
+                                                                    const avx_m256c_t& qz,
+                                                                    real_t radius, real_t height) {
+    real_t vol = 2. * PI_ * radius * radius * height;
+    real_t half_height = 0.5 * height;
+    avx_m256c_t temp1 = avx_mul_crp(qz, half_height);
+    avx_m256c_t sinc_val = avx_sinc_cp(temp1);
+    avx_m256c_t temp2 = avx_mul_ccp(CMPLX_ONE_, temp1);
+    avx_m256c_t expt_val = avx_exp_cp(temp2);
+    temp1 = avx_mul_crp(qpar, radius);
+    avx_m256c_t bess_val = avx_cbessj_cp(temp1, 1);
+    bess_val = avx_div_ccp(bess_val, temp1);
+    temp1 = avx_mul_ccp(sinc_val, expt_val);
+    temp2 = avx_mul_ccp(temp1, bess_val);
+    return avx_mul_crp(temp2, vol);
   } // AnalyticFormFactor::ff_cylinder_kernel_opt_vec()
 
 
   inline bool AnalyticFormFactor::cylinder_kernel_opt(std::vector<real_t>& r, std::vector<real_t>& h,
                                                       vector3_t transvec, std::vector<complex_t>& ff_vec) {
-    // ...
+    real_t* qx = QGrid::instance().qx();
+    real_t* qy = QGrid::instance().qy();
+    complex_t* qz_extended = QGrid::instance().qz_extended();
+    complex_t* ff = &ff_vec[0];
+
+    real_t *rp = &r[0], *hp = &h[0];
+    int rsize = r.size(), hsize = h.size();
+
+    unsigned int loop_limit = nqz_ / AVX_VEC_LEN_;
+    int loop_rem = nqz_ % AVX_VEC_LEN_;  // TODO ...
+
+    #pragma omp for schedule(runtime)
+    for(unsigned int l = 0; l < loop_limit; ++ l) {
+      unsigned int z = AVX_VEC_LEN_ * l;
+      unsigned int y = z % nqy_;
+      avx_m256c_t mqx, mqy, mqz;
+      rot_.rotate_vec(qx + y, qy + y, qz_extended + z, mqx, mqy, mqz);
+      avx_m256c_t qx2 = avx_mul_ccp(mqx, mqx);
+      avx_m256c_t qy2 = avx_mul_ccp(mqy, mqy);
+      avx_m256c_t qxy2 = avx_add_ccp(qx2, qy2);
+      avx_m256c_t qpar = avx_sqrt_cp(qxy2);
+      avx_m256c_t temp_ff = avx_setzero_cp();
+      for(unsigned int i_r = 0; i_r < rsize; ++ i_r) {
+        for(unsigned int i_h = 0; i_h < hsize; ++ i_h) {
+          avx_m256c_t temp = ff_cylinder_kernel_opt_vec(qpar, mqz, rp[i_r], hp[i_h]);
+          temp_ff = avx_add_ccp(temp_ff, temp);
+        } // for h
+      } // for r
+      avx_m256c_t temp1 = avx_mul_crp(mqz, transvec[2]);
+      avx_m256c_t temp2 = avx_fma_rccp(transvec[1], mqy, temp1);
+      temp1 = avx_fma_rccp(transvec[0], mqx, temp2);
+      temp2 = avx_mul_ccp(CMPLX_ONE_, temp1);
+      temp1 = avx_exp_cp(temp2);
+      temp2 = avx_mul_ccp(temp_ff, temp1);
+      avx_store_cp(ff + z, temp2);
+    } // for z
+
     return true;
   } // AnalyticFormFactor::cylinder_kernel_opt()
 

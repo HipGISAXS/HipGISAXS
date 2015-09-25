@@ -111,8 +111,12 @@ namespace hig {
    * complex operators
    */
 
+#if defined(__ICC) || defined(__INTEL_COMPILER)
+#if __ICC < 1600 || __INTEL_COMPILER < 1600
   extern complex_t operator*(complex_t c, real_t s);
   extern complex_t operator*(real_t s, complex_t c);
+#endif
+#endif
   extern std::complex<long double> operator*(std::complex<long double> c, long double s);
 /*  #ifdef USE_GPU
     extern complex_t operator*(float2 c, float2 s);

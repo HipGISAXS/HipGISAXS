@@ -47,6 +47,16 @@ namespace hig {
   const complex_t CMPLX_ONE_  = complex_t(REAL_ZERO_, REAL_ONE_);
   const complex_t CMPLX_MINUS_ONE_ = complex_t(REAL_ZERO_, REAL_MINUS_ONE_);
 
+# if defined FF_CPU_OPT_MKL
+  const int VEC_LEN = 400;            // vector length for MKL functions
+# elif defined FF_CPU_OPT_AVX
+#   ifdef DOUBLEP
+      const int AVX_VEC_LEN_ = 4;     // 256-bits = 4 doubles
+#   else
+      const int AVX_VEC_LEN_ = 8;     // 256-bits = 8 singles
+#   endif // DOUBLEP
+# endif // FF_CPU_OPT_AVX
+
 } // namespace
 
 #endif // __CONSTANTS_HPP__
