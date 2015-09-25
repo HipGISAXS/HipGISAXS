@@ -76,14 +76,6 @@ namespace hig {
     return complex_t(j1(zz.real()), 0.0);
   } // cbessj()
 
-
-#ifdef FF_CPU_OPT
-  // TODO ...
-  void cbessj_vec(const int VEC_LEN, complex_t* zz, int order, complex_t* res) {
-    for(int i = 0; i < VEC_LEN; ++ i) res[i] = complex_t(j1(zz[i].real()), 0.0);
-  } // cbessj()
-#endif // FF_CPU_OPT
-
   real_t dot(vector3_t& a, vector3_t& b) {
     return (a[0] * b[0] + a[1] * b[1] + a[2] * b[2]);
   } // dot()
@@ -100,5 +92,19 @@ namespace hig {
     if(std::abs(x) > 1.0E-14) return std::sin(x) / x;
     else return (1.- x*x/6. + x*x*x*x/120.);  // taylor series approx
   } // sinc()
+
+
+#ifdef FF_CPU_OPT
+
+  // TODO ...
+  void cbessj_vec(const int VEC_LEN, complex_t* zz, int order, complex_t* res) {
+    for(int i = 0; i < VEC_LEN; ++ i) res[i] = complex_t(j1(zz[i].real()), 0.0);
+  } // cbessj()
+
+  void sinc_vec(const int VEC_LEN, complex_t* x, complex_t* res) {
+    for(int i = 0; i < VEC_LEN; ++ i) res[i] = sinc(x[i]);
+  } // sinc_vec()
+
+#endif // FF_CPU_OPT
 
 } // namespace hig
