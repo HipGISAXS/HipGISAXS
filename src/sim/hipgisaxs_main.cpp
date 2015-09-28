@@ -1022,13 +1022,6 @@ namespace hig {
         memset(grain_ids, 0 , num_gr * nrow_ * ncol_ * sizeof(complex_t));
       } // if
 
-
-      #ifdef USE_GPU
-      int num_device = 0;
-      cudaGetDeviceCount(&num_device);
-      omp_set_num_threads(num_device);
-      #pragma omp parallel for 
-      #endif
       // loop over grains - each process processes num_gr grains
       for(int grain_i = grain_min; grain_i < grain_max; grain_i ++) {  // or distributions
 
@@ -1036,10 +1029,6 @@ namespace hig {
           std::cout << "-- Processing grain " << grain_i + 1 << " / " << num_grains << " ..."
                 << std::endl;
         } // if
-        #ifdef USE_GPU
-        cudaSetDevice(omp_get_thread_num());
-        #endif
-            
 
         // define r_norm (grain orientation by tau and eta)
         // define full grain rotation matrix r_total = r_phi * r_norm
@@ -1570,23 +1559,13 @@ namespace hig {
                   , woo::comm_t comm_key
                 #endif
                 ) {
-    #ifndef GPUSF
-      return ff.compute_form_factor(shape_name, shape_file, shape_params,
+    return ff.compute_form_factor(shape_name, shape_file, shape_params,
                       single_layer_thickness_,
                       curr_transvec, shp_tau, shp_eta, rot
                       #ifdef USE_MPI
                         , multi_node_, comm_key
                       #endif
                       );
-    #else
-      return ff.compute_form_factor_gpu(shape_name, shape_file, shape_params,
-                      single_layer_thickness_,
-                      curr_transvec, shp_tau, shp_eta, rot
-                      #ifdef USE_MPI
-                        , multi_node_, comm_key
-                      #endif
-                      );
-    #endif
   } // HipGISAXS::form_factor()
 
 
