@@ -101,6 +101,9 @@ namespace hig {
 
       // calculate transmission and reflection coefficents
       bool propagation_coeffs(complex_vec_t &, real_t, real_t, int);
+
+      /** DEBUG **/
+     void debug_multilayer();
   };
 } // namespace hig
 

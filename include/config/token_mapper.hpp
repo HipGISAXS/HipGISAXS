@@ -259,8 +259,9 @@ namespace hig {
         KeyWords_[std::string("unitcell:key")]    = struct_grain_ukey_token;
         KeyWords_[std::string("value")]           = instrument_scatter_photon_value_token;
         KeyWords_[std::string("variable")]        = fit_param_variable_token;
-        KeyWords_[std::string("xyrotation")]      = shape_xyrot_token;
-        KeyWords_[std::string("ztilt")]           = shape_ztilt_token;
+        KeyWords_[std::string("xrot")]            = shape_xrot_token;
+        KeyWords_[std::string("yrot")]            = shape_yrot_token;
+        KeyWords_[std::string("zrot")]            = shape_zrot_token;
         KeyWords_[std::string("mean")]            = mean_token;
         KeyWords_[std::string("stddev")]          = stddev_token;
         KeyWords_[std::string("paracrystal")]     = struct_paracrystal;

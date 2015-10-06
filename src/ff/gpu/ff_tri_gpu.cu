@@ -72,7 +72,7 @@ namespace hig {
     edge[2] = vertex[0] - vertex[2];
 
     // calculate outward normal and area
-    vector3_t n_t = cross_product(edge[0], edge[1]);
+    vector3_t n_t = cross(edge[0], edge[1]);
     real_t t_area = 0.5 * n_t.abs();
     n_t =  n_t / n_t.abs(); // normalize vector
  
@@ -93,7 +93,7 @@ namespace hig {
       for (int e = 0; e < 3; e++) {
 
         // edge normal
-        vector3_t n_e = cross_product(edge[e], n_t);
+        vector3_t n_e = cross(edge[e], n_t);
         n_e = n_e / n_e.abs(); // normalize
 
         // dot(q, n_e)

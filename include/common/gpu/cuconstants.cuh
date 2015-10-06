@@ -29,7 +29,7 @@
 
 namespace hig {
 
-  const real_t CUTINY_ = 1e-20;
+  //const real_t CUTINY_ = 1e-20;
 
   // complex constants
   const cucomplex_t CUCMPLX_ZERO_ = make_cuC(REAL_ZERO_, REAL_ZERO_);

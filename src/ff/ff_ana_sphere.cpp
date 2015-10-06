@@ -31,7 +31,6 @@
 #include <model/qgrid.hpp>
 #include <utils/utilities.hpp>
 #include <numerics/numeric_utils.hpp>
-
 namespace hig {
 
   /**
@@ -39,6 +38,9 @@ namespace hig {
    */
   complex_t FormFactorSphere(complex_t qx, complex_t qy, complex_t qz, real_t radius){
       complex_t qval = std::sqrt(qx * qx + qy * qy + qz * qz);
+      if (std::abs(qval) < TINY_){
+        return CMPLX_ZERO_;
+      }
       complex_t qR   = qval * radius;
       complex_t qR3   = qR * qR * qR;
       complex_t t1   = std::conj(qR3) / std::norm(qR3);
@@ -103,7 +105,7 @@ namespace hig {
               QGrid::instance().qz_extended(z));
       complex_t temp_ff = CMPLX_ZERO_;
       for(unsigned int i_r = 0; i_r < r.size(); ++ i_r) {
-          temp_ff += FormFactorSphere(mq[0], mq[1], mq[2], r[i_r]);
+          temp_ff += distr_r[i_r] * FormFactorSphere(mq[0], mq[1], mq[2], r[i_r]);
       } // for r
       complex_t temp1 = mq[0] * transvec[0] + mq[1] * transvec[1] + mq[2] * transvec[2];
       complex_t temp2 = std::exp(complex_t(-temp1.imag(), temp1.real()));

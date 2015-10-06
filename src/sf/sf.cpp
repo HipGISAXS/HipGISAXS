@@ -37,9 +37,9 @@ namespace hig {
     nz_ = 0;
     type_ = default_type;
     sf_ = nullptr;
-    #ifdef SF_GPU
-      gsf_.init(HiGInput::instance().experiment());
-    #endif
+    // #ifdef SF_GPU
+    //  gsf_.init(HiGInput::instance().experiment());
+    //#endif
   } // StructureFactor::StructureFactor()
 
   StructureFactor::~StructureFactor() {
@@ -205,6 +205,7 @@ namespace hig {
       complex_t sa, sb, sc;
       real_t qx = QGrid::instance().qx(j);
       real_t qy = QGrid::instance().qy(j);
+
       complex_t qz;
       if(expt == "saxs") qz = QGrid::instance().qz(i);
       else if(expt == "gisaxs") qz = QGrid::instance().qz_extended(i);
@@ -241,11 +242,11 @@ namespace hig {
       sc = pow(e_iqc, ((real_t) 1.0 - repet[2]) / (real_t) 2.0) * sc;
 
       if(!((boost::math::isfinite)(sa.real()) && (boost::math::isfinite)(sa.imag()))) {
-        std::cout << "sa sa sa sa sa sa sa: " << i << ", " << j << std::endl; }
+        std::cerr << "sa sa sa sa sa sa sa: " << i << ", " << j << std::endl; }
       if(!((boost::math::isfinite)(sb.real()) && (boost::math::isfinite)(sb.imag()))) {
-        std::cout << "sb sb sb sb sb sb sb: " << i << ", " << j << std::endl; }
+        std::cerr << "sb sb sb sb sb sb sb: " << i << ", " << j << std::endl; }
       if(!((boost::math::isfinite)(sc.real()) && (boost::math::isfinite)(sc.imag()))) {
-        std::cout << "sc sc sc sc sc sc sc: " << i << ", " << j << std::endl; }
+        std::cerr << "sc sc sc sc sc sc sc: " << i << ", " << j << std::endl; }
 
       complex_t temp3 = center[0] * qx + center[1] * qy + center[2] * qz;
       temp3 = exp(complex_t(-temp3.imag(), temp3.real()));
@@ -253,11 +254,13 @@ namespace hig {
       temp2 = unit_c + exp(complex_t(-temp2.imag(), temp2.real()));
       sf_[i] = temp3 * temp2 * sa * sb * sc;
 
+      /************
       if(!((boost::math::isfinite)(temp3.real()) && (boost::math::isfinite)(temp3.imag()))) {
         std::cerr << "error: here it is not finite (666) " << i << ", " << j
               << ": here it is finite (444) " << center[0] << ", "
               << center[1] << ", " << center[2] << std::endl;
       } // if
+      ************/
 
       if(!((boost::math::isfinite)(temp2.real()) && (boost::math::isfinite)(temp2.imag()))) {
         std::cerr << "error: here it is not finite (888) " << i << ", " << j << std::endl;

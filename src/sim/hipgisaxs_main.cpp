@@ -126,8 +126,11 @@ namespace hig {
       photon = photon / 1000;    // in keV
       lambda = 1.23984 / photon;
       freq_ = 1e-9 * photon * 1.60217646e-19 * 1000 / 6.626068e-34;
+    } else if (unit == "kev") {
+      lambda = 1.23984 / photon;
+      freq_ = 1e-9 * photon * 1.60217646e-19 * 1000 / 6.626068e-34;
     } else { /* do something else ? ... */
-      if(master) std::cerr << "error: photon energy is not given in 'ev'" << std::endl;
+      if(master) std::cerr << "error: photon energy is not given in 'ev' or 'kev'" << std::endl;
       return false;
     } // if-else
 
@@ -744,8 +747,9 @@ namespace hig {
                 #endif
                 int corr_doms) {
 
-    SampleRotation rotation_matrix;
-    if(!run_init(alphai, phi, tilt, rotation_matrix)) return false;
+    //SampleRotation rotation_matrix;
+    // if(!run_init(alphai, phi, tilt, rotation_matrix)) return false;
+    rot_ = RotMatrix_t(2, phi);
 
     //QGrid::instance().save ("qgrid.out");
     #ifdef USE_MPI
@@ -842,14 +846,6 @@ namespace hig {
         std::exit(1);
       }
 
-#ifdef DEBUG
-      std::ofstream fcoef("coeffs.out", std::ios::out);
-      for (int i = 0; i < nqz_extended_; i++){
-        fcoef << std::abs(fc[i]) << std::endl;
-      }
-      fcoef.close();
-#endif
-
       real_t *dd = NULL, *nn = NULL, *wght = NULL;    // come back to this ...
                         // these structures can be improved ...
       real_t tz = 0;
@@ -866,11 +862,23 @@ namespace hig {
       for(int i = 0; i < ndx; ++ i) std::cout << nn[ndx + i] << " ";
       std::cout << std::endl;
       for(int i = 0; i < ndx; ++ i) std::cout << nn[2 * ndx + i] << " ";
-      std::cout << std::endl;*/
+      std::cout << std::endl;
+      std::exit(1); */
 
-      int r1axis = (int) (*s).second.rotation_rot1()[0];
-      int r2axis = (int) (*s).second.rotation_rot2()[0];
-      int r3axis = (int) (*s).second.rotation_rot3()[0];
+      int r1axis, r2axis, r3axis;
+      if ( struct_dist == "bragg" ){
+        r1axis = 2;
+        r2axis = 0;
+        r3axis = 1;
+        // TODO this is a hack
+        if (dd) delete [] dd;
+        dd = new real_t[ndx * 3];
+        for (int i = 0; i < ndx * 3; i++) dd[i] = REAL_ZERO_;
+      } else {
+        r1axis = (int) (*s).second.rotation_rot1()[0];
+        r2axis = (int) (*s).second.rotation_rot2()[0];
+        r3axis = (int) (*s).second.rotation_rot3()[0];
+      }
 
       if(smaster) {
         std::cout << "-- Grains: " << num_grains << std::endl;
@@ -966,8 +974,6 @@ namespace hig {
                            // ... incomplete
       } // if-else
       //ShapeName shape_name = HiGInput::instance().shape_name((*s).second);
-      //real_t shape_tau = HiGInput::instance().shape_tau((*s).second);
-      //real_t shape_eta = HiGInput::instance().shape_eta((*s).second);
       //std::string shape_file = HiGInput::instance().shape_filename((*s).second);
       //shape_param_list_t shape_params = HiGInput::instance().shape_params((*s).second);
 
@@ -1016,7 +1022,6 @@ namespace hig {
         memset(grain_ids, 0 , num_gr * nrow_ * ncol_ * sizeof(complex_t));
       } // if
 
-
       // loop over grains - each process processes num_gr grains
       for(int grain_i = grain_min; grain_i < grain_max; grain_i ++) {  // or distributions
 
@@ -1041,77 +1046,13 @@ namespace hig {
         RotMatrix_t r3(r3axis, rot3); 
 
         // order of multiplication is important
-        RotMatrix_t rot = r3 * r2 * r1;
-
-        vector3_t z1, z2, z3, e1, e2, e3, t1, t2, t3;
-        switch(r1axis) {
-          case 0:
-            compute_rotation_matrix_x(rot1, z1, z2, z3);
-            break;
-          case 1:
-            compute_rotation_matrix_y(rot1, z1, z2, z3);
-            break;
-          case 2:
-            compute_rotation_matrix_z(rot1, z1, z2, z3);
-            break;
-          default:
-            std::cerr << "error: unknown axis: " << r1axis << std::endl;
-            return false;
-        } // switch
-        switch(r2axis) {
-          case 0:
-            compute_rotation_matrix_x(rot2, e1, e2, e3);
-            break;
-          case 1:
-            compute_rotation_matrix_y(rot2, e1, e2, e3);
-            break;
-          case 2:
-            compute_rotation_matrix_z(rot2, e1, e2, e3);
-            break;
-          default:
-            std::cerr << "error: unknown axis: " << r2axis << std::endl;
-            return false;
-        } // switch
-        switch(r3axis) {
-          case 0:
-            compute_rotation_matrix_x(rot3, t1, t2, t3);
-            break;
-          case 1:
-            compute_rotation_matrix_y(rot3, t1, t2, t3);
-            break;
-          case 2:
-            compute_rotation_matrix_z(rot3, t1, t2, t3);
-            break;
-          default:
-            std::cerr << "error: unknown axis: " << r3axis << std::endl;
-            return false;
-        } // switch
-
-        vector3_t temp1, temp2, temp3;
-        vector3_t r_norm1, r_norm2, r_norm3;
-        mat_mul_3x3(z1, z2, z3, e1, e2, e3, temp1, temp2, temp3);
-        mat_mul_3x3(temp1, temp2, temp3, t1, t2, t3, r_norm1, r_norm2, r_norm3);
-
-        vector3_t r_tot1, r_tot2, r_tot3;
-        mat_mul_3x3(rotation_matrix.r1_, rotation_matrix.r2_, rotation_matrix.r3_,
-              r_norm1, r_norm2, r_norm3, r_tot1, r_tot2, r_tot3);
-        //mat_mul_3x3(r_norm1, r_norm2, r_norm3,
-        //      rotation_matrix.r1_, rotation_matrix.r2_, rotation_matrix.r3_,
-        //      r_tot1, r_tot2, r_tot3);
-        //std::cout << "--> " << r_tot1[0] << " " << r_tot1[1] << " " << r_tot1[2] << std::endl;
-        //std::cout << "--> " << r_tot2[0] << " " << r_tot2[1] << " " << r_tot2[2] << std::endl;
-        //std::cout << "--> " << r_tot3[0] << " " << r_tot3[1] << " " << r_tot3[2] << std::endl;
+        RotMatrix_t rot = rot_ * r3 * r2 * r1;
 
         /* center of unit cell replica */
         vector3_t curr_dd_vec(dd[grain_i + 0],
                     dd[grain_i + num_grains],
                     dd[grain_i + 2 * num_grains]);
-        vector3_t result(0.0, 0.0, 0.0);
-
-        mat_mul_3x1(rotation_matrix.r1_, rotation_matrix.r2_, rotation_matrix.r3_,
-              curr_dd_vec, result);
-        vector3_t center = result + curr_transvec;
-
+        vector3_t center = rot * curr_dd_vec + curr_transvec;
 
         /* compute structure factor and form factor */
 
@@ -1130,19 +1071,18 @@ namespace hig {
         for(Unitcell::element_iterator_t e = curr_unitcell->element_begin();
             e != curr_unitcell->element_end(); ++ e) {
 
-          //ShapeName shape_name = HiGInput::instance().shape_name((*e).second);
-          //real_t shape_tau = HiGInput::instance().shape_tau((*e).second);
-          //real_t shape_eta = HiGInput::instance().shape_eta((*e).second);
-          //std::string shape_file = HiGInput::instance().shape_filename((*e).second);
-          //shape_param_list_t shape_params = HiGInput::instance().shape_params((*e).second);
           ShapeName shape_name = HiGInput::instance().shape_name((*e).first);
-          real_t shape_tau = HiGInput::instance().shape_tau((*e).first);
-          real_t shape_eta = HiGInput::instance().shape_eta((*e).first);
+          real_t zrot = HiGInput::instance().shape_zrot((*e).first);
+          real_t yrot = HiGInput::instance().shape_yrot((*e).first);
+          real_t xrot = HiGInput::instance().shape_xrot((*e).first);
           std::string shape_file = HiGInput::instance().shape_filename((*e).first);
           shape_param_list_t shape_params = HiGInput::instance().shape_params((*e).first);
 
+          // update rotation matrix
+          rot = rot *  RotMatrix_t(0, xrot) * RotMatrix_t(1, yrot) * RotMatrix_t(2, zrot);
+
           for(Unitcell::location_iterator_t l = (*e).second.begin(); l != (*e).second.end(); ++ l) {
-            vector3_t transvec = curr_transvec + (*l);
+            vector3_t transvec = (*l);
             #ifdef FF_NUM_GPU   // use GPU
               #ifdef FF_NUM_GPU_FUSED
                 FormFactor eff(64, 8);
@@ -1155,6 +1095,8 @@ namespace hig {
               FormFactor eff;
             #endif
 
+            // TODO remove these later
+            real_t shape_tau = 0., shape_eta = 0.;
             fftimer.resume();
             //read_form_factor("curr_ff.out");
             form_factor(eff, shape_name, shape_file, shape_params, transvec,
@@ -1174,12 +1116,6 @@ namespace hig {
 #ifndef FF_VERBOSE
           std::cout << "**               FF compute time: "
                     << fftimer.elapsed_msec() << " ms." << std::endl;
-#endif
-#ifdef DEBUG
-          std::ofstream fout("ff.out", std::ios::out);
-          for (int i = 0; i < sz; i++)
-            fout << std::abs(ff[i]) << std::endl;
-          fout.close();
 #endif
 
         sftimer.start(); sftimer.pause();
@@ -1234,12 +1170,12 @@ namespace hig {
             unsigned int imsize = nrow_ * ncol_;
             if(nslices <= 1) {
               /* without slicing */
-              if(single_layer_refindex_.delta() < 0 || single_layer_refindex_.beta() < 0) {
-                // this should never happen
-                std::cerr << "error: single layer information not correctly set"
-                          << std::endl;
-                return false;
-              } // if
+              //if(single_layer_refindex_.delta() < 0 || single_layer_refindex_.beta() < 0) {
+              //  // this should never happen
+              //  std::cerr << "error: single layer information not correctly set"
+              //            << std::endl;
+              //  return false;
+              //} // if
               complex_t dn2 = multilayer_[order].one_minus_n2() - curr_struct->one_minus_n2();
               if(HiGInput::instance().experiment() == "gisaxs") {  // GISAXS
                 for(unsigned int i = 0; i < imsize; ++ i) {
@@ -1283,7 +1219,7 @@ namespace hig {
               // not yet implemented ...
               std::cout << "uh-oh: ever thought about implementing the slicing scheme?"
                         << std::endl;
-              return false;
+              //return false;
             } // if-else
           } // if gmaster
           //sf.clear(); // clean structure factor
@@ -1623,23 +1559,13 @@ namespace hig {
                   , woo::comm_t comm_key
                 #endif
                 ) {
-    #ifndef GPUSF
-      return ff.compute_form_factor(shape_name, shape_file, shape_params,
+    return ff.compute_form_factor(shape_name, shape_file, shape_params,
                       single_layer_thickness_,
                       curr_transvec, shp_tau, shp_eta, rot
                       #ifdef USE_MPI
                         , multi_node_, comm_key
                       #endif
                       );
-    #else
-      return ff.compute_form_factor_gpu(shape_name, shape_file, shape_params,
-                      single_layer_thickness_,
-                      curr_transvec, shp_tau, shp_eta, rot
-                      #ifdef USE_MPI
-                        , multi_node_, comm_key
-                      #endif
-                      );
-    #endif
   } // HipGISAXS::form_factor()
 
 
@@ -2143,7 +2069,7 @@ namespace hig {
   } // HipGISAXS::spatial_distribution()
 
 
-  bool HipGISAXS::orientation_distribution(structure_iterator_t s, real_t* dd, int ndx, int ndy, 
+  bool HipGISAXS::orientation_distribution(structure_iterator_t s, real_t* dd, int & ndx, int ndy, 
                         real_t* &nn, real_t* &wght) {
     std::string distribution = (*s).second.grain_orientation();
     //vector2_t tau = (*s).second.rotation_tau();
@@ -2153,6 +2079,24 @@ namespace hig {
     vector3_t rot2 = (*s).second.rotation_rot2();
     vector3_t rot3 = (*s).second.rotation_rot3();
 
+    if (distribution == "bragg"){
+      real_vec_t angles;
+      Lattice * lattice = (Lattice *) HiGInput::instance().lattice(s->second);
+      vector3_t gr_scaling = s->second.grain_scaling();
+      vector3_t gr_repetitions = s->second.grain_repetition();
+      lattice->bragg_angles(gr_repetitions, gr_scaling, k0_, angles);
+      if (angles.size() > 0 ) {
+        ndx = angles.size();
+        nn = new (std::nothrow) real_t[ndx * 3];
+        for (int i = 0; i < ndx * 3; i++) nn[i] = REAL_ZERO_;
+        for (int i = 0; i < ndx; i++) nn[i] = angles[i];
+      } else {
+        std::cerr << "Failed to calculate orientations for Bragg condition" << std::endl;
+        std::cerr << "This is a bug, please report it." << std::endl;
+        return false;
+      }
+      return true;
+    }
     nn = new (std::nothrow) real_t[ndx * ndy];
     if (nn == NULL) {
       std::cerr << "error: could not allocate memory" << std::endl;

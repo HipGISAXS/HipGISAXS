@@ -31,7 +31,6 @@
 #include <numerics/gpu/cu_complex_numeric.cuh>
 #include <utils/gpu/cu_utilities.cuh>
 
-
 namespace hig {
 
   extern __constant__ real_t transvec_d[3];
@@ -44,7 +43,9 @@ namespace hig {
   __device__  __inline__ cucomplex_t FormFactorSphere(cucomplex_t qx, cucomplex_t qy, cucomplex_t qz, 
           real_t radius){
     cucomplex_t qR    = cuCsqrt(qx * qx + qy * qy + qz * qz) * radius;
-
+    if (cuC_abs(qR) < CUTINY_){
+        return make_cuC(REAL_ZERO_, REAL_ZERO_);
+    }
     real_t     vol = 4 * PI_ * radius * radius * radius;
     cucomplex_t sincos = cuCsin(qR) - cuCcos(qR) * qR; 
     cucomplex_t expval = cuCexpi(qz * radius);
@@ -94,6 +95,7 @@ namespace hig {
     cudaMemcpy(distr_x_d, distr_x_h, n_distr_x * sizeof(real_t), cudaMemcpyHostToDevice);
 
     //run_init(rot_h, transvec);
+    //std::cout << "FF transv = [ " << transvec_h[0] << " " << transvec_h[1] << " " << transvec_h[2] << " ] " << std::endl;
     cudaMemcpyToSymbol(transvec_d, transvec_h, 3*sizeof(real_t), 0, cudaMemcpyHostToDevice); 
 
     int num_threads = 256;

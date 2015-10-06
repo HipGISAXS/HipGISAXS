@@ -20,10 +20,15 @@
  */
 
 #include <iostream>
+#include <set>
 
 #include <model/structure.hpp>
 #include <utils/string_utils.hpp>
 #include <config/token_mapper.hpp>
+#include <numerics/matrix.hpp>
+#include <numerics/numeric_utils.hpp>
+#include <common/constants.hpp>
+#include <model/qgrid.hpp>
 
 
 namespace hig {
@@ -91,17 +96,27 @@ namespace hig {
     if(!abc_set_) {
       switch(type_) {
         case lattice_cubic:          // CUBIC
-          a_[0] = 1; a_[1] = 0; a_[2] = 0;
-          b_[0] = 0; b_[1] = 1; b_[2] = 0;
-          c_[0] = 0; c_[1] = 0; c_[2] = 1;
-          t_[0] = 0; t_[1] = 0; t_[2] = 0;
+          if (hkl_ == "100") {
+            a_[0] = 1; a_[1] = 0; a_[2] = 0;
+            b_[0] = 0; b_[1] = 1; b_[2] = 0;
+            c_[0] = 0; c_[1] = 0; c_[2] = 1;
+            t_[0] = 0; t_[1] = 0; t_[2] = 0;
+          } else if( hkl_ == "110") {
+            a_[0] = 1; a_[1] = 0; a_[2] = 0;
+            b_[0] = 0.; b_[1] = 1.4142; b_[2] = 0;
+            c_[0] = 0.; c_[1] = 0.7071; c_[2] = 0.7071;
+            t_[0] = 0; t_[1] = 0; t_[2] = 0;
+          } else {
+            std::cerr << "error: invalid lattice type and hkl combination" << std::endl;
+            return false;
+          }
           break;
 
         case lattice_bcc:          // BCC
           if(hkl_ == "100") {
-            a_[0] = -0.5; a_[1] = 0.5; a_[2] = 0.5;
-            b_[0] =  0.5; b_[1] = 0.5; b_[2] = 0.5;
-            c_[0] = -0.5; c_[1] =-0.5; c_[2] = 0.5;
+            a_[0] = 1.; a_[1] = 0.; a_[2] = 0.;
+            b_[0] = 0.; b_[1] = 1.; b_[2] = 0.;
+            c_[0] = 0.5; c_[1] =0.5; c_[2]= 0.5;
             t_[0] = 0.0; t_[1] = 0; t_[2] = 0.0;
           } else if(hkl_ == "110") {
             a_[0] = 1.0; a_[1] = 0.0; a_[2] = 0;
@@ -141,9 +156,9 @@ namespace hig {
 
         case lattice_hcp:          // HCP
           a_[0] = 1; a_[1] = 0; a_[2] = 0;
-          b_[0] = 0.5; b_[1] = sqrt3 / 2.0; b_[2] = 0;
-          c_[0] = 0; c_[1] = 0; c_[2] = 2.0 * sqrt2 / sqrt3;
-          t_[0] = 1.0 / sqrt3; t_[1] = 0; t_[2] = ca_ / (2 * sqrt3);
+          b_[0] = 0.5; b_[1] = 0.866; b_[2] = 0;
+          c_[0] = 0.5; c_[1] = 0.2887; c_[2] = 0.8166;
+          t_[0] = 0; t_[1] = 0; t_[2] = 0;
           break;
 
         case lattice_hex:          // HEX
@@ -169,6 +184,48 @@ namespace hig {
 
     return true;
   } // Lattice::construct_vectors()
+
+  void Lattice::bragg_angles(vector3_t repeats, vector3_t scaling, real_t k0, real_vec_t & angles){
+    angles.clear();
+
+    vector3_t a = a_ * scaling[0];
+    vector3_t b = b_ * scaling[1];
+    vector3_t c = c_ * scaling[1];
+
+    // compute reciprocal lattice
+    vector3_t bc = cross(b, c);
+    real_t vol = std::abs(dot(a, bc));
+    real_t t1 = 2. * PI_ / vol;
+    vector3_t mra = cross(b, c) * t1;
+    vector3_t mrb = cross(c, a) * t1;
+    vector3_t mrc = cross(a, b) * t1;
+    vector2_t qmin = QGrid::instance().qmin();
+    vector2_t qmax = QGrid::instance().qmax();
+
+    const real_t d_ang = PI_ / 180. * 0.5;
+    std::set<real_t> angs;
+    for (real_t h = 0; h < repeats[0]; h++){
+      for (real_t k = 0; k < repeats[1]; k++){
+        for (real_t l = 0; l < repeats[1]; l++){
+          vector3_t G = mra * h + mrb * k + mrc * l;
+          if ((G[0] < qmin[0]) || (G[0] > qmax[0])) continue;
+          if ((G[2] < qmin[1]) || (G[2] > qmax[1])) continue;
+          if (G.norm() > 0 ){
+            real_t G_proj = std::sqrt(G[0] * G[0] + G[1] * G[1]);
+            if ( G_proj < TINY_ ) continue;
+            real_t k_proj = std::sqrt(k0 * k0 - G[2] * G[2]);
+            real_t t1 = std::atan2(G[1], G[0]);
+            real_t t2 = std::acos((k0 * k0 + G_proj * G_proj - k_proj * k_proj)/(2. * k0 * G_proj));
+            real_t a = t1 - t2;
+            angs.insert(a);
+          }
+        }
+      }
+    }
+    for (std::set<real_t>::iterator it = angs.begin(); it != angs.end(); it++){
+      angles.push_back(*it);
+    }
+  }
 
 
 

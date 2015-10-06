@@ -35,8 +35,10 @@
 namespace hig {
   class RotMatrix_t {
     private:
+      INLINE void swapit(real_t & a, real_t & b){
+        real_t t = a; a = b; b = t;
+      }
       real_t data_[9];
-
       INLINE void set(real_t v){ for (int i=0; i<9; i++) data_[i] = v; }
 
     public:
@@ -70,11 +72,24 @@ namespace hig {
         }
       }
 
+      // constructor 3
+      CUDAFY RotMatrix_t(vector3_t & a, vector3_t & b, vector3_t & c){
+        data_[0] = a[0]; data_[1] = a[1]; data_[2] = a[2];
+        data_[3] = b[0]; data_[4] = b[1]; data_[5] = b[2];
+        data_[6] = c[0]; data_[7] = c[1]; data_[8] = c[2];
+      }
+
       // copy constructor
       CUDAFY RotMatrix_t(const RotMatrix_t & obj){
         for(int i=0; i<9; i++) data_[i] = obj.data_[i];
       } 
 
+      // transpose
+      CUDAFY void transpose(){
+        swapit(data_[1],data_[3]);
+        swapit(data_[2],data_[6]);
+        swapit(data_[5],data_[7]);
+      }
 
       // assignment operator
       CUDAFY RotMatrix_t operator= (const RotMatrix_t & rhs){
