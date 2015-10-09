@@ -17,9 +17,10 @@ SRC_DIR = $(PREFIX)
 BIN_DIR = $(PREFIX)
 OBJ_DIR = $(PREFIX)
 CXX = mpicxx
-CXX_FLAGS = -std=c++0x -fopenmp -DUSE_MPI
-CXX_FLAGS += -g -O2 -Wno-literal-suffix
-PREC_FLAG =
+CXX_FLAGS = -std=c++11 -fopenmp -DUSE_MPI
+CXX_FLAGS += -g -O3 -Wno-literal-suffix
+#CXX_FLAGS += -g -Wno-literal-suffix -DMEMDEBUG
+PREC_FLAG = -DDOUBLEP
 
 
 MPI_LDFLAGS = -L $(MPI_DIR)/lib
@@ -115,7 +116,7 @@ lmvm:
 	$(CXX) -c $< -o $@  $(CXX_FLAGS) $(PREC_FLAG) $(ALL_INCL) 
 
 $(BINARY): $(OBJECTS)
-	$(CXX)  $(CXX_FLAGS) -o $(BIN_DIR)/$@ $^ $(ALL_LDFLAGS) $(ALL_LIBS)
+	$(CXX)  $(CXX_FLAGS) $(PREC_FLAG) -o $(BIN_DIR)/$@ $^ $(ALL_LDFLAGS) $(ALL_LIBS)
 
 .PHONY: clean
 
