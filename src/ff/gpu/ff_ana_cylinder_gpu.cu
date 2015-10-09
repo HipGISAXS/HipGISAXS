@@ -50,7 +50,8 @@ namespace hig {
     cucomplex_t qpar = cuCsqrt(qx * qx + qy * qy);
 
     real_t     temp1 = 2 * PI_ * radius * radius * height;
-    cucomplex_t temp2 = cuCcbessj(qpar * radius, 1) / (qpar * radius);
+    cucomplex_t temp2; temp2.x = 0.0; temp2.y = 0.0;
+    if((qpar.x*qpar.x+qpar.y*qpar.y)>CUTINY_) temp2 = cuCcbessj(qpar * radius, 1) / (qpar * radius);
     cucomplex_t temp3 = cuCsinc (0.5 * qz * height);
     cucomplex_t temp4 = cuCexpi(0.5 * qz * height);
     return (temp1 * temp2 * temp3 * temp4);

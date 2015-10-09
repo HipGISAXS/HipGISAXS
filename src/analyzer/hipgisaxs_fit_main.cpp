@@ -10,6 +10,7 @@
 #include <iostream>
 
 #include <analyzer/hipgisaxs_fit_pounders.hpp>
+#include <analyzer/hipgisaxs_fit_lmvm.hpp>
 #include <analyzer/hipgisaxs_fit_pso.hpp>
 #include <analyzer/hipgisaxs_fit_bruteforce.hpp>
 
@@ -75,6 +76,9 @@ int main(int narg, char** args) {
     if(algo == hig::algo_pounders) {
       hip_func.set_distance_measure(new ResidualVector());
       ana.add_analysis_algo(new hig::FitPOUNDERSAlgo(&hip_func));
+    } else if(algo == hig::algo_lmvm) {
+      hip_func.set_distance_measure(new AbsoluteDifferenceSquare());
+      ana.add_analysis_algo(new hig::FitLMVMAlgo(&hip_func));
     } else if(algo == hig::algo_pso) {
       hip_func.set_distance_measure(new AbsoluteDifferenceSquareNorm());
       ana.add_analysis_algo(new hig::ParticleSwarmOptimization(narg, args, &hip_func, i, false, 0));

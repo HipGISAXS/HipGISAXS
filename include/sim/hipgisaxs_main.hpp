@@ -207,6 +207,8 @@ namespace hig {
       unsigned int nqx() const { return nqx_; }
       unsigned int nqy() const { return nqy_; }
       unsigned int nqz() const { return nqz_; }
+      unsigned int ncol() const { return ncol_; }
+      unsigned int nrow() const { return nrow_; }
 
       string_t reference_data_path(int i) const {
         return HiGInput::instance().reference_data_path(i);
@@ -226,6 +228,10 @@ namespace hig {
         woo::MultiNode* multi_node_comm() { return &multi_node_; }
         bool update_sim_comm(woo::comm_t comm) { sim_comm_ = comm; return true; }
       #endif
+
+      // debug stuff
+      bool check_finite(real_t*, unsigned int);
+      bool check_finite(complex_t*, unsigned int);
 
       //template <typename ErrorFunction>
       //real_t compute_gisaxs_error(const ErrorFunction&, real_t*);

@@ -47,4 +47,3 @@ namespace hig {
 } // namespace hig
 
 #endif // __HIPGISAXS_FIT_PSO_TYPEDEFS_HPP__
-_

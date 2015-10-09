@@ -62,6 +62,3 @@ namespace hig {
         return  (PetscReal) temp[0];
   } // EvaluateFunction()
 } // namespace hig
-g
-g
-g

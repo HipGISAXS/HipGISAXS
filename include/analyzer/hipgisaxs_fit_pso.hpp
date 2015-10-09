@@ -87,7 +87,7 @@ namespace hig {
       bool update_fips_particle(real_t, real_t, real_t, const parameter_data_list_t&,
             const PSOParticleConstraints&, woo::MTRandomNumberGenerator&);
       bool update_fdr_particle(real_t, real_t, real_t, const parameter_data_list_t&,
-            const float_vec_t&, const float_vec_t&, const PSOParticleConstraints&,
+            const real_vec_t&, const real_vec_t&, const PSOParticleConstraints&,
             woo::MTRandomNumberGenerator&);
       bool update_barebones_particle(const parameter_data_list_t&, const PSOParticleConstraints&,
             woo::MTRandomNumberGenerator&);
