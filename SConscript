@@ -367,8 +367,8 @@ add_option("extrapath", "comma separated list of additional paths", 1, True)
 add_option("extralib", "comma separated list of additional libraries", 1, True)
 ## debug options
 add_option("release", "release build, full optimizations, no debug", 0, True, default = 0)
-add_option("dbgo", "optimized build with debug symbols", 0, True, "opt_debug_build", default = 0)
 add_option("dbg", "debug build, no optimization", 0, True, "debug_build", default = 0)
+add_option("dbgo", "optimized build with debug symbols", 0, True, "opt_debug_build", default = 0)
 add_option("dbgl", "debug build, no optimization, debug logging", 0, True,
             "debug_build_and_log", default = 0)
 ## optional packages and support

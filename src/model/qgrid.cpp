@@ -3,14 +3,8 @@
  *
  *  File: qgrid.cpp
  *  Created: Jun 17, 2012
- *  Modified: Wed 08 Oct 2014 12:17:46 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
- *  Developers: Slim Chourou <stchourou@lbl.gov>
- *              Abhinav Sarje <asarje@lbl.gov>
- *              Elaine Chan <erchan@lbl.gov>
- *              Alexander Hexemer <ahexemer@lbl.gov>
- *              Xiaoye Li <xsli@lbl.gov>
  *
  *  Licensing: The HipGISAXS software is only available to be downloaded and
  *  used by employees of academic research institutions, not-for-profit
@@ -21,6 +15,8 @@
  */
 
 #include <fstream>
+#include <algorithm>
+
 #include <common/constants.hpp>
 #include <model/qgrid.hpp>
 #include <config/hig_input.hpp>
@@ -32,7 +28,6 @@ namespace hig {
    * create Q-grid in reciprocal space
    */
   bool QGrid::create(real_t freq, real_t alpha_i, real_t k0, int mpi_rank) {
-                    // x and y are reversed in slim's code ? ...
     vector2_t total_pixels = HiGInput::instance().detector_total_pixels();
     vector2_t min_point = HiGInput::instance().param_output_minpoint();
     vector2_t max_point = HiGInput::instance().param_output_maxpoint();
@@ -141,16 +136,16 @@ namespace hig {
     complex_t kzi = -1 * k0 * std::sqrt(sin_ai * sin_ai - dnl_q);
 
     std::vector<complex_t> kzf;
-    for (int i = 0; i < imsize; i++){
+    for(int i = 0; i < imsize; ++ i){
       real_t kzf_0 = qz_[i] + kzi_0;
-      kzf.push_back(sgn(kzf_0)*std::sqrt(kzf_0 * kzf_0 - k0 * k0 * dnl_q));
-    }
+      kzf.push_back(sgn(kzf_0) * std::sqrt(kzf_0 * kzf_0 - k0 * k0 * dnl_q));
+    } // for
   
     // calculate 4 components
-    for (int i = 0; i < imsize; i++) qz_extended_.push_back( kzf[i] - kzi);
-    for (int i = 0; i < imsize; i++) qz_extended_.push_back(-kzf[i] - kzi);
-    for (int i = 0; i < imsize; i++) qz_extended_.push_back( kzf[i] + kzi);
-    for (int i = 0; i < imsize; i++) qz_extended_.push_back(-kzf[i] + kzi);
+    for(int i = 0; i < imsize; ++ i) qz_extended_.push_back( kzf[i] - kzi);
+    for(int i = 0; i < imsize; ++ i) qz_extended_.push_back(-kzf[i] - kzi);
+    for(int i = 0; i < imsize; ++ i) qz_extended_.push_back( kzf[i] + kzi);
+    for(int i = 0; i < imsize; ++ i) qz_extended_.push_back(-kzf[i] + kzi);
 
     return true;
   } // QGrid::create_qz_extended()
@@ -160,25 +155,45 @@ namespace hig {
    * for fitting, update the qgrid to match reference data
    */
   bool QGrid::update(unsigned int nqy, unsigned int nqz,
-            real_t qminy, real_t qminz, real_t qmaxy, real_t qmaxz,
-            real_t freq, real_t alpha_i, real_t k0, int mpi_rank) {
+                     real_t qminy, real_t qminz, real_t qmaxy, real_t qmaxz,
+                     real_t freq, real_t alpha_i, real_t k0, int mpi_rank) {
 
-    vector3_t qmax, qmin, step;
-    qmin[0] = 0.0; qmax[0] = 0.0;  // x dimension has just 0.0
-    qmin[1] = qminy; qmax[1] = qmaxy;
-    qmin[2] = qminz; qmax[2] = qmaxz;
+    nrow_ = nqz; ncol_ = nqy;
 
-    step[1] = (qmax[1] - qmin[1]) / nqy;
-    //step[2] = (qmax[2] - qmin[2]) / (nqz - 1);
-    step[2] = (qmax[2] - qmin[2]) / nqz;
+    // calculate angles in vertical direction
+    real_t dq = (qmaxz - qminz) / (nqz - 1);
+    alpha_.clear();
+    alpha_.resize(nqz);
+    for(int i = 0; i < nqz; ++ i) {
+      real_t qpt = qminz + i * dq;
+      alpha_[i] = std::asin(qpt / k0 - std::sin(alpha_i));
+    } // for
 
+    // calculate angles in horizontal direction
+    dq = (qmaxy - qminy) / (nqy - 1);
+    real_t cos_ai = std::cos(alpha_i);
+    real_t cos_af = std::cos(alpha_[0]);
+    real_vec_t theta; theta.resize(nqy);
+    for(int i = 0; i < nqy; ++ i) {
+      real_t qpt = qminy + i * dq;
+      real_t kf2 = std::pow(qpt / k0, 2);
+      real_t tmp = (cos_af * cos_af + cos_ai * cos_ai - kf2) / (2 * cos_af * cos_ai);
+      tmp = min(tmp, 1.0);
+      theta[i] = sgn(qpt) * std::acos(tmp);
+    } // for
+
+    // calculate q-vectors on the Ewald sphere for every pixel on the detector
     qx_.clear(); qy_.clear(); qz_.clear();
-    qx_.push_back(qmin[0]);
-    //for(real_t val = qmin[1]; val <= qmax[1]; val += step[1]) qy_.push_back(val);
-    //for(real_t val = qmin[2]; val <= qmax[2]; val += step[2]) qz_.push_back(val);
-    real_t val = qmin[1]; for(int i = 0; i < nqy; ++ i, val += step[1]) qy_.push_back(val);
-    val = qmin[2]; for(int i = 0; i < nqz; ++ i, val += step[2]) qz_.push_back(val);
-    std::reverse(qz_.begin(), qz_.end());
+    std::reverse(alpha_.begin(), alpha_.end());
+    for (int i = 0; i < nqz; i++) {
+      for (int j = 0; j < nqy; j++) {
+        real_t tth = theta[j];
+        real_t alf = alpha_[i];
+        qx_.push_back(k0 * (std::cos(alf) * std::cos(tth) - std::cos(alpha_i)));
+        qy_.push_back(k0 * (std::cos(alf) * std::sin(tth)));
+        qz_.push_back(k0 * (std::sin(alf) + std::sin(alpha_i)));
+      } // for
+    } // for
 
     // sanity check
     if(qy_.size() != nqy || qz_.size() != nqz) {
@@ -188,13 +203,11 @@ namespace hig {
 
     if(mpi_rank == 0) {
       std::cout << "**              New Q-grid range: ("
-            << qmin[0] << ", " << qmin[1] << ", " << qmin[2] << ") x ("
-            << qmax[0] << ", " << qmax[1] << ", " << qmax[2] << ")" << std::endl;
-      std::cout << "**               NQX x NQY x NQZ: " << qx_.size() << " x " << qy_.size()
-            << " x " << qz_.size() << std::endl;
+                << qx_[0] << ", " << qy_[0] << ", " << qz_.back() << ") x ("
+                << qx_.back() << ", " << qy_.back() << ", " << qz_[0] << ")" << std::endl;
     } // if
     return true;
-  } // QGrid::create()
+  } // QGrid::update()
 
 
   /**

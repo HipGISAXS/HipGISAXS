@@ -1,17 +1,14 @@
 /**
- *  Project: AnalyzeHipGISAXS (High-Performance GISAXS Data Analysis)
+ *  Project: HipGISAXS (High-Performance GISAXS Data Analysis)
  *
  *  File: AnaAlgorithm.cpp
  *  Created: Dec 26, 2013
  *  Modified: Wed 08 Oct 2014 12:17:42 PM PDT
  *
- *  Author: Slim Chourou <stchourou@lbl.gov>
- *  Developers: Slim Chourou <stchourou@lbl.gov>
- *              Abhinav Sarje <asarje@lbl.gov>
- *              Alexander Hexemer <ahexemer@lbl.gov>
- *              Xiaoye Li <xsli@lbl.gov>
+ *  Author: Dinesh Kumar <dkumar@lbl.gov>
+ *          Abhinav Sarje <asarje@lbl.gov>
  *
- *  Licensing: The AnalyzeHipGISAXS software is only available to be downloaded and
+ *  Licensing: The HipGISAXS software is only available to be downloaded and
  *  used by employees of academic research institutions, not-for-profit
  *  research laboratories, or governmental research facilities. Please read the
  *  accompanying LICENSE file before downloading the software. By downloading
@@ -32,6 +29,7 @@ f(X) - f(X*) (estimated)            <= fatol
 
 
 namespace hig {
+
   // Declare user function for tao
   PetscErrorCode HipGISAXSFormFunctionGradient(TaoSolver, Vec, PetscReal *, Vec, void *);
 
@@ -194,5 +192,4 @@ namespace hig {
     ierr = VecRestoreArray(G, &g);
     return 0;
   }
-}
 }

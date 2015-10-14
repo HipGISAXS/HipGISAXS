@@ -43,7 +43,8 @@ namespace hig {
     complex_t sinc_val = sinc(0.5 * qz * height);
     complex_t expt_val = std::exp(CMPLX_ONE_ * 0.5 * qz * height);
     complex_t t1 = qpar * radius;
-    complex_t bess_val = cbessj(t1, 1) * std::conj(t1) / std::norm(t1);
+    complex_t bess_val(0, 0);
+    if(std::norm(t1) > CUTINY_) bess_val = cbessj(t1, 1) * std::conj(t1) / std::norm(t1);
     return (vol * sinc_val * expt_val * bess_val);
   } // ff_cylinder_kernel()
 
@@ -121,6 +122,9 @@ namespace hig {
       complex_t temp1 = mq[0] * transvec[0] + mq[1] * transvec[1] + mq[2] * transvec[2];
       complex_t temp2 = exp(complex_t(-temp1.imag(), temp1.real()));
       ff[z] = temp_ff * temp2;
+      if((!(boost::math::isfinite)(ff[z].real())) || (!(boost::math::isfinite)(ff[z].imag()))) {
+        std::cerr << "not finite: " << z << std::endl;
+      } // if
     } // for z
 #endif // FF_CPU_OPT
 #endif // FF_ANA_GPU

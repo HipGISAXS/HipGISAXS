@@ -216,7 +216,3 @@ namespace hig {
   } // PSOParticle::compute_and_set_values()
 
 } // namespace hig
-set_values()
-
-} // namespace hig
-ig

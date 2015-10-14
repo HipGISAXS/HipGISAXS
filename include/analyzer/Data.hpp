@@ -60,7 +60,7 @@ namespace hig{
 
     string_t get_name() const { return filename_;}
 
-    float_vec_t create_vec(float v0, float vN, float& stp, int& nv );
+    real_vec_t create_vec(real_t v0, real_t vN, real_t& stp, int& nv );
 
   }; /* class Data */
 

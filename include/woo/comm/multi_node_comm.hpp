@@ -264,6 +264,15 @@ namespace woo {
 				return true;
 			} // allgatherv()
 
+			inline bool allgatherv(double* sbuf, int scount, double* rbuf, int* rcount) {
+				int* displs = new (std::nothrow) int[num_procs_];
+				displs[0] = 0;
+				for(int i = 1; i < num_procs_; ++ i) displs[i] = displs[i - 1] + rcount[i - 1];
+				MPI_Allgatherv(sbuf, scount, MPI_DOUBLE, rbuf, rcount, displs, MPI_DOUBLE, world_);
+				delete[] displs;
+				return true;
+			} // allgatherv()
+
 			inline bool gatherv(float* sbuf, int scount, float* rbuf, int* rcount, int* displs) {
 				MPI_Gatherv(sbuf, scount, MPI_FLOAT, rbuf, rcount, displs, MPI_FLOAT,
 							master_rank_, world_);
@@ -452,7 +461,21 @@ namespace woo {
 				return success;
 			} // broadcast()
 
+			inline bool broadcast(comm_t key, std::vector<double>& data, int rank) {
+				double* temp_data = new (std::nothrow) double[data.size()];
+				for(int i = 0; i < data.size(); ++ i) temp_data[i] = data[i];
+				bool success = comms_[key].broadcast(temp_data, data.size(), rank);
+				for(int i = 0; i < data.size(); ++ i) data[i] = temp_data[i];
+				delete[] temp_data;
+				return success;
+			} // broadcast()
+
 			inline bool allreduce(comm_t key, float sendval, float& recvval,
+									int& rank, comm::ReduceOp op) {
+				return comms_[key].allreduce(sendval, recvval, rank, op);
+			} // allreduce()
+
+			inline bool allreduce(comm_t key, double sendval, double& recvval,
 									int& rank, comm::ReduceOp op) {
 				return comms_[key].allreduce(sendval, recvval, rank, op);
 			} // allreduce()
@@ -485,6 +508,21 @@ namespace woo {
 				comms_[key].allgather(&size, 1, rsize, 1);
 				int recv_tot = 0; for(int i = 0; i < comms_[key].size(); ++ i) recv_tot += rsize[i];
 				float* temp_rbuf = new (std::nothrow) float[recv_tot];
+				rbuf.clear();
+				if(!comms_[key].allgatherv(&sbuf[0], size, temp_rbuf, rsize)) return false;
+				for(int i = 0; i < recv_tot; ++ i) rbuf.push_back(temp_rbuf[i]);
+				delete[] temp_rbuf;
+				delete[] rsize;
+				return true;
+			} // allgather()
+
+			inline bool allgatherv(comm_t key, std::vector<double>& sbuf,
+									std::vector<double>& rbuf) {
+				int size = sbuf.size();
+				int* rsize = new (std::nothrow) int[comms_[key].size()];
+				comms_[key].allgather(&size, 1, rsize, 1);
+				int recv_tot = 0; for(int i = 0; i < comms_[key].size(); ++ i) recv_tot += rsize[i];
+				double* temp_rbuf = new (std::nothrow) double[recv_tot];
 				rbuf.clear();
 				if(!comms_[key].allgatherv(&sbuf[0], size, temp_rbuf, rsize)) return false;
 				for(int i = 0; i < recv_tot; ++ i) rbuf.push_back(temp_rbuf[i]);

@@ -3,13 +3,8 @@
  *
  *  File: hipgisaxs_helpers.cpp
  *  Created: Apr 01, 2014
- *  Modified: Wed 08 Oct 2014 12:17:46 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
- *  Developers: Slim Chourou <stchourou@lbl.gov>
- *              Abhinav Sarje <asarje@lbl.gov>
- *              Alexander Hexemer <ahexemer@lbl.gov>
- *              Xiaoye Li <xsli@lbl.gov>
  *
  *  Licensing: The HipGISAXS software is only available to be downloaded and
  *  used by employees of academic research institutions, not-for-profit
@@ -20,6 +15,7 @@
  */
 
 #include <iostream>
+#include <boost/math/special_functions/fpclassify.hpp>
 
 #include <sim/hipgisaxs_main.hpp>
 #include <numerics/convolutions.hpp>
@@ -29,5 +25,30 @@ namespace hig {
   bool HipGISAXS::gaussian_smearing(real_t*& data, real_t sigma) {
     return Convolutions::instance().convolution_gaussian_2d(data, ncol_, nrow_, sigma);
   } // HipGISAXS::gaussian_smearing()
+
+  bool HipGISAXS::check_finite(real_t* arr, unsigned int size) {
+    for(unsigned int i = 0; i < size; ++ i) {
+      if(!(boost::math::isfinite)(arr[i])) {
+        std::cerr << "** ARRAY CHECK ** array entry not finite: " << i << std::endl;
+        return false;
+      } // if
+    } // for
+    return true;
+  } // HipGISAXS::check_nan_inf()
+
+  bool HipGISAXS::check_finite(complex_t* arr, unsigned int size) {
+    bool res = true;
+    for(unsigned int i = 0; i < size; ++ i) {
+      if(!(boost::math::isfinite)(arr[i].real())) {
+        std::cerr << "** ARRAY CHECK ** array entry not finite: " << i << ".real()" << std::endl;
+        res = false;
+      } // if
+      if(!(boost::math::isfinite)(arr[i].imag())) {
+        std::cerr << "** ARRAY CHECK ** array entry not finite: " << i << ".imag()" << std::endl;
+        res = false;
+      } // if
+    } // for
+    return res;
+  } // HipGISAXS::check_nan_inf()
 
 } // namespace hig

@@ -33,16 +33,16 @@ namespace hig {
       bool read_mask_data(string_t);
       bool read_edf_mask_data(string_t);
 
-      float_vec_t operator()(const float_vec_t&);
+      real_vec_t operator()(const real_vec_t&);
 
       int num_fit_params() const { return hipgisaxs_.num_fit_params(); }
       unsigned int n_par() const { return n_par_; }
       unsigned int n_ver() const { return n_ver_; }
       unsigned int data_size() const { return n_par_ * n_ver_; }
       std::vector <std::string> fit_param_keys() const { return hipgisaxs_.fit_param_keys(); }
-      std::vector <float_pair_t> fit_param_limits() const { return hipgisaxs_.fit_param_limits(); }
-      float_vec_t fit_param_step_values() const { return hipgisaxs_.fit_param_step_values(); }
-      float_vec_t fit_param_init_values() const { return hipgisaxs_.fit_param_init_values(); }
+      std::vector <real_pair_t> fit_param_limits() const { return hipgisaxs_.fit_param_limits(); }
+      real_vec_t fit_param_step_values() const { return hipgisaxs_.fit_param_step_values(); }
+      real_vec_t fit_param_init_values() const { return hipgisaxs_.fit_param_init_values(); }
 
       #ifdef USE_MPI
         woo::MultiNode* multi_node_comm() { return hipgisaxs_.multi_node_comm(); }
@@ -50,7 +50,7 @@ namespace hig {
       #endif
 
       // for testing
-      bool simulate_and_set_ref(const float_vec_t&);
+      bool simulate_and_set_ref(const real_vec_t&);
   }; // class HipGISAXSObjectiveFunction
 
 } // namespace hig

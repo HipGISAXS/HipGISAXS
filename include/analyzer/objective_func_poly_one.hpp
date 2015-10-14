@@ -33,14 +33,14 @@ namespace hig{
       PolyOneObjectiveFunction(int, char**, DistanceMeasure*);
       ~PolyOneObjectiveFunction();
 
-      float_vec_t operator()(const float_vec_t&);
+      real_vec_t operator()(const real_vec_t&);
       bool set_reference_data(char*);
       bool set_reference_data(int) { }
 
       int num_fit_params() const { return 2; }
       std::vector <std::string> fit_param_keys() const;
-      std::vector <float_pair_t> fit_param_limits() const;
-      float_vec_t fit_param_init_values() const;
+      std::vector <real_pair_t> fit_param_limits() const;
+      real_vec_t fit_param_init_values() const;
       unsigned int data_size() const { return ref_data_->size(); }
   }; // class PolyOneObjectiveFunction
 
