@@ -91,6 +91,12 @@ def add_paths(s):
         path = env['ENV']['PATH'] + ":" + x + "/bin"
         env['ENV']['PATH'] = path
 
+def add_include_path(p):
+  env.Append(CPPPATH = [ p ])
+
+def add_library_path(p):
+  env.Append(LIBPATH = [ p ])
+
 def add_libs(s):
     for x in s.split(","):
         env.Append(LIBS = [x])
@@ -104,6 +110,7 @@ def add_ld_library_path(env, s):
 def setup_configuration_tests(conf):
     def FindSysLibDep(context, name, libs, **kwargs):
         var = "LIBDEPS_" + name.upper() + "_SYSLIBDEP"
+        var = var.replace("++", "PP")
         kwargs['autoadd'] = False
         for lib in libs:
             result = context.sconf.CheckLib(lib, **kwargs)
@@ -238,6 +245,13 @@ def do_configure(myenv):
     ## setup configuration tests
     setup_configuration_tests(conf)
     
+    if 'CXX' in os.environ:
+        conf.env.Replace(CXX = os.environ['CXX'])
+        print(">> Using C++ compiler " + os.environ['CXX'])
+    if 'CC' in os.environ:
+        conf.env.Replace(CC = os.environ['CC'])
+        print(">> Using C compiler " + os.environ['CC'])
+
     ## select compiler toolchain
     toolchain = None
     have_toolchain = lambda: toolchain != None
@@ -264,15 +278,9 @@ def do_configure(myenv):
         Exit(1)
 
     ## check if compilers work
-    if 'CXX' in os.environ:
-        conf.env.Replace(CXX = os.environ['CXX'])
-        print(">> Using C++ compiler " + os.environ['CXX'])
     if not conf.CheckCXX():
         print("error: your C++ compiler '%s' doesn't seem to work!" % conf.env["CXX"])
         Exit(1)
-    if 'CC' in os.environ:
-        conf.env.Replace(CC = os.environ['CC'])
-        print(">> Using C compiler " + os.environ['CC'])
     if not conf.CheckCC():
         print("error: your C compiler '%s' doesn't seem to work!" % conf.env["CC"])
         Exit(1)
@@ -315,7 +323,7 @@ def do_configure(myenv):
     myenv = conf.Finish()
 
     ## add flags
-    if using_gcc() or using_intel() or using_pgi():
+    if using_gcc() or using_pgi():
         add_to_ccflags_if_supported(myenv, '-Wno-unused-local-typedefs')
     if not add_to_cxxflags_if_supported(myenv, '-std=c++11'):
         if not add_to_cxxflags_if_supported(myenv, '-std=c++0x'):
@@ -487,6 +495,7 @@ if _has_option("extrapath"):
 if _has_option("extralib"):
     add_libs(get_option("extralib"))
 
+
 nix_lib_prefix = "lib"
 if processor == "x86_64":
     linux64 = True
@@ -497,6 +506,7 @@ if processor == "x86_64":
                             "/lib",
                             "/usr/local/lib64",
                             "/usr/local/lib"])
+    env.Append(CPPPATH = [ '/usr/include/x86_64-linux-gnu/c++/4.8' ])
 env['NIX_LIB_DIR'] = nix_lib_prefix
 
 #add_ld_library_path(env, os.environ['LD_LIBRARY_PATH'])
@@ -507,140 +517,163 @@ if _has_option("cpppath"):
 #print env['LIBPATH']
 #print env['ENV']
 
+use_mkl = False
+
 ## call configure
 if not get_option('clean'):
     env = do_configure(env)
 
-## stuff for TAU
-if using_tau:
-  if 'TAU_MAKEFILE' not in env['ENV']:
-    print "error: please specify TAU_MAKEFILE environment variable to enable use of TAU"
-    sys.exit(1)
+    ## MKL with intel only (Edison)
+    if env['TOOLCHAIN'] == toolchain_intel:
+      use_mkl = True
+      if 'MKL_INC' in env['ENV']:
+        add_include_path(env['ENV']['MKL_INC'])
+      if 'MKL_LIBDIR' in env['ENV']:
+        add_library_path(env['ENV']['MKL_LIBDIR'])
 
-using_accelerator = None
-## required libs
-boost_libs = ["boost_system", "boost_filesystem", "boost_timer", "boost_chrono"]
-parallel_hdf5_libs = ["hdf5", "z"]
-tiff_libs = ["tiff"]
-other_libs = ["m", "gomp"]
-## optional libs
-#mpi_libs = []
-mpi_libs = ["mpi_cxx", "mpi"]
-#gpu_libs = ["cudart", "cufft", "cudadevrt", "nvToolsExt"]
-gpu_libs = ["cudart"]
-papi_libs = ["papi"]
-## required flags
-detail_flags = []
-if _has_option("detail-time"): detail_flags += ['TIME_DETAIL_1', 'TIME_DETAIL_2']
-if _has_option("detail-mem"): detail_flags += ['MEM_DETAIL']
-if _has_option("verbose"): detail_flags += ['FF_VERBOSE', 'SF_VERBOSE']
-## optional flags
-gpu_flags = ['USE_GPU', 'GPUR', 'KERNEL2', 'FF_ANA_GPU', 'FF_NUM_GPU', 'FF_NUM_GPU_FUSED', 'SF_GPU']
-mic_flags = ['USE_MIC', 'FF_MIC_OPT', 'FF_NUM_MIC_SWAP', 'FF_NUM_MIC_KB']
-cpu_flags = ['FF_NUM_CPU_FUSED']
-mpi_flags = ['USE_MPI']
-parallel_hdf5_flags = ['USE_PARALLEL_HDF5']
-papi_flags = ['PROFILE_PAPI']
+    ## stuff for TAU
+    if using_tau:
+      if 'TAU_MAKEFILE' not in env['ENV']:
+        print "error: please specify TAU_MAKEFILE environment variable to enable use of TAU"
+        sys.exit(1)
 
-all_flags = detail_flags
-all_libs = boost_libs + tiff_libs + other_libs
+    using_accelerator = None
+    ## required libs
+    boost_libs = ["boost_system", "boost_filesystem", "boost_timer", "boost_chrono"]
+    parallel_hdf5_libs = ["hdf5", "z"]
+    tiff_libs = ["tiff"]
+    mkl_libs = []
+    if use_mkl:
+      mkl_libs = ["mkl_intel_lp64", "mkl_sequential", "mkl_core"]
+    if env['TOOLCHAIN'] == toolchain_intel:
+      other_libs = ["m", "stdc++"]
+    else:
+      other_libs = ["m", "gomp"]
+    ## optional libs
+    mpi_libs = []
+    #mpi_libs = ["mpi_cxx", "mpi"]
+    #gpu_libs = ["cudart", "cufft", "cudadevrt", "nvToolsExt"]
+    gpu_libs = ["cudart"]
+    papi_libs = ["papi"]
+    ## required flags
+    detail_flags = []
+    if _has_option("detail-time"): detail_flags += ['TIME_DETAIL_1', 'TIME_DETAIL_2']
+    if _has_option("detail-mem"): detail_flags += ['MEM_DETAIL']
+    if _has_option("verbose"): detail_flags += ['FF_VERBOSE', 'SF_VERBOSE']
+    ## optional flags
+    gpu_flags = ['USE_GPU', 'GPUR', 'KERNEL2', 'FF_ANA_GPU', 'FF_NUM_GPU', 'FF_NUM_GPU_FUSED', 'SF_GPU']
+    mic_flags = ['USE_MIC', 'FF_MIC_OPT', 'FF_NUM_MIC_SWAP', 'FF_NUM_MIC_KB']
+    cpu_flags = ['FF_NUM_CPU_FUSED', 'FF_CPU_OPT']
+    ## choose at most one of the following
+    #if use_mkl: cpu_flags += [ 'FF_CPU_OPT_MKL' ]
+    cpu_flags += [ 'INTEL_AVX', 'FF_CPU_OPT_AVX' ]
 
-if using_cuda:
-    all_libs += gpu_libs
-    all_flags += gpu_flags
-    using_accelerator = 'gpu'
-elif using_mic:
-    all_flags += mic_flags
-    using_accelerator = 'mic'
-else:
-    all_flags += cpu_flags
+    mpi_flags = ['USE_MPI']
+    parallel_hdf5_flags = ['USE_PARALLEL_HDF5']
+    papi_flags = ['PROFILE_PAPI']
 
-if using_mpi:
-    all_libs += mpi_libs
-    all_flags += mpi_flags
+    all_flags = detail_flags
+    all_libs = boost_libs + tiff_libs + mkl_libs + other_libs
 
-if using_parallel_hdf5:
-    all_libs += parallel_hdf5_libs
-    all_flags += parallel_hdf5_flags
-    env['USE_PARALLEL_HDF5'] = True
-else:
-    env['USE_PARALLEL_HDF5'] = False
+    if using_cuda:
+        all_libs += gpu_libs
+        all_flags += gpu_flags
+        using_accelerator = 'gpu'
+    elif using_mic:
+        all_flags += mic_flags
+        using_accelerator = 'mic'
+    else:
+        all_flags += cpu_flags
 
-if using_papi:
-    all_libs += papi_libs
-    all_flags += papi_flags
+    if using_mpi:
+        all_libs += mpi_libs
+        all_flags += mpi_flags
 
-env.Append(LIBS = all_libs)
-env.Append(CPPDEFINES = all_flags)
-env['ACCELERATOR_TYPE'] = using_accelerator
-if using_accelerator != None:
-    print("Enabling use of accelerator: %s" % using_accelerator)
+    if using_parallel_hdf5:
+        all_libs += parallel_hdf5_libs
+        all_flags += parallel_hdf5_flags
+        env['USE_PARALLEL_HDF5'] = True
+    else:
+        env['USE_PARALLEL_HDF5'] = False
 
-#env.Append(CCFLAGS = ["-mavx -msse4.1 -msse4.2 -mssse3"])
+    if using_papi:
+        all_libs += papi_libs
+        all_flags += papi_flags
 
-if using_debug:
-    env.Append(CCFLAGS = ['-g'])
-    env.Append(CPPDEFINES = ['DEBUG'])
-elif using_opt_debug:
-    odbg_flags = ['-O3', '-g']
-    if env['TOOLCHAIN'] == toolchain_intel: odbg_flags += ['-dynamic']
-    env.Append(CCFLAGS = odbg_flags)
-    env.Append(CPPDEFINES = ['NDEBUG'])
-else:
-    env.Append(CCFLAGS = ['-O3'])
-    env.Append(CPPDEFINES = ['NDEBUG'])
+    env.Append(LIBS = all_libs)
+    env.Append(CPPDEFINES = all_flags)
+    env['ACCELERATOR_TYPE'] = using_accelerator
+    if using_accelerator != None:
+        print("Enabling use of accelerator: %s" % using_accelerator)
 
-# use double-precision as defualt
-if not using_single:
-    env.Append(CPPDEFINES = ['DOUBLEP'])
+    env.Append(CCFLAGS = ["-mavx", "-mtune=core-avx2"])
+    #env.Append(CCFLAGS = ["-no-vec"])
 
-## print stuff
-#for item in sorted(env.Dictionary().items()):
-#   print "++ '%s', value = '%s'" % item
-print("Platform: %s" % sys.platform)
+    if using_debug:
+        env.Append(CCFLAGS = ['-g'])
+        env.Append(CPPDEFINES = ['DEBUG'])
+    elif using_opt_debug:
+        odbg_flags = ['-O3', '-g']
+        if env['TOOLCHAIN'] == toolchain_intel: odbg_flags += ['-dynamic']
+        env.Append(CCFLAGS = odbg_flags)
+        env.Append(CPPDEFINES = ['NDEBUG'])
+    else:
+        env.Append(CCFLAGS = ['-O3'])
+        env.Append(CPPDEFINES = ['NDEBUG'])
+
+    # use double-precision as defualt
+    if not using_single:
+        env.Append(CPPDEFINES = ['DOUBLEP'])
+
+    ## print stuff
+    #for item in sorted(env.Dictionary().items()):
+    #   print "++ '%s', value = '%s'" % item
+    print("Platform: %s" % sys.platform)
 
 ## call post configure
 if not get_option('clean'):
     env = do_post_configure(env)
 
-gpuenv = env.Clone(CC = 'nvcc')
-if using_cuda:
-    gpuenv.Tool('cuda')
-    ## remove openmp flag from CCFLAGS and LINKFLAGS
-    old_ccflags = gpuenv['CCFLAGS']
-    ccflags = []
-    flags_to_remove = ['-fopenmp', '-Wno-unused-local-typedefs']
-    for flag in old_ccflags:
-        if flag not in flags_to_remove:
-            ccflags += [ flag ]
-    gpuenv.Replace(CCFLAGS = ccflags)
-    old_linkflags = gpuenv['LINKFLAGS']
-    linkflags = []
-    for flag in old_linkflags:
-        if flag not in flags_to_remove:
-            linkflags += [ flag ]
-    gpuenv.Replace(LINKFLAGS = linkflags)
-    ## add other flags
-    gpuenv.Append(LINKFLAGS = ['-Xlinker', '-Wl,-rpath', '-Xlinker', '-Wl,$CUDA_TOOLKIT_PATH/lib64'])
-    gpuenv.Append(LINKFLAGS = ['-Xlinker', '-lgomp'])
-    gpuenv.Append(LINKFLAGS = ['-arch=sm_35'])
-    gpuenv.Append(LINKFLAGS = ['-dlink'])
-Export('gpuenv')
-Export('env')
+    gpuenv = env.Clone(CC = 'nvcc')
+    if using_cuda:
+        gpuenv.Tool('cuda')
+        ## remove openmp flag from CCFLAGS and LINKFLAGS
+        old_ccflags = gpuenv['CCFLAGS']
+        ccflags = []
+        flags_to_remove = ['-fopenmp', '-Wno-unused-local-typedefs', "-mavx", "-mtune=core-avx2"]
+        for flag in old_ccflags:
+            if flag not in flags_to_remove:
+                ccflags += [ flag ]
+        gpuenv.Replace(CCFLAGS = ccflags)
+        old_linkflags = gpuenv['LINKFLAGS']
+        linkflags = []
+        for flag in old_linkflags:
+            if flag not in flags_to_remove:
+                linkflags += [ flag ]
+        gpuenv.Replace(LINKFLAGS = linkflags)
+        ## add other flags
+        gpuenv.Append(LINKFLAGS = ['-Xlinker', '-Wl,-rpath', '-Xlinker', '-Wl,$CUDA_TOOLKIT_PATH/lib64'])
+        gpuenv.Append(LINKFLAGS = ['-Xlinker', '-lgomp'])
+        gpuenv.Append(LINKFLAGS = ['-arch=sm_35'])
+        gpuenv.Append(LINKFLAGS = ['-dlink'])
+    Export('gpuenv')
+    Export('env')
 
-objs, nvobjs, mainobjs = env.SConscript('src/SConscript', duplicate = False)
+    objs, nvobjs, mainobjs = env.SConscript('src/SConscript', duplicate = False)
 
-if using_cuda:
-    nvlibobj = gpuenv.Program('nv_hipgisaxs.o', nvobjs)
-    objs += nvlibobj + nvobjs
+    if using_cuda:
+        nvlibobj = gpuenv.Program('nv_hipgisaxs.o', nvobjs)
+        objs += nvlibobj + nvobjs
 
-env.Library('hipgisaxs', objs)
-env.Program('hipgisaxs', objs + mainobjs)
-env.Install('#/bin', source = 'hipgisaxs')
-env.Install('#/lib', source = 'libhipgisaxs.a')
+    env.Library('hipgisaxs', objs)
+    env.Program('hipgisaxs', objs + mainobjs)
+    env.Install('#/bin', source = 'hipgisaxs')
+    env.Install('#/lib', source = 'libhipgisaxs.a')
 
 ## to clean everything
 Clean('.', '#/' + env['BUILD_DIR'])
+Clean('.', '#/bin/hipgisaxs')
+Clean('.', '#/lib/libhipgisaxs.a')
 Clean('.', env['CONFIGUREDIR'])
 Clean('.', env['CONFIGURELOG'])
 Clean('.', '#/' + SCONSIGN_FILE + ".dblite")
