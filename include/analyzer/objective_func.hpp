@@ -17,6 +17,8 @@
 # define TaoFinalize(...)
 # define TaoSolverTerminationReason TaoConvergedReason
 # define TaoGetTerminationReason TaoGetConvergedReason
+# define TaoSetHistory TaoSetConvergenceHistory
+# define TaoGetHistory TaoGetConvergenceHistory
 #else
 # include <tao.h>
 #endif // PETSC_35

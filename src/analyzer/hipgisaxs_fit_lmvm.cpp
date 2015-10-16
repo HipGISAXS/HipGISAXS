@@ -73,10 +73,12 @@ namespace hig {
     TaoDefaultMonitor(tao, PETSC_NULL);
 
     ierr = TaoSetInitialVector(tao, x0);
-    ierr = TaoSetHistory(tao, hist, resid, 0, nhist, PETSC_TRUE);
+    //ierr = TaoSetHistory(tao, hist, resid, 0, nhist, PETSC_TRUE);
+    ierr = TaoSetHistory(tao, hist, resid, NULL, NULL, nhist, PETSC_TRUE);
     ierr = TaoSolve(tao);
     ierr = TaoGetTerminationReason(tao, &reason);
-    TaoGetHistory(tao, 0, 0, 0, &nhist);
+    //TaoGetHistory(tao, 0, 0, 0, &nhist);
+    TaoGetHistory(tao, NULL, NULL, NULL, NULL, &nhist);
 
     // print history and converged values to file
     char filename[30];
