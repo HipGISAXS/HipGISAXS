@@ -68,15 +68,21 @@ namespace hig {
     /* check for TAO command line options */
     ierr = TaoSetFromOptions(tao);
     TaoSetMaximumIterations(tao, max_iter_);
-    //TaoSetHistory(tao, hist, resid, 0, max_hist_, PETSC_TRUE);
-    TaoSetHistory(tao, hist, resid, NULL, NULL, max_hist_, PETSC_TRUE);
+    #ifdef PETSC_36
+      TaoSetHistory(tao, hist, resid, NULL, NULL, max_hist_, PETSC_TRUE);
+    #else
+      TaoSetHistory(tao, hist, resid, 0, max_hist_, PETSC_TRUE);
+    #endif // PETSC_36
     TaoSetTolerances(tao, tol_, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT);
 
     ierr = TaoSetInitialVector(tao, x0);
     ierr = TaoSolve(tao);
     ierr = TaoGetTerminationReason(tao, &reason);
-    //TaoGetHistory(tao, 0, 0, 0, &nhist);
-    TaoGetHistory(tao, NULL, NULL, NULL, NULL, &nhist);
+    #ifdef PETSC_36
+      TaoGetHistory(tao, NULL, NULL, NULL, NULL, &nhist);
+    #else
+      TaoGetHistory(tao, 0, 0, 0, &nhist);
+    #endif
 
     for(int i = 0; i < nhist; ++ i) PetscPrintf(PETSC_COMM_WORLD, "%G\t%G\n", hist[i], resid[i]);
 

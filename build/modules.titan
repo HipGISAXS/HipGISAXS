@@ -6,3 +6,4 @@ module load cudatoolkit
 module load python scons
 #module load hdf5-parallel/1.8.8
 #module load gsl
+module load cray-petsc
