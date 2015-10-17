@@ -1,5 +1,5 @@
 /**
- *  Project:
+ *  Project: HipGISAXS
  *
  *  File: objective_func.hpp
  *  Created: Feb 02, 2014
@@ -10,7 +10,21 @@
 #ifndef __OBJECTIVE_FUNC_HPP__
 #define __OBJECTIVE_FUNC_HPP__
 
-#include <tao.h>
+#if defined PETSC_35 || defined PETSC_36
+# include <petsctao.h>
+# define TaoSolver Tao
+# define TaoInitialize(...)
+# define TaoFinalize(...)
+# define TaoSolverTerminationReason TaoConvergedReason
+# define TaoGetTerminationReason TaoGetConvergedReason
+# ifdef PETSC_36
+#   define TaoSetHistory TaoSetConvergenceHistory
+#   define TaoGetHistory TaoGetConvergenceHistory
+# endif // PETSC_36
+#else
+# include <tao.h>
+#endif // PETSC_35 || PETSC_36
+
 #include <hipgisaxs.hpp>
 #include <analyzer/ImageData.hpp>
 #include <analyzer/distance_functions.hpp>

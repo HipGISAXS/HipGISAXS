@@ -293,6 +293,32 @@ namespace hig {
   } // StructureFactor::compute_structure_factor()
 
 
+#ifdef SF_GPU
+  bool StructureFactor::compute_structure_factor_gpu(std::string expt, vector3_t center,
+                                 Lattice* lattice, vector3_t repet, vector3_t scaling,
+                                 RotMatrix_t & rot
+                                 #ifdef USE_MPI
+                                   , woo::MultiNode& world_comm, std::string comm_key
+                                 #endif
+                                ) {
+    ny_ = QGrid::instance().nqy();
+    if(expt == "saxs") nz_ = QGrid::instance().nqz();
+    else if(expt == "gisaxs") nz_ = QGrid::instance().nqz_extended();
+    sf_ = new (std::nothrow) complex_t[nz_];
+    if(sf_ == NULL) return false;
+    gsf_.init(expt);
+    bool ret = gsf_.compute(expt, center, lattice, repet, scaling, rot
+                        //#ifdef USE_MPI
+                        //  , world_comm, comm_key
+                        //#endif
+                       );
+    gsf_.get_sf(sf_);
+    gsf_.destroy();
+    return ret;
+  } // StructureFactor::compute_structure_factor_gpu()
+#endif // SF_GPU
+
+
   void StructureFactor::save (const char* filename) {
     std::ofstream f(filename);
     for(int i = 0; i < nz_; i++){

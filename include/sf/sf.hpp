@@ -23,7 +23,6 @@
 #define __HIG_SF_HPP__
 
 #ifdef USE_MPI
-#include <mpi.h>
 #include <woo/comm/multi_node_comm.hpp>
 #endif // USE_MPI
 
