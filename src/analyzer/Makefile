@@ -1,6 +1,7 @@
 
-#PETSC_VERSION = "old"
-PETSC_VERSION = "new"
+#PETSC_VERSION = "34"
+#PETSC_VERSION = "35"
+PETSC_VERSION = "36"
 
 MPI_DIR = /usr/local/openmpi
 #PETSC_DIR = /usr/local/petsc-3.4.3-gnu
@@ -24,7 +25,14 @@ CXX_FLAGS = -std=c++11 -fopenmp -DUSE_MPI
 CXX_FLAGS += -O3 #-g
 PREC_FLAG = -DDOUBLEP
 
-ifeq ($(PETSC_VERSION), "new")
+ifeq ($(PETSC_VERSION), "36")
+  CXX_FLAGS += -DPETSC_36
+  TAO_DIR =
+  TAO_INCL =
+  TAO_LDFLAGS =
+  TAO_LIBS =
+else
+ifeq ($(PETSC_VERSION), "35")
   CXX_FLAGS += -DPETSC_35
   TAO_DIR =
   TAO_INCL =
@@ -35,6 +43,7 @@ else
   TAO_INCL = -I $(TAO_DIR)/include
   TAO_LDFLAGS = -L $(TAO_DIR)/lib
   TAO_LIBS = -ltao
+endif
 endif
 
 MPI_LDFLAGS = -L $(MPI_DIR)/lib
