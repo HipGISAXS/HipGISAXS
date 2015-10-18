@@ -61,7 +61,8 @@ namespace hig {
 
     /* create TAO solver with pounders */
     ierr = TaoCreate(PETSC_COMM_SELF, &tao);
-    ierr = TaoSetType(tao, "tao_pounders");
+    //ierr = TaoSetType(tao, "tao_pounders");
+    ierr = TaoSetType(tao, TAOPOUNDERS);
     /* set routines for function, gradient, hessian evaluation */
     ierr = TaoSetSeparableObjectiveRoutine(tao, f, EvaluateFunction, obj_func_);
 
@@ -84,7 +85,8 @@ namespace hig {
       TaoGetHistory(tao, 0, 0, 0, &nhist);
     #endif
 
-    for(int i = 0; i < nhist; ++ i) PetscPrintf(PETSC_COMM_WORLD, "%G\t%G\n", hist[i], resid[i]);
+    //for(int i = 0; i < nhist; ++ i) PetscPrintf(PETSC_COMM_WORLD, "%G\t%G\n", hist[i], resid[i]);
+    for(int i = 0; i < nhist; ++ i) PetscPrintf(PETSC_COMM_WORLD, "%g\t%g\n", hist[i], resid[i]);
 
     PetscInt iterate;
     PetscReal f_cv, gnorm, cnorm, xdiff, *x_cv;

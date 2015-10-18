@@ -27,6 +27,7 @@
 namespace hig {
 
   bool extract_first_keyword(const std::string& str, std::string& keyword, std::string& rem_str) {
+    if(str == "") return false;
     std::size_t pos = str.find_first_of(":");
     //if(pos == std::string::npos) {
     //  std::cerr << "error: ill-formed parameter variable name '" << str << "'" << std::endl;
