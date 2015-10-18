@@ -3,7 +3,7 @@
  *
  *  File: sf_gpu.cu
  *  Created: Oct 15, 2012
- *  Modified: Wed 08 Oct 2014 12:17:49 PM PDT
+ *  Modified: Thu 15 Oct 2015 02:22:31 PM EDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Developers: Abhinav Sarje <asarje@lbl.gov>
@@ -24,7 +24,8 @@
 #include <cuComplex.h>
 
 #include <woo/timer/woo_boostchronotimers.hpp>
-#include <sf/sf.hpp>
+//#include <sf/sf.hpp>
+#include <sf/gpu/sf_gpu.cuh>
 #include <model/qgrid.hpp>
 #include <common/typedefs.hpp>
 #include <common/constants.hpp>
@@ -35,7 +36,7 @@ namespace hig {
 
 
 #ifdef SF_GPU
-  bool StructureFactor::compute_structure_factor_gpu(std::string expt, vector3_t center,
+/*  bool StructureFactor::compute_structure_factor_gpu(std::string expt, vector3_t center,
                                  Lattice* lattice, vector3_t repet, vector3_t scaling,
                                  RotMatrix_t & rot
                                  #ifdef USE_MPI
@@ -56,7 +57,7 @@ namespace hig {
     gsf_.get_sf(sf_);
     gsf_.destroy();
     return ret;
-  } // StructureFactor::compute_structure_factor_gpu()
+  } // StructureFactor::compute_structure_factor_gpu()*/
 
   StructureFactorG::StructureFactorG():
                     inited_(false),
@@ -214,17 +215,17 @@ namespace hig {
   bool StructureFactorG::compute(std::string expt, vector3_t center,
                                  Lattice* lattice, vector3_t repet, vector3_t scaling,
                                  RotMatrix_t rot
-                                 #ifdef USE_MPI
-                                   , woo::MultiNode& world_comm, std::string comm_key
-                                 #endif
+                                 //#ifdef USE_MPI
+                                 //  , woo::MultiNode& world_comm, std::string comm_key
+                                 //#endif
                                 ) {
-    #ifdef USE_MPI
-      int my_rank = world_comm.rank(comm_key);
-      bool master = world_comm.is_master(comm_key);
-    #else
+    //#ifdef USE_MPI
+    //  int my_rank = world_comm.rank(comm_key);
+    //  bool master = world_comm.is_master(comm_key);
+    //#else
       int my_rank = 0;
       bool master = true;
-    #endif
+    //#endif
 
     #ifdef SF_VERBOSE
       if(master) std::cout << "-- Computing structure factor on GPU ... " << std::flush;

@@ -1,7 +1,10 @@
 
+#PETSC_VERSION = "old"
+PETSC_VERSION = "new"
+
 MPI_DIR = /usr/local/openmpi
-TAO_DIR = /usr/local/tao-2.2.0
-PETSC_DIR = /usr/local/petsc-3.4.3-gnu
+#PETSC_DIR = /usr/local/petsc-3.4.3-gnu
+PETSC_DIR = /usr/local/petsc-3.6.2
 HIPGISAXS_DIR = ../..
 HDF5_DIR = /usr/local/hdf5-1.8.9
 TIFF_DIR = /usr/local/tiff-4.0.2
@@ -9,30 +12,37 @@ BOOST_DIR = /usr/local/boost
 SZIP_DIR = /usr/local/szip-2.1
 CUDA_DIR = /usr/local/cuda
 
-
 PREFIX = $(PWD)
 INCL_DIR =$(PREFIX)
 LIB_DIR = $(PREFIX)
 SRC_DIR = $(PREFIX)
 BIN_DIR = $(PREFIX)
 OBJ_DIR = $(PREFIX)
+
 CXX = mpicxx
 CXX_FLAGS = -std=c++11 -fopenmp -DUSE_MPI
-CXX_FLAGS += -g -O3 -Wno-literal-suffix
-#CXX_FLAGS += -g -Wno-literal-suffix -DMEMDEBUG
+CXX_FLAGS += -O3 #-g
 PREC_FLAG = -DDOUBLEP
 
+ifeq ($(PETSC_VERSION), "new")
+  CXX_FLAGS += -DPETSC_35
+  TAO_DIR =
+  TAO_INCL =
+  TAO_LDFLAGS =
+  TAO_LIBS =
+else
+  TAO_DIR = /usr/local/tao-2.2.0
+  TAO_INCL = -I $(TAO_DIR)/include
+  TAO_LDFLAGS = -L $(TAO_DIR)/lib
+  TAO_LIBS = -ltao
+endif
 
 MPI_LDFLAGS = -L $(MPI_DIR)/lib
 MPI_LIBS = -lmpi -lmpi_cxx
 
-TAO_INCL = -I $(TAO_DIR)/include
-TAO_LDFLAGS = -L $(TAO_DIR)/lib
-TAO_LIBS = -ltao
-
 PETSC_INCL = -I $(PETSC_DIR)/include
-PETSC_LDFLAGS = -L $(PETSC_DIR)/lib -Wl,-rpath,$(PETSC_DIR)/lib
-PETSC_LIBS += -lpetsc
+PETSC_LDFLAGS = -L $(PETSC_DIR)/lib #-Wl,-rpath,$(PETSC_DIR)/lib #-L /usr/syscom/opt/torque/4.1.4/lib
+PETSC_LIBS = -lpetsc
 
 HIPGISAXS_INCL = -I $(HIPGISAXS_DIR)/include -I $(CUDA_DIR)/include
 HIPGISAXS_LDFLAGS = -L $(HIPGISAXS_DIR)/lib -L $(CUDA_DIR)/lib64
@@ -40,13 +50,13 @@ HIPGISAXS_LIBS = -lhipgisaxs -lcudart
 
 HDF5_INCL = -I $(HDF5_DIR)/include
 HDF5_LDFLAGS = -L $(HDF5_DIR)/lib -L $(SZIP_DIR)/lib
-HDF5_LIBS = -lhdf5 -lz -lsz
+HDF5_LIBS = -lhdf5 -lz #-lsz
 
 TIFF_INCL = -I $(TIFF_DIR)/include
 TIFF_LDFLAGS = -L $(TIFF_DIR)/lib
 TIFF_LIBS = -ltiff
 
-BOOST_INCL = -I $(BOOST_DIR)/include -I $(NUM_BOOST_DIR)/include
+BOOST_INCL = -I $(BOOST_DIR)/include
 BOOST_LDFLAGS = -L $(BOOST_DIR)/lib
 BOOST_LIBS = -lboost_system -lboost_filesystem -lboost_timer -lboost_chrono
 
@@ -54,9 +64,8 @@ BOOST_LIBS = -lboost_system -lboost_filesystem -lboost_timer -lboost_chrono
 ## all objs and libs                                                                                                                           
 ALL_INCL= $(TAO_INCL) $(PETSC_INCL) $(HDF5_INCL) $(TIFF_INCL) $(BOOST_INCL) $(HIPGISAXS_INCL)
 ALL_LDFLAGS = $(MPI_LDFLAGS) $(TAO_LDFLAGS) $(GCC_LDFLAGS) $(PETSC_LDFLAGS) \
-			  $(HIPGISAXS_LDFLAGS) $(HDF5_LDFLAGS) $(TIFF_LDFLAGS) $(BOOST_LDFLAGS)
-ALL_LIBS = $(MPI_LIBS) $(TAO_LIBS) $(PETSC_LIBS) $(HIPGISAXS_LIBS) $(HDF5_LIBS) \
-		   $(TIFF_LIBS) $(BOOST_LIBS)
+              $(HIPGISAXS_LDFLAGS) $(HDF5_LDFLAGS) $(TIFF_LDFLAGS) $(BOOST_LDFLAGS)
+ALL_LIBS = $(MPI_LIBS) $(TAO_LIBS) $(PETSC_LIBS) $(HIPGISAXS_LIBS) $(HDF5_LIBS) $(TIFF_LIBS) $(BOOST_LIBS)
 
 OBJECTS = ImageData.o analysis_algorithm.o objective_func.o hipgisaxs_ana.o objective_func_hipgisaxs.o
 
@@ -117,8 +126,6 @@ lmvm:
 
 $(BINARY): $(OBJECTS)
 	$(CXX)  $(CXX_FLAGS) $(PREC_FLAG) -o $(BIN_DIR)/$@ $^ $(ALL_LDFLAGS) $(ALL_LIBS)
-
-.PHONY: clean
 
 clean:
 	rm -f *.o $(BINARY)

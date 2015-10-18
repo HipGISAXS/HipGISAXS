@@ -640,7 +640,7 @@ if not get_option('clean'):
         ## remove openmp flag from CCFLAGS and LINKFLAGS
         old_ccflags = gpuenv['CCFLAGS']
         ccflags = []
-        flags_to_remove = ['-fopenmp', '-Wno-unused-local-typedefs', "-mavx", "-mtune=core-avx2"]
+        flags_to_remove = ['-fopenmp', '-openmp', '-Wno-unused-local-typedefs', "-mavx", "-mtune=core-avx2"]
         for flag in old_ccflags:
             if flag not in flags_to_remove:
                 ccflags += [ flag ]
