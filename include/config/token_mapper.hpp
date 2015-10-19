@@ -265,7 +265,7 @@ namespace hig {
         KeyWords_[std::string("mean")]            = mean_token;
         KeyWords_[std::string("stddev")]          = stddev_token;
         KeyWords_[std::string("paracrystal")]     = struct_paracrystal;
-        KeyWords_[std::string("percusyevick")]   = struct_percusyevick;
+        KeyWords_[std::string("percusyevick")]    = struct_percusyevick;
         KeyWords_[std::string("dimensions")]      = struct_dims;
         KeyWords_[std::string("xspacing")]        = struct_paracrystal_xspacing;
         KeyWords_[std::string("yspacing")]        = struct_paracrystal_yspacing;
@@ -275,18 +275,18 @@ namespace hig {
       
         /* shape name keywords */
 
-        ShapeKeyWords_[std::string("box")]      = shape_box;
-        ShapeKeyWords_[std::string("cylinder")]    = shape_cylinder;
+        ShapeKeyWords_[std::string("box")]        = shape_box;
+        ShapeKeyWords_[std::string("cylinder")]   = shape_cylinder;
         ShapeKeyWords_[std::string("hcylinder")]  = shape_horizontal_cylinder;
-        ShapeKeyWords_[std::string("randcylinders")]= shape_random_cylinders;
-        ShapeKeyWords_[std::string("sphere")]    = shape_sphere;
+        ShapeKeyWords_[std::string("randcylinders")]  = shape_random_cylinders;
+        ShapeKeyWords_[std::string("sphere")]     = shape_sphere;
         ShapeKeyWords_[std::string("pyramid")]    = shape_pyramid;
         ShapeKeyWords_[std::string("trunccone")]  = shape_trunccone;
-        ShapeKeyWords_[std::string("prism3")]    = shape_prism3;
-        ShapeKeyWords_[std::string("prism6")]    = shape_prism6;
+        ShapeKeyWords_[std::string("prism3")]     = shape_prism3;
+        ShapeKeyWords_[std::string("prism6")]     = shape_prism6;
         ShapeKeyWords_[std::string("prism3x")]    = shape_prism3x;
-        ShapeKeyWords_[std::string("sawtooth")]    = shape_sawtooth;
-        ShapeKeyWords_[std::string("custom")]    = shape_custom;
+        ShapeKeyWords_[std::string("sawtooth")]   = shape_sawtooth;
+        ShapeKeyWords_[std::string("custom")]     = shape_custom;
       
         /* shape parameter type keywords */
 

@@ -63,7 +63,8 @@ namespace hig {
 
     ierr = VecCreateSeq(PETSC_COMM_SELF, num_obs_, &G);
     ierr = TaoCreate(PETSC_COMM_SELF, &tao);
-    ierr = TaoSetType(tao, "tao_lmvm");
+    //ierr = TaoSetType(tao, "tao_lmvm");
+    ierr = TaoSetType(tao, TAOLMVM);
 
     ierr = TaoSetObjectiveAndGradientRoutine(tao, HipGISAXSFormFunctionGradient, obj_func_);
     ierr = TaoSetFromOptions(tao);
@@ -88,14 +89,15 @@ namespace hig {
 
     // print history and converged values to file
     char filename[30];
-    sprintf(filename, "output%4.2f_%4.2f.txt", x0_[0], x0_[1]);
+    sprintf(filename, "output_%.2f_%.2f.txt", x0_[0], x0_[1]);
     std::fstream out(filename, std::ios::out);
     if(!out.is_open()) {
       std::cerr << "Error: unable to create new file" << std::endl;
       exit(1);
     } // if
     for(int j = 0; j < nhist; ++ j) {
-      PetscPrintf(MPI_COMM_SELF, "History: %G\t%G\n", hist[j], resid[j]);
+      //PetscPrintf(MPI_COMM_SELF, "History: %G\t%G\n", hist[j], resid[j]);
+      PetscPrintf(MPI_COMM_SELF, "History: %g\t%g\n", hist[j], resid[j]);
       out << "History: " << j << "\t" << hist[j] << "\t" << resid[j] << std::endl;
     } // for
 

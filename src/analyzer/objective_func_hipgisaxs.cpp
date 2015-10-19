@@ -264,6 +264,7 @@ namespace hig {
   } // ObjectiveFunction::operator()()
 
 
+  // this is used only in the test mode
   bool HipGISAXSObjectiveFunction::simulate_and_set_ref(const real_vec_t& x) {
     real_t *gisaxs_data = NULL;
     if(x.size() > 0) {
@@ -281,6 +282,21 @@ namespace hig {
     } // if
 
     hipgisaxs_.compute_gisaxs(gisaxs_data);
+    #ifdef USE_MPI
+      woo::MultiNode* temp_multi = hipgisaxs_.multi_node_comm();
+      woo::comm_t root = (*temp_multi).universe_key();
+      if((*temp_multi).size(root) > 1) {
+        // the root processor has the computed data. it needs to send it to all other procs.
+        if(!(*temp_multi).is_master(root)) {
+          if(gisaxs_data != NULL) delete[] gisaxs_data;
+          gisaxs_data = new (std::nothrow) real_t[n_par_ * n_ver_];
+        } // if
+        if(!(*temp_multi).broadcast(root, gisaxs_data, n_par_ * n_ver_)) {
+          std::cerr << "error: failed to broadcast gisaxs_data to all" << std::endl;
+          return false;
+        } // if
+      } // if
+    #endif // USE_MPI
     if(ref_data_ == NULL) ref_data_ = new ImageData(n_par_, n_ver_);
     (*ref_data_).set_data(gisaxs_data);
     std::cout << "++ Reference data set after simulation" << std::endl;

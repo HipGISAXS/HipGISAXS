@@ -22,7 +22,8 @@ OBJ_DIR = $(PREFIX)
 
 CXX = mpicxx
 CXX_FLAGS = -std=c++11 -fopenmp -DUSE_MPI
-CXX_FLAGS += -O3 #-g
+CXX_FLAGS += -O3
+#CXX_FLAGS += -g
 PREC_FLAG = -DDOUBLEP
 
 ifeq ($(PETSC_VERSION), "36")

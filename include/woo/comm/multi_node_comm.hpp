@@ -217,7 +217,7 @@ namespace woo {
 				} send, recv;
 				send.val = sendval;
 				send.rank = rank_;
-				if(MPI_Allreduce(&send, &recv, 1, MPI_FLOAT_INT, mpi_op, world_) != MPI_SUCCESS)
+				if(MPI_Allreduce(&send, &recv, 1, MPI_DOUBLE_INT, mpi_op, world_) != MPI_SUCCESS)
 					return false;
 				recvval = recv.val;
 				proc_rank = recv.rank;
