@@ -1,7 +1,7 @@
 
 #PETSC_VERSION = "34"
-#PETSC_VERSION = "35"
-PETSC_VERSION = "36"
+PETSC_VERSION = "35"
+#PETSC_VERSION = "36"
 
 MPI_DIR =
 #PETSC_DIR = ${PETSC_DIR}
@@ -45,16 +45,13 @@ else
 endif
 endif
 
-MPI_LDFLAGS = -L $(MPI_DIR)/lib
-MPI_LIBS = -lmpi -lmpi_cxx
-
 PETSC_INCL = -I $(PETSC_DIR)/include
 PETSC_LDFLAGS = -L $(PETSC_DIR)/lib
 PETSC_LIBS = -lcraypetsc_intel_real
 
 HIPGISAXS_INCL = -I $(HIPGISAXS_DIR)/include
 HIPGISAXS_LDFLAGS = -L $(HIPGISAXS_DIR)/lib
-HIPGISAXS_LIBS = -lhipgisaxs
+HIPGISAXS_LIBS = -lhipgisaxs -lstdc++
 
 HDF5_INCL = -I $(HDF5_DIR)/include
 HDF5_LDFLAGS = -L $(HDF5_DIR)/lib -L $(SZIP_DIR)/lib
