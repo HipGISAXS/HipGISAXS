@@ -436,9 +436,6 @@ if using_mpi:
     ## general
     CXXCOMPILER = "mpicxx"
     CCCOMPILER = "mpicc"
-    ## edison
-    #CXXCOMPILER = "CC"
-    #CCCOMPILER = "cc"
 else:
     CXXCOMPILER = "g++"
     CCCOMPILER = "gcc"
@@ -547,6 +544,8 @@ if not get_option('clean'):
       mkl_libs = ["mkl_intel_lp64", "mkl_sequential", "mkl_core"]
     if env['TOOLCHAIN'] == toolchain_intel:
       other_libs = ["m", "stdc++"]
+      if using_mic:
+        other_libs.append("pfm")
     else:
       other_libs = ["m", "gomp"]
     ## optional libs
@@ -562,7 +561,7 @@ if not get_option('clean'):
     if _has_option("verbose"): detail_flags += ['FF_VERBOSE', 'SF_VERBOSE']
     ## optional flags
     gpu_flags = ['USE_GPU', 'GPUR', 'KERNEL2', 'FF_ANA_GPU', 'FF_NUM_GPU', 'FF_NUM_GPU_FUSED', 'SF_GPU']
-    mic_flags = ['USE_MIC', 'FF_MIC_OPT', 'FF_NUM_MIC_SWAP', 'FF_NUM_MIC_KB']
+    mic_flags = [] #['USE_MIC', 'FF_MIC_OPT', 'FF_NUM_MIC_SWAP', 'FF_NUM_MIC_KB']
     cpu_flags = ['FF_NUM_CPU_FUSED', 'FF_CPU_OPT']
     ## choose at most one of the following
     #if use_mkl: cpu_flags += [ 'FF_CPU_OPT_MKL' ]
@@ -582,6 +581,8 @@ if not get_option('clean'):
     elif using_mic:
         all_flags += mic_flags
         using_accelerator = 'mic'
+        env.Append(CCFLAGS = ["-mmic", "-mt_mpi"])
+        env.Append(LINKFLAGS = ["-mmic", "-mt_mpi", "-mkl"])
     else:
         all_flags += cpu_flags
 
@@ -616,6 +617,7 @@ if not get_option('clean'):
         odbg_flags = ['-O3', '-g']
         if env['TOOLCHAIN'] == toolchain_intel: odbg_flags += ['-dynamic']
         env.Append(CCFLAGS = odbg_flags)
+        env.Append(LINKFLAGS = odbg_flags)
         env.Append(CPPDEFINES = ['NDEBUG'])
     else:
         env.Append(CCFLAGS = ['-O3'])
