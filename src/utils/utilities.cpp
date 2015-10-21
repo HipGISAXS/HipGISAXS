@@ -215,8 +215,9 @@ namespace hig {
    * arithmetic operators for complex types
    */
 
-#if defined(__ICC) || defined(__INTEL_COMPILER)
-#if __ICC < 1600 || __INTEL_COMPILER < 1600
+#if (!(defined(__ICC) || defined(__INTEL_COMPILER))) || \
+    (defined(__ICC) || defined(__INTEL_COMPILER)) && \
+    (__ICC < 1600 || __INTEL_COMPILER < 1600)
   complex_t operator*(complex_t c, real_t s) {
     return complex_t(c.real() * s, c.imag() * s);
   } // operator*()
@@ -224,7 +225,6 @@ namespace hig {
   complex_t operator*(real_t s, complex_t c) {
     return complex_t(c.real() * s, c.imag() * s);
   } // operator*()
-#endif
 #endif
 
   std::complex<long double> operator*(std::complex<long double> c, long double s) {
