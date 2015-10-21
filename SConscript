@@ -541,7 +541,7 @@ if not get_option('clean'):
     tiff_libs = ["tiff"]
     mkl_libs = []
     if use_mkl:
-      mkl_libs = ["mkl_intel_lp64", "mkl_sequential", "mkl_core"]
+      mkl_libs = [] #["mkl_intel_lp64", "mkl_sequential", "mkl_core"]
     if env['TOOLCHAIN'] == toolchain_intel:
       other_libs = ["m", "stdc++"]
       if using_mic:

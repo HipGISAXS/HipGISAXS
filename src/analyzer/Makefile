@@ -22,7 +22,8 @@ OBJ_DIR = $(PREFIX)
 
 CXX = mpicxx
 CXX_FLAGS = -std=c++11 -fopenmp -DUSE_MPI
-CXX_FLAGS += -O3 #-g
+CXX_FLAGS += -O3
+#CXX_FLAGS += -g
 PREC_FLAG = -DDOUBLEP
 
 ifeq ($(PETSC_VERSION), "36")
@@ -137,7 +138,7 @@ $(BINARY): $(OBJECTS)
 	$(CXX)  $(CXX_FLAGS) $(PREC_FLAG) -o $(BIN_DIR)/$@ $^ $(ALL_LDFLAGS) $(ALL_LIBS)
 
 clean:
-	rm -f *.o $(BINARY)
+	rm -f *.o $(BINARY) $(HIPGISAXS_DIR)/bin/$(BINARY)
 
 install: $(BINARY)
 	@install -v $(BINARY) $(HIPGISAXS_DIR)/bin
