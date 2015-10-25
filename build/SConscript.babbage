@@ -548,8 +548,8 @@ if not get_option('clean'):
       mkl_libs = ["mkl_core"]
     if env['TOOLCHAIN'] == toolchain_intel:
       other_libs = ["m", "stdc++"]
-      if using_mic:
-        other_libs.append("pfm")
+      #if using_mic:
+      #  other_libs.append("pfm")
     else:
       other_libs = ["m", "gomp"]
 
