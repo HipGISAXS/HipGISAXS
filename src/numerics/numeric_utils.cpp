@@ -3,14 +3,9 @@
  *
  *  File: numeric_utils.cpp
  *  Created: Oct 08, 2012
- *  Modified: Wed 08 Oct 2014 12:17:46 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
- *  Developers: Slim Chourou <stchourou@lbl.gov>
- *              Abhinav Sarje <asarje@lbl.gov>
- *              Elaine Chan <erchan@lbl.gov>
- *              Alexander Hexemer <ahexemer@lbl.gov>
- *              Xiaoye Li <xsli@lbl.gov>
+ *          Dinesh Kumar <dkumar@lbl.gov>
  *
  *  Licensing: The HipGISAXS software is only available to be downloaded and
  *  used by employees of academic research institutions, not-for-profit
@@ -20,12 +15,40 @@
  *  NON-COMMERCIAL END USER LICENSE AGREEMENT.
  */
 
-#include <numerics/numeric_utils.hpp>
-
 #include <cmath>
+
+#include <numerics/numeric_utils.hpp>
 
 namespace hig {
 
+  // vector3 dot product
+  real_t dot(vector3_t& a, vector3_t& b) {
+    return (a[0] * b[0] + a[1] * b[1] + a[2] * b[2]);
+  } // dot()
+
+  // vector3 cross product
+  vector3_t cross(vector3_t & u, vector3_t & v) {
+    vector3_t w;
+    w[0] = u[1] * v[2] - u[2] * v[1];
+    w[1] = u[2] * v[0] - u[0] * v[2];
+    w[2] = u[0] * v[1] - u[1] * v[0];
+    return w;
+  } // cross()
+
+  // sinc function
+  complex_t sinc(complex_t x) {
+    if(std::abs(x) > 1.0E-14) return std::sin(x) / x;
+    else return (1.- x * x / 6. + x * x * x * x / 120.);  // taylor series approx
+  } // sinc()
+
+  #ifdef FF_CPU_OPT
+  void sinc_vec(const int VEC_LEN, complex_t* x, complex_t* res) {
+    for(int i = 0; i < VEC_LEN; ++ i) res[i] = sinc(x[i]);
+  } // sinc_vec()
+  #endif // FF_CPU_OPT
+
+
+  // gamma function
   double gamma(double x) {
     double coef[6];
     coef[0] = 76.18009173;
@@ -44,6 +67,9 @@ namespace hig {
     } // for
     return exp(temp + log(stp * ser));
   } // gamma()
+
+
+  // besselj functions
 
   /*--------------------------------------------------
                           inf.     (-z^2/4)^k
@@ -76,35 +102,56 @@ namespace hig {
     return complex_t(j1(zz.real()), 0.0);
   } // cbessj()
 
-  real_t dot(vector3_t& a, vector3_t& b) {
-    return (a[0] * b[0] + a[1] * b[1] + a[2] * b[2]);
-  } // dot()
-
-  vector3_t cross(vector3_t & u, vector3_t & v) {
-    vector3_t w;
-    w[0] = u[1] * v[2] - u[2] * v[1];
-    w[1] = u[2] * v[0] - u[0] * v[2];
-    w[2] = u[0] * v[1] - u[1] * v[0];
-    return w;
-  } // cross()
-
-  complex_t sinc(complex_t x) {
-    if(std::abs(x) > 1.0E-14) return std::sin(x) / x;
-    else return (1.- x*x/6. + x*x*x*x/120.);  // taylor series approx
-  } // sinc()
-
-
-#ifdef FF_CPU_OPT
-
-  // TODO ...
+  #ifdef FF_CPU_OPT
   void cbessj_vec(const int VEC_LEN, complex_t* zz, int order, complex_t* res) {
     for(int i = 0; i < VEC_LEN; ++ i) res[i] = complex_t(j1(zz[i].real()), 0.0);
   } // cbessj()
+  #endif // FF_CPU_OPT
 
-  void sinc_vec(const int VEC_LEN, complex_t* x, complex_t* res) {
-    for(int i = 0; i < VEC_LEN; ++ i) res[i] = sinc(x[i]);
-  } // sinc_vec()
 
-#endif // FF_CPU_OPT
+// This is the bessel function from MPFUN-fort packge developed be David Bailey.
+// /////////////////////////////////////
+//
+//  function mp_besselj (ra, rb)
+//    implicit none
+//    type (mp_real):: mp_besselj
+//    type (mp_real), intent (in):: ra, rb
+//    integer mpnw
+//    mpnw = max (int (ra%mpr(1)), int (rb%mpr(1)))
+//    mpnw = min (mpnw, mpwds)
+//    mp_besselj%mpr(0) = mpwds6
+//    call mpbesselj (ra%mpr, rb%mpr, mp_besselj%mpr, mpnw)
+//    return
+//  end function
+
+  complex_t cbesselj(complex_t z, int order) {
+    if(order == 1) return cj1(z);
+    std::cout << "error: Bessel functions for order != 1 are not supported" << std::endl;
+    return complex_t(0., 0.);
+  } // cbesselj()
+
+  complex_t cj1(complex_t z) {
+    // z = r + i, r = real, i = imaginary
+    real_t r = z.real();
+    // single precision ~ 7 digits precision (24 * log(2) / log(10))
+    // double precision ~ 15 digits precision (53 * log(2) / log(10))
+    int digits = 7;
+    #ifdef DOUBLEP
+      digits = 15;
+    #endif
+    real_t threshold = 1.73 * digits;
+    if(r > threshold) {
+      std::cerr << "error: bessel argument is greater than threshold of " << threshold << std::endl;
+      assert(r < threshold);
+    } // if
+    double g = gamma(1. + 1);   // gamma(nu + k + 1), nu = 1, k = 0
+    g = 1. / g;
+    double r2 = r * r / 4.;     // (z^2 / 4)
+    int MAXK = 1e5;
+    for(int k = 1; k < MAXK; ++ k) {
+      
+    } // for
+    
+  } // cj1()
 
 } // namespace hig
