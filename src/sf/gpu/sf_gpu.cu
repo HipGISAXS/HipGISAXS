@@ -237,6 +237,7 @@ namespace hig {
     vector3_t temp_la(lattice->a() * scaling[0]),
               temp_lb(lattice->b() * scaling[1]),
               temp_lc(lattice->c() * scaling[2]);
+
     vector3_t l_t = lattice->t();
     vector3_t arot = rot * temp_la;
     vector3_t brot = rot * temp_lb;
@@ -450,7 +451,6 @@ namespace hig {
       cucomplex_t sa, sb, sc;
 
       real_t q_x = qx[i_x], q_y = qy[i_y];
-      //check for the missing wedge
       cucomplex_t q_z = qz[i_z];
 
       cucomplex_t e_iqa = cuCexpi(rot[0] * q_x + rot[1] * q_y + rot[2] * q_z);

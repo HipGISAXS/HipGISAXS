@@ -453,7 +453,7 @@ namespace hig {
             }
             curr_structure_.grain_scaling_a_mean(curr_vector_[0]);
             curr_structure_.grain_scaling_b_mean(curr_vector_[1]);
-            curr_structure_.grain_scaling_c_mean(curr_vector_[1]);
+            curr_structure_.grain_scaling_c_mean(curr_vector_[2]);
             break;
 
           case struct_grain_transvec_token:
