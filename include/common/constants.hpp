@@ -41,6 +41,7 @@ namespace hig {
   const real_t REAL_ZERO_ = (real_t) 0.;
   const real_t REAL_ONE_  = (real_t) 1.;
   const real_t REAL_MINUS_ONE_ = (real_t) -1.;
+  const real_t REAL_EPSILON_ = (real_t) 1.e-13;
 
   // complex constants
   const complex_t CMPLX_ZERO_ = complex_t(REAL_ZERO_, REAL_ZERO_);

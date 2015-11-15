@@ -15,9 +15,17 @@
  *  NON-COMMERCIAL END USER LICENSE AGREEMENT.
  */
 
+#include <iostream>
+#include <fstream>
 #include <cmath>
 
+#ifdef NDEBUG
+#undef NDEBUG
+#endif
+#include <cassert>
+
 #include <numerics/numeric_utils.hpp>
+#include <common/constants.hpp>
 
 namespace hig {
 
@@ -48,56 +56,55 @@ namespace hig {
   #endif // FF_CPU_OPT
 
 
+  // besselj functions (of the first kind)
+
   // gamma function
-  double gamma(double x) {
-    double coef[6];
-    coef[0] = 76.18009173;
-    coef[1] = -86.50532033;
-    coef[2] = 24.01409822;
-    coef[3] = -1.231739516;
-    coef[4] = 0.120858003e-2;
-    coef[5] = -0.536382e-5;
-    double stp = 2.50662827465;
-    double temp = x + 5.5;
-    temp = (x + 0.5) * log(temp) - temp;
-    double ser = 1.0;
-    for(int j = 0; j < 6; ++ j) {
-      x += 1.0;
-      ser += coef[j] / x;
-    } // for
-    return exp(temp + log(stp * ser));
-  } // gamma()
+  // double gamma(double x) {
+  //   double coef[6];
+  //   coef[0] = 76.18009173;
+  //   coef[1] = -86.50532033;
+  //   coef[2] = 24.01409822;
+  //   coef[3] = -1.231739516;
+  //   coef[4] = 0.120858003e-2;
+  //   coef[5] = -0.536382e-5;
+  //   double stp = 2.50662827465;
+  //   double temp = x + 5.5;
+  //   temp = (x + 0.5) * log(temp) - temp;
+  //   double ser = 1.0;
+  //   for(int j = 0; j < 6; ++ j) {
+  //     x += 1.0;
+  //     ser += coef[j] / x;
+  //   } // for
+  //   return exp(temp + log(stp * ser));
+  // } // gamma()
+
+  // /*--------------------------------------------------
+  //                         inf.     (-z^2/4)^k
+  //     Jnu(z) = (z/2)^nu x Sum  ------------------
+  //                         k=0  k! x Gamma(nu+k+1)
+  //   (nu must be >= 0). Here k=15.
+  // ---------------------------------------------------*/
+  // complex_t cbessj(complex_t zz, int order) {
+  //   std::complex<long double> z = zz;
+  //   std::complex<long double> temp1 = pow(z / (long double) 2.0, order);
+  //   std::complex<long double> z2 = - z * z / (long double) 4.0;
+  //   std::complex<long double> sum(0.0, 0.0);
+  //   long double factorial_k = 1.0;
+  //   std::complex<long double> pow_z2_k = 1.0;
+  //   //for(int k = 0; k <= MAXK; ++ k, pow_z2_k *= z2) {
+  //   for(int k = 0; k <= 200; ++ k, pow_z2_k *= z2) {
+  //     if(k == 0) factorial_k = 1.0;  // base case
+  //     else factorial_k *= k;        // compute k!
+  //     std::complex<long double> temp2 =
+  //           pow_z2_k / (factorial_k * (long double) gamma((double) order + k + 1.0));
+  //     sum += temp2;
+  //   } // for
+  //   temp1 *= sum;
+  //   return complex_t((real_t) temp1.real(), (real_t) temp1.imag());
+  // } // cbessj()
 
 
-  // besselj functions
-
-  /*--------------------------------------------------
-                          inf.     (-z^2/4)^k
-      Jnu(z) = (z/2)^nu x Sum  ------------------
-                          k=0  k! x Gamma(nu+k+1)
-    (nu must be >= 0). Here k=15.
-  ---------------------------------------------------*/
-/*  complex_t cbessj(complex_t zz, int order) {
-    std::complex<long double> z = zz;
-    std::complex<long double> temp1 = pow(z / (long double) 2.0, order);
-    std::complex<long double> z2 = - z * z / (long double) 4.0;
-    std::complex<long double> sum(0.0, 0.0);
-    long double factorial_k = 1.0;
-    std::complex<long double> pow_z2_k = 1.0;
-    //for(int k = 0; k <= MAXK; ++ k, pow_z2_k *= z2) {
-    for(int k = 0; k <= 200; ++ k, pow_z2_k *= z2) {
-      if(k == 0) factorial_k = 1.0;  // base case
-      else factorial_k *= k;        // compute k!
-      std::complex<long double> temp2 =
-            pow_z2_k / (factorial_k * (long double) gamma((double) order + k + 1.0));
-      sum += temp2;
-    } // for
-    temp1 *= sum;
-    return complex_t((real_t) temp1.real(), (real_t) temp1.imag());
-  } // cbessj()
-*/
-
-  // temporary fix. assuming imaginary component is 0
+  // using GNU math. assuming imaginary component is 0
   complex_t cbessj(complex_t zz, int order) {
     return complex_t(j1(zz.real()), 0.0);
   } // cbessj()
@@ -109,28 +116,18 @@ namespace hig {
   #endif // FF_CPU_OPT
 
 
-// This is the bessel function from MPFUN-fort packge developed be David Bailey.
-// /////////////////////////////////////
-//
-//  function mp_besselj (ra, rb)
-//    implicit none
-//    type (mp_real):: mp_besselj
-//    type (mp_real), intent (in):: ra, rb
-//    integer mpnw
-//    mpnw = max (int (ra%mpr(1)), int (rb%mpr(1)))
-//    mpnw = min (mpnw, mpwds)
-//    mp_besselj%mpr(0) = mpwds6
-//    call mpbesselj (ra%mpr, rb%mpr, mp_besselj%mpr, mpnw)
-//    return
-//  end function
-
   complex_t cbesselj(complex_t z, int order) {
     if(order == 1) return cj1(z);
-    std::cout << "error: Bessel functions for order != 1 are not supported" << std::endl;
+    std::cerr << "error: Bessel functions for order != 1 are not supported" << std::endl;
     return complex_t(0., 0.);
   } // cbesselj()
 
+  // Bessel function with MPFUN-fort's mpbesselj as reference.
+  // MPFUN-fort is developed by David Bailey et al.
+
+  // bessel fuction with order 1
   complex_t cj1(complex_t z) {
+    int MAXK = 1e5; // max numver of iterations in the following
     // z = r + i, r = real, i = imaginary
     real_t r = z.real();
     // single precision ~ 7 digits precision (24 * log(2) / log(10))
@@ -141,17 +138,51 @@ namespace hig {
     #endif
     real_t threshold = 1.73 * digits;
     if(r > threshold) {
-      std::cerr << "error: bessel argument is greater than threshold of " << threshold << std::endl;
+      //std::ofstream ooo("lll.out", std::ofstream::app);
+      //ooo << z.real() << "\t" << z.imag() << std::endl;
+      //ooo.close();
+      std::cerr << "error: bessel argument [" << r << "] is greater than threshold of "
+                << threshold << std::endl;
       assert(r < threshold);
-    } // if
-    double g = gamma(1. + 1);   // gamma(nu + k + 1), nu = 1, k = 0
-    g = 1. / g;
-    double r2 = r * r / 4.;     // (z^2 / 4)
-    int MAXK = 1e5;
-    for(int k = 1; k < MAXK; ++ k) {
-      
-    } // for
-    
+
+      // the asymptotic method to compute j1
+      // J1(z) = (2/(PIz))^(1/2)(cos(w\SUM_0^inf(A(k))) - sin(w\SUM_0^inf(B(k))))
+      // A(k) = ((-1)(4-(4k-1)^2)(4-(4k-3)^2)/(2k(2k-1)8^2z^2))A(k-1)
+      // B(k) = ((-1)(4-(4k+1)^2)(4-(4k-1)^2)/((2k+1)2k8^2z^2))B(k-1)
+      double a0 = 3.;
+      double b0 = 3. / (8 * r);
+      int k = 1;
+      for(; k < MAXK; ++ k) {
+
+      } // for
+    } else {
+      //std::ofstream ooo("sss.out", std::ofstream::app);
+      //ooo << z.real() << "\t" << z.imag() << std::endl;
+      //ooo.close();
+
+      // the direct method to compute j1
+      double g = 1. / gamma((unsigned int)(1 + 1));   // 1 / gamma(nu + k + 1),
+                                                    // nu = 1, k = 0
+      double r2 = 0.25 * r * r;        // (z^2 / 4)
+      double r0 = g, temp = g;
+      int k = 1;
+      for(; k < MAXK; ++ k) {
+        temp = -1. * (r2 / (k * (k + 1))) * temp;    // (-1)^k * (z^2 / 4)^k / (k * (k + 1))
+        r0 += temp;
+        if(fabs(temp) < REAL_EPSILON_) break;
+      } // for
+      if(k == MAXK) {
+        std::cerr << "error: bessel loop overflow with fabs(" << temp << ") > " << REAL_EPSILON_ << std::endl;
+        assert(k != MAXK);
+      } // if
+      return complex_t(r0 * 0.5 * r, 0.);    // (z/2)^nu
+    } // if-else
   } // cj1()
+  
+  // special case of gamma function for x = 2
+  inline real_t gamma(unsigned int x) {
+    assert(x == 2);
+    return 1.;        // gamma(2) = 1
+  } // gamma()
 
 } // namespace hig

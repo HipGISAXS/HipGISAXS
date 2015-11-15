@@ -26,9 +26,11 @@ namespace hig {
   extern real_t dot(vector3_t & a, vector3_t & b);
 
   // special functions
-  extern double gamma(double x);
+  // extern double gamma(double x);
+  extern real_t gamma(unsigned int x);
   extern complex_t cbessj(complex_t z, int order);
   extern complex_t cbesselj(complex_t z, int order);
+  extern complex_t cj1(complex_t z);
   extern complex_t sinc(complex_t x);
 
 #ifdef FF_CPU_OPT
