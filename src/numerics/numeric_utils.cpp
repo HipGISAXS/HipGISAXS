@@ -141,20 +141,33 @@ namespace hig {
       //std::ofstream ooo("lll.out", std::ofstream::app);
       //ooo << z.real() << "\t" << z.imag() << std::endl;
       //ooo.close();
-      std::cerr << "error: bessel argument [" << r << "] is greater than threshold of "
-                << threshold << std::endl;
-      assert(r < threshold);
+      // std::cerr << "error: bessel argument [" << r << "] is greater than threshold of "
+      //           << threshold << std::endl;
+      // assert(r < threshold);
 
       // the asymptotic method to compute j1
-      // J1(z) = (2/(PIz))^(1/2)(cos(w\SUM_0^inf(A(k))) - sin(w\SUM_0^inf(B(k))))
+      
+      // J1(z) = (2/(PIz))^(1/2)(cos(w)\SUM_0^inf(A(k)) - sin(w)\SUM_0^inf(B(k)))
       // A(k) = ((-1)(4-(4k-1)^2)(4-(4k-3)^2)/(2k(2k-1)8^2z^2))A(k-1)
       // B(k) = ((-1)(4-(4k+1)^2)(4-(4k-1)^2)/((2k+1)2k8^2z^2))B(k-1)
-      double a0 = 3.;
-      double b0 = 3. / (8 * r);
+      double ak = 3.;
+      double bk = 3. / (8 * r);
+      double ak_sum = ak;
+      double bk_sum = bk;
       int k = 1;
       for(; k < MAXK; ++ k) {
-
+        ak *= -1. * (4. - (4. * k - 1.) * (4. * k - 1.)) * (4. - (4. * k - 3.) * (4. * k - 3.)) / (2. * k * (2. * k - 1.) * 64. * r * r);
+        bk *= -1. * (4. - (4. * k + 1.) * (4. * k + 1.)) * (4. - (4. * k - 1.) * (4. * k - 1.)) / (2. * k * (2. * k + 1.) * 64. * r * r);
+        ak_sum += ak;
+        bk_sum += bk;
+        if(fabs(ak) < REAL_EPSILON_ && fabs(bk) < REAL_EPSILON_) break;
       } // for
+      if(k == MAXK) {
+        std::cerr << "error: bessel loop overflow with fabs(" << ak << ") > " << REAL_EPSILON_ << " and/or fabs(" << bk << ") > " << REAL_EPSILON_ << std::endl;
+        assert(k != MAXK);
+      } // if
+      double w = r - 3. * PI_ / 4.;
+      return complex_t(sqrt(2. / (r * PI_)) * (cos(w) * ak_sum - sin(w) * bk_sum), 0.); 
     } else {
       //std::ofstream ooo("sss.out", std::ofstream::app);
       //ooo << z.real() << "\t" << z.imag() << std::endl;
