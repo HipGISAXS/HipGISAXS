@@ -127,7 +127,7 @@ namespace hig {
 
   // bessel fuction with order 1
   complex_t cj1(complex_t z) {
-    int MAXK = 1e5; // max numver of iterations in the following
+    int MAXK = 1e9; // max numver of iterations in the following
     // z = r + i, r = real, i = imaginary
     real_t r = z.real();
     // single precision ~ 7 digits precision (24 * log(2) / log(10))
@@ -138,44 +138,42 @@ namespace hig {
     #endif
     real_t threshold = 1.73 * digits;
     if(r > threshold) {
-      //std::ofstream ooo("lll.out", std::ofstream::app);
-      //ooo << z.real() << "\t" << z.imag() << std::endl;
-      //ooo.close();
-      // std::cerr << "error: bessel argument [" << r << "] is greater than threshold of "
-      //           << threshold << std::endl;
-      // assert(r < threshold);
-
-      // the asymptotic method to compute j1
-      
+      // the asymptotic method to compute j1      
       // J1(z) = (2/(PIz))^(1/2)(cos(w)\SUM_0^inf(A(k)) - sin(w)\SUM_0^inf(B(k)))
-      // A(k) = ((-1)(4-(4k-1)^2)(4-(4k-3)^2)/(2k(2k-1)8^2z^2))A(k-1)
-      // B(k) = ((-1)(4-(4k+1)^2)(4-(4k-1)^2)/((2k+1)2k8^2z^2))B(k-1)
-      double ak = 3.;
-      double bk = 3. / (8 * r);
-      double ak_sum = ak;
-      double bk_sum = bk;
-      int k = 1;
+      double ir = 1. / r;
+      double irk = ir;
+      double ak = 1.;                     // a0 = 1
+      double xk = ak;                     // x0 = a0 / 1
+      double xk_sum = xk;
+      ak = 0.375;                         // a1 = 3 / 8
+      double yk = ak * irk;               // y0 = a1 / z
+      double yk_sum = yk;
+      int k = 1, m = 1;
       for(; k < MAXK; ++ k) {
-        ak *= -1. * (4. - (4. * k - 1.) * (4. * k - 1.)) * (4. - (4. * k - 3.) * (4. * k - 3.)) / (2. * k * (2. * k - 1.) * 64. * r * r);
-        bk *= -1. * (4. - (4. * k + 1.) * (4. * k + 1.)) * (4. - (4. * k - 1.) * (4. * k - 1.)) / (2. * k * (2. * k + 1.) * 64. * r * r);
-        ak_sum += ak;
-        bk_sum += bk;
-        if(fabs(ak) < REAL_EPSILON_ && fabs(bk) < REAL_EPSILON_) break;
+        m *= -1;
+        double t0 = 16. * k;
+        irk *= ir;
+        double t1 = 4. * k - 1.;
+        ak *= (4. - t1 * t1) / t0;        // a{2k}
+        xk = m * ak * irk;
+        xk_sum += xk;
+        irk *= ir;
+        double t2 = 4. * k + 1.;
+        ak *= (4. - t2 * t2) / (t0 + 8.); // a{2k+1}
+        yk = m * ak * irk;
+        yk_sum += yk;
+        if(fabs(xk) < REAL_EPSILON_ && fabs(yk) < REAL_EPSILON_) break;
       } // for
       if(k == MAXK) {
-        std::cerr << "error: bessel loop overflow with fabs(" << ak << ") > " << REAL_EPSILON_ << " and/or fabs(" << bk << ") > " << REAL_EPSILON_ << std::endl;
+        std::cerr << "error: bessel loop overflow with fabs(" << xk << ") > " << REAL_EPSILON_ << " and/or fabs(" << yk << ") > " << REAL_EPSILON_ << std::endl;
         assert(k != MAXK);
       } // if
-      double w = r - 3. * PI_ / 4.;
-      return complex_t(sqrt(2. / (r * PI_)) * (cos(w) * ak_sum - sin(w) * bk_sum), 0.); 
+      double w = r - 0.75 * PI_;
+      return complex_t(sqrt(2. / (r * PI_)) * (cos(w) * xk_sum - sin(w) * yk_sum), 0.); 
     } else {
-      //std::ofstream ooo("sss.out", std::ofstream::app);
-      //ooo << z.real() << "\t" << z.imag() << std::endl;
-      //ooo.close();
-
       // the direct method to compute j1
       double g = 1. / gamma((unsigned int)(1 + 1));   // 1 / gamma(nu + k + 1),
-                                                    // nu = 1, k = 0
+                                                      // nu = 1, k = 0
       double r2 = 0.25 * r * r;        // (z^2 / 4)
       double r0 = g, temp = g;
       int k = 1;
