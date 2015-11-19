@@ -127,7 +127,7 @@ namespace hig {
 
   // bessel fuction with order 1
   complex_t cj1(complex_t z) {
-    int MAXK = 1e9; // max numver of iterations in the following
+    int MAXK = 1e5; // max number of iterations in the following
     // z = r + i, r = real, i = imaginary
     real_t r = z.real();
     // single precision ~ 7 digits precision (24 * log(2) / log(10))

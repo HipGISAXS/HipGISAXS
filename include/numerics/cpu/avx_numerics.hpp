@@ -260,7 +260,7 @@ namespace hig {
     _mm256_store_pd(real, v.real);
     _mm256_store_pd(imag, v.imag);
     for(int i = 0; i < AVX_VEC_LEN_; ++ i) {
-      complex_t temp = cbessj(complex_t(real[i], imag[i]), o);
+      complex_t temp = cbesselj(complex_t(real[i], imag[i]), o);
       real[i] = temp.real();
       imag[i] = temp.imag();
     } // for
@@ -269,7 +269,52 @@ namespace hig {
     return res;
   } // avx_cbessj_cp()
 
-#else
+  static inline avx_m256c_t avx_cbesselj_cp(avx_m256c_t v, int o) {
+    if(o == 1) return avx_cj1_cp(v);
+    std::cerr << "error: Bessel functions of order != 1 are not supported" << std::endl;
+    return v;
+  } // avx_cbesselj_cp()
+
+  static inline avx_cj1_cp(avx_m256c_t v) {
+    int MAXK = 1e5;
+    avx_m256_t r = v.real;
+    int digits = 7;
+    #ifdef DOUBLEP
+      digits = 15;
+    #endif
+    real_t threshold = 1.73 * digits;
+    avx_m256_t thmask = _mm256_cmp_pd(r, _mm256_set1_pd(threshold), _CMP_GT_OS);
+    if(r > threshold) {
+      avx_m256_t ir = __inverse__(r);
+      avx_m256_t irk = ir;
+      avx_m256_t ak = __one__();
+      avx_m256_t xk = ak;
+      avx_m256_t xk_sum = xk;
+      int k = 1, m = 1;
+      for(; k < MAXK; ++ k) {
+      } // for
+      if(k == MAXK) {
+        std::cerr << "error: Bessel loop overflow occured" << std::endl;
+        return v;
+      } // if
+      avx_m256_t w = __sub__(r, 0.75 * PI_);
+      t0 = r * PI_;
+      t1 = 2 / t0;
+      t0 = sqrt(t1);
+      t2 = cos(w);
+      t3 = sin(w);
+      t4 = t2 * xk_sum;
+      t5 = t3 * yk_sum;
+      t6 = t4 - t5;
+      t7 = t0 * t6;
+      avx_m256c_t res;
+      res.real = t7; res.imag = 0.;
+      return res;
+    } else {
+    } // if-else
+  } // avx_cj1_cp()
+
+#else     // single precision
 
 	/**
 	 * load store
