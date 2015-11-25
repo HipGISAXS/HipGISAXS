@@ -275,7 +275,7 @@ namespace hig {
     return v;
   } // avx_cbesselj_cp()
 
-  static inline avx_cj1_cp(avx_m256c_t v) {
+  static inline avx_m256c_t avx_cj1_cp(avx_m256c_t v) {
     int MAXK = 1e5;
     avx_m256_t r = v.real;
     int digits = 7;
@@ -284,33 +284,56 @@ namespace hig {
     #endif
     real_t threshold = 1.73 * digits;
     avx_m256_t thmask = _mm256_cmp_pd(r, _mm256_set1_pd(threshold), _CMP_GT_OS);
-    if(r > threshold) {
-      avx_m256_t ir = __inverse__(r);
+    avx_m256_t AVX_ZERO_ = _mm256_setzero_pd();
+    avx_m256_t AVX_ONE_ = _mm256_set1_pd(1.0);
+    avx_m256_t AVX_ALLONE_ = _mm256_set1_pd(0xFFFFFFFFFFFFFFFF);
+    int allz = _mm256_testc_pd(thmask, AVX_ZERO_);  // returns 1 iff all are 0 (all <= threshold)
+    int allnz = _mm256_testc_pd(AVX_ALLONE_, thmask);  // returns 1 iff all are 1 (all > threshold)
+    if(allz) {          // all <= threshold
+      // ...
+    } else if(allnz) {  // all > threshold
+      avx_m256_t ir = _mm256_div_pd(AVX_ONE_, r);
       avx_m256_t irk = ir;
-      avx_m256_t ak = __one__();
+      avx_m256_t ak = AVX_ONE_;
       avx_m256_t xk = ak;
       avx_m256_t xk_sum = xk;
       int k = 1, m = 1;
+      avx_m256_t t0, t1, t2, t3, t4, t5, t6, t7;
       for(; k < MAXK; ++ k) {
+        m *= -1;
+        t0 = _mm_set1_pd(16. * k);
+        irk = _mm_mul_pd(irk, ir);
+        t1 = _mm_set1_pd(4. * k - 1.);
+        t2 = _mm_div_pd(_mm_sub_pd(4.0, _mm_mul_pd(t1, t1)), t0);
+        ak = _mm_mul_pd(ak, t2);
+        xk = _mm_mul_pd(_mm_set1_pd(m), _(_mm_mul_pd(ak, irk)));
+        xk_sum = _mm_add_pd(xk_sum, xk);
+        irk = _mm_mul_pd(irk, ir);
+        t1 = _mm_set1_pd(4. * k + 1.);
+        t2 = _mm_div_pd(_mm_sub_pd(4.0, _mm_mul_pd(t1, t1)), _mm_add_pd(t0, _mm_set1_pd(8.0)));
+        ak = _mm_mul_pd(ak, t2);
+        yk = _mm_mul_pd(_mm_set1_pd(m), _(_mm_mul_pd(ak, irk)));
+        yk_sum = _mm_add_pd(yk_sum, yk);
+        // if(fabs(xk) < REAL_EPSILON_ && fabs(yk) < REAL_EPSILON_) break; // TODO ...
       } // for
       if(k == MAXK) {
         std::cerr << "error: Bessel loop overflow occured" << std::endl;
         return v;
       } // if
-      avx_m256_t w = __sub__(r, 0.75 * PI_);
-      t0 = r * PI_;
-      t1 = 2 / t0;
-      t0 = sqrt(t1);
-      t2 = cos(w);
-      t3 = sin(w);
-      t4 = t2 * xk_sum;
-      t5 = t3 * yk_sum;
-      t6 = t4 - t5;
-      t7 = t0 * t6;
+      avx_m256_t w = _mm256_sub_pd(r, _mm256_set1_pd(0.75 * PI_));
+      t0 = _mm256_mul_pd(r, _mm256_set1_pd(PI_));
+      t1 = _mm256_div_pd(_mm256_set1_pd(2.0), t0);
+      t0 = _mm256_sqrt_pd(t1);
+      t3 = _mm256_sincos_pd(&t2, w);    // t3 = sin(w), t2 = cos(w)
+      t4 = _mm256_mul_pd(t2, xk_sum);
+      t5 = _mm256_mul_pd(t3, yk_sum);
+      t6 = _mm256_sub_pd(t4, t5);
+      t7 = _mm256_mul_pd(t0, t6);
       avx_m256c_t res;
-      res.real = t7; res.imag = 0.;
+      res.real = t7; res.imag = AVX_ZERO_;
       return res;
-    } else {
+    } else {            // use mask and do both
+      // ...
     } // if-else
   } // avx_cj1_cp()
 
