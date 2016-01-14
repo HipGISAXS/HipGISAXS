@@ -171,15 +171,9 @@ namespace hig {
     if(repet[1] < 1) repet[1] = 1;
     if(repet[2] < 1) repet[2] = 1;
 
-    vector3_t temp_la(lattice->a() * scaling[0]),
-              temp_lb(lattice->b() * scaling[1]),
-              temp_lc(lattice->c() * scaling[2]);
-    vector3_t arot = rot * temp_la;
-    vector3_t brot = rot * temp_lb;
-    vector3_t crot = rot * temp_lc;
-
-    //vector3_t l_t = lattice->t() * scaling;
-    vector3_t l_t = lattice->t();
+    vector3_t la(lattice->a() * scaling[0]),
+              lb(lattice->b() * scaling[1]),
+              lc(lattice->c() * scaling[2]);
 
     #ifdef SF_VERBOSE
       if(master) std::cout << "-- Computing structure factor on CPU ... " << std::flush;
@@ -209,8 +203,9 @@ namespace hig {
       complex_t qz;
       if(expt == "saxs") qz = QGrid::instance().qz(i);
       else if(expt == "gisaxs") qz = QGrid::instance().qz_extended(i);
+      std::vector<complex_t> mq = rot.rotate(qx, qy, qz);
 
-      complex_t e_iqa = exp(unit_ci * (arot[0] * qx + arot[1] * qy + arot[2] * qz));
+      complex_t e_iqa = exp(unit_ci * (la[0] * mq[0] + la[1] * mq[1] + la[2] * mq[2]));
       complex_t Xa_0 = unit_c - pow(e_iqa, repet[0]);
       complex_t Ya_0 = unit_c - e_iqa;
 
@@ -219,7 +214,7 @@ namespace hig {
       else sa = repet[0];
       sa = pow(e_iqa, ((real_t) 1.0 - repet[0]) / (real_t) 2.0) * sa;
 
-      complex_t iqb = unit_ci *  (brot[0] * qx + brot[1] * qy + brot[2] * qz) ;
+      complex_t iqb = unit_ci *  (lb[0] * mq[0] + lb[1] * mq[1] + lb[2] * lb[2]) ;
       complex_t iqNb =  repet[1] * iqb;
 
       complex_t e_iqb = exp(iqb);
@@ -232,7 +227,7 @@ namespace hig {
       sb = pow(e_iqb, ((real_t) 1.0 - repet[1]) / (real_t) 2.0) * sb;
 
 
-      complex_t e_iqc = exp(unit_ci * (crot[0] * qx + crot[1] * qy + crot[2] * qz));
+      complex_t e_iqc = exp(unit_ci * (lc[0] * mq[0] + lc[1] * mq[1] + lc[2] * mq[2]));
       complex_t Xc_0 = unit_c - pow(e_iqc, repet[2]);
       complex_t Yc_0 = unit_c - e_iqc;
 
@@ -248,11 +243,11 @@ namespace hig {
       if(!((boost::math::isfinite)(sc.real()) && (boost::math::isfinite)(sc.imag()))) {
         std::cerr << "sc sc sc sc sc sc sc: " << i << ", " << j << std::endl; }
 
-      complex_t temp3 = center[0] * qx + center[1] * qy + center[2] * qz;
+      complex_t temp3 = center[0] * mq[0] + center[1] * mq[1] + center[2] * mq[2];
       temp3 = exp(complex_t(-temp3.imag(), temp3.real()));
-      complex_t temp2 = l_t[0] * qx + l_t[1] * qy + l_t[2] * qz;
-      temp2 = unit_c + exp(complex_t(-temp2.imag(), temp2.real()));
-      sf_[i] = temp3 * temp2 * sa * sb * sc;
+      //complex_t temp2 = l_t[0] * qx + l_t[1] * qy + l_t[2] * qz;
+      //temp2 = unit_c + exp(complex_t(-temp2.imag(), temp2.real()));
+      sf_[i] = temp3 * sa * sb * sc;
 
       /************
       if(!((boost::math::isfinite)(temp3.real()) && (boost::math::isfinite)(temp3.imag()))) {
@@ -260,11 +255,12 @@ namespace hig {
               << ": here it is finite (444) " << center[0] << ", "
               << center[1] << ", " << center[2] << std::endl;
       } // if
-      ************/
 
       if(!((boost::math::isfinite)(temp2.real()) && (boost::math::isfinite)(temp2.imag()))) {
         std::cerr << "error: here it is not finite (888) " << i << ", " << j << std::endl;
       } // if
+      ************/
+
     } // for i
 
     computetimer.stop();

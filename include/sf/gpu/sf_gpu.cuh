@@ -78,6 +78,12 @@ namespace hig {
                                           real_t* rot, real_t* repet,
                                           real_t* center, real_t* transvec,
                                           cucomplex_t* sf);
+  __global__ void structure_factor_kernel(unsigned int nqx, unsigned int nqy, unsigned int nqz,
+                                          real_t* qx, real_t* qy, cucomplex_t* qz,
+                                          RotMatrix_t r, vector3_t a, vector3_t b, vector3_t c,
+                                          real_t* repet,
+                                          real_t* center, real_t* transvec,
+                                          cucomplex_t* sf);
 
 #endif // SF_GPU
 
