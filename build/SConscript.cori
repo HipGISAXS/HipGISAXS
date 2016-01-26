@@ -381,7 +381,7 @@ add_option("dbgl", "debug build, no optimization, debug logging", 0, True,
             "debug_build_and_log", default = 0)
 ## optional packages and support
 add_option("with-cuda", "Enable GPU support", 0, False)
-add_option("with-mic", "Enable Intel MIC support", 0, False)
+#add_option("with-mic", "Enable Intel MIC support", 0, False)
 add_option("with-mpi", "Enable MPI parallelization", 0, False)
 add_option("with-parallel-hdf5", "Enable parallel HDF5 data format support", 0, False)
 add_option("with-papi", "Enable PAPI profiling", 0, False)
@@ -410,7 +410,7 @@ if release_build and using_debug:
     print("error: release build cannot have debug enabled. make a choice first.")
     Exit(1)
 using_cuda = _has_option("with-cuda")
-using_mic = _has_option("with-mic")      ## disabling MIC version
+using_mic = 0 ## _has_option("with-mic")      ## disabling MIC version
 using_mpi = _has_option("with-mpi")
 using_parallel_hdf5 = _has_option("with-parallel-hdf5")
 using_papi = _has_option("with-papi")
@@ -579,7 +579,7 @@ if not get_option('clean'):
         all_flags += gpu_flags
         using_accelerator = 'gpu'
     elif using_mic:
-        all_flags += mic_flags + cpu_flags
+        all_flags += mic_flags
         using_accelerator = 'mic'
         env.Append(CCFLAGS = ["-mmic", "-mt_mpi"])
         env.Append(LINKFLAGS = ["-mmic", "-mt_mpi", "-mkl"])
@@ -607,9 +607,8 @@ if not get_option('clean'):
     if using_accelerator != None:
         print("Enabling use of accelerator: %s" % using_accelerator)
 
-    if not using_mic:
-      env.Append(CCFLAGS = ["-mavx", "-mtune=core-avx2"]) #, "-msse4.1", "-msse4.2", "-mssse3"])
-      #env.Append(CCFLAGS = ["-no-vec"])
+    env.Append(CCFLAGS = ["-mavx", "-mtune=core-avx2"])
+    #env.Append(CCFLAGS = ["-no-vec"])
 
     if using_debug:
         env.Append(CCFLAGS = ['-g'])

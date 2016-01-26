@@ -115,6 +115,12 @@ namespace hig {
       qvec_iter_t qz_end() const { return qz_.end(); }
       cqvec_iter_t qz_extended_end() const { return qz_extended_.end(); }
 
+      /* temporary, just for performance testing purposes */
+      real_t* qx(void) { return &qx_[0]; }
+      real_t* qy(void) { return &qy_[0]; }
+      real_t* qz(void) { return &qz_[0]; }
+      complex_t* qz_extended(void) { return &qz_extended_[0]; }
+
       /* debug */
       void save (const char *);
 

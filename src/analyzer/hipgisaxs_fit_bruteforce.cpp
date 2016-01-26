@@ -89,5 +89,3 @@ namespace hig {
   } // BruteForceOptimization::save_history()
 
 } // namespace hig
-e hig
- hig

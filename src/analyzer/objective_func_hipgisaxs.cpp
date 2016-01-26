@@ -14,7 +14,7 @@
 #include <analyzer/objective_func_hipgisaxs.hpp>
 #include <file/edf_reader.hpp>
 
-namespace hig{
+namespace hig {
 
   HipGISAXSObjectiveFunction::HipGISAXSObjectiveFunction(int narg, char** args, DistanceMeasure* d) :
       hipgisaxs_(narg, args) {
@@ -28,8 +28,8 @@ namespace hig{
       exit(1);
     } // if
 
-    n_par_ = hipgisaxs_.nqy();
-    n_ver_ = hipgisaxs_.nqz();
+    n_par_ = hipgisaxs_.nrow();
+    n_ver_ = hipgisaxs_.ncol();
 
     ref_data_ = NULL;
     mask_data_.clear();
@@ -52,8 +52,8 @@ namespace hig{
       exit(1);
     } // if
 
-    n_par_ = hipgisaxs_.nqy();
-    n_ver_ = hipgisaxs_.nqz();
+    n_par_ = hipgisaxs_.ncol();
+    n_ver_ = hipgisaxs_.nrow();
 
     ref_data_ = NULL;
     mask_data_.clear();
@@ -103,8 +103,8 @@ namespace hig{
 
 
   bool HipGISAXSObjectiveFunction::set_reference_data(int i) {
-        if(i >= 0) {
-            if(ref_data_ != NULL) delete ref_data_;
+    if(i >= 0) {
+      if(ref_data_ != NULL) delete ref_data_;
       std::string ref_filename = hipgisaxs_.reference_data_path(i);
       ReferenceFileType ref_type = get_reference_file_type(ref_filename);
       real_t* temp_data = NULL;
@@ -130,32 +130,34 @@ namespace hig{
                 << std::endl;
           return false;
       } // switch
-            if(n_par_ != ref_data_->n_par() || n_ver_ != ref_data_->n_ver()) {
-                std::cerr << "warning: reference and simulation data dimension sizes do not match [ "
-                            << ref_data_->n_par() << " * " << ref_data_->n_ver() << " ] != [ "
-                            << n_par_ << " * " << n_ver_ << " ]"
-                            << std::endl;
+      if(n_par_ != ref_data_->n_par() || n_ver_ != ref_data_->n_ver()) {
+        std::cerr << "warning: reference and simulation data dimension sizes do not match [ "
+                  << ref_data_->n_par() << " * " << ref_data_->n_ver() << " ] != [ "
+                  << n_par_ << " * " << n_ver_ << " ]"
+                  << std::endl;
         std::cerr << "warning: overriding simulation region with reference data region"
-              << std::endl;
-                n_par_ = ref_data_->n_par();
-                n_ver_ = ref_data_->n_ver();
-                hipgisaxs_.override_qregion(n_par_, n_ver_, i);
-            } // if
+                  << std::endl;
+        n_par_ = ref_data_->n_par();
+        n_ver_ = ref_data_->n_ver();
+        hipgisaxs_.override_qregion(n_par_, n_ver_, i);
+      } // if
       if(ref_type == reference_file_edf) {
         if(!read_edf_mask_data(hipgisaxs_.reference_data_mask(i))) return false;
-      } else { if(!read_mask_data(hipgisaxs_.reference_data_mask(i))) return false; }
-            if(mask_data_.size() != n_par_ * n_ver_) {
-                std::cerr << "error: mask and reference data dimension sizes do not match [ "
-                            << n_par_ << " * " << n_ver_ << " ] != " << mask_data_.size()
-                            << std::endl;
-                return false;
-            } // if
-        } // if
+      } else {
+        if(!read_mask_data(hipgisaxs_.reference_data_mask(i))) return false;
+      } // if-else
+      if(mask_data_.size() != n_par_ * n_ver_) {
+        std::cerr << "error: mask and reference data dimension sizes do not match [ "
+                  << n_par_ << " * " << n_ver_ << " ] != " << mask_data_.size()
+                  << std::endl;
+        return false;
+      } // if
+    } // if
     if(!mask_set_) {
       mask_data_.clear();
       mask_data_.resize(n_par_ * n_ver_, 1);
     } // if
-        return true;
+    return true;
   } // HipGISAXSObjectiveFunction::set_reference_data()
 
 
@@ -230,6 +232,13 @@ namespace hig{
         exit(-1);
       } // if
 
+#ifdef MEMDEBUG
+      if(!hipgisaxs_.check_finite((*ref_data_).data(), n_par_ * n_ver_))
+        std::cerr << "** ARRAY CHECK ** ref_data_ failed check" << std::endl;
+      if(!hipgisaxs_.check_finite(gisaxs_data, n_par_ * n_ver_))
+        std::cerr << "** ARRAY CHECK ** gisaxs_data failed check" << std::endl;
+#endif // MEMDEBUG
+
       // compute error/distance
       std::cout << "+++++ computing distance ..." << std::endl;
       real_t* ref_data = (*ref_data_).data();
@@ -255,6 +264,7 @@ namespace hig{
   } // ObjectiveFunction::operator()()
 
 
+  // this is used only in the test mode
   bool HipGISAXSObjectiveFunction::simulate_and_set_ref(const real_vec_t& x) {
     real_t *gisaxs_data = NULL;
     if(x.size() > 0) {
@@ -263,16 +273,30 @@ namespace hig{
       std::map <std::string, real_t> param_vals;
       for(int i = 0; i < x.size(); ++ i) param_vals[params[i]] = x[i];
 
-      for(std::map<std::string, real_t>::iterator i = param_vals.begin();
-          i != param_vals.end(); ++ i)
+      for(std::map<std::string, real_t>::iterator i = param_vals.begin(); i != param_vals.end(); ++ i)
         std::cout << (*i).first << ": " << (*i).second << "  ";
       std::cout << std::endl;
 
-    // update and compute gisaxs
+      // update and compute gisaxs
       hipgisaxs_.update_params(param_vals);
     } // if
 
     hipgisaxs_.compute_gisaxs(gisaxs_data);
+    #ifdef USE_MPI
+      woo::MultiNode* temp_multi = hipgisaxs_.multi_node_comm();
+      woo::comm_t root = (*temp_multi).universe_key();
+      if((*temp_multi).size(root) > 1) {
+        // the root processor has the computed data. it needs to send it to all other procs.
+        if(!(*temp_multi).is_master(root)) {
+          if(gisaxs_data != NULL) delete[] gisaxs_data;
+          gisaxs_data = new (std::nothrow) real_t[n_par_ * n_ver_];
+        } // if
+        if(!(*temp_multi).broadcast(root, gisaxs_data, n_par_ * n_ver_)) {
+          std::cerr << "error: failed to broadcast gisaxs_data to all" << std::endl;
+          return false;
+        } // if
+      } // if
+    #endif // USE_MPI
     if(ref_data_ == NULL) ref_data_ = new ImageData(n_par_, n_ver_);
     (*ref_data_).set_data(gisaxs_data);
     std::cout << "++ Reference data set after simulation" << std::endl;
@@ -281,5 +305,3 @@ namespace hig{
   } // ObjectiveFunction::operator()()
 
 } // namespace hig
-pace hig
- hig

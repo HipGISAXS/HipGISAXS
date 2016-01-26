@@ -272,7 +272,7 @@ namespace hig {
   } // HipGISAXS::run_init()
 
 
-  // for fitting, change the qregion when they are different
+  // for fitting, update the qgrid when they are different
   bool HipGISAXS::override_qregion(unsigned int ny, unsigned int nz, unsigned int i) {
 
     OutputRegionType type = HiGInput::instance().reference_region_type(i);
@@ -294,7 +294,7 @@ namespace hig {
       // update Q-grid
       real_t min_alphai = HiGInput::instance().scattering_min_alpha_i() * PI_ / 180;
       if(!QGrid::instance().update(ny, nz, miny, minz, maxy, maxz,
-                      freq_, min_alphai, k0_, mpi_rank)) {
+                                   freq_, min_alphai, k0_, mpi_rank)) {
         if(master) std::cerr << "error: could not update Q-grid" << std::endl;
         return false;
       } // if
@@ -715,7 +715,7 @@ namespace hig {
             << " ms." << std::endl;
 
     // temporary for testing ...
-    if(master) {
+    /*if(master) {
       Image img(ncol_, nrow_);
       img.construct_image(final_data, 0); // slice x = 0
       // define output filename
@@ -728,7 +728,7 @@ namespace hig {
       std::cout << "-- Saving image in " << output << " ... " << std::flush;
       img.save(output);
       std::cout << "done." << std::endl;
-    } // if
+    } // if*/
 
     return true;
   } // HipGISAXS::compute_gisaxs()
@@ -1022,13 +1022,6 @@ namespace hig {
         memset(grain_ids, 0 , num_gr * nrow_ * ncol_ * sizeof(complex_t));
       } // if
 
-
-      #ifdef USE_GPU
-      int num_device = 0;
-      cudaGetDeviceCount(&num_device);
-      omp_set_num_threads(num_device);
-      #pragma omp parallel for 
-      #endif
       // loop over grains - each process processes num_gr grains
       for(int grain_i = grain_min; grain_i < grain_max; grain_i ++) {  // or distributions
 
@@ -1036,10 +1029,6 @@ namespace hig {
           std::cout << "-- Processing grain " << grain_i + 1 << " / " << num_grains << " ..."
                 << std::endl;
         } // if
-        #ifdef USE_GPU
-        cudaSetDevice(omp_get_thread_num());
-        #endif
-            
 
         // define r_norm (grain orientation by tau and eta)
         // define full grain rotation matrix r_total = r_phi * r_norm
@@ -1076,7 +1065,18 @@ namespace hig {
         std::vector<complex_t> ff;
         unsigned int sz = nqz_;
         if(HiGInput::instance().experiment() == "gisaxs") sz = nqz_extended_;
+        ff.clear();
         ff.resize(sz, CMPLX_ZERO_);
+        /*std::cout << "** ARRAY CHECK ** (sz=" << sz << ")" << std::endl;
+        if(!check_finite(QGrid::instance().qx(), QGrid::instance().nqx())) {
+          std::cerr << "** ARRAY CHECK ** qx failed check (sz=" << QGrid::instance().nqx() << ")" << std::endl;
+        } // if
+        if(!check_finite(QGrid::instance().qy(), QGrid::instance().nqy())) {
+          std::cerr << "** ARRAY CHECK ** qy failed check (sz=" << QGrid::instance().nqy() << ")" << std::endl;
+        } // if
+        if(!check_finite(QGrid::instance().qz_extended(), QGrid::instance().nqz_extended())) {
+          std::cerr << "** ARRAY CHECK ** qz failed check (sz=" << QGrid::instance().nqz_extended() << ")" << std::endl;
+        } // if*/
 
         // loop over all elements in the unit cell
         for(Unitcell::element_iterator_t e = curr_unitcell->element_begin();
@@ -1117,6 +1117,9 @@ namespace hig {
                   #endif
                   );
             fftimer.pause();
+            /*if(!check_finite(eff.ff(), sz)) {
+              std::cerr << "** ARRAY CHECK ** eff failed check" << std::endl;
+            } // if*/
 
             // for each location, add the FFs
             for(unsigned int i = 0; i < sz; ++ i) ff[i] += eff[i]; 
@@ -1128,6 +1131,10 @@ namespace hig {
           std::cout << "**               FF compute time: "
                     << fftimer.elapsed_msec() << " ms." << std::endl;
 #endif
+        /*if(!check_finite(&ff[0], ff.size())) {
+          std::cerr << "** ARRAY CHECK ** ff failed check" << std::endl;
+        } // if*/
+
 
         sftimer.start(); sftimer.pause();
         for (int i_scale = 0; i_scale < num_repeat_scaling; i_scale++) {
@@ -1513,7 +1520,6 @@ namespace hig {
 
   bool HipGISAXS::normalize(real_t*& data, unsigned int size) {
     real_t min_val = data[0], max_val = data[0];
-    #pragma omp parallel for
     for(unsigned int i = 1; i < size; ++ i) {
       min_val = std::min(min_val, data[i]);
       max_val = std::max(max_val, data[i]);
@@ -1570,23 +1576,13 @@ namespace hig {
                   , woo::comm_t comm_key
                 #endif
                 ) {
-    #ifndef GPUSF
-      return ff.compute_form_factor(shape_name, shape_file, shape_params,
+    return ff.compute_form_factor(shape_name, shape_file, shape_params,
                       single_layer_thickness_,
                       curr_transvec, shp_tau, shp_eta, rot
                       #ifdef USE_MPI
                         , multi_node_, comm_key
                       #endif
                       );
-    #else
-      return ff.compute_form_factor_gpu(shape_name, shape_file, shape_params,
-                      single_layer_thickness_,
-                      curr_transvec, shp_tau, shp_eta, rot
-                      #ifdef USE_MPI
-                        , multi_node_, comm_key
-                      #endif
-                      );
-    #endif
   } // HipGISAXS::form_factor()
 
 

@@ -447,10 +447,10 @@ namespace hig {
             break;
 
           case struct_grain_scaling_token:
-            if (curr_vector_.size() != 3){
+            if(curr_vector_.size() != 3) {
               std::cerr << "error : scaling can be a scaler, vector[3] or a distribution." << std::endl;
               return false;
-            }
+            } // if
             curr_structure_.grain_scaling_a_mean(curr_vector_[0]);
             curr_structure_.grain_scaling_b_mean(curr_vector_[1]);
             curr_structure_.grain_scaling_c_mean(curr_vector_[2]);
@@ -1005,17 +1005,17 @@ namespace hig {
         break;
 
       case struct_grain_scaling_token:
-        if (past_token_.type_ == assignment_token){
+        if(past_token_.type_ == assignment_token) {
           curr_structure_.grain_scaling_a_mean(num);
           curr_structure_.grain_scaling_b_mean(num);
           curr_structure_.grain_scaling_c_mean(num);
         } else {
           curr_vector_.push_back(num);
-          if(curr_vector_.size() > 3){
-            std::cerr << "error : scaling can be a scaler, vector[3] or a distribution." << std::endl;
+          if(curr_vector_.size() > 3) {
+            std::cerr << "error : scaling can be a scalar, vector[3] or a distribution." << std::endl;
             return false;
-          }
-        }
+          } // if
+        } // if-else
         break;
       case step_token:
         // find out which step is this for

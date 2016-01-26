@@ -107,5 +107,3 @@ namespace hig {
   } // ImageData::read()
 
 } // namespace hig
-ce hig
-ig

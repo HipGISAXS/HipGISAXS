@@ -33,13 +33,13 @@ namespace hig{
 
   private :
     OutputRegionType mode_;
-    float_vec_t data_;
-    float_vec_t axis_par_;
-    float_vec_t axis_ver_;
+    real_vec_t data_;
+    real_vec_t axis_par_;
+    real_vec_t axis_ver_;
     unsigned int n_par_;
     unsigned int n_ver_;
 
-    float_vec_t read_string_values(string_t line);
+    real_vec_t read_string_values(string_t line);
 
   public:
     ImageData(std::string filename) {
@@ -53,7 +53,7 @@ namespace hig{
       axis_ver_.clear();
     } // ImageData()
 
-    ImageData(const float_vec_t& data, float_vec_t axis_par, float_vec_t axis_ver,
+    ImageData(const real_vec_t& data, real_vec_t axis_par, real_vec_t axis_ver,
         OutputRegionType type) :
         data_(data), axis_par_(axis_par), axis_ver_(axis_ver), mode_(type) {
       n_par_ = axis_par_.size();
@@ -72,25 +72,25 @@ namespace hig{
     //virtual bool init(){return false;}
 
     /* setters */
-    void set_data(const float_vec_t& data) { data_ = data; }
-    void set_data(const float* data, unsigned int n_par, unsigned int n_ver) {
+    void set_data(const real_vec_t& data) { data_ = data; }
+    void set_data(const real_t* data, unsigned int n_par, unsigned int n_ver) {
       n_par_ = n_par;
       n_ver_ = n_ver;
       set_data(data);
     } // set_data()
-    void set_data(const float* data) {
+    void set_data(const real_t* data) {
       data_.clear();
       for(unsigned int i = 0; i < n_par_ * n_ver_; ++ i) data_.push_back(data[i]);
     } // set_data()
 
     /* getters */
-    //float img_p (int iv, int ip) const;
-    //float img_q  (float qv, float qp) const;
+    //real_t img_p (int iv, int ip) const;
+    //real_t img_q  (real_t qv, real_t qp) const;
     real_t operator()(int i, int j) const;
     real_t operator()(unsigned int i, unsigned int j) const;
     real_t operator()(real_t qi, real_t qj) const;
 
-    //float_mat_t img() const {return img_;}
+    //real_t_mat_t img() const {return img_;}
     unsigned int n_par() const { return n_par_;}
     unsigned int n_ver() const { return n_ver_;}
 
@@ -108,4 +108,3 @@ namespace hig{
 } /* namespace hig */
 
 #endif /* IMAGEDATA_HPP_ */
-PP_ */

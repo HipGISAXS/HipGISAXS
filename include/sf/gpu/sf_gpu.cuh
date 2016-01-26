@@ -25,6 +25,7 @@
 
 #include <common/typedefs.hpp>
 #include <common/constants.hpp>
+#include <model/structure.hpp>
 #include <numerics/matrix.hpp>
 
 namespace hig {
@@ -65,9 +66,9 @@ namespace hig {
 
       bool compute(std::string, vector3_t, Lattice*, vector3_t, vector3_t,
                    RotMatrix_t
-                   #ifdef USE_MPI
-                    , woo::MultiNode&, std::string
-                   #endif
+                   //#ifdef USE_MPI
+                   // , woo::MultiNode&, std::string
+                   //#endif
                    );
 
   }; // class StructureFactorG
@@ -75,6 +76,12 @@ namespace hig {
   __global__ void structure_factor_kernel(unsigned int nqx, unsigned int nqy, unsigned int nqz,
                                           real_t* qx, real_t* qy, cucomplex_t* qz,
                                           real_t* rot, real_t* repet,
+                                          real_t* center, real_t* transvec,
+                                          cucomplex_t* sf);
+  __global__ void structure_factor_kernel(unsigned int nqx, unsigned int nqy, unsigned int nqz,
+                                          real_t* qx, real_t* qy, cucomplex_t* qz,
+                                          RotMatrix_t r, vector3_t a, vector3_t b, vector3_t c,
+                                          real_t* repet,
                                           real_t* center, real_t* transvec,
                                           cucomplex_t* sf);
 

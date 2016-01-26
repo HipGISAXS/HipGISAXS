@@ -616,7 +616,12 @@ namespace hig {
             break;
 
           case struct_grain_scaling_token:
-            //grain_scaling(new_val); // TODO: fitting ...
+            if(rem_str2 == "") {
+              grain_.scaling_.mean_[0] = new_val;
+              grain_.scaling_.mean_[1] = new_val;
+              grain_.scaling_.mean_[2] = new_val;
+              return true;
+            } // if
             if(!extract_first_keyword(rem_str2, keyword3, rem_str3)) return false;
             switch(TokenMapper::instance().get_keyword_token(keyword3)) {
               case struct_grain_lattice_a_token:

@@ -93,6 +93,8 @@ namespace hig {
           std::cout << ff_[i].real() << "," << ff_[i].imag() << "\t";
         std::cout << std::endl;
       } // printff()
+
+      complex_t* ff(void) { return &ff_[0]; }
   }; // class FormFactor
 
 } // namespace

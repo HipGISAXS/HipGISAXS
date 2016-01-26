@@ -76,7 +76,7 @@ int main(int narg, char** args) {
   } // if-else
   
   // set reference parameters
-  std::vector<float> ref_param_vals;
+  std::vector<hig::real_t> ref_param_vals;
   if(arg_map.count("-ref") == 1) {
     for(std::vector<std::string>::const_iterator i = arg_map.at("-ref").begin();
         i != arg_map.at("-ref").end(); ++ i) {
@@ -132,7 +132,7 @@ int main(int narg, char** args) {
   } // if-else
 
   // set initial parameter values
-  std::vector<float> param_vals;
+  std::vector<hig::real_t> param_vals;
   if(arg_map.count(std::string("-init")) == 1) {
     for(std::vector<std::string>::const_iterator i = arg_map.at(std::string("-init")).begin();
         i != arg_map.at(std::string("-init")).end(); ++ i) {
