@@ -194,8 +194,10 @@ namespace hig {
     } // for
 
     // sanity check
-    if(qy_.size() != nqy || qz_.size() != nqz) {
+    if(qy_.size() != nqy * nqz || qz_.size() != nqy * nqz) {
       std::cerr << "error: mismatch in the needed qgrid size and the constructed one" << std::endl;
+      std::cerr << "error:    " << qy_.size() << " != " << nqy << std::endl;
+      std::cerr << "error:    " << qz_.size() << " != " << nqz << std::endl;
       return false;
     } // if
 
