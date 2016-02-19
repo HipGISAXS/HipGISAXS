@@ -206,7 +206,7 @@ namespace hig {
     std::set<real_t> angs;
     for (real_t h = 0; h < repeats[0]; h++){
       for (real_t k = 0; k < repeats[1]; k++){
-        for (real_t l = 0; l < repeats[1]; l++){
+        for (real_t l = 0; l < repeats[2]; l++){
           vector3_t G = mra * h + mrb * k + mrc * l;
           if ((G[0] < qmin[0]) || (G[0] > qmax[0])) continue;
           if ((G[2] < qmin[1]) || (G[2] > qmax[1])) continue;

@@ -37,28 +37,24 @@ This licensing information is also provided as a PDF file along with the documen
 
 
 ## SUPPORTED PLATFORMS
-HipGISAXS has been tested on, and supports, the following.
+HipGISAXS has been successfully tested on the following platforms.
 
-### A. Operating System Platforms
-1. GNU/Linux x86\_64: Ubuntu, Red Hat Linux, SUSE Linux, Cray Linux Environment (XT5, XE5, XK7, XE6, XC30).
-2. Darwin x86\_64: Mac OS X (Lion, Mountain Lion).
-3. You could try HipGISAXS on any UNIX based OS, but it may or may not be supported.  
-   Please let us know about your platform (except Windows!) so that we can include it in our list.
+### A. Operating System Platforms (Software Environment)
+1. GNU/Linux x86\_64: Ubuntu, Red Hat Linux, SUSE Linux, Cray Linux Environment (XK7, XE6, XC30, XC40).
+2. Darwin x86\_64: Mac OS X (El Capitan, Yosemite).
+3. You could try HipGISAXS on any UNIX based OS: generally it should work.
+4. Windows: Will probably be supported in future.
 
 ### B. System Hardware (Compute Environment)
-1. Clusters/Supercomputers equipped with Nvidia GPUs as accelerators on each node when using the GPU version.
-2. Generic desktop equipped with an Nvidia GPU when using the GPU version.
-3. Clusters/Supercomputers equipped with Intel Phi coprocessors on each node when using MIC version.
-4. Any Intel CPU equipped with Intel Phi coprocessor when using MIC version.
-5. Any generic CPU (multi-cores), without accelerators.
+1. Generic x86 laptop/desktop/server.
+2. Clusters/Supercomputers based on x86 processors.
+3. Generic x86 laptop/desktop/server equipped with Nvidia GPUs.
+4. Clusters/Supercomputers equipped with Nvidia GPUs as accelerators on each node.
 
 ### C. System Hardware (Processor Architectures)
-1. Intel/AMD processors (including multi-cores).
-   We have not extensively tested on various types of processors yet.
-2. Fermi or Kepler architecture based Nvidia GPUs.
-   Compute capability of these GPUs >= 2.0.
-3. Intel MIC architecture based Intel Phi coprocessors.
-   Requires intel compilers, version >= 13.1.0.146.
+1. Intel/AMD processors (64-bit).
+2. Nvidia GPUs with compute capability >= 2.0.
+3. Intel MIC architecture: support under development.
 
 
 ## SOFTWARE PRE-REQUISITES
@@ -66,54 +62,54 @@ This software uses several third-party libraries, and they need to be installed 
 For ease, if possible use the installations already available on your system, if any. Alternatively, download and install them yourself.
 The following are the dependencies of this software:
 
-1. **GNU C/C++ compilers**, version >= 4.3 and <= 4.7 (4.6 recommended), OR **Intel C/C++ compilers**, version >= 13.1.0.146.  
-   To compile with GPU support enabled, use GNU compilers.  
-   Intel compilers are necessary to enable Intel MIC version of HipGISAXS. Other versions of compilers may be used, but they have not been tested. Intel compilers will work best with GNU compatibility 4.6.
-2. **Nvidia CUDA toolkit** version > 4.x. (>= 5.5 recommended).  
-   CUDA can be obtained from: http://developer.nvidia.com/cuda/cuda-downloads  
-   *NOTE: CUDA is NOT required if compiling for CPU-only or MIC versions.*
-3. **OpenMPI** compiled with GNU or Intel compilers which ever you are using to compile HipGISAXS. Version > 1.4.4.  
-   OpenMPI can be obtained from: http://www.open-mpi.org/software
-   *NOTE: Currently, even if you do not plan to use MPI, the compilation process still needs MPI.
-   		 This requirement will be removed in future.*  
-   Alternative implementations of MPI may also be used, such as MPICH2 and MVAPICH.
-4. **Boost** and **numeric extension to Boost GIL**.  
+### Required Software
+1. **GNU C/C++ compilers**, version >= 4.7, OR **Intel C/C++ compilers**, version >= 15 (with GNU compatibility >= 4.7).  
+   To compile with GPU support enabled, use GNU compilers. 
+2. **Scons**, version >= 2.0.
+   Scons can be obtained from: http://scons.org
+   *NOTE: Scons is based on Python, so you need to have Python installed too.*
+3. **Boost C++ Libraries**.
    Boost can be obtained from: http://www.boost.org  
-   Numeric extension to Boost GIL can be obtained from the following (file name `numeric.zip`):  
-     http://sourceforge.net/adobe/genimglib/wiki/Downloads  
-     http://gil-contributions.googlecode.com/svn/trunk  
-   After downloading, unzip the file, generating a directory named `numeric`.  
-   Copy this directory under `boost/gil/extensions/` at your Boost installation location. If you do not have permissions to do that, you can specify an additional path to this library during the install process.
-5. **Parallel HDF5 library**.  
+4. **Tiff Library** (libtiff).  
+   Tiff library can be obtained from: http://www.libtiff.org
+
+### Optional Software
+1. **Nvidia CUDA toolkit** version >= 5.5.  
+   CUDA can be obtained from: http://developer.nvidia.com/cuda/cuda-downloads  
+   *NOTE: CUDA required to enable GPU support.*
+   *NOTE: CUDA is NOT required if compiling for CPU-only version.*
+2. **OpenMPI** compiled with GNU or Intel compilers which ever you are using to compile HipGISAXS. Version > 1.4.4.  
+   OpenMPI can be obtained from: http://www.open-mpi.org/software
+   Alternative implementations of MPI may also be used, such as MPICH and MVAPICH.
+   *NOTE: MPI library is required to enable support for multi-node systems.*
+   *NOTE: MPI library is NOT required if compiling for single node/server/desktop/laptop.*
+3. **Parallel HDF5 library**.  
    HDF5 can be obtained from: http://www.hdfgroup.org/downloads  
+   *NOTE: HDF5 library is NOT required if you do not plan to use input files in this format.*
    *NOTE: HDF5 depends on the zlib and szip libraries.*  
    **zlib** can be obtained from: http://www.zlib.net  
    **szip** can be obtained from: http://www.hdfgroup.org/doc\_resource/SZIP  
-6. **Tiff Library** (libtiff).  
-   Tiff library can be obtained from: http://www.libtiff.org
-7. **Scons** version >= 2.0, for installation.  
-   It can be obtained from http://www.scons.org  
-   *NOTE: Scons is based on the Python language, so you need to have Python installed too.*
 
 
 ## HipGISAXS DIRECTORY LAYOUT
 
-    hipgisaxs
-    |- README     : Duh!
+    HipGISAXS
+    |- README.md  : Duh!
     |- LICENSE    : This contains all the licensing information for HipGISAXS.
     |- SConstruct : Scons file for installation.
     |- SConscript : Scons file for installation.
     |- bin        : This contains HipGISAXS binaries generated by compilation.
     |- build      : A few Makefiles for various systems are provided in this.
-    |- data       : This provides some sample input shape definition files in HDF5 format.
-    |- doc        : This contains detailed documentation of HipGISAXS.
-    |- inputs     : This gives some sample input files to HipGISAXS program in HiG format.
+    |- data       : This provides some sample input shape definition files.
+    |- doc        : This will contain detailed documentation of HipGISAXS.
+    |- extras     : This contains some extra stuff such as syntax highlighting config for Vim.
+    |- include    : All the source headers are within this directory. It contains subdirectories.
+    |- inputs     : This contains some sample input files in HiG format.
     |- lib        : The HipGISAXS library, libhipgisaxs.a, is generated here.
     |- man        : This has the man pages.
     |- obj        : All the object files generated during build are stored here.
     |- samples    : This contains some compilable samples on how to use the HipGISAXS library.
-    |- src        : This is the main source directory containing the whole code.
-                      It contains many subdirectories.
+    |- src        : This is the main source code directory. It contains many subdirectories.
 
 
 ## TO BUILD HIPGISAXS BINARY AND LIBRARY
@@ -148,93 +144,11 @@ NOTE: See Appendix at the end of this file for more detailed and customized buil
 
 
 ## TO RUN HIPGISAXS
-   
-### A. On a Linux/OS X machine with or without GPU
 1. Make sure all the paths (data, output) and other variables are correctly set in the input HiG file.
 2. Execute the binary with the input file as an argument. For example,  
    ```
    $ ./bin/hipgisaxs inputs/01-cylinder.hig
    ```
-
-### B. Interactively on the Dirac system at NERSC
-1. Unload the default PGI modules:  
-
-   ```
-   $ module unload pgi openmpi
-   ```
-2. Load the required modules:  
-
-   ```
-   $ module load openmpi-gnu gcc/4.5.2 cuda/4.2  
-   $ module load szip zlib  
-   $ module load hdf5-parallel/1.8.3-gnu  
-   ```
-3. Request an interactive GPU node:  
-
-   ```
-   $ qsub -I -V -q dirac_int -l nodes=1:ppn=8:fermi
-   ```
-4. Make sure loaded modules are correct. By default, PGI version of openMPI might be loaded, and needs to be unloaded:  
-
-   ```
-   $ module unload openmpi
-   ```
-5. Move to the work directory:  
-
-   ```
-   $ cd $PBS_O_WORKDIR
-   ```
-6. Execute on a single node:  
-
-   ```
-   $ ./bin/hipgisaxs inputs/01-cylinder.hig  
-   ```
-
-   NOTE: For details on running interactive jobs on Dirac, please refer to:
-    http://www.nersc.gov/users/computational-systems/dirac/running-jobs/interactive
-
-### C. Submit batch job to use multiple GPU nodes on the Dirac system at NERSC
-1. Create a job script. Example of such a file:  
-   ```
-   $ cat script.pbs
-
-   #PBS -q dirac_special
-   #PBS -l nodes=12:ppn=1:fermi
-   #PBS -l walltime=03:00:00
-   #PBS -A gpgpu
-   #PBS -N opv_new1.12
-   #PBS -e opv_new1.12.$PBS_JOBID.err
-   #PBS -o opv_new1.12.$PBS_JOBID.out
-   #PBS -V
-
-   cd $PBS_O_WORKDIR
-
-   module unload pgi openmpi
-   module load openmpi-gnu/1.4.5 gcc/4.5.4 cuda/4.2
-   module load szip zlib
-   module load hdf5-parallel/1.8.3-gnu
-
-   export PATH=/global/homes/a/asarje/local/tiff-4.0.2/bin:$PATH
-   export LD_LIBRARY_PATH=/global/homes/a/asarje/local/tiff-4.0.2/lib:$LD_LIBRARY_PATH
-
-   mpirun -np 4 ./bin/hipgisaxs inputs/10-flexrod.hig
-   ```
-2. In the submission script, make sure the modules are loaded correctly (see example above.)
-   For the execution command, use:
-
-   ```
-   mpirun -np <nodes> ./bin/hipgisaxs <input-file-in-HiG>  
-   ```
-   where, `<nodes>` is number of GPU nodes to use.
- 
-3. Submit the job script to the queue:
-
-   ```
-   $ qsub script.pbs
-   ```
-
-4. For detailed information on writing and submitting job scripts on Dirac, please refer to:
-    http://www.nersc.gov/users/computational-systems/dirac/running-jobs/batch
 
 
 ## INPUTS
@@ -250,7 +164,7 @@ The main components in the input file to update are the following:
        ...
        shape = {
     	   ...
-    	   name = "data/Shape_27.hd5"
+    	   name = "data/flexrod.obj"
        } ...
    ```
    This file needs to be either in HDF5 format or the OBJ format.  
@@ -262,7 +176,7 @@ The main components in the input file to update are the following:
       computation = {
     	  ...
     	  pathprefix = ".",
-    	  runname = "27",
+    	  runname = "myflexrod",
     	  ...
       } ...
    ```
@@ -275,7 +189,7 @@ The main components in the input file to update are the following:
       ...
       computation = {
     	  ...
-    	  resolution = [ 0.5 0.5 ],
+    	  resolution = [ 1000 500 ],
     	  ...
       } ...
    ```
