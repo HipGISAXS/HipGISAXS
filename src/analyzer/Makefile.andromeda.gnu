@@ -5,7 +5,7 @@ PETSC_VERSION = "36"
 
 MPI_DIR = /usr/local/openmpi
 #PETSC_DIR = /usr/local/petsc-3.4.3-gnu
-PETSC_DIR = /usr/local/petsc-3.6.2
+PETSC_DIR = /usr/local/petsc-3.6.3
 HIPGISAXS_DIR = ../..
 HDF5_DIR = /usr/local/hdf5-1.8.9
 TIFF_DIR = /usr/local/tiff-4.0.2
@@ -102,13 +102,13 @@ BINARY = analyze
 
 all: hipgisaxs
 
-test:
-	(make $(BINARY) \
-		"OBJECTS = $(OBJECTS) $(TEST_HIP_OBJS)")
-
 hipgisaxs:
 	(make $(BINARY) \
 		"OBJECTS = $(OBJECTS) $(HIP_OBJS)")
+
+test:
+	(make $(BINARY) \
+		"OBJECTS = $(OBJECTS) $(TEST_HIP_OBJS)")
 
 pounders:
 	(make $(BINARY) \

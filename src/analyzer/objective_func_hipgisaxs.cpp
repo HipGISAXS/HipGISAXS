@@ -246,7 +246,7 @@ namespace hig {
       unsigned int* mask_data = &(mask_data_[0]);
 //      unsigned int* mask_data = new (std::nothrow) unsigned int[n_par_ * n_ver_];
 //      memset(mask_data, 0, n_par_ * n_ver_ * sizeof(unsigned int));
-      std::cout << "============== " << n_par_ << " x " << n_ver_ << std::endl;
+      //std::cout << "============== " << n_par_ << " x " << n_ver_ << std::endl;
       (*pdist_)(gisaxs_data, ref_data, mask_data, n_par_ * n_ver_, curr_dist);
 //      delete[] mask_data;
 
@@ -254,8 +254,10 @@ namespace hig {
       std::string prefix(HiGInput::instance().param_pathprefix() + "/"
                 + HiGInput::instance().runname());
       std::ofstream out(prefix + "/convergance.dat", std::ios::app);
-      for(real_vec_t::const_iterator i = curr_dist.begin(); i != curr_dist.end(); ++ i)
+      for(real_vec_t::const_iterator i = curr_dist.begin(); i != curr_dist.end(); ++ i) {
         out << (*i) << " ";
+        //std::cerr << "----------------------> " << *i << " <---------------------" << std::endl;
+      } // for
       out << std::endl;
       out.close();
     } // if
