@@ -553,10 +553,28 @@ namespace hig {
       #ifdef USE_MPI
       } // if
       #endif
-      //std::cout << "@@@@ " << i + 1 << ": " << curr_fitness[0] << " "
-      //  << particles_[i].best_fitness_ << " [ ";
-      //for(int j = 0; j < num_params_; ++ j) std::cout << particles_[i].param_values_[j] << " ";
-      //std::cout << "]" << std::endl;
+
+      // write out the current status
+      #ifdef USE_MPI
+      if((*multi_node_).is_master(particle_comm_)) {  // only particle masters do it
+      #endif
+        std::stringstream cfilename_s;
+        cfilename_s << "convergence." << myrank << "." << i << ".dat";
+        std::string prefix(HiGInput::instance().param_pathprefix() + "/" + HiGInput::instance().runname());
+        std::ofstream out(prefix + "/" + cfilename_s.str(), std::ios::app);
+        out << myrank << "\t" << i << "\t" << curr_fitness[0] << "\t";
+        for(int j = 0; j < num_params_; ++ j) out << particles_[i].param_values_[j] << "\t";
+        out << particles_[i].best_fitness_ << "\t";
+        for(int j = 0; j < num_params_; ++ j) out << particles_[i].best_values_[j] << "\t";
+        out << std::endl;
+        out.close();
+        //std::cout << "@@@@ " << i + 1 << ": " << curr_fitness[0] << " "
+        //  << particles_[i].best_fitness_ << " [ ";
+        //for(int j = 0; j < num_params_; ++ j) std::cout << particles_[i].param_values_[j] << " ";
+        //std::cout << "]" << std::endl;
+      #ifdef USE_MPI
+      } // if
+      #endif
     } // for
 
     #ifdef USE_MPI
