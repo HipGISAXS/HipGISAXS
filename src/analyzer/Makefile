@@ -1,16 +1,10 @@
-
-#PETSC_VERSION = "34"
-#PETSC_VERSION = "35"
 PETSC_VERSION = "36"
 
 MPI_DIR = /usr/local/openmpi
 #PETSC_DIR = /usr/local/petsc-3.4.3-gnu
 PETSC_DIR = /usr/local/petsc
 HIPGISAXS_DIR = ../..
-HDF5_DIR = /usr/local/hdf5-1.8.9
-TIFF_DIR = /usr/local/tiff-4.0.2
 BOOST_DIR = /usr/local/boost
-SZIP_DIR = /usr/local/szip-2.1
 CUDA_DIR = /usr/local/cuda
 
 PREFIX = $(PWD)

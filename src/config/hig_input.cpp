@@ -807,6 +807,7 @@ namespace hig {
 
       case mean_token:
       case stddev_token:
+      case nsamples_token:
         break;
 
       case compute_token:
@@ -1239,6 +1240,20 @@ namespace hig {
           default:
             std::cerr <<"error:distribution is not implemented for this type yet" << std::endl;
             return false;
+        }
+        break;
+
+      case nsamples_token:
+        switch (get_curr_parent()){
+          case struct_grain_lattice_a_token:
+            curr_structure_.grain_scaling_a_nsamples(num);
+            break;
+          case struct_grain_lattice_b_token:
+            curr_structure_.grain_scaling_b_nsamples(num);
+            break;
+          case struct_grain_lattice_c_token:
+            curr_structure_.grain_scaling_c_nsamples(num);
+            break;
         }
         break;
 
