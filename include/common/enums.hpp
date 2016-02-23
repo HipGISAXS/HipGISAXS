@@ -30,15 +30,16 @@ namespace hig {
   enum ShapeName {
     shape_null,
     shape_error,
-    shape_box,        /* box */
-    shape_cylinder,      /* cylinder */
+    shape_cube,        /* cube ... same as box with 1 parameter for fitting */
+    shape_box,         /* box */
+    shape_cylinder,    /* cylinder */
     shape_sphere,      /* sphere */
-    shape_truncpyr,      /* truncated pyramid */
-    shape_trunccone,    /* truncated cone */
+    shape_truncpyr,    /* truncated pyramid */
+    shape_trunccone,   /* truncated cone */
     shape_prism3,      /* 3-fold prism */
     shape_prism6,      /* 6-fold prism */
-    shape_prism3x,      /* triangular grating in x direction */
-    shape_sawtooth,      /* sawtooth (prism along x) (same as above) */
+    shape_prism3x,     /* triangular grating in x direction */
+    shape_sawtooth,    /* sawtooth (prism along x) (same as above) */
     shape_random_cylinders,
     shape_horizontal_cylinder,
     // the following have not yet been defined or implemented ... :

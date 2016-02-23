@@ -39,6 +39,7 @@
 #include <utils/utilities.hpp>
 #include <numerics/matrix.hpp>
 #include <numerics/numeric_utils.hpp>
+#include <file/edf_reader.hpp>
 
 #if defined USE_GPU || defined FF_ANA_GPU || defined FF_NUM_GPU
   #include <init/gpu/init_gpu.cuh>
@@ -511,6 +512,24 @@ namespace hig {
             std::cout << "-- Saving raw data in " << data_file << " ... "
                 << std::flush;
             save_gisaxs(final_data, data_file);
+            std::cout << "done." << std::endl;
+
+            // Save the data into EDF file for HipIES (TODO: should change to Nexus file later)
+            std::string edf_file(HiGInput::instance().param_pathprefix() +
+                    "/" + HiGInput::instance().runname() +
+                    "/gisaxs_ai=" + alphai_s + "_rot=" + phi_s +
+                    "_tilt=" + tilt_s + ".edf");
+            std::cout << "-- Saving data in " << edf_file << " ... " << std::flush;
+            EDFWriter edf(edf_file.c_str());
+            edf.setEnergy(1.23984E+03 * k0_ / 2 / PI_);
+            edf.setSize(nrow_, ncol_);
+            vector2_t qmin = QGrid::instance().qmin();
+            vector2_t qmax = QGrid::instance().qmax();
+            real_t cx = -qmin[0] * (ncol_ - 1) / (qmax[0] - qmin[0]);
+            real_t cy = -qmin[1] * (nrow_ - 1) / (qmax[1] - qmin[1]);
+            edf.setCenter(cx, cy);
+            edf.sdd(QGrid::instance().alpha(0)); // alphas are stored in reverse order
+            edf.Write(final_data);
             std::cout << "done." << std::endl;
           } // if
 
@@ -1376,10 +1395,9 @@ namespace hig {
       iratios_sum += (*s).second.iratio();
     } // for
 
-    /*if(iratios_sum != 1.0) {
-      std::cerr << "error: iratios of all structures must add to 1.0 ("
-            << iratios_sum << ")" << std::endl;
-      return false;
+    if(iratios_sum != 1.0) {
+      for (int i = 0; i < iratios.size(); i++){
+        iratios[i] /= iratios_sum;
     } // if*/
 
     real_t* all_struct_intensity = NULL;

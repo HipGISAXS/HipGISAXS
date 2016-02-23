@@ -1154,6 +1154,10 @@ namespace hig {
         curr_structure_.percusyevick_putVolf(num);
 
       case struct_iratio_token:
+        if (num <= 0) {
+          std::cerr << "error: iratio can't be a negative number or zeros" << std::endl;
+          return false;
+        }
         curr_structure_.iratio(num);
         break;
 
@@ -1921,6 +1925,32 @@ namespace hig {
               std::cerr << "warning: ignoring the edge values given for cylinder shape"
                     << std::endl;
               break;
+            case param_baseangle:
+              // do nothing
+              break;
+            default:
+              std::cerr << "error: invalid parameter found in a shape" << std::endl;
+              return false;
+          } // switch
+          ++ param;
+        } // while
+        return true;
+
+      case shape_cube:
+        while(param != shape.param_end()) {
+          switch((*param).second.type()) {
+            case param_height:
+              max_dim[0] = max((*param).second.max(), (*param).second.min());
+              min_dim[0] = -max_dim[0];
+              max_dim[1] = max((*param).second.max(), (*param).second.min());
+              min_dim[1] = -max_dim[1];
+              max_dim[2] = max((*param).second.max(), (*param).second.min());
+              min_dim[2] = -max_dim[0];
+              break;
+            case param_xsize:
+            case param_ysize:
+            case param_radius:
+            case param_edge:
             case param_baseangle:
               // do nothing
               break;
