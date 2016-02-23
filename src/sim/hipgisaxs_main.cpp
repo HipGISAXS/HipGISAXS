@@ -1396,7 +1396,7 @@ namespace hig {
     } // for
 
     if(iratios_sum != 1.0) {
-      for (int i = 0; i < iratios.size(); i++){
+      for (int i = 0; i < iratios.size(); i++)
         iratios[i] /= iratios_sum;
     } // if*/
 
