@@ -35,7 +35,6 @@ hipGisaxsInput = {
 		runname = "cyl",						# name for current run and folder name for outputs
 		method = "dwba",						# theorical approach (see list)
 		outputregion = { type = "qspace" , minpoint = [ 0 0 ], maxpoint = [ 3 3 ] },
-#		outputregion = { type = "qspace", minpoint = [ 0 0 ], maxpoint = [ 0.2 1 ] },	# data space
 		resolution = [ 0.5 0.5 ],				# number of q points per pixel
 		nslices = 0								# max number of slices for slicing algorithm
 	},
@@ -53,16 +52,9 @@ hipGisaxsInput = {
 			init = 9
 		},
 		referencedata = {
-			path = "/home/asarje/hipgisaxs-samples.git/outputs/01-cylinder/gisaxs_ai=0.14_rot=0_tilt=0.out",										# path to reference data.
-#			path = "/home/asarje/hipgisaxs.git/src/analyzer/poly_one_ref_40_120.dat",
-#			path = "/home/asarje/hipgisaxs.git/src/analyzer/poly_one_ref_30_80_-0.2-0.2-0.01.dat",
-															# should include axes vectors
+			path = "/home/asarje/hipgisaxs-samples.git/outputs/01-cylinder/gisaxs_ai=0.14_rot=0_tilt=0.out",
 			fitregion = { type = "qspace", regmin = [ 0 0 ], regmax = [ 3 3 ] },	# data space
-#			fitregion = { type = "qspace", regmin = [ 0 0 ], regmax = [ 0.2 1 ] },	# data space
 			npoints = { parallel = 1500, perpendicular = 749 }	# number of image points to take inside
-#			npoints = { parallel = 20, perpendicular = 1 }	# number of image points to take inside
-															# the region. overrides simulation output
-															# region defined above
 		},
 		algorithm = {
 			algoname = "pso",					# name of the analysis algorithm

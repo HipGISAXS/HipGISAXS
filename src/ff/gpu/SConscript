@@ -8,7 +8,7 @@ gpuenv.Tool('cuda')
 
 #CUDA_INCL = -I$(CUDA_DIR)/include
 #CUDA_LIBS = -L$(CUDA_DIR)/lib64 -lcudart -lcufft -lcudadevrt #-lnvToolsExt
-cuda_flags = ['-Xcompiler', '-fPIC', '-Xcompiler', '-fopenmp', '-m64', '-dc']
+cuda_flags = ['-Xcompiler', '-fPIC', '-Xcompiler', '-fopenmp', '-m64', '-dc', '-std=c++11' ]
 cuda_flags += ['-gencode', 'arch=compute_20,code=sm_20']
 cuda_flags += ['-gencode', 'arch=compute_20,code=compute_20']
 cuda_flags += ['-gencode', 'arch=compute_20,code=sm_21']

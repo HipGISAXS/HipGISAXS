@@ -157,7 +157,7 @@ namespace hig {
         case lattice_hcp:          // HCP
           a_[0] = 1; a_[1] = 0; a_[2] = 0;
           b_[0] = 0.5; b_[1] = 0.866; b_[2] = 0;
-          c_[0] = 0.5; c_[1] = 0.2887; c_[2] = 0.8166;
+          c_[0] = 0.5; c_[1] = 0.2887; c_[2] = 0.8165;
           t_[0] = 0; t_[1] = 0; t_[2] = 0;
           break;
 
@@ -633,6 +633,9 @@ namespace hig {
                   case stddev_token:
                     grain_.scaling_.stddev_[0] = new_val;
                     break;
+                  case nsamples_token:
+                    grain_.scaling_.nvals_[0] = new_val;
+                    break;
                   default:
                     std::cerr << "error: invalid keyword '" << keyword4 << "' in param '"
                               << rem_str3 << "'" << std::endl;
@@ -649,6 +652,9 @@ namespace hig {
                   case stddev_token:
                     grain_.scaling_.stddev_[1] = new_val;
                     break;
+                  case nsamples_token:
+                    grain_.scaling_.nvals_[0] = new_val;
+                    break;
                   default:
                     std::cerr << "error: invalid keyword '" << keyword4 << "' in param '"
                               << rem_str3 << "'" << std::endl;
@@ -664,6 +670,9 @@ namespace hig {
                     break;
                   case stddev_token:
                     grain_.scaling_.stddev_[2] = new_val;
+                    break;
+                  case nsamples_token:
+                    grain_.scaling_.nvals_[0] = new_val;
                     break;
                   default:
                     std::cerr << "error: invalid keyword '" << keyword4 << "' in param '"

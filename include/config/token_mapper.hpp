@@ -264,6 +264,7 @@ namespace hig {
         KeyWords_[std::string("zrot")]            = shape_zrot_token;
         KeyWords_[std::string("mean")]            = mean_token;
         KeyWords_[std::string("stddev")]          = stddev_token;
+        KeyWords_[std::string("nsamples")]        = nsamples_token;
         KeyWords_[std::string("paracrystal")]     = struct_paracrystal;
         KeyWords_[std::string("percusyevick")]    = struct_percusyevick;
         KeyWords_[std::string("dimensions")]      = struct_dims;
@@ -276,6 +277,7 @@ namespace hig {
         /* shape name keywords */
 
         ShapeKeyWords_[std::string("box")]        = shape_box;
+        ShapeKeyWords_[std::string("cube")]        = shape_cube;
         ShapeKeyWords_[std::string("cylinder")]   = shape_cylinder;
         ShapeKeyWords_[std::string("hcylinder")]  = shape_horizontal_cylinder;
         ShapeKeyWords_[std::string("randcylinders")]  = shape_random_cylinders;

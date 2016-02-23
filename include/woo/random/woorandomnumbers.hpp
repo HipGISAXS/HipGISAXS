@@ -26,9 +26,6 @@ namespace woo {
 			virtual void reset() = 0;				// reset the random number generator
 			virtual void reset(unsigned int) = 0;	// reset the random number generator with seed
 
-			//virtual double min() = 0;					// return the min number
-			//virtual double max() = 0;					// return the max number
-
 			virtual double rand() = 0;				// returns a random number in [0,1]
 			virtual double rand_last() = 0;			// returns the last generated random number
 	}; // class WooRandomNumberGenerator

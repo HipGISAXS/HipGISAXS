@@ -81,7 +81,14 @@ namespace hig {
 //    #endif // TIME_DETAIL_1
 
     switch(shape) {
-      case shape_box:            // cube or box
+      case shape_cube:            // cube 
+        if(!compute_cube(nqx_, nqy_, nqz_, ff, params, tau, eta, transvec)) {
+          std::cerr << "error: something went wrong while computing FF for a cube"
+                << std::endl;
+          return false;
+        } // if
+        break;
+      case shape_box:            // box
         if(!compute_box(nqx_, nqy_, nqz_, ff, shape, params, tau, eta, transvec)) {
           std::cerr << "error: something went wrong while computing FF for a box"
                 << std::endl;

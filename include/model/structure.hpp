@@ -374,6 +374,7 @@ namespace hig {
       void scaling_dist(std::vector<StatisticType> s) { scaling_.dist_ = s; }
       void scaling_mean(vector3_t d) { scaling_.mean_ = d; }
       void scaling_stddev(vector3_t d) { scaling_.stddev_ = d; }
+      void scaling_nsamples(std::vector<int> d) { scaling_.nvals_ = d; }
 
       void lattice_type(LatticeType l) { lattice_.type(l); }
       void lattice_hkl(std::string l) { lattice_.hkl(l); }
@@ -514,6 +515,9 @@ namespace hig {
       void grain_scaling_a_stddev (real_t num) { grain_.scaling_.stddev_[0] = num; }
       void grain_scaling_b_stddev (real_t num) { grain_.scaling_.stddev_[1] = num; } 
       void grain_scaling_c_stddev (real_t num) { grain_.scaling_.stddev_[2] = num; }
+      void grain_scaling_a_nsamples (int num) { grain_.scaling_.nvals_[0] = num; }
+      void grain_scaling_b_nsamples (int num) { grain_.scaling_.nvals_[1] = num; }
+      void grain_scaling_c_nsamples (int num) { grain_.scaling_.nvals_[2] = num; }
 
       void ensemble_spacing(vector3_t v) { ensemble_.spacing(v); }
       void ensemble_maxgrains(vector3_t v) { ensemble_.maxgrains(v); }
