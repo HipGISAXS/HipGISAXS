@@ -1,7 +1,8 @@
 " VIM syntax file
 " Language: HipGISAXS input file format
 " Maintainer: Abhinav Sarje <asarje@lbl.gov>
-" Latest Revision: June 9 2012
+" Created: June 09 2012
+" Revised: March 05 2016
 
 if exists("b:current_syntax")
 	finish
