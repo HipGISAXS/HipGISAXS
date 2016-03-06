@@ -19,7 +19,7 @@ intel:
 		)
 
 bragg-gnu:
-	(  $(MAKE) hipgisaxs                                      \
+	( $(MAKE) hipgisaxs install                               \
 		"CXX = mpicxx"                                          \
 		"CXX_FLAGS = -std=c++11 -fopenmp -DUSE_MPI"             \
 		"CXX_FLAGS += -O3"                                      \
@@ -33,7 +33,7 @@ bragg-gnu:
 		)
 
 andromeda-gnu:
-	(  $(MAKE) hipgisaxs                                      \
+	( $(MAKE) hipgisaxs install                               \
 		"MPI_DIR = /usr/local/openmpi"                          \
 		"PETSC_DIR = /usr/local/petsc-3.6.3"                    \
 		"PETSC_VERSION = \"3.6\""                               \
@@ -55,7 +55,7 @@ andromeda-gnu:
 
 # with intel don't use mpi for now as it has not been tested
 andromeda-intel:
-	( $(MAKE) hipgisaxs                                       \
+	( $(MAKE) hipgisaxs install                               \
 		"PETSC_DIR = /usr/local/petsc-3.6.2"                    \
 		"PETSC_VERSION = \"3.6\""                               \
 		"HIPGISAXS_DIR = $(HOME)/hipgisaxs.edison.git"          \
@@ -74,9 +74,9 @@ andromeda-intel:
 		)
 
 nersc-intel:
-	( $(MAKE) hipgisaxs                                       \
+	( $(MAKE) hipgisaxs install                               \
 		"PETSC_DIR = $(PETSC_DIR)"                              \
-		"PETSC_VERSION = \"3.5\""                               \
+		"PETSC_VERSION = \"3.6\""                               \
 		"HIPGISAXS_DIR = ../.."                                 \
 		"BOOST_DIR = $(BOOST_DIR)"                              \
 		"HDF5_DIR = $(HOME)/local/hdf5-1.8.9-edison-intel"      \
@@ -93,9 +93,9 @@ nersc-intel:
 		)
 
 nersc-gnu:
-	( $(MAKE) hipgisaxs                                       \
+	( $(MAKE) hipgisaxs install                               \
 		"PETSC_DIR = $(PETSC_DIR)"                              \
-		"PETSC_VERSION = \"3.5\""                               \
+		"PETSC_VERSION = \"3.6\""                               \
 		"HIPGISAXS_DIR = ../.."                                 \
 		"BOOST_DIR = $(BOOST_DIR)"                              \
 		"HDF5_DIR = $(HOME)/local/hdf5-1.8.9-edison-gnu"        \
@@ -112,7 +112,7 @@ nersc-gnu:
 		)
 
 titan-gnu:
-	( $(MAKE) hipgisaxs                                       \
+	( $(MAKE) hipgisaxs install                               \
 		"PETSC_DIR = $(PETSC_DIR)"                              \
 		"PETSC_VERSION = \"3.6\""                               \
 		"HIPGISAXS_DIR = ../.."                                 \
@@ -286,7 +286,7 @@ errormsg:
 	@echo "          bragg-gnu"
 	@echo "          nersc-intel"
 	@echo "          nersc-gnu"
-	@echo "          titan-intel"
+	@echo "          titan-gnu"
 	@echo ""
 	@echo "options: none yet."
 	@echo ""
