@@ -194,6 +194,14 @@ namespace hig {
           return true;
         #endif
       } // is_master()
+      int rank() {
+        #ifdef USE_MPI
+          return multi_node_.rank(sim_comm_);
+        #else
+          return 0;
+        #endif
+      } // is_master()
+
       // fitting related ... TODO: improve
       std::vector <std::string> fit_param_keys() const {
         return HiGInput::instance().fit_param_keys();

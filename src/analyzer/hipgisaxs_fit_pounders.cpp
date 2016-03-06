@@ -32,7 +32,7 @@ namespace hig {
   bool FitPOUNDERSAlgo::run(int argc,char **argv, int img_num) {
     if(!(*obj_func_).set_reference_data(img_num)) return false;
 
-    static char help[] = "Running POUNDERS fitting...";
+    static char help[] = "** Attempting fitting using Pounders algorithm...";
     std::cout << help << std::endl;
 
     int size, rank;
@@ -85,8 +85,9 @@ namespace hig {
       TaoGetHistory(tao, 0, 0, 0, &nhist);
     #endif
 
-    //for(int i = 0; i < nhist; ++ i) PetscPrintf(PETSC_COMM_WORLD, "%G\t%G\n", hist[i], resid[i]);
-    for(int i = 0; i < nhist; ++ i) PetscPrintf(PETSC_COMM_WORLD, "%g\t%g\n", hist[i], resid[i]);
+    PetscPrintf(PETSC_COMM_WORLD, "** History:\n");
+    for(int i = 0; i < nhist; ++ i)
+      PetscPrintf(PETSC_COMM_WORLD, "** %d:\t%g\t%g\n", i, hist[i], resid[i]);
 
     PetscInt iterate;
     PetscReal f_cv, gnorm, cnorm, xdiff, *x_cv;
@@ -96,13 +97,13 @@ namespace hig {
 
     xn_.clear();
     for(PetscInt j = 0; j < num_params_; ++ j) {
-      VecGetValues(x0, 1 , &j , y);
+      VecGetValues(x0, 1, &j, y);
       xn_.push_back(y[0]);
     } // for
 
-    std::cout << "Converged vector: ";
+    std::cout << "** Final vector: [ ";
     for(real_vec_t::iterator i = xn_.begin(); i != xn_.end(); ++ i) std::cout << *i << " ";
-    std::cout << std::endl;
+    std::cout << "]" << std::endl;
 
     ierr = TaoDestroy(&tao);
     ierr = VecDestroy(&x0);
@@ -113,7 +114,7 @@ namespace hig {
 
 
   void FitPOUNDERSAlgo::print() {
-    //std::cout << get_type_string() << " - Parameters: default." <<std::endl;
+    // ...
   } // FitPOUNDERSAlgo::print()
 
 } // namespace hig

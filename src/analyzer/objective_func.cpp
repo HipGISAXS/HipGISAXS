@@ -16,49 +16,44 @@ namespace hig {
 
   // used in pounders
   PetscErrorCode EvaluateFunction(TaoSolver tao, Vec X, Vec F, void *ptr) {
-//    PetscFunctionBegin;
     PetscErrorCode ierr;
-
     PetscReal *x, *ff;
-    int data_size = ((ObjectiveFunction*) ptr)->data_size();
-    int num_params = ((ObjectiveFunction*) ptr)->num_fit_params();
+    int data_size = ((ObjectiveFunction*)ptr)->data_size();
+    int num_params = ((ObjectiveFunction*)ptr)->num_fit_params();
 
     ierr = VecGetArray(X, &x); CHKERRQ(ierr);
-        ierr = VecGetArray(F, &ff); CHKERRQ(ierr);
+    ierr = VecGetArray(F, &ff); CHKERRQ(ierr);
 
     real_vec_t params;
     for(int i = 0; i < num_params; ++ i) params.push_back(x[i]);
     // run objective function
-    real_vec_t temp = (*(ObjectiveFunction*) ptr)(params);
+    std::cout << "++ evaluating objective function..." << std::endl;
+    real_vec_t temp = (*(ObjectiveFunction*)ptr)(params);
     real_t err = 0.0;
     real_t* ref_data = (*(ObjectiveFunction*) ptr).get_reference_data();
     unsigned int* mask_data = (*(ObjectiveFunction*) ptr).get_mask_data();
     for(int i = 0; i < data_size; ++ i) {
       ff[i] = mask_data[i] * temp[i];
-      ff[i] = temp[i];
       if(i == data_size - 1) std::cout << i << "," << ff[i] << std::endl;
-      //err += mask_data[i] * (temp[i] * temp[i] / ref_data[i]);
-      //err += mask_data[i] * (temp[i] * temp[i]);
       err += ff[i] * ff[i];
     } // for
 
     ierr = VecRestoreArray(F, &ff); CHKERRQ(ierr);
+    std::cout << "** Distance = " << err << std::endl;
 
-    std::cout << "Distance = " << err << std::endl;
-//    std::cout << "Eval X =\n" ;
-//    VecView(X, PETSC_VIEWER_STDOUT_WORLD);
-
-//    PetscFunctionReturn(0);
     return 0;
   } // EvaluateFunction()
 
 
   // used in lmvm
   PetscReal EvaluateFunction(TaoSolver tao, real_vec_t X, void *ptr) {
-    std::cout << "evaluate function ..." << std::endl;
-    // Compute F(X)
+    std::cout << "++ evaluating objective function..." << std::endl;
     real_vec_t temp = (*(ObjectiveFunction*) ptr)(X);
-    std::cout << "*********************** " << temp[0] << std::endl;
-        return  (PetscReal) temp[0];
+    real_t dist = temp[0];
+    std::cout << "** Distance = " << dist << std::endl;
+
+    return (PetscReal) dist;
   } // EvaluateFunction()
+
+
 } // namespace hig

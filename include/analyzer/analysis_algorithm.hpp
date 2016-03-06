@@ -20,14 +20,14 @@ namespace hig {
 
     protected:
       bool is_valid_;
-      FittingAlgorithmName name_;    // algorithm name
-      ObjectiveFunction* obj_func_;  // the objective function
-      real_t tol_;            // error tolerance
-      int max_iter_;          // max num of iterations
-      int max_hist_;          // max history
-      int num_params_;        // number of parameters
-      real_vec_t x0_;        // initial param values
-      real_vec_t xn_;        // final param values
+      FittingAlgorithmName name_;   // algorithm name
+      ObjectiveFunction* obj_func_; // the objective function
+      real_t tol_;                  // error tolerance
+      int max_iter_;                // max num of iterations
+      int max_hist_;                // max history
+      int num_params_;              // number of parameters
+      real_vec_t x0_;               // initial param values
+      real_vec_t xn_;               // final param values
 
     public:
       AnalysisAlgorithm(): max_iter_(200), max_hist_(100), tol_(1e-4), num_params_(0) { }
@@ -41,7 +41,7 @@ namespace hig {
       ~AnalysisAlgorithm() { }
 
       bool init_params(const real_vec_t& X0);
-      void set_objective_function(ObjectiveFunction* func) { obj_func_= func;  }
+      void set_objective_function(ObjectiveFunction* func) { obj_func_= func; }
 
       real_vec_t get_param_values() { return xn_; }
 
