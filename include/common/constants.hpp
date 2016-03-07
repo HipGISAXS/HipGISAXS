@@ -47,6 +47,9 @@ namespace hig {
   const complex_t CMPLX_ONE_  = complex_t(REAL_ZERO_, REAL_ONE_);
   const complex_t CMPLX_MINUS_ONE_ = complex_t(REAL_ZERO_, REAL_MINUS_ONE_);
 
+  // miscellaneous helpers
+  // const int VERBOSE_LEVEL_ONE = 1;
+
 } // namespace
 
 #endif // __CONSTANTS_HPP__

@@ -33,7 +33,7 @@ namespace hig {
     if(!(*obj_func_).set_reference_data(img_num)) return false;
 
     static char help[] = "** Attempting fitting using Pounders algorithm...";
-    std::cout << help << std::endl;
+    std::cout << help << " [ " << img_num << " ]" << std::endl;
 
     int size, rank;
     PetscErrorCode ierr;

@@ -47,6 +47,15 @@
 #endif
 
 
+// TODO ... put this in a better place
+#define VERBOSE_LEVEL_ZERO 0
+#define VERBOSE_LEVEL_ONE  1
+#define VERBOSE_LEVEL_TWO  2
+
+#ifndef VERBOSE_LEVEL
+#define VERBOSE_LEVEL VERBOSE_LEVEL_ONE
+#endif
+
 namespace hig {
 
   HipGISAXS::HipGISAXS(int narg, char** args): freq_(0.0), k0_(0.0),
@@ -685,12 +694,10 @@ namespace hig {
     if(tilt_step == 0) num_tilt = 1;
     else num_tilt = (tilt_max - tilt_min) / tilt_step + 1;
     if(num_alphai > 1 || num_phi > 1 || num_tilt > 1) {
-      if(master)
-        std::cerr << "error: currently you can simulate only for single "
-              << "alpha_i, phi and tilt angles"
-              << std::endl;
+      if(master) std::cerr << "error: currently you can simulate only for single "
+                           << "alpha_i, phi and tilt angles for fitting!" << std::endl;
       // TODO ...
-      return -1.0;
+      return false;
     } // if
 
     woo::BoostChronoTimer sim_timer;
@@ -699,7 +706,9 @@ namespace hig {
     real_t alphai = alpha_i * PI_ / 180;
     real_t phi_rad = phi_min * PI_ / 180;
     real_t tilt_rad = tilt_min * PI_ / 180;
+    #if VERBOSE_LEVEL > VERBOSE_LEVEL_ZERO
     if(master) std::cout << "-- Computing GISAXS ... " << std::endl << std::flush;
+    #endif
     /* run a gisaxs simulation */
     if(!run_gisaxs(alpha_i, alphai, phi_rad, tilt_rad, final_data,
           #ifdef USE_MPI
@@ -710,9 +719,11 @@ namespace hig {
       return -1.0;
     } // if
     sim_timer.stop();
+    #if VERBOSE_LEVEL > VERBOSE_LEVEL_ZERO
     if(master)
       std::cout << "**        Total Simulation time: " << sim_timer.elapsed_msec()
             << " ms." << std::endl;
+    #endif
 
     // temporary for testing ...
     /*if(master) {
@@ -828,9 +839,11 @@ namespace hig {
       // get the shape
       // compute t, lattice, ndoms, dd, nn, id etc.
 
+      #if VERBOSE_LEVEL > VERBOSE_LEVEL_ONE
       if(smaster) {
         std::cout << "-- Processing structure " << s_num + 1 << " ..." << std::endl;
       } // if
+      #endif
 
       Structure *curr_struct = &((*s).second);
       Lattice *curr_lattice = (Lattice*) HiGInput::instance().lattice(*curr_struct);
@@ -880,9 +893,11 @@ namespace hig {
         r3axis = (int) (*s).second.rotation_rot3()[0];
       }
 
+      #if VERBOSE_LEVEL > VERBOSE_LEVEL_ONE
       if(smaster) {
         std::cout << "-- Grains: " << num_grains << std::endl;
       } // if
+      #endif
 
       //std::cout << "DD: " << std::endl;
       //for(unsigned int d = 0; d < num_grains; ++ d) {
@@ -1025,10 +1040,12 @@ namespace hig {
       // loop over grains - each process processes num_gr grains
       for(int grain_i = grain_min; grain_i < grain_max; grain_i ++) {  // or distributions
 
+        #if VERBOSE_LEVEL > VERBOSE_LEVEL_ONE
         if(gmaster) {
           std::cout << "-- Processing grain " << grain_i + 1 << " / " << num_grains << " ..."
                 << std::endl;
         } // if
+        #endif
 
         // define r_norm (grain orientation by tau and eta)
         // define full grain rotation matrix r_total = r_phi * r_norm
@@ -1127,10 +1144,12 @@ namespace hig {
         } // for e
 
         fftimer.stop();
-#ifndef FF_VERBOSE
+        #if VERBOSE_LEVEL > VERBOSE_LEVEL_ONE
+        #ifndef FF_VERBOSE
           std::cout << "**               FF compute time: "
                     << fftimer.elapsed_msec() << " ms." << std::endl;
-#endif
+        #endif
+        #endif
         /*if(!check_finite(&ff[0], ff.size())) {
           std::cerr << "** ARRAY CHECK ** ff failed check" << std::endl;
         } // if*/
@@ -1157,10 +1176,12 @@ namespace hig {
           else
             grain_repeats = all_grains_repeats[0]; // same repeat for all grains
 
-#ifdef SF_VERBOSE
+          #if VERBOSE_LEVEL > VERBOSE_LEVEL_ONE
+          #ifdef SF_VERBOSE
           std::cout << "-- Distribution sample " << i_scale + 1 << " / "
               << scaling_samples.size() << ".\n";
- #endif
+           #endif
+           #endif
 
           /* calulate structure factor for the grain */
           real_t weight = gauss_weight * scaling_wght;
@@ -1243,11 +1264,13 @@ namespace hig {
           //sf.clear(); // clean structure factor
         } // for i_scale
         sftimer.stop();
+        #if VERBOSE_LEVEL > VERBOSE_LEVEL_ONE
         #ifndef SF_VERBOSE
           std::cout << "**               SF compute time: "
                     << sftimer.elapsed_msec() << " ms." << std::endl;
         #else
           std::cout << sftimer.elapsed_msec() << " ms." << std::endl;
+        #endif
         #endif
 
         // clean form factor before going to next
@@ -1501,16 +1524,20 @@ namespace hig {
       real_t sigma = HiGInput::instance().scattering_smearing();
       if(sigma > 0.0) {
         woo::BoostChronoTimer smear_timer;
+        #if VERBOSE_LEVEL > VERBOSE_LEVEL_ONE
         std::cout << "-- Smearing the result with sigma = " << sigma << " ... " << std::flush;
+        #endif
         if(img3d == NULL) {
           std::cerr << "error: there is no img3d. you are so in the dumps!" << std::endl;
         } // if
         smear_timer.start();
         gaussian_smearing(img3d, sigma);
         smear_timer.stop();
+        #if VERBOSE_LEVEL > VERBOSE_LEVEL_ONE
         std::cout << "done." << std::endl;
         std::cout << "**                 Smearing time: "
-              << smear_timer.elapsed_msec() << " ms." << std::endl;
+                  << smear_timer.elapsed_msec() << " ms." << std::endl;
+        #endif
       } // if
     } // if master
 
@@ -2399,11 +2426,13 @@ namespace hig {
    */
 
   bool HipGISAXS::update_params(const map_t& params) {
-    std::cout << "Updating HipGISAXS parameters: ";
+    #if VERBOSE_LEVEL > VERBOSE_LEVEL_ONE
+    std::cout << "** Updating HipGISAXS parameters: ";
     for(map_t::const_iterator i = params.begin(); i != params.end(); ++ i)
-      std::cout << (*i).first << " = " << (*i).second << "; ";
+      std::cout << (*i).first << " = " << (*i).second << "\t";
     std::cout << std::endl;
     //HiGInput::instance().print_all();
+    #endif
     return HiGInput::instance().update_params(params);
   } // HipGISAXS::update_params()
 
