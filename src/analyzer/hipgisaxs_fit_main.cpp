@@ -75,16 +75,16 @@ int main(int narg, char** args) {
 
     if(algo == hig::algo_pounders) {
       hip_func.set_distance_measure(new ResidualVector());
-      ana.add_analysis_algo(new hig::FitPOUNDERSAlgo(&hip_func));
+      ana.add_analysis_algo(new hig::FitPOUNDERSAlgo(narg, args, &hip_func, i));
     } else if(algo == hig::algo_lmvm) {
       hip_func.set_distance_measure(new AbsoluteDifferenceSquare());
-      ana.add_analysis_algo(new hig::FitLMVMAlgo(&hip_func));
+      ana.add_analysis_algo(new hig::FitLMVMAlgo(narg, args, &hip_func, i));
     } else if(algo == hig::algo_pso) {
       hip_func.set_distance_measure(new AbsoluteDifferenceSquareNorm());
       ana.add_analysis_algo(new hig::ParticleSwarmOptimization(narg, args, &hip_func, i, false, 0));
     } else if(algo == hig::algo_bruteforce) {
       hip_func.set_distance_measure(new AbsoluteDifferenceSquareNorm());
-      ana.add_analysis_algo(new hig::BruteForceOptimization(narg, args, &hip_func));
+      ana.add_analysis_algo(new hig::BruteForceOptimization(narg, args, &hip_func, i));
     } else if(algo == hig::algo_error) {
       std::cerr << "error: unknown optimization algorithm encountered" << std::endl;
       return -1;

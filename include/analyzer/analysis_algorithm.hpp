@@ -43,7 +43,8 @@ namespace hig {
       bool init_params(const real_vec_t& X0);
       void set_objective_function(ObjectiveFunction* func) { obj_func_= func; }
 
-      real_vec_t get_param_values() { return xn_; }
+      real_vec_t get_param_values() const { return xn_; }
+      real_t tolerance() const { return tol_; }
 
       virtual bool run(int, char**, int) = 0;
 

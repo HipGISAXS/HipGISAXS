@@ -13,7 +13,7 @@
 
 namespace hig {
 
-  BruteForceOptimization::BruteForceOptimization(int narg, char** args, ObjectiveFunction* obj) {
+  BruteForceOptimization::BruteForceOptimization(int narg, char** args, ObjectiveFunction* obj, unsigned int algo_num) {
     name_ = algo_bruteforce;
     obj_func_ = obj;
     num_params_ = (*obj_func_).num_fit_params();
@@ -29,10 +29,10 @@ namespace hig {
     } // for
 
     tol_ = 0;        // not used
-    max_iter_ = 0;      // not used
-    max_hist_ = 0;    // not used
+    max_iter_ = 0;   // not used
+    max_hist_ = 0;   // not used
 
-    x0_ = x_min_;      // initial vector is min of all
+    x0_ = x_min_;    // initial vector is min of all
     xn_.clear();
     error_list_.clear();
   } // BruteForceOptimization::BruteForceOptimization()

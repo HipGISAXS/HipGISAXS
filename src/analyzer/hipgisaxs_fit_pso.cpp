@@ -25,8 +25,8 @@ namespace hig {
       bool tune_omega = false, int type = 0) :
         rand_(time(NULL)), type_(type) {
     name_ = algo_pso;
-    max_hist_ = 100;      // not used ...
-    tol_ = 1e-8;
+    max_hist_ = 100;      // not used in pso
+    tol_ = 1e-6;          // default?
 
     obj_func_ = obj;
 
@@ -43,11 +43,9 @@ namespace hig {
     tune_omega_ = tune_omega;
 
     // get number of particles
-    //num_particles_ = atoi(args[2]);
     num_particles_ = npart;
     num_particles_global_ = npart;
     // max number of generations
-    //max_iter_ = atoi(args[3]);
     max_iter_ = ngen;
 
     init();
@@ -59,7 +57,8 @@ namespace hig {
       rand_(time(NULL)), type_(type) {
     name_ = algo_pso;
     max_hist_ = 100;
-    tol_ = 1e-8;
+    //tol_ = 1e-8;
+    tol_ = HiGInput::instance().analysis_tolerance(algo_num);
 
     obj_func_ = obj;
 
@@ -222,13 +221,14 @@ namespace hig {
     } // if
 
     if(is_master()) {
-      std::cout << "** PSO Parameters: Omega = " << pso_omega_ << std::endl
-            << "                   Phi1  = " << pso_phi1_ << std::endl
-            << "                   Phi2  = " << pso_phi2_ << std::endl
-            << "                   Npart = " << num_particles_ << std::endl
-            << "                   Ngen  = " << max_iter_ << std::endl
-            << "     PSO Algorithm Type  = " << type_ << std::endl
-            << "            Tune Omega?  = " << tune_omega_ << std::endl;
+      std::cout << "** Fitting Parameters: Tolerance = " << tol_ << std::endl
+                << "**     PSO Parameters:     Omega = " << pso_omega_ << std::endl
+                << "                     Tune Omega? = " << tune_omega_ << std::endl
+                << "                            Phi1 = " << pso_phi1_ << std::endl
+                << "                            Phi2 = " << pso_phi2_ << std::endl
+                << "                Number of Agents = " << num_particles_ << std::endl
+                << "           Number of Generations = " << max_iter_ << std::endl
+                << "            PSO Algorithm Flavor = " << type_ << std::endl;
     } // if
 
     return true;
