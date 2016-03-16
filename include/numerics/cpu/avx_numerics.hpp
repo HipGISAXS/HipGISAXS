@@ -253,8 +253,7 @@ namespace hig {
    */
 
   static inline avx_m256c_t avx_cbessj_cp(avx_m256c_t v, int o) {
-    // TODO: properly vectorize ...
-    // currently it converts to scalar, computes, and converts back to vector
+    // convert to scalar, compute, and convert back to vector
     avx_m256c_t res;
     __attribute__((aligned(32))) real_t real[AVX_VEC_LEN_], imag[AVX_VEC_LEN_];
     _mm256_store_pd(real, v.real);
@@ -268,12 +267,6 @@ namespace hig {
     res.imag = _mm256_load_pd(imag);
     return res;
   } // avx_cbessj_cp()
-
-  static inline avx_m256c_t avx_cbesselj_cp(avx_m256c_t v, int o) {
-    if(o == 1) return avx_cj1_cp(v);
-    std::cerr << "error: Bessel functions of order != 1 are not supported" << std::endl;
-    return v;
-  } // avx_cbesselj_cp()
 
   static inline avx_m256c_t avx_cj1_cp(avx_m256c_t v) {
     int MAXK = 1e5;
@@ -295,26 +288,29 @@ namespace hig {
     } else if(allnz) {  // all > threshold
       avx_m256_t ir = _mm256_div_pd(AVX_ONE_, r);
       avx_m256_t irk = ir;
-      avx_m256_t ak = AVX_ONE_;
-      avx_m256_t xk = ak;
+      avx_m256_t ak = AVX_ONE_;                 // a0 = 1
+      avx_m256_t xk = ak;                       // x0 = a0 / 1
       avx_m256_t xk_sum = xk;
+      ak = _mm256_set1_pd(0.375);               // a1 = 3 / 8
+      avx_m256_t yk = _mm256_mul_pd(ak, irk);   // y0 = a1 / z
+      avx_m256_t yk_sum = yk;
       int k = 1, m = 1;
       avx_m256_t t0, t1, t2, t3, t4, t5, t6, t7;
       for(; k < MAXK; ++ k) {
         m *= -1;
-        t0 = _mm_set1_pd(16. * k);
-        irk = _mm_mul_pd(irk, ir);
-        t1 = _mm_set1_pd(4. * k - 1.);
-        t2 = _mm_div_pd(_mm_sub_pd(4.0, _mm_mul_pd(t1, t1)), t0);
-        ak = _mm_mul_pd(ak, t2);
-        xk = _mm_mul_pd(_mm_set1_pd(m), _(_mm_mul_pd(ak, irk)));
-        xk_sum = _mm_add_pd(xk_sum, xk);
-        irk = _mm_mul_pd(irk, ir);
-        t1 = _mm_set1_pd(4. * k + 1.);
-        t2 = _mm_div_pd(_mm_sub_pd(4.0, _mm_mul_pd(t1, t1)), _mm_add_pd(t0, _mm_set1_pd(8.0)));
-        ak = _mm_mul_pd(ak, t2);
-        yk = _mm_mul_pd(_mm_set1_pd(m), _(_mm_mul_pd(ak, irk)));
-        yk_sum = _mm_add_pd(yk_sum, yk);
+        t0 = _mm256_set1_pd(16. * k);
+        irk = _mm256_mul_pd(irk, ir);
+        t1 = _mm256_set1_pd(4. * k - 1.);
+        t2 = _mm256_div_pd(_mm256_sub_pd(_mm256_set1_pd(4.0), _mm256_mul_pd(t1, t1)), t0);
+        ak = _mm256_mul_pd(ak, t2);
+        xk = _mm256_mul_pd(_mm256_set1_pd(m), _mm256_mul_pd(ak, irk));
+        xk_sum = _mm256_add_pd(xk_sum, xk);
+        irk = _mm256_mul_pd(irk, ir);
+        t1 = _mm256_set1_pd(4. * k + 1.);
+        t2 = _mm256_div_pd(_mm256_sub_pd(_mm256_set1_pd(4.0), _mm256_mul_pd(t1, t1)), _mm256_add_pd(t0, _mm256_set1_pd(8.0)));
+        ak = _mm256_mul_pd(ak, t2);
+        yk = _mm256_mul_pd(_mm256_set1_pd(m), _mm256_mul_pd(ak, irk));
+        yk_sum = _mm256_add_pd(yk_sum, yk);
         // if(fabs(xk) < REAL_EPSILON_ && fabs(yk) < REAL_EPSILON_) break;
         avx_m256_t xcmp = _mm256_cmp_pd(xk, AVX_EPSILON_, _CMP_GT_OS);
         avx_m256_t ycmp = _mm256_cmp_pd(yk, AVX_EPSILON_, _CMP_GT_OS);
@@ -342,6 +338,12 @@ namespace hig {
       // ...
     } // if-else
   } // avx_cj1_cp()
+
+  static inline avx_m256c_t avx_cbesselj_cp(avx_m256c_t v, int o) {
+    if(o == 1) return avx_cj1_cp(v);
+    std::cerr << "error: Bessel functions of order != 1 are not supported" << std::endl;
+    return v;
+  } // avx_cbesselj_cp()
 
 #else     // single precision
 

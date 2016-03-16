@@ -45,13 +45,13 @@ namespace hig {
 
 # if defined FF_CPU_OPT_MKL
   const int VEC_LEN = 400;            // vector length for MKL functions
-# elif defined FF_CPU_OPT_AVX
+# elif defined INTEL_AVX
 #   ifdef DOUBLEP
       const int AVX_VEC_LEN_ = 4;     // 256-bits = 4 doubles
 #   else
       const int AVX_VEC_LEN_ = 8;     // 256-bits = 8 singles
 #   endif // DOUBLEP
-# endif // FF_CPU_OPT_AVX
+# endif // INTEL_AVX
 
   // miscellaneous helpers
   // const int VERBOSE_LEVEL_ONE = 1;

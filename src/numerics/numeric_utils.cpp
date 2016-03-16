@@ -24,8 +24,11 @@
 #endif
 #include <cassert>
 
-#include <numerics/numeric_utils.hpp>
 #include <common/constants.hpp>
+#include <numerics/numeric_utils.hpp>
+#ifdef INTEL_AVX
+#include <numerics/cpu/avx_numerics.hpp>
+#endif // INTEL_AVX
 
 namespace hig {
 
@@ -110,22 +113,40 @@ namespace hig {
   } // cbessj()
 
   #ifdef FF_CPU_OPT
+  // using GNU math. assuming imaginary component is 0
   void cbessj_vec(const int VEC_LEN, complex_t* zz, int order, complex_t* res) {
     for(int i = 0; i < VEC_LEN; ++ i) res[i] = complex_t(j1(zz[i].real()), 0.0);
   } // cbessj()
   #endif // FF_CPU_OPT
 
 
+  // using new local implementation below
   complex_t cbesselj(complex_t z, int order) {
     if(order == 1) return cj1(z);
     std::cerr << "error: Bessel functions for order != 1 are not supported" << std::endl;
     return complex_t(0., 0.);
   } // cbesselj()
 
+  #ifdef FF_CPU_OPT
+  #ifdef FF_CPU_OPT_AVX
+  // using new local avx implementation (this is just a wrapper)
+  avx_m256c_t cbesselj_vec(avx_m256c_t z, int order) {
+    return avx_cbesselj_cp(z, order);
+  } // cbesselj()
+  #else
+  // using new local implementation below
+  complex_t cbesselj_vec(complex_t z, int order) {
+    if(order == 1) return cj1(z);
+    std::cerr << "error: Bessel functions for order != 1 are not supported" << std::endl;
+    return complex_t(0., 0.);
+  } // cbesselj()
+  #endif // FF_CPU_OPT_AVX
+  #endif // FF_CPU_OPT
+
   // Bessel function with MPFUN-fort's mpbesselj as reference.
   // MPFUN-fort is developed by David Bailey et al.
 
-  // bessel fuction with order 1
+  // generic implementation: bessel fuction with order 1
   complex_t cj1(complex_t z) {
     int MAXK = 1e5; // max number of iterations in the following
     // z = r + i, r = real, i = imaginary

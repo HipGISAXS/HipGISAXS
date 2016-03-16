@@ -84,6 +84,7 @@ namespace hig {
 
   inline bool AnalyticFormFactor::cylinder_kernel_opt(std::vector<real_t>& r, std::vector<real_t>& h,
                                                       vector3_t transvec, std::vector<complex_t>& ff_vec) {
+    std::cout << "** using AVX-based cylinder FF kernel"<< std::endl;
     real_t* qx = QGrid::instance().qx();
     real_t* qy = QGrid::instance().qy();
     complex_t* qz_extended = QGrid::instance().qz_extended();
