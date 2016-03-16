@@ -287,6 +287,7 @@ namespace hig {
     avx_m256_t AVX_ZERO_ = _mm256_setzero_pd();
     avx_m256_t AVX_ONE_ = _mm256_set1_pd(1.0);
     avx_m256_t AVX_ALLONE_ = _mm256_set1_pd(0xFFFFFFFFFFFFFFFF);
+    avx_m256_t AVX_EPSILON_ = _mm256_set1_pd(REAL_EPSILON_);
     int allz = _mm256_testc_pd(thmask, AVX_ZERO_);  // returns 1 iff all are 0 (all <= threshold)
     int allnz = _mm256_testc_pd(AVX_ALLONE_, thmask);  // returns 1 iff all are 1 (all > threshold)
     if(allz) {          // all <= threshold
@@ -314,7 +315,12 @@ namespace hig {
         ak = _mm_mul_pd(ak, t2);
         yk = _mm_mul_pd(_mm_set1_pd(m), _(_mm_mul_pd(ak, irk)));
         yk_sum = _mm_add_pd(yk_sum, yk);
-        // if(fabs(xk) < REAL_EPSILON_ && fabs(yk) < REAL_EPSILON_) break; // TODO ...
+        // if(fabs(xk) < REAL_EPSILON_ && fabs(yk) < REAL_EPSILON_) break;
+        avx_m256_t xcmp = _mm256_cmp_pd(xk, AVX_EPSILON_, _CMP_GT_OS);
+        avx_m256_t ycmp = _mm256_cmp_pd(yk, AVX_EPSILON_, _CMP_GT_OS);
+        int xcond = _mm256_testc_pd(xcmp, AVX_ZERO_);
+        int ycond = _mm256_testc_pd(ycmp, AVX_ZERO_);
+        if(xcond && ycond) break;
       } // for
       if(k == MAXK) {
         std::cerr << "error: Bessel loop overflow occured" << std::endl;
