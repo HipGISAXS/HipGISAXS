@@ -169,7 +169,7 @@ namespace hig {
 
     public:
       ParticleSwarmOptimization(int, char**, ObjectiveFunction*,
-                    real_t, real_t, real_t, int, int, bool, int);
+                                real_t, real_t, real_t, int, int, bool, int);
       ParticleSwarmOptimization(int, char**, ObjectiveFunction*, unsigned int, bool, int);
       ~ParticleSwarmOptimization();
 

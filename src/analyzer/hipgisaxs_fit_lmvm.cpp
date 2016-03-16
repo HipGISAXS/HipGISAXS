@@ -1,7 +1,7 @@
 /**
  *  Project: HipGISAXS
  *
- *  File: AnaAlgorithm.cpp
+ *  File: hipgisaxs_fit_lmvm.cpp
  *  Created: Dec 26, 2013
  *
  *  Author: Dinesh Kumar <dkumar@lbl.gov>
@@ -38,8 +38,8 @@ namespace hig {
 
     if(!(*obj_func_).set_reference_data(img_num)) return false;
 
-    static char help[] = "Running LMVM fitting...";
-    std::cout << help << " [" << img_num << "]" << std::endl;
+    static char help[] = "** Attempting fitting using LMVM algorithm...";
+    std::cout << help << " [ " << img_num << " ]" << std::endl;
 
     PetscErrorCode ierr;
     int size, rank;
@@ -87,18 +87,18 @@ namespace hig {
       TaoGetHistory(tao, 0, 0, 0, &nhist);
     #endif // PETSC_36
 
-    // print history and converged values to file
-    char filename[30];
-    sprintf(filename, "output_%.2f_%.2f.txt", x0_[0], x0_[1]);
-    std::fstream out(filename, std::ios::out);
-    if(!out.is_open()) {
-      std::cerr << "Error: unable to create new file" << std::endl;
-      exit(1);
-    } // if
+    // print history and converged values
+    //char filename[30];
+    //sprintf(filename, "output_%.2f_%.2f.txt", x0_[0], x0_[1]);
+    //std::fstream out(filename, std::ios::out);
+    //if(!out.is_open()) {
+    //  std::cerr << "error: unable to create new file" << std::endl;
+    //  exit(1);
+    //} // if
+    PetscPrintf(MPI_COMM_SELF, "** History:\n");
     for(int j = 0; j < nhist; ++ j) {
-      //PetscPrintf(MPI_COMM_SELF, "History: %G\t%G\n", hist[j], resid[j]);
-      PetscPrintf(MPI_COMM_SELF, "History: %g\t%g\n", hist[j], resid[j]);
-      out << "History: " << j << "\t" << hist[j] << "\t" << resid[j] << std::endl;
+      PetscPrintf(MPI_COMM_SELF, "** %d: %g\t%g\n", j, hist[j], resid[j]);
+      //out << "** " << j << ":\t" << hist[j] << "\t" << resid[j] << std::endl;
     } // for
 
     TaoGetSolutionVector(tao, &x0);
@@ -108,15 +108,15 @@ namespace hig {
       xn_.push_back(y[0]);
     } // for
 
-    std::cout << "Converged vector: ";
-    out << "Converged vector: ";
+    std::cout << "** Final vector: [ ";
+    //out << "** Final vector: [ ";
     for(real_vec_t::iterator i = xn_.begin(); i != xn_.end(); ++i) {
       std::cout << *i << " ";
-      out << *i << " ";
+      //out << *i << " ";
     } // for
-    std::cout << std::endl;
-    out << std::endl;
-    out.close();
+    std::cout << " ]" << std::endl;
+    //out << std::endl;
+    //out.close();
 
     ierr = VecDestroy(&x0);
     ierr = VecDestroy(&G);
@@ -128,7 +128,7 @@ namespace hig {
 
 
   void FitLMVMAlgo::print() {
-    //std::cout << get_type_string() << " - Parameters: default." <<std::endl;
+    // ...
   } // FitLMVMAlgo::print()
 
 

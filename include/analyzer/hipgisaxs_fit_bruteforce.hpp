@@ -6,12 +6,8 @@
  *  Modified: Wed 08 Oct 2014 12:11:48 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
- *  Developers: Slim Chourou <stchourou@lbl.gov>
- *              Abhinav Sarje <asarje@lbl.gov>
- *              Alexander Hexemer <ahexemer@lbl.gov>
- *              Xiaoye Li <xsli@lbl.gov>
  *
- *  Licensing: The AnalyzeHipGISAXS software is only available to be downloaded and
+ *  Licensing: The HipGISAXS software is only available to be downloaded and
  *  used by employees of academic research institutions, not-for-profit
  *  research laboratories, or governmental research facilities. Please read the
  *  accompanying LICENSE file before downloading the software. By downloading
@@ -40,10 +36,10 @@ namespace hig{
       bool save_history(char*);
 
     public:
-      BruteForceOptimization(int, char**, ObjectiveFunction*);
+      BruteForceOptimization(int, char**, ObjectiveFunction*, unsigned int);
       ~BruteForceOptimization();
 
-      bool run(int argc,char **argv, int);
+      bool run(int argc, char **argv, int);
   }; // class BruteForceOptimization
 
 } // namespace hig

@@ -332,6 +332,7 @@ namespace hig {
 
         /* fitting algorithm name keywords */
 
+        FittingAlgorithmKeyWords_[std::string("lmvm")]    = algo_lmvm;
         FittingAlgorithmKeyWords_[std::string("pounders")]    = algo_pounders;
         FittingAlgorithmKeyWords_[std::string("pso")]      = algo_pso;
         FittingAlgorithmKeyWords_[std::string("bruteforce")]  = algo_bruteforce;

@@ -59,7 +59,6 @@ namespace hig {
     mask_data_.clear();
     mask_set_ = false;
     pdist_ = NULL;
-    //curr_dist_.clear();
 
   } // HipGISAXSObjectiveFunction::HipGISAXSObjectiveFunction()
 
@@ -89,7 +88,7 @@ namespace hig {
     temp_ext[extlen] = '\0';
     std::string temp_ext2(temp_ext);
     std::string ext(temp_ext2.rbegin(), temp_ext2.rend());
-    std::cout << "EXTENSION = " << ext << std::endl;
+    std::cout << "-- Input pattern type: " << ext << std::endl;
     if(ext.compare(std::string("edf")) == 0) return reference_file_edf;
     if(ext.compare(std::string("EDF")) == 0) return reference_file_edf;
     if(ext.compare(std::string("txt")) == 0) return reference_file_ascii;
@@ -190,8 +189,7 @@ namespace hig {
       mask_data_.resize(n_par_ * n_ver_, 1);
       return true;
     } // if
-    //EDFReader edfreader(filename.c_str());
-    std::cout << "***** READING MASK EDF FILE " << filename << std::endl;
+    std::cout << "-- Reading mask data from " << filename << "..." << std::endl;
     EDFReader* edfreader = new EDFReader(filename.c_str());
     real_t* temp_data = NULL;
     unsigned int temp_n_par = 0, temp_n_ver = 0;
@@ -215,8 +213,9 @@ namespace hig {
     std::map <std::string, real_t> param_vals;
     for(int i = 0; i < x.size(); ++ i) param_vals[params[i]] = x[i];
 
+    std::cout << "-- Parameter values input to objective function: ";
     for(std::map<std::string, real_t>::iterator i = param_vals.begin(); i != param_vals.end(); ++ i)
-      std::cout << (*i).first << ": " << (*i).second << "  ";
+      std::cout << (*i).first << " = " << (*i).second << "\t";
     std::cout << std::endl;
 
     real_vec_t curr_dist;
@@ -228,7 +227,7 @@ namespace hig {
     if(hipgisaxs_.is_master()) {
       if(gisaxs_data == NULL) {
         std::cerr << "error: something went wrong in compute_gisaxs. gisaxs_data == NULL."
-              << std::endl;
+                  << std::endl;
         exit(-1);
       } // if
 
@@ -240,22 +239,19 @@ namespace hig {
 #endif // MEMDEBUG
 
       // compute error/distance
-      std::cout << "+++++ computing distance ..." << std::endl;
+      std::cout << "-- Computing distance..." << std::endl;
       real_t* ref_data = (*ref_data_).data();
-      if(ref_data == NULL) std::cerr << "woops: ref_data is NULL" << std::endl;
+      if(ref_data == NULL) std::cerr << "error: ref_data is NULL" << std::endl;
       unsigned int* mask_data = &(mask_data_[0]);
-//      unsigned int* mask_data = new (std::nothrow) unsigned int[n_par_ * n_ver_];
-//      memset(mask_data, 0, n_par_ * n_ver_ * sizeof(unsigned int));
-      std::cout << "============== " << n_par_ << " x " << n_ver_ << std::endl;
       (*pdist_)(gisaxs_data, ref_data, mask_data, n_par_ * n_ver_, curr_dist);
-//      delete[] mask_data;
 
       // write to output file
-      std::string prefix(HiGInput::instance().param_pathprefix() + "/"
-                + HiGInput::instance().runname());
-      std::ofstream out(prefix + "/convergance.dat", std::ios::app);
-      for(real_vec_t::const_iterator i = curr_dist.begin(); i != curr_dist.end(); ++ i)
-        out << (*i) << " ";
+      int myrank = hipgisaxs_.rank();
+      std::stringstream cfilename;
+      cfilename << "convergence." << myrank << ".dat";
+      std::string prefix(HiGInput::instance().param_pathprefix() + "/" + HiGInput::instance().runname());
+      std::ofstream out(prefix + "/" + cfilename.str(), std::ios::app);
+      for(real_vec_t::const_iterator i = curr_dist.begin(); i != curr_dist.end(); ++ i) out << *i << " ";
       out << std::endl;
       out.close();
     } // if
@@ -273,8 +269,9 @@ namespace hig {
       std::map <std::string, real_t> param_vals;
       for(int i = 0; i < x.size(); ++ i) param_vals[params[i]] = x[i];
 
+      std::cout << "-- Reference parameter values: ";
       for(std::map<std::string, real_t>::iterator i = param_vals.begin(); i != param_vals.end(); ++ i)
-        std::cout << (*i).first << ": " << (*i).second << "  ";
+        std::cout << (*i).first << " = " << (*i).second << "\t";
       std::cout << std::endl;
 
       // update and compute gisaxs
@@ -299,7 +296,7 @@ namespace hig {
     #endif // USE_MPI
     if(ref_data_ == NULL) ref_data_ = new ImageData(n_par_, n_ver_);
     (*ref_data_).set_data(gisaxs_data);
-    std::cout << "++ Reference data set after simulation" << std::endl;
+    std::cout << "** Reference data set after simulation" << std::endl;
 
     return true;
   } // ObjectiveFunction::operator()()

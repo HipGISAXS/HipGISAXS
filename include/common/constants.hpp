@@ -6,11 +6,6 @@
  *  Modified: Wed 08 Oct 2014 12:13:01 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
- *  Developers: Slim Chourou <stchourou@lbl.gov>
- *              Abhinav Sarje <asarje@lbl.gov>
- *              Elaine Chan <erchan@lbl.gov>
- *              Alexander Hexemer <ahexemer@lbl.gov>
- *              Xiaoye Li <xsli@lbl.gov>
  *
  *  Licensing: The HipGISAXS software is only available to be downloaded and
  *  used by employees of academic research institutions, not-for-profit
@@ -57,6 +52,9 @@ namespace hig {
       const int AVX_VEC_LEN_ = 8;     // 256-bits = 8 singles
 #   endif // DOUBLEP
 # endif // FF_CPU_OPT_AVX
+
+  // miscellaneous helpers
+  // const int VERBOSE_LEVEL_ONE = 1;
 
 } // namespace
 

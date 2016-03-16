@@ -7,7 +7,7 @@
  *  Author: Slim Chourou <stchourou@lbl.gov>
  *          Abhinav Sarje <asarje@lbl.gov>
  *
- *  Licensing: The AnalyzeHipGISAXS software is only available to be downloaded and
+ *  Licensing: The HipGISAXS software is only available to be downloaded and
  *  used by employees of academic research institutions, not-for-profit
  *  research laboratories, or governmental research facilities. Please read the
  *  accompanying LICENSE file before downloading the software. By downloading
@@ -15,8 +15,8 @@
  *  NON-COMMERCIAL END USER LICENSE AGREEMENT.
  */
 
-#ifndef _FITPOUNDERSALGO_HPP_
-#define _FITPOUNDERSALGO_HPP_
+#ifndef __HIPGISAXS_FIT_POUNDERS_HPP__
+#define __HIPGISAXS_FIT_POUNDERS_HPP__
 
 #include <analyzer/analysis_algorithm.hpp>
 
@@ -36,9 +36,10 @@ namespace hig {
       unsigned int num_obs_;
 
     public:
-      FitPOUNDERSAlgo() { name_= algo_pounders; max_iter_ = 200; max_hist_ = 100; tol_ = 1e-10; }
-      FitPOUNDERSAlgo(ObjectiveFunction* obj) {
-        name_= algo_pounders; obj_func_ = obj; max_iter_ = 200; max_hist_ = 100; tol_ = 1e-10;
+      FitPOUNDERSAlgo() { name_= algo_pounders; max_iter_ = 200; max_hist_ = 200; tol_ = 1e-6; }
+      FitPOUNDERSAlgo(int narg, char** args, ObjectiveFunction* obj, unsigned int algo_num) {
+        name_= algo_pounders; obj_func_ = obj; max_iter_ = 200; max_hist_ = 200;
+        tol_ = HiGInput::instance().analysis_tolerance(algo_num);
         num_obs_ = (*obj_func_).data_size();
         num_params_ = (*obj_func_).num_fit_params();
         x0_ = (*obj_func_).fit_param_init_values();
@@ -53,4 +54,4 @@ namespace hig {
 
 } /* namespace hig */
 
-#endif /* FITPOUNDERSALGO_HPP_ */
+#endif /* __HIPGISAXS_FIT_POUNDERS_HPP_ */
