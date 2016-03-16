@@ -106,7 +106,6 @@ namespace hig {
       std::map <std::string, std::string> param_key_map_;      // maps keys to param strings
       std::map <std::string, ParamSpace> param_space_key_map_;  // maps keys to param space
       // TODO: ...
-      //FitReferenceData reference_data_[1];    // TODO temp: data about the reference data
       std::vector <FitReferenceData> reference_data_;
       bool reference_data_set_;
 
@@ -375,9 +374,10 @@ namespace hig {
       } // fit_param_init_vector()
       int num_analysis_algos() const { return analysis_algos_.size(); }
       FittingAlgorithmName analysis_algo(int i) const { return analysis_algos_[i].name(); }
-      bool analysis_algo_param(int algo_num, const std::string pstr, real_t& val) const {
-        return analysis_algos_[algo_num].param(pstr, val);
+      bool analysis_algo_param(int i, const std::string pstr, real_t& val) const {
+        return analysis_algos_[i].param(pstr, val);
       } // analysis_algo_param()
+      real_t analysis_tolerance(int i) const { return analysis_algos_[i].tolerance(); }
 
       /* printing for testing */
       void print_all();

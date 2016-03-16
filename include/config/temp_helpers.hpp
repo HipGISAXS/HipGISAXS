@@ -117,6 +117,7 @@ namespace hig {
       bool restart(bool r) { restart_ = r; return true; }
 
       FittingAlgorithmName name() const { return name_; }
+      real_t tolerance() const { return tolerance_; }
 
       bool param(const std::string pstr, real_t& val) const {
         FitAlgorithmParamType type = TokenMapper::instance().get_fit_algorithm_param_token(pstr);
