@@ -39,43 +39,56 @@ namespace hig {
     int newnarg = argc;
     //char* newargs[argc + 3];     // possibly add arguments for the tao routines
     //char newargs[argc + 3][50];
-    char** newargs = new char*[argc + 3];     // possibly add arguments for the tao routines
+    char** newargs = new char*[argc + 6];     // possibly add arguments for the tao routines
     for(int i = 0; i < argc; ++ i) {
       newargs[i] = new char[50];
       strncpy(newargs[i], argv[i], 50);
     } // for
 
-    for(int i = 0; i < argc; ++ i) std::cout << argv[i] << std::endl;
-    for(int i = 0; i < newnarg; ++ i) std::cout << newargs[i] << std::endl;
-
     if(HiGInput::instance().analysis_algo_param(algo_num, "pounders_delta", pdelta)) {
-      std::stringstream arg; arg << "-tao_pounders_delta " << pdelta;
-      //newargs[newnarg] = new char[arg.str().size() + 1];
+      std::stringstream arg1; arg1 << "-tao_pounders_delta";
+      //newargs[newnarg] = new char[arg1.str().size() + 1];
       newargs[newnarg] = new char[50];
-      strncpy(newargs[newnarg], arg.str().c_str(), 50);
+      strncpy(newargs[newnarg], arg1.str().c_str(), 50);
+      ++ newnarg;
+      std::stringstream arg2; arg2 << pdelta;
+      //newargs[newnarg] = new char[arg2.str().size() + 1];
+      newargs[newnarg] = new char[50];
+      strncpy(newargs[newnarg], arg2.str().c_str(), 50);
       ++ newnarg;
     } else {
       std::cerr << "warning: default pounders_delta being used" << std::endl;
     } // if-else
     if(HiGInput::instance().analysis_algo_param(algo_num, "pounders_npmax", pnpmax)) {
-      std::stringstream arg; arg << "-tao_pounders_npmax " << pnpmax;
-      //newargs[newnarg] = new char[arg.str().size() + 1];
+      std::stringstream arg1; arg1 << "-tao_pounders_npmax";
+      //newargs[newnarg] = new char[arg1.str().size() + 1];
       newargs[newnarg] = new char[50];
-      strncpy(newargs[newnarg], arg.str().c_str(), 50);
+      strncpy(newargs[newnarg], arg1.str().c_str(), 50);
+      ++ newnarg;
+      std::stringstream arg2; arg2 << pnpmax;
+      //newargs[newnarg] = new char[arg2.str().size() + 1];
+      newargs[newnarg] = new char[50];
+      strncpy(newargs[newnarg], arg2.str().c_str(), 50);
       ++ newnarg;
     } else {
       std::cerr << "warning: default pounders_npmax being used" << std::endl;
     } // if-else
     if(HiGInput::instance().analysis_algo_param(algo_num, "pounders_gqt", pgqt)) {
-      std::stringstream arg; arg << "-tao_pounders_gqt " << pgqt;
-      //newargs[newnarg] = new char[arg.str().size() + 1];
+      std::stringstream arg1; arg1 << "-tao_pounders_gqt";
+      //newargs[newnarg] = new char[arg1.str().size() + 1];
       newargs[newnarg] = new char[50];
-      strncpy(newargs[newnarg], arg.str().c_str(), 50);
+      strncpy(newargs[newnarg], arg1.str().c_str(), 50);
+      ++ newnarg;
+      std::stringstream arg2; arg2 << pgqt;
+      //newargs[newnarg] = new char[arg2.str().size() + 1];
+      newargs[newnarg] = new char[50];
+      strncpy(newargs[newnarg], arg2.str().c_str(), 50);
       ++ newnarg;
     } else {
       std::cerr << "warning: default pounders_gqt being used" << std::endl;
     } // if-else
 
+    // temp ...
     for(int i = 0; i < newnarg; ++ i) std::cout << newargs[i] << std::endl;
 
     int size, rank;
