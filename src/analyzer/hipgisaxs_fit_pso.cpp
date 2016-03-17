@@ -429,7 +429,7 @@ namespace hig {
   } // ParticleSwarmOptimization::get_best_values()
 
 
-  bool ParticleSwarmOptimization::run(int narg, char** args, int img_num) {
+  bool ParticleSwarmOptimization::run(int narg, char** args, int algo_num, int img_num) {
     std::cout << "Running Particle Swarm Optimization ..." << std::endl;
 
     if(!(*obj_func_).set_reference_data(img_num)) return false;

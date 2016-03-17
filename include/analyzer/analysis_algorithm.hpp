@@ -46,7 +46,7 @@ namespace hig {
       real_vec_t get_param_values() const { return xn_; }
       real_t tolerance() const { return tol_; }
 
-      virtual bool run(int, char**, int) = 0;
+      virtual bool run(int, char**, int, int) = 0;
 
     }; // class AnalysisAlgorithm
 

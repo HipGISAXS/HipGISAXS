@@ -29,16 +29,61 @@ f(X) - f(X*) (estimated)            <= fatol
 
 namespace hig {
 
-  bool FitPOUNDERSAlgo::run(int argc,char **argv, int img_num) {
+  bool FitPOUNDERSAlgo::run(int argc, char **argv, int algo_num, int img_num) {
     if(!(*obj_func_).set_reference_data(img_num)) return false;
 
     static char help[] = "** Attempting fitting using Pounders algorithm...";
     std::cout << help << " [ " << img_num << " ]" << std::endl;
 
+    real_t pdelta, pnpmax, pgqt;
+    int newnarg = argc;
+    //char* newargs[argc + 3];     // possibly add arguments for the tao routines
+    //char newargs[argc + 3][50];
+    char** newargs = new char*[argc + 3];     // possibly add arguments for the tao routines
+    for(int i = 0; i < argc; ++ i) {
+      newargs[i] = new char[50];
+      strncpy(newargs[i], argv[i], 50);
+    } // for
+
+    for(int i = 0; i < argc; ++ i) std::cout << argv[i] << std::endl;
+    for(int i = 0; i < newnarg; ++ i) std::cout << newargs[i] << std::endl;
+
+    if(HiGInput::instance().analysis_algo_param(algo_num, "pounders_delta", pdelta)) {
+      std::stringstream arg; arg << "-tao_pounders_delta " << pdelta;
+      //newargs[newnarg] = new char[arg.str().size() + 1];
+      newargs[newnarg] = new char[50];
+      strncpy(newargs[newnarg], arg.str().c_str(), 50);
+      ++ newnarg;
+    } else {
+      std::cerr << "warning: default pounders_delta being used" << std::endl;
+    } // if-else
+    if(HiGInput::instance().analysis_algo_param(algo_num, "pounders_npmax", pnpmax)) {
+      std::stringstream arg; arg << "-tao_pounders_npmax " << pnpmax;
+      //newargs[newnarg] = new char[arg.str().size() + 1];
+      newargs[newnarg] = new char[50];
+      strncpy(newargs[newnarg], arg.str().c_str(), 50);
+      ++ newnarg;
+    } else {
+      std::cerr << "warning: default pounders_npmax being used" << std::endl;
+    } // if-else
+    if(HiGInput::instance().analysis_algo_param(algo_num, "pounders_gqt", pgqt)) {
+      std::stringstream arg; arg << "-tao_pounders_gqt " << pgqt;
+      //newargs[newnarg] = new char[arg.str().size() + 1];
+      newargs[newnarg] = new char[50];
+      strncpy(newargs[newnarg], arg.str().c_str(), 50);
+      ++ newnarg;
+    } else {
+      std::cerr << "warning: default pounders_gqt being used" << std::endl;
+    } // if-else
+
+    for(int i = 0; i < newnarg; ++ i) std::cout << newargs[i] << std::endl;
+
     int size, rank;
     PetscErrorCode ierr;
-    PetscInitialize(&argc, &argv, (char*) 0, help);
-    TaoInitialize(&argc, &argv, (char*) 0, help);
+    PetscInitialize(&newnarg, &newargs, (char*) 0, help);
+    TaoInitialize(&newnarg, &newargs, (char*) 0, help);
+
+    // need to free the newargs memory ... TODO ...
 
     Vec x0;   // variables to read from context
     double y[1] = { 0 };

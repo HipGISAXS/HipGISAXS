@@ -39,7 +39,7 @@ namespace hig{
       BruteForceOptimization(int, char**, ObjectiveFunction*, unsigned int);
       ~BruteForceOptimization();
 
-      bool run(int argc, char **argv, int);
+      bool run(int argc, char **argv, int, int);
   }; // class BruteForceOptimization
 
 } // namespace hig
