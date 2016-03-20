@@ -6,11 +6,6 @@
  *  Modified: Wed 08 Oct 2014 12:13:01 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
- *  Developers: Slim Chourou <stchourou@lbl.gov>
- *              Abhinav Sarje <asarje@lbl.gov>
- *              Elaine Chan <erchan@lbl.gov>
- *              Alexander Hexemer <ahexemer@lbl.gov>
- *              Xiaoye Li <xsli@lbl.gov>
  *
  *  Licensing: The HipGISAXS software is only available to be downloaded and
  *  used by employees of academic research institutions, not-for-profit
@@ -34,14 +29,14 @@ namespace hig {
   /**
    * shape and shape parameter parameter defaults
    */
-  const real_t    DEFAULT_P1_          = 0.0;      // p1/mean
-  const real_t    DEFAULT_P2_          = 0.0;      // p2/sd
-  const int      DEFAULT_NVALUES_      = 1;      // num values
-  const real_t    DEFAULT_ORIGIN_VEC_X_    = 0.0;
-  const real_t    DEFAULT_ORIGIN_VEC_Y_    = 0.0;
-  const real_t    DEFAULT_ORIGIN_VEC_Z_    = 0.0;
-  const real_t    DEFAULT_Z_TILT_        = 0.0;
-  const real_t    DEFAULT_XY_ROTATION_    = 0.0;
+  const real_t    DEFAULT_P1_           = 0.0;      // p1/mean
+  const real_t    DEFAULT_P2_           = 0.0;      // p2/sd
+  const int       DEFAULT_NVALUES_      = 1;        // num values
+  const real_t    DEFAULT_ORIGIN_VEC_X_ = 0.0;
+  const real_t    DEFAULT_ORIGIN_VEC_Y_ = 0.0;
+  const real_t    DEFAULT_ORIGIN_VEC_Z_ = 0.0;
+  const real_t    DEFAULT_Z_TILT_       = 0.0;
+  const real_t    DEFAULT_XY_ROTATION_  = 0.0;
 
   // TODO: ...
 
@@ -83,13 +78,13 @@ namespace hig {
   /**
    * detector parameters
    */
-  const std::string  DEFAULT_ORIGIN_("bottom-left");        // not yet implemented
-  const int      DEFAULT_TOTAL_PIXELS_Y_   = 5000;      // horizontal axis
-  const int      DEFAULT_TOTAL_PIXELS_Z_   = 5000;      // vertical axis
-  const real_t    DEFAULT_PIXEL_SIZE_     = 0.172;    // the detector pixel size
-  const int      DEFAULT_SDD_         = 4000;      // not used currently
-  const real_t    DEFAULT_DIRECT_BEAM_Y_     = 0.0;      // direct beam coordinates on detector
-  const real_t    DEFAULT_DIRECT_BEAM_Z_     = 0.0;      // direct beam coordinates on detector
+  const std::string DEFAULT_ORIGIN_("bottom-left");     // not yet implemented
+  const int         DEFAULT_TOTAL_PIXELS_Y_ = 5000;     // horizontal axis
+  const int         DEFAULT_TOTAL_PIXELS_Z_ = 5000;     // vertical axis
+  const real_t      DEFAULT_PIXEL_SIZE_     = 0.172;    // the detector pixel size
+  const int         DEFAULT_SDD_            = 4000;     // not used currently
+  const real_t      DEFAULT_DIRECT_BEAM_Y_  = 0.0;      // direct beam coordinates on detector
+  const real_t      DEFAULT_DIRECT_BEAM_Z_  = 0.0;      // direct beam coordinates on detector
 
 
 } // namespace hig

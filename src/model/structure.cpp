@@ -273,8 +273,12 @@ namespace hig {
           rot1_.angles_min(new_val);
         } else if(keyword2.compare("max") == 0 || keyword2.compare("1") == 0) {
           rot1_.angles_max(new_val);
+        } else if(keyword2.compare("anglelocation") == 0) {
+          rot1_.angle_location(new_val);
         } else if(keyword2.compare("anglemean") == 0) {
           rot1_.angle_mean(new_val);
+        } else if(keyword2.compare("anglescale") == 0) {
+          rot1_.angle_scale(new_val);
         } else if(keyword2.compare("anglesd") == 0) {
           rot1_.angle_sd(new_val);
         } else {
@@ -294,8 +298,12 @@ namespace hig {
           rot2_.angles_min(new_val);
         } else if(keyword2.compare("max") == 0 || keyword2.compare("1") == 0) {
           rot2_.angles_min(new_val);
+        } else if(keyword2.compare("anglelocation") == 0) {
+          rot2_.angle_location(new_val);
         } else if(keyword2.compare("anglemean") == 0) {
           rot2_.angle_mean(new_val);
+        } else if(keyword2.compare("anglescale") == 0) {
+          rot2_.angle_scale(new_val);
         } else if(keyword2.compare("anglesd") == 0) {
           rot2_.angle_sd(new_val);
         } else {
@@ -315,8 +323,12 @@ namespace hig {
           rot3_.angles_min(new_val);
         } else if(keyword2.compare("max") == 0 || keyword2.compare("1") == 0) {
           rot3_.angles_max(new_val);
+        } else if(keyword2.compare("anglelocation") == 0) {
+          rot3_.angle_location(new_val);
         } else if(keyword2.compare("anglemean") == 0) {
           rot3_.angle_mean(new_val);
+        } else if(keyword2.compare("anglescale") == 0) {
+          rot3_.angle_scale(new_val);
         } else if(keyword2.compare("anglesd") == 0) {
           rot3_.angle_sd(new_val);
         } else {

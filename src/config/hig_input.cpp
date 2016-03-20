@@ -801,7 +801,9 @@ namespace hig {
       case struct_ensemble_orient_rot3_token:
       case struct_ensemble_orient_rot_axis_token:
       case struct_ensemble_orient_rot_angles_token:
+      case struct_ensemble_orient_rot_anglelocation_token:
       case struct_ensemble_orient_rot_anglemean_token:
+      case struct_ensemble_orient_rot_anglescale_token:
       case struct_ensemble_orient_rot_anglesd_token:
         break;
 
@@ -1274,6 +1276,24 @@ namespace hig {
         } // if
         break;
 
+      case struct_ensemble_orient_rot_anglelocation_token:
+        parent = get_curr_parent();
+        switch(parent) {
+          case struct_ensemble_orient_rot1_token:
+            curr_structure_.grain_orientation_rot1_anglelocation(num);
+            break;
+          case struct_ensemble_orient_rot2_token:
+            curr_structure_.grain_orientation_rot2_anglelocation(num);
+            break;
+          case struct_ensemble_orient_rot3_token:
+            curr_structure_.grain_orientation_rot3_anglelocation(num);
+            break;
+          default:
+            std::cerr << "error: something wrong in the rot angle location" << std::endl;
+            return false;
+        } // switch
+        break;
+
       case struct_ensemble_orient_rot_anglemean_token:
         parent = get_curr_parent();
         switch(parent) {
@@ -1288,6 +1308,24 @@ namespace hig {
             break;
           default:
             std::cerr << "error: something wrong in the rot angle mean" << std::endl;
+            return false;
+        } // switch
+        break;
+
+      case struct_ensemble_orient_rot_anglescale_token:
+        parent = get_curr_parent();
+        switch(parent) {
+          case struct_ensemble_orient_rot1_token:
+            curr_structure_.grain_orientation_rot1_anglescale(num);
+            break;
+          case struct_ensemble_orient_rot2_token:
+            curr_structure_.grain_orientation_rot2_anglescale(num);
+            break;
+          case struct_ensemble_orient_rot3_token:
+            curr_structure_.grain_orientation_rot3_anglescale(num);
+            break;
+          default:
+            std::cerr << "error: something wrong in the rot angle scale" << std::endl;
             return false;
         } // switch
         break;

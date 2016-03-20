@@ -918,10 +918,9 @@ namespace hig {
 
         // if sigma is zeros set sampling count to 1
         for (int i = 0; i < 3; i++)
-          if (stddev[i] == 0)
-            scaling_nvals[i] = 1;
+          if (stddev[i] == 0) scaling_nvals[i] = 1;
         construct_scaling_distribution(dist, mean, stddev, scaling_nvals, scaling_samples,
-                     scaling_weights);
+                                       scaling_weights);
       } else {
         scaling_samples.push_back(s->second.grain_scaling());
         scaling_weights.push_back(1.);
@@ -947,12 +946,10 @@ namespace hig {
         is_grain_repetition_dist = true;
         // get nvalues from scaling distribution
         int num_repeats;
-        if (scaling_samples.size() > 1) 
-                    num_repeats = scaling_samples.size();    // CHECK ...
-        else
-          num_repeats = num_grains;          // CHECK ...
+        if(scaling_samples.size() > 1) num_repeats = scaling_samples.size();    // CHECK ...
+        else num_repeats = num_grains;          // CHECK ...
         construct_repetition_distribution((*s).second.grain_repetitiondist(), 
-                        num_repeats, all_grains_repeats);
+                                          num_repeats, all_grains_repeats);
       } else {
         vector3_t grain_repeats = (*s).second.grain_repetition();
         all_grains_repeats.push_back(grain_repeats);
@@ -1054,9 +1051,10 @@ namespace hig {
         real_t rot2 = nn[1 * num_grains + grain_i];
         real_t rot3 = nn[2 * num_grains + grain_i];
         real_t gauss_weight = 1.0;
-        if(struct_dist == "gaussian") {
-          gauss_weight = wght[grain_i] * wght[num_grains + grain_i] *
-                  wght[2 * num_grains + grain_i];
+        if(struct_dist == "gaussian" || struct_dist == "cauchy") {
+          gauss_weight = wght[grain_i] *
+                         wght[num_grains + grain_i] *
+                         wght[2 * num_grains + grain_i];
         } // if
         RotMatrix_t r1(r1axis, rot1);
         RotMatrix_t r2(r2axis, rot2);
@@ -1914,7 +1912,7 @@ namespace hig {
 
 
   bool HipGISAXS::spatial_distribution(structure_iterator_t s, real_t tz, int dim,
-                    int& rand_dim_x, int& rand_dim_y, real_t* &d) {
+                                       int& rand_dim_x, int& rand_dim_y, real_t* &d) {
     vector3_t spacing = (*s).second.ensemble_spacing();
     vector3_t maxgrains = (*s).second.ensemble_maxgrains();
     std::string distribution = (*s).second.ensemble_distribution();
@@ -2114,7 +2112,7 @@ namespace hig {
 
 
   bool HipGISAXS::orientation_distribution(structure_iterator_t s, real_t* dd, int & ndx, int ndy, 
-                        real_t* &nn, real_t* &wght) {
+                                           real_t* &nn, real_t* &wght) {
     std::string distribution = (*s).second.grain_orientation();
     //vector2_t tau = (*s).second.rotation_tau();
     //vector2_t eta = (*s).second.rotation_eta();
@@ -2157,16 +2155,19 @@ namespace hig {
         //nn[x] = tau[0] * PI_ / 180;
         nn[x] = rot1[1] * PI_ / 180;
       } // for x
+      if(ndy < 2) return true;
       for(int x = 0; x < ndx; ++ x) {
         //nn[ndx + x] = eta[0] * PI_ / 180;
         nn[ndx + x] = rot2[1] * PI_ / 180;
       } // for x
+      if(ndy < 3) return true;
       for(int x = 0; x < ndx; ++ x) {
         //nn[2 * ndx + x] = zeta[0] * PI_ / 180;
         nn[2 * ndx + x] = rot3[1] * PI_ / 180;
       } // for x
+      return true;
     } else if(distribution == "random") {  // random
-      for(int x = 0; x < 3 * ndx; ++ x) {
+      for(int x = 0; x < ndy * ndx; ++ x) {
         nn[x] = (real_t(rand()) / RAND_MAX) * 2 * PI_;
       } // for x
     } else if(distribution == "range") {  // range
@@ -2180,10 +2181,12 @@ namespace hig {
         //nn[x] = (tau[0] + (real_t(rand()) / RAND_MAX) * dtau) * PI_ / 180;
         nn[x] = (rot1[1] + (real_t(rand()) / RAND_MAX) * drot1) * PI_ / 180;
       } // for x
+      if(ndy < 2) return true;
       for(int x = 0; x < ndx; ++ x) {
         //nn[ndx + x] = (eta[0] + (real_t(rand()) / RAND_MAX) * deta) * PI_ / 180;
         nn[ndx + x] = (rot2[1] + (real_t(rand()) / RAND_MAX) * drot2) * PI_ / 180;
       } // for x
+      if(ndy < 3) return true;
       for(int x = 0; x < ndx; ++ x) {
         //nn[2 * ndx + x] = (zeta[0] + (real_t(rand()) / RAND_MAX) * dzeta) * PI_ / 180;
         nn[2 * ndx + x] = (rot3[1] + (real_t(rand()) / RAND_MAX) * drot3) * PI_ / 180;
@@ -2193,6 +2196,7 @@ namespace hig {
         nn[x] = x * da;
       } // for x
       for(int x = 0; x < 2 * ndx; ++ x) nn[ndx + x] = 0;*/
+      return true;
     } else if(distribution == "gaussian" || distribution == "normal") {  // gaussian
       real_t mean1 = (*s).second.rotation_rot1_anglemean();
       real_t sd1 = (*s).second.rotation_rot1_anglesd();
@@ -2251,7 +2255,6 @@ namespace hig {
         drot1 /= ndx;
         for(int x = 0; x < ndx; ++ x) {
           real_t temp = rot1[1] + x * drot1;
-          //real_t temp = rot1[1] + (real_t(rand()) / RAND_MAX) * drot1;
           nn[x] = temp * PI_ / 180;
           wght[x] = gaussian(temp, mean1, sd1);
         } // for x
@@ -2287,6 +2290,56 @@ namespace hig {
           wght[2 * ndx + x] = 1;
         }
       } // if
+    } else if(distribution == "cauchy") {  // cauchy
+      real_t location1 = (*s).second.rotation_rot1_anglelocation();
+      real_t scale1 = (*s).second.rotation_rot1_anglescale();
+      real_t location2 = (*s).second.rotation_rot2_anglelocation();
+      real_t scale2 = (*s).second.rotation_rot2_anglescale();
+      real_t location3 = (*s).second.rotation_rot3_anglelocation();
+      real_t scale3 = (*s).second.rotation_rot3_anglescale();
+      // weighting with regular instead of sampling
+      real_t drot1 = (rot1[2] - rot1[1]) / ndx;
+      real_t drot2 = (rot2[2] - rot2[1]) / ndx;
+      real_t drot3 = (rot3[2] - rot3[1]) / ndx;
+      if(fabs(drot1) > TINY_) {
+        for(int x = 0; x < ndx; ++ x) {
+          real_t temp = rot1[1] + x * drot1;
+          nn[x] = temp * PI_ / 180;
+          wght[x] = cauchy(temp, location1, scale1);
+        } // for x
+      } else {
+        for(int x = 0; x < ndx; ++ x) { 
+          nn[x] = rot1[1] * PI_ / 180;
+          wght[x] = 1;
+        }
+      } // if
+      if(ndy < 2) return true;
+      if(fabs(drot2) > TINY_) {
+        for(int x = 0; x < ndx; ++ x) {
+          real_t temp = rot2[1] + x * drot2;
+          nn[ndx + x] =  temp * PI_ / 180;
+          wght[ndx + x] = cauchy(temp, location2, scale2);
+        } // for x
+      } else {
+        for(int x = 0; x < ndx; ++ x) {
+          nn[ndx + x] = rot2[1] * PI_ / 180;
+          wght[ndx + x] = 1;
+        }
+      } // if
+      if(ndy < 3) return true;
+      if(fabs(drot3) > TINY_) {
+        for(int x = 0; x < ndx; ++ x) {
+          real_t temp = rot3[1] + x * drot3;
+          nn[2 * ndx + x] = temp * PI_ / 180;
+          wght[2 * ndx + x] = cauchy(temp, location3, scale3);
+        } // for x
+      } else {
+        for(int x = 0; x < ndx; ++ x) { 
+          nn[2 * ndx + x] = rot3[1] * PI_ / 180;
+          wght[2 * ndx + x] = 1;
+        }
+      } // if
+      return true;
     } else {
       // TODO read .ori file ...
       std::cerr << "uh-oh: I guess you wanted to read orientations from a file" << std::endl;
@@ -2388,11 +2441,11 @@ namespace hig {
   } // HipGISAXS::construct_repetition_distribution()
 
   bool HipGISAXS::construct_scaling_distribution(std::vector<StatisticType> dist,
-                          vector3_t mean, vector3_t stddev,
-                          std::vector<int> nvals,
-                          std::vector<vector3_t> &samples,
-                           std::vector<real_t> &weights) {
-        woo::MTRandomNumberGenerator rng;
+                                                 vector3_t mean, vector3_t stddev,
+                                                 std::vector<int> nvals,
+                                                 std::vector<vector3_t> &samples,
+                                                 std::vector<real_t> &weights) {
+    woo::MTRandomNumberGenerator rng;
     real_t width = 4;
     for (int i = 0; i < 3; ++ i) {
       if (dist[i] != stat_gaussian) {
