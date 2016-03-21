@@ -112,14 +112,6 @@ namespace hig {
     return complex_t(j1(zz.real()), 0.0);
   } // cbessj()
 
-  #ifdef FF_CPU_OPT
-  // using GNU math. assuming imaginary component is 0
-  void cbessj_vec(const int VEC_LEN, complex_t* zz, int order, complex_t* res) {
-    for(int i = 0; i < VEC_LEN; ++ i) res[i] = complex_t(j1(zz[i].real()), 0.0);
-  } // cbessj()
-  #endif // FF_CPU_OPT
-
-
   // using new local implementation below
   complex_t cbesselj(complex_t z, int order) {
     if(order == 1) return cj1(z);
@@ -128,18 +120,26 @@ namespace hig {
   } // cbesselj()
 
   #ifdef FF_CPU_OPT
+  
+  // using GNU math. assuming imaginary component is 0
+  void cbessj_vec(const int VEC_LEN, complex_t* zz, int order, complex_t* res) {
+    for(int i = 0; i < VEC_LEN; ++ i) res[i] = complex_t(j1(zz[i].real()), 0.0);
+  } // cbessj()
+
   #ifdef FF_CPU_OPT_AVX
+
   // using new local avx implementation (this is just a wrapper)
   avx_m256c_t cbesselj_vec(avx_m256c_t z, int order) {
     return avx_cbesselj_cp(z, order);
-  } // cbesselj()
+  } // cbesselj_vec()
+
   #else
+  
   // using new local implementation below
   complex_t cbesselj_vec(complex_t z, int order) {
-    if(order == 1) return cj1(z);
-    std::cerr << "error: Bessel functions for order != 1 are not supported" << std::endl;
-    return complex_t(0., 0.);
-  } // cbesselj()
+    return cbesselj(z, order);
+  } // cbesselj_vec()
+  
   #endif // FF_CPU_OPT_AVX
   #endif // FF_CPU_OPT
 

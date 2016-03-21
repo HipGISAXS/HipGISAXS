@@ -10,13 +10,35 @@
 
 #include <iostream>
 #include <fstream>
+#include <malloc.h>
 #include <woo/timer/woo_boostchronotimers.hpp>
 
 #include <numerics/numeric_utils.hpp>
+#include <numerics/cpu/avx_numerics.hpp>
 
 
 typedef std::vector<hig::complex_t> cvec_t;
-typedef std::vector<hig::avx_m256c_t> avx_m256cvec_t;
+typedef hig::avx_m256c_t m256c_t;
+typedef std::vector<m256c_t> avx_m256cvec_t;
+
+template <std::size_t N>
+struct MyAllocator {
+  char data[N];
+  void* p;
+  std::size_t sz;
+  MyAllocator() : p(data), sz(N) {}
+  template <typename T>
+  T* aligned_alloc(std::size_t a = alignof(T)) {
+    if (std::align(a, sizeof(T), p, sz)) {
+      T* result = reinterpret_cast<T*>(p);
+      p = (char*)p + sizeof(T);
+      sz -= sizeof(T);
+      return result;
+    } // if
+    return nullptr;
+  } // aligned_alloc()
+}; // struct MyAllocator
+
 
 bool read_input(char* fname, cvec_t& data) {
   std::ifstream input(fname);
@@ -39,26 +61,36 @@ bool write_output(char* fname, const cvec_t& data) {
   return true;
 } // write_output()
 
-bool convert_to_avx(const cvec_t& data, avx_m256cvec_t& avx_data) {
-  avx_data.clear();
+bool convert_to_avx(const cvec_t& data, size_t sz, size_t pad, hig::avx_m256c_t* avx_data, size_t& vsz) {
   __attribute__((aligned(32))) hig::real_t real[hig::AVX_VEC_LEN_], imag[hig::AVX_VEC_LEN_];
-  for(int i = 0; i < data.size(); i += hig::AVX_VEC_LEN_) {
+  int k = 0;
+  for(int i = 0; i < sz - hig::AVX_VEC_LEN_; i += hig::AVX_VEC_LEN_, ++ k) {
     for(int j = 0; j < hig::AVX_VEC_LEN_; ++ j) {
       real[j] = data[i + j].real();
       imag[j] = data[i + j].imag();
     } // for j
-    hig::avx_m256c_t temp;
-    temp.real = _mm256_load_pd(real);
-    temp.imag = _mm256_load_pd(imag);
-    avx_data.push_back(temp);
+    avx_data[k].real = _mm256_load_pd(real);
+    avx_data[k].imag = _mm256_load_pd(imag);
   } // for i
+  // last iteration, to take care of padding if there
+  for(int j = 0; j < hig::AVX_VEC_LEN_ - pad; ++ j) {
+    real[j] = data[sz - hig::AVX_VEC_LEN_ + j].real();
+    imag[j] = data[sz - hig::AVX_VEC_LEN_ + j].imag();
+  } // for j
+  for(int j = hig::AVX_VEC_LEN_ - 1; j >= pad; -- j) {
+    real[j] = 0.0;
+    imag[j] = 0.0;
+  } // for j
+  avx_data[k].real = _mm256_load_pd(real);
+  avx_data[k].imag = _mm256_load_pd(imag);
+  vsz = k + 1;
   return true;
 } // convert_to_avx()
 
-bool convert_from_avx(const avx_m256cvec_t& avx_data, cvec_t& data) {
+bool convert_to_scalar(cvec_t& data, const m256c_t* avx_data, size_t sz, size_t pad) {
   data.clear();
   __attribute__((aligned(32))) hig::real_t real[hig::AVX_VEC_LEN_], imag[hig::AVX_VEC_LEN_];
-  for(int i = 0; i < avx_data.size(); ++ i) {
+  for(int i = 0; i < sz - 1; ++ i) {
     _mm256_store_pd(real, avx_data[i].real);
     _mm256_store_pd(imag, avx_data[i].imag);
     for(int j = 0; j < hig::AVX_VEC_LEN_; ++ j) {
@@ -66,8 +98,14 @@ bool convert_from_avx(const avx_m256cvec_t& avx_data, cvec_t& data) {
       data.push_back(temp);
     } // for j
   } // for i
+  _mm256_store_pd(real, avx_data[sz - 1].real);
+  _mm256_store_pd(imag, avx_data[sz - 1].imag);
+  for(int j = 0; j < hig::AVX_VEC_LEN_ - pad; ++ j) {
+    hig::complex_t temp(real[j], imag[j]);
+    data.push_back(temp);
+  } // for j
   return true;
-} // convert_to_avx()
+} // convert_to_scalar()
 
 
 bool compute_vals(const cvec_t& data, cvec_t& vals, hig::complex_t (*func)(hig::complex_t, int)) {
@@ -81,12 +119,9 @@ bool compute_vals(const cvec_t& data, cvec_t& vals, hig::complex_t (*func)(hig::
 } // compute_vals()
 
 
-bool compute_vals_vec(const avx_m256cvec_t& data, avx_m256cvec_t& vals,
-                      hig::avx_m256c_t (*func)(hig::avx_m256c_t, int)) {
-  vals.clear();
-  vals.resize(data.size());
+bool compute_vals_vec(m256c_t* &data, size_t sz, m256c_t* vals, m256c_t (*func)(m256c_t, int)) {
   #pragma omp parallel for
-  for(int i = 0; i < data.size(); ++ i) {
+  for(int i = 0; i < sz; ++ i) {
     vals[i] = ((*func)(data[i], 1));
   } // for
   return true;
@@ -102,7 +137,8 @@ hig::real_t error_function(const hig::complex_t a, const hig::complex_t b) {
 hig::real_t compute_error(const cvec_t& d1, const cvec_t& d2) {
   hig::real_t e = 0.;
   if(d1.size() != d2.size()) {
-    std::cerr << "error: invalid comparison due to unequal data lengths" << std::endl;
+    std::cerr << std::endl << "error: invalid comparison due to unequal data lengths" << std::endl;
+    std::cerr << "       " << d1.size() << " != " << d2.size() << std::endl;
     return -1.;
   } // if
   #pragma omp parallel for reduction(+:e)
@@ -120,7 +156,7 @@ int main(int narg, char** args) {
     return 0;
   } // if
 
-  cvec_t data, vals_ref, vals_new;
+  cvec_t data, vals_ref, vals_new, vals_vec_new, vals_vec_ref;
   woo::BoostChronoTimer timer;
 
   // read input data
@@ -166,41 +202,62 @@ int main(int narg, char** args) {
   std::cout << "** vector tests **" << std::endl;
 
   // convert data to vectors
-  avx_m256cvec_t avx_data, avx_vals_new, avx_vals_ref;
-  convert_to_avx(data, avx_data);
+  size_t sz = ceil((float) data.size() / hig::AVX_VEC_LEN_);
+  size_t rem = data.size() % hig::AVX_VEC_LEN_;
+  size_t pad = (rem == 0) ? 0 : hig::AVX_VEC_LEN_ - rem;
+  std::cout << "** converting scalars into avx vectors [padding: " << pad << "] ..." << std::endl;
+  // need aligned buffers
+  hig::avx_m256c_t *avx_data = (hig::avx_m256c_t*)_mm_malloc(sz * sizeof(hig::avx_m256c_t), 64);
+  hig::avx_m256c_t *avx_vals_new = (hig::avx_m256c_t*)_mm_malloc(sz * sizeof(hig::avx_m256c_t), 64);
+  hig::avx_m256c_t *avx_vals_ref = (hig::avx_m256c_t*)_mm_malloc(sz * sizeof(hig::avx_m256c_t), 64);
+  size_t vsz;
+  convert_to_avx(data, data.size(), pad, avx_data, vsz);
+
+  std::cout << "data.size(): " << data.size() << " sz: " << sz << " pad: " << pad
+            << " vsz: " << vsz << std::endl;
+  assert(sz == vsz);
 
   // using the vectorized version from hipgisaxs
   std::cout << "** computing values [vectorized] ..." << std::flush;
   timer.start();
-  compute_vals_vec(avx_data, avx_vals_new, &hig::cbesselj_vec);
+  compute_vals_vec(avx_data, sz, avx_vals_new, &hig::avx_cbesselj_cp);
   timer.stop();
   std::cout << " done. [" << timer.elapsed_msec() << " ms.]" << std::endl;
 
   // using vectorized GNU math (ref)
-  std::cout << "** computing values [vectorized] ..." << std::flush;
+  std::cout << "** computing reference [vectorized] ..." << std::flush;
   timer.start();
-  compute_vals_vec(avx_data, avx_vals_new, &hig::cbessj_vec);
+  compute_vals_vec(avx_data, sz, avx_vals_ref, &hig::avx_cbessj_cp);
   timer.stop();
   std::cout << " done. [" << timer.elapsed_msec() << " ms.]" << std::endl;
   
   // convert to scalars
-  convert_from_avx(avx_vals_new, vals_new);
+  convert_to_scalar(vals_vec_new, avx_vals_new, sz, pad);
   // compute error
-  std::cout << "** computing error (vector vs. scalar) ..." << std::flush;
+  std::cout << "** computing error (vector new vs. scalar ref) ..." << std::flush;
   timer.start();
-  hig::real_t e2 = compute_error(vals_new, vals_ref);
+  hig::real_t e2 = compute_error(vals_vec_new, vals_ref);
   timer.stop();
   std::cout << " done. [" << timer.elapsed_msec() << " ms.]" << std::endl;
   std::cout << "++ total error = " << e2 << " [average = " << e2 / data.size() << "]" << std::endl;
 
-  convert_from_avx(avx_vals_ref, vals_ref);
+  // convert to scalars
+  convert_to_scalar(vals_vec_ref, avx_vals_ref, sz, pad);
   // compute error
-  std::cout << "** computing error (vector vs. vector) ..." << std::flush;
+  std::cout << "** computing error (vector new vs. vector ref) ..." << std::flush;
   timer.start();
-  hig::real_t e3 = compute_error(vals_new, vals_ref);
+  hig::real_t e3 = compute_error(vals_vec_new, vals_vec_ref);
   timer.stop();
   std::cout << " done. [" << timer.elapsed_msec() << " ms.]" << std::endl;
   std::cout << "++ total error = " << e3 << " [average = " << e3 / data.size() << "]" << std::endl;
+
+  // for sanity of the reference
+  std::cout << "** computing sanity (vector ref vs. scalar ref) ..." << std::flush;
+  timer.start();
+  hig::real_t e4 = compute_error(vals_vec_ref, vals_ref);
+  timer.stop();
+  std::cout << " done. [" << timer.elapsed_msec() << " ms.]" << std::endl;
+  std::cout << "++ total error = " << e4 << " [average = " << e4 / data.size() << "]" << std::endl;
 
   return 0;
 } // main()

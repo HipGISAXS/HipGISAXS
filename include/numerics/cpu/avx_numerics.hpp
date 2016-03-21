@@ -19,10 +19,13 @@
 
 #ifdef INTEL_AVX
 
+#ifndef __AVX_ALIGNED__
+#define __AVX_ALIGNED__ __attribute__((aligned(64)))    // 2 * 256 bits for complex
+#endif
+
 #include <common/typedefs.hpp>
 #include <common/constants.hpp>
 #include <numerics/numeric_utils.hpp>
-//#include <numerics/cpu/avx_mathfun.hpp>
 
 namespace hig {
 
@@ -35,16 +38,16 @@ namespace hig {
 	// s = single-precision, d = double-precision
 	// ////////////////////////////////////////////////////
 
-#ifdef DOUBLEP    // TODO: improve and put it within each functions instead
+#ifdef DOUBLEP    // TODO: improve and move it within each functions instead
 
   /**
    * load/store/initialize
    */
 
-  static inline avx_m256c_t avx_load_cp(complex_t* p) {
+  static inline avx_m256c_t avx_load_cp(const complex_t* p) {
     // TODO: use _mm256_i64scatter_pd() instead to directly store into p ...
     avx_m256c_t v;
-    __attribute__((aligned(32))) real_t real[AVX_VEC_LEN_], imag[AVX_VEC_LEN_];
+    __AVX_ALIGNED__ real_t real[AVX_VEC_LEN_], imag[AVX_VEC_LEN_];
     for(int i = 0; i < AVX_VEC_LEN_; ++ i) {
       real[i] = p[i].real(); imag[i] = p[i].imag();
     } // for
@@ -55,7 +58,7 @@ namespace hig {
 
   static inline void avx_store_cp(complex_t* p, avx_m256c_t v) {
     // TODO: use _mm256_i64scatter_pd() instead to directly store into p ...
-    __attribute__((aligned(32))) real_t real[AVX_VEC_LEN_], imag[AVX_VEC_LEN_];
+    __AVX_ALIGNED__ real_t real[AVX_VEC_LEN_], imag[AVX_VEC_LEN_];
     _mm256_store_pd(real, v.real);
     _mm256_store_pd(imag, v.imag);
     for(int i = 0; i < AVX_VEC_LEN_; ++ i) p[i] = complex_t(real[i], imag[i]);
@@ -235,7 +238,7 @@ namespace hig {
     // TODO: properly vectorize ...
     // currently it converts to scalar, computes, and converts back to vector
     avx_m256c_t res;
-    __attribute__((aligned(32))) real_t real[AVX_VEC_LEN_], imag[AVX_VEC_LEN_];
+    __AVX_ALIGNED__ real_t real[AVX_VEC_LEN_], imag[AVX_VEC_LEN_];
     _mm256_store_pd(real, v.real);
     _mm256_store_pd(imag, v.imag);
     for(int i = 0; i < AVX_VEC_LEN_; ++ i) {
@@ -255,7 +258,7 @@ namespace hig {
   static inline avx_m256c_t avx_cbessj_cp(avx_m256c_t v, int o) {
     // convert to scalar, compute, and convert back to vector
     avx_m256c_t res;
-    __attribute__((aligned(32))) real_t real[AVX_VEC_LEN_], imag[AVX_VEC_LEN_];
+    __AVX_ALIGNED__ real_t real[AVX_VEC_LEN_], imag[AVX_VEC_LEN_];
     _mm256_store_pd(real, v.real);
     _mm256_store_pd(imag, v.imag);
     for(int i = 0; i < AVX_VEC_LEN_; ++ i) {
@@ -269,23 +272,27 @@ namespace hig {
   } // avx_cbessj_cp()
 
   static inline avx_m256c_t avx_cj1_cp(avx_m256c_t v) {
-    int MAXK = 1e5;
-    avx_m256_t r = v.real;
-    int digits = 7;
+    const int MAXK = 1e5;
+    const avx_m256_t AVX_ZERO_ = _mm256_setzero_pd();
+    const avx_m256_t AVX_ONE_ = _mm256_set1_pd(1.0);
+    const avx_m256_t AVX_ALLONE_ = _mm256_set1_pd(0xFFFFFFFFFFFFFFFF);
+    const avx_m256_t AVX_EPSILON_ = _mm256_set1_pd(REAL_EPSILON_);
     #ifdef DOUBLEP
-      digits = 15;
+      const int digits = 15;    // double precision
+    #else
+      const int digits = 7;     // single precision
     #endif
-    real_t threshold = 1.73 * digits;
+    const real_t threshold = 1.73 * digits;
+
+    avx_m256_t r = v.real;
     avx_m256_t thmask = _mm256_cmp_pd(r, _mm256_set1_pd(threshold), _CMP_GT_OS);
-    avx_m256_t AVX_ZERO_ = _mm256_setzero_pd();
-    avx_m256_t AVX_ONE_ = _mm256_set1_pd(1.0);
-    avx_m256_t AVX_ALLONE_ = _mm256_set1_pd(0xFFFFFFFFFFFFFFFF);
-    avx_m256_t AVX_EPSILON_ = _mm256_set1_pd(REAL_EPSILON_);
-    int allz = _mm256_testc_pd(thmask, AVX_ZERO_);  // returns 1 iff all are 0 (all <= threshold)
-    int allnz = _mm256_testc_pd(AVX_ALLONE_, thmask);  // returns 1 iff all are 1 (all > threshold)
-    if(allz) {          // all <= threshold
+    int imask = _mm256_movemask_pd(thmask);
+    // imask == 0 => all are LE threshold
+    // imask == 0xF => all are GT threshold
+    // imask, otherwise has mixed and use thmask as a mask
+    if(imask == 0) {            // all <= threshold
       // ...
-    } else if(allnz) {  // all > threshold
+    } else if(imask == 0xF) {   // all > threshold
       avx_m256_t ir = _mm256_div_pd(AVX_ONE_, r);
       avx_m256_t irk = ir;
       avx_m256_t ak = AVX_ONE_;                 // a0 = 1
@@ -307,16 +314,17 @@ namespace hig {
         xk_sum = _mm256_add_pd(xk_sum, xk);
         irk = _mm256_mul_pd(irk, ir);
         t1 = _mm256_set1_pd(4. * k + 1.);
-        t2 = _mm256_div_pd(_mm256_sub_pd(_mm256_set1_pd(4.0), _mm256_mul_pd(t1, t1)), _mm256_add_pd(t0, _mm256_set1_pd(8.0)));
+        t2 = _mm256_div_pd(_mm256_sub_pd(_mm256_set1_pd(4.0), _mm256_mul_pd(t1, t1)),
+                           _mm256_add_pd(t0, _mm256_set1_pd(8.0)));
         ak = _mm256_mul_pd(ak, t2);
         yk = _mm256_mul_pd(_mm256_set1_pd(m), _mm256_mul_pd(ak, irk));
         yk_sum = _mm256_add_pd(yk_sum, yk);
         // if(fabs(xk) < REAL_EPSILON_ && fabs(yk) < REAL_EPSILON_) break;
         avx_m256_t xcmp = _mm256_cmp_pd(xk, AVX_EPSILON_, _CMP_GT_OS);
         avx_m256_t ycmp = _mm256_cmp_pd(yk, AVX_EPSILON_, _CMP_GT_OS);
-        int xcond = _mm256_testc_pd(xcmp, AVX_ZERO_);
-        int ycond = _mm256_testc_pd(ycmp, AVX_ZERO_);
-        if(xcond && ycond) break;
+        int xcond = _mm256_movemask_pd(xcmp);
+        int ycond = _mm256_movemask_pd(ycmp);
+        if(xcond == 0 && ycond == 0) break;
       } // for
       if(k == MAXK) {
         std::cerr << "error: Bessel loop overflow occured" << std::endl;

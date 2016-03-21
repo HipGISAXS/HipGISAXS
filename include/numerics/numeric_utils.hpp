@@ -35,10 +35,11 @@ namespace hig {
   extern complex_t sinc(complex_t x);
 
 #ifdef FF_CPU_OPT
-  extern void cbessj_vec(const int, complex_t*, int, complex_t*);   // for reference (GNU math)
-  extern void cbesselj_vec(const int, complex_t*, int, complex_t*); // new vectorized implementation
   extern void sinc_vec(const int VEC_LEN, complex_t* x, complex_t* res);
+  extern void cbessj_vec(const int, complex_t*, int, complex_t*);   // for reference (GNU math)
+//  extern void cbesselj_vec(const int, complex_t*, int, complex_t*); // new vectorized implementation
 #ifdef INTEL_AVX
+  extern avx_m256c_t cbesselj_vec(avx_m256c_t, int);        // avx vectorized implementation
   extern avx_m256c_t avx_cbessj_cp(avx_m256c_t, int);    // old
   extern avx_m256c_t avx_cbesselj_cp(avx_m256c_t, int);  // new
 #endif
