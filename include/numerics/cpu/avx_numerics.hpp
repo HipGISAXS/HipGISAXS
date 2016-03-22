@@ -284,16 +284,43 @@ namespace hig {
     #endif
     const real_t threshold = 1.73 * digits;
 
-    avx_m256_t r = v.real;
-    avx_m256_t thmask = _mm256_cmp_pd(r, _mm256_set1_pd(threshold), _CMP_GT_OS);
-    int imask = _mm256_movemask_pd(thmask);
+    const avx_m256_t r = v.real;
+    avx_m256_t asympt_mask = _mm256_cmp_pd(r, _mm256_set1_pd(threshold), _CMP_GT_OS);
+    // asympt_mask = mask for asymptotic method
+    int imask = _mm256_movemask_pd(asympt_mask);
     // imask == 0 => all are LE threshold
     // imask == 0xF => all are GT threshold
-    // imask, otherwise has mixed and use thmask as a mask
-    if(imask == 0) {            // all <= threshold
-      // ...
-    } else if(imask == 0xF) {   // all > threshold
-      avx_m256_t ir = _mm256_div_pd(AVX_ONE_, r);
+    // imask, otherwise has mixed and use asymp_mask as a mask
+    avx_m256c_t direct_res, asympt_res;
+
+    if(imask < 0xF) {          // either imask == 0 (all <= threshold) or mixed
+      // the direct method to compute j1
+      avx_m256_t g = AVX_ONE_;  // (1.0 / gamma(nu + k + 1)), nu = 1, k = 0 => (1.0 / gamma(2)) = 1.0
+      avx_m256_t r2 = _mm256_andnot_pd(asympt_mask,
+                                       _mm256_mul_pd(_mm256_set1_pd(0.25), _mm256_mul_pd(r, r)));
+      avx_m256_t r0 = g, temp = g;
+      int k = 1, m = 1;
+      for(; k < MAXK; ++ k) {
+        m *= -1;
+        temp = _mm256_mul_pd(_mm256_div_pd(r2, _mm256_set1_pd(k * (k + 1))), temp);
+                                                      // (-1)^k * (z^2 / 4)^k / (k * (k + 1))
+        r0 = _mm256_add_pd(r0, _mm256_mul_pd(_mm256_set1_pd(m), temp));
+        //if(fabs(temp) < REAL_EPSILON_) break;
+        avx_m256_t cmp = _mm256_cmp_pd(temp, AVX_EPSILON_, _CMP_GT_OS);
+        int cond = _mm256_movemask_pd(cmp);
+        if(cond == 0) break;
+      } // for
+      if(k == MAXK) {
+        std::cerr << "error: bessel loop overflow occured in direct method" << std::endl;
+        return v;
+      } // if
+      direct_res.real = _mm256_mul_pd(_mm256_set1_pd(0.5), _mm256_mul_pd(r0, r));  // (z/2)^nu
+      direct_res.imag = AVX_ZERO_;
+    } // if
+
+    if(imask > 0) {          // either imask == 0xF (all > threshold) or mixed
+      // asymptotic method to compute j1
+      avx_m256_t ir = _mm256_and_pd(asympt_mask, _mm256_div_pd(AVX_ONE_, r));
       avx_m256_t irk = ir;
       avx_m256_t ak = AVX_ONE_;                 // a0 = 1
       avx_m256_t xk = ak;                       // x0 = a0 / 1
@@ -327,7 +354,7 @@ namespace hig {
         if(xcond == 0 && ycond == 0) break;
       } // for
       if(k == MAXK) {
-        std::cerr << "error: Bessel loop overflow occured" << std::endl;
+        std::cerr << "error: Bessel loop overflow occured in asymptotic method" << std::endl;
         return v;
       } // if
       avx_m256_t w = _mm256_sub_pd(r, _mm256_set1_pd(0.75 * PI_));
@@ -338,14 +365,23 @@ namespace hig {
       t4 = _mm256_mul_pd(t2, xk_sum);
       t5 = _mm256_mul_pd(t3, yk_sum);
       t6 = _mm256_sub_pd(t4, t5);
-      t7 = _mm256_mul_pd(t0, t6);
-      avx_m256c_t res;
-      res.real = t7; res.imag = AVX_ZERO_;
-      return res;
-    } else {            // use mask and do both
-      // ...
-    } // if-else
+      asympt_res.real = _mm256_mul_pd(t0, t6);
+      asympt_res.imag = AVX_ZERO_;
+    } // if
+
+    if(imask == 0x0) return direct_res;
+    if(imask == 0xF) return asympt_res;
+
+    // mixed case
+    avx_m256c_t mixed_res;
+    avx_m256_t ares = _mm256_and_pd(asympt_mask, asympt_res.real);
+    avx_m256_t dres = _mm256_andnot_pd(asympt_mask, direct_res.real);
+    mixed_res.real = _mm256_or_pd(ares, dres);
+    mixed_res.imag = AVX_ZERO_;
+
+    return mixed_res;
   } // avx_cj1_cp()
+
 
   static inline avx_m256c_t avx_cbesselj_cp(avx_m256c_t v, int o) {
     if(o == 1) return avx_cj1_cp(v);
