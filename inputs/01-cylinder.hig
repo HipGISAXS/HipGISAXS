@@ -2,9 +2,10 @@ hipGisaxsInput = {
 	shape = {
 		key = "s1",	 		# a unique key to identify this shape in this file
 		name = "cylinder",		# shape name
-#		originvec = [0 0 0],
-		param = { type = "height", min = 5 },
-		param = { type = "radius", min = 20 }
+	  #param = { type = "height", min = 5 },
+		param = { type = "height", min = 5, max = 10, stat = "gaussian", p1 = 7.5, p2 = 1.0, nvalues = 10 },
+	  #param = { type = "radius", min = 20 }
+		param = { type = "radius", min = 20, max = 30, stat = "gaussian", p1 = 25, p2 = 3.0, nvalues = 10 }
 	},
 	layer = {
 		key = "substr",	 	# special key for case of the substrate layer infinite in lower half space
@@ -44,7 +45,7 @@ hipGisaxsInput = {
 		runname = "cyl",					# name for current run and folder name for outputs
 		method = "dwba",					# theorical approach (see list)
 		outputregion = { type = "qspace" , minpoint = [ -3 0 ], maxpoint = [ 3 3 ] },
-		resolution = [ 1000 500 ],			# number of q points per pixel
+		resolution = [ 2000 1000 ],			# number of q points per pixel
 		nslices = 0							# max number of slices for slicing algorithm
 	}
 }

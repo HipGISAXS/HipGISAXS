@@ -1,4 +1,4 @@
-HIPGISAXS_DIR = ..
+HIPGISAXS_DIR = ../..
 BOOST_DIR = /usr/local/boost
 CUDA_DIR = /usr/local/cuda
 
