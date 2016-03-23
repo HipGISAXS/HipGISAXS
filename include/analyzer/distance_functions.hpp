@@ -24,8 +24,9 @@
 // The base class used everywhere
 class DistanceMeasure {
   public:
-    virtual bool operator()(hig::real_t*& ref, hig::real_t*& data, unsigned int*& mask, unsigned int size,
-                std::vector<hig::real_t>& dist) const = 0;
+    virtual bool operator()(hig::real_t*& ref, hig::real_t*& data,
+                            unsigned int*& mask, unsigned int size,
+                            std::vector<hig::real_t>& dist) const = 0;
   //  virtual hig::real_t operator()(hig::real_t*& ref, hig::real_t*& data, unsigned int size) const { }
 }; // class DistanceMeasure
 
@@ -36,8 +37,9 @@ class AbsoluteDifferenceError : public DistanceMeasure {
     AbsoluteDifferenceError() { }
     ~AbsoluteDifferenceError() { }
 
-    bool operator()(hig::real_t*& ref, hig::real_t*& data, unsigned int*& mask, unsigned int size,
-            std::vector<hig::real_t>& dist) const {
+    bool operator()(hig::real_t*& ref, hig::real_t*& data,
+                    unsigned int*& mask, unsigned int size,
+                    std::vector<hig::real_t>& dist) const {
       if(ref == NULL || data == NULL) return false;
       double dist_sum = 0.0;
       for(int i = 0; i < size; ++ i) {
@@ -50,15 +52,15 @@ class AbsoluteDifferenceError : public DistanceMeasure {
 }; // class AbsoluteDifferenceError
 
 
-// vector of differences
+// residual vector of differences
 class ResidualVector : public DistanceMeasure {
   public:
     ResidualVector() { }
     ~ResidualVector() { }
 
-    //std::vector<hig::real_t> operator()(hig::real_t*& ref, hig::real_t*& data, unsigned int size) const {
-    bool operator()(hig::real_t*& ref, hig::real_t*& data, unsigned int*& mask, unsigned int size,
-            std::vector<hig::real_t>& dist) const {
+    bool operator()(hig::real_t*& ref, hig::real_t*& data,
+                    unsigned int*& mask, unsigned int size,
+                    std::vector<hig::real_t>& dist) const {
       dist.clear();
       for(int i = 0; i < size; ++ i) {
         dist.push_back(mask[i] * (ref[i] - data[i]));
@@ -68,14 +70,33 @@ class ResidualVector : public DistanceMeasure {
 }; // class ResidualVector
 
 
+class RelativeError : public DistanceMeasure {
+  public:
+    RelativeError() { }
+    ~RelativeError() { }
+
+    bool operator()(hig::real_t*& ref, hig::real_t*& data,
+                    unsigned int*& mask, unsigned int size,
+                    std::vector<hig::real_t>& dist) const {
+      if(ref == NULL || data == NULL) return false;
+      dist.clear();
+      for(int i = 0; i < size; ++ i) {
+        dist.push_back(mask[i] * (data[i] - ref[i]) / fabs(ref[i]));
+      } // for
+      return true;
+    } // operator()
+}; // class RelativeError
+
+
 // sum of squares of absolute differences
 class AbsoluteDifferenceSquare : public DistanceMeasure {
   public:
     AbsoluteDifferenceSquare() { }
     ~AbsoluteDifferenceSquare() { }
 
-    bool operator()(hig::real_t*& ref, hig::real_t*& data, unsigned int*& mask, unsigned int size,
-            std::vector<hig::real_t>& dist) const {
+    bool operator()(hig::real_t*& ref, hig::real_t*& data,
+                    unsigned int*& mask, unsigned int size,
+                    std::vector<hig::real_t>& dist) const {
       if(ref == NULL || data == NULL || mask == NULL) return false;
       double dist_sum = 0.0;
       for(int i = 0; i < size; ++ i) {
@@ -95,8 +116,9 @@ class AbsoluteDifferenceSquareNorm : public DistanceMeasure {
     AbsoluteDifferenceSquareNorm() { }
     ~AbsoluteDifferenceSquareNorm() { }
 
-    bool operator()(hig::real_t*& ref, hig::real_t*& data, unsigned int*& mask, unsigned int size,
-            std::vector<hig::real_t>& dist) const {
+    bool operator()(hig::real_t*& ref, hig::real_t*& data,
+                    unsigned int*& mask, unsigned int size,
+                    std::vector<hig::real_t>& dist) const {
       if(ref == NULL || data == NULL) return false;
       double dist_sum = 0.0;
       double ref_sum = 0.0;
@@ -119,8 +141,9 @@ class AbsoluteDifferenceNorm : public DistanceMeasure {
     AbsoluteDifferenceNorm() { }
     ~AbsoluteDifferenceNorm() { }
 
-    bool operator()(hig::real_t*& ref, hig::real_t*& data, unsigned int*& mask, unsigned int size,
-            std::vector<hig::real_t>& dist) const {
+    bool operator()(hig::real_t*& ref, hig::real_t*& data,
+                    unsigned int*& mask, unsigned int size,
+                    std::vector<hig::real_t>& dist) const {
       if(ref == NULL || data == NULL) return false;
       double dist_sum = 0.0;
       double ref_sum = 0.0;

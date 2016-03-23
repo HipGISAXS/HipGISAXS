@@ -29,6 +29,33 @@ f(X) - f(X*) (estimated)            <= fatol
 
 namespace hig {
 
+
+  /* default constructor */
+  FitPOUNDERSAlgo::FitPOUNDERSAlgo() {
+        name_ = algo_pounders;
+        max_iter_ = 200;
+        max_hist_ = 200;
+        tol_ = 1e-4;
+  } // FitPOUNDERSAlgo::FitPOUNDERSAlgo()
+
+
+  /* constructor to set objective function */
+  FitPOUNDERSAlgo::FitPOUNDERSAlgo(int narg, char** args,
+                                   ObjectiveFunction* obj, unsigned int algo_num) {
+    name_ = algo_pounders;
+    obj_func_ = obj;
+    max_iter_ = 200;
+    max_hist_ = 200;
+    tol_ = HiGInput::instance().analysis_tolerance(algo_num);
+    num_obs_ = (*obj_func_).data_size();
+    num_params_ = (*obj_func_).num_fit_params();
+    x0_ = (*obj_func_).fit_param_init_values();
+  } // FitPOUNDERSAlgo::FitPOUNDERSAlgo()
+
+
+  FitPOUNDERSAlgo::~FitPOUNDERSAlgo() { }
+
+
   bool FitPOUNDERSAlgo::run(int argc, char **argv, int algo_num, int img_num) {
     if(!(*obj_func_).set_reference_data(img_num)) return false;
 
@@ -143,7 +170,7 @@ namespace hig {
       TaoGetHistory(tao, 0, 0, 0, &nhist);
     #endif
 
-    PetscPrintf(PETSC_COMM_WORLD, "** History:\n");
+    PetscPrintf(PETSC_COMM_WORLD, "** [pounders] History:\n");
     for(int i = 0; i < nhist; ++ i)
       PetscPrintf(PETSC_COMM_WORLD, "** %d:\t%g\t%g\n", i, hist[i], resid[i]);
 
@@ -159,7 +186,7 @@ namespace hig {
       xn_.push_back(y[0]);
     } // for
 
-    std::cout << "** Final vector: [ ";
+    std::cout << "** [pounders] Final vector: [ ";
     for(real_vec_t::iterator i = xn_.begin(); i != xn_.end(); ++ i) std::cout << *i << " ";
     std::cout << "]" << std::endl;
 

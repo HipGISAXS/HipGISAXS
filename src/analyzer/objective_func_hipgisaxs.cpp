@@ -231,12 +231,12 @@ namespace hig {
         exit(-1);
       } // if
 
-#ifdef MEMDEBUG
-      if(!hipgisaxs_.check_finite((*ref_data_).data(), n_par_ * n_ver_))
-        std::cerr << "** ARRAY CHECK ** ref_data_ failed check" << std::endl;
-      if(!hipgisaxs_.check_finite(gisaxs_data, n_par_ * n_ver_))
-        std::cerr << "** ARRAY CHECK ** gisaxs_data failed check" << std::endl;
-#endif // MEMDEBUG
+      #ifdef MEMDEBUG
+        if(!hipgisaxs_.check_finite((*ref_data_).data(), n_par_ * n_ver_))
+          std::cerr << "** ARRAY CHECK ** ref_data_ failed check" << std::endl;
+        if(!hipgisaxs_.check_finite(gisaxs_data, n_par_ * n_ver_))
+          std::cerr << "** ARRAY CHECK ** gisaxs_data failed check" << std::endl;
+      #endif // MEMDEBUG
 
       // compute error/distance
       std::cout << "-- Computing distance..." << std::endl;

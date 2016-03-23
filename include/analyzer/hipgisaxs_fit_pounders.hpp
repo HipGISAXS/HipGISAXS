@@ -36,16 +36,9 @@ namespace hig {
       unsigned int num_obs_;
 
     public:
-      FitPOUNDERSAlgo() { name_= algo_pounders; max_iter_ = 200; max_hist_ = 200; tol_ = 1e-6; }
-      FitPOUNDERSAlgo(int narg, char** args, ObjectiveFunction* obj, unsigned int algo_num) {
-        name_= algo_pounders; obj_func_ = obj; max_iter_ = 200; max_hist_ = 200;
-        tol_ = HiGInput::instance().analysis_tolerance(algo_num);
-        num_obs_ = (*obj_func_).data_size();
-        num_params_ = (*obj_func_).num_fit_params();
-        x0_ = (*obj_func_).fit_param_init_values();
-      } // FitPOUNDERSAlgo()
-
-      ~FitPOUNDERSAlgo() { }
+      FitPOUNDERSAlgo();
+      FitPOUNDERSAlgo(int narg, char** args, ObjectiveFunction* obj, unsigned int algo_num);
+      ~FitPOUNDERSAlgo();
 
       bool run(int argc,char **argv, int, int);
       void print();
