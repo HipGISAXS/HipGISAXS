@@ -5,11 +5,7 @@
  *  Created: Jul 18, 2012
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
- *  Developers: Slim Chourou <stchourou@lbl.gov>
- *              Abhinav Sarje <asarje@lbl.gov>
- *              Elaine Chan <erchan@lbl.gov>
- *              Alexander Hexemer <ahexemer@lbl.gov>
- *              Xiaoye Li <xsli@lbl.gov>
+ *          Dinesh Kumar  <dkumar@lbl.gov>
  *
  *  Licensing: The HipGISAXS software is only available to be downloaded and
  *  used by employees of academic research institutions, not-for-profit
@@ -41,7 +37,7 @@
 
 namespace hig {
 
-  bool NumericFormFactor::init(RotMatrix_t & rot, std::vector<complex_t>& ff) {
+  bool NumericFormFactor::init(RotMatrix_t& rot, std::vector<complex_t>& ff) {
     nqy_ = QGrid::instance().nqy();
     nqz_ = QGrid::instance().nqz_extended();
     ff.clear();
@@ -49,30 +45,31 @@ namespace hig {
     return true;
   } // NumericFormFactor::init()
 
-  bool NumericFormFactor::compute2(const char * filename, complex_vec_t &ff,
-          RotMatrix_t & rot
-#ifdef USE_MPI
-          , woo::MultiNode & world_comm, std::string comm_key
-#endif
-          ) {
 
+  // default (new)
+  bool NumericFormFactor::compute2(const char * filename, complex_vec_t &ff,
+                                   RotMatrix_t & rot
+                                   #ifdef USE_MPI
+                                    , woo::MultiNode & world_comm, std::string comm_key
+                                   #endif
+                                   ) {
     // initialize 
-    init (rot, ff);
+    init(rot, ff);
 
     // read file
     std::vector<vertex_t> vertices;
-    std::vector<std::vector<int>> faces;
-    std::vector<std::vector<int>> dummy;
+    std::vector<std::vector<int> > faces;
+    std::vector<std::vector<int> > dummy;
     ObjectShapeReader shape_reader;
-    if (!shape_reader.load_object (filename, vertices, faces, dummy)) {
-        std::cerr << "Error: shape reader failed to load triangles" << std::endl;
+    if(!shape_reader.load_object(filename, vertices, faces, dummy)) {
+        std::cerr << "error: shape reader failed to load triangles" << std::endl;
         return false;
-    }
+    } // if
 
-    // create triangles
+    // construct triangles
     int num_triangles = faces.size();
-    triangle_t * triangles = new (std::nothrow) triangle_t [num_triangles];
-    for (int i = 0; i < num_triangles; i++) {
+    triangle_t* triangles = new (std::nothrow) triangle_t[num_triangles];
+    for(int i = 0; i < num_triangles; i++) {
       triangles[i].v1[0] = vertices[faces[i][0]-1].x;
       triangles[i].v1[1] = vertices[faces[i][0]-1].y;
       triangles[i].v1[2] = vertices[faces[i][0]-1].z;
@@ -84,121 +81,110 @@ namespace hig {
       triangles[i].v3[0] = vertices[faces[i][2]-1].x;
       triangles[i].v3[1] = vertices[faces[i][2]-1].y;
       triangles[i].v3[2] = vertices[faces[i][2]-1].z;
-    }
+    } // for
 
-
-//#ifndef __SSE3__
-    real_vec_t shape_def;
-//#else
-//#ifdef USE_GPU
-//    real_vec_t shape_def;
-//#else
-//    real_t * shape_def = NULL;
-//#endif
-//#endif
-    //unsigned int num_triangles = read_shapes_file(filename, shape_def);
-
-#ifdef USE_MPI
+    #ifdef USE_MPI
       int num_procs = world_comm.size(comm_key);
       int rank = world_comm.rank(comm_key);
       bool master = world_comm.is_master(comm_key);
-#else
+    #else
       bool master = true;
-
-#endif
+    #endif // USE_MPI
 
     if(master) {
       std::cout << "-- Numerical form factor computation ..." << std::endl
-            << "**        Using input shape file: " << filename << std::endl
-            << "**     Number of input triangles: " << num_triangles << std::endl
-            << "**  Q-grid resolution (q-points): " << nqy_ << std::endl
-#ifdef USE_MPI
-              << "** Number of processes requested: " << num_procs << std::endl
-#endif
-            << std::flush;
+                << "**        Using input shape file: " << filename << std::endl
+                << "**     Number of input triangles: " << num_triangles << std::endl
+                << "**  Q-grid resolution (q-points): " << nqy_ << std::endl
+                #ifdef USE_MPI
+                << "** Number of processes requested: " << num_procs << std::endl
+                #endif
+                << std::flush;
     } // if
 
     // copy q-points
-    real_t * qx = new (std::nothrow) real_t [nqy_];
-    if (qx == NULL) {
-        std::cerr << "Error: failure in allocation memeroy." << std::endl;
+    real_t * qx = new (std::nothrow) real_t[nqy_];
+    if(qx == NULL) {
+        std::cerr << "error: failure in memory allocation for qx" << std::endl;
         return false;
-    }
-    for (int i = 0; i < nqy_; i++ ) qx[i] = QGrid::instance().qx(i);
+    } // if
+    for(int i = 0; i < nqy_; ++ i) qx[i] = QGrid::instance().qx(i);
 
-    real_t * qy = new (std::nothrow) real_t [nqy_];
-    if (qy == NULL) {
-        std::cerr << "Error: failure in allocation memeroy." << std::endl;
+    real_t * qy = new (std::nothrow) real_t[nqy_];
+    if(qy == NULL) {
+        std::cerr << "error: failure in memory allocation for qy" << std::endl;
         return false;
-    }
-    for (int i = 0; i < nqy_; i++) qy[i] = QGrid::instance().qy(i);
+    } // if
+    for(int i = 0; i < nqy_; ++ i) qy[i] = QGrid::instance().qy(i);
 
-#ifdef FF_NUM_GPU
-    cucomplex_t * qz = new (std::nothrow) cucomplex_t [nqz_];
-    if (qz == NULL) {
-      std::cerr << "Error: failure in memeroy allocation." << std::endl;
-      return 0;
-    }
-    for (int i = 0; i < nqz_; i++) {
+    #ifdef FF_NUM_GPU   // for GPU
+    cucomplex_t * qz = new (std::nothrow) cucomplex_t[nqz_];
+    if(qz == NULL) {
+      std::cerr << "error: failure in memory allocation for qz" << std::endl;
+      return false;
+    } // if
+    for(int i = 0; i < nqz_; ++ i) {
       qz[i].x = QGrid::instance().qz_extended(i).real();
       qz[i].y = QGrid::instance().qz_extended(i).imag();
-    }
-#else
-    complex_t * qz = new (std::nothrow) complex_t [nqz_];
-    if (qz == NULL) {
-        std::cerr << "Error: failure in memeroy allocation." << std::endl;
-        return 0;
-    }
-    for (int i = 0; i < nqz_; i++) qz[i] = QGrid::instance().qz_extended(i);
-#endif
+    } // for
+    #else               // for CPU
+    complex_t * qz = new (std::nothrow) complex_t[nqz_];
+    if(qz == NULL) {
+        std::cerr << "error: failure in memory allocation for qz" << std::endl;
+        return false;
+    } // if
+    for(int i = 0; i < nqz_; ++ i) qz[i] = QGrid::instance().qz_extended(i);
+    #endif              // FF_NUM_GPU
 
-    real_t compute_time = 0.;
-#ifdef FF_NUM_GPU
-    cucomplex_t * p_ff = NULL;
-    // call kernel
-    if (num_triangles != gff_.compute_exact_triangle(triangles, num_triangles,
-                p_ff, nqy_, qx, qy,
-                nqz_, qz, rot_, compute_time)) {
-        std::cerr << "Calculation of numerical form-factor failed" << std::endl;
+    real_t compute_time = 0.0;
+    #ifdef FF_NUM_GPU
+      cucomplex_t * p_ff = NULL;
+      if(num_triangles != gff_.compute_exact_triangle(triangles, num_triangles,
+                                                      p_ff, nqy_, qx, qy,
+                                                      nqz_, qz, rot_, compute_time)) {
+        std::cerr << "error: calculation of numerical form-factor failed" << std::endl;
         return false;
-    }
-    for (int i = 0; i < nqz_; i++) ff.push_back (complex_t(p_ff[i].x, p_ff[i].y));
-    std::cout << "**        FF GPU compute time: " << compute_time << " ms." << std::endl;
-#else
-    complex_t * p_ff = new (std::nothrow) complex_t[nqz_];
-    if (p_ff == NULL){
-      std::cerr << "Error: failed to allocate memory of size: " 
-          << nqz_ * sizeof(complex_t) << std::endl;
-      return false;
-    }
-    if (num_triangles != cff_.compute_exact_triangle(triangles, num_triangles, 
-                p_ff, nqy_, qx, qy, 
-                nqz_, qz, rot_, compute_time)) {
-        std::cerr << "Calculation of numerical form-factor failed" << std::endl;
+      } // if
+      for(int i = 0; i < nqz_; ++ i) ff.push_back(complex_t(p_ff[i].x, p_ff[i].y));
+      std::cout << "**        FF GPU compute time: " << compute_time << " ms." << std::endl;
+    #else             // on CPU
+      complex_t * p_ff = new (std::nothrow) complex_t[nqz_];
+      if(p_ff == NULL){
+        std::cerr << "error: failed to allocate memory of size "
+                  << nqz_ * sizeof(complex_t) << std::endl;
         return false;
-    }
-    for (int i = 0; i < nqz_; i++) ff.push_back(p_ff[i]);
-    std::cout << "**        FF CPU compute time: " << compute_time << " ms." << std::endl;
-#endif
-    delete [] qx;
-    delete [] qy;
-    delete [] qz;
-    delete [] triangles;
-    if (p_ff != NULL) delete [] p_ff;
+      } // if
+      if(num_triangles != cff_.compute_exact_triangle(triangles, num_triangles, 
+                                                      p_ff, nqy_, qx, qy, 
+                                                      nqz_, qz, rot_, compute_time)) {
+        std::cerr << "error: calculation of numerical form-factor failed" << std::endl;
+        return false;
+      } // if
+      for(int i = 0; i < nqz_; ++ i) ff.push_back(p_ff[i]);
+      std::cout << "**        FF CPU compute time: " << compute_time << " ms." << std::endl;
+    #endif            // FF_NUM_GPU
+
+    delete[] qx;
+    delete[] qy;
+    delete[] qz;
+    delete[] triangles;
+    if(p_ff != NULL) delete[] p_ff;
+
     return true;
-  }
+  } // NumericFormFactor::compute2()
 
 
+  // old
   bool NumericFormFactor::compute(const char * filename, complex_vec_t & ff,
-          RotMatrix_t & rot
-#ifdef USE_MPI
-          , woo::MultiNode &world_comm, std::string comm_key
-#endif
-          ){
+                                  RotMatrix_t & rot
+                                  #ifdef USE_MPI
+                                    , woo::MultiNode &world_comm, std::string comm_key
+                                  #endif
+                                  ) {
     real_t comp_time = 0.0;
 
     // initialize 
-    init (rot, ff);
+    init(rot, ff);
 
     unsigned int nqy = QGrid::instance().nqy();
     unsigned int nqz = QGrid::instance().nqz_extended();
@@ -839,33 +825,17 @@ namespace hig {
   } // NumericFormFactor::construct_ff()
   
   
-  /*void NumericFormFactor::gather_all(std::complex<float> *cast_p_ff,
-      unsigned long int local_qpoints,
-      std::complex<float> *cast_ff, int *recv_counts, int *displacements, MPI::Comm &comm) {
-    comm.Gatherv(cast_p_ff, local_qpoints, MPI::COMPLEX, cast_ff, recv_counts,
-          displacements, MPI::COMPLEX, 0);
-  } // NumericFormFactor::gather_all()
-  
-  
-  void NumericFormFactor::gather_all(std::complex<double> *cast_p_ff,
-      unsigned long int local_qpoints,
-      std::complex<double> *cast_ff, int *recv_counts, int *displacements, MPI::Comm &comm) {
-    comm.Gatherv(cast_p_ff, local_qpoints, MPI::DOUBLE_COMPLEX, cast_ff, recv_counts,
-          displacements, MPI::DOUBLE_COMPLEX, 0);
-  } // NumericFormFactor::gather_all()
-  */
-  
   /**
    * Function to read the input shape file.
    */
   unsigned int NumericFormFactor::read_shapes_file_dat(const char* filename, real_vec_t &shape_def) {
     std::ifstream f(filename);
     if(!f.is_open()) {
-      std::cout << "Cannot open file " << filename << std::endl;
-      return 1;
+      std::cout << "error: could not open file " << filename << std::endl;
+      return 0;
     } // if
+
     real_t s = 0.0, cx = 0.0, cy = 0.0, cz = 0.0, nx = 0.0, ny = 0.0, nz = 0.0;
-  
     while(true) {
       f >> s;
       if(f.eof() || !f.good()) break;

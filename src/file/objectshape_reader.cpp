@@ -28,19 +28,19 @@
 namespace hig {
 
   /**
+   * constructor: default, do nothing
+   */
+  ObjectShapeReader::ObjectShapeReader() { }
+
+
+  /**
    * constructor: read input object file, convert to shape
    */
   ObjectShapeReader::ObjectShapeReader(const char* filename, double* &shape_def,
-                      unsigned int& num_triangles) {
+                                       unsigned int& num_triangles) {
     std::vector<vertex_t> vertices;
-    //std::vector<poly_index_t> Vn3, Vn4, F3, F4;
     std::vector<std::vector<int> > face_list_3v, face_list_4v;
     load_object(filename, vertices, face_list_3v, face_list_4v);
-
-    //load_object(filename, vertices, Vn3, Vn4, F3, F4);
-    //std::cout << "Vertices: " << std::endl;  display_vertices(vertices);
-    //std::cout << "F3: " << std::endl;    display_poly_index(F3);
-    //std::cout << "F4: " << std::endl;    display_poly_index(F4);
 
     if(face_list_4v.size() > 0)
       std::cerr << "warning: ignoring faces with four vertices. may be fix it later" << std::endl;
@@ -53,50 +53,45 @@ namespace hig {
 
 
   /**
+   * destructor: do nothing
+   */
+  ObjectShapeReader::~ObjectShapeReader() { }
+
+
+  /**
    * load input object file into local data structures in memory
    */
   bool ObjectShapeReader::load_object(const char* filename,
-      std::vector<vertex_t> &vertices,
-      /*std::vector<poly_index_t> &Vn3, std::vector<poly_index_t> &Vn4,
-      std::vector<poly_index_t> &F3, std::vector<poly_index_t> &F4,*/
-      std::vector<std::vector<int> > &face_list_3v,
-      std::vector<std::vector<int> > &face_list_4v) {
-
+                                      std::vector<vertex_t> &vertices,
+                                      std::vector<std::vector<int> > &face_list_3v,
+                                      std::vector<std::vector<int> > &face_list_4v) {
     std::ifstream input(filename);
     if(!input.is_open()) {
-      std::cout << "Unable to open file " << filename << std::endl;
+      std::cout << "error: unable to open file " << filename << std::endl;
       return false;
     } // if
 
-    int num_texture = 0, num_normal = 0;
-    //std::vector<int> g3num, g4num;
-    //int f3num = 0, f4num = 0;
-    //char discard;
-    //real_t data[12], tc1[4], vn1[4];
-    //poly_index_t f1;
-
+    char* temp_line = new char[257];  // will not work if line has more than 256 characters
+    tokenizer_t::iterator iter1, iter2;
     std::vector<int> face_vi, face_vti, face_vni;
     int face_num_3v, face_num_4v;
-    tokenizer_t::iterator iter1, iter2;
-    char* temp_line = new char[257];  // will not work if line has more than 256 characters
+    int num_texture = 0, num_normal = 0;
 
     while(!input.eof()) {
       input.getline(temp_line, 256);
       std::string temp_string(temp_line);
-
       temp_string.erase(std::remove(temp_string.begin(), temp_string.end(), '\r'),
-                temp_string.end());
+                        temp_string.end());
       if(temp_string.empty()) continue;
 
-      std::stringstream temp_stream(temp_string);
-      std::string token;
-      temp_stream >> token;
-
       std::vector<int> pos_face_vertices, pos_slash;
-      //int num_face_vertices = 0, num_slash = 0, dbslash = 0;
 
       token_separator_t sep1(" ");
+      std::stringstream temp_stream(temp_string);
       tokenizer_t tokens1(temp_string, sep1);
+
+      std::string token;
+      temp_stream >> token;
 
       switch(token_hash(token)) {
         case VERTEX:
@@ -191,12 +186,12 @@ namespace hig {
           } // if-else
           break;*/
 
-        case FACE:  // new processing
-          face_vi.clear();  // vertex indices
-          face_vti.clear();  // vertex texture indices
-          face_vni.clear();  // vertex normal indices
+        case FACE:            // new processing
+          face_vi.clear();    // vertex indices
+          face_vti.clear();   // vertex texture indices
+          face_vni.clear();   // vertex normal indices
           iter1 = tokens1.begin();
-          ++ iter1;  // ignore the first token
+          ++ iter1;           // ignore the first token
           for(; iter1 != tokens1.end(); ++ iter1) {
             token_separator_t sep2("/", " ", boost::keep_empty_tokens);
             tokenizer_t tokens2(*iter1, sep2);
@@ -214,7 +209,7 @@ namespace hig {
             } // if
             if(iter2 != tokens2.end()) {
               std::cerr << "error: could not understand the input line '"
-                  << temp_string << "'" << std::endl;
+                        << temp_string << "'" << std::endl;
               return false;
             } // if-else
           } // for
@@ -252,8 +247,8 @@ namespace hig {
    * convert data from object file into shape definition
    */
   bool ObjectShapeReader::convert_to_shape(std::vector<std::vector<int> > face_list_3v,
-                          std::vector<vertex_t> vertices,
-                          std::vector<real_t> &shape_def) {
+                                           std::vector<vertex_t> vertices,
+                                           std::vector<real_t> &shape_def) {
     int num_triangles = face_list_3v.size();
     int count = 0;
     for(std::vector<std::vector<int> >::iterator i = face_list_3v.begin();
@@ -261,7 +256,8 @@ namespace hig {
       real_t s_area = 0.0;
       vertex_t norm, center;
       if(!get_triangle_params(vertices[(*i)[0] - 1], vertices[(*i)[1] - 1], vertices[(*i)[2] - 1],
-                s_area, norm, center)) continue;
+                              s_area, norm, center))
+        continue;
       shape_def.push_back(s_area);
       shape_def.push_back(norm.x);
       shape_def.push_back(norm.y);
@@ -279,7 +275,7 @@ namespace hig {
    * given the vertices of a triangle in order, compute surface area, normal and center
    */
   bool ObjectShapeReader::get_triangle_params(vertex_t v1, vertex_t v2, vertex_t v3,
-      real_t &s_area, vertex_t &normal, vertex_t &center) {
+                                              real_t &s_area, vertex_t &normal, vertex_t &center) {
     center.x = (v1.x + v2.x + v3.x) / 3.0;
     center.y = (v1.y + v2.y + v3.y) / 3.0;
     center.z = (v1.z + v2.z + v3.z) / 3.0;
@@ -311,6 +307,7 @@ namespace hig {
    */
   token_t ObjectShapeReader::token_hash(std::string const &str) {
     if(str == "#") return COMMENT;
+    if(str[0] == '#') return COMMENT;
     if(str == "v") return VERTEX;
     if(str == "vt") return TEXTURE;
     if(str == "g") return SUB_MESH;

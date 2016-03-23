@@ -1,11 +1,10 @@
 /**
  *  Project: HipGISAXS (High-Performance GISAXS)
  *
- *  File: ff_tri_cpu.hpp
- *  Created: Nov 05, 2011
+ *  File: ff_num_exact_kernels.cpp
+ *  Created: Mar 22, 2016
  *
- *  Author: Dinesh Kumar <dkumar@lbl.gov>
- *          Abhinav Sarje <asarje@lbl.gov>
+ *  Author: Abhinav Sarje <asarje@lbl.gov>
  *
  *  Licensing: The HipGISAXS software is only available to be downloaded and
  *  used by employees of academic research institutions, not-for-profit
@@ -33,11 +32,16 @@
 #include <common/parameters.hpp>
 #include <common/cpu/parameters_cpu.hpp>
 #include <ff/cpu/ff_num_cpu.hpp>
+
+#ifdef INTEL_AVX
+#include <numerics/cpu/avx_numerics.hpp>
+#endif
   
 
 namespace hig {
+
+#ifdef INTEL_AVX
   
-//  complex_t FormFactorTriangle(real_t qx, real_t qy, complex_t qz,
   complex_t NumericFormFactorC::form_factor_kernel_exact(real_t qx, real_t qy, complex_t qz,
                                                          RotMatrix_t& rot,
                                                          const triangle_t& tri) {
@@ -117,18 +121,29 @@ namespace hig {
 
 
   /**
-   * Exact integration
+   * Exact integration: hand vectorized
    */
-  unsigned int NumericFormFactorC::compute_exact_triangle(const triangle_t* shape_def,
-                                                          int num_triangles,
-                                                          complex_t* &ff,
-                                                          int nqy, const real_t* qx, const real_t* qy,
-                                                          int nqz, const complex_t* qz,
-                                                          RotMatrix_t& rot,
-                                                          real_t& compute_time) {
+  unsigned int NumericFormFactorC::compute_exact_triangle_vec(const triangle_t* shape_def,
+                                                              int num_triangles,
+                                                              complex_t* &ff,
+                                                              int nqy,
+                                                              const real_t* qx, const real_t* qy,
+                                                              int nqz, const complex_t* qz,
+                                                              RotMatrix_t& rot,
+                                                              real_t& compute_time) {
     if(num_triangles < 1) return 0;
 
-    // allocate memory for the final FF 3D matrix
+    // TODO:
+    // vectorization is on the level of triangles (triangle loop)
+    // hence, qx, qy, qz dont need to be vectorized (unlike analytical ff)
+    // steps:
+    // convert shape_def to the vectorized data structure
+    // loop over all q-points
+    // loop over ceil(num_triangles/4) vector triangles
+    // compute a vector temp_ff in each vector triangle iteration
+    // sum vector temp_ff over all vector triangle iterations
+    // reduce the vector temp_ff by summing all 4 entries into one scalar ff for a q-point
+
     unsigned long int total_qpoints = nqz;
     ff = new (std::nothrow) complex_t[total_qpoints];
     if(ff == NULL) {
@@ -136,15 +151,6 @@ namespace hig {
                 << total_qpoints * sizeof(complex_t) << " bytes" << std::endl;
       return 0;
     } // if
-    //memset(ff, 0, total_qpoints * sizeof(complex_t));
- 
-    #if 0
-      int n = 10;
-      for(int i_t = 0; i_t < num_triangles; ++ i_t){
-        complex_t foo = FormFactorTriangle(qx[n], qy[n], qz[n], rot, shape_def[i_t]);
-        std::cout << foo << std::endl;
-      } // for
-    #endif
    
     woo::BoostChronoTimer timer;
     timer.start();
@@ -166,57 +172,6 @@ namespace hig {
   } // NumericFormFactorC::compute_exact_triangle()
 
 
-  /**
-   * Approximated integration
-   */
-  unsigned int NumericFormFactorC::compute_approx_triangle(const real_vec_t &shape_def,
-                                                           complex_t *& ff,
-                                                           int nqy, const real_t* qx, const real_t* qy, 
-                                                           int nqz, const complex_t * qz,
-                                                           RotMatrix_t& rot,
-                                                           real_t &comp_time){
-    int num_triangles = shape_def.size() / CPU_T_PROP_SIZE_;
-    if (num_triangles < 1) return 0;
-
-    ff = new (std::nothrow) complex_t[nqz];
-    if(ff == NULL){
-      std::cerr << "error: memory allocation failed for ff of requested size "
-                << nqz * sizeof(complex_t) << " bytes" << std::endl;
-      return 0;
-    } // if
-    //memset(ff, 0, nqz * sizeof(complex_t));
-
-    woo::BoostChronoTimer timer;
-    timer.start();
-
-    #pragma omp parallel for schedule(runtime)
-    for(int i_z = 0; i_z < nqz; ++ i_z) {
-      int i_y = i_z % nqy;
-      for(int i_t = 0; i_t < num_triangles; ++ i_t) {
-        int offset = i_t * CPU_T_PROP_SIZE_;
-        real_t s  = shape_def[offset];
-        real_t nx = shape_def[offset + 1];
-        real_t ny = shape_def[offset + 2];
-        real_t nz = shape_def[offset + 3];
-        real_t x  = shape_def[offset + 4];
-        real_t y  = shape_def[offset + 5];
-        real_t z  = shape_def[offset + 6];
-
-        // rotate q-vector
-        std::vector<complex_t> mq = rot.rotate(qx[i_y], qy[i_y], qz[i_z]);
-        real_t q2 = std::norm(mq[0]) + std::norm(mq[1]) + std::norm(mq[2]);
-        complex_t qn = mq[0] * nx + mq[1] * ny + mq[2] * nz;
-        complex_t qt = mq[0] * x  + mq[1] * y  + mq[2] * z;
-        complex_t nj = CMPLX_MINUS_ONE_;
-        complex_t np = CMPLX_ONE_;
-        ff[i_z] += nj * qn * s * std::exp(np * qt) / q2;
-      } // for
-    } // for
-
-    timer.stop();
-    comp_time = timer.elapsed_msec();
-
-    return num_triangles;
-  } // NumericFormFactorC::compute_approx_triangle()
+#endif // INTEL_AVX
 
 } // namespace hig

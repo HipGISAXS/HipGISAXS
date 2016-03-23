@@ -6,11 +6,6 @@
  *  Modified: Wed 08 Oct 2014 12:13:01 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
- *  Developers: Slim Chourou <stchourou@lbl.gov>
- *              Abhinav Sarje <asarje@lbl.gov>
- *              Elaine Chan <erchan@lbl.gov>
- *              Alexander Hexemer <ahexemer@lbl.gov>
- *              Xiaoye Li <xsli@lbl.gov>
  *
  *  Licensing: The HipGISAXS software is only available to be downloaded and
  *  used by employees of academic research institutions, not-for-profit
@@ -70,31 +65,30 @@ namespace hig {
       void clear(void);
 
       bool compute_form_factor(ShapeName shape, std::string shape_filename,
-                  shape_param_list_t& params,
-                  real_t single_thickness,
-                  vector3_t& transvec, real_t shp_tau, real_t shp_eta,
-                  RotMatrix_t &
-                  #ifdef USE_MPI
-                    , woo::MultiNode&, std::string
-                  #endif
-                  );
+                               shape_param_list_t& params,
+                               real_t single_thickness,
+                               vector3_t& transvec, real_t shp_tau, real_t shp_eta,
+                               RotMatrix_t &
+                               #ifdef USE_MPI
+                                , woo::MultiNode&, std::string
+                               #endif
+                               );
 
       complex_t operator[](unsigned int i) const { return ff_[i]; }
 
       // for testing only ... remove ...
-      bool read_form_factor(const char* filename,
-                  unsigned int nqx, unsigned int nqy, unsigned int nqz);
-      void print_ff(unsigned int nqx, unsigned int nqy, unsigned int nqz);
-      void save_ff(unsigned int nqz, const char* filename);
-      void save (unsigned, unsigned, const char *);
-      void printff(unsigned int nqx, unsigned int nqy, unsigned int nqz) {
+      bool read_form_factor(const char* filename, unsigned nqx, unsigned nqy, unsigned nqz);
+      void print_ff(unsigned nqx, unsigned nqy, unsigned nqz);
+      void save_ff(unsigned nqz, const char* filename);
+      void save(unsigned, unsigned, const char *);
+      void printff(unsigned nqx, unsigned nqy, unsigned nqz) {
         std::cout << "ff:" << std::endl;
-        for(unsigned int i = 0; i < nqx * nqy * nqz; ++ i)
+        for(unsigned i = 0; i < nqx * nqy * nqz; ++ i)
           std::cout << ff_[i].real() << "," << ff_[i].imag() << "\t";
         std::cout << std::endl;
       } // printff()
+      complex_t* ff(void) { return &ff_[0]; } // i know ... very bad!
 
-      complex_t* ff(void) { return &ff_[0]; }
   }; // class FormFactor
 
 } // namespace

@@ -6,11 +6,6 @@
  *  Modified: Wed 08 Oct 2014 12:17:43 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
- *  Developers: Slim Chourou <stchourou@lbl.gov>
- *              Abhinav Sarje <asarje@lbl.gov>
- *              Elaine Chan <erchan@lbl.gov>
- *              Alexander Hexemer <ahexemer@lbl.gov>
- *              Xiaoye Li <xsli@lbl.gov>
  *
  *  Licensing: The HipGISAXS software is only available to be downloaded and
  *  used by employees of academic research institutions, not-for-profit
@@ -36,33 +31,34 @@ namespace hig {
 
 
   bool FormFactor::compute_form_factor(ShapeName shape, std::string shape_filename,
-                    shape_param_list_t& params, real_t single_thickness,
-                    vector3_t& transvec, real_t shp_tau, real_t shp_eta,
-                    RotMatrix_t & rot
-                    #ifdef USE_MPI
-                      , woo::MultiNode& multi_node, std::string comm_key
-                    #endif
-                    ) {
+                                       shape_param_list_t& params, real_t single_thickness,
+                                       vector3_t& transvec, real_t shp_tau, real_t shp_eta,
+                                       RotMatrix_t & rot
+                                       #ifdef USE_MPI
+                                        , woo::MultiNode& multi_node, std::string comm_key
+                                       #endif
+                                       ) {
     if(shape == shape_custom) {
       /* compute numerically */
       is_analytic_ = false;
       numeric_ff_.init(rot, ff_);
       numeric_ff_.compute2(shape_filename.c_str(), ff_, rot
-                #ifdef USE_MPI
-                  , multi_node, comm_key
-                #endif
-                );
+                           #ifdef USE_MPI
+                             , multi_node, comm_key
+                           #endif
+                           );
     } else {
       /* compute analytically */
       is_analytic_ = true;
       analytic_ff_.init(rot, ff_);
       analytic_ff_.compute(shape, shp_tau, shp_eta, transvec,
-                  ff_, params, single_thickness, rot
-                  #ifdef USE_MPI
-                    , multi_node, comm_key
-                  #endif
-                  );
+                           ff_, params, single_thickness, rot
+                           #ifdef USE_MPI
+                            , multi_node, comm_key
+                           #endif
+                           );
     } // if-else
+
     return true;
   } // FormFactor::compute_form_factor()
 
@@ -102,7 +98,7 @@ namespace hig {
   } // FormFactor::print_ff()
 
 
-  void FormFactor::save (unsigned nrow, unsigned ncol, const char * filename) {
+  void FormFactor::save(unsigned nrow, unsigned ncol, const char * filename) {
     int size = 4 * ncol * nrow;
     std::ofstream out (filename);
     for (unsigned i = 0; i < size; i++){

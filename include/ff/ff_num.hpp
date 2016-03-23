@@ -6,11 +6,6 @@
  *  Modified: Mon 13 Jul 2015 09:36:15 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
- *  Developers: Slim Chourou <stchourou@lbl.gov>
- *              Abhinav Sarje <asarje@lbl.gov>
- *              Elaine Chan <erchan@lbl.gov>
- *              Alexander Hexemer <ahexemer@lbl.gov>
- *              Xiaoye Li <xsli@lbl.gov>
  *
  *  Licensing: The HipGISAXS software is only available to be downloaded and
  *  used by employees of academic research institutions, not-for-profit
@@ -30,29 +25,30 @@
 #include <complex>
 #include <cstring>
 
+#include <woo/timer/woo_boostchronotimers.hpp>
+#include <common/parameters.hpp>
+#include <common/enums.hpp>
+#include <model/qgrid.hpp>
+#include <utils/utilities.hpp>
+#include <numerics/matrix.hpp>
+
 #ifdef USE_MPI
 #include <mpi.h>
 #include <woo/comm/multi_node_comm.hpp>
-#endif
+#endif  // USE_MPI
 
-#include <common/parameters.hpp>
-#include <common/enums.hpp>
 #ifdef USE_PARALLEL_HDF5
 #include <file/hdf5shape_reader.h>
-#endif
-#include <model/qgrid.hpp>
-#include <utils/utilities.hpp>
+#endif  // USE_PARALLEL_HDF5
+
 #ifdef FF_NUM_GPU
-  #include <ff/gpu/ff_num_gpu.cuh>  // for gpu version
+#include <ff/gpu/ff_num_gpu.cuh>  // gpu version
 #elif defined USE_MIC
-  #include <ff/mic/ff_num_mic.hpp>  // for mic version
+#include <ff/mic/ff_num_mic.hpp>  // mic version
 #else
-  #include <ff/cpu/ff_num_cpu.hpp>  // for cpu version
+#include <ff/cpu/ff_num_cpu.hpp>  // cpu version
 #endif // FF_NUM_GPU
 
-#include <numerics/matrix.hpp>
-
-#include <woo/timer/woo_boostchronotimers.hpp>
 
 namespace hig {
 
@@ -61,7 +57,7 @@ namespace hig {
    */
   #ifdef FF_NUM_GPU
     void write_slice_to_file(cucomplex_t *ff, int nqx, int nqy, int nqz,
-                  char* filename, int axis, int slice);
+                             char* filename, int axis, int slice);
   #endif
   
   
@@ -72,45 +68,46 @@ namespace hig {
         // TODO: make the cpu and cpu version classes children of this class ...
     public:
 
-      #ifdef FF_NUM_GPU    // use GPUs for numerical
+      #ifdef FF_NUM_GPU           // use GPUs for numerical
         #ifdef FF_NUM_GPU_FUSED
           NumericFormFactor(int block_cuda_y, int block_cuda_z):
-                  block_cuda_t_(0),
-                  block_cuda_y_(block_cuda_y), block_cuda_z_(block_cuda_z),
-                  gff_(block_cuda_y, block_cuda_z) { }
-        #endif
+                            block_cuda_t_(0),
+                            block_cuda_y_(block_cuda_y), block_cuda_z_(block_cuda_z),
+                            gff_(block_cuda_y, block_cuda_z) { }
+        #endif                    // FF_NUM_GPU_FUSED
         #ifdef KERNEL2
           NumericFormFactor(int block_cuda_t, int block_cuda_y, int block_cuda_z):
-                  block_cuda_t_(block_cuda_t), block_cuda_y_(block_cuda_y),
-                  block_cuda_z_(block_cuda_z),
-                  gff_(block_cuda_t, block_cuda_y, block_cuda_z) { }
+                            block_cuda_t_(block_cuda_t), block_cuda_y_(block_cuda_y),
+                            block_cuda_z_(block_cuda_z),
+                            gff_(block_cuda_t, block_cuda_y, block_cuda_z) { }
         #else
           NumericFormFactor(int block_cuda): block_cuda_(block_cuda), gff_(block_cuda) { }
-        #endif // KERNEL2
-      #elif defined USE_MIC  // use MICs for numerical
+        #endif                    // KERNEL2
+      #elif defined USE_MIC       // use MICs for numerical
         NumericFormFactor(): mff_() { }
-      #else          // use CPUs for numerical
+      #else                       // use CPUs for numerical
         NumericFormFactor(): cff_() { }
-      #endif  // FF_NUM_GPU
+      #endif                      // FF_NUM_GPU
 
       ~NumericFormFactor() { }
 
       bool init(RotMatrix_t &, std::vector<complex_t>&);
-      void clear() { }        // TODO ...
+      void clear() { }            // TODO ...
 
       bool compute(const char* filename, std::vector<complex_t>& ff,
-              RotMatrix_t &
-              #ifdef USE_MPI
-                , woo::MultiNode&, std::string
-              #endif
-              );
+                   RotMatrix_t &
+                   #ifdef USE_MPI
+                     , woo::MultiNode&, std::string
+                   #endif
+                   );
   
       bool compute2(const char* filename, std::vector<complex_t>& ff,
-              RotMatrix_t &
-              #ifdef USE_MPI
-                , woo::MultiNode&, std::string
-              #endif
-              );
+                    RotMatrix_t &
+                    #ifdef USE_MPI
+                      , woo::MultiNode&, std::string
+                    #endif
+                    );
+
     private:
 
       // TODO: make these for gpu only ...
@@ -161,13 +158,6 @@ namespace hig {
                   woo::MultiNode&, std::string,
                 #endif
                 real_t&, real_t&);
-      //void gather_all(std::complex<float> *cast_p_ff, unsigned long int local_qpoints,
-      //          std::complex<float> *cast_ff,
-      //          int *recv_counts, int *displacements, MPI::Comm &comm);
-      //void gather_all(std::complex<double> *cast_p_ff, unsigned long int local_qpoints,
-      //          std::complex<double> *cast_ff,
-      //          int *recv_counts, int *displacements, MPI::Comm &comm);
-
   }; // class NumericFormFactor
   
   

@@ -62,59 +62,57 @@ namespace hig {
     #endif
   #endif
 
-  typedef std::complex<real_t>             complex_t;
-  typedef std::vector<real_t>              real_vec_t;
-  typedef std::vector<complex_t>           complex_vec_t;
-  typedef std::vector<unsigned int>        uint_vec_t;
+  typedef std::complex<real_t>              complex_t;
+  typedef std::vector<real_t>               real_vec_t;
+  typedef std::vector<complex_t>            complex_vec_t;
+  typedef std::vector<unsigned int>         uint_vec_t;
+  typedef std::pair <real_t, real_t>        real_pair_t;
+  typedef std::string                       string_t;
+  typedef std::map <std::string, real_t>    map_t;
 
-  typedef std::pair <real_t, real_t>       real_pair_t;
+  // triangle with vertices in counter-clockwise order
+  typedef struct {
+      real_t v1[3];   // coords of v1
+      real_t v2[3];   // coords of v2
+      real_t v3[3];   // coords of v3
+  }                                         triangle_t;
 
   #ifdef USE_GPU
-    typedef std::vector<cucomplex_t>       cucomplex_vec_t;
+
+    typedef std::vector<cucomplex_t>        cucomplex_vec_t;
+
   #elif defined INTEL_AVX
+
     // AVX vector types
     #ifdef DOUBLEP  // double precision
-      typedef __m256d                      avx_m256_t;
+
+      typedef __m256d                       avx_m256_t;
       typedef struct {  // complex
         __m256d real;
         __m256d imag;
-      }                                    avx_m256c_t;
+      }                                     avx_m256c_t;
+
     #else           // single precision
-      typedef __m256                       avx_m256_t;
+
+      typedef __m256                        avx_m256_t;
       typedef struct {  // complex
         __m256 real;
         __m256 imag;
-      }                                    avx_m256c_t;
+      }                                     avx_m256c_t;
+
     #endif  // DOUBLEP
-/*  #elif defined __SSE3__
-    typedef __m128                         sse_m128_t;
-    typedef struct {
-      __m128 xvec;
-      __m128 yvec;
-    }                                      sse_m128c_t; */
-  #endif
 
-/*  #ifdef USE_MIC
-    typedef __m512                         mic_m512_t;
-    typedef struct {
-      __m512 xvec;
-      __m512 yvec;
-    }                                      mic_m512c_t;
-  #endif */
+    typedef struct {  // triangle structure of arrays
+      // in DP, each object defines 4 triangles = 4 * 3 * 3 = 36 reals = 288 bytes
+      // in SP, each object defines 8 triangles = 8 * 3 * 3 = 72 reals = 288 bytes
+      // each vertex vector stores the x, y, z coords of each of the triangles
+      // there are total of 9 avx vectors
+      avx_m256_t a[3];    // coords of vertex a of each triangle
+      avx_m256_t b[3];    // coords of vertex b of each trinagle
+      avx_m256_t c[3];    // coords of vertex c of each triangle
+    }                                       avx_triangle_t;
 
-  typedef std::string                      string_t;
-  typedef std::map <std::string, real_t>   map_t;
-
-
-  // Triangle with vertices counter-clockwise order
-  typedef struct Triangle {
-      real_t v1[3];
-      real_t v2[3];
-      real_t v3[3]; 
-  }                                        triangle_t;
- 
-
-  // TODO: handle multiprecision? ...
+  #endif    // INTEL_AVX
 
 } // namespace
 

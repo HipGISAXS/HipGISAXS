@@ -6,11 +6,6 @@
  *  Modified: Wed 08 Oct 2014 12:13:01 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
- *  Developers: Slim Chourou <stchourou@lbl.gov>
- *              Abhinav Sarje <asarje@lbl.gov>
- *              Elaine Chan <erchan@lbl.gov>
- *              Alexander Hexemer <ahexemer@lbl.gov>
- *              Xiaoye Li <xsli@lbl.gov>
  *
  *  Licensing: The HipGISAXS software is only available to be downloaded and
  *  used by employees of academic research institutions, not-for-profit
@@ -67,19 +62,18 @@ namespace hig {
 
   class ObjectShapeReader {
     public:
-      ObjectShapeReader() {};
+      ObjectShapeReader();
       ObjectShapeReader(const char*, double*&, unsigned int&);
-      ~ObjectShapeReader() { }
+      ~ObjectShapeReader();
 
       bool load_object(const char* filename, std::vector<vertex_t> &vertices,
-                std::vector<std::vector<int> > &face_list_3v,
-                std::vector<std::vector<int> > &face_list_4v);
+                       std::vector<std::vector<int> > &face_list_3v,
+                       std::vector<std::vector<int> > &face_list_4v);
     private:
       bool convert_to_shape(std::vector<std::vector<int> > face_list_3v,
-                std::vector<vertex_t> vertices, std::vector<real_t>&);
-  
+                            std::vector<vertex_t> vertices, std::vector<real_t>&);
       bool get_triangle_params(vertex_t v1, vertex_t v2, vertex_t v3,
-                real_t &s_area, vertex_t &normal, vertex_t &center);
+                               real_t &s_area, vertex_t &normal, vertex_t &center);
       token_t token_hash(std::string const &str);
       void findall(std::string str, char c, std::vector<int> &pos_list);
       void display_vertices(std::vector<vertex_t> &vertices);
