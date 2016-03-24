@@ -70,10 +70,10 @@ class ResidualVector : public DistanceMeasure {
 }; // class ResidualVector
 
 
-class RelativeError : public DistanceMeasure {
+class RelativeResidualVector : public DistanceMeasure {
   public:
-    RelativeError() { }
-    ~RelativeError() { }
+    RelativeResidualVector() { }
+    ~RelativeResidualVector() { }
 
     bool operator()(hig::real_t*& ref, hig::real_t*& data,
                     unsigned int*& mask, unsigned int size,
@@ -85,7 +85,7 @@ class RelativeError : public DistanceMeasure {
       } // for
       return true;
     } // operator()
-}; // class RelativeError
+}; // class RelativeResidualVector
 
 
 // sum of squares of absolute differences
@@ -108,6 +108,28 @@ class AbsoluteDifferenceSquare : public DistanceMeasure {
       return true;
     } // operator()
 }; // class AbsoluteDifferenceNorm
+
+
+// sum of squares of relative absolute differences
+class RelativeAbsoluteDifferenceSquare : public DistanceMeasure {
+  public:
+    RelativeAbsoluteDifferenceSquare() { }
+    ~RelativeAbsoluteDifferenceSquare() { }
+
+    bool operator()(hig::real_t*& ref, hig::real_t*& data,
+                    unsigned int*& mask, unsigned int size,
+                    std::vector<hig::real_t>& dist) const {
+      if(ref == NULL || data == NULL) return false;
+      double dist_sum = 0.0;
+      for(int i = 0; i < size; ++ i) {
+        double temp = mask[i] * fabs((ref[i] - data[i]) / ref[i]);
+        dist_sum += temp * temp;
+      } // for
+      dist.clear();
+      dist.push_back((hig::real_t) dist_sum);
+      return true;
+    } // operator()
+}; // class RelativeAbsoluteDifference
 
 
 // normalized sum of squares of absolute differences

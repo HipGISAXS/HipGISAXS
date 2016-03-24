@@ -74,13 +74,16 @@ int main(int narg, char** args) {
     } // if
 
     if(algo == hig::algo_pounders) {
-      hip_func.set_distance_measure(new ResidualVector());
+      //hip_func.set_distance_measure(new ResidualVector());
+      hip_func.set_distance_measure(new RelativeResidualVector());
       ana.add_analysis_algo(new hig::FitPOUNDERSAlgo(narg, args, &hip_func, i));
     } else if(algo == hig::algo_lmvm) {
-      hip_func.set_distance_measure(new AbsoluteDifferenceSquare());
+      //hip_func.set_distance_measure(new AbsoluteDifferenceSquare());
+      hip_func.set_distance_measure(new RelativeAbsoluteDifferenceSquare());
       ana.add_analysis_algo(new hig::FitLMVMAlgo(narg, args, &hip_func, i));
     } else if(algo == hig::algo_pso) {
-      hip_func.set_distance_measure(new AbsoluteDifferenceSquareNorm());
+      //hip_func.set_distance_measure(new AbsoluteDifferenceSquareNorm());
+      hip_func.set_distance_measure(new RelativeAbsoluteDifferenceSquare());
       ana.add_analysis_algo(new hig::ParticleSwarmOptimization(narg, args, &hip_func, i, false, 0));
     } else if(algo == hig::algo_bruteforce) {
       hip_func.set_distance_measure(new AbsoluteDifferenceSquareNorm());
