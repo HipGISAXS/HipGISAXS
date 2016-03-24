@@ -40,6 +40,11 @@ namespace hig {
                                           int, const real_t*, const real_t*,
                                           int, const complex_t*,
                                           RotMatrix_t&, real_t&);
+      unsigned int compute_exact_triangle_vec(const triangle_t*, int,
+                                              complex_t*&, 
+                                              int, const real_t*, const real_t*,
+                                              int, const complex_t*,
+                                              RotMatrix_t&, real_t&);
 
       // old
       unsigned int compute_approx_triangle(const real_vec_t&,
@@ -63,6 +68,8 @@ namespace hig {
     private:
 
       complex_t form_factor_kernel_exact(real_t, real_t, complex_t, RotMatrix_t&, const triangle_t&);
+      avx_m256c_t form_factor_kernel_exact(real_t, real_t, complex_t, RotMatrix_t&,
+                                           const avx_triangle_t&);
 
       // following are old kernels for the approximate triangles method
 

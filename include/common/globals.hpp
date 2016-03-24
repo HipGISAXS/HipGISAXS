@@ -6,11 +6,7 @@
  *  Modified: Wed 08 Oct 2014 06:32:15 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
- *  Developers: Slim Chourou <stchourou@lbl.gov>
- *              Abhinav Sarje <asarje@lbl.gov>
- *              Elaine Chan <erchan@lbl.gov>
- *              Alexander Hexemer <ahexemer@lbl.gov>
- *              Xiaoye Li <xsli@lbl.gov>
+ *          Dinesh Kumar <dkumar@lbl.gov>
  *
  *  Licensing: The HipGISAXS software is only available to be downloaded and
  *  used by employees of academic research institutions, not-for-profit
@@ -33,6 +29,7 @@
 namespace hig {
 
   typedef struct vector2_t {
+
     boost::array <real_t, 2> vec_;
 
     /* constructors */
@@ -68,10 +65,12 @@ namespace hig {
     real_t& operator[](int i) {
       return vec_[i];
     } // operator[]
+
   } vector2_t;
 
 
   typedef struct vector3_t {
+
     real_t vec_[3];
 
     /* constructors */
@@ -103,22 +102,23 @@ namespace hig {
       vec_[2] = a.vec_[2]; 
     } // vector3_t()
 
-    INLINE real_t norm(){
+    /* operators */
+
+    INLINE real_t norm() {
       real_t norm = 0.;
       for (int i = 0; i < 3; i++) norm += vec_[i] * vec_[i];
       return norm;
-    }
+    } // norm()
 
-    INLINE real_t abs(){
+    INLINE real_t abs() {
       real_t v = this->norm();
-#ifdef DOUBLEP
-      return sqrt(v);
-#else
-      return sqrtf(v);
-#endif
-    }
+      #ifdef DOUBLEP
+        return sqrt(v);
+      #else
+        return sqrtf(v);
+      #endif
+    } // abs()
 
-    /* operators */
     INLINE vector3_t& operator=(const vector3_t& a) {
       vec_[0] = a.vec_[0]; 
       vec_[1] = a.vec_[1]; 
@@ -175,10 +175,12 @@ namespace hig {
     INLINE vector3_t operator/(vector3_t todiv) {
       return vector3_t(vec_[0] / todiv[0], vec_[1] / todiv[1], vec_[2] / todiv[2]);
     } // operator/()
+
   } vector3_t;
 
 
   typedef struct matrix3x3_t {
+
     typedef boost::array <real_t, 3> mat3_t;
     mat3_t mat_[3];
 

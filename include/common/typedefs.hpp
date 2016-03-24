@@ -72,9 +72,9 @@ namespace hig {
 
   // triangle with vertices in counter-clockwise order
   typedef struct {
-      real_t v1[3];   // coords of v1
-      real_t v2[3];   // coords of v2
-      real_t v3[3];   // coords of v3
+      real_t v1[3];   // coords of v1 (a)
+      real_t v2[3];   // coords of v2 (b)
+      real_t v3[3];   // coords of v3 (c)
   }                                         triangle_t;
 
   #ifdef USE_GPU
@@ -82,6 +82,12 @@ namespace hig {
     typedef std::vector<cucomplex_t>        cucomplex_vec_t;
 
   #elif defined INTEL_AVX
+
+    const unsigned int AVX_ALIGNMENT_ = 64;   // 2 * 256 bits. for complex
+
+    #ifndef __AVX_ALIGNED__
+    #define __AVX_ALIGNED__ __attribute__((aligned(AVX_ALIGNMENT_)))    // 2 * 256 bits for complex
+    #endif
 
     // AVX vector types
     #ifdef DOUBLEP  // double precision
@@ -102,15 +108,32 @@ namespace hig {
 
     #endif  // DOUBLEP
 
-    typedef struct {  // triangle structure of arrays
-      // in DP, each object defines 4 triangles = 4 * 3 * 3 = 36 reals = 288 bytes
-      // in SP, each object defines 8 triangles = 8 * 3 * 3 = 72 reals = 288 bytes
-      // each vertex vector stores the x, y, z coords of each of the triangles
-      // there are total of 9 avx vectors
-      avx_m256_t a[3];    // coords of vertex a of each triangle
-      avx_m256_t b[3];    // coords of vertex b of each trinagle
-      avx_m256_t c[3];    // coords of vertex c of each triangle
+    //typedef struct {  // triangle structure of arrays
+    //  avx_m256_t a[3];    // coords of vertex a of each triangle
+    //  avx_m256_t b[3];    // coords of vertex b of each trinagle
+    //  avx_m256_t c[3];    // coords of vertex c of each triangle
+    //}                                       avx_triangle_t;
+
+    typedef avx_m256_t                      avx_coord_t;      // one coordinate of AVX_VEC_LEN_ points
+
+    typedef struct {  // 3 coordinates of AVX_VEC_LEN_ vertices
+      avx_coord_t x;
+      avx_coord_t y;
+      avx_coord_t z;
+    }                                       avx_vertex_t;
+
+    typedef avx_vertex_t                    avx_edge_t;
+
+    typedef struct {  // 3 vertices of AVX_VEC_LEN_ triangles
+      avx_vertex_t a;
+      avx_vertex_t b;
+      avx_vertex_t c;
     }                                       avx_triangle_t;
+
+    // in DP, each object defines 4 triangles = 4 * 3 * 3 = 36 reals = 288 bytes
+    // in SP, each object defines 8 triangles = 8 * 3 * 3 = 72 reals = 288 bytes
+    // each vertex vector stores the x, y, z coords (indices 0, 1, 2, resp.) of each triangle
+    // there are total of 9 avx vectors
 
   #endif    // INTEL_AVX
 

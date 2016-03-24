@@ -19,10 +19,6 @@
 
 #ifdef INTEL_AVX
 
-#ifndef __AVX_ALIGNED__
-#define __AVX_ALIGNED__ __attribute__((aligned(64)))    // 2 * 256 bits for complex
-#endif
-
 #include <common/typedefs.hpp>
 #include <common/constants.hpp>
 #include <numerics/numeric_utils.hpp>
@@ -40,8 +36,13 @@ namespace hig {
 
 #ifdef DOUBLEP    // TODO: improve and move it within each functions instead
 
+  const avx_m256_t AVX_ZERO_ = _mm256_setzero_pd();
+  const avx_m256_t AVX_ONE_ = _mm256_set1_pd(1.0);
+  const avx_m256_t AVX_ALLONE_ = _mm256_set1_pd(0xFFFFFFFFFFFFFFFF);
+  const avx_m256_t AVX_EPSILON_ = _mm256_set1_pd(REAL_EPSILON_);
+
   /**
-   * load/store/initialize
+   * complex load/store/initialize
    */
 
   static inline avx_m256c_t avx_load_cp(const complex_t* p) {
@@ -151,6 +152,10 @@ namespace hig {
     v.imag = _mm256_add_pd(_mm256_mul_pd(temp, b.imag), c.imag);
     return v;
   } // avx_fma_rccp()
+
+  static inline avx_m256_t avx_mul_rrp(real_t a, avx_m256_t b) {
+    return _mm256_mul_pd(b, _mm256_set1_pd(a));
+  } // avx_mul_rrp()
 
   static inline avx_m256_t avx_mul_rrp(avx_m256_t a, real_t b) {
     return _mm256_mul_pd(a, _mm256_set1_pd(b));
@@ -273,10 +278,6 @@ namespace hig {
 
   static inline avx_m256c_t avx_cj1_cp(avx_m256c_t v) {
     const int MAXK = 1e5;
-    const avx_m256_t AVX_ZERO_ = _mm256_setzero_pd();
-    const avx_m256_t AVX_ONE_ = _mm256_set1_pd(1.0);
-    const avx_m256_t AVX_ALLONE_ = _mm256_set1_pd(0xFFFFFFFFFFFFFFFF);
-    const avx_m256_t AVX_EPSILON_ = _mm256_set1_pd(REAL_EPSILON_);
     #ifdef DOUBLEP
       const int digits = 15;    // double precision
     #else
@@ -388,6 +389,66 @@ namespace hig {
     std::cerr << "error: Bessel functions of order != 1 are not supported" << std::endl;
     return v;
   } // avx_cbesselj_cp()
+
+
+  /**
+   * other avx based operations with structs/arrays of vectors
+   * t: triangle, v: vertex, e: edge, p: point/position
+   */
+
+  static inline avx_edge_t avx_cross_epep(avx_edge_t e1, avx_edge_t e2) {
+    // ...
+  } // avx_cross_epep()
+
+  static inline avx_m256_t avx_abs_ep(avx_edge_t e) {
+    // ...
+  } // avx_abs_ep()
+
+  static inline avx_edge_t avx_div_eprp(avx_edge_t e, avx_m256_t r) {
+    // ...
+  } // avx_div_eprp()
+
+  static inline avx_m256c_t avx_dot_cep(const std::vector<complex_t>& a, avx_edge_t e) {
+    // ...
+  } // avx_dot_cep()
+
+  static inline avx_m256_t avx_norm_cp(avx_m256c_t a) {
+    // ...
+  } // avx_norm_cp()
+
+  static inline avx_m256_t avx_sub_rrp(real_t a, avx_m256_t b) {
+    // ...
+  } // avx_sub_rrp()
+
+  static inline avx_m256_t avx_sub_rprp(avx_m256_t a, avx_m256_t b) {
+    // ...
+  } // avx_sub_rprp()
+
+  static inline avx_m256_t avx_mul_rprp(avx_m256_t a, avx_m256_t b) {
+    // ...
+  } // avx_mul_rprp()
+
+  // AVX_CMPLX_MINUS_ONE_
+
+  static inline avx_m256c_t avx_mul_rcp(avx_m256_t a, avx_m256c_t b) {
+    // ...
+  } // avx_mul_rcp()
+
+  static inline avx_m256c_t avx_mul_cpcp(avx_m256c_t a, avx_m256c_t b) {
+    // ...
+  } // avx_mul_cpcp()
+
+  static inline avx_m256c_t avx_div_cprp(avx_m256c_t a, avx_m256_t b) {
+    // ...
+  } // avx_div_cprp()
+
+  static inline avx_m256c_t avx_add_cpcp(avx_m256c_t a, avx_m256c_t b) {
+    // ...
+  } // avx_add_cpcp()
+
+  static inline avx_m256c_t avx_hadd_cpcp(avx_m256c_t a, avx_m256c_t b) {
+    // ...
+  } // avx_add_cpcp()
 
 #else     // single precision
 
