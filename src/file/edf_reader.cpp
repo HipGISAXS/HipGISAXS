@@ -5,10 +5,6 @@
  *  Created: Aug 25, 2013
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
- *  Developers: Abhinav Sarje <asarje@lbl.gov>
- *              Dinesh Kumar <dkumar@lbl.gov>
- *              Alexander Hexemer <ahexemer@lbl.gov>
- *              Xiaoye Li <xsli@lbl.gov>
  *
  *  Licensing: The HipGISAXS software is only available to be downloaded and
  *  used by employees of academic research institutions, not-for-profit
@@ -37,7 +33,7 @@ namespace hig {
     if(!extract_data(infile, dataseg, EDF_CHUNK_SIZE)) exit(1);
     infile.close();
     delete[] dataseg;
-    print_header();
+    //print_header();
     //print_data();
   } // EDFReader::EDFReader()
 

@@ -15,6 +15,7 @@
 #include <cmath>
 
 #include <common/typedefs.hpp>
+#include <common/constants.hpp>
 
 /**
  * Distance Functors
@@ -159,15 +160,20 @@ class ScaledRelativeAbsoluteDifferenceSquare : public DistanceMeasure {
       hig::real_t ref_min, ref_max, dat_min, dat_max;
       find_minmax(ref, mask, size, ref_min, ref_max);
       find_minmax(dat, mask, size, dat_min, dat_max);
+      std::cout << "MIN: " << ref_min << " and " << dat_min << std::endl;
+      std::cout << "MAX: " << ref_max << " and " << dat_max << std::endl;
       hig::real_t ref_range = ref_max - ref_min;
       hig::real_t dat_range = dat_max - dat_min;
+      if(ref_range < hig::TINY_) ref_range = 1.0;
+      if(dat_range < hig::TINY_) dat_range = 1.0;
       double dist_sum = 0.0;
       for(int i = 0; i < size; ++ i) {
         hig::real_t scaled_ref = (ref[i] - ref_min) / ref_range;
         hig::real_t scaled_dat = (dat[i] - dat_min) / dat_range;
-        double temp = mask[i] * fabs((scaled_ref - scaled_dat) / scaled_ref);
+        double temp = mask[i] * fabs(scaled_ref - scaled_dat);
         dist_sum += temp * temp;
       } // for
+      std::cout << "DISTANCE: " << dist_sum << std::endl;
       dist.clear();
       dist.push_back((hig::real_t) dist_sum);
       return true;

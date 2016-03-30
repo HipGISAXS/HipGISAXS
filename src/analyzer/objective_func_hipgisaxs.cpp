@@ -189,7 +189,7 @@ namespace hig {
       mask_data_.resize(n_par_ * n_ver_, 1);
       return true;
     } // if
-    std::cout << "-- Reading mask data from " << filename << "..." << std::endl;
+    //std::cout << "-- Reading mask data from " << filename << "..." << std::endl;
     EDFReader* edfreader = new EDFReader(filename.c_str());
     real_t* temp_data = NULL;
     unsigned int temp_n_par = 0, temp_n_ver = 0;
@@ -243,14 +243,17 @@ namespace hig {
       real_t* ref_data = (*ref_data_).data();
       if(ref_data == NULL) std::cerr << "error: ref_data is NULL" << std::endl;
       unsigned int* mask_data = &(mask_data_[0]);
-      (*pdist_)(gisaxs_data, ref_data, mask_data, n_par_ * n_ver_, curr_dist);
+      (*pdist_)(ref_data, gisaxs_data, mask_data, n_par_ * n_ver_, curr_dist);
 
       // write to output file
+      // do something better ...
+      // as here all procs for different particles will have same ranks within their hipgisaxs object
       int myrank = hipgisaxs_.rank();
       std::stringstream cfilename;
-      cfilename << "convergence." << myrank << ".dat";
+      cfilename << "distance." << myrank << ".dat";
       std::string prefix(HiGInput::instance().param_pathprefix() + "/" + HiGInput::instance().runname());
       std::ofstream out(prefix + "/" + cfilename.str(), std::ios::app);
+      out.precision(7);
       for(real_vec_t::const_iterator i = curr_dist.begin(); i != curr_dist.end(); ++ i) out << *i << " ";
       out << std::endl;
       out.close();
