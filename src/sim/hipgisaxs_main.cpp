@@ -1040,7 +1040,7 @@ namespace hig {
         #if VERBOSE_LEVEL > VERBOSE_LEVEL_ONE
         if(gmaster) {
           std::cout << "-- Processing grain " << grain_i + 1 << " / " << num_grains << " ..."
-                << std::endl;
+                    << std::endl;
         } // if
         #endif
 
@@ -1065,8 +1065,8 @@ namespace hig {
 
         /* center of unit cell replica */
         vector3_t curr_dd_vec(dd[grain_i + 0],
-                    dd[grain_i + num_grains],
-                    dd[grain_i + 2 * num_grains]);
+                              dd[grain_i + num_grains],
+                              dd[grain_i + 2 * num_grains]);
         vector3_t center = rot * curr_dd_vec + curr_transvec;
 
         /* compute structure factor and form factor */
@@ -1295,9 +1295,13 @@ namespace hig {
               proc_displacements[i] = proc_displacements[i - 1] + proc_sizes[i - 1];
           } // if
           multi_node_.gatherv(struct_comm, grain_ids, gmaster * num_gr * nrow_ * ncol_,
-                    id, proc_sizes, proc_displacements);
+                              id, proc_sizes, proc_displacements);
           delete[] proc_displacements;
           delete[] proc_sizes;
+          if(gmaster) {
+            if(grain_ids != NULL) delete[] grain_ids;
+            grain_ids = NULL;
+          } // if
         } else {
           id = grain_ids;
         } // if-else
@@ -1385,16 +1389,11 @@ namespace hig {
 
     std::vector<real_t> iratios;
     real_t iratios_sum = 0.0;
-    for(structure_iterator_t s = HiGInput::instance().structure_begin(); s != HiGInput::instance().structure_end(); ++ s) {
+    for(structure_iterator_t s = HiGInput::instance().structure_begin();
+        s != HiGInput::instance().structure_end(); ++ s) {
       iratios.push_back((*s).second.iratio());
       iratios_sum += (*s).second.iratio();
     } // for
-
-    /*if(iratios_sum != 1.0) {
-      std::cerr << "error: iratios of all structures must add to 1.0 ("
-            << iratios_sum << ")" << std::endl;
-      return false;
-    } // if*/
 
     real_t* all_struct_intensity = NULL;
     complex_t* all_c_struct_intensity = NULL;
@@ -1432,6 +1431,12 @@ namespace hig {
         } // if-else
         delete[] proc_displacements;
         delete[] proc_sizes;
+        if(master) {
+          if(struct_intensity != NULL) delete[] struct_intensity;
+          if(c_struct_intensity != NULL) delete[] c_struct_intensity;
+          struct_intensity = NULL;
+          c_struct_intensity = NULL;
+        } // if
       } else {
         all_struct_intensity = struct_intensity;
         all_c_struct_intensity = c_struct_intensity;
@@ -1447,17 +1452,14 @@ namespace hig {
     #endif
 
     if(master) {
-      // normalize
-      if(all_struct_intensity != NULL)
-        normalize(all_struct_intensity, nrow_ * ncol_);
-
+      if(all_struct_intensity != NULL) normalize(all_struct_intensity, nrow_ * ncol_);
       img3d = new (std::nothrow) real_t[nrow_ * ncol_];
-      if (img3d == nullptr) {
+      if(img3d == nullptr) {
         std::cerr << "error: unable to allocate memeory." << std::endl;
         std::exit(1);
-      }
-      // sum of all struct_intensity into intensity
+      } // if
 
+      // sum of all struct_intensity into intensity
       // new stuff for correlation
       switch(HiGInput::instance().param_structcorrelation()) {
         case structcorr_null:  // default
@@ -1513,8 +1515,10 @@ namespace hig {
           return false;
       } // switch
 
-      delete[] all_c_struct_intensity;
-      delete[] all_struct_intensity;
+      if(all_struct_intensity != NULL) delete[] all_struct_intensity;
+      if(all_c_struct_intensity != NULL) delete[] all_c_struct_intensity;
+      all_struct_intensity = NULL;
+      all_c_struct_intensity = NULL;
     } // if master
 
     if(master) {
