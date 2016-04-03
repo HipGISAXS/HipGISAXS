@@ -83,7 +83,7 @@ namespace hig {
 
   #elif defined INTEL_AVX
 
-    const unsigned int AVX_ALIGNMENT_ = 64;   // 2 * 256 bits. for complex
+    const unsigned int AVX_ALIGNMENT_ = 64;   // 2 * 256 bits for complex
 
     #ifndef __AVX_ALIGNED__
     #define __AVX_ALIGNED__ __attribute__((aligned(AVX_ALIGNMENT_)))    // 2 * 256 bits for complex

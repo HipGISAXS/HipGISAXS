@@ -1450,8 +1450,7 @@ namespace hig {
 
     if(master) {
       // normalize
-      if(all_struct_intensity != NULL)
-        normalize(all_struct_intensity, nrow_ * ncol_);
+      if(all_struct_intensity != NULL) normalize(all_struct_intensity, nrow_ * ncol_);
 
       img3d = new (std::nothrow) real_t[nrow_ * ncol_];
       if (img3d == nullptr) {
@@ -1552,7 +1551,7 @@ namespace hig {
       max_val = std::max(max_val, data[i]);
     } // for
     real_t d = max_val - min_val;
-    if(d < 1e-30) return false;
+    if(d < TINY_) return false;
     #pragma omp parallel for
     for(unsigned int i = 1; i < size; ++ i) data[i] = (data[i] - min_val) / d;
     return true;

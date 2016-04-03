@@ -154,12 +154,21 @@ namespace hig {
                   << nqz_ * sizeof(complex_t) << std::endl;
         return false;
       } // if
-      if(num_triangles != cff_.compute_exact_triangle(triangles, num_triangles, 
-                                                      p_ff, nqy_, qx, qy, 
-                                                      nqz_, qz, rot_, compute_time)) {
-        std::cerr << "error: calculation of numerical form-factor failed" << std::endl;
-        return false;
-      } // if
+      #ifdef INTEL_AVX  // avx version
+        if(num_triangles != cff_.compute_exact_triangle_vec(triangles, num_triangles, 
+                                                            p_ff, nqy_, qx, qy, 
+                                                            nqz_, qz, rot_, compute_time)) {
+          std::cerr << "error: calculation of numerical form-factor failed" << std::endl;
+          return false;
+        } // if
+      #else   // default, non-vectorized
+        if(num_triangles != cff_.compute_exact_triangle(triangles, num_triangles, 
+                                                        p_ff, nqy_, qx, qy, 
+                                                        nqz_, qz, rot_, compute_time)) {
+          std::cerr << "error: calculation of numerical form-factor failed" << std::endl;
+          return false;
+        } // if
+      #endif  // INTEL_AVX
       for(int i = 0; i < nqz_; ++ i) ff.push_back(p_ff[i]);
       std::cout << "**        FF CPU compute time: " << compute_time << " ms." << std::endl;
     #endif            // FF_NUM_GPU

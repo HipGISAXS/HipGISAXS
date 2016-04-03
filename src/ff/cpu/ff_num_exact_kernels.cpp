@@ -45,56 +45,71 @@ namespace hig {
   avx_m256c_t NumericFormFactorC::form_factor_kernel_exact(real_t qx, real_t qy, complex_t qz,
                                                            RotMatrix_t& rot,
                                                            const avx_triangle_t& vt) {
+    // qx, qy, qz are scalars
+    // vt is simd vector
+    //    avx_triangle vt = { va, vb, vc }
+    //    avx_vertex vv = { vx, vy, vz }
+    //    avx_coord vx = < v1, v2, v3, v4 >         // this is a simd vector
+    //    hence, 1 vt = 4 triangles (in double precision avx)
+
+    avx_m256c_t temp; temp.real = AVX_ZERO_; temp.imag = _mm256_set1_pd(-1.0);
+    const avx_m256c_t AVX_CMPLX_MINUS_ONE_ = temp;
+
     std::vector<complex_t> mq = rot.rotate(qx, qy, qz);
     real_t q_sqr = 0.0;
     for(int i = 0; i < 3; ++ i) q_sqr += std::norm(mq[i]);              // calculate q^2
           
     // construct vertices
-    //std::vector<vector3_t> vertex;
-    //vertex.resize(3);
-    //vertex[0] = vector3_t(tri.v1[0], tri.v1[1], tri.v1[2]);
-    //vertex[1] = vector3_t(tri.v2[0], tri.v2[1], tri.v2[2]);
-    //vertex[2] = vector3_t(tri.v3[0], tri.v3[1], tri.v3[2]);
     // 3 avx vertices of avx triangle are vt.a, vt.b and vt.c
+    // and each vertex's 3 coordinates are a.x, a.y, a.z
     avx_vertex_t vertex[3];
-    vertex[0].x = vt.a.x; vertex[0].y = vt.a.y; vertex[0].z = vt.a.z;
-    vertex[1].x = vt.b.x; vertex[1].y = vt.b.y; vertex[1].z = vt.b.z;
-    vertex[2].x = vt.c.x; vertex[2].y = vt.c.y; vertex[2].z = vt.c.z;
+    vertex[0] = vt.a;   //vertex[0].x = vt.a.x; vertex[0].y = vt.a.y; vertex[0].z = vt.a.z;
+    vertex[1] = vt.b;   //vertex[1].x = vt.b.x; vertex[1].y = vt.b.y; vertex[1].z = vt.b.z;
+    vertex[2] = vt.c;   //vertex[2].x = vt.c.x; vertex[2].y = vt.c.y; vertex[2].z = vt.c.z;
 
-    // construct edges
-    //std::vector<vector3_t> edge;
-    //edge.resize(3);
-    //edge[0] = vertex[1] - vertex[0];
-    //edge[1] = vertex[2] - vertex[1];
-    //edge[2] = vertex[0] - vertex[2];
-    // 3 avx edges are:
+    // construct edges of the triangles
+    // an avx edge is defined by same structure as vertex
     avx_edge_t edge[3];
-    edge[0].x = _mm256_sub_pd(vt.b.x, vt.a.x);
-    edge[0].y = _mm256_sub_pd(vt.b.y, vt.a.y);
-    edge[0].z = _mm256_sub_pd(vt.b.z, vt.a.z);
-    edge[1].x = _mm256_sub_pd(vt.c.x, vt.b.x);
-    edge[1].y = _mm256_sub_pd(vt.c.y, vt.b.y);
-    edge[1].z = _mm256_sub_pd(vt.c.z, vt.b.z);
-    edge[2].x = _mm256_sub_pd(vt.a.x, vt.c.x);
-    edge[2].y = _mm256_sub_pd(vt.a.y, vt.c.y);
-    edge[2].z = _mm256_sub_pd(vt.a.z, vt.c.z);
+    edge[0] = avx_sub_vpvp(vt.b, vt.a);
+    edge[1] = avx_sub_vpvp(vt.c, vt.b);
+    edge[2] = avx_sub_vpvp(vt.a, vt.c);
+
+    avx_edge_t n_t = avx_cross_epep(edge[0], edge[1]);
+    avx_m256_t t_area = avx_mul_rrp(0.5, avx_abs_ep(n_t));    // are is the triangles
 
     // calculate projection of n_t on q
-    //vector3_t n_t = cross(edge[0], edge[1]);
-    //real_t t_area = 0.5 * n_t.abs();
-    //n_t = n_t / n_t.abs();
-    avx_edge_t n_t = avx_cross_epep(edge[0], edge[1]);
-    avx_m256_t t_area = avx_mul_rrp(avx_abs_ep(n_t), 0.5);
-    n_t = avx_div_eprp(n_t, avx_abs_ep(n_t));
-
-    //complex_t q_dot_nt = CMPLX_ZERO_;
-    //for(int i = 0; i < 3; ++ i) q_dot_nt += mq[i] * n_t[i];             // dot(q, n_t)
-    //real_t proj_tq = q_sqr - std::norm(q_dot_nt);                       // proj_tq
+    n_t = avx_div_eprp(n_t, avx_abs_ep(n_t));   // unit normal
     avx_m256c_t q_dot_nt = avx_dot_cep(mq, n_t);
     avx_m256_t proj_tq = avx_sub_rrp(q_sqr, avx_norm_cp(q_dot_nt));
 
-    // TODO: handle mixed cases:
     avx_m256c_t ff = avx_setzero_cp();
+
+    // case 3: the general case
+    // TODO: replace with the case handling ...
+    for(auto ei = 0; ei < 3; ++ ei) {
+      avx_edge_t n_e = avx_cross_epep(edge[ei], n_t);
+      n_e = avx_div_eprp(n_e, avx_abs_ep(n_e));
+      avx_m256c_t q_dot_ne = avx_dot_cep(mq, n_e);
+      avx_m256_t proj_eq = _mm256_sub_pd(proj_tq, avx_norm_cp(q_dot_ne));
+
+      avx_m256_t f0 = avx_mul_rrp(q_sqr, _mm256_mul_pd(proj_tq, proj_eq));
+      avx_m256c_t q_dot_v = avx_dot_cep(mq, vertex[ei]);
+      avx_edge_t n_v = avx_div_eprp(edge[ei], avx_abs_ep(edge[ei]));
+      avx_m256c_t q_dot_nv = avx_dot_cep(mq, n_v);
+      avx_m256c_t c0 = avx_mul_ccp(avx_mul_ccp(AVX_CMPLX_MINUS_ONE_, q_dot_nt),
+                                   avx_mul_ccp(q_dot_ne, q_dot_nv));
+      avx_m256c_t c1 = avx_exp_cp(avx_mul_ccp(AVX_CMPLX_MINUS_ONE_, q_dot_v));
+      ff = avx_add_ccp(ff, avx_div_cprp(avx_mul_ccp(c0, c1), f0));
+      q_dot_v = avx_dot_cep(mq, vertex[(ei + 1) % 3]);
+      q_dot_nv = avx_dot_cep(mq, n_v);
+      c0 = avx_mul_ccp(avx_mul_ccp(AVX_CMPLX_MINUS_ONE_, q_dot_nt),
+                       avx_mul_ccp(q_dot_ne, q_dot_nv));
+      c1 = avx_exp_cp(avx_mul_ccp(AVX_CMPLX_MINUS_ONE_, q_dot_v));
+      ff = avx_add_ccp(ff, avx_div_cprp(avx_mul_ccp(c0, c1), f0));
+    } // for
+
+    // TODO: handle mixed cases:
+    /*
     // ... avx_m256_t cmp = _mm256_cmp_pd(avx_abs_rp(proj_tq), AVX_EPSILON_, _CMP_GT_OS);
     int cond = 1;
     // ... int cond = _mm256_movemask_pd(cmp);
@@ -165,6 +180,7 @@ namespace hig {
         } // if-else
       } // for
     } // if-else
+    */
 
     return ff;
   } // NumericFormFactorC::form_factor_kernel_exact()
@@ -174,7 +190,7 @@ namespace hig {
    * Exact integration: hand vectorized
    */
   unsigned int NumericFormFactorC::compute_exact_triangle_vec(const triangle_t* shape_def,
-                                                              int num_triangles,
+                                                              unsigned int num_triangles,
                                                               complex_t* &ff,
                                                               int nqy,
                                                               const real_t* qx, const real_t* qy,
@@ -193,11 +209,17 @@ namespace hig {
     //   sum vector temp_ff over all vector triangle iterations
     //   reduce the vector temp_ff by summing all 4 entries into one scalar ff for a q-point
 
-    // assuming double precision for now ... FIXME
+    // NOTE: assuming double precision for now ... FIXME
 
     // allocate aligned memory for avx vector triangles
     int num_vtriangles = ceil(num_triangles / AVX_VEC_LEN_);
-    int pad = AVX_VEC_LEN_ - num_triangles % AVX_VEC_LEN_;  // this is the padding in the last vtriangle
+    int pad = (AVX_VEC_LEN_ - num_triangles % AVX_VEC_LEN_) % AVX_VEC_LEN_;
+              // this is the padding in the last vtriangle
+    std::cout << "----------- num_triangles: " << num_triangles
+              << ", num_vtriangles: " << num_vtriangles
+              << ", pad: " << pad
+              << ", AVX_VEC_LEN_: " << AVX_VEC_LEN_
+              << std::endl;
     avx_triangle_t* vtriangles = (avx_triangle_t*) _mm_malloc(num_vtriangles * sizeof(avx_triangle_t),
                                                               AVX_ALIGNMENT_);
     if(vtriangles == NULL) {
@@ -208,52 +230,15 @@ namespace hig {
 
     // convert scalar triangles to vector triangles
     int endi = (pad > 0) ? num_vtriangles - 1 : num_vtriangles; // to handle padding separately
+    #pragma omp parallel for schedule(runtime)
     for(auto i = 0; i < endi; ++ i) {
-      __AVX_ALIGNED__ real_t real[AVX_VEC_LEN_];
       int ti = i * AVX_VEC_LEN_;  // index for scalar triangles array
-      for(auto j = 0; j < AVX_VEC_LEN_; ++ j) real[j] = shape_def[ti + j].v1[0];
-      vtriangles[i].a.x = _mm256_load_pd(real);
-      for(auto j = 0; j < AVX_VEC_LEN_; ++ j) real[j] = shape_def[ti + j].v2[0];
-      vtriangles[i].b.x = _mm256_load_pd(real);
-      for(auto j = 0; j < AVX_VEC_LEN_; ++ j) real[j] = shape_def[ti + j].v3[0];
-      vtriangles[i].c.x = _mm256_load_pd(real);
-      for(auto j = 0; j < AVX_VEC_LEN_; ++ j) real[j] = shape_def[ti + j].v1[1];
-      vtriangles[i].a.y = _mm256_load_pd(real);
-      for(auto j = 0; j < AVX_VEC_LEN_; ++ j) real[j] = shape_def[ti + j].v2[1];
-      vtriangles[i].b.y = _mm256_load_pd(real);
-      for(auto j = 0; j < AVX_VEC_LEN_; ++ j) real[j] = shape_def[ti + j].v3[1];
-      vtriangles[i].c.y = _mm256_load_pd(real);
-      for(auto j = 0; j < AVX_VEC_LEN_; ++ j) real[j] = shape_def[ti + j].v1[2];
-      vtriangles[i].a.z = _mm256_load_pd(real);
-      for(auto j = 0; j < AVX_VEC_LEN_; ++ j) real[j] = shape_def[ti + j].v2[2];
-      vtriangles[i].b.z = _mm256_load_pd(real);
-      for(auto j = 0; j < AVX_VEC_LEN_; ++ j) real[j] = shape_def[ti + j].v3[2];
-      vtriangles[i].c.z = _mm256_load_pd(real);
+      vtriangles[i] = avx_load_triangles(shape_def + ti);
     } // for
     if(pad > 0) { // handle the last vector set with padding
-      __AVX_ALIGNED__ real_t real[AVX_VEC_LEN_];
-      for(auto j = 0; j < AVX_VEC_LEN_; ++ j) real[j] = 0.0;  // to make sure pad is 0 for all
       int i = num_triangles - 1;
       int ti = i * AVX_VEC_LEN_;
-      int rem = AVX_VEC_LEN_ - pad;
-      for(auto j = 0; j < rem; ++ j) real[j] = shape_def[ti + j].v1[0];
-      vtriangles[i].a.x = _mm256_load_pd(real);
-      for(auto j = 0; j < rem; ++ j) real[j] = shape_def[ti + j].v2[0];
-      vtriangles[i].b.x = _mm256_load_pd(real);
-      for(auto j = 0; j < rem; ++ j) real[j] = shape_def[ti + j].v3[0];
-      vtriangles[i].c.x = _mm256_load_pd(real);
-      for(auto j = 0; j < rem; ++ j) real[j] = shape_def[ti + j].v1[1];
-      vtriangles[i].a.y = _mm256_load_pd(real);
-      for(auto j = 0; j < rem; ++ j) real[j] = shape_def[ti + j].v2[1];
-      vtriangles[i].b.y = _mm256_load_pd(real);
-      for(auto j = 0; j < rem; ++ j) real[j] = shape_def[ti + j].v3[1];
-      vtriangles[i].c.y = _mm256_load_pd(real);
-      for(auto j = 0; j < rem; ++ j) real[j] = shape_def[ti + j].v1[2];
-      vtriangles[i].a.z = _mm256_load_pd(real);
-      for(auto j = 0; j < rem; ++ j) real[j] = shape_def[ti + j].v2[2];
-      vtriangles[i].b.z = _mm256_load_pd(real);
-      for(auto j = 0; j < rem; ++ j) real[j] = shape_def[ti + j].v3[2];
-      vtriangles[i].c.z = _mm256_load_pd(real);
+      vtriangles[i] = avx_load_triangles(shape_def + ti, pad);
     } // if
 
     unsigned long int num_qpoints = nqz;
@@ -272,21 +257,20 @@ namespace hig {
     #pragma omp parallel for schedule(runtime)
     for(int i_z = 0; i_z < nqz; ++ i_z) {
       int i_y = i_z % nqy; 
-      avx_m256c_t ff_temp = AVX_ZERO_, temp;
+      avx_m256c_t ff_temp, temp;
+      ff_temp.real = AVX_ZERO_; ff_temp.imag = AVX_ZERO_;
       for(int i_t = 0; i_t < num_vtriangles; ++ i_t) {    // NOTE: padding is included
         temp = form_factor_kernel_exact(qx[i_y], qy[i_y], qz[i_z], rot, vtriangles[i_t]);
-        ff_temp = avx_add_cpcp(ff_temp, temp);
+        ff_temp = avx_add_ccp(ff_temp, temp);
       } // for
-      avx_m256c_t sum = avx_hadd_cpcp(ff_temp, ff_temp);  // partial sums
-      __m128d sum_high = _mm256_extractf128_pd(sum, 1);   // extract upper 128 bits
-      ff[i_z] = _mm_cvtsd_f64(_mm_add_pd(_mm256_extractf128_pd(sum, 1), _mm256_extract128_pd(sum, 0)));
+      ff[i_z] = avx_hreduce_cp(ff_temp);
     } // for
 
     timer.stop();
     compute_time = timer.elapsed_msec();
 
     return num_triangles;
-  } // NumericFormFactorC::compute_exact_triangle()
+  } // NumericFormFactorC::compute_exact_triangle_vec()
 
 
 #endif // INTEL_AVX

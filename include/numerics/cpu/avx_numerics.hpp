@@ -19,6 +19,8 @@
 
 #ifdef INTEL_AVX
 
+#include <cstring>
+
 #include <common/typedefs.hpp>
 #include <common/constants.hpp>
 #include <numerics/numeric_utils.hpp>
@@ -113,6 +115,16 @@ namespace hig {
     avx_m256_t temp = _mm256_set1_pd(b);
     v.real = _mm256_mul_pd(a.real, temp);
     v.imag = _mm256_mul_pd(a.imag, temp);
+    return v;
+  } // avx_mul_crp()
+
+  static inline avx_m256c_t avx_mul_crp(complex_t a, avx_m256_t b) {
+    avx_m256c_t v;
+    avx_m256c_t temp;
+    temp.real = _mm256_set1_pd(a.real());
+    temp.imag = _mm256_set1_pd(a.imag());
+    v.real = _mm256_mul_pd(temp.real, b);
+    v.imag = _mm256_mul_pd(temp.imag, b);
     return v;
   } // avx_mul_crp()
 
@@ -396,59 +408,101 @@ namespace hig {
    * t: triangle, v: vertex, e: edge, p: point/position
    */
 
-  static inline avx_edge_t avx_cross_epep(avx_edge_t e1, avx_edge_t e2) {
-    // ...
+  static inline avx_edge_t avx_sub_vpvp(avx_vertex_t a, avx_vertex_t b) {
+    avx_edge_t res;
+    res.x = _mm256_sub_pd(a.x, b.x);
+    res.y = _mm256_sub_pd(a.y, b.y);
+    res.z = _mm256_sub_pd(a.z, b.z);
+    return res;
+  } // avx_sub_epep()
+
+  static inline avx_edge_t avx_cross_epep(avx_edge_t a, avx_edge_t b) {
+    avx_edge_t c;
+    c.x = _mm256_mul_pd(a.y, b.z) - _mm256_mul_pd(a.z, b.y);
+    c.y = _mm256_mul_pd(a.z, b.x) - _mm256_mul_pd(a.x, b.z);
+    c.z = _mm256_mul_pd(a.x, b.y) - _mm256_mul_pd(a.y, b.x);
+    return c;
   } // avx_cross_epep()
 
   static inline avx_m256_t avx_abs_ep(avx_edge_t e) {
-    // ...
+    return _mm256_sqrt_pd(_mm256_add_pd(_mm256_mul_pd(e.x, e.x),
+                                        _mm256_add_pd(_mm256_mul_pd(e.y, e.y),
+                                                      _mm256_mul_pd(e.z, e.z))));
   } // avx_abs_ep()
 
   static inline avx_edge_t avx_div_eprp(avx_edge_t e, avx_m256_t r) {
-    // ...
+    avx_edge_t res;
+    avx_m256_t rr = _mm256_div_pd(AVX_ONE_, r);
+    res.x = _mm256_mul_pd(e.x, rr);
+    res.y = _mm256_mul_pd(e.y, rr);
+    res.z = _mm256_mul_pd(e.z, rr);
+    return res;
   } // avx_div_eprp()
 
   static inline avx_m256c_t avx_dot_cep(const std::vector<complex_t>& a, avx_edge_t e) {
-    // ...
+    return avx_add_ccp(avx_add_ccp(avx_mul_crp(a[0], e.x), avx_mul_crp(a[1], e.y)),
+                                   avx_mul_crp(a[2], e.z));
   } // avx_dot_cep()
 
   static inline avx_m256_t avx_norm_cp(avx_m256c_t a) {
-    // ...
+    return _mm256_sqrt_pd(_mm256_mul_pd(a.real, a.real) + _mm256_mul_pd(a.imag, a.imag));
   } // avx_norm_cp()
 
   static inline avx_m256_t avx_sub_rrp(real_t a, avx_m256_t b) {
-    // ...
+    return _mm256_sub_pd(_mm256_set1_pd(a), b);
   } // avx_sub_rrp()
-
-  static inline avx_m256_t avx_sub_rprp(avx_m256_t a, avx_m256_t b) {
-    // ...
-  } // avx_sub_rprp()
-
-  static inline avx_m256_t avx_mul_rprp(avx_m256_t a, avx_m256_t b) {
-    // ...
-  } // avx_mul_rprp()
 
   // AVX_CMPLX_MINUS_ONE_
 
-  static inline avx_m256c_t avx_mul_rcp(avx_m256_t a, avx_m256c_t b) {
-    // ...
+  static inline avx_m256c_t avx_mul_rpcp(avx_m256_t a, avx_m256c_t b) {
+    avx_m256c_t res;
+    res.real = _mm256_mul_pd(a, b.real);
+    res.imag = _mm256_mul_pd(a, b.imag);
+    return res;
   } // avx_mul_rcp()
 
-  static inline avx_m256c_t avx_mul_cpcp(avx_m256c_t a, avx_m256c_t b) {
-    // ...
-  } // avx_mul_cpcp()
-
   static inline avx_m256c_t avx_div_cprp(avx_m256c_t a, avx_m256_t b) {
-    // ...
+    avx_m256c_t res;
+    res.real = _mm256_div_pd(a.real, b);
+    res.imag = _mm256_div_pd(a.imag, b);
+    return res;
   } // avx_div_cprp()
 
-  static inline avx_m256c_t avx_add_cpcp(avx_m256c_t a, avx_m256c_t b) {
-    // ...
+  static inline avx_m256c_t avx_hadd_cpcp(avx_m256c_t a, avx_m256c_t b) {
+    avx_m256c_t res;
+    res.real = _mm256_hadd_pd(a.real, b.real);
+    res.imag = _mm256_hadd_pd(a.imag, b.imag);
+    return res;
   } // avx_add_cpcp()
 
-  static inline avx_m256c_t avx_hadd_cpcp(avx_m256c_t a, avx_m256c_t b) {
-    // ...
-  } // avx_add_cpcp()
+  static inline complex_t avx_hreduce_cp(avx_m256c_t v) {
+    __m128d sum_high_real, sum_high_imag, sum_low_real, sum_low_imag;
+    avx_m256c_t sum = avx_hadd_cpcp(v, v);                // partial sums
+    sum_high_real = _mm256_extractf128_pd(sum.real, 1);   // extract upper 128 bits
+    sum_high_imag = _mm256_extractf128_pd(sum.imag, 1);   // extract upper 128 bits
+    sum_low_real = _mm256_extractf128_pd(sum.real, 0);    // extract lower 128 bits
+    sum_low_imag = _mm256_extractf128_pd(sum.imag, 0);    // extract lower 128 bits
+    return complex_t(_mm_cvtsd_f64(_mm_add_pd(sum_high_real, sum_low_real)),
+                     _mm_cvtsd_f64(_mm_add_pd(sum_high_imag, sum_low_imag)));
+  } // avx_hreduce_cp()
+
+  // load triangles to avx triangles
+  static inline avx_triangle_t avx_load_triangles(const triangle_t* shape_def, int pad = 0) {
+    __AVX_ALIGNED__ real_t real[AVX_VEC_LEN_];
+    memset(real, 0, AVX_VEC_LEN_ * sizeof(real_t)); // to make sure pad is 0 for all
+    avx_triangle_t vt;
+    int nt = AVX_VEC_LEN_ - pad;                    // load these many triangles from shape_def to vt
+    for(auto j = 0; j < nt; ++ j) real[j] = shape_def[j].v1[0]; vt.a.x = _mm256_load_pd(real);
+    for(auto j = 0; j < nt; ++ j) real[j] = shape_def[j].v2[0]; vt.b.x = _mm256_load_pd(real);
+    for(auto j = 0; j < nt; ++ j) real[j] = shape_def[j].v3[0]; vt.c.x = _mm256_load_pd(real);
+    for(auto j = 0; j < nt; ++ j) real[j] = shape_def[j].v1[1]; vt.a.y = _mm256_load_pd(real);
+    for(auto j = 0; j < nt; ++ j) real[j] = shape_def[j].v2[1]; vt.b.y = _mm256_load_pd(real);
+    for(auto j = 0; j < nt; ++ j) real[j] = shape_def[j].v3[1]; vt.c.y = _mm256_load_pd(real);
+    for(auto j = 0; j < nt; ++ j) real[j] = shape_def[j].v1[2]; vt.a.z = _mm256_load_pd(real);
+    for(auto j = 0; j < nt; ++ j) real[j] = shape_def[j].v2[2]; vt.b.z = _mm256_load_pd(real);
+    for(auto j = 0; j < nt; ++ j) real[j] = shape_def[j].v3[2]; vt.c.z = _mm256_load_pd(real);
+    return vt;
+  } // avx_load_triangles()
 
 #else     // single precision
 

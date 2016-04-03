@@ -40,7 +40,7 @@ namespace hig {
                                           int, const real_t*, const real_t*,
                                           int, const complex_t*,
                                           RotMatrix_t&, real_t&);
-      unsigned int compute_exact_triangle_vec(const triangle_t*, int,
+      unsigned int compute_exact_triangle_vec(const triangle_t*, unsigned int,
                                               complex_t*&, 
                                               int, const real_t*, const real_t*,
                                               int, const complex_t*,
