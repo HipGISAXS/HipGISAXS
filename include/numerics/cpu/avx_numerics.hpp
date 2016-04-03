@@ -418,9 +418,9 @@ namespace hig {
 
   static inline avx_edge_t avx_cross_epep(avx_edge_t a, avx_edge_t b) {
     avx_edge_t c;
-    c.x = _mm256_mul_pd(a.y, b.z) - _mm256_mul_pd(a.z, b.y);
-    c.y = _mm256_mul_pd(a.z, b.x) - _mm256_mul_pd(a.x, b.z);
-    c.z = _mm256_mul_pd(a.x, b.y) - _mm256_mul_pd(a.y, b.x);
+    c.x = _mm256_sub_pd(_mm256_mul_pd(a.y, b.z), _mm256_mul_pd(a.z, b.y));
+    c.y = _mm256_sub_pd(_mm256_mul_pd(a.z, b.x), _mm256_mul_pd(a.x, b.z));
+    c.z = _mm256_sub_pd(_mm256_mul_pd(a.x, b.y), _mm256_mul_pd(a.y, b.x));
     return c;
   } // avx_cross_epep()
 
@@ -445,7 +445,7 @@ namespace hig {
   } // avx_dot_cep()
 
   static inline avx_m256_t avx_norm_cp(avx_m256c_t a) {
-    return _mm256_sqrt_pd(_mm256_mul_pd(a.real, a.real) + _mm256_mul_pd(a.imag, a.imag));
+    return _mm256_sqrt_pd(_mm256_add_pd(_mm256_mul_pd(a.real, a.real), _mm256_mul_pd(a.imag, a.imag)));
   } // avx_norm_cp()
 
   static inline avx_m256_t avx_sub_rrp(real_t a, avx_m256_t b) {

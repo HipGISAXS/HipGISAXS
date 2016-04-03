@@ -215,11 +215,6 @@ namespace hig {
     int num_vtriangles = ceil(num_triangles / AVX_VEC_LEN_);
     int pad = (AVX_VEC_LEN_ - num_triangles % AVX_VEC_LEN_) % AVX_VEC_LEN_;
               // this is the padding in the last vtriangle
-    std::cout << "----------- num_triangles: " << num_triangles
-              << ", num_vtriangles: " << num_vtriangles
-              << ", pad: " << pad
-              << ", AVX_VEC_LEN_: " << AVX_VEC_LEN_
-              << std::endl;
     avx_triangle_t* vtriangles = (avx_triangle_t*) _mm_malloc(num_vtriangles * sizeof(avx_triangle_t),
                                                               AVX_ALIGNMENT_);
     if(vtriangles == NULL) {
