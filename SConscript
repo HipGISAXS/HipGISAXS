@@ -538,7 +538,7 @@ if not get_option('clean'):
     ## required libs
     boost_libs = ["boost_system", "boost_filesystem", "boost_timer", "boost_chrono"]
     parallel_hdf5_libs = ["hdf5", "z"]
-    tiff_libs = ["tiff"]
+    tiff_libs = ["tiff", "z"]
     mkl_libs = []
     if use_mkl:
       mkl_libs = [] #["mkl_intel_lp64", "mkl_sequential", "mkl_core"]
