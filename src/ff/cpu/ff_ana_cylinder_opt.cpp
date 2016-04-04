@@ -74,7 +74,8 @@ namespace hig {
     avx_m256c_t temp2 = avx_mul_ccp(CMPLX_ONE_, temp1);
     avx_m256c_t expt_val = avx_exp_cp(temp2);
     temp1 = avx_mul_crp(qpar, radius);
-    avx_m256c_t bess_val = avx_cbessj_cp(temp1, 1);
+    //avx_m256c_t bess_val = avx_cbessj_cp(temp1, 1);
+    avx_m256c_t bess_val = avx_cbesselj_cp(temp1, 1);
     bess_val = avx_div_ccp(bess_val, temp1);
     temp1 = avx_mul_ccp(sinc_val, expt_val);
     temp2 = avx_mul_ccp(temp1, bess_val);
@@ -84,7 +85,7 @@ namespace hig {
 
   inline bool AnalyticFormFactor::cylinder_kernel_opt(std::vector<real_t>& r, std::vector<real_t>& h,
                                                       vector3_t transvec, std::vector<complex_t>& ff_vec) {
-    std::cout << "** using AVX-based cylinder FF kernel"<< std::endl;
+    //std::cout << "** using AVX-based cylinder FF kernel"<< std::endl;
     real_t* qx = QGrid::instance().qx();
     real_t* qy = QGrid::instance().qy();
     complex_t* qz_extended = QGrid::instance().qz_extended();

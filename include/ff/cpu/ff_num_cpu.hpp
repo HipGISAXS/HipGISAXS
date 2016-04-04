@@ -68,8 +68,10 @@ namespace hig {
     private:
 
       complex_t form_factor_kernel_exact(real_t, real_t, complex_t, RotMatrix_t&, const triangle_t&);
+      #ifdef INTEL_AVX
       avx_m256c_t form_factor_kernel_exact(real_t, real_t, complex_t, RotMatrix_t&,
                                            const avx_triangle_t&);
+      #endif
 
       // following are old kernels for the approximate triangles method
 
