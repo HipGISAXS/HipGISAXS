@@ -68,11 +68,6 @@ namespace hig {
         //  ff_()
         //#endif
           {
-    single_layer_refindex_.delta(0.0);
-    single_layer_refindex_.beta(0.0);
-    single_layer_thickness_ = 0.0;
-    // construct hig input instance
-    HiGInput::instance();
     // construct the qgrid -- to be changed to be not singleton ...
     QGrid::instance();
   } // HipGISAXS::HipGISAXS()
@@ -81,6 +76,19 @@ namespace hig {
   HipGISAXS::~HipGISAXS() {
     // nothing to do here yet ...
   } // HipGISAXS::~HipGISAXS()
+
+
+  // read and parse the input file
+  bool HipGISAXS::construct_input(const char * filename) {
+    std::string ext = boost::filesystem::extension(std::string(filename));
+    if (ext.compare("hig") input_ = new HiGInput();
+    else if (ext.compare("yaml") || ext.compare("yml")) input_ = new YAMLInput();
+    else {
+      std::cerr << "error: unrecogonizable files extension" << std::endl;
+      return false;
+    }
+    return input_->construct_input_config(filename);
+  }
 
 
   bool HipGISAXS::init() {

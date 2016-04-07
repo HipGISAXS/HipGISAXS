@@ -307,7 +307,7 @@ namespace hig {
 
   class Grain {
     private:
-      //std::string shape_key_;
+      std::string shape_key_;
       std::string unitcell_key_;
       std::string layer_key_;
       bool in_layer_;
@@ -330,6 +330,7 @@ namespace hig {
 
       bool lattice_abc_set() { return lattice_.abc_set(); }
 
+      void shape_key(std::string s) { shape_key_ = s; }
       void unitcell_key(std::string s) { unitcell_key_ = s; }
       void layer_key(std::string s) { layer_key_ = s; in_layer_ = true; }
 
@@ -462,6 +463,7 @@ namespace hig {
       void lattice_vec_c(real_t a, real_t b, real_t c) { grain_.lattice_vec_c(a, b, c); }
       void lattice_abc_set(bool v) { grain_.lattice_abc_set(v); }
 
+      void grain_shape_key(std::string s) { grain_.shape_key(s); }
       void grain_unitcell_key(std::string s) { grain_.unitcell_key(s); }
       void grain_layer_key(std::string s) { grain_.layer_key(s); }
 
@@ -470,6 +472,9 @@ namespace hig {
       void grain_transvec(real_t v, real_t w, real_t x) { grain_.transvec(v, w, x); }
       void grain_repetition(real_t v, real_t w, real_t x) { grain_.repetition(v, w, x); }
 
+      void grain_repetition_min(vector3_t);
+      void grain_repetition_max(vector3_t);
+      void grain_repetition_stat(std::vector<StatisticType>);
       void grain_is_repetition_dist(bool b) { grain_.is_repetition_dist(b); }
       void grain_xrepetition_min(unsigned int v) { grain_.xrepetition_min(v); }
       void grain_yrepetition_min(unsigned int v) { grain_.yrepetition_min(v); }
@@ -518,6 +523,10 @@ namespace hig {
       void grain_scaling_a_nsamples (int num) { grain_.scaling_.nvals_[0] = num; }
       void grain_scaling_b_nsamples (int num) { grain_.scaling_.nvals_[1] = num; }
       void grain_scaling_c_nsamples (int num) { grain_.scaling_.nvals_[2] = num; }
+      void grain_scaling_mean(vector3_t v) { grain_.scaling_.mean_ = v; }
+      void grain_scaling_stddev(vector3_t v) { grain_.scaling_.stddev_ = v; }
+      void grain_scaling_stat(std::vector<StatisticType> v) { grain_.scaling_.dist_ = v; }
+      void grain_scaling_nsamples(std::vector<int> v) { grain_.scaling_.nvals_ = v; }
 
       void ensemble_spacing(vector3_t v) { ensemble_.spacing(v); }
       void ensemble_maxgrains(vector3_t v) { ensemble_.maxgrains(v); }

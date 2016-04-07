@@ -394,6 +394,21 @@ namespace hig {
   Structure::Structure() { iratio_ = 1.0; type_ = default_type; }
   Structure::~Structure() { }
 
+  void Structure::grain_repetition_min(vector3_t v){
+    grain_.xrepetition_min((unsigned) v[0]);
+    grain_.yrepetition_min((unsigned) v[1]);
+    grain_.zrepetition_min((unsigned) v[2]);
+  }
+  void Structure::grain_repetition_max(vector3_t v){
+    grain_.xrepetition_max((unsigned) v[0]);
+    grain_.yrepetition_max((unsigned) v[1]);
+    grain_.zrepetition_max((unsigned) v[2]);
+  }
+  void Structure::grain_repetition_stat(std::vector<StatisticType> v){
+    grain_.xrepetition_stat(v[0]);
+    grain_.yrepetition_stat(v[1]);
+    grain_.zrepetition_stat(v[2]);
+  }
 
   void Structure::init() {
     key_ = "";

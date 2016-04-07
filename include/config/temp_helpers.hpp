@@ -7,6 +7,9 @@
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
 
+#ifndef TEMP_HELPERS__H
+#define TEMP_HELPERS__H
+
 #include <string>
 #include <vector>
 #include <map>
@@ -149,3 +152,5 @@ namespace hig {
 
 
 } // namespace hig
+
+#endif // TEMP_HELPERS__H

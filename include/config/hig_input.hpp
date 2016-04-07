@@ -31,6 +31,7 @@
 #include <common/constants.hpp>
 #include <config/tokens.hpp>
 #include <config/token_mapper.hpp>
+#include <config/input.hpp>
 #include <model/shape.hpp>
 #include <model/layer.hpp>
 #include <model/unitcell.hpp>
@@ -48,7 +49,7 @@ namespace hig {
   // for that create a class with generic 'object type' and parent, children pointers
   // ...
 
-  class HiGInput {
+  class HiGInput : public Input {
 
     private:
       /*containers */

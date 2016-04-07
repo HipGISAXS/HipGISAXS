@@ -27,7 +27,9 @@
 
 #include <common/typedefs.hpp>
 #include <common/globals.hpp>
+#include <config/input.hpp>
 #include <config/hig_input.hpp>
+#include <config/yaml_input.hpp>
 #include <model/common.hpp>
 #include <model/layer.hpp>
 #include <model/qgrid.hpp>
@@ -58,6 +60,7 @@ namespace hig {
       vector3_t cell_;    /* stores the domain size in each dimension */
       RotMatrix_t rot_;
       MultiLayer multilayer_; 
+      std::shared_ptr<Input> input_ = nullptr;
 
       class SampleRotation {
         friend class HipGISAXS;
@@ -172,9 +175,7 @@ namespace hig {
       HipGISAXS(int, char**);
       ~HipGISAXS();
 
-      bool construct_input(const char* filename) {
-        return HiGInput::instance().construct_input_config(filename);
-      } // construct_input()
+      bool construct_input(const char* filename);
 
       /* loops over all configs and computes GISAXS for each */
       bool run_all_gisaxs(int = 0, int = 0, int = 0);
