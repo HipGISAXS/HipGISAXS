@@ -564,15 +564,17 @@ if not get_option('clean'):
     mic_flags = [] #['USE_MIC', 'FF_MIC_OPT', 'FF_NUM_MIC_SWAP', 'FF_NUM_MIC_KB']
     cpu_flags = ['FF_NUM_CPU_FUSED', 'FF_CPU_OPT']
     ## choose at most one of the following
-    #if use_mkl: cpu_flags += [ 'FF_CPU_OPT_MKL' ]
-    cpu_flags += [ 'INTEL_AVX', 'FF_CPU_OPT_AVX' ]
+    if use_mkl: cpu_flags += [ 'FF_CPU_OPT_MKL' ]
+    env.Append(CCFLAGS = ["-mkl"])
+    env.Append(LINKFLAGS = ["-mkl"])
+    #cpu_flags += [ 'INTEL_AVX', 'FF_CPU_OPT_AVX' ]
 
     mpi_flags = ['USE_MPI']
     parallel_hdf5_flags = ['USE_PARALLEL_HDF5']
     papi_flags = ['PROFILE_PAPI']
 
     all_flags = detail_flags
-    all_libs = boost_libs + tiff_libs + mkl_libs + other_libs
+    all_libs = boost_libs + tiff_libs + mkl_libs + other_libs + [ 'ittnotify' ]
 
     if using_cuda:
         all_libs += gpu_libs

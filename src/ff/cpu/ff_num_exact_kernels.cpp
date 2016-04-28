@@ -18,6 +18,8 @@
 #include <cmath>
 #include <cstring>
 
+#include <ittnotify.h>
+
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -247,6 +249,9 @@ namespace hig {
     woo::BoostChronoTimer timer;
     timer.start();
 
+    __SSC_MARK(0x111);      // start tracing (intel sde)
+    __itt_resume();         // start vtune
+
     // NOTE: each thread accesses all triangles. TODO ... improve this later
 
     #pragma omp parallel for schedule(runtime)
@@ -260,6 +265,9 @@ namespace hig {
       } // for
       ff[i_z] = avx_hreduce_cp(ff_temp);
     } // for
+
+    __itt_pause();
+    __SSC_MARK(0x222);
 
     timer.stop();
     compute_time = timer.elapsed_msec();

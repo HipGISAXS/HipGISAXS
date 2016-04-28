@@ -16,6 +16,8 @@
 
 #include <cstring>
 
+#include <ittnotify.h>  // for vtune
+
 #ifdef PROFILE_PAPI
 # include <papi.h>
 #endif // PROFILE_PAPI
@@ -174,8 +176,9 @@ namespace hig {
     unsigned int loop_limit = nqz_ / VEC_LEN;
     int loop_rem = nqz_ % VEC_LEN;  // TODO ...
 
-    vmlSetMode(VML_EP);
+    //vmlSetMode(VML_HA);
     //vmlSetMode(VML_LA);
+    vmlSetMode(VML_EP);
 
     #pragma omp for schedule(runtime)
     for(unsigned int l = 0; l < loop_limit; ++ l) {
@@ -307,8 +310,12 @@ namespace hig {
 
     #ifdef PROFILE_PAPI
     double overall_ipc = 0.0;
-    int papi_events[3] = { PAPI_TOT_CYC, PAPI_TOT_INS, PAPI_DP_OPS };
-    long long papi_counter_values[num_threads][3];
+    // for edison
+    //int papi_events[3] = { PAPI_TOT_CYC, PAPI_TOT_INS, PAPI_DP_OPS };
+    //long long papi_counter_values[num_threads][3];
+    // for cori
+    int papi_events[2] = { PAPI_TOT_CYC, PAPI_TOT_INS };
+    long long papi_counter_values[num_threads][2];
     if(PAPI_library_init(PAPI_VER_CURRENT) != PAPI_VER_CURRENT) {
       std::cerr << "error: failed in PAPI_library_init()" << std::endl;
       return false;
@@ -329,10 +336,17 @@ namespace hig {
     #endif
 
     #ifdef PROFILE_PAPI
-    PAPI_start_counters(papi_events, 3);
+    //PAPI_start_counters(papi_events, 3);
+    PAPI_start_counters(papi_events, 2);
     #endif // PROFILE_PAPI
 
+    __SSC_MARK(0x111);    // for intel sde
+    __itt_resume();       // for intel vtune
+
     cylinder_kernel_opt(r, h, transvec, ff);
+
+    __itt_pause();
+    __SSC_MARK(0x222);
 
     #ifdef PROFILE_PAPI
     PAPI_stop_counters(papi_counter_values[thread_id], 3);
@@ -349,20 +363,20 @@ namespace hig {
     for(int i = 0; i < num_threads; ++ i) {
       papi_cycles = papi_counter_values[i][0];
       papi_inst = papi_counter_values[i][1];
-      papi_flop = papi_counter_values[i][2];
+      //papi_flop = papi_counter_values[i][2];
       papi_total_cycles += papi_cycles;
       papi_total_inst += papi_inst;
-      papi_total_flop += papi_flop;
+      //papi_total_flop += papi_flop;
       std::cout << "++                  PAPI_TOT_CYC: " << papi_cycles << std::endl;
       std::cout << "++                  PAPI_TOT_INS: " << papi_inst << std::endl;
-      std::cout << "++                   PAPI_DP_OPS: " << papi_flop << std::endl;
+      //std::cout << "++                   PAPI_DP_OPS: " << papi_flop << std::endl;
       std::cout << "++                           IPC: "
                 << (double) papi_inst / papi_cycles << std::endl;
-      std::cout << "++                        MFLOPS: "
-                << papi_flop / timer.elapsed_msec() / 1000. << std::endl;
+      //std::cout << "++                        MFLOPS: "
+      //          << papi_flop / timer.elapsed_msec() / 1000. << std::endl;
     } // for
-    std::cout << "++                  Total GFLOPS: "
-              << papi_total_flop / timer.elapsed_msec() / 1000. / 1000. << std::endl;
+    //std::cout << "++                  Total GFLOPS: "
+    //          << papi_total_flop / timer.elapsed_msec() / 1000. / 1000. << std::endl;
     #endif // PROFILE_PAPI
 
     return true;
