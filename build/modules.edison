@@ -1,7 +1,16 @@
+
+module unload darshan
+
 module load python scons
-module load gcc
+module swap intel intel/16.0.0.109
+module load gcc/4.9.3
 module load boost
 #module load szip
-module load cray-petsc
+#module load cray-petsc
 module load papi
-module load mkl
+#module load mkl
+module load sde vtune
+
+export TIFFDIR=$HOME/local/tiff-4.0.4-cori
+export LD_LIBRARY_PATH=$TIFFDIR/lib:$LD_LIBRARY_PATH
+export CRAY_LD_LIBRARY_PATH=$TIFFDIR/lib:$CRAY_LD_LIBRARY_PATH
