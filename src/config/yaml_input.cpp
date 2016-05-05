@@ -27,6 +27,14 @@
 
 
 namespace hig {
+  YAMLInput::YAMLInput() {
+    shapes_.clear();
+    layers_.clear();
+    structures_.clear();
+    scattering_.init();
+    detector_.init();
+    compute_.init();
+  }
 
   void YAMLInput::init() {
     shapes_.clear();
@@ -115,7 +123,7 @@ namespace hig {
         std::cerr << "error: order must begin at 1, unless it is substrate." << std::endl;
         return false;
       }
-      curr_layer_.order(curr_layer["order"].as<int>());
+      curr_layer_.order(order);
 
       // film thickness 
       if(curr_layer["thickness"]){
@@ -134,6 +142,7 @@ namespace hig {
         std::cerr << "error: refrective index is missing for layer \"" << key <<"\"" << std::endl;
         return false;
       }
+      layers_[order] = curr_layer_;
     } //for i (layers)
     if (!found_substr){
       std::cerr << "Warning: substrate not defined. Will atumatically add Si-substrate" << std::endl;
@@ -149,6 +158,8 @@ namespace hig {
       scattering_.alphai_max(scattering["max"].as<real_t>()); 
       scattering_.alphai_step(scattering["step"].as<real_t>());
     }
+    if (!scattering["expt"]) scattering_.experiment(std::string("gisaxs"));
+    else scattering_.experiment(scattering["expt"].as<std::string>());
   }
 
   bool YAMLInput::extract_compute_params(){
@@ -359,6 +370,7 @@ namespace hig {
           } // rot3
         } //orientation
       } // if curr_struct["ensemble"]
+      structures_[key] = curr_structure_;
     } // for i (structs)
   }
 

@@ -170,6 +170,7 @@ namespace hig {
       ScatteringParams scattering_;
       DetectorParams detector_;
       ComputeParams compute_;
+      FittingParams fitting_;
 
       /* helpers */
       int num_shapes_;
@@ -182,6 +183,7 @@ namespace hig {
       string_t curr_element_shape_key_;
       Layer curr_layer_;
       Structure curr_structure_;
+
 
 
       /**
@@ -200,10 +202,21 @@ namespace hig {
       bool extract_structures();
       
     public:
-
+    
+      YAMLInput();
       bool construct_input_config(const char *);
+      bool update_params(map_t & params) { return false; }
       const std::string& path() const { return compute_.pathprefix(); }
       const std::string& runname() const { return compute_.runname(); }
+
+      const shape_list_t & shapes() const         { return shapes_;     }
+      const layer_list_t & layers() const         { return layers_;     }
+      const unitcell_list_t & unitcells() const   { return unitcells_;  }
+      const structure_list_t & structures() const { return structures_; }
+      const ScatteringParams & scattering() const { return scattering_; }
+      const DetectorParams & detector() const     { return detector_;   }
+      const ComputeParams & compute() const       { return compute_;    }
+      const FittingParams & fitting() const       { return fitting_;    }
 
   }; // class YAMLInput
 

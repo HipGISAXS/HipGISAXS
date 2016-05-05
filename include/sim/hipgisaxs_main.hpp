@@ -60,7 +60,8 @@ namespace hig {
       vector3_t cell_;    /* stores the domain size in each dimension */
       RotMatrix_t rot_;
       MultiLayer multilayer_; 
-      std::shared_ptr<Input> input_ = nullptr;
+      Input * input_ = nullptr;
+      std::string output_subdir_;
 
       class SampleRotation {
         friend class HipGISAXS;

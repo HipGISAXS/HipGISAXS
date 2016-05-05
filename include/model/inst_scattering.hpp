@@ -60,6 +60,7 @@ namespace hig {
       void clear();
 
       void expt(std::string s) { expt_ = s; }
+      void experiment(std::string s) { expt_ = s; }
 
       void coherence(real_t d) { coherence_ = d; }
       void spot_area(real_t d) { spot_area_ = d; }
@@ -87,7 +88,25 @@ namespace hig {
 
       real_t spot_area() const { return spot_area_; }
       Photon photon_energy() const { return photon_; }
+      void photon_energy(real_t & val, std::string & unit) const {
+        val = photon_.value_;
+        unit = photon_.unit_;
+      }
 
+      real_t alphai_min() const { return alpha_i_.min_; }
+      void alphai(real_t & ai_min, real_t & ai_max, real_t & ai_step) const {
+        ai_min = alpha_i_.min_;
+        ai_max = alpha_i_.max_;
+        ai_step = alpha_i_.step_;
+      } 
+      void inplanerot(real_t & phi_min, real_t & phi_max, real_t & phi_step) const {
+        phi_min = inplane_rot_.min_;
+        phi_max = inplane_rot_.max_;
+        phi_step= inplane_rot_.step_;
+      }
+
+      // return experiment string
+      std::string experiment() const { return expt_; }
       bool update_param(const std::string&, real_t);
 
 

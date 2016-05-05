@@ -85,7 +85,7 @@ namespace hig {
       void structcorrelation(StructCorrelationType c) { correlation_ = c; }
 
       /* getters */
-      //OutputRegion output_region() { return output_region_; }
+      OutputRegion output_region() const { return output_region_; }
 
       /* modifiers (updates) */
       bool update_param(const std::string&, real_t);

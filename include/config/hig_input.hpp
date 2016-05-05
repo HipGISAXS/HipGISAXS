@@ -87,6 +87,7 @@ namespace hig {
       std::vector <real_t> curr_vector_;    // to store values in a vector while parsing it
 
       /* fitting related */
+      FittingParams fitting_;
 
       analysis_algo_list_t analysis_algos_;            // list of algorithms
 
@@ -139,13 +140,6 @@ namespace hig {
        * methods
        */
 
-      /* singleton */
-
-      HiGInput();
-      HiGInput(const HiGInput&);
-      HiGInput& operator=(const HiGInput&);
-
-      void init();
 
       /* setters */
 
@@ -202,15 +196,26 @@ namespace hig {
       void print_fit_algos();
 
     public:
+
+      HiGInput();
+      HiGInput(const HiGInput&);
+      HiGInput& operator=(const HiGInput&);
+      void init();
       // TODO: ...
       //typedef HiGIterators <Shape> shape_iterator_t;
       //typedef std::unordered_map <std::string, Structure>::iterator structure_iterator_t;
       //typedef structure_list_t::iterator structure_iterator_t;
 
-      static HiGInput& instance() {
-        static HiGInput hig_input;
-        return hig_input;
-      } // instance()
+      /*  New methods to support HigInput as derived class  */
+      const shape_list_t & shapes() const { return shapes_; }
+      const layer_list_t & layers() const { return layers_; }
+      const unitcell_list_t & unitcells() const { return unitcells_; }
+      const structure_list_t & structures() const { return structures_; }
+      const ScatteringParams & scattering() const { return scattering_; }
+      const ComputeParams & compute() const { return compute_; }
+      const FittingParams & fitting() const { return fitting_; } 
+      /*  End of new methods */
+
 
       bool construct_input_config(const char* filename);
       bool construct_lattice_vectors();

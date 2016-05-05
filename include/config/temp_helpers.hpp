@@ -14,6 +14,9 @@
 #include <vector>
 #include <map>
 
+#include <config/tokens.hpp>
+#include <config/token_mapper.hpp>
+#include <common/typedefs.hpp>
 namespace hig {
 
   class FitReferenceData {
