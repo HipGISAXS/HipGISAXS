@@ -113,6 +113,7 @@ namespace hig {
       switch(ref_type) {
         case reference_file_ascii:
           ref_data_ = new ImageData(ref_filename);
+          ref_data_->normalize();
           break;
 
         case reference_file_edf:

@@ -80,8 +80,8 @@ int main(int narg, char** args) {
       hip_func.set_distance_measure(new AbsoluteDifferenceSquare());
       ana.add_analysis_algo(new hig::FitLMVMAlgo(&hip_func));
     } else if(algo == hig::algo_pso) {
-      //hip_func.set_distance_measure(new AbsoluteDifferenceSquareNorm());
-      hip_func.set_distance_measure(new LogDifferenceNorm2());
+      hip_func.set_distance_measure(new AbsoluteDifferenceSquareNorm());
+      //hip_func.set_distance_measure(new LogDifferenceNorm2());
       ana.add_analysis_algo(new hig::ParticleSwarmOptimization(narg, args, &hip_func, i, false, 0));
     } else if(algo == hig::algo_bruteforce) {
       hip_func.set_distance_measure(new AbsoluteDifferenceSquareNorm());
