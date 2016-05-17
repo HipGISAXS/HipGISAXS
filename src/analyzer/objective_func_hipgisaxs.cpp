@@ -10,6 +10,7 @@
 
 #include <iostream>
 #include <map>
+#include <boost/math/special_functions/fpclassify.hpp>
 
 #include <analyzer/objective_func_hipgisaxs.hpp>
 #include <file/edf_reader.hpp>
@@ -37,7 +38,7 @@ namespace hig {
     pdist_ = d;
     //curr_dist_.clear();
 
-    reg_alpha_ = 100;     // starting with some big value
+    reg_alpha_ = 10;     // starting with some big value
                           // TODO: make this configurable from the input
 
   } // HipGISAXSObjectiveFunction::HipGISAXSObjectiveFunction()
@@ -62,6 +63,9 @@ namespace hig {
     mask_data_.clear();
     mask_set_ = false;
     pdist_ = NULL;
+
+    reg_alpha_ = 10;     // starting with some big value
+                          // TODO: make this configurable from the input
 
   } // HipGISAXSObjectiveFunction::HipGISAXSObjectiveFunction()
 
@@ -261,7 +265,10 @@ namespace hig {
       // for better alpha selection, plot pmean vs. curr_dist
       reg_alpha_ /= 5;    // calculate new alpha
       double reg = (reg_alpha_ / 2) * pmean;
-      for(auto i = 0; i < curr_dist.size(); ++ i) curr_dist[i] += reg;
+      for(auto i = 0; i < curr_dist.size(); ++ i) {
+        if((boost::math::isfinite)(curr_dist[i])) curr_dist[i] += reg;
+        else curr_dist[i] = 0.0;
+      } // for
 
       // write to output file
       // do something better ...

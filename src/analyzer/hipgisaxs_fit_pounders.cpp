@@ -72,6 +72,7 @@ namespace hig {
       strncpy(newargs[i], argv[i], 50);
     } // for
 
+    if(img_num >= 0) {
     if(HiGInput::instance().analysis_algo_param(algo_num, "pounders_delta", pdelta)) {
       std::stringstream arg1; arg1 << "-tao_pounders_delta";
       //newargs[newnarg] = new char[arg1.str().size() + 1];
@@ -114,6 +115,7 @@ namespace hig {
     } else {
       std::cerr << "warning: default pounders_gqt being used" << std::endl;
     } // if-else
+    } // if
 
     // temp ...
     for(int i = 0; i < newnarg; ++ i) std::cout << newargs[i] << std::endl;

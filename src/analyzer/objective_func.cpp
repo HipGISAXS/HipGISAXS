@@ -32,8 +32,6 @@ namespace hig {
     real_t err = 0.0;
     for(int i = 0; i < data_size; ++ i) {
       ff[i] = temp[i];
-      // just error checking ... to remove
-      if(i == data_size - 1) std::cout << i << "," << ff[i] << std::endl;
       err += ff[i] * ff[i];
     } // for
 
