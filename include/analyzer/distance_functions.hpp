@@ -134,7 +134,7 @@ class RelativeAbsoluteDifferenceSquare : public DistanceMeasure {
 
 
 
-// sum of squares of relative absolute differences
+// sum of squares of scaled relative absolute differences
 class ScaledRelativeAbsoluteDifferenceSquare : public DistanceMeasure {
   private:
     bool find_minmax(hig::real_t*& arr, unsigned int*& mask, unsigned int size,
@@ -160,8 +160,6 @@ class ScaledRelativeAbsoluteDifferenceSquare : public DistanceMeasure {
       hig::real_t ref_min, ref_max, dat_min, dat_max;
       find_minmax(ref, mask, size, ref_min, ref_max);
       find_minmax(dat, mask, size, dat_min, dat_max);
-      std::cout << "MIN: " << ref_min << " and " << dat_min << std::endl;
-      std::cout << "MAX: " << ref_max << " and " << dat_max << std::endl;
       hig::real_t ref_range = ref_max - ref_min;
       hig::real_t dat_range = dat_max - dat_min;
       if(ref_range < hig::TINY_) ref_range = 1.0;
@@ -173,7 +171,7 @@ class ScaledRelativeAbsoluteDifferenceSquare : public DistanceMeasure {
         double temp = mask[i] * fabs(scaled_ref - scaled_dat);
         dist_sum += temp * temp;
       } // for
-      std::cout << "DISTANCE: " << dist_sum << std::endl;
+      //std::cout << "DISTANCE: " << dist_sum << std::endl;
       dist.clear();
       dist.push_back((hig::real_t) dist_sum);
       return true;

@@ -28,14 +28,17 @@ namespace hig {
       exit(1);
     } // if
 
-    n_par_ = hipgisaxs_.nrow();
-    n_ver_ = hipgisaxs_.ncol();
+    n_par_ = hipgisaxs_.ncol();
+    n_ver_ = hipgisaxs_.nrow();
 
     ref_data_ = NULL;
     mask_data_.clear();
     mask_set_ = false;
     pdist_ = d;
     //curr_dist_.clear();
+
+    reg_alpha_ = 100;     // starting with some big value
+                          // TODO: make this configurable from the input
 
   } // HipGISAXSObjectiveFunction::HipGISAXSObjectiveFunction()
 
@@ -245,6 +248,21 @@ namespace hig {
       unsigned int* mask_data = &(mask_data_[0]);
       (*pdist_)(ref_data, gisaxs_data, mask_data, n_par_ * n_ver_, curr_dist);
 
+      // add regularization term
+      // compute regularization = (alpha / 2) * || x - x_mean || ^ 2
+      double pmean = 0.0;
+      for(std::map<std::string, real_t>::const_iterator i = param_vals.begin();
+          i != param_vals.end(); ++ i) {
+        double x_mean = HiGInput::instance().param_space_mean((*i).first);
+        double ptemp = ((*i).second - x_mean);
+        ptemp *= ptemp;
+        pmean += ptemp;
+      } // for
+      // for better alpha selection, plot pmean vs. curr_dist
+      reg_alpha_ /= 5;    // calculate new alpha
+      double reg = (reg_alpha_ / 2) * pmean;
+      for(auto i = 0; i < curr_dist.size(); ++ i) curr_dist[i] += reg;
+
       // write to output file
       // do something better ...
       // as here all procs for different particles will have same ranks within their hipgisaxs object
@@ -253,7 +271,7 @@ namespace hig {
       cfilename << "distance." << myrank << ".dat";
       std::string prefix(HiGInput::instance().param_pathprefix() + "/" + HiGInput::instance().runname());
       std::ofstream out(prefix + "/" + cfilename.str(), std::ios::app);
-      out.precision(7);
+      out.precision(10);
       for(real_vec_t::const_iterator i = curr_dist.begin(); i != curr_dist.end(); ++ i) out << *i << " ";
       out << std::endl;
       out.close();
