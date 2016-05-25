@@ -3,7 +3,7 @@
  *
  *  File: objective_func.cpp
  *  Created: Feb 02, 2014
- *  Modified: Wed 08 Oct 2014 12:17:42 PM PDT
+ *  Modified: Tue 24 May 2016 08:15:09 PM EDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -38,7 +38,8 @@ namespace hig {
     pdist_ = d;
     //curr_dist_.clear();
 
-    reg_alpha_ = 10;     // starting with some big value
+    reg_alpha_ = 0;     // starting with some big value
+    //reg_alpha_ = 10;     // starting with some big value
                           // TODO: make this configurable from the input
 
   } // HipGISAXSObjectiveFunction::HipGISAXSObjectiveFunction()
@@ -64,7 +65,8 @@ namespace hig {
     mask_set_ = false;
     pdist_ = NULL;
 
-    reg_alpha_ = 10;     // starting with some big value
+    reg_alpha_ = 0;     // starting with some big value
+    //reg_alpha_ = 10;     // starting with some big value
                           // TODO: make this configurable from the input
 
   } // HipGISAXSObjectiveFunction::HipGISAXSObjectiveFunction()

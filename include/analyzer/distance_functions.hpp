@@ -3,7 +3,6 @@
   *
   *  File: distance_functions.hpp
   *  Created: May 17, 2013
-  *  Modified: Wed 08 Oct 2014 12:11:36 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
@@ -29,6 +28,12 @@ class DistanceMeasure {
                             unsigned int*& mask, unsigned int size,
                             std::vector<hig::real_t>& dist) const = 0;
   //  virtual hig::real_t operator()(hig::real_t*& ref, hig::real_t*& data, unsigned int size) const { }
+  protected:
+    hig::real_t norm_l2(hig::real_t*& arr, unsigned int*& mask, unsigned int size) const {
+      hig::real_t sum = 0.0;
+      for(unsigned int i = 0; i < size; ++ i) sum += mask[i] * arr[i] * arr[i];
+      return sqrt(sum);
+    } // norm_l2()
 }; // class DistanceMeasure
 
 
@@ -89,6 +94,29 @@ class RelativeResidualVector : public DistanceMeasure {
 }; // class RelativeResidualVector
 
 
+// uses unit-length normalization/scaling -- NEW
+class UnitLengthNormalizedResidualVector : public DistanceMeasure {
+  public:
+    UnitLengthNormalizedResidualVector() { }
+    ~UnitLengthNormalizedResidualVector() { }
+
+    bool operator()(hig::real_t*& ref, hig::real_t*& data,
+                    unsigned int*& mask, unsigned int size,
+                    std::vector<hig::real_t>& dist) const {
+      if(ref == NULL || data == NULL) return false;
+      hig::real_t ref_norm = norm_l2(ref, mask, size);
+      hig::real_t dat_norm = norm_l2(data, mask, size);
+      dist.clear();
+      for(int i = 0; i < size; ++ i) {
+        hig::real_t temp = data[i] / dat_norm - ref[i] / ref_norm;
+        temp *= temp;
+        dist.push_back(mask[i] * temp / (ref_norm * ref_norm));
+      } // for
+      return true;
+    } // operator()
+}; // class UnitLengthNormalizedResidualVector
+
+
 // sum of squares of absolute differences
 class AbsoluteDifferenceSquare : public DistanceMeasure {
   public:
@@ -131,7 +159,6 @@ class RelativeAbsoluteDifferenceSquare : public DistanceMeasure {
       return true;
     } // operator()
 }; // class RelativeAbsoluteDifferenceSquare
-
 
 
 // sum of squares of scaled relative absolute differences
@@ -177,6 +204,31 @@ class ScaledRelativeAbsoluteDifferenceSquare : public DistanceMeasure {
       return true;
     } // operator()
 }; // class ScaledRelativeAbsoluteDifferenceSquare
+
+
+// unit-length normalized/scaled chi2
+class UnitLengthNormalizedDifferenceSquareNorm : public DistanceMeasure {
+  public:
+    UnitLengthNormalizedDifferenceSquareNorm() { }
+    ~UnitLengthNormalizedDifferenceSquareNorm() { }
+
+    bool operator()(hig::real_t*& ref, hig::real_t*& dat,
+                    unsigned int*& mask, unsigned int size,
+                    std::vector<hig::real_t>& dist) const {
+      if(ref == NULL || dat == NULL) return false;
+      hig::real_t ref_norm = norm_l2(ref, mask, size);
+      hig::real_t dat_norm = norm_l2(dat, mask, size);
+      double dist_sum = 0.0;
+      for(unsigned int i = 0; i < size; ++ i) {
+        hig::real_t temp = (dat[i] / dat_norm) - (ref[i] / ref_norm);
+        temp *= temp;
+        dist_sum += mask[i] * temp * temp;
+      } // for
+      dist.clear();
+      dist.push_back((hig::real_t) dist_sum / (ref_norm * ref_norm));
+      return true;
+    } // operator()
+}; // class UnitLengthNormalizedDifferenceSquareNorm
 
 
 // normalized sum of squares of absolute differences
