@@ -94,7 +94,7 @@ class RelativeResidualVector : public DistanceMeasure {
 }; // class RelativeResidualVector
 
 
-// uses unit-length normalization/scaling -- NEW
+// uses unit-length normalization/scaling -- used in pounders
 class UnitLengthNormalizedResidualVector : public DistanceMeasure {
   public:
     UnitLengthNormalizedResidualVector() { }
@@ -107,10 +107,14 @@ class UnitLengthNormalizedResidualVector : public DistanceMeasure {
       hig::real_t ref_norm = norm_l2(ref, mask, size);
       hig::real_t dat_norm = norm_l2(data, mask, size);
       dist.clear();
-      for(int i = 0; i < size; ++ i) {
-        hig::real_t temp = data[i] / dat_norm - ref[i] / ref_norm;
-        temp *= temp;
-        dist.push_back(mask[i] * temp / (ref_norm * ref_norm));
+      for(unsigned int i = 0; i < size; ++ i) {
+        hig::real_t n_data = data[i] / dat_norm,
+                    n_ref = ref[i] / ref_norm;
+        hig::real_t temp = mask[i] * (n_data - n_ref);
+        //temp *= temp;
+        //dist.push_back(mask[i] * temp / (ref_norm * ref_norm));
+        //dist.push_back(mask[i] * temp / (ref_norm));
+        dist.push_back(temp);
       } // for
       return true;
     } // operator()

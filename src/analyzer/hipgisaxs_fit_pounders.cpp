@@ -4,8 +4,8 @@
  *  File: hipgisaxs_fit_pounders.cpp
  *  Created: Dec 26, 2013
  *
- *  Author: Slim Chourou <stchourou@lbl.gov>
- *          Abhinav Sarje <asarje@lbl.gov>
+ *  Author: Abhinav Sarje <asarje@lbl.gov>
+ *          Slim Chourou <stchourou@lbl.gov>
  *
  *  Licensing: The AnalyzeHipGISAXS software is only available to be downloaded and
  *  used by employees of academic research institutions, not-for-profit
@@ -19,23 +19,33 @@
 
 #include <analyzer/hipgisaxs_fit_pounders.hpp>
 
-/*
-f(X) - f(X*) (estimated)            <= fatol
-|f(X) - f(X*)| (estimated) / |f(X)| <= frtol
-||g(X)||                            <= gatol
-||g(X)|| / |f(X)|                   <= grtol
-||g(X)|| / ||g(X0)||                <= gttol
- */
 
 namespace hig {
 
+  /* pounders: Finds the nonlinear least-squares solution to the model
+   *           y = exp[-b1 * x] / (b2 + b3 * x) + e
+   */
+
+  /*
+   * Concepts: TAO^Solving a system of nonlinear equations, nonlinear least squares
+   * Routines: TaoCreate();
+   * Routines: TaoSetType();
+   * Routines: TaoSetSeparableObjectiveRoutine();
+   * Routines: TaoSetJacobianRoutine();
+   * Routines: TaoSetInitialVector();
+   * Routines: TaoSetFromOptions();
+   * Routines: TaoSetConvergenceHistory(); TaoGetConvergenceHistory();
+   * Routines: TaoSolve();
+   * Routines: TaoView(); TaoDestroy();
+   * Processors: 1
+   */
 
   /* default constructor */
   FitPOUNDERSAlgo::FitPOUNDERSAlgo() {
         name_ = algo_pounders;
         max_iter_ = 200;
         max_hist_ = 200;
-        tol_ = 1e-4;
+        tol_ = 1e-8;
   } // FitPOUNDERSAlgo::FitPOUNDERSAlgo()
 
 
@@ -62,27 +72,29 @@ namespace hig {
     static char help[] = "** Attempting fitting using Pounders algorithm...";
     std::cout << help << " [ " << img_num << " ]" << std::endl;
 
+    const int str_max = 100;
+
     real_t pdelta, pnpmax, pgqt;
     int newnarg = argc;
     //char* newargs[argc + 3];     // possibly add arguments for the tao routines
     //char newargs[argc + 3][50];
     char** newargs = new char*[argc + 6];     // possibly add arguments for the tao routines
     for(int i = 0; i < argc; ++ i) {
-      newargs[i] = new char[50];
-      strncpy(newargs[i], argv[i], 50);
+      newargs[i] = new char[str_max];
+      strncpy(newargs[i], argv[i], str_max);
     } // for
 
     if(img_num >= 0) {
     if(HiGInput::instance().analysis_algo_param(algo_num, "pounders_delta", pdelta)) {
       std::stringstream arg1; arg1 << "-tao_pounders_delta";
       //newargs[newnarg] = new char[arg1.str().size() + 1];
-      newargs[newnarg] = new char[50];
-      strncpy(newargs[newnarg], arg1.str().c_str(), 50);
+      newargs[newnarg] = new char[str_max];
+      strncpy(newargs[newnarg], arg1.str().c_str(), str_max);
       ++ newnarg;
       std::stringstream arg2; arg2 << pdelta;
       //newargs[newnarg] = new char[arg2.str().size() + 1];
-      newargs[newnarg] = new char[50];
-      strncpy(newargs[newnarg], arg2.str().c_str(), 50);
+      newargs[newnarg] = new char[str_max];
+      strncpy(newargs[newnarg], arg2.str().c_str(), str_max);
       ++ newnarg;
     } else {
       std::cerr << "warning: default pounders_delta being used" << std::endl;
@@ -90,13 +102,13 @@ namespace hig {
     if(HiGInput::instance().analysis_algo_param(algo_num, "pounders_npmax", pnpmax)) {
       std::stringstream arg1; arg1 << "-tao_pounders_npmax";
       //newargs[newnarg] = new char[arg1.str().size() + 1];
-      newargs[newnarg] = new char[50];
-      strncpy(newargs[newnarg], arg1.str().c_str(), 50);
+      newargs[newnarg] = new char[str_max];
+      strncpy(newargs[newnarg], arg1.str().c_str(), str_max);
       ++ newnarg;
       std::stringstream arg2; arg2 << pnpmax;
       //newargs[newnarg] = new char[arg2.str().size() + 1];
-      newargs[newnarg] = new char[50];
-      strncpy(newargs[newnarg], arg2.str().c_str(), 50);
+      newargs[newnarg] = new char[str_max];
+      strncpy(newargs[newnarg], arg2.str().c_str(), str_max);
       ++ newnarg;
     } else {
       std::cerr << "warning: default pounders_npmax being used" << std::endl;
@@ -104,13 +116,13 @@ namespace hig {
     if(HiGInput::instance().analysis_algo_param(algo_num, "pounders_gqt", pgqt)) {
       std::stringstream arg1; arg1 << "-tao_pounders_gqt";
       //newargs[newnarg] = new char[arg1.str().size() + 1];
-      newargs[newnarg] = new char[50];
-      strncpy(newargs[newnarg], arg1.str().c_str(), 50);
+      newargs[newnarg] = new char[str_max];
+      strncpy(newargs[newnarg], arg1.str().c_str(), str_max);
       ++ newnarg;
       std::stringstream arg2; arg2 << pgqt;
       //newargs[newnarg] = new char[arg2.str().size() + 1];
-      newargs[newnarg] = new char[50];
-      strncpy(newargs[newnarg], arg2.str().c_str(), 50);
+      newargs[newnarg] = new char[str_max];
+      strncpy(newargs[newnarg], arg2.str().c_str(), str_max);
       ++ newnarg;
     } else {
       std::cerr << "warning: default pounders_gqt being used" << std::endl;
@@ -123,78 +135,140 @@ namespace hig {
     int size, rank;
     PetscErrorCode ierr;
     PetscInitialize(&newnarg, &newargs, (char*) 0, help);
-    TaoInitialize(&newnarg, &newargs, (char*) 0, help);
+
+    // <= version 3.4
+    // TaoInitialize(&newnarg, &newargs, (char*) 0, help);
 
     // need to free the newargs memory ... TODO ...
 
-    Vec x0;   // variables to read from context
-    double y[1] = { 0 };
+    std::vector<std::pair<hig::real_t, hig::real_t> > plimits = HiGInput::instance().fit_param_limits();
+
+    Vec x0,         // initial parameter vector
+        xmin, xmax; // parameter min and max limits (bounds)
+    double y;
     VecCreateSeq(PETSC_COMM_SELF, num_params_, &x0);
+    VecCreateSeq(PETSC_COMM_SELF, num_params_, &xmin);
+    VecCreateSeq(PETSC_COMM_SELF, num_params_, &xmax);
     for(PetscInt i = 0; i < num_params_; ++ i) {
-      y[0] = (double) x0_[i];
-      VecSetValues(x0, 1, &i, y, INSERT_VALUES);
+      y = (double) x0_[i];
+      VecSetValues(x0, 1, &i, &y, INSERT_VALUES);
+      std::cout << "** " << y << " [ ";
+      y = (double) plimits[i].first;
+      VecSetValues(xmin, 1, &i, &y, INSERT_VALUES);
+      std::cout << y << " ";
+      y = (double) plimits[i].second;
+      VecSetValues(xmax, 1, &i, &y, INSERT_VALUES);
+      std::cout << y << " ] " << std::endl;
     } // for
 
     PetscReal tr_rad = 10;
     Vec f;
     PetscReal zero = 0.0;
     PetscReal hist[max_hist_], resid[max_hist_];
-    PetscInt nhist;
-    TaoSolver tao;
-    TaoSolverTerminationReason reason;
+    PetscInt icount[max_hist_];   // number of linear iterations for each tao iteration
+    PetscInt nhist = max_hist_;
 
-    /* allocate vectors for the solution, gradient, hessian, etc. */
+    Tao tao;
+    TaoConvergedReason reason;
+    // TaoSolver tao;
+    // TaoSolverTerminationReason reason;
+
+    // allocate vectors
     ierr = VecCreateSeq(PETSC_COMM_SELF, num_obs_, &f);
 
-    /* create TAO solver with pounders */
+    // create TAO solver with pounders
     ierr = TaoCreate(PETSC_COMM_SELF, &tao);
-    //ierr = TaoSetType(tao, "tao_pounders");
-    ierr = TaoSetType(tao, TAOPOUNDERS);
-    /* set routines for function, gradient, hessian evaluation */
-    ierr = TaoSetSeparableObjectiveRoutine(tao, f, EvaluateFunction, obj_func_);
+    ierr = TaoSetType(tao, TAOPOUNDERS); CHKERRQ(ierr);
 
-    /* check for TAO command line options */
+    // set objective function
+    ierr = TaoSetSeparableObjectiveRoutine(tao, f, EvaluateFunction, (void*) obj_func_);
+    // set jacobian function
+    // ierr = TaoSetJacobianRoutine(tao, J, J, EvaluateJacobian, (void*) &user); CHKERRQ(ierr);
+
+    // check for command line options
     ierr = TaoSetFromOptions(tao);
-    TaoSetMaximumIterations(tao, max_iter_);
-    #ifdef PETSC_36
-      TaoSetHistory(tao, hist, resid, NULL, NULL, max_hist_, PETSC_TRUE);
-    #else
-      TaoSetHistory(tao, hist, resid, 0, max_hist_, PETSC_TRUE);
-    #endif // PETSC_36
-    TaoSetTolerances(tao, tol_, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT);
 
-    ierr = TaoSetInitialVector(tao, x0);
-    ierr = TaoSolve(tao);
-    ierr = TaoGetTerminationReason(tao, &reason);
-    #ifdef PETSC_36
-      TaoGetHistory(tao, NULL, NULL, NULL, NULL, &nhist);
+    TaoSetMaximumIterations(tao, max_iter_);
+    #ifdef PETSC_37
+      ierr = TaoSetConvergenceHistory(tao, hist, resid, 0, icount, max_hist_, PETSC_TRUE); CHKERRQ(ierr);
+    #elif defined PETSC_36
+      ierr = TaoSetHistory(tao, hist, resid, NULL, icount, max_hist_, PETSC_TRUE); CHKERRQ(ierr);
+    #else
+      ierr = TaoSetHistory(tao, hist, resid, 0, max_hist_, PETSC_TRUE); CHKERRQ(ierr);
+    #endif // PETSC_36
+
+    std::cout << "++ [pounders] Setting tolerances = " << tol_ << std::endl;
+    #ifdef PETSC_37
+      //ierr = TaoSetTolerances(tao, tol_, tol_, tol_); CHKERRQ(ierr);
+      ierr = TaoSetTolerances(tao, tol_, 0.0, 0.0); CHKERRQ(ierr);
+      //ierr = TaoSetConvergedReason(tao, TAO_CONVERGED_ATOL); CHKERRQ(ierr);
+    #else
+      //ierr = TaoSetTolerances(tao, tol_, tol_, tol_, tol_, tol_); CHKERRQ(ierr);
+      ierr = TaoSetTolerances(tao, 0.0, 0.0, tol_, 0.0, 0.0); CHKERRQ(ierr);
+      //ierr = TaoSetConvergedReason(tao, TAO_CONVERGED_GATOL); CHKERRQ(ierr);
+    #endif
+
+    ierr = TaoSetVariableBounds(tao, xmin, xmax); CHKERRQ(ierr);
+
+    // set the initial parameter vector (initial guess)
+    ierr = TaoSetInitialVector(tao, x0); CHKERRQ(ierr);
+
+    // perform the solve
+    ierr = TaoSolve(tao); CHKERRQ(ierr);
+
+    // temp ...
+    TaoView(tao, PETSC_VIEWER_STDOUT_SELF);
+
+    // ierr = TaoGetTerminationReason(tao, &reason);
+    ierr = TaoGetConvergedReason(tao, &reason);
+    std::cout << "** [pounders] converged reason: " << reason << std::endl;
+
+    #ifdef PETSC_37
+      //ierr = TaoGetConvergenceHistory(tao, &hist, &resid, NULL, &icount, &nhist)
+      ierr = TaoGetConvergenceHistory(tao, NULL, NULL, NULL, NULL, &nhist);
+    #elif defined PETSC_36
+      ierr = TaoGetConvergenceHistory(tao, NULL, NULL, NULL, NULL, &nhist);
+      //TaoGetHistory(tao, NULL, NULL, NULL, &icount, &nhist);
     #else
       TaoGetHistory(tao, 0, 0, 0, &nhist);
     #endif
 
-    PetscPrintf(PETSC_COMM_WORLD, "** [pounders] History:\n");
+    PetscPrintf(PETSC_COMM_WORLD, "** [pounders] history: < iter\tnum_linear_iter\tobj_val\tresidual >\n");
     for(int i = 0; i < nhist; ++ i)
-      PetscPrintf(PETSC_COMM_WORLD, "** %d:\t%g\t%g\n", i, hist[i], resid[i]);
+      PetscPrintf(PETSC_COMM_WORLD, ">> \t%d\t%d\t%g\t%g\n", i, icount[i], hist[i], resid[i]);
 
-    PetscInt iterate;
-    PetscReal f_cv, gnorm, cnorm, xdiff, *x_cv;
-    TaoGetSolutionStatus(tao, &iterate, &f_cv, &gnorm, &cnorm, &xdiff, &reason);
-    TaoGetSolutionVector(tao, &x0);
-    VecGetArray(x0, &x_cv);
+    PetscInt iterate; // current iterate number
+    PetscReal f_cv,   // current function value
+              gnorm,  // square of gradient norm (distance)
+              cnorm,  // infeasibility of current solution w.r.t. constraints
+              xdiff;  // current trust region step length
+    ierr = TaoGetSolutionStatus(tao, &iterate, &f_cv, &gnorm, &cnorm, &xdiff, &reason);
+    std::cout << "** [pounders] converged reason    : " << reason   << std::endl
+              << "** [pounders] iterate number      : " << iterate  << std::endl
+              << "** [pounders] function value      : " << f_cv     << std::endl
+              << "** [pounders] distance            : " << gnorm    << std::endl
+              << "** [pounders] infeasibility       : " << cnorm    << std::endl
+              << "** [pounders] trust region length : " << xdiff    << std::endl;
 
-    xn_.clear();
+    // obtain the parameter solution vector
+    TaoGetSolutionVector(tao, &x0); xn_.clear();
     for(PetscInt j = 0; j < num_params_; ++ j) {
-      VecGetValues(x0, 1, &j, y);
-      xn_.push_back(y[0]);
+      VecGetValues(x0, 1, &j, &y);
+      xn_.push_back(y);
     } // for
 
-    std::cout << "** [pounders] Final vector: [ ";
+    std::cout << "** [pounders] final parameter vector: [ ";
     for(real_vec_t::iterator i = xn_.begin(); i != xn_.end(); ++ i) std::cout << *i << " ";
     std::cout << "]" << std::endl;
 
     ierr = TaoDestroy(&tao);
     ierr = VecDestroy(&x0);
-    TaoFinalize();
+    ierr = VecDestroy(&xmin);
+    ierr = VecDestroy(&xmax);
+    ierr = VecDestroy(&f);
+
+    //TaoFinalize();
+    PetscFinalize();
 
     return true;
   } // FitPOUNDERSAlgo::run()

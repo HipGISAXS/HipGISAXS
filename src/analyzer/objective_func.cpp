@@ -14,40 +14,46 @@
 
 namespace hig {
 
-  /* evaluate function used in pounders algo */
-  PetscErrorCode EvaluateFunction(TaoSolver tao, Vec X, Vec F, void *ptr) {
+  /* evaluate function used in pounders */
+  //PetscErrorCode EvaluateFunction(TaoSolver tao, Vec X, Vec F, void *ptr) {
+  PetscErrorCode EvaluateFunction(Tao tao, Vec X, Vec F, void* ptr) {
     PetscErrorCode ierr;
-    PetscReal *x, *ff;
-    int data_size = ((ObjectiveFunction*)ptr)->data_size();
-    int num_params = ((ObjectiveFunction*)ptr)->num_fit_params();
+    PetscReal *x, *f;
+    ObjectiveFunction* obj_func = (ObjectiveFunction *) ptr;
+    int data_size = obj_func->data_size();
+    int num_params = obj_func->num_fit_params();
 
     ierr = VecGetArray(X, &x); CHKERRQ(ierr);
-    ierr = VecGetArray(F, &ff); CHKERRQ(ierr);
+    ierr = VecGetArray(F, &f); CHKERRQ(ierr);
 
+    // construct the parameter vector
     real_vec_t params;
     for(int i = 0; i < num_params; ++ i) params.push_back(x[i]);
+
     // run objective function
     std::cout << "++ [pounders] evaluating objective function..." << std::endl;
-    real_vec_t temp = (*(ObjectiveFunction*)ptr)(params);
-    real_t err = 0.0;
-    for(int i = 0; i < data_size; ++ i) {
-      ff[i] = temp[i];
-      err += ff[i] * ff[i];
-    } // for
+    real_vec_t temp = (*obj_func)(params);
 
-    ierr = VecRestoreArray(F, &ff); CHKERRQ(ierr);
-    std::cout << "** [pounders] distance = " << err << std::endl;
+    // compute the distance and set residual vector
+    real_t dist = 0.0;      // square of gradient norm
+    for(unsigned int i = 0; i < data_size; ++ i) {
+      f[i] = temp[i];
+      dist += f[i] * f[i];
+    } // for
+    std::cout << "** [pounders] distance (gradient norm square) = " << dist << std::endl;
+    ierr = VecRestoreArray(F, &f); CHKERRQ(ierr);
 
     return 0;
   } // EvaluateFunction()
 
 
   /* evaluate function used in lmvm */
-  PetscReal EvaluateFunction(TaoSolver tao, real_vec_t X, void *ptr) {
+  PetscReal EvaluateFunction(TaoSolver tao, real_vec_t params, void *ptr) {
+    ObjectiveFunction* obj_func = (ObjectiveFunction *) ptr;
     std::cout << "++ [lmvm] evaluating objective function..." << std::endl;
-    real_vec_t temp = (*(ObjectiveFunction*) ptr)(X);
+    real_vec_t temp = (*obj_func)(params);
     real_t dist = temp[0];
-    std::cout << "** Distance = " << dist << std::endl;
+    std::cout << "** [lmvm] distance = " << dist << std::endl;
 
     return (PetscReal) dist;
   } // EvaluateFunction()

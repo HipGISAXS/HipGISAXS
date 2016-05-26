@@ -4,8 +4,8 @@
  *  File: hipgisaxs_fit_pounders.hpp
  *  Created: Dec 26, 2013
  *
- *  Author: Slim Chourou <stchourou@lbl.gov>
- *          Abhinav Sarje <asarje@lbl.gov>
+ *  Author: Abhinav Sarje <asarje@lbl.gov>
+ *          Slim Chourou <stchourou@lbl.gov>
  *
  *  Licensing: The HipGISAXS software is only available to be downloaded and
  *  used by employees of academic research institutions, not-for-profit
@@ -20,13 +20,12 @@
 
 #include <analyzer/analysis_algorithm.hpp>
 
-/*
-f(X) - f(X*) (estimated)            <= fatol
-|f(X) - f(X*)| (estimated) / |f(X)| <= frtol
-||g(X)||                            <= gatol
-||g(X)|| / |f(X)|                   <= grtol
-||g(X)|| / ||g(X0)||                <= gttol
-*/
+/* convergence criteria:
+ * error in constraints < crtol and either:
+ * ||g(X)||             <= gatol
+ * ||g(X)|| / |f(X)|    <= grtol
+ * ||g(X)|| / ||g(X0)|| <= gttol
+ */
 
 namespace hig {
 

@@ -10,7 +10,7 @@
 #ifndef __OBJECTIVE_FUNC_HPP__
 #define __OBJECTIVE_FUNC_HPP__
 
-#if defined PETSC_35 || defined PETSC_36
+#if defined PETSC_35 || defined PETSC_36 || defined PETSC_37
 # include <petsctao.h>
 # define TaoSolver Tao
 # define TaoInitialize(...)
@@ -21,9 +21,9 @@
 #   define TaoSetHistory TaoSetConvergenceHistory
 #   define TaoGetHistory TaoGetConvergenceHistory
 # endif // PETSC_36
-#else
+#else   // PETSC_34 or lower
 # include <tao.h>
-#endif // PETSC_35 || PETSC_36
+#endif // PETSC_35 || PETSC_36 || PETSC_37
 
 #include <hipgisaxs.hpp>
 #include <analyzer/ImageData.hpp>
@@ -69,9 +69,11 @@ namespace hig {
   }; // class ObjectiveFunction
 
 
+  // lmvm
   PetscReal EvaluateFunction(TaoSolver , real_vec_t , void *);
-  PetscErrorCode EvaluateFunction(TaoSolver , Vec , Vec , void *);
-  PetscErrorCode EvaluateJacobian(TaoSolver , Vec , Mat *, Mat *, MatStructure*,void *);
+  // pounders
+  PetscErrorCode EvaluateFunction(TaoSolver, Vec, Vec, void *);
+  PetscErrorCode EvaluateJacobian(TaoSolver, Vec, Mat *, Mat *, MatStructure *, void *);
 
 } // namespace hig
 
