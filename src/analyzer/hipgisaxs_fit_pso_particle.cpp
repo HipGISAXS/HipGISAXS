@@ -3,7 +3,6 @@
  *
  *  File: hipgisaxs_fit_pso_particle.cpp
  *  Created: Jan 13, 2014
- *  Modified: Wed 08 Oct 2014 12:17:42 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -28,7 +27,7 @@ namespace hig {
 
 
   bool PSOParticle::init(pso_parameter_dist_t dist, woo::MTRandomNumberGenerator& rng,
-              const PSOParticleConstraints& constraints) {
+                         const PSOParticleConstraints& constraints) {
     param_values_.clear();
     velocity_.clear();
     best_values_.clear();
@@ -38,13 +37,10 @@ namespace hig {
       case PSO_DEFAULT:
       case PSO_UNIFORM:
         return init_random_uniform(rng, constraints);
-
       case PSO_GAUSSIAN:
         return init_random_gaussian(rng, constraints);
-
       case PSO_SINGLE:
         return init_single(constraints);
-
       default:
         std::cerr << "error: invalid parameter distribution" << std::endl;
         return false;
@@ -54,14 +50,14 @@ namespace hig {
 
 
   bool PSOParticle::init_random_uniform(woo::MTRandomNumberGenerator& rng,
-                      const PSOParticleConstraints& constraints) {
+                                        const PSOParticleConstraints& constraints) {
     for(int i = 0; i < num_parameters_; ++ i) {
       real_t val = constraints.param_values_min_[i] +
-              rng.rand() *
-              (constraints.param_values_max_[i] - constraints.param_values_min_[i]);
+                    rng.rand() *
+                    (constraints.param_values_max_[i] - constraints.param_values_min_[i]);
       real_t vel = constraints.velocity_min_[i] +
-              rng.rand() *
-              (constraints.velocity_max_[i] - constraints.velocity_min_[i]);
+                    rng.rand() *
+                    (constraints.velocity_max_[i] - constraints.velocity_min_[i]);
       param_values_.push_back(val);
       velocity_.push_back(vel);
       best_values_.push_back(val);
@@ -72,7 +68,7 @@ namespace hig {
 
 
   bool PSOParticle::init_random_gaussian(woo::MTRandomNumberGenerator& rng,
-                      const PSOParticleConstraints& constraints) {
+                                         const PSOParticleConstraints& constraints) {
     std::cerr << "error: init_random_gaussian() is not currently implemented" << std::endl;
     return false;
   } // PSOParticle::init_random_gaussian()
@@ -95,21 +91,20 @@ namespace hig {
 
   // basic
   bool PSOParticle::update_particle(real_t omega, real_t phi1, real_t phi2,
-                    const parameter_data_list_t& global_best,
-                    const PSOParticleConstraints& constraints,
-                    woo::MTRandomNumberGenerator& rng) {
+                                    const parameter_data_list_t& global_best,
+                                    const PSOParticleConstraints& constraints,
+                                    woo::MTRandomNumberGenerator& rng) {
     for(int i = 0; i < num_parameters_; ++ i) {
       real_t r1 = rng.rand();
       real_t r2 = rng.rand();
       real_t new_vel = omega * velocity_[i] +
-                phi1 * r1 * (best_values_[i] - param_values_[i]) +
-                phi2 * r2 * (global_best[i] - param_values_[i]);
-      velocity_[i] = std::min(std::max(new_vel,
-                    constraints.velocity_min_[i]),
-                    constraints.velocity_max_[i]);
+                        phi1 * r1 * (best_values_[i] - param_values_[i]) +
+                        phi2 * r2 * (global_best[i] - param_values_[i]);
+      velocity_[i] = std::min(std::max(new_vel, constraints.velocity_min_[i]),
+                              constraints.velocity_max_[i]);
       param_values_[i] = std::min(std::max(param_values_[i] + velocity_[i],
-                    constraints.param_values_min_[i]),
-                    constraints.param_values_max_[i]);
+                                           constraints.param_values_min_[i]),
+                                  constraints.param_values_max_[i]);
     } // for
     return true;
   } // PSOParticle::update_particle()
@@ -194,23 +189,21 @@ namespace hig {
 
 
   bool PSOParticle::compute_and_set_values(const parameter_data_list_t& start_pos,
-                    const parameter_data_list_t& start_vel,
-                    real_t omega, real_t phi1, real_t phi2,
-                    const parameter_data_list_t& global_best,
-                    const PSOParticleConstraints& constraints,
-                    woo::MTRandomNumberGenerator& rng) {
+                                           const parameter_data_list_t& start_vel,
+                                           real_t omega, real_t phi1, real_t phi2,
+                                           const parameter_data_list_t& global_best,
+                                           const PSOParticleConstraints& constraints,
+                                           woo::MTRandomNumberGenerator& rng) {
     for(int i = 0; i < num_parameters_; ++ i) {
       real_t r1 = rng.rand();
       real_t r2 = rng.rand();
       real_t new_vel = omega * start_vel[i] +
-                phi1 * r1 * (best_values_[i] - start_pos[i]) +
-                phi2 * r2 * (global_best[i] - start_pos[i]);
-      velocity_[i] = std::min(std::max(new_vel,
-                    constraints.velocity_min_[i]),
-                    constraints.velocity_max_[i]);
-      param_values_[i] = std::min(std::max(start_pos[i] + new_vel,
-                    constraints.param_values_min_[i]),
-                    constraints.param_values_max_[i]);
+                        phi1 * r1 * (best_values_[i] - start_pos[i]) +
+                        phi2 * r2 * (global_best[i] - start_pos[i]);
+      velocity_[i] = std::min(std::max(new_vel, constraints.velocity_min_[i]),
+                              constraints.velocity_max_[i]);
+      param_values_[i] = std::min(std::max(start_pos[i] + new_vel, constraints.param_values_min_[i]),
+                                  constraints.param_values_max_[i]);
     } // for
     return true;
   } // PSOParticle::compute_and_set_values()

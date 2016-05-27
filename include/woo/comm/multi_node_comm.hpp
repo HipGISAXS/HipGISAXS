@@ -161,6 +161,16 @@ namespace woo {
 				return new_mncomm;
 			} // dup()*/
 
+			inline bool broadcast(float& data) {
+				MPI_Bcast(&data, 1, MPI_FLOAT, master_rank_, world_);
+				return true;
+			} // broadcast()
+
+			inline bool broadcast(double& data) {
+				MPI_Bcast(&data, 1, MPI_DOUBLE, master_rank_, world_);
+				return true;
+			} // broadcast()
+
 			inline bool broadcast(float* data, int size) {
 				MPI_Bcast(&(*data), size, MPI_FLOAT, master_rank_, world_);
 				return true;
@@ -173,6 +183,16 @@ namespace woo {
 
 			inline bool broadcast(unsigned int* data, int size) {
 				MPI_Bcast(&(*data), size, MPI_UNSIGNED, master_rank_, world_);
+				return true;
+			} // broadcast()
+
+			inline bool broadcast(float& data, int root) {
+				if(MPI_Bcast(&data, 1, MPI_FLOAT, root, world_) != MPI_SUCCESS) return false;
+				return true;
+			} // broadcast()
+
+			inline bool broadcast(double& data, int root) {
+				if(MPI_Bcast(&data, 1, MPI_DOUBLE, root, world_) != MPI_SUCCESS) return false;
 				return true;
 			} // broadcast()
 
@@ -440,6 +460,14 @@ namespace woo {
 			 * Broadcasts
 			 */
 
+			inline bool broadcast(comm_t key, float& data) {
+				return comms_[key].broadcast(data);
+			} // send_broadcast()
+
+			inline bool broadcast(comm_t key, double& data) {
+				return comms_[key].broadcast(data);
+			} // send_broadcast()
+
 			inline bool broadcast(comm_t key, float* data, int size) {
 				return comms_[key].broadcast(data, size);
 			} // send_broadcast()
@@ -451,6 +479,14 @@ namespace woo {
 			inline bool broadcast(comm_t key, unsigned int* data, int size) {
 				return comms_[key].broadcast(data, size);
 			} // send_broadcast()
+
+			inline bool broadcast(comm_t key, float& data, int rank) {
+				return comms_[key].broadcast(data, rank);
+      } // broadcast()
+
+			inline bool broadcast(comm_t key, double& data, int rank) {
+				return comms_[key].broadcast(data, rank);
+      } // broadcast()
 
 			inline bool broadcast(comm_t key, std::vector<float>& data, int rank) {
 				float* temp_data = new (std::nothrow) float[data.size()];

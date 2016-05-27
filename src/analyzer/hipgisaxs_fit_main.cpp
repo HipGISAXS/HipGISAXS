@@ -3,7 +3,7 @@
  *
  *  File: hipgisaxs_fit_main.cpp
  *  Created: Feb 25, 2014
- *  Modified: Wed 08 Oct 2014 12:17:42 PM PDT
+ *  Modified: Tue 24 May 2016 08:04:50 PM EDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -74,13 +74,20 @@ int main(int narg, char** args) {
     } // if
 
     if(algo == hig::algo_pounders) {
-      hip_func.set_distance_measure(new ResidualVector());
+      //hip_func.set_distance_measure(new ResidualVector());
+      //hip_func.set_distance_measure(new RelativeResidualVector());
+      hip_func.set_distance_measure(new UnitLengthNormalizedResidualVector());
       ana.add_analysis_algo(new hig::FitPOUNDERSAlgo(narg, args, &hip_func, i));
     } else if(algo == hig::algo_lmvm) {
-      hip_func.set_distance_measure(new AbsoluteDifferenceSquare());
+      //hip_func.set_distance_measure(new AbsoluteDifferenceSquare());
+      //hip_func.set_distance_measure(new RelativeAbsoluteDifferenceSquare());
+      hip_func.set_distance_measure(new UnitLengthNormalizedDifferenceSquareNorm());
       ana.add_analysis_algo(new hig::FitLMVMAlgo(narg, args, &hip_func, i));
     } else if(algo == hig::algo_pso) {
-      hip_func.set_distance_measure(new AbsoluteDifferenceSquareNorm());
+      //hip_func.set_distance_measure(new AbsoluteDifferenceSquareNorm());
+      //hip_func.set_distance_measure(new RelativeAbsoluteDifferenceSquare());
+      //hip_func.set_distance_measure(new ScaledRelativeAbsoluteDifferenceSquare());
+      hip_func.set_distance_measure(new UnitLengthNormalizedDifferenceSquareNorm());
       ana.add_analysis_algo(new hig::ParticleSwarmOptimization(narg, args, &hip_func, i, false, 0));
     } else if(algo == hig::algo_bruteforce) {
       hip_func.set_distance_measure(new AbsoluteDifferenceSquareNorm());

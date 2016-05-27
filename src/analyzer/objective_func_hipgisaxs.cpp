@@ -3,13 +3,14 @@
  *
  *  File: objective_func.cpp
  *  Created: Feb 02, 2014
- *  Modified: Wed 08 Oct 2014 12:17:42 PM PDT
+ *  Modified: Tue 24 May 2016 08:15:09 PM EDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
 
 #include <iostream>
 #include <map>
+#include <boost/math/special_functions/fpclassify.hpp>
 
 #include <analyzer/objective_func_hipgisaxs.hpp>
 #include <file/edf_reader.hpp>
@@ -28,14 +29,18 @@ namespace hig {
       exit(1);
     } // if
 
-    n_par_ = hipgisaxs_.nrow();
-    n_ver_ = hipgisaxs_.ncol();
+    n_par_ = hipgisaxs_.ncol();
+    n_ver_ = hipgisaxs_.nrow();
 
     ref_data_ = NULL;
     mask_data_.clear();
     mask_set_ = false;
     pdist_ = d;
     //curr_dist_.clear();
+
+    reg_alpha_ = 0;     // starting with some big value
+    //reg_alpha_ = 10;     // starting with some big value
+                          // TODO: make this configurable from the input
 
   } // HipGISAXSObjectiveFunction::HipGISAXSObjectiveFunction()
 
@@ -59,6 +64,10 @@ namespace hig {
     mask_data_.clear();
     mask_set_ = false;
     pdist_ = NULL;
+
+    reg_alpha_ = 0;     // starting with some big value
+    //reg_alpha_ = 10;     // starting with some big value
+                          // TODO: make this configurable from the input
 
   } // HipGISAXSObjectiveFunction::HipGISAXSObjectiveFunction()
 
@@ -189,7 +198,7 @@ namespace hig {
       mask_data_.resize(n_par_ * n_ver_, 1);
       return true;
     } // if
-    std::cout << "-- Reading mask data from " << filename << "..." << std::endl;
+    //std::cout << "-- Reading mask data from " << filename << "..." << std::endl;
     EDFReader* edfreader = new EDFReader(filename.c_str());
     real_t* temp_data = NULL;
     unsigned int temp_n_par = 0, temp_n_ver = 0;
@@ -231,26 +240,47 @@ namespace hig {
         exit(-1);
       } // if
 
-#ifdef MEMDEBUG
-      if(!hipgisaxs_.check_finite((*ref_data_).data(), n_par_ * n_ver_))
-        std::cerr << "** ARRAY CHECK ** ref_data_ failed check" << std::endl;
-      if(!hipgisaxs_.check_finite(gisaxs_data, n_par_ * n_ver_))
-        std::cerr << "** ARRAY CHECK ** gisaxs_data failed check" << std::endl;
-#endif // MEMDEBUG
+      #ifdef MEMDEBUG
+        if(!hipgisaxs_.check_finite((*ref_data_).data(), n_par_ * n_ver_))
+          std::cerr << "** ARRAY CHECK ** ref_data_ failed check" << std::endl;
+        if(!hipgisaxs_.check_finite(gisaxs_data, n_par_ * n_ver_))
+          std::cerr << "** ARRAY CHECK ** gisaxs_data failed check" << std::endl;
+      #endif // MEMDEBUG
 
       // compute error/distance
       std::cout << "-- Computing distance..." << std::endl;
       real_t* ref_data = (*ref_data_).data();
       if(ref_data == NULL) std::cerr << "error: ref_data is NULL" << std::endl;
       unsigned int* mask_data = &(mask_data_[0]);
-      (*pdist_)(gisaxs_data, ref_data, mask_data, n_par_ * n_ver_, curr_dist);
+      (*pdist_)(ref_data, gisaxs_data, mask_data, n_par_ * n_ver_, curr_dist);
+
+      // add regularization term
+      // compute regularization = (alpha / 2) * || x - x_mean || ^ 2
+      double pmean = 0.0;
+      for(std::map<std::string, real_t>::const_iterator i = param_vals.begin();
+          i != param_vals.end(); ++ i) {
+        double x_mean = HiGInput::instance().param_space_mean((*i).first);
+        double ptemp = ((*i).second - x_mean);
+        ptemp *= ptemp;
+        pmean += ptemp;
+      } // for
+      // for better alpha selection, plot pmean vs. curr_dist
+      reg_alpha_ /= 5;    // calculate new alpha
+      double reg = (reg_alpha_ / 2) * pmean;
+      for(auto i = 0; i < curr_dist.size(); ++ i) {
+        if((boost::math::isfinite)(curr_dist[i])) curr_dist[i] += reg;
+        else curr_dist[i] = 0.0;
+      } // for
 
       // write to output file
+      // do something better ...
+      // as here all procs for different particles will have same ranks within their hipgisaxs object
       int myrank = hipgisaxs_.rank();
       std::stringstream cfilename;
-      cfilename << "convergence." << myrank << ".dat";
+      cfilename << "distance." << myrank << ".dat";
       std::string prefix(HiGInput::instance().param_pathprefix() + "/" + HiGInput::instance().runname());
       std::ofstream out(prefix + "/" + cfilename.str(), std::ios::app);
+      out.precision(10);
       for(real_vec_t::const_iterator i = curr_dist.begin(); i != curr_dist.end(); ++ i) out << *i << " ";
       out << std::endl;
       out.close();

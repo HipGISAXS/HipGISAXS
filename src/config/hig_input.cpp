@@ -2774,11 +2774,11 @@ namespace hig {
       real_t new_val = (*p).second;
       // check if new_val is within the param space
       ParamSpace ps = param_space_key_map_.at((*p).first);  // if not exist, exception!!
-      if(new_val < ps.min_ || new_val > ps.max_) {
-        std::cerr << "warning: given parameter value out of range space. resetting to limit."
-              << std::endl;
-        new_val = std::max(std::min(new_val, ps.max_), ps.min_);
-      } // if
+      //if(new_val < ps.min_ || new_val > ps.max_) {
+      //  std::cerr << "warning: given parameter value out of range space. resetting to limit."
+      //        << std::endl;
+      //  new_val = std::max(std::min(new_val, ps.max_), ps.min_);
+      //} // if
       std::string param = param_key_map_.at((*p).first);  // if not exist, exception!!
       // get first component from the string
       std::string keyword, rem_param;

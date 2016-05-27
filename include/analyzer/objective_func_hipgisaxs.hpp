@@ -18,9 +18,11 @@ namespace hig {
 
   class HipGISAXSObjectiveFunction : public ObjectiveFunction {
     private:
-      HipGISAXS hipgisaxs_;    // the hipgisaxs object
+      HipGISAXS hipgisaxs_;   // hipgisaxs object
       unsigned int n_par_;    // nqy
       unsigned int n_ver_;    // nqz
+
+      double reg_alpha_;      // alpha for regularization
 
     public:
       HipGISAXSObjectiveFunction(int, char**, DistanceMeasure*);
