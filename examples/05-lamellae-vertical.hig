@@ -1,0 +1,52 @@
+hipGisaxsInput = {
+	shape = {
+		key = "s1",	 		# a unique key to identify this shape in this file
+		name = "box",		# shape name
+		originvec = [0 0 0],
+		param = { type = "xsize", min = 500 },
+		param = { type = "ysize", min = 10 },
+		param = { type = "height", min = 150 }
+	},
+  unitcell = {
+		key = "u1",
+		element = {
+      shape:key = "s1",
+      locations = [[0 0 0]]
+    }
+	},
+	layer = {
+		key = "substr",	 	# special key for case of the substrate layer infinite in lower half space
+		order = -1 ,	 	# special order code for the substrate layer
+		refindex = { delta = 9.10724521E-06, beta = 2.46666474E-07 }
+	},
+	structure = {
+		key = "st1",
+		grain = {
+			unitcell:key = "u1",
+			refindex = { delta = 8.50028573E-06, beta = 3.138E-07 },
+      lattice = {a=[1 0 0],b=[0 1 0],c=[0 0 1] },		        # lattice forming grain
+			scaling = 60,					# scaling factor for lattice vectors
+			repetition=[1 1000 1]
+		}
+	},
+	instrumentation = {
+		scattering = {
+			expt = "gisaxs",
+			alphai = { min = 0.175 },					# incidence angles
+			photon = { value = 7350, unit = "ev" }		# photon energy
+		},
+		detector = {
+			pixelsize = 0.172,	 				# pixel size of the detector
+			sdd = 4128.62,						# sample to detector distance
+			directbeam = [ 489.916 843.076 ]	# position of direct beam
+		}
+	},
+	computation = {
+		pathprefix = ".",					# path to output directory
+		runname = "vertlam_11d",					# name for current run and folder name for outputs
+		method = "dwba",					# theorical approach (see list)
+		outputregion = { type = "qspace" , minpoint = [ -1 0 ], maxpoint = [ 1 1 ] },
+		resolution = [ 600 300 ],			# number of q points per pixel
+		nslices = 0							# max number of slices for slicing algorithm
+	}
+}
