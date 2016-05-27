@@ -179,4 +179,40 @@ namespace hig {
     } // for
   } // EDFReader::preint_data()
 
+
+  /******* EDF Writer ********/
+  void EDFWriter::Write(real_t * data){
+    std::fstream edf(filename_, std::ios::out | std::ios::binary);
+    if (!edf.is_open()){
+      std::cerr << "Error: failed to open EDF file for writing" << std::endl;
+      return;
+    }
+
+    std::string type("float");
+    int size = nrow_ * ncol_;
+    /* filename */
+    edf << "Pixel Size        = " << pixel_    << std::endl;
+    edf << "Center X          = " << center_x_ << std::endl;
+    edf << "Center Y          = " << center_y_ << std::endl;
+    edf << "Detector Distance = " << sdd_      << std::endl;
+    edf << "Energy            = " << energy_   << std::endl;
+    edf << "Dim_1             = " << nrow_     << std::endl;
+    edf << "Dim_2             = " << ncol_     << std::endl;
+    edf << "Size              = " << size * sizeof(float)  << std::endl;
+    edf << "DataType          = " << type      << std::endl;
+
+    // First 1024 bytes are reserved for header
+    edf.seekp(1024);
+    for (int i = 0; i < size; i++ ){
+      float d = (float) data[i];
+      edf.write(reinterpret_cast<char *>(&d), sizeof(float));
+    }
+    edf.close();
+  }
+
+  void EDFWriter::sdd(real_t alpha){
+    real_t tan_a = std::tan(alpha);
+    sdd_ = (ncol_ - center_y_) * pixel_ / tan_a;
+  }
+
 } // namespace hig

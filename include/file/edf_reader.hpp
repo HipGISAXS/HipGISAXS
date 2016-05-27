@@ -57,6 +57,29 @@ namespace hig {
 
   }; // class EDFReader
 
+
+  class EDFWriter {
+    public:
+      EDFWriter(const char * name) :filename_(name), pixel_(172.E-06) {}
+      void setCenter(real_t x, real_t y){ center_x_ = x; center_y_ = y; }
+      void setEnergy(real_t e){ energy_ = e; }
+      void setPixelSize(real_t px){ pixel_ = px; }
+      void setSize(int r, int c){ nrow_ = r; ncol_ = c; }
+      void sdd(real_t ); // calculate SDD for Xi-cam (HipIES) compatibility
+      void Write(real_t *);
+
+    private:
+      const char * filename_;
+      int nrow_, ncol_;
+      real_t center_x_, center_y_;
+      real_t energy_;
+      real_t pixel_;
+      real_t sdd_;
+    
+      EDFWriter(){} // forbid default constructor
+
+  }; // EDFWriter
+
 } // namespace hig
 
 #endif // __EDF_READER_HPP__

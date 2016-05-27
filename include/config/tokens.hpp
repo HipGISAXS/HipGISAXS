@@ -80,6 +80,7 @@ namespace hig {
     rot_token,                  /* rotation value for various  */
     type_token,                 /* various types */
     stat_token,                 /* statistic type: gaussian, uniform, random, etc. */
+    nsamples_token,             /* number of samples drawn from distribution */
     mean_token,                 /* mean value */
     stddev_token,               /* standard deviation #26 */
 

@@ -76,6 +76,8 @@ namespace hig {
               std::vector<complex_t>& ff,
               ShapeName shape, shape_param_list_t& params,
               real_t tau, real_t eta, vector3_t &transvec);
+      bool compute_cube(unsigned , unsigned, unsigned, std::vector<complex_t> &,
+              shape_param_list_t&, real_t, real_t, vector3_t &);
       bool compute_cylinder(shape_param_list_t&, real_t, real_t,
               std::vector<complex_t>&, vector3_t);
       bool compute_horizontal_cylinder(real_t, real_t, shape_param_list_t&, vector3_t,

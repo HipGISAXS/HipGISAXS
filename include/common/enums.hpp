@@ -31,6 +31,7 @@ namespace hig {
     shape_null,
     shape_error,
     shape_box,        /* box */
+    shape_cube,       /* same as box */
     shape_cylinder,      /* cylinder */
     shape_sphere,      /* sphere */
     shape_truncpyr,      /* truncated pyramid */

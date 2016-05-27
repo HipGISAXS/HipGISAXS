@@ -39,6 +39,7 @@
 #include <utils/utilities.hpp>
 #include <numerics/matrix.hpp>
 #include <numerics/numeric_utils.hpp>
+#include <file/edf_reader.hpp>
 
 #if defined USE_GPU || defined FF_ANA_GPU || defined FF_NUM_GPU
   #include <init/gpu/init_gpu.cuh>
@@ -521,6 +522,24 @@ namespace hig {
                 << std::flush;
             save_gisaxs(final_data, data_file);
             std::cout << "done." << std::endl;
+
+            // Save the data into EDF file for HipIES (TODO: should change to Nexus file later)
+            std::string edf_file(HiGInput::instance().param_pathprefix() +
+                  "/" + HiGInput::instance().runname() +
+                  "/gisaxs_ai=" + alphai_s + "_rot=" + phi_s +
+                  "_tilt=" + tilt_s + ".edf");
+            std::cout << "-- Saving data in " << edf_file << " ... " << std::flush;
+            EDFWriter edf(edf_file.c_str());
+            edf.setEnergy(1.23984E+03 * k0_ / 2 / PI_);
+            edf.setSize(nrow_, ncol_);
+            vector2_t qmin = QGrid::instance().qmin();
+            vector2_t qmax = QGrid::instance().qmax();
+            real_t cx = -qmin[0] * (ncol_ - 1) / (qmax[0] - qmin[0]);
+            real_t cy = -qmin[1] * (nrow_ - 1) / (qmax[1] - qmin[1]);
+            edf.setCenter(cx, cy);
+            edf.sdd(QGrid::instance().alpha(0)); // alphas are stored in reverse order
+            edf.Write(final_data);
+            std::cout << "done." << std::endl;
           } // if
 
           // also compute averaged values over phi and tilt
@@ -917,8 +936,7 @@ namespace hig {
         std::vector<int> scaling_nvals = s->second.grain_scaling_nvals();
 
         // if sigma is zeros set sampling count to 1
-        for (int i = 0; i < 3; i++)
-          if (stddev[i] == 0) scaling_nvals[i] = 1;
+        for(int i = 0; i < 3; i++) if (stddev[i] == 0) scaling_nvals[i] = 1;
         construct_scaling_distribution(dist, mean, stddev, scaling_nvals, scaling_samples,
                                        scaling_weights);
       } else {
@@ -1390,11 +1408,12 @@ namespace hig {
       iratios_sum += (*s).second.iratio();
     } // for
 
-    /*if(iratios_sum != 1.0) {
-      std::cerr << "error: iratios of all structures must add to 1.0 ("
-            << iratios_sum << ")" << std::endl;
-      return false;
-    } // if*/
+    if(iratios_sum != 1.0) {
+      for(int i = 0; i < iratios.size(); i++) iratios[i] /= iratios_sum;
+      //std::cerr << "error: iratios of all structures must add to 1.0 ("
+      //      << iratios_sum << ")" << std::endl;
+      //return false;
+    } // if
 
     real_t* all_struct_intensity = NULL;
     complex_t* all_c_struct_intensity = NULL;
@@ -2460,7 +2479,7 @@ namespace hig {
       min[i] = mean[i] - width * stddev[i];
       dx[i] = (2 * width) * stddev[i] / (nvals[i] + 1);
     } // for
-    for (int i = 0; i < nvals[0]; ++ i) {
+    /*for (int i = 0; i < nvals[0]; ++ i) {
       for (int j = 0; j < nvals[1]; ++ j) {
         for (int k = 0; k < nvals[2]; ++ k) {
           temp[0] = min[0] + i * dx[0] + rng.rand() * dx[0];
@@ -2470,7 +2489,16 @@ namespace hig {
           weights.push_back(gaussian3d(temp, mean, stddev));
         } // for
       } // for
+    } // for*/
+    int nsamples = std::max(nvals[0], std::max(nvals[1], nvals[2]));
+    for (int i = 0; i < nsamples; ++ i) {
+      temp[0] = min[0] + i * dx[0] + rng.rand() * dx[0];
+      temp[1] = min[1] + i * dx[1] + rng.rand() * dx[1];
+      temp[2] = min[2] + i * dx[2] + rng.rand() * dx[2];
+      samples.push_back(temp);
+      weights.push_back(gaussian3d(temp, mean, stddev));
     } // for
+
     return true;
   } // HipGISAXS::construct_scaling_distribution()
 

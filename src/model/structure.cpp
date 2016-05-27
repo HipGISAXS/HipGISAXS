@@ -645,6 +645,9 @@ namespace hig {
                   case stddev_token:
                     grain_.scaling_.stddev_[0] = new_val;
                     break;
+                  case nsamples_token:
+                    grain_.scaling_.nvals_[0] = new_val;
+                    break;
                   default:
                     std::cerr << "error: invalid keyword '" << keyword4 << "' in param '"
                               << rem_str3 << "'" << std::endl;
@@ -661,6 +664,9 @@ namespace hig {
                   case stddev_token:
                     grain_.scaling_.stddev_[1] = new_val;
                     break;
+                  case nsamples_token:
+                    grain_.scaling_.nvals_[1] = new_val;
+                    break;
                   default:
                     std::cerr << "error: invalid keyword '" << keyword4 << "' in param '"
                               << rem_str3 << "'" << std::endl;
@@ -676,6 +682,9 @@ namespace hig {
                     break;
                   case stddev_token:
                     grain_.scaling_.stddev_[2] = new_val;
+                    break;
+                  case nsamples_token:
+                    grain_.scaling_.nvals_[2] = new_val;
                     break;
                   default:
                     std::cerr << "error: invalid keyword '" << keyword4 << "' in param '"
