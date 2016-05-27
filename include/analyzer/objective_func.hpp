@@ -74,6 +74,7 @@ namespace hig {
   // pounders
   PetscErrorCode EvaluateFunction(TaoSolver, Vec, Vec, void *);
   PetscErrorCode EvaluateJacobian(TaoSolver, Vec, Mat *, Mat *, MatStructure *, void *);
+  PetscErrorCode convergence_test(Tao, void *);
 
 } // namespace hig
 

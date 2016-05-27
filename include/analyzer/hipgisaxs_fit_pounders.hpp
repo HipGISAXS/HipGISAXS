@@ -34,13 +34,15 @@ namespace hig {
     private:
       unsigned int num_obs_;
 
+      //PetscErrorCode convergence_test(Tao tao, void * ctx);
+      void print();
+
     public:
       FitPOUNDERSAlgo();
       FitPOUNDERSAlgo(int narg, char** args, ObjectiveFunction* obj, unsigned int algo_num);
       ~FitPOUNDERSAlgo();
 
       bool run(int argc,char **argv, int, int);
-      void print();
 
   }; /* class FitPOUNDERSAlgo  */
 

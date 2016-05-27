@@ -45,7 +45,7 @@ namespace hig {
         name_ = algo_pounders;
         max_iter_ = 200;
         max_hist_ = 200;
-        tol_ = 1e-8;
+        tol_ = 1e-6;
   } // FitPOUNDERSAlgo::FitPOUNDERSAlgo()
 
 
@@ -75,6 +75,7 @@ namespace hig {
     const int str_max = 100;
 
     real_t pdelta, pnpmax, pgqt;
+    bool isdelta = false;
     int newnarg = argc;
     //char* newargs[argc + 3];     // possibly add arguments for the tao routines
     //char newargs[argc + 3][50];
@@ -96,6 +97,7 @@ namespace hig {
       newargs[newnarg] = new char[str_max];
       strncpy(newargs[newnarg], arg2.str().c_str(), str_max);
       ++ newnarg;
+      isdelta = true;
     } else {
       std::cerr << "warning: default pounders_delta being used" << std::endl;
     } // if-else
@@ -157,6 +159,7 @@ namespace hig {
       VecSetValues(xmin, 1, &i, &y, INSERT_VALUES);
       std::cout << y << " ";
       y = (double) plimits[i].second;
+      if(isdelta) y += pdelta;
       VecSetValues(xmax, 1, &i, &y, INSERT_VALUES);
       std::cout << y << " ] " << std::endl;
     } // for
@@ -165,7 +168,7 @@ namespace hig {
     Vec f;
     PetscReal zero = 0.0;
     PetscReal hist[max_hist_], resid[max_hist_];
-    PetscInt icount[max_hist_];   // number of linear iterations for each tao iteration
+    //PetscInt icount[max_hist_];   // number of linear iterations for each tao iteration
     PetscInt nhist = max_hist_;
 
     Tao tao;
@@ -180,32 +183,33 @@ namespace hig {
     ierr = TaoCreate(PETSC_COMM_SELF, &tao);
     ierr = TaoSetType(tao, TAOPOUNDERS); CHKERRQ(ierr);
 
+    // check for command line options
+    ierr = TaoSetFromOptions(tao);
+
     // set objective function
     ierr = TaoSetSeparableObjectiveRoutine(tao, f, EvaluateFunction, (void*) obj_func_);
     // set jacobian function
     // ierr = TaoSetJacobianRoutine(tao, J, J, EvaluateJacobian, (void*) &user); CHKERRQ(ierr);
 
-    // check for command line options
-    ierr = TaoSetFromOptions(tao);
+    // set the convergence test function
+    ierr = TaoSetConvergenceTest(tao, &convergence_test, NULL);
 
     TaoSetMaximumIterations(tao, max_iter_);
     #ifdef PETSC_37
-      ierr = TaoSetConvergenceHistory(tao, hist, resid, 0, icount, max_hist_, PETSC_TRUE); CHKERRQ(ierr);
+      ierr = TaoSetConvergenceHistory(tao, hist, resid, NULL, NULL, max_hist_, PETSC_TRUE); CHKERRQ(ierr);
     #elif defined PETSC_36
-      ierr = TaoSetHistory(tao, hist, resid, NULL, icount, max_hist_, PETSC_TRUE); CHKERRQ(ierr);
+      ierr = TaoSetHistory(tao, hist, resid, NULL, NULL, max_hist_, PETSC_TRUE); CHKERRQ(ierr);
     #else
-      ierr = TaoSetHistory(tao, hist, resid, 0, max_hist_, PETSC_TRUE); CHKERRQ(ierr);
+      ierr = TaoSetHistory(tao, hist, resid, NULL, max_hist_, PETSC_TRUE); CHKERRQ(ierr);
     #endif // PETSC_36
 
     std::cout << "++ [pounders] Setting tolerances = " << tol_ << std::endl;
     #ifdef PETSC_37
-      //ierr = TaoSetTolerances(tao, tol_, tol_, tol_); CHKERRQ(ierr);
-      ierr = TaoSetTolerances(tao, tol_, 0.0, 0.0); CHKERRQ(ierr);
-      //ierr = TaoSetConvergedReason(tao, TAO_CONVERGED_ATOL); CHKERRQ(ierr);
+      ierr = TaoSetTolerances(tao, tol_, tol_, tol_); CHKERRQ(ierr);
+      //ierr = TaoSetTolerances(tao, tol_, 0.0, 0.0); CHKERRQ(ierr);
     #else
-      //ierr = TaoSetTolerances(tao, tol_, tol_, tol_, tol_, tol_); CHKERRQ(ierr);
-      ierr = TaoSetTolerances(tao, 0.0, 0.0, tol_, 0.0, 0.0); CHKERRQ(ierr);
-      //ierr = TaoSetConvergedReason(tao, TAO_CONVERGED_GATOL); CHKERRQ(ierr);
+      ierr = TaoSetTolerances(tao, tol_, tol_, tol_, tol_, tol_); CHKERRQ(ierr);
+      //ierr = TaoSetTolerances(tao, 0.0, 0.0, tol_, 0.0, 0.0); CHKERRQ(ierr);
     #endif
 
     ierr = TaoSetVariableBounds(tao, xmin, xmax); CHKERRQ(ierr);
@@ -216,7 +220,7 @@ namespace hig {
     // perform the solve
     ierr = TaoSolve(tao); CHKERRQ(ierr);
 
-    // temp ...
+    // temporary, to check the details
     TaoView(tao, PETSC_VIEWER_STDOUT_SELF);
 
     // ierr = TaoGetTerminationReason(tao, &reason);
@@ -224,18 +228,18 @@ namespace hig {
     std::cout << "** [pounders] converged reason: " << reason << std::endl;
 
     #ifdef PETSC_37
-      //ierr = TaoGetConvergenceHistory(tao, &hist, &resid, NULL, &icount, &nhist)
-      ierr = TaoGetConvergenceHistory(tao, NULL, NULL, NULL, NULL, &nhist);
+      ierr = TaoGetConvergenceHistory(tao, &hist, &resid, NULL, NULL, &nhist);
+      //ierr = TaoGetConvergenceHistory(tao, NULL, NULL, NULL, NULL, &nhist);
     #elif defined PETSC_36
-      ierr = TaoGetConvergenceHistory(tao, NULL, NULL, NULL, NULL, &nhist);
-      //TaoGetHistory(tao, NULL, NULL, NULL, &icount, &nhist);
+      //ierr = TaoGetConvergenceHistory(tao, &hist, &resid, NULL, NULL, &nhist); CHKERRQ(ierr);
+      ierr = TaoGetConvergenceHistory(tao, NULL, NULL, NULL, NULL, &nhist); CHKERRQ(ierr);
     #else
       TaoGetHistory(tao, 0, 0, 0, &nhist);
     #endif
 
-    PetscPrintf(PETSC_COMM_WORLD, "** [pounders] history: < iter\tnum_linear_iter\tobj_val\tresidual >\n");
+    PetscPrintf(PETSC_COMM_WORLD, "** [pounders] history: [ iter\tobj_val\tresidual ]\n");
     for(int i = 0; i < nhist; ++ i)
-      PetscPrintf(PETSC_COMM_WORLD, ">> \t%d\t%d\t%g\t%g\n", i, icount[i], hist[i], resid[i]);
+      PetscPrintf(PETSC_COMM_WORLD, ">> \t%d\t%g\t%g\n", i, hist[i], resid[i]);
 
     PetscInt iterate; // current iterate number
     PetscReal f_cv,   // current function value
@@ -272,6 +276,32 @@ namespace hig {
 
     return true;
   } // FitPOUNDERSAlgo::run()
+
+
+  /*PetscErrorCode convergence_test(Tao tao, void * ctx) {
+    PetscErrorCode ierr;
+    PetscInt iter;    // iteration number
+    PetscReal f,      // function value
+              gnorm,  // square of gradient norm (distance)
+              cnorm,  // infeasibility
+              xdiff;  // trust region step length
+    TaoConvergedReason reason;
+
+    ierr = TaoGetSolutionStatus(tao, &iter, &f, &gnorm, &cnorm, &xdiff, &reason); CHKERRQ(ierr);
+    if(gnorm <= tol_) {
+      #ifdef PETSC_37
+        TaoSetConvergedReason(tao, TAO_CONVERGED_ATOL);
+      #else
+        TaoSetConvergedReason(tao, TAO_CONVERGED_GATOL);
+      #endif
+    } else if(iter >= max_iter_) {
+      TaoSetConvergedReason(tao, TAO_DIVERGED_MAXITS);
+    } else {
+      TaoSetConvergedReason(tao, TAO_CONTINUE_ITERATING);
+    } // if-else
+    
+    return 0;
+  } // convergence_test()*/
 
 
   void FitPOUNDERSAlgo::print() {

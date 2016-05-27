@@ -46,6 +46,40 @@ namespace hig {
     return 0;
   } // EvaluateFunction()
 
+  /* convergence test for pounders */
+  PetscErrorCode convergence_test(Tao tao, void * ctx) {
+    PetscErrorCode ierr;
+    PetscInt iter;    // iteration number
+    PetscReal f,      // function value
+              gnorm,  // square of gradient norm (distance)
+              cnorm,  // infeasibility
+              xdiff;  // trust region step length
+    TaoConvergedReason reason;
+    PetscReal gatol, grtol, gttol, fatol, frtol;
+    PetscInt maxiter;
+
+    ierr = TaoGetSolutionStatus(tao, &iter, &f, &gnorm, &cnorm, &xdiff, &reason); CHKERRQ(ierr);
+    #ifdef PETSC_37
+      ierr = TaoGetTolerances(tao, &gatol, &grtol, &gttol); CHKERRQ(ierr);
+    #else
+      ierr = TaoGetTolerances(tao, &fatol, &frtol, &gatol, &grtol, &gttol); CHKERRQ(ierr);
+    #endif
+    ierr = TaoGetMaximumIterations(tao, &maxiter); CHKERRQ(ierr);
+    if(gnorm <= gatol) {
+      #ifdef PETSC_37
+        TaoSetConvergedReason(tao, TAO_CONVERGED_ATOL);
+      #else
+        TaoSetConvergedReason(tao, TAO_CONVERGED_GATOL);
+      #endif
+    } else if(iter >= maxiter) {
+      TaoSetConvergedReason(tao, TAO_DIVERGED_MAXITS);
+    } else {
+      TaoSetConvergedReason(tao, TAO_CONTINUE_ITERATING);
+    } // if-else
+    
+    return 0;
+  } // convergence_test()
+
 
   /* evaluate function used in lmvm */
   PetscReal EvaluateFunction(TaoSolver tao, real_vec_t params, void *ptr) {
