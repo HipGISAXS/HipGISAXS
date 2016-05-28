@@ -13,6 +13,7 @@
 #include <analyzer/hipgisaxs_fit_lmvm.hpp>
 #include <analyzer/hipgisaxs_fit_pso.hpp>
 #include <analyzer/hipgisaxs_fit_bruteforce.hpp>
+#include <analyzer/hipgisaxs_compute_objective.hpp>
 
 #include <analyzer/distance_functions.hpp>
 #include <analyzer/objective_func.hpp>
@@ -78,6 +79,9 @@ int main(int narg, char** args) {
       //hip_func.set_distance_measure(new RelativeResidualVector());
       hip_func.set_distance_measure(new UnitLengthNormalizedResidualVector());
       ana.add_analysis_algo(new hig::FitPOUNDERSAlgo(narg, args, &hip_func, i));
+    } else if(algo == hig::algo_none_pounders) {    // dont fit, just compute the obj function
+      hip_func.set_distance_measure(new UnitLengthNormalizedResidualVector());
+      ana.add_analysis_algo(new hig::ComputeObjectiveFunction(narg, args, &hip_func, i));
     } else if(algo == hig::algo_lmvm) {
       //hip_func.set_distance_measure(new AbsoluteDifferenceSquare());
       //hip_func.set_distance_measure(new RelativeAbsoluteDifferenceSquare());

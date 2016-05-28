@@ -229,7 +229,8 @@ ALL_LDFLAGS = $(MPI_LDFLAGS) $(TAO_LDFLAGS) $(GCC_LDFLAGS) $(PETSC_LDFLAGS) \
 		          $(HIPGISAXS_LDFLAGS) $(HDF5_LDFLAGS) $(TIFF_LDFLAGS) $(BOOST_LDFLAGS)
 ALL_LIBS = $(MPI_LIBS) $(TAO_LIBS) $(PETSC_LIBS) $(HIPGISAXS_LIBS) $(HDF5_LIBS) $(TIFF_LIBS) $(BOOST_LIBS)
 
-OBJECTS = ImageData.o analysis_algorithm.o objective_func.o hipgisaxs_ana.o objective_func_hipgisaxs.o
+OBJECTS = ImageData.o analysis_algorithm.o objective_func.o hipgisaxs_ana.o \
+					objective_func_hipgisaxs.o hipgisaxs_compute_objective.o
 
 POUND_OBJS = hipgisaxs_fit_pounders.o
 POUND_HIP_OBJS = $(POUND_OBJS) hipgisaxs_fit_pounders_main.o

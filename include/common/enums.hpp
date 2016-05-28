@@ -120,12 +120,15 @@ namespace hig {
   }; // enum StructCorrelationType
 
   enum FittingAlgorithmName {
-    algo_error,        /* error type */
-    algo_null,        /* default, no algorithm */
+    algo_error,         /* error type */
+    algo_null,          /* default, no algorithm */
     algo_pounders,      /* pounders algorithm (from tao) */
-    algo_pso,        /* particle swarm optimization algorithm */
-        algo_lmvm,
-    algo_bruteforce      /* brute force optimization */
+    algo_pso,           /* particle swarm optimization algorithm */
+    algo_lmvm,          /* lmvm algorithm (from tao) */
+    algo_bruteforce,    /* brute force optimization */
+    algo_none_pounders, /* dont fit, evaluate objective */
+    algo_none_lmvm,     /* dont fit, evaluate objective */
+    algo_none_pso       /* dont fit, evaluate objective */
   }; // enum FittingAlgorithmName
 
   enum FitAlgorithmParamType {
