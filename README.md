@@ -206,6 +206,7 @@ The main components in the input file to update are the following:
 2. Ensure all system environment variables are set accordingly to include the prerequisites.
 3. Once all the required software are available, use the `scons` command to build the binary. Example:
 
+
     $ scons --extrapath=$PATHS_TO_SOFTWARE --with-mpi --with-cuda
 
 4. On successful build, the binary will be generated in the `bin` directory, called `hipgisaxs`.
