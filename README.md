@@ -201,80 +201,64 @@ The main components in the input file to update are the following:
 
 ## SPECIAL BUILD INSTRUCTIONS FOR SPECIFIC SYSTEMS (STALE INFO, TO BE UPDATED SOON)
 
-### A. On Carver/Dirac at NERSC
-1. Some makefiles for different systems are included in the directory "build".
-   Replace the current "Makefile" with the one for Carver/Dirac (and name it as "Makefile"):
-    $ cp build/Makefile.dirac Makefile
-2. Unload the default PGI modules:
-    $ module unload pgi openmpi
-3. Load the required modules:
-    $ module load openmpi-gnu gcc/4.5.2 cuda
-    $ module load szip zlib
-    $ module load hdf5-parallel/1.8.3-gnu
-4. The Boost module available on Carver does NOT contain the GIL numeric extension.
-   Please install and use your own copy.
-5. Edit Makefile to specify the correct paths ("base directories" section) to the various libraries.
+### A. On a generic Linux (x86-64) system
+1. Ensure all above prerequisites are available on the system.
+2. Ensure all system environment variables are set accordingly to include the prerequisites.
+3. Once all the required software are available, use the `scons` command to build the binary.
    Example:
-    $ cat Makefile
-    ...
-    ## base directories
-    BOOST_DIR = /global/homes/a/asarje/local/boost_1_49_0
-    MPI_DIR = 
-    CUDA_DIR = /usr/common/usg/cuda/5.0
-    HDF5_DIR = /global/homes/a/asarje/local/hdf5-1.8.8-gnu/parallel
-    TIFF_DIR = /global/homes/a/asarje/local/tiff-4.0.2
-    Z_DIR = $(ZLIB_DIR)     # an environment variable set by loading zlib module
-    SZ_DIR = $(SZIP_DIR)    # an environment variable set by loading szip module
-    ...
-6. Build the code from within the code directory:
-    $ make clean
-    $ make [or, make library]
-   This will generate the binary in directory "bin".
-   When building the library, it will be generated into the "lib" directory.
-   All the intermediate generated object files are in the directory "obj". They can be removed if wanted.
+   ```
+    $ scons --extrapath=$PATHS_TO_SOFTWARE --with-mpi --with-cuda
+   ```
+4. On successful build, the binary will be generated in the `bin` directory, called `hipgisaxs`.
 
-### B. On Hopper/Edison at NERSC
-   Instructions coming soon. Meanwhile go try yourself!
+### B. NERSC Systems
 
-### C. On Titan at OLCF
-   Instructions coming soon. Meanwhile go try yourself!
+#### Edison (Cray XC30, Intel Ivy Bridge)
+1. All required software, except `libtiff` are available as modules on Edison. An example set of modules you can load are given in the `build/modules.edison` file. You could just `source` this file:
+    ```
+      $ source build/modules.edison
+    ```
+2. You will need to install `libtiff`. Please refer to the required software section above.
+3. An example build command is given in the `build/build-edison.sh`. If needed, make sure the paths are correctly set, including your installation of `libtiff`. Since Edison requires cross compilation for its compute nodes, make sure the `CC` and `CXX` environment variables are also set. Example:
+    ```
+      $ CC=cc CXX=CC scons --with-mpi --extrapath=$BOOST_ROOT,$TIFFDIR
+    ```
+    *NOTE: For those users who are member of the 'als' group at NERSC, an installation of `libtiff` is available under `/project/projectdirs/als/software/tiff-4.0.6`.*
+4. On successful build, the binary will be generated in the `bin` directory, called `hipgisaxs`.
 
-### D. On Stampede at TACC
-   Instructions coming soon. Meanwhile go try yourself!
+#### Cori Phase 1 (Cray XC40, Intel Haswell)
+1. All required software, except `libtiff` are available as modules on Cori. An example set of modules you can load are given in the `build/modules.cori` file. You could just `source` this file:
+    ```
+      $ source build/modules.cori
+    ```
+2. You will need to install `libtiff`. Please refer to the required software section above.
+3. Build command is same as for the Edison system (see above), given in the `build/build-edison.sh`. If needed, make sure the paths are correctly set, including your installation of `libtiff`. Since Cori requires cross compilation for its compute nodes, make sure the `CC` and `CXX` environment variables are also set. Example:
+    ```
+      $ CC=cc CXX=CC scons --with-mpi --extrapath=$BOOST_ROOT,$TIFFDIR
+    ```
+    *NOTE: For those users who are member of the 'als' group at NERSC, an installation of `libtiff` is available under `/project/projectdirs/als/software/tiff-4.0.6`.*
+4. On successful build, the binary will be generated in the `bin` directory, called `hipgisaxs`.
 
-### E. On Mira at ALCF
-   Instructions coming soon. Meanwhile go try yourself!
+### C. OLCF Systems
 
-### F. On a generic Linux system
-1. Make sure all above prerequisites are available.
-2. Make sure all system environment variables are set accordingly to include the prerequisites.
-3. Set all paths correctly in the sample Makefile, and edit as needed (as above).
-4. Build the library from within the code directory:
-    $ make clean
-    $ make library
+#### 1. Titan (Cray XK7)
+1. All required software as modules on Titan, except `libtiff` which is already installed systemwide. An example set of modules you can load are given in the `build/modules.titan` file. You could just `source` this file:
+    ```
+      $ source build/modules.titan
+    ```
+2. An example build command is given in the `build/build-titan.sh`. If needed, make sure the paths are correctly set. Since Titan requires cross compilation for its compute nodes, make sure the `CC` and `CXX` environment variables are also set. Example:
+    ```
+      $ CUDA_TOOLKIT_PATH=$CRAY_CUDATOOLKIT_DIR CXX=CC CC=cc scons --with-mpi --with-cuda --extrapath=$BOOST_DIR
+    ```
+4. On successful build, the binary will be generated in the `bin` directory, called `hipgisaxs`.
 
-### G. For certain users, on saxs-waxs-gpu/saxs-waxs-gpu2/andromeda servers
-1. Replace the current "Makefile" with the one for saxs-waxs-gpu (and name it as "Makefile"):
-    $ cp build/Makefile.saxs1 Makefile		OR
-    $ cp build/Makefile.saxs2 Makefile		OR
-    $ cp build/Makefile.andromeda Makefile
-2. All "base directories" in the provided Makefile are set to the correct locations.
-   If you want to use your own installation of any of the required softwares, please edit its corresponding entry in the Makefile.
+### D. For certain users, on Andromeda/Bragg servers
+1. All the required softwares are already available on these systems.
+   If you want to use your own installation of any of the required softwares, make sure you use its corresponding paths in the following.
+2. An example build command is given in the `build/build-bragg.sh` or `build/build-andromeda.sh`. If needed, make sure the paths are correctly set.
+3. Once all the required software are available, use the `scons` command to build the binary.
    Example:
-    $ cat Makefile
-    ...
-    ## base directories
-    BOOST_DIR = /usr/local/boost_1_45_0
-    MPI_DIR = /usr/local
-    CUDA_DIR = /usr/local/cuda
-    HDF5_DIR = /home/asarje/local/hdf5-1.8.8-gnu/parallel
-    Z_DIR = /root/zlib-1.2.7
-    SZ_DIR = /root/szip-2.1
-    TIFF_LIB_DIR = /usr/local
-    ...
-3. Build the code from within the code's main directory:
-    $ make clean
-    $ make [or, make library]
-   This will generate the binary in directory "bin".
-   When building the library, it will be generated into the "lib" directory.
-   All the generated object files are in the directory "obj".
+   ```
+    $ scons --extrapath=/usr/local/cuda --with-mpi --with-cuda
+   ```
+4. On successful build, the binary will be generated in the `bin` directory, called `hipgisaxs`.
