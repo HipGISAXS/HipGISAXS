@@ -91,7 +91,7 @@ namespace hig {
       }
 
       // hipgisaxs style init and clear
-      bool init(layer_list_t &);
+      bool init(const layer_list_t &);
       void clear();
 
       //gets

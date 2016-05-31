@@ -58,10 +58,36 @@ namespace hig {
       AnalysisAlgorithmParamData fit_algo_param_;
       FitReferenceData ref_data_;
     public:
-      real_t reference_region_min_x(int i);
-      real_t reference_region_min_y(int i);
-      real_t reference_region_max_x(int i);
-      real_t reference_region_max_y(int i);
+      real_t reference_region_min_x(int i) const;
+      real_t reference_region_min_y(int i) const;
+      real_t reference_region_max_x(int i) const;
+      real_t reference_region_max_y(int i) const;
+
+      std::vector<std::string> fit_param_keys() const {
+        std::vector<std::string> keys;
+        return keys;
+      }
+      std::vector<std::pair<real_t, real_t> > fit_param_limits() const {
+        std::vector<std::pair<real_t, real_t> > lims;
+        return lims;
+      }
+      std::vector<real_t> fit_param_step_values() const {
+        std::vector<real_t> steps;
+        return steps;
+      }
+      std::string reference_data_path() const {
+        return std::string();
+      }
+      std::string reference_data_mask() const {
+        return std::string();
+      }
+      int num_fit_params() const {
+        return 0;
+      }
+      std::vector<real_t> fit_param_init_values() const {
+        std::vector<real_t> init_vals;
+        return init_vals;
+      }
   };
 }
 

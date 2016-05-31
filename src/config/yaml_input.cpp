@@ -29,6 +29,7 @@
 namespace hig {
   YAMLInput::YAMLInput() {
     shapes_.clear();
+    unitcells_.clear();
     layers_.clear();
     structures_.clear();
     scattering_.init();

@@ -344,8 +344,9 @@ namespace hig {
 
 
   void Grain::init() {
-    layer_key_ = "";
-    in_layer_ = false;
+    layer_key_ = "air";
+    in_layer_ = true; 
+    layer_order_ = 0;
     lattice_.init();
     transvec_[0] = transvec_[1] = transvec_[2] = 0;
     repetition_[0] = repetition_[1] = repetition_[2] = 1;

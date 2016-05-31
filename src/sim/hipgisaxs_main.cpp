@@ -159,7 +159,7 @@ namespace hig {
 
     // create Q-grid
     real_t min_alphai = input_->scattering().alphai_min() * PI_ / 180;
-    if(!QGrid::instance().create(freq_, min_alphai, k0_, mpi_rank)) {
+    if(!QGrid::instance().create(input_->compute(), min_alphai, k0_, mpi_rank)) {
       if(master) std::cerr << "error: could not create Q-grid" << std::endl;
       return false;
     } // if
@@ -171,7 +171,7 @@ namespace hig {
     nqz_ = QGrid::instance().nqz();
     nqz_extended_ = QGrid::instance().nqz_extended();
 
-    if(!multilayer_.init(input_->layers()){
+    if(!multilayer_.init(input_->layers())){
       if(master) std::cerr << "error: could not construct layer profile" << std::endl;
       return false;
     } // if
@@ -699,7 +699,7 @@ namespace hig {
     ****************************/
 
     /* loop over all structures and grains/grains */
-    structure_iterator_t s = input_->structure().begin();
+    auto s = input_->structures().cbegin();
     int num_structs = num_structures_;
     #ifdef USE_MPI
       // divide among processors
@@ -740,7 +740,7 @@ namespace hig {
     } // master
 
     // loop over structures
-    for(int s_num = 0; s_num < num_structs && s != input_->structure().end();
+    for(int s_num = 0; s_num < num_structs && s != input_->structures().cend();
         ++ s, ++ s_num) {
       // get all repetitions of the structure in the volume
       // with position dr and orientation (tau, eta)
@@ -756,12 +756,12 @@ namespace hig {
         std::cout << "-- Processing structure " << s_num + 1 << " ..." << std::endl;
       } // if
 
-      Structure *curr_struct = &((*s).second);
+      const Structure *curr_struct = &((*s).second);
       Lattice *curr_lattice = (Lattice*) curr_struct->lattice();
-      Unitcell *curr_unitcell = (Unitcell*) curr_struct->unitcell();
-      bool struct_in_layer = curr_struct->grain_in_layer();
+      Unitcell curr_unitcell = input_->unitcell(curr_struct->grain_unitcell_key());
 
       /* calulate propagation coefficients for current layer*/
+      std::string layer_key = curr_struct->grain_layer_key();
       int order = curr_struct->layer_order();
       layer_qgrid_qz(alphai, multilayer_[order].one_minus_n2());
       complex_vec_t fc; 
@@ -1008,15 +1008,17 @@ namespace hig {
         } // if*/
 
         // loop over all elements in the unit cell
-        for(Unitcell::element_iterator_t e = curr_unitcell->element_begin();
-            e != curr_unitcell->element_end(); ++ e) {
+        for(Unitcell::element_iterator_t e = curr_unitcell.element_begin();
+            e != curr_unitcell.element_end(); ++ e) {
 
-          ShapeName shape_name = e->shape_name();
-          real_t zrot = e->zrot();
-          real_t yrot = e->yrot();
-          real_t xrot = e->xrot();
-          std::string shape_file = e->filename();
-          shape_param_list_t shape_params = e->shape_params();
+          std::string shape_key = e->first;
+          Shape shape = input_->shapes().at(shape_key);
+          ShapeName shape_name = shape.name();
+          real_t zrot = shape.zrot();
+          real_t yrot = shape.yrot();
+          real_t xrot = shape.xrot();
+          std::string shape_file = shape.filename();
+          shape_param_list_t shape_params = shape.param_list();
 
           // update rotation matrix
           rot = rot *  RotMatrix_t(0, xrot) * RotMatrix_t(1, yrot) * RotMatrix_t(2, zrot);
@@ -1285,8 +1287,8 @@ namespace hig {
 
     std::vector<real_t> iratios;
     real_t iratios_sum = 0.0;
-    for(structure_iterator_t s = input_->structure().begin(); 
-        s != input_->structure().end(); ++ s) {
+    for(structure_citerator_t s = input_->structures().cbegin(); 
+        s != input_->structures().cend(); ++ s) {
       iratios.push_back((*s).second.iratio());
       iratios_sum += (*s).second.iratio();
     } // for
@@ -1560,7 +1562,7 @@ namespace hig {
   } // HipGISAXS::layer_qgrid_qz()
 
 
-  bool HipGISAXS::spatial_distribution(structure_iterator_t s, real_t tz, int dim,
+  bool HipGISAXS::spatial_distribution(structure_citerator_t s, real_t tz, int dim,
                     int& rand_dim_x, int& rand_dim_y, real_t* &d) {
     vector3_t spacing = (*s).second.ensemble_spacing();
     vector3_t maxgrains = (*s).second.ensemble_maxgrains();
@@ -1760,7 +1762,7 @@ namespace hig {
   } // HipGISAXS::spatial_distribution()
 
 
-  bool HipGISAXS::orientation_distribution(structure_iterator_t s, real_t* dd, int & ndx, int ndy, 
+  bool HipGISAXS::orientation_distribution(structure_citerator_t s, real_t* dd, int & ndx, int ndy, 
                         real_t* &nn, real_t* &wght) {
     std::string distribution = (*s).second.grain_orientation();
     //vector2_t tau = (*s).second.rotation_tau();
@@ -1772,7 +1774,7 @@ namespace hig {
 
     if (distribution == "bragg"){
       real_vec_t angles;
-      Lattice * lattice = (Lattice *) s->second.grain_lattice();
+      Lattice * lattice = (Lattice *) s->second.lattice();
       vector3_t gr_scaling = s->second.grain_scaling();
       vector3_t gr_repetitions = s->second.grain_repetition();
       lattice->bragg_angles(gr_repetitions, gr_scaling, k0_, angles);

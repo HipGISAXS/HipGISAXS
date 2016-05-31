@@ -144,6 +144,10 @@ namespace hig {
       return vec_[i];
     } // operator[]
 
+    INLINE real_t operator[](int i) const {
+      return vec_[i];
+    } // read_only
+
     INLINE vector3_t operator+(int toadd) {
       return vector3_t(vec_[0] + toadd, vec_[1] + toadd, vec_[2] + toadd);
     } // operator+()

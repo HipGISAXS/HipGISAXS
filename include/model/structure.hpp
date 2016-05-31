@@ -210,10 +210,10 @@ namespace hig {
       void init();
       void clear();
 
-      std::string stat() { return stat_; }
-      Rotation rot1() { return rot1_; }
-      Rotation rot2() { return rot2_; }
-      Rotation rot3() { return rot3_; }
+      std::string stat() const { return stat_; }
+      Rotation rot1() const { return rot1_; }
+      Rotation rot2() const { return rot2_; }
+      Rotation rot3() const { return rot3_; }
 
       void stat(std::string s) { stat_ = s; }
 
@@ -307,6 +307,7 @@ namespace hig {
 
   class Grain {
     private:
+      int layer_order_;
       std::string shape_key_;
       std::string unitcell_key_;
       std::string layer_key_;
@@ -333,6 +334,7 @@ namespace hig {
       void shape_key(std::string s) { shape_key_ = s; }
       void unitcell_key(std::string s) { unitcell_key_ = s; }
       void layer_key(std::string s) { layer_key_ = s; in_layer_ = true; }
+      void layer_order(int d) { layer_order_ = d; }
 
       void lattice_vec_a(vector3_t v) { lattice_.a(v); }
       void lattice_vec_b(vector3_t v) { lattice_.b(v); }
@@ -466,6 +468,7 @@ namespace hig {
       void grain_shape_key(std::string s) { grain_.shape_key(s); }
       void grain_unitcell_key(std::string s) { grain_.unitcell_key(s); }
       void grain_layer_key(std::string s) { grain_.layer_key(s); }
+      void grain_layer_order(int d){ grain_.layer_order(d); }
 
       void grain_transvec(vector3_t v) { grain_.transvec(v); }
       void grain_repetition(vector3_t v) { grain_.repetition(v); }
@@ -591,26 +594,27 @@ namespace hig {
       vector3_t grain_repetition() const { return grain_.repetition_; }
       bool grain_is_repetition_dist() const { return grain_.is_repetition_dist_; }
       const GrainRepetitions& grain_repetitiondist() const { return grain_.repetitiondist_; }
-      std::string grain_orientation() { return ensemble_.orientations_.stat(); }
-      RefractiveIndex grain_refindex() { return grain_.refindex_; }
-      complex_t one_minus_n2() { return grain_.refindex_.one_minus_n2(); }
-      const std::string& grain_unitcell_key() { return grain_.unitcell_key_; }
-      const std::string& grain_layer_key() { return grain_.layer_key_; }
+      std::string grain_orientation() const { return ensemble_.orientations_.stat(); }
+      RefractiveIndex grain_refindex() const { return grain_.refindex_; }
+      complex_t one_minus_n2() const { return grain_.refindex_.one_minus_n2(); }
+      const std::string& grain_unitcell_key() const { return grain_.unitcell_key_; }
+      const std::string& grain_layer_key() const { return grain_.layer_key_; }
+      int layer_order() const { return grain_.layer_order_; }
       bool grain_in_layer() { return grain_.in_layer_; }
-      vector3_t grain_transvec() { return grain_.transvec_; }
+      vector3_t grain_transvec() const { return grain_.transvec_; }
 
-            // scaling related params
-            bool grain_scaling_is_dist () {
-                for (int i = 0; i < 3; i++)
-                    if ( grain_.scaling_.stddev_[i] > 0 )
-                        return true;
-                return false;
-            }
+      // scaling related params
+      bool grain_scaling_is_dist () const {
+        for (int i = 0; i < 3; i++)
+          if ( grain_.scaling_.stddev_[i] > 0 )
+            return true;
+        return false;
+      }
+
       vector3_t grain_scaling() const { return grain_.scaling_.mean_; }
-            vector3_t grain_scaling_stddev() const { return grain_.scaling_.stddev_; }
-            std::vector<StatisticType> grain_scaling_dist() const { return grain_.scaling_.dist_; }
-            std::vector<int> grain_scaling_nvals() { return grain_.scaling_.nvals_; }
-
+      vector3_t grain_scaling_stddev() const { return grain_.scaling_.stddev_; }
+      std::vector<StatisticType> grain_scaling_dist() const { return grain_.scaling_.dist_; }
+      std::vector<int> grain_scaling_nvals() const { return grain_.scaling_.nvals_; }
 
       vector3_t ensemble_spacing() const { return ensemble_.spacing_; }
       vector3_t ensemble_maxgrains() const { return ensemble_.maxgrains_; }
@@ -620,34 +624,31 @@ namespace hig {
       vector2_t rotation_eta() { return ensemble_.orientations_.rot2().angles(); }
       vector2_t rotation_zeta() { return ensemble_.orientations_.rot3().angles(); }
 
-      vector3_t rotation_rot1() {
+      vector3_t rotation_rot1() const {
         char axis = ensemble_.orientations_.rot1().axis();
         if(axis == 'n') return vector3_t(0, 0, 0);
         vector2_t angs = ensemble_.orientations_.rot1().angles();
         return vector3_t((real_t) ((char)axis - 'x'), angs[0], angs[1]);
-        //return vector3_t((real_t) axis, angs[0], angs[1]);
       } // rotation_rot1()
-      vector3_t rotation_rot2() {
+      vector3_t rotation_rot2() const {
         char axis = ensemble_.orientations_.rot2().axis();
         if(axis == 'n') return vector3_t(0, 0, 0);
         vector2_t angs = ensemble_.orientations_.rot2().angles();
         return vector3_t((real_t) ((char)axis - 'x'), angs[0], angs[1]);
-        //return vector3_t((real_t) axis, angs[0], angs[1]);
       } // rotation_rot2()
-      vector3_t rotation_rot3() {
+      vector3_t rotation_rot3() const {
         char axis = ensemble_.orientations_.rot3().axis();
         if(axis == 'n') return vector3_t(0, 0, 0);
         vector2_t angs = ensemble_.orientations_.rot3().angles();
         return vector3_t((real_t) ((char)axis - 'x'), angs[0], angs[1]);
-        //return vector3_t((real_t) axis, angs[0], angs[1]);
       } // rotation_rot3()
 
-      real_t rotation_rot1_anglemean() { return ensemble_.orientations_.rot1().angle_mean(); }
-      real_t rotation_rot2_anglemean() { return ensemble_.orientations_.rot2().angle_mean(); }
-      real_t rotation_rot3_anglemean() { return ensemble_.orientations_.rot3().angle_mean(); }
-      real_t rotation_rot1_anglesd() { return ensemble_.orientations_.rot1().angle_sd(); }
-      real_t rotation_rot2_anglesd() { return ensemble_.orientations_.rot2().angle_sd(); }
-      real_t rotation_rot3_anglesd() { return ensemble_.orientations_.rot3().angle_sd(); }
+      real_t rotation_rot1_anglemean() const { return ensemble_.orientations_.rot1().angle_mean(); }
+      real_t rotation_rot2_anglemean() const { return ensemble_.orientations_.rot2().angle_mean(); }
+      real_t rotation_rot3_anglemean() const { return ensemble_.orientations_.rot3().angle_mean(); }
+      real_t rotation_rot1_anglesd() const { return ensemble_.orientations_.rot1().angle_sd(); }
+      real_t rotation_rot2_anglesd() const { return ensemble_.orientations_.rot2().angle_sd(); }
+      real_t rotation_rot3_anglesd() const { return ensemble_.orientations_.rot3().angle_sd(); }
 
       /* modifiers (updates) */
       bool update_param(const std::string&, real_t);
@@ -664,6 +665,7 @@ namespace hig {
 
   typedef std::unordered_map <std::string, Structure> structure_list_t;
   typedef structure_list_t::iterator structure_iterator_t;
+  typedef structure_list_t::const_iterator structure_citerator_t;
 
 } // namespace hig
 

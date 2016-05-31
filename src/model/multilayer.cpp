@@ -31,7 +31,7 @@ namespace hig {
   }
 
   // TODO check errors and return false on error
-  bool MultiLayer::init(layer_list_t & layers){
+  bool MultiLayer::init(const layer_list_t & layers){
     // get number of layer including substrate
     int num_layers = layers.size();
 

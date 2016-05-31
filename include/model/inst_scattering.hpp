@@ -86,6 +86,13 @@ namespace hig {
       void tilt_max(real_t d) { tilt_.max_ = d; }
       void tilt_step(real_t d) { tilt_.step_ = d; }
 
+      // getters
+      real_t smearing() const { return smearing_; }
+
+      void tilt(real_t & vmin, real_t & vmax, real_t & vstep) const {
+        vmin = tilt_.min_; vmax = tilt_.max_; vstep= tilt_.step_;
+      }
+
       real_t spot_area() const { return spot_area_; }
       Photon photon_energy() const { return photon_; }
       void photon_energy(real_t & val, std::string & unit) const {

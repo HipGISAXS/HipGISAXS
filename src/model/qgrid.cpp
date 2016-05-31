@@ -27,24 +27,15 @@ namespace hig {
   /**
    * create Q-grid in reciprocal space
    */
-  bool QGrid::create(real_t freq, real_t alpha_i, real_t k0, int mpi_rank) {
-    vector2_t min_point = HiGInput::instance().param_output_minpoint();
-    vector2_t max_point = HiGInput::instance().param_output_maxpoint();
-    OutputRegionType type = HiGInput::instance().param_output_type();
-    std::vector<int> pixels = HiGInput::instance().param_resolution();
+  bool QGrid::create(const ComputeParams & params, real_t alpha_i, real_t k0, int mpi_rank) {
+    vector2_t min_point = params.output_minpoint();
+    vector2_t max_point = params.output_maxpoint();
+    OutputRegionType type = params.output_region_type();
+    std::vector<int> pixels = params.resolution();
 
     nrow_ = pixels[1];
     ncol_ = pixels[0];
-    qmin_ = HiGInput::instance().param_output_minpoint();
-    qmax_ = HiGInput::instance().param_output_maxpoint();
-
-    /* one-pixel range in k-space
-     * in order to resolve a pixel, dq must be <= qpixel and lower to resolve subpixels */
-    vector3_t q0 = pixel_to_kspace(vector2_t(0, 0), k0, alpha_i, pixel_size, sd_distance, beam);
-    vector3_t q1 = pixel_to_kspace(vector2_t(1, 1), k0, alpha_i, pixel_size, sd_distance, beam);
-
     vector3_t qmax, qmin, step;
-
     qmin[0] = 0.0; qmax[0] = 0.0;
 
     if(type == region_pixels) {

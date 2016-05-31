@@ -206,17 +206,6 @@ namespace hig {
       //typedef std::unordered_map <std::string, Structure>::iterator structure_iterator_t;
       //typedef structure_list_t::iterator structure_iterator_t;
 
-      /*  New methods to support HigInput as derived class  */
-      const shape_list_t & shapes() const { return shapes_; }
-      const layer_list_t & layers() const { return layers_; }
-      const unitcell_list_t & unitcells() const { return unitcells_; }
-      const structure_list_t & structures() const { return structures_; }
-      const ScatteringParams & scattering() const { return scattering_; }
-      const ComputeParams & compute() const { return compute_; }
-      const FittingParams & fitting() const { return fitting_; } 
-      /*  End of new methods */
-
-
       bool construct_input_config(const char* filename);
       bool construct_lattice_vectors();
       bool construct_layer_profile();
