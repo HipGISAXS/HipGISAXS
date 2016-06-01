@@ -199,15 +199,16 @@ The main components in the input file to update are the following:
 
 # APPENDIX
 
-## SPECIAL BUILD INSTRUCTIONS FOR SPECIFIC SYSTEMS (STALE INFO, TO BE UPDATED SOON)
+## SPECIAL BUILD INSTRUCTIONS FOR SPECIFIC SYSTEMS
 
 ### A. On a generic Linux (x86-64) system
 1. Ensure all above prerequisites are available on the system.
 2. Ensure all system environment variables are set accordingly to include the prerequisites.
 3. Once all the required software are available, use the `scons` command to build the binary. Example:
 
-
-    $ scons --extrapath=$PATHS_TO_SOFTWARE --with-mpi --with-cuda
+    ```
+      $ scons --extrapath=$PATHS_TO_SOFTWARE --with-mpi --with-cuda
+    ```
 
 4. On successful build, the binary will be generated in the `bin` directory, called `hipgisaxs`.
 
@@ -216,14 +217,16 @@ The main components in the input file to update are the following:
 #### Edison (Cray XC30, Intel Ivy Bridge)
 1. All required software, except `libtiff` are available as modules on Edison. An example set of modules you can load are given in the `build/modules.edison` file. You could just `source` this file:
 
-
-    $ source build/modules.edison
+    ```
+      $ source build/modules.edison
+    ```
 
 2. You will need to install `libtiff`. Please refer to the required software section above.
 3. An example build command is given in the `build/build-edison.sh`. If needed, make sure the paths are correctly set, including your installation of `libtiff`. Since Edison requires cross compilation for its compute nodes, make sure the `CC` and `CXX` environment variables are also set. Example:
 
-
-    $ CC=cc CXX=CC scons --with-mpi --extrapath=$BOOST_ROOT,$TIFFDIR
+    ```
+      $ CC=cc CXX=CC scons --with-mpi --extrapath=$BOOST_ROOT,$TIFFDIR
+    ```
 
 *NOTE: For those users who are member of the 'als' group at NERSC, an installation of `libtiff` is available under `/project/projectdirs/als/software/tiff-4.0.6`.*
 4. On successful build, the binary will be generated in the `bin` directory, called `hipgisaxs`.
@@ -231,14 +234,16 @@ The main components in the input file to update are the following:
 #### Cori Phase 1 (Cray XC40, Intel Haswell)
 1. All required software, except `libtiff` are available as modules on Cori. An example set of modules you can load are given in the `build/modules.cori` file. You could just `source` this file:
 
-
-    $ source build/modules.cori
+    ```
+      $ source build/modules.cori
+    ```
 
 2. You will need to install `libtiff`. Please refer to the required software section above.
 3. Build command is same as for the Edison system (see above), given in the `build/build-edison.sh`. If needed, make sure the paths are correctly set, including your installation of `libtiff`. Since Cori requires cross compilation for its compute nodes, make sure the `CC` and `CXX` environment variables are also set. Example:
 
-
-    $ CC=cc CXX=CC scons --with-mpi --extrapath=$BOOST_ROOT,$TIFFDIR
+    ```
+      $ CC=cc CXX=CC scons --with-mpi --extrapath=$BOOST_ROOT,$TIFFDIR
+    ```
 
 *NOTE: For those users who are member of the `als` group at NERSC, an installation of `libtiff` is available under `/project/projectdirs/als/software/tiff-4.0.6`.*
 4. On successful build, the binary will be generated in the `bin` directory, called `hipgisaxs`.
@@ -248,13 +253,15 @@ The main components in the input file to update are the following:
 #### 1. Titan (Cray XK7)
 1. All required software as modules on Titan, except `libtiff` which is already installed systemwide. An example set of modules you can load are given in the `build/modules.titan` file. You could just `source` this file:
 
-
-    $ source build/modules.titan
+    ```
+      $ source build/modules.titan
+    ```
 
 2. An example build command is given in the `build/build-titan.sh`. If needed, make sure the paths are correctly set. Since Titan requires cross compilation for its compute nodes, make sure the `CC` and `CXX` environment variables are also set. Example:
 
-
-    $ CUDA_TOOLKIT_PATH=$CRAY_CUDATOOLKIT_DIR CXX=CC CC=cc scons --with-mpi --with-cuda --extrapath=$BOOST_DIR
+    ```
+      $ CUDA_TOOLKIT_PATH=$CRAY_CUDATOOLKIT_DIR CXX=CC CC=cc scons --with-mpi --with-cuda --extrapath=$BOOST_DIR
+    ```
 
 4. On successful build, the binary will be generated in the `bin` directory, called `hipgisaxs`.
 
@@ -263,7 +270,8 @@ The main components in the input file to update are the following:
 2. An example build command is given in the `build/build-bragg.sh` or `build/build-andromeda.sh`. If needed, make sure the paths are correctly set.
 3. Once all the required software are available, use the `scons` command to build the binary. Example:
 
-
-    $ scons --extrapath=/usr/local/cuda --with-mpi --with-cuda
+    ```
+      $ scons --extrapath=/usr/local/cuda --with-mpi --with-cuda
+    ```
 
 4. On successful build, the binary will be generated in the `bin` directory, called `hipgisaxs`.
