@@ -65,33 +65,34 @@ For ease, if possible use the installations already available on your system, if
 The following are the dependencies of this software:
 
 ### Required Software
-1. **GNU C/C++ compilers**, version >= 4.7, OR **Intel C/C++ compilers**, version >= 15 (with GNU compatibility >= 4.7).  
+1. **GNU C/C++ compilers**, version >= 4.7, OR  
+   **Intel C/C++ compilers**, version >= 15 (with GNU compatibility >= 4.7).  
    To compile with GPU support enabled, it is recommended to use GNU compilers. 
 2. **Scons**, version >= 2.0.  
-   Scons can be obtained from: http://scons.org  
+   Scons can be obtained from: [http://scons.org](http://scons.org)  
    *NOTE: Scons is based on Python, so you need to have Python installed too.*
 3. **Boost C++ Libraries**.  
-   Boost can be obtained from: http://www.boost.org  
+   Boost can be obtained from: [http://www.boost.org](http://www.boost.org)  
 4. **Tiff Library** (libtiff).  
-   Tiff library can be obtained from: http://remotesensing.org/libtiff or http://www.libtiff.org  
+   Tiff library can be obtained from: [http://remotesensing.org/libtiff](http://remotesensing.org/libtiff)  
    *NOTE: `libtiff` should be built with C++ support enabled. Also, disable `jpeg` support unless you have JPEG libraries installed. Brief instructions on building `libtiff` are given in the appendix.*
 
 ### Optional Software
 1. **Nvidia CUDA toolkit** version >= 6.0.  
-   CUDA can be obtained from: http://developer.nvidia.com/cuda/cuda-downloads  
+   CUDA can be obtained from [Nvidia CUDA downloads](http://developer.nvidia.com/cuda/cuda-downloads)  
    *NOTE: CUDA required to enable GPU support.*  
    *NOTE: CUDA is NOT required if compiling for CPU-only version.*
 2. **OpenMPI** compiled with GNU or Intel compilers which ever you are using to compile HipGISAXS. Version > 1.4.4.  
-   OpenMPI can be obtained from: http://www.open-mpi.org/software  
+   OpenMPI can be obtained from its [website](http://www.open-mpi.org/software)  
    Alternative implementations of MPI may also be used, such as MPICH and MVAPICH.  
    *NOTE: MPI library is required to enable support for multi-node systems.*  
    *NOTE: MPI library is NOT required if compiling for single node/server/desktop/laptop.*
 3. **Parallel HDF5 library**.  
-   HDF5 can be obtained from: http://www.hdfgroup.org/downloads  
+   HDF5 can be obtained from the [HDF5 group website](http://www.hdfgroup.org/downloads)  
    *NOTE: HDF5 library is NOT required if you do not plan to use input files in this format.*  
    *NOTE: HDF5 depends on the zlib and szip libraries.*  
-   **zlib** can be obtained from: http://www.zlib.net  
-   **szip** can be obtained from: http://www.hdfgroup.org/doc\_resource/SZIP  
+   **zlib** can be obtained from: [http://www.zlib.net](http://www.zlib.net)  
+   **szip** can be obtained from: [http://www.hdfgroup.org/doc\_resource/SZIP](http://www.hdfgroup.org/doc\_resource/SZIP)  
 
 
 ## HipGISAXS DIRECTORY LAYOUT
@@ -207,39 +208,35 @@ The main components in the input file to update are the following:
 ### A. On a generic Linux (x86-64) system
 1. Ensure all above prerequisites are available on the system.
 2. Ensure all system environment variables are set accordingly to include the prerequisites.
-3. Once all the required software are available, use the `scons` command to build the binary. Example:
-
-    ```
+3. Once all the required software are available, use the `scons` command to build the binary. Example:  
+   ```
       $ scons --extrapath=$PATHS_TO_SOFTWARE --with-mpi --with-cuda
-    ```
+   ```
 
 4. On successful build, the binary will be generated in the `bin` directory, called `hipgisaxs`.
 
-### B. NERSC Systems
+### B. [NERSC](http://www.nersc.gov) Systems
 
 #### Edison (Cray XC30, Intel Ivy Bridge)
-1. All required software, except `libtiff` are available as modules on Edison. An example set of modules you can load are given in the `build/modules.edison` file. You could just `source` this file:
-
-    ```
+1. All required software, except `libtiff` are available as modules on Edison. An example set of modules you can load are given in the `build/modules.edison` file. You could just `source` this file:  
+   ```
       $ source build/modules.edison
-    ```
+   ```
 
 2. You will need to install `libtiff`. Please refer to the required software section above.
-3. An example build command is given in the `build/build-edison.sh`. If needed, make sure the paths are correctly set, including your installation of `libtiff`. Since Edison requires cross compilation for its compute nodes, make sure the `CC` and `CXX` environment variables are also set. Example:
-
-    ```
+3. An example build command is given in the `build/build-edison.sh`. If needed, make sure the paths are correctly set, including your installation of `libtiff`. Since Edison requires cross compilation for its compute nodes, make sure the `CC` and `CXX` environment variables are also set. Example:  
+   ```
       $ CC=cc CXX=CC scons --with-mpi --extrapath=$BOOST_ROOT,$TIFFDIR
-    ```
+   ```
 
 *NOTE: For those users who are member of the 'als' group at NERSC, an installation of `libtiff` is available under `/project/projectdirs/als/local/tiff-4.0.6`.*
 4. On successful build, the binary will be generated in the `bin` directory, called `hipgisaxs`.
 
 #### Cori Phase 1 (Cray XC40, Intel Haswell)
-1. All required software, except `libtiff` are available as modules on Cori. An example set of modules you can load are given in the `build/modules.cori` file. You could just `source` this file:
-
-    ```
+1. All required software, except `libtiff` are available as modules on Cori. An example set of modules you can load are given in the `build/modules.cori` file. You could just `source` this file:  
+   ```
       $ source build/modules.cori
-    ```
+   ```
 
 2. You will need to install `libtiff`. Please refer to the required software section above.
 3. Build command is same as for the Edison system (see above), given in the `build/build-edison.sh`. If needed, make sure the paths are correctly set, including your installation of `libtiff`. Since Cori requires cross compilation for its compute nodes, make sure the `CC` and `CXX` environment variables are also set. Example:
@@ -251,20 +248,18 @@ The main components in the input file to update are the following:
 *NOTE: For those users who are member of the `als` group at NERSC, an installation of `libtiff` is available under `/project/projectdirs/als/local/tiff-4.0.6`.*
 4. On successful build, the binary will be generated in the `bin` directory, called `hipgisaxs`.
 
-### C. OLCF Systems
+### C. [OLCF](https://www.olcf.ornl.gov) Systems
 
 #### 1. Titan (Cray XK7)
-1. All required software as modules on Titan, except `libtiff` which is already installed systemwide. An example set of modules you can load are given in the `build/modules.titan` file. You could just `source` this file:
-
-    ```
+1. All required software as modules on Titan, except `libtiff` which is already installed systemwide. An example set of modules you can load are given in the `build/modules.titan` file. You could just `source` this file:  
+   ```
       $ source build/modules.titan
-    ```
+   ```
 
-2. An example build command is given in the `build/build-titan.sh`. If needed, make sure the paths are correctly set. Since Titan requires cross compilation for its compute nodes, make sure the `CC` and `CXX` environment variables are also set. Example:
-
-    ```
+2. An example build command is given in the `build/build-titan.sh`. If needed, make sure the paths are correctly set. Since Titan requires cross compilation for its compute nodes, make sure the `CC` and `CXX` environment variables are also set. Example:  
+   ```
       $ CUDA_TOOLKIT_PATH=$CRAY_CUDATOOLKIT_DIR CXX=CC CC=cc scons --with-mpi --with-cuda --extrapath=$BOOST_DIR
-    ```
+   ```
 
 4. On successful build, the binary will be generated in the `bin` directory, called `hipgisaxs`.
 
@@ -272,8 +267,7 @@ The main components in the input file to update are the following:
 
 1. All the required softwares are already available on these systems. If you want to use your own installation of any of the required softwares, make sure you use its corresponding paths in the following.
 2. An example build command is given in the `build/build-bragg.sh` or `build/build-andromeda.sh`. If needed, make sure the paths are correctly set.
-3. Once all the required software are available, use the `scons` command to build the binary. Example:
-
+3. Once all the required software are available, use the `scons` command to build the binary. Example:  
     ```
       $ scons --extrapath=/usr/local/cuda --with-mpi --with-cuda
     ```
@@ -285,18 +279,15 @@ The main components in the input file to update are the following:
 ### A. TIFF library
 
 1. The source for the TIFF library can be obtained from http://remotesensing.org/libtiff.
-2. Use the `configure` script to generate the required build files. C++ support should be enabled. Additionally, disable JPEG support unless you are willing to install JPEG libraries as well. Example:  
-
+2. Use the `configure` script to generate the required build files. C++ support should be enabled. Additionally, disable JPEG support unless you are willing to install JPEG libraries as well. Example:    
     ```
       $ ./configure --prefix=<my_install_path> --disable-zlib --disable-jpeg --enable-cxx
     ```
 3. Compile the source with `make`:  
-
     ```
       $ make
     ```
 4. Install the library at your specified path `<my_install_path>`:  
-
     ```
       $ make install
     ```
