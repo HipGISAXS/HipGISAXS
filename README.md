@@ -1,5 +1,5 @@
 # HipGISAXS: QUICK STARTER GUIDE #
-Bug (what bug..?) reporting: Email: `asarje@lbl.gov`
+Bug (what bug...?) reporting: Email: `asarje@lbl.gov`
 
 ## TABLE OF CONTENTS ##
   1. LICENSING
@@ -25,6 +25,8 @@ Bug (what bug..?) reporting: Email: `asarje@lbl.gov`
       5. On Mira at ALCF
       6. On a generic Linux system
       7. For certain users, on ALS GPU servers
+    2. INSTALLING SOFTWARE DEPENDENCIES
+      1. TIFF Library
 
 
 ## LICENSING ##
@@ -64,28 +66,29 @@ The following are the dependencies of this software:
 
 ### Required Software
 1. **GNU C/C++ compilers**, version >= 4.7, OR **Intel C/C++ compilers**, version >= 15 (with GNU compatibility >= 4.7).  
-   To compile with GPU support enabled, use GNU compilers. 
-2. **Scons**, version >= 2.0.
-   Scons can be obtained from: http://scons.org
+   To compile with GPU support enabled, it is recommended to use GNU compilers. 
+2. **Scons**, version >= 2.0.  
+   Scons can be obtained from: http://scons.org  
    *NOTE: Scons is based on Python, so you need to have Python installed too.*
-3. **Boost C++ Libraries**.
+3. **Boost C++ Libraries**.  
    Boost can be obtained from: http://www.boost.org  
 4. **Tiff Library** (libtiff).  
-   Tiff library can be obtained from: http://www.libtiff.org
+   Tiff library can be obtained from: http://remotesensing.org/libtiff or http://www.libtiff.org  
+   *NOTE: `libtiff` should be built with C++ support enabled. Also, disable `jpeg` support unless you have JPEG libraries installed. Brief instructions on building `libtiff` are given in the appendix.*
 
 ### Optional Software
-1. **Nvidia CUDA toolkit** version >= 5.5.  
+1. **Nvidia CUDA toolkit** version >= 6.0.  
    CUDA can be obtained from: http://developer.nvidia.com/cuda/cuda-downloads  
-   *NOTE: CUDA required to enable GPU support.*
+   *NOTE: CUDA required to enable GPU support.*  
    *NOTE: CUDA is NOT required if compiling for CPU-only version.*
 2. **OpenMPI** compiled with GNU or Intel compilers which ever you are using to compile HipGISAXS. Version > 1.4.4.  
-   OpenMPI can be obtained from: http://www.open-mpi.org/software
-   Alternative implementations of MPI may also be used, such as MPICH and MVAPICH.
-   *NOTE: MPI library is required to enable support for multi-node systems.*
+   OpenMPI can be obtained from: http://www.open-mpi.org/software  
+   Alternative implementations of MPI may also be used, such as MPICH and MVAPICH.  
+   *NOTE: MPI library is required to enable support for multi-node systems.*  
    *NOTE: MPI library is NOT required if compiling for single node/server/desktop/laptop.*
 3. **Parallel HDF5 library**.  
    HDF5 can be obtained from: http://www.hdfgroup.org/downloads  
-   *NOTE: HDF5 library is NOT required if you do not plan to use input files in this format.*
+   *NOTE: HDF5 library is NOT required if you do not plan to use input files in this format.*  
    *NOTE: HDF5 depends on the zlib and szip libraries.*  
    **zlib** can be obtained from: http://www.zlib.net  
    **szip** can be obtained from: http://www.hdfgroup.org/doc\_resource/SZIP  
@@ -137,12 +140,6 @@ The generated static library, `libhipgisaxs.a`, will be located in the `lib` dir
 NOTE: See Appendix at the end of this file for more detailed and customized building information.
 
 
-## TO USE THE HIPGISAXS LIBRARY IN YOUR OWN APPLICATION
-   Please refer to the examples provided in the `samples` directory.
-   It contains simple code which uses the HipGISAXS library.
-   The corresponsing Makefile is also provided as a reference.
-
-
 ## TO RUN HIPGISAXS
 1. Make sure all the paths (data, output) and other variables are correctly set in the input HiG file.
 2. Execute the binary with the input file as an argument. For example,  
@@ -155,7 +152,7 @@ NOTE: See Appendix at the end of this file for more detailed and customized buil
 The HipGISAXS binary takes as input a file in HiG format.
 Please refer to detailed HipGISAXS documentation for details of the HiG format.
 A few sample input files are located in the directory "inputs", with extensions ".hig".
-Update the input file as needed.
+Update the input file as needed. Detailed information on the inputs is available at https://webhipgisaxs.lbl.gov  
 The main components in the input file to update are the following:
 
 1. Shape name defines the input filename containing triangulated shape data.
@@ -182,7 +179,7 @@ The main components in the input file to update are the following:
    ```
    The `pathprefix` is a relative path to a directory.  
    The `runname` is appended with a timestamp, and a directory by this resulting name is created in the directory specified by `pathprefix`.  
-   All generated output files are stored in this generated directory.  
+   All output files are stored in this generated directory.  
 
 3. Resolution alters the final image resolution, and also affects the run time:
    ```
@@ -195,6 +192,12 @@ The main components in the input file to update are the following:
    ```
    Obviously, simulations with lower resolutions finish faster.  
    Modify the provided input file templates as needed.
+
+
+## TO USE THE HIPGISAXS LIBRARY IN YOUR OWN APPLICATION
+   Please refer to the examples provided in the `samples` directory.
+   It contains simple code which uses the HipGISAXS library.
+   The corresponsing Makefile is also provided as a reference.
 
 
 # APPENDIX
@@ -228,7 +231,7 @@ The main components in the input file to update are the following:
       $ CC=cc CXX=CC scons --with-mpi --extrapath=$BOOST_ROOT,$TIFFDIR
     ```
 
-*NOTE: For those users who are member of the 'als' group at NERSC, an installation of `libtiff` is available under `/project/projectdirs/als/software/tiff-4.0.6`.*
+*NOTE: For those users who are member of the 'als' group at NERSC, an installation of `libtiff` is available under `/project/projectdirs/als/local/tiff-4.0.6`.*
 4. On successful build, the binary will be generated in the `bin` directory, called `hipgisaxs`.
 
 #### Cori Phase 1 (Cray XC40, Intel Haswell)
@@ -245,7 +248,7 @@ The main components in the input file to update are the following:
       $ CC=cc CXX=CC scons --with-mpi --extrapath=$BOOST_ROOT,$TIFFDIR
     ```
 
-*NOTE: For those users who are member of the `als` group at NERSC, an installation of `libtiff` is available under `/project/projectdirs/als/software/tiff-4.0.6`.*
+*NOTE: For those users who are member of the `als` group at NERSC, an installation of `libtiff` is available under `/project/projectdirs/als/local/tiff-4.0.6`.*
 4. On successful build, the binary will be generated in the `bin` directory, called `hipgisaxs`.
 
 ### C. OLCF Systems
@@ -266,6 +269,7 @@ The main components in the input file to update are the following:
 4. On successful build, the binary will be generated in the `bin` directory, called `hipgisaxs`.
 
 ### D. For certain users, on Andromeda/Bragg servers
+
 1. All the required softwares are already available on these systems. If you want to use your own installation of any of the required softwares, make sure you use its corresponding paths in the following.
 2. An example build command is given in the `build/build-bragg.sh` or `build/build-andromeda.sh`. If needed, make sure the paths are correctly set.
 3. Once all the required software are available, use the `scons` command to build the binary. Example:
@@ -275,3 +279,24 @@ The main components in the input file to update are the following:
     ```
 
 4. On successful build, the binary will be generated in the `bin` directory, called `hipgisaxs`.
+
+## INSTALLING SOFTWARE DEPENDENCIES
+
+### A. TIFF library
+
+1. The source for the TIFF library can be obtained from http://remotesensing.org/libtiff.
+2. Use the `configure` script to generate the required build files. C++ support should be enabled. Additionally, disable JPEG support unless you are willing to install JPEG libraries as well. Example:  
+
+    ```
+      $ ./configure --prefix=<my_install_path> --disable-zlib --disable-jpeg --enable-cxx
+    ```
+3. Compile the source with `make`:  
+
+    ```
+      $ make
+    ```
+4. Install the library at your specified path `<my_install_path>`:  
+
+    ```
+      $ make install
+    ```
