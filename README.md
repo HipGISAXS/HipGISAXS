@@ -2,34 +2,31 @@
 Bug (what bug...?) reporting: Email: `asarje@lbl.gov`
 
 ## TABLE OF CONTENTS ##
-  1. LICENSING
-  2. SUPPORTED PLATFORMS
+  1. Licensing
+  2. Supported Platforms
     1. Operating System Platforms
     2. System Hardware (Compute Environment)
     3. System Hardware (Processor Architectures)
-  3. SOFTWARE PRE-REQUISITES
-  4. HipGISAXS DIRECTORY LAYOUT
-  5. TO BUILD THE APPLICATION AND LIBRARY
-  6. TO USE THE HIPGISAXS LIBRARY IN YOUR OWN APPLICATION
-  7. TO RUN THE APPLICATION
-    1. Interactively on Dirac (NERSC)
-    2. Submit batch job for multiple GPU nodes on Dirac (NERSC)
-    3. Interactively on a generic Linux machine equipped with GPU
-  8. INPUTS
-  9. APPENDIX
-    1. SPECIAL BUILD INSTRUCTIONS FOR SPECIFIC SYSTEMS
-      1. On Carver/Dirac at NERSC
-      2. On Hopper/Edison at NERSC
-      3. On Titan at OLCF
-      4. On Stampede at TACC
-      5. On Mira at ALCF
-      6. On a generic Linux system
-      7. For certain users, on ALS GPU servers
-    2. INSTALLING SOFTWARE DEPENDENCIES
+  3. Software Pre-requisites
+  4. HipGISAXS Directory Layout
+  5. Building the Binary and Library
+  6. Running the Binary
+  7. Inputs
+  8. Using the Library in an Application
+  9. Appendix
+    1. Special System Specific Build Instructions
+      1. On a generic Linux (x86-64) system
+      2. [NERSC](http://www.nersc.gov) Systems
+        1. Edison (Cray XC30, Intel Ivy Bridge)
+        2. Cori Phase 1 (Cray XC40, Intel Haswell)
+      3. [OLCF](https://www.olcf.ornl.gov) Systems
+        1. Titan (Cray XK7)
+      4. For users on Andromeda/Bragg servers
+    2. Installing Software Dependencies
       1. TIFF Library
 
 
-## LICENSING ##
+## Licensing ##
 The HipGISAXS software is only available to be downloaded and used by employees
 of academic research institutions, not-for-profit research laboratories, or
 governmental research facilities. Please read the accompanying LICENSE file
@@ -38,7 +35,7 @@ to be bound by the terms of this Non-Commercial End User License Agreement.
 This licensing information is also provided as a PDF file along with the documentation.
 
 
-## SUPPORTED PLATFORMS
+## Supported Platforms
 HipGISAXS has been successfully tested on the following platforms.
 
 ### A. Operating System Platforms (Software Environment)
@@ -59,7 +56,7 @@ HipGISAXS has been successfully tested on the following platforms.
 3. Intel MIC architecture: support under development.
 
 
-## SOFTWARE PRE-REQUISITES
+## Software Pre-requisites
 This software uses several third-party libraries, and they need to be installed and available in order to compile and run HipGISAXS.
 For ease, if possible use the installations already available on your system, if any. Alternatively, download and install them yourself.
 The following are the dependencies of this software:
@@ -95,7 +92,7 @@ The following are the dependencies of this software:
    **szip** can be obtained from: [http://www.hdfgroup.org/doc\_resource/SZIP](http://www.hdfgroup.org/doc\_resource/SZIP)  
 
 
-## HipGISAXS DIRECTORY LAYOUT
+## HipGISAXS Directory Layout
 
     HipGISAXS
     |- README.md  : Duh!
@@ -106,17 +103,17 @@ The following are the dependencies of this software:
     |- build      : A few Makefiles for various systems are provided in this.
     |- data       : This provides some sample input shape definition files.
     |- doc        : This will contain detailed documentation of HipGISAXS.
+    |- examples   : This contains some example input files in HiG format.
     |- extras     : This contains some extra stuff such as syntax highlighting config for Vim.
     |- include    : All the source headers are within this directory. It contains subdirectories.
-    |- inputs     : This contains some sample input files in HiG format.
     |- lib        : The HipGISAXS library, libhipgisaxs.a, is generated here.
     |- man        : This has the man pages.
     |- obj        : All the object files generated during build are stored here.
-    |- samples    : This contains some compilable samples on how to use the HipGISAXS library.
+    |- samples    : This contains some samples on how to use the HipGISAXS library.
     |- src        : This is the main source code directory. It contains many subdirectories.
 
 
-## TO BUILD HIPGISAXS BINARY AND LIBRARY
+## Building the Binary and Library
 To build the HipGISAXS application binary and static library, use `scons`. Make sure you are passing paths to all the dependencies through `--extrapath=` option of scons:
 
     $ scons --extrapath=<path1>,<path2>,<etc>
@@ -140,15 +137,15 @@ The generated static library, `libhipgisaxs.a`, will be located in the `lib` dir
 
 NOTE: See Appendix at the end of this file for more detailed and customized building information.
 
-## TO RUN HIPGISAXS
+## Running the Binary
 1. Make sure all the paths (data, output) and other variables are correctly set in the input HiG file.
 2. Execute the binary with the input file as an argument. For example,  
 
    ```
-     $ ./bin/hipgisaxs inputs/01-cylinder.hig
+     $ ./bin/hipgisaxs examples/01-pyramid.hig
    ```
 
-## INPUTS
+## Inputs
 The HipGISAXS binary takes as input a file in HiG format.
 Please refer to detailed HipGISAXS documentation for details of the HiG format. Detailed information on the inputs is available at https://webhipgisaxs.lbl.gov  
 A few sample input files are located in the directory "inputs", with extensions ".hig".
@@ -194,17 +191,17 @@ The main components in the input file to update are the following:
    Modify the provided input file templates as needed.
 
 
-## TO USE THE HIPGISAXS LIBRARY IN YOUR OWN APPLICATION
+## Using the Library in an Application
    Please refer to the examples provided in the `samples` directory.
    It contains simple code which uses the HipGISAXS library.
    The corresponsing Makefile is also provided as a reference.
 
 
-# APPENDIX
+## Appendix
 
-## SPECIAL BUILD INSTRUCTIONS FOR SPECIFIC SYSTEMS
+### Special System Specific Build Instructions
 
-### A. On a generic Linux (x86-64) system
+#### A. On a generic Linux (x86-64) system
 1. Ensure all above prerequisites are available on the system.
 2. Ensure all system environment variables are set accordingly to include the prerequisites.
 3. Once all the required software are available, use the `scons` command to build the binary. Example:  
@@ -214,9 +211,9 @@ The main components in the input file to update are the following:
 
 4. On successful build, the binary will be generated in the `bin` directory, called `hipgisaxs`.
 
-### B. [NERSC](http://www.nersc.gov) Systems
+#### B. [NERSC](http://www.nersc.gov) Systems
 
-#### Edison (Cray XC30, Intel Ivy Bridge)
+##### Edison (Cray XC30, Intel Ivy Bridge)
 1. All required software, except `libtiff` are available as modules on Edison. An example set of modules you can load are given in the `build/modules.edison` file. You could just `source` this file:  
    ```
       $ source build/modules.edison
@@ -231,7 +228,7 @@ The main components in the input file to update are the following:
 *NOTE: For those users who are member of the 'als' group at NERSC, an installation of `libtiff` is available under `/project/projectdirs/als/local/tiff-4.0.6`.*
 4. On successful build, the binary will be generated in the `bin` directory, called `hipgisaxs`.
 
-#### Cori Phase 1 (Cray XC40, Intel Haswell)
+##### Cori Phase 1 (Cray XC40, Intel Haswell)
 1. All required software, except `libtiff` are available as modules on Cori. An example set of modules you can load are given in the `build/modules.cori` file. You could just `source` this file:  
    ```
       $ source build/modules.cori
@@ -247,9 +244,9 @@ The main components in the input file to update are the following:
 *NOTE: For those users who are member of the `als` group at NERSC, an installation of `libtiff` is available under `/project/projectdirs/als/local/tiff-4.0.6`.*
 4. On successful build, the binary will be generated in the `bin` directory, called `hipgisaxs`.
 
-### C. [OLCF](https://www.olcf.ornl.gov) Systems
+#### C. [OLCF](https://www.olcf.ornl.gov) Systems
 
-#### 1. Titan (Cray XK7)
+##### 1. Titan (Cray XK7)
 1. All required software as modules on Titan, except `libtiff` which is already installed systemwide. An example set of modules you can load are given in the `build/modules.titan` file. You could just `source` this file:  
    ```
       $ source build/modules.titan
@@ -262,7 +259,7 @@ The main components in the input file to update are the following:
 
 4. On successful build, the binary will be generated in the `bin` directory, called `hipgisaxs`.
 
-### D. For certain users, on Andromeda/Bragg servers
+#### D. For users on Andromeda/Bragg servers
 
 1. All the required softwares are already available on these systems. If you want to use your own installation of any of the required softwares, make sure you use its corresponding paths in the following.
 2. An example build command is given in the `build/build-bragg.sh` or `build/build-andromeda.sh`. If needed, make sure the paths are correctly set.
@@ -273,9 +270,9 @@ The main components in the input file to update are the following:
 
 4. On successful build, the binary will be generated in the `bin` directory, called `hipgisaxs`.
 
-## INSTALLING SOFTWARE DEPENDENCIES
+### Installing Software Dependencies
 
-### A. TIFF library
+#### A. TIFF library
 
 1. The source for the TIFF library can be obtained from http://remotesensing.org/libtiff.
 2. Use the `configure` script to generate the required build files. C++ support should be enabled. Additionally, disable JPEG support unless you are willing to install JPEG libraries as well. Example:    
