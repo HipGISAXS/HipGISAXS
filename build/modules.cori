@@ -1,9 +1,5 @@
-## gcc 4.9 not compatible with intel compilers
-## cray-petsc 3.4.4 gives errors
-
 module load python scons
 module load gcc/4.9.3
 module load boost
-#module load szip
-module load cray-petsc
+#module load cray-petsc
 #module load papi

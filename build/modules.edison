@@ -1,7 +1,5 @@
 module load python scons
-module load gcc
+module load gcc/4.9.3
 module load boost
-#module load szip
-module load cray-petsc
-module load papi
-module load mkl
+#module load cray-petsc
+#module load papi
