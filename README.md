@@ -148,8 +148,8 @@ NOTE: See Appendix at the end of this file for more detailed and customized buil
 ## Inputs
 The HipGISAXS binary takes as input a file in HiG format.
 Please refer to detailed HipGISAXS documentation for details of the HiG format. Detailed information on the inputs is available at https://webhipgisaxs.lbl.gov  
-A few sample input files are located in the directory "inputs", with extensions ".hig".
-Update the input file as needed.   
+A few sample input files are located in the directory `examples`, with extensions `.hig`.
+Update the input files as needed.   
 The main components in the input file to update are the following:
 
 1. Shape name defines the input filename containing triangulated shape data.
