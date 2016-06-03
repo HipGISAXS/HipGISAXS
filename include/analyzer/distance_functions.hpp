@@ -224,12 +224,14 @@ class UnitLengthNormalizedDifferenceSquareNorm : public DistanceMeasure {
       hig::real_t dat_norm = norm_l2(dat, mask, size);
       double dist_sum = 0.0;
       for(unsigned int i = 0; i < size; ++ i) {
-        hig::real_t temp = (dat[i] / dat_norm) - (ref[i] / ref_norm);
-        temp *= temp;
-        dist_sum += mask[i] * temp * temp;
+        hig::real_t n_data = dat[i] / dat_norm,
+                    n_ref = ref[i] / ref_norm;
+        hig::real_t temp = mask[i] * (n_data - n_ref);
+        dist_sum += temp * temp;
       } // for
       dist.clear();
-      dist.push_back((hig::real_t) dist_sum / (ref_norm * ref_norm));
+      //dist.push_back((hig::real_t) dist_sum / (ref_norm * ref_norm));
+      dist.push_back((hig::real_t) dist_sum);
       return true;
     } // operator()
 }; // class UnitLengthNormalizedDifferenceSquareNorm

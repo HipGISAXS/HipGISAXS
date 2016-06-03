@@ -65,6 +65,7 @@ namespace hig {
       ierr = TaoGetTolerances(tao, &fatol, &frtol, &gatol, &grtol, &gttol); CHKERRQ(ierr);
     #endif
     ierr = TaoGetMaximumIterations(tao, &maxiter); CHKERRQ(ierr);
+    std::cout << "++++++++++++++++++++++ iteration " << iter << " / " << maxiter << " +++++++++++++++++++++++++++++++++" << std::endl;
     if(gnorm <= gatol) {
       #ifdef PETSC_37
         TaoSetConvergedReason(tao, TAO_CONVERGED_ATOL);

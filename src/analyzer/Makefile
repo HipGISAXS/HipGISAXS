@@ -20,14 +20,16 @@ intel:
 
 bragg-gnu:
 	( $(MAKE) hipgisaxs install                               \
+		"HIPGISAXS_DIR = ../.."                                 \
+		"PETSC_DIR = /usr/local/petsc"                          \
+		"PETSC_VERSION = \"3.6\""                               \
+		"CUDA_DIR = /usr/local/cuda"                            \
 		"CXX = mpicxx"                                          \
 		"CXX_FLAGS = -std=c++11 -fopenmp -DUSE_MPI"             \
 		"CXX_FLAGS += -O3"                                      \
 		"OPT_FLAGS = -O3"                                       \
 		"DBG_FLAGS = -g"                                        \
 		"MPI_LIBS = -lmpi -lmpi_cxx"                            \
-		"PETSC_INCL = -I $(PETSC_DIR)/include"                  \
-		"PETSC_LDFLAGS = -L $(PETSC_DIR)/lib"                   \
 		"PETSC_LIBS = -lpetsc"                                  \
 		"HDF5_LIBS = -lhdf5 -lz"                                \
 		)
