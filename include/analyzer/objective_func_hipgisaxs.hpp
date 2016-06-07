@@ -22,7 +22,7 @@ namespace hig {
       unsigned int n_par_;    // nqy
       unsigned int n_ver_;    // nqz
 
-      double reg_alpha_;      // alpha for regularization
+      real_t reg_alpha_;      // alpha for regularization
 
     public:
       HipGISAXSObjectiveFunction(int, char**, DistanceMeasure*);
@@ -32,6 +32,7 @@ namespace hig {
       bool set_distance_measure(DistanceMeasure*);
       bool set_reference_data(int);
       bool set_reference_data(char*) { }
+      bool set_regularization(real_t r) { reg_alpha_ = r; }
       bool read_mask_data(string_t);
       bool read_edf_mask_data(string_t);
 

@@ -53,6 +53,7 @@ namespace hig {
       virtual bool set_distance_measure(DistanceMeasure*) = 0;
       virtual bool set_reference_data(int) = 0;
       virtual bool set_reference_data(char*) = 0;
+      virtual bool set_regularization(real_t) = 0;
       virtual unsigned int data_size() const = 0;
       real_t* get_reference_data() { return ref_data_->data(); }
       unsigned int* get_mask_data() { return &(mask_data_[0]); }

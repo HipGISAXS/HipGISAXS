@@ -38,7 +38,6 @@ namespace hig {
     pdist_ = d;
     //curr_dist_.clear();
 
-    //reg_alpha_ = 0;     // starting with some big value
     reg_alpha_ = 2;     // starting with some big value
                           // TODO: make this configurable from the input
 
@@ -65,7 +64,6 @@ namespace hig {
     mask_set_ = false;
     pdist_ = NULL;
 
-    //reg_alpha_ = 0;     // starting with some big value
     reg_alpha_ = 2;     // starting with some big value
                           // TODO: make this configurable from the input
 
@@ -254,22 +252,26 @@ namespace hig {
       unsigned int* mask_data = &(mask_data_[0]);
       (*pdist_)(ref_data, gisaxs_data, mask_data, n_par_ * n_ver_, curr_dist);
 
-      // add regularization term
+      /** regularization **/
       // compute regularization = (alpha / 2) * || x - x_mean || ^ 2
       double pmean = 0.0;
       for(std::map<std::string, real_t>::const_iterator i = param_vals.begin();
           i != param_vals.end(); ++ i) {
         double x_mean = HiGInput::instance().param_space_mean((*i).first);
         double ptemp = ((*i).second - x_mean);
+        std::cout << (*i).second << ", " << x_mean << "\t";
         ptemp *= ptemp;
         pmean += ptemp;
       } // for
+      std::cout << std::endl;
       // for better alpha selection, plot pmean vs. curr_dist
-      reg_alpha_ /= 5;    // calculate new alpha
+      //reg_alpha_ /= 5;    // calculate new alpha
+      //reg_alpha_ /= 1.5;    // calculate new alpha
       double reg = (reg_alpha_ / 2) * pmean;
+      std::cout << "################ regalpha: " << reg_alpha_ << " pmean: " << pmean << " reg: " << reg << std::endl;
       for(auto i = 0; i < curr_dist.size(); ++ i) {
         if((boost::math::isfinite)(curr_dist[i])) curr_dist[i] += reg;
-        else curr_dist[i] = 0.0;
+        else curr_dist[i] = 1e6;    // some large number
       } // for
 
       // write to output file

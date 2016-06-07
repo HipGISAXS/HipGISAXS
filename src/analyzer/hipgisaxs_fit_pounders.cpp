@@ -151,10 +151,13 @@ namespace hig {
     VecCreateSeq(PETSC_COMM_SELF, num_params_, &x0);
     VecCreateSeq(PETSC_COMM_SELF, num_params_, &xmin);
     VecCreateSeq(PETSC_COMM_SELF, num_params_, &xmax);
+    VecSetFromOptions(x0);
+    VecSetFromOptions(xmin);
+    VecSetFromOptions(xmax);
     for(PetscInt i = 0; i < num_params_; ++ i) {
       y = (double) x0_[i];
       VecSetValues(x0, 1, &i, &y, INSERT_VALUES);
-      std::cout << "** " << y << " [ ";
+      std::cout << "** " << y << "\t\t[ ";
       y = (double) plimits[i].first;
       VecSetValues(xmin, 1, &i, &y, INSERT_VALUES);
       std::cout << y << " ";
@@ -164,112 +167,125 @@ namespace hig {
       std::cout << y << " ] " << std::endl;
     } // for
 
-    PetscReal tr_rad = 10;
-    Vec f;
-    PetscReal zero = 0.0;
-    PetscReal hist[max_hist_], resid[max_hist_];
-    //PetscInt icount[max_hist_];   // number of linear iterations for each tao iteration
-    PetscInt nhist = max_hist_;
+    real_t reg_init = HiGInput::instance().analysis_regularization(algo_num);
+    real_t reg_factor = reg_init;
 
-    Tao tao;
-    TaoConvergedReason reason;
-    // TaoSolver tao;
-    // TaoSolverTerminationReason reason;
+    for(int reg_iter = 0; reg_iter < 20; ++ reg_iter) {
 
-    // allocate vectors
-    ierr = VecCreateSeq(PETSC_COMM_SELF, num_obs_, &f);
+      std::cout << "** Regularization factor: " << reg_factor << std::endl;
 
-    // create TAO solver with pounders
-    ierr = TaoCreate(PETSC_COMM_SELF, &tao);
-    ierr = TaoSetType(tao, TAOPOUNDERS); CHKERRQ(ierr);
+      Vec f;
+      PetscReal hist[max_hist_], resid[max_hist_];
+      PetscInt nhist = max_hist_;
 
-    // check for command line options
-    ierr = TaoSetFromOptions(tao);
+      Tao tao;
+      TaoConvergedReason reason;
 
-    // set objective function
-    ierr = TaoSetSeparableObjectiveRoutine(tao, f, EvaluateFunction, (void*) obj_func_);
-    // set jacobian function
-    // ierr = TaoSetJacobianRoutine(tao, J, J, EvaluateJacobian, (void*) &user); CHKERRQ(ierr);
+      // allocate vectors
+      ierr = VecCreateSeq(PETSC_COMM_SELF, num_obs_, &f);
+      VecSetFromOptions(f);
 
-    // set the convergence test function
-    ierr = TaoSetConvergenceTest(tao, &convergence_test, NULL);
+      // create TAO solver with pounders
+      ierr = TaoCreate(PETSC_COMM_SELF, &tao);
+      ierr = TaoSetType(tao, TAOPOUNDERS); CHKERRQ(ierr);
 
-    TaoSetMaximumIterations(tao, max_iter_);
-    #ifdef PETSC_37
-      ierr = TaoSetConvergenceHistory(tao, hist, resid, NULL, NULL, max_hist_, PETSC_TRUE); CHKERRQ(ierr);
-    #elif defined PETSC_36
-      ierr = TaoSetHistory(tao, hist, resid, NULL, NULL, max_hist_, PETSC_TRUE); CHKERRQ(ierr);
-    #else
-      ierr = TaoSetHistory(tao, hist, resid, NULL, max_hist_, PETSC_TRUE); CHKERRQ(ierr);
-    #endif // PETSC_36
+      // check for command line options
+      ierr = TaoSetFromOptions(tao);
 
-    std::cout << "++ [pounders] Setting tolerances = " << tol_ << std::endl;
-    #ifdef PETSC_37
-      ierr = TaoSetTolerances(tao, tol_, tol_, tol_); CHKERRQ(ierr);
-      //ierr = TaoSetTolerances(tao, tol_, 0.0, 0.0); CHKERRQ(ierr);
-    #else
-      ierr = TaoSetTolerances(tao, tol_, tol_, tol_, tol_, tol_); CHKERRQ(ierr);
-      //ierr = TaoSetTolerances(tao, 0.0, 0.0, tol_, 0.0, 0.0); CHKERRQ(ierr);
-    #endif
+      // set objective function
+      (*obj_func_).set_regularization(reg_factor);
+      ierr = TaoSetSeparableObjectiveRoutine(tao, f, EvaluateFunction, (void*) obj_func_);
+      // set jacobian function
+      // ierr = TaoSetJacobianRoutine(tao, J, J, EvaluateJacobian, (void*) &user); CHKERRQ(ierr);
 
-    ierr = TaoSetVariableBounds(tao, xmin, xmax); CHKERRQ(ierr);
+      // set the convergence test function
+      ierr = TaoSetConvergenceTest(tao, &convergence_test, NULL);
 
-    // set the initial parameter vector (initial guess)
-    ierr = TaoSetInitialVector(tao, x0); CHKERRQ(ierr);
+      TaoSetMaximumIterations(tao, max_iter_);
+      #ifdef PETSC_37
+        ierr = TaoSetConvergenceHistory(tao, hist, resid, NULL, NULL, max_hist_, PETSC_TRUE); CHKERRQ(ierr);
+      #elif defined PETSC_36
+        ierr = TaoSetHistory(tao, hist, resid, NULL, NULL, max_hist_, PETSC_TRUE); CHKERRQ(ierr);
+      #else
+        ierr = TaoSetHistory(tao, hist, resid, NULL, max_hist_, PETSC_TRUE); CHKERRQ(ierr);
+      #endif // PETSC_36
 
-    // perform the solve
-    ierr = TaoSolve(tao); CHKERRQ(ierr);
+      std::cout << "++ [pounders] Setting tolerances = " << tol_ << std::endl;
+      #ifdef PETSC_37
+        ierr = TaoSetTolerances(tao, tol_, tol_, tol_); CHKERRQ(ierr);
+      #else
+        ierr = TaoSetTolerances(tao, tol_, tol_, tol_, tol_, tol_); CHKERRQ(ierr);
+      #endif
 
-    // temporary, to check the details
-    TaoView(tao, PETSC_VIEWER_STDOUT_SELF);
+      ierr = TaoSetVariableBounds(tao, xmin, xmax); CHKERRQ(ierr);
 
-    // ierr = TaoGetTerminationReason(tao, &reason);
-    ierr = TaoGetConvergedReason(tao, &reason);
-    std::cout << "** [pounders] converged reason: " << reason << std::endl;
+      ierr = TaoSetInitialVector(tao, x0); CHKERRQ(ierr);
 
-    #ifdef PETSC_37
-      ierr = TaoGetConvergenceHistory(tao, &hist, &resid, NULL, NULL, &nhist);
-      //ierr = TaoGetConvergenceHistory(tao, NULL, NULL, NULL, NULL, &nhist);
-    #elif defined PETSC_36
-      //ierr = TaoGetConvergenceHistory(tao, &hist, &resid, NULL, NULL, &nhist); CHKERRQ(ierr);
-      ierr = TaoGetConvergenceHistory(tao, NULL, NULL, NULL, NULL, &nhist); CHKERRQ(ierr);
-    #else
-      TaoGetHistory(tao, 0, 0, 0, &nhist);
-    #endif
+      // perform the solve
+      ierr = TaoSolve(tao); CHKERRQ(ierr);
 
-    PetscPrintf(PETSC_COMM_WORLD, "** [pounders] history: [ iter\tobj_val\tresidual ]\n");
-    for(int i = 0; i < nhist; ++ i)
-      PetscPrintf(PETSC_COMM_WORLD, ">> \t%d\t%g\t%g\n", i, hist[i], resid[i]);
+      // temporary, to check the details
+      TaoView(tao, PETSC_VIEWER_STDOUT_SELF);
 
-    PetscInt iterate; // current iterate number
-    PetscReal f_cv,   // current function value
-              gnorm,  // square of gradient norm (distance)
-              cnorm,  // infeasibility of current solution w.r.t. constraints
-              xdiff;  // current trust region step length
-    ierr = TaoGetSolutionStatus(tao, &iterate, &f_cv, &gnorm, &cnorm, &xdiff, &reason);
-    std::cout << "** [pounders] converged reason    : " << reason   << std::endl
-              << "** [pounders] iterate number      : " << iterate  << std::endl
-              << "** [pounders] function value      : " << f_cv     << std::endl
-              << "** [pounders] distance            : " << gnorm    << std::endl
-              << "** [pounders] infeasibility       : " << cnorm    << std::endl
-              << "** [pounders] trust region length : " << xdiff    << std::endl;
+      // ierr = TaoGetTerminationReason(tao, &reason);
+      ierr = TaoGetConvergedReason(tao, &reason);
+      std::cout << "** [pounders] converged reason: " << reason << std::endl;
 
-    // obtain the parameter solution vector
-    TaoGetSolutionVector(tao, &x0); xn_.clear();
-    for(PetscInt j = 0; j < num_params_; ++ j) {
-      VecGetValues(x0, 1, &j, &y);
-      xn_.push_back(y);
-    } // for
+      #ifdef PETSC_37
+        ierr = TaoGetConvergenceHistory(tao, &hist, &resid, NULL, NULL, &nhist);
+        //ierr = TaoGetConvergenceHistory(tao, NULL, NULL, NULL, NULL, &nhist);
+      #elif defined PETSC_36
+        //ierr = TaoGetConvergenceHistory(tao, &hist, &resid, NULL, NULL, &nhist); CHKERRQ(ierr);
+        ierr = TaoGetConvergenceHistory(tao, NULL, NULL, NULL, NULL, &nhist); CHKERRQ(ierr);
+      #else
+        TaoGetHistory(tao, 0, 0, 0, &nhist);
+      #endif
 
-    std::cout << "** [pounders] final parameter vector: [ ";
-    for(real_vec_t::iterator i = xn_.begin(); i != xn_.end(); ++ i) std::cout << *i << " ";
-    std::cout << "]" << std::endl;
+      PetscPrintf(PETSC_COMM_WORLD, "** [pounders] history: [ iter\tobj_val\tresidual ]\n");
+      for(int i = 0; i < nhist; ++ i)
+        PetscPrintf(PETSC_COMM_WORLD, ">> \t%d\t%g\t%g\n", i, hist[i], resid[i]);
 
-    ierr = TaoDestroy(&tao);
+      PetscInt iterate; // current iterate number
+      PetscReal f_cv,   // current function value
+                gnorm,  // square of gradient norm (distance)
+                cnorm,  // infeasibility of current solution w.r.t. constraints
+                xdiff;  // current trust region step length
+      ierr = TaoGetSolutionStatus(tao, &iterate, &f_cv, &gnorm, &cnorm, &xdiff, &reason);
+      std::cout << "** [pounders] converged reason    : " << reason   << std::endl
+                << "** [pounders] iterate number      : " << iterate  << std::endl
+                << "** [pounders] function value      : " << f_cv     << std::endl
+                << "** [pounders] distance            : " << gnorm    << std::endl
+                << "** [pounders] infeasibility       : " << cnorm    << std::endl
+                << "** [pounders] trust region length : " << xdiff    << std::endl;
+
+      // obtain the parameter solution vector
+      TaoGetSolutionVector(tao, &x0); xn_.clear();
+      for(PetscInt j = 0; j < num_params_; ++ j) {
+        VecGetValues(x0, 1, &j, &y);
+        xn_.push_back(y);
+      } // for
+
+      std::cout << "** [pounders] final parameter vector: [ ";
+      for(real_vec_t::iterator i = xn_.begin(); i != xn_.end(); ++ i) std::cout << *i << " ";
+      std::cout << "]" << std::endl;
+
+      ierr = TaoDestroy(&tao);
+      ierr = VecDestroy(&f);
+
+      reg_factor /= 5;    // decrease the regularization factor for next set of iterations
+      if(reg_factor <= TINY_) break;
+
+      // set the initial parameter vector equal to the current solution for next set of iterations
+      for(PetscInt i = 0; i < num_params_; ++ i) {
+        y = (double) xn_[i];
+        VecSetValues(x0, 1, &i, &y, INSERT_VALUES);
+      } // for
+
+    } // for reg_iter
+
     ierr = VecDestroy(&x0);
     ierr = VecDestroy(&xmin);
     ierr = VecDestroy(&xmax);
-    ierr = VecDestroy(&f);
 
     //TaoFinalize();
     PetscFinalize();

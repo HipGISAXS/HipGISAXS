@@ -216,7 +216,8 @@ namespace hig {
     fit_algorithm_param_token,
     fit_algorithm_param_value_token,
     fit_algorithm_restart_token,
-    fit_algorithm_tolerance_token
+    fit_algorithm_tolerance_token,
+    fit_algorithm_regularization_token
   }; // enum TokenType
 
 
