@@ -22,6 +22,8 @@
 
 namespace hig {
 
+  const int MAX_ITER_REG_ = 10;
+
   /* pounders: Finds the nonlinear least-squares solution to the model
    *           y = exp[-b1 * x] / (b2 + b3 * x) + e
    */
@@ -151,28 +153,27 @@ namespace hig {
     VecCreateSeq(PETSC_COMM_SELF, num_params_, &x0);
     VecCreateSeq(PETSC_COMM_SELF, num_params_, &xmin);
     VecCreateSeq(PETSC_COMM_SELF, num_params_, &xmax);
-    VecSetFromOptions(x0);
-    VecSetFromOptions(xmin);
-    VecSetFromOptions(xmax);
     for(PetscInt i = 0; i < num_params_; ++ i) {
       y = (double) x0_[i];
       VecSetValues(x0, 1, &i, &y, INSERT_VALUES);
-      std::cout << "** " << y << "\t\t[ ";
+      std::cout << "** " << y << "\t[ ";
       y = (double) plimits[i].first;
       VecSetValues(xmin, 1, &i, &y, INSERT_VALUES);
-      std::cout << y << " ";
+      std::cout << y << "\t";
       y = (double) plimits[i].second;
       if(isdelta) y += pdelta;
       VecSetValues(xmax, 1, &i, &y, INSERT_VALUES);
-      std::cout << y << " ] " << std::endl;
+      std::cout << y << "\t]" << std::endl;
     } // for
 
     real_t reg_init = HiGInput::instance().analysis_regularization(algo_num);
     real_t reg_factor = reg_init;
 
-    for(int reg_iter = 0; reg_iter < 20; ++ reg_iter) {
+    for(int reg_iter = 0; reg_iter < MAX_ITER_REG_; ++ reg_iter) {
 
-      std::cout << "** Regularization factor: " << reg_factor << std::endl;
+      std::cout << "++ Regularization optimization iteration " << reg_iter + 1 << std::endl;
+
+      (*obj_func_).set_regularization(reg_factor);
 
       Vec f;
       PetscReal hist[max_hist_], resid[max_hist_];
@@ -183,7 +184,6 @@ namespace hig {
 
       // allocate vectors
       ierr = VecCreateSeq(PETSC_COMM_SELF, num_obs_, &f);
-      VecSetFromOptions(f);
 
       // create TAO solver with pounders
       ierr = TaoCreate(PETSC_COMM_SELF, &tao);
@@ -193,7 +193,6 @@ namespace hig {
       ierr = TaoSetFromOptions(tao);
 
       // set objective function
-      (*obj_func_).set_regularization(reg_factor);
       ierr = TaoSetSeparableObjectiveRoutine(tao, f, EvaluateFunction, (void*) obj_func_);
       // set jacobian function
       // ierr = TaoSetJacobianRoutine(tao, J, J, EvaluateJacobian, (void*) &user); CHKERRQ(ierr);
@@ -213,12 +212,15 @@ namespace hig {
       std::cout << "++ [pounders] Setting tolerances = " << tol_ << std::endl;
       #ifdef PETSC_37
         ierr = TaoSetTolerances(tao, tol_, tol_, tol_); CHKERRQ(ierr);
+        //ierr = TaoSetTolerances(tao, tol_, 0.0, 0.0); CHKERRQ(ierr);
       #else
         ierr = TaoSetTolerances(tao, tol_, tol_, tol_, tol_, tol_); CHKERRQ(ierr);
+        //ierr = TaoSetTolerances(tao, 0.0, 0.0, tol_, 0.0, 0.0); CHKERRQ(ierr);
       #endif
 
       ierr = TaoSetVariableBounds(tao, xmin, xmax); CHKERRQ(ierr);
 
+      // set the initial parameter vector (initial guess)
       ierr = TaoSetInitialVector(tao, x0); CHKERRQ(ierr);
 
       // perform the solve
@@ -272,14 +274,8 @@ namespace hig {
       ierr = TaoDestroy(&tao);
       ierr = VecDestroy(&f);
 
-      reg_factor /= 5;    // decrease the regularization factor for next set of iterations
+      reg_factor /= 5.0;
       if(reg_factor <= TINY_) break;
-
-      // set the initial parameter vector equal to the current solution for next set of iterations
-      for(PetscInt i = 0; i < num_params_; ++ i) {
-        y = (double) xn_[i];
-        VecSetValues(x0, 1, &i, &y, INSERT_VALUES);
-      } // for
 
     } // for reg_iter
 
