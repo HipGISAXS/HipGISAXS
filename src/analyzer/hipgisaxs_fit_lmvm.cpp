@@ -44,7 +44,6 @@ namespace hig {
     int size, rank;
     PetscErrorCode ierr;
     PetscInitialize(&argc, &argv, (char*) 0, help);
-    //TaoInitialize(&argc, &argv, (char*) 0, help);
 
     std::vector<std::pair<hig::real_t, hig::real_t> > plimits = HiGInput::instance().fit_param_limits();
 
@@ -65,10 +64,17 @@ namespace hig {
       std::cout << y << " ] " << std::endl;
     } // for
 
-    PetscReal zero = 0.0;
+    real_t reg_init = HiGInput::instance().analysis_regularization(algo_num);
+    real_t reg_factor = reg_init;
+
+    for(int reg_iter = 0; reg_iter < MAX_ITER_REG_; ++ reg_iter) {
+
+    std::cout << "++ Regularization optimization iteration " << reg_iter + 1 << std::endl;
+    (*obj_func_).set_regularization(reg_factor);
+
+    Vec f;            // gradient vector
     PetscReal hist[max_hist_], resid[max_hist_];
     PetscInt nhist = max_hist_;
-    Vec f;            // gradient vector
 
     Tao tao;    // TaoSolver solver context
     TaoConvergedReason reason;
@@ -105,6 +111,8 @@ namespace hig {
 
     ierr = TaoSolve(tao); CHKERRQ(ierr);
 
+    TaoView(tao, PETSC_VIEWER_STDOUT_SELF);
+
     ierr = TaoGetConvergedReason(tao, &reason);
     std::cout << "** [lmvm] converged reason: " << reason << std::endl;
 
@@ -131,8 +139,7 @@ namespace hig {
               << "** [lmvm] infeasibility       : " << cnorm    << std::endl
               << "** [lmvm] trust region length : " << xdiff    << std::endl;
 
-    TaoGetSolutionVector(tao, &x0);
-    xn_.clear();
+    TaoGetSolutionVector(tao, &x0); xn_.clear();
     for(PetscInt j = 0; j < num_params_; ++ j) {
       VecGetValues(x0, 1, &j, &y);
       xn_.push_back(y);
@@ -143,10 +150,16 @@ namespace hig {
     std::cout << "]" << std::endl;
 
     ierr = TaoDestroy(&tao);
+    ierr = VecDestroy(&f);
+
+    reg_factor /= 5.0;
+    if(reg_factor <= TINY_) break;
+
+    } // for reg_iter
+
     ierr = VecDestroy(&x0);
     ierr = VecDestroy(&xmin);
     ierr = VecDestroy(&xmax);
-    ierr = VecDestroy(&f);
 
     PetscFinalize();
 

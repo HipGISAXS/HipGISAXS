@@ -22,8 +22,6 @@
 
 namespace hig {
 
-  const int MAX_ITER_REG_ = 10;
-
   /* pounders: Finds the nonlinear least-squares solution to the model
    *           y = exp[-b1 * x] / (b2 + b3 * x) + e
    */
@@ -140,9 +138,6 @@ namespace hig {
     PetscErrorCode ierr;
     PetscInitialize(&newnarg, &newargs, (char*) 0, help);
 
-    // <= version 3.4
-    // TaoInitialize(&newnarg, &newargs, (char*) 0, help);
-
     // need to free the newargs memory ... TODO ...
 
     std::vector<std::pair<hig::real_t, hig::real_t> > plimits = HiGInput::instance().fit_param_limits();
@@ -212,10 +207,8 @@ namespace hig {
       std::cout << "++ [pounders] Setting tolerances = " << tol_ << std::endl;
       #ifdef PETSC_37
         ierr = TaoSetTolerances(tao, tol_, tol_, tol_); CHKERRQ(ierr);
-        //ierr = TaoSetTolerances(tao, tol_, 0.0, 0.0); CHKERRQ(ierr);
       #else
         ierr = TaoSetTolerances(tao, tol_, tol_, tol_, tol_, tol_); CHKERRQ(ierr);
-        //ierr = TaoSetTolerances(tao, 0.0, 0.0, tol_, 0.0, 0.0); CHKERRQ(ierr);
       #endif
 
       ierr = TaoSetVariableBounds(tao, xmin, xmax); CHKERRQ(ierr);
@@ -229,15 +222,10 @@ namespace hig {
       // temporary, to check the details
       TaoView(tao, PETSC_VIEWER_STDOUT_SELF);
 
-      // ierr = TaoGetTerminationReason(tao, &reason);
       ierr = TaoGetConvergedReason(tao, &reason);
       std::cout << "** [pounders] converged reason: " << reason << std::endl;
 
-      #ifdef PETSC_37
-        ierr = TaoGetConvergenceHistory(tao, &hist, &resid, NULL, NULL, &nhist);
-        //ierr = TaoGetConvergenceHistory(tao, NULL, NULL, NULL, NULL, &nhist);
-      #elif defined PETSC_36
-        //ierr = TaoGetConvergenceHistory(tao, &hist, &resid, NULL, NULL, &nhist); CHKERRQ(ierr);
+      #if defined PETSC_36 || defined PETSC_37
         ierr = TaoGetConvergenceHistory(tao, NULL, NULL, NULL, NULL, &nhist); CHKERRQ(ierr);
       #else
         TaoGetHistory(tao, 0, 0, 0, &nhist);
@@ -283,7 +271,6 @@ namespace hig {
     ierr = VecDestroy(&xmin);
     ierr = VecDestroy(&xmax);
 
-    //TaoFinalize();
     PetscFinalize();
 
     return true;
