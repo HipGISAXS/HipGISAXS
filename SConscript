@@ -497,12 +497,12 @@ nix_lib_prefix = "lib"
 if processor == "x86_64":
     linux64 = True
     nix_lib_prefix = "lib64"
-    env.Append(LIBPATH = ["/usr/lib64",
-                            "/usr/lib",
-                            "/lib64",
-                            "/lib",
-                            "/usr/local/lib64",
-                            "/usr/local/lib"])
+#    env.Append(LIBPATH = ["/usr/lib64",
+#                            "/usr/lib",
+#                            "/lib64",
+#                            "/lib",
+#                            "/usr/local/lib64",
+#                            "/usr/local/lib"])
     #env.Append(CPPPATH = [ '/usr/include/x86_64-linux-gnu/c++/4.8' ])
 env['NIX_LIB_DIR'] = nix_lib_prefix
 
