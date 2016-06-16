@@ -503,7 +503,7 @@ if processor == "x86_64":
                             "/lib",
                             "/usr/local/lib64",
                             "/usr/local/lib"])
-    env.Append(CPPPATH = [ '/usr/include/x86_64-linux-gnu/c++/4.8' ])
+    #env.Append(CPPPATH = [ '/usr/include/x86_64-linux-gnu/c++/4.8' ])
 env['NIX_LIB_DIR'] = nix_lib_prefix
 
 #add_ld_library_path(env, os.environ['LD_LIBRARY_PATH'])
