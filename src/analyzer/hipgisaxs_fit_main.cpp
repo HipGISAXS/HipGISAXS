@@ -86,6 +86,7 @@ int main(int narg, char** args) {
       //hip_func.set_distance_measure(new AbsoluteDifferenceSquare());
       //hip_func.set_distance_measure(new RelativeAbsoluteDifferenceSquare());
       hip_func.set_distance_measure(new UnitLengthNormalizedDifferenceSquareNorm());
+      //hip_func.set_distance_measure(new UnitLengthNormalizedDifferenceL1Norm());
       ana.add_analysis_algo(new hig::FitLMVMAlgo(narg, args, &hip_func, i));
     } else if(algo == hig::algo_pso) {
       //hip_func.set_distance_measure(new AbsoluteDifferenceSquareNorm());
