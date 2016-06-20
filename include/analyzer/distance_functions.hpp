@@ -44,6 +44,13 @@ class DistanceMeasure {
       return sqrt(sum);
     } // norm_l2()
 
+    // element-wise product
+    hig::real_t vec_dot(hig::real_t*& a, hig::real_t*& b, unsigned int*& mask, unsigned int size) const {
+      hig::real_t sum = 0.0;
+      for(unsigned int i = 0; i < size; ++ i) sum += mask[i] * a[i] * b[i];
+      return sum;
+    } // vec_dot()
+
 }; // class DistanceMeasure
 
 
@@ -244,6 +251,33 @@ class UnitLengthNormalizedDifferenceSquareNorm : public DistanceMeasure {
       return true;
     } // operator()
 }; // class UnitLengthNormalizedDifferenceSquareNorm
+
+
+// normalized with computed constant (jeff's), with L2-norm
+class ConstNormalizedDifferenceL2NormSquare : public DistanceMeasure {
+  public:
+    ConstNormalizedDifferenceL2NormSquare() { }
+    ~ConstNormalizedDifferenceL2NormSquare() { }
+
+    bool operator()(hig::real_t*& ref, hig::real_t*& dat,
+                    unsigned int*& mask, unsigned int size,
+                    std::vector<hig::real_t>& dist) const {
+      if(ref == NULL || dat == NULL) return false;
+      hig::real_t ref_norm = norm_l2(ref, mask, size); ref_norm *= ref_norm;
+      hig::real_t dot_prod = vec_dot(dat, ref, mask, size);
+      hig::real_t c = dot_prod / ref_norm;
+      double dist_sum = 0.0;
+      for(unsigned int i = 0; i < size; ++ i) {
+        hig::real_t n_dat = c * dat[i],
+                    n_ref = ref[i];
+        hig::real_t temp = mask[i] * fabs(n_ref - n_dat);
+        dist_sum += temp * temp;
+      } // for
+      dist.clear();
+      dist.push_back((hig::real_t) dist_sum);
+      return true;
+    } // operator()
+}; // class ConstNormalizedDifferenceL2NormSquare
 
 
 // uses unit-length normalization/scaling -- used in pounders

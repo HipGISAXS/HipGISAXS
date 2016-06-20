@@ -230,6 +230,7 @@ namespace hig {
     // update and compute gisaxs
     hipgisaxs_.update_params(param_vals);
     hipgisaxs_.compute_gisaxs(gisaxs_data);
+
     // only the master process does the following
     if(hipgisaxs_.is_master()) {
       if(gisaxs_data == NULL) {
@@ -250,6 +251,8 @@ namespace hig {
       real_t* ref_data = (*ref_data_).data();
       if(ref_data == NULL) std::cerr << "error: ref_data is NULL" << std::endl;
       unsigned int* mask_data = &(mask_data_[0]);
+
+      // distance function
       (*pdist_)(ref_data, gisaxs_data, mask_data, n_par_ * n_ver_, curr_dist);
 
       /** regularization **/
@@ -266,8 +269,9 @@ namespace hig {
       real_t reg = (reg_alpha_ / 2) * pmean;
       std::cout << "## reg_const: " << reg_alpha_ << ", param_norm: " << pmean
                 << ", reg_value: " << reg << ", dist[0]: " << curr_dist[0] << std::endl;
+      real_t reg_dist = reg / curr_dist.size();   // distribute it across the distance vector
       for(auto i = 0; i < curr_dist.size(); ++ i) {
-        if((boost::math::isfinite)(curr_dist[i])) curr_dist[i] += reg;
+        if((boost::math::isfinite)(curr_dist[i])) curr_dist[i] += reg_dist;
         else curr_dist[i] = 1e6;    // some large number
       } // for
 
