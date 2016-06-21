@@ -38,14 +38,14 @@ class DistanceMeasure {
     } // norm_l1()
 
     // L2 norm
-    hig::real_t norm_l2(hig::real_t*& arr, unsigned int*& mask, unsigned int size) const {
+    hig::real_t norm_l2(hig::real_t* arr, unsigned int*& mask, unsigned int size) const {
       hig::real_t sum = 0.0;
       for(unsigned int i = 0; i < size; ++ i) sum += mask[i] * arr[i] * arr[i];
       return sqrt(sum);
     } // norm_l2()
 
     // element-wise product
-    hig::real_t vec_dot(hig::real_t*& a, hig::real_t*& b, unsigned int*& mask, unsigned int size) const {
+    hig::real_t vec_dot(hig::real_t* a, hig::real_t* b, unsigned int*& mask, unsigned int size) const {
       hig::real_t sum = 0.0;
       for(unsigned int i = 0; i < size; ++ i) sum += mask[i] * a[i] * b[i];
       return sum;
@@ -226,7 +226,7 @@ class UnitLengthNormalizedDifferenceL1Norm : public DistanceMeasure {
 }; // class UnitLengthNormalizedDifferenceL1Norm
 
 
-// unit-length normalized/scaled chi2 (with L2-norm)
+// unit-length normalized/scaled chi2 (with L2-norm) -- default
 class UnitLengthNormalizedDifferenceSquareNorm : public DistanceMeasure {
   public:
     UnitLengthNormalizedDifferenceSquareNorm() { }
@@ -278,6 +278,103 @@ class ConstNormalizedDifferenceL2NormSquare : public DistanceMeasure {
       return true;
     } // operator()
 }; // class ConstNormalizedDifferenceL2NormSquare
+
+
+// sqrt with unit-length normalized/scaled chi2 (with L1-norm)
+class SqrtUnitLengthNormalizedDifferenceL1Norm : public DistanceMeasure {
+  public:
+    SqrtUnitLengthNormalizedDifferenceL1Norm() { }
+    ~SqrtUnitLengthNormalizedDifferenceL1Norm() { }
+
+    bool operator()(hig::real_t*& ref, hig::real_t*& dat,
+                    unsigned int*& mask, unsigned int size,
+                    std::vector<hig::real_t>& dist) const {
+      if(ref == NULL || dat == NULL) return false;
+      std::vector<hig::real_t> sqrt_ref, sqrt_dat;
+      sqrt_ref.resize(size); sqrt_dat.resize(size);
+      for(unsigned int i = 0; i < size; ++ i) {
+        sqrt_ref[i] = sqrt(ref[i]);
+        sqrt_dat[i] = sqrt(dat[i]);
+      } // for
+      hig::real_t ref_norm = norm_l2(&sqrt_ref[0], mask, size);
+      hig::real_t dat_norm = norm_l2(&sqrt_dat[0], mask, size);
+      double dist_sum = 0.0;
+      for(unsigned int i = 0; i < size; ++ i) {
+        hig::real_t n_data = sqrt_dat[i] / dat_norm,
+                    n_ref = sqrt_ref[i] / ref_norm;
+        hig::real_t temp = mask[i] * fabs(n_data - n_ref);
+        dist_sum += temp;
+      } // for
+      dist.clear();
+      dist.push_back((hig::real_t) dist_sum);
+      return true;
+    } // operator()
+}; // class SqrtUnitLengthNormalizedDifferenceL1Norm
+
+
+// sqrt with unit-length normalized with L2-norm
+class SqrtUnitLengthNormalizedDifferenceSquareNorm : public DistanceMeasure {
+  public:
+    SqrtUnitLengthNormalizedDifferenceSquareNorm() { }
+    ~SqrtUnitLengthNormalizedDifferenceSquareNorm() { }
+
+    bool operator()(hig::real_t*& ref, hig::real_t*& dat,
+                    unsigned int*& mask, unsigned int size,
+                    std::vector<hig::real_t>& dist) const {
+      if(ref == NULL || dat == NULL) return false;
+      std::vector<hig::real_t> sqrt_ref, sqrt_dat;
+      sqrt_ref.resize(size); sqrt_dat.resize(size);
+      for(unsigned int i = 0; i < size; ++ i) {
+        sqrt_ref[i] = sqrt(ref[i]);
+        sqrt_dat[i] = sqrt(dat[i]);
+      } // for
+      hig::real_t ref_norm = norm_l2(&sqrt_ref[0], mask, size);
+      hig::real_t dat_norm = norm_l2(&sqrt_dat[0], mask, size);
+      double dist_sum = 0.0;
+      for(unsigned int i = 0; i < size; ++ i) {
+        hig::real_t n_data = sqrt_dat[i] / dat_norm,
+                    n_ref = sqrt_ref[i] / ref_norm;
+        hig::real_t temp = mask[i] * (n_data - n_ref);
+        dist_sum += temp * temp;
+      } // for
+      dist.clear();
+      dist.push_back((hig::real_t) dist_sum);
+      return true;
+    } // operator()
+}; // class SqrtUnitLengthNormalizedDifferenceSquareNorm
+
+
+// sqrt with normalized with computed constant (jeff's), with L2-norm
+class SqrtConstNormalizedDifferenceL2NormSquare : public DistanceMeasure {
+  public:
+    SqrtConstNormalizedDifferenceL2NormSquare() { }
+    ~SqrtConstNormalizedDifferenceL2NormSquare() { }
+
+    bool operator()(hig::real_t*& ref, hig::real_t*& dat,
+                    unsigned int*& mask, unsigned int size,
+                    std::vector<hig::real_t>& dist) const {
+      if(ref == NULL || dat == NULL) return false;
+      std::vector<hig::real_t> sqrt_ref, sqrt_dat;
+      sqrt_ref.resize(size); sqrt_dat.resize(size);
+      for(unsigned int i = 0; i < size; ++ i) {
+        sqrt_ref[i] = sqrt(ref[i]);
+        sqrt_dat[i] = sqrt(dat[i]);
+      } // for
+      hig::real_t ref_norm = norm_l2(&sqrt_ref[0], mask, size); ref_norm *= ref_norm;
+      hig::real_t dot_prod = vec_dot(&sqrt_dat[0], &sqrt_ref[0], mask, size);
+      hig::real_t c = dot_prod / ref_norm;
+      double dist_sum = 0.0;
+      for(unsigned int i = 0; i < size; ++ i) {
+        hig::real_t n_dat = c * sqrt_dat[i],
+                    n_ref = sqrt_ref[i];
+        hig::real_t temp = mask[i] * fabs(n_ref - n_dat);
+        dist_sum += temp * temp;
+      } // for
+      dist.clear();
+      dist.push_back((hig::real_t) dist_sum);
+      return true;
+    } // operator()
+}; // class SqrtConstNormalizedDifferenceL2NormSquare
 
 
 // uses unit-length normalization/scaling -- used in pounders
