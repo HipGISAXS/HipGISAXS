@@ -58,6 +58,8 @@ namespace hig {
     PetscReal gatol, grtol, gttol, fatol, frtol;
     PetscInt maxiter;
 
+    TaoView(tao, PETSC_VIEWER_STDOUT_SELF);
+
     ierr = TaoGetSolutionStatus(tao, &iter, &f, &gnorm, &cnorm, &xdiff, &reason); CHKERRQ(ierr);
     #ifdef PETSC_37
       ierr = TaoGetTolerances(tao, &gatol, &grtol, &gttol); CHKERRQ(ierr);
