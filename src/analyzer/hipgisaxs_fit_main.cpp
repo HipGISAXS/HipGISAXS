@@ -83,26 +83,18 @@ int main(int narg, char** args) {
       hip_func.set_distance_measure(new UnitLengthNormalizedResidualVector());
       ana.add_analysis_algo(new hig::ComputeObjectiveFunction(narg, args, &hip_func, i));
     } else if(algo == hig::algo_lmvm) {
-      //hip_func.set_distance_measure(new AbsoluteDifferenceSquare());
-      //hip_func.set_distance_measure(new RelativeAbsoluteDifferenceSquare());
-
-      //hip_func.set_distance_measure(new UnitLengthNormalizedDifferenceL1Norm());        // L1
-      hip_func.set_distance_measure(new UnitLengthNormalizedDifferenceSquareNorm());  // L2/default
-      //hip_func.set_distance_measure(new ConstNormalizedDifferenceL2NormSquare());     // jeff's
-
-      //hip_func.set_distance_measure(new SqrtUnitLengthNormalizedDifferenceL1Norm());        // L1
-      //hip_func.set_distance_measure(new SqrtUnitLengthNormalizedDifferenceSquareNorm());  // L2/default
-      //hip_func.set_distance_measure(new SqrtConstNormalizedDifferenceL2NormSquare());     // jeff's
-
+      //hip_func.set_distance_measure(new UnitVectorNormL1Distance());        // L1
+      hip_func.set_distance_measure(new UnitVectorNormL2DistanceSquare());  // L2/default
+      //hip_func.set_distance_measure(new CNormL2DistanceSquare());
+      //hip_func.set_distance_measure(new SqrtUnitLengthNormalizedDifferenceL1Norm());
+      //hip_func.set_distance_measure(new SqrtUnitLengthNormalizedDifferenceSquareNorm());
+      //hip_func.set_distance_measure(new SqrtConstNormalizedDifferenceL2NormSquare());
       ana.add_analysis_algo(new hig::FitLMVMAlgo(narg, args, &hip_func, i));
     } else if(algo == hig::algo_pso) {
-      //hip_func.set_distance_measure(new AbsoluteDifferenceSquareNorm());
-      //hip_func.set_distance_measure(new RelativeAbsoluteDifferenceSquare());
-      //hip_func.set_distance_measure(new ScaledRelativeAbsoluteDifferenceSquare());
-      hip_func.set_distance_measure(new UnitLengthNormalizedDifferenceSquareNorm());
+      hip_func.set_distance_measure(new UnitVectorNormL2DistanceSquare());
       ana.add_analysis_algo(new hig::ParticleSwarmOptimization(narg, args, &hip_func, i, false, 0));
     } else if(algo == hig::algo_bruteforce) {
-      hip_func.set_distance_measure(new AbsoluteDifferenceSquareNorm());
+      hip_func.set_distance_measure(new UnitVectorNormL2DistanceSquare());
       ana.add_analysis_algo(new hig::BruteForceOptimization(narg, args, &hip_func, i));
     } else if(algo == hig::algo_error) {
       std::cerr << "error: unknown optimization algorithm encountered" << std::endl;

@@ -26,8 +26,8 @@ class DistanceMeasure {
   public:
     virtual bool operator()(hig::real_t*& ref, hig::real_t*& data,
                             unsigned int*& mask, unsigned int size,
-                            std::vector<hig::real_t>& dist) const = 0;
-  //  virtual hig::real_t operator()(hig::real_t*& ref, hig::real_t*& data, unsigned int size) const { }
+                            std::vector<hig::real_t>& dist,
+                            hig::real_t* mean = NULL) const = 0;
   protected:
 
     // L1 norm
@@ -41,6 +41,7 @@ class DistanceMeasure {
     hig::real_t norm_l2(hig::real_t* arr, unsigned int*& mask, unsigned int size) const {
       hig::real_t sum = 0.0;
       for(unsigned int i = 0; i < size; ++ i) sum += mask[i] * arr[i] * arr[i];
+      std::cout << "+++++++++++ " << sum << std::endl;
       return sqrt(sum);
     } // norm_l2()
 
@@ -200,72 +201,144 @@ class ScaledRelativeAbsoluteDifferenceSquare : public DistanceMeasure {
 }; // class ScaledRelativeAbsoluteDifferenceSquare
 
 
-// unit-length normalized/scaled chi2 (with L1-norm)
-class UnitLengthNormalizedDifferenceL1Norm : public DistanceMeasure {
+// normalized sum of squares of absolute differences
+class AbsoluteDifferenceSquareNorm : public DistanceMeasure {
   public:
-    UnitLengthNormalizedDifferenceL1Norm() { }
-    ~UnitLengthNormalizedDifferenceL1Norm() { }
+    AbsoluteDifferenceSquareNorm() { }
+    ~AbsoluteDifferenceSquareNorm() { }
+
+    bool operator()(hig::real_t*& ref, hig::real_t*& data,
+                    unsigned int*& mask, unsigned int size,
+                    std::vector<hig::real_t>& dist) const {
+      if(ref == NULL || data == NULL) return false;
+      double dist_sum = 0.0;
+      double ref_sum = 0.0;
+      for(int i = 0; i < size; ++ i) {
+        double temp = mask[i] * fabs(ref[i] - data[i]);
+        dist_sum += temp * temp;
+        ref_sum += mask[i] * ref[i] * ref[i];
+      } // for
+      dist_sum /= ref_sum;
+      dist.clear();
+      dist.push_back((hig::real_t) dist_sum);
+      return true;
+    } // operator()
+}; // class AbsoluteDifferenceNorm
+
+
+// normalized sum of absolute differences
+class AbsoluteDifferenceNorm : public DistanceMeasure {
+  public:
+    AbsoluteDifferenceNorm() { }
+    ~AbsoluteDifferenceNorm() { }
+
+    bool operator()(hig::real_t*& ref, hig::real_t*& data,
+                    unsigned int*& mask, unsigned int size,
+                    std::vector<hig::real_t>& dist) const {
+      if(ref == NULL || data == NULL) return false;
+      double dist_sum = 0.0;
+      double ref_sum = 0.0;
+      for(int i = 0; i < size; ++ i) {
+        dist_sum += mask[i] * fabs(ref[i] - data[i]);
+        ref_sum += mask[i] * ref[i];
+      } // for
+      dist_sum /= ref_sum;
+      dist.clear();
+      dist.push_back((hig::real_t) dist_sum);
+      return true;
+    } // operator()
+}; // class AbsoluteDifferenceNorm
+
+
+/**
+ * normalized/scaled:
+ *  NL1X : actual param vector / unitvec norm / L1
+ *  NCX  : actual param vector / c norm / L2
+ *  NL2X : actual param vector / unitvec norm / L2   [default]
+ *  NL1M : mean param vector / unitvec norm / L1
+ *  NCM  : mean param vector / c norm / L2
+ *  NL2M : mean param vector / unitvec norm / L2
+ */
+
+
+// NL1X
+class UnitVectorNormL1Distance : public DistanceMeasure {
+  public:
+    UnitVectorNormL1Distance() { }
+    ~UnitVectorNormL1Distance() { }
 
     bool operator()(hig::real_t*& ref, hig::real_t*& dat,
                     unsigned int*& mask, unsigned int size,
-                    std::vector<hig::real_t>& dist) const {
+                    std::vector<hig::real_t>& dist,
+                    hig::real_t* mean = NULL) const {
       if(ref == NULL || dat == NULL) return false;
-      hig::real_t ref_norm = norm_l2(ref, mask, size);
-      hig::real_t dat_norm = norm_l2(dat, mask, size);
+      hig::real_t dat_norm = 0.0,
+                  ref_norm = norm_l2(ref, mask, size);
+      if(mean == NULL) dat_norm = norm_l2(dat, mask, size);
+      else dat_norm = norm_l2(mean, mask, size);
       double dist_sum = 0.0;
       for(unsigned int i = 0; i < size; ++ i) {
-        hig::real_t n_data = dat[i] / dat_norm,
+        hig::real_t n_dat = dat[i] / dat_norm,
                     n_ref = ref[i] / ref_norm;
-        hig::real_t temp = mask[i] * fabs(n_data - n_ref);
+        hig::real_t temp = mask[i] * fabs(n_dat - n_ref);
         dist_sum += temp;
       } // for
       dist.clear();
       dist.push_back((hig::real_t) dist_sum);
       return true;
     } // operator()
-}; // class UnitLengthNormalizedDifferenceL1Norm
+}; // class UnitVectorNormL1Distance
 
 
-// unit-length normalized/scaled chi2 (with L2-norm) -- default
-class UnitLengthNormalizedDifferenceSquareNorm : public DistanceMeasure {
+// NL2X [default]
+class UnitVectorNormL2DistanceSquare : public DistanceMeasure {
   public:
-    UnitLengthNormalizedDifferenceSquareNorm() { }
-    ~UnitLengthNormalizedDifferenceSquareNorm() { }
+    UnitVectorNormL2DistanceSquare() { }
+    ~UnitVectorNormL2DistanceSquare() { }
 
     bool operator()(hig::real_t*& ref, hig::real_t*& dat,
                     unsigned int*& mask, unsigned int size,
-                    std::vector<hig::real_t>& dist) const {
+                    std::vector<hig::real_t>& dist,
+                    hig::real_t* mean = NULL) const {
       if(ref == NULL || dat == NULL) return false;
-      hig::real_t ref_norm = norm_l2(ref, mask, size);
-      hig::real_t dat_norm = norm_l2(dat, mask, size);
+      hig::real_t dat_norm = 0.0,
+                  ref_norm = norm_l2(ref, mask, size);
+      if(mean == NULL) dat_norm = norm_l2(dat, mask, size);
+      else dat_norm = norm_l2(mean, mask, size);
       double dist_sum = 0.0;
       for(unsigned int i = 0; i < size; ++ i) {
-        hig::real_t n_data = dat[i] / dat_norm,
+        hig::real_t n_dat = dat[i] / dat_norm,
                     n_ref = ref[i] / ref_norm;
-        hig::real_t temp = mask[i] * (n_data - n_ref);
+        hig::real_t temp = mask[i] * (n_dat - n_ref);
         dist_sum += temp * temp;
       } // for
       dist.clear();
-      //dist.push_back((hig::real_t) dist_sum / (ref_norm * ref_norm));
       dist.push_back((hig::real_t) dist_sum);
       return true;
     } // operator()
-}; // class UnitLengthNormalizedDifferenceSquareNorm
+}; // class UnitVectorNormL2DistanceSquare
 
 
-// normalized with computed constant (jeff's), with L2-norm
-class ConstNormalizedDifferenceL2NormSquare : public DistanceMeasure {
+// NCX
+class CNormL2DistanceSquare : public DistanceMeasure {
   public:
-    ConstNormalizedDifferenceL2NormSquare() { }
-    ~ConstNormalizedDifferenceL2NormSquare() { }
+    CNormL2DistanceSquare() { }
+    ~CNormL2DistanceSquare() { }
 
     bool operator()(hig::real_t*& ref, hig::real_t*& dat,
                     unsigned int*& mask, unsigned int size,
-                    std::vector<hig::real_t>& dist) const {
+                    std::vector<hig::real_t>& dist,
+                    hig::real_t* mean = NULL) const {
       if(ref == NULL || dat == NULL) return false;
-      hig::real_t ref_norm = norm_l2(ref, mask, size); ref_norm *= ref_norm;
-      hig::real_t dot_prod = vec_dot(dat, ref, mask, size);
-      hig::real_t c = dot_prod / ref_norm;
+      hig::real_t dat_norm = 0.0, dot_prod = 0.0;
+      if(mean == NULL) {
+        dat_norm = norm_l2(dat, mask, size);
+        dot_prod = vec_dot(dat, ref, mask, size);
+      } else {
+        dat_norm = norm_l2(mean, mask, size);
+        dot_prod = vec_dot(mean, ref, mask, size);
+      } // if-else
+      hig::real_t c = dot_prod / (dat_norm * dat_norm);
       double dist_sum = 0.0;
       for(unsigned int i = 0; i < size; ++ i) {
         hig::real_t n_dat = c * dat[i],
@@ -277,7 +350,12 @@ class ConstNormalizedDifferenceL2NormSquare : public DistanceMeasure {
       dist.push_back((hig::real_t) dist_sum);
       return true;
     } // operator()
-}; // class ConstNormalizedDifferenceL2NormSquare
+}; // class CNormL2DistanceSquare
+
+
+/**
+ * square-rooted versions
+ */
 
 
 // sqrt with unit-length normalized/scaled chi2 (with L1-norm)
@@ -377,6 +455,10 @@ class SqrtConstNormalizedDifferenceL2NormSquare : public DistanceMeasure {
 }; // class SqrtConstNormalizedDifferenceL2NormSquare
 
 
+/**
+ * with residual vector for pounders
+ */
+
 // uses unit-length normalization/scaling -- used in pounders
 class UnitLengthNormalizedResidualVector : public DistanceMeasure {
   public:
@@ -385,7 +467,8 @@ class UnitLengthNormalizedResidualVector : public DistanceMeasure {
 
     bool operator()(hig::real_t*& ref, hig::real_t*& data,
                     unsigned int*& mask, unsigned int size,
-                    std::vector<hig::real_t>& dist) const {
+                    std::vector<hig::real_t>& dist,
+                    hig::real_t* mean = NULL) const {
       if(ref == NULL || data == NULL) return false;
       hig::real_t ref_norm = norm_l2(ref, mask, size);
       hig::real_t dat_norm = norm_l2(data, mask, size);
@@ -395,62 +478,11 @@ class UnitLengthNormalizedResidualVector : public DistanceMeasure {
                     n_ref = ref[i] / ref_norm;
         hig::real_t temp = mask[i] * (n_data - n_ref);
         //temp *= temp;
-        //dist.push_back(mask[i] * temp / (ref_norm * ref_norm));
-        //dist.push_back(mask[i] * temp / (ref_norm));
         dist.push_back(temp);
       } // for
       return true;
     } // operator()
 }; // class UnitLengthNormalizedResidualVector
-
-
-// normalized sum of squares of absolute differences
-class AbsoluteDifferenceSquareNorm : public DistanceMeasure {
-  public:
-    AbsoluteDifferenceSquareNorm() { }
-    ~AbsoluteDifferenceSquareNorm() { }
-
-    bool operator()(hig::real_t*& ref, hig::real_t*& data,
-                    unsigned int*& mask, unsigned int size,
-                    std::vector<hig::real_t>& dist) const {
-      if(ref == NULL || data == NULL) return false;
-      double dist_sum = 0.0;
-      double ref_sum = 0.0;
-      for(int i = 0; i < size; ++ i) {
-        double temp = mask[i] * fabs(ref[i] - data[i]);
-        dist_sum += temp * temp;
-        ref_sum += mask[i] * ref[i] * ref[i];
-      } // for
-      dist_sum /= ref_sum;
-      dist.clear();
-      dist.push_back((hig::real_t) dist_sum);
-      return true;
-    } // operator()
-}; // class AbsoluteDifferenceNorm
-
-
-// normalized sum of absolute differences
-class AbsoluteDifferenceNorm : public DistanceMeasure {
-  public:
-    AbsoluteDifferenceNorm() { }
-    ~AbsoluteDifferenceNorm() { }
-
-    bool operator()(hig::real_t*& ref, hig::real_t*& data,
-                    unsigned int*& mask, unsigned int size,
-                    std::vector<hig::real_t>& dist) const {
-      if(ref == NULL || data == NULL) return false;
-      double dist_sum = 0.0;
-      double ref_sum = 0.0;
-      for(int i = 0; i < size; ++ i) {
-        dist_sum += mask[i] * fabs(ref[i] - data[i]);
-        ref_sum += mask[i] * ref[i];
-      } // for
-      dist_sum /= ref_sum;
-      dist.clear();
-      dist.push_back((hig::real_t) dist_sum);
-      return true;
-    } // operator()
-}; // class AbsoluteDifferenceNorm
 
 
 #endif // __DISTANCE_FUNCTIONS_HPP__
