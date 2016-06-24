@@ -86,9 +86,9 @@ int main(int narg, char** args) {
       //hip_func.set_distance_measure(new UnitVectorNormL1Distance());        // L1
       hip_func.set_distance_measure(new UnitVectorNormL2DistanceSquare());  // L2/default
       //hip_func.set_distance_measure(new CNormL2DistanceSquare());
-      //hip_func.set_distance_measure(new SqrtUnitLengthNormalizedDifferenceL1Norm());
-      //hip_func.set_distance_measure(new SqrtUnitLengthNormalizedDifferenceSquareNorm());
-      //hip_func.set_distance_measure(new SqrtConstNormalizedDifferenceL2NormSquare());
+      //hip_func.set_distance_measure(new SqrtUnitVectorNormL1Distance());        // L1
+      //hip_func.set_distance_measure(new SqrtUnitVectorNormL2DistanceSquare());  // L2/default
+      //hip_func.set_distance_measure(new SqrtCNormL2DistanceSquare());
       ana.add_analysis_algo(new hig::FitLMVMAlgo(narg, args, &hip_func, i));
     } else if(algo == hig::algo_pso) {
       hip_func.set_distance_measure(new UnitVectorNormL2DistanceSquare());
