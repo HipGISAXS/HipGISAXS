@@ -240,8 +240,8 @@ namespace hig {
 
   real_vec_t HipGISAXSObjectiveFunction::operator()(const real_vec_t& x) {
 
-    bool use_mean = true;    // temporary
-    //bool use_mean = false;    // temporary
+    //bool use_mean = true;    // temporary
+    bool use_mean = false;    // temporary
 
     real_t *gisaxs_data = NULL;
     // construct param_vals

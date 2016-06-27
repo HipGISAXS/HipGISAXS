@@ -31,9 +31,9 @@ class DistanceMeasure {
   protected:
 
     // L1 norm
-    hig::real_t norm_l1(hig::real_t*& arr, unsigned int*& mask, unsigned int size) const {
+    hig::real_t norm_l1(hig::real_t* arr, unsigned int*& mask, unsigned int size) const {
       hig::real_t sum = 0.0;
-      for(unsigned int i = 0; i < size; ++ i) sum += mask[i] * arr[i];
+      for(unsigned int i = 0; i < size; ++ i) sum += mask[i] * fabs(arr[i]);
       return sum;
     } // norm_l1()
 
@@ -48,7 +48,7 @@ class DistanceMeasure {
     // element-wise product
     hig::real_t vec_dot(hig::real_t* a, hig::real_t* b, unsigned int*& mask, unsigned int size) const {
       hig::real_t sum = 0.0;
-      for(unsigned int i = 0; i < size; ++ i) sum += mask[i] * a[i] * b[i];
+      for(unsigned int i = 0; i < size; ++ i) sum += mask[i] * fabs(a[i] * b[i]);
       return sum;
     } // vec_dot()
 
@@ -273,9 +273,9 @@ class UnitVectorNormL1Distance : public DistanceMeasure {
                     hig::real_t* mean = NULL) const {
       if(ref == NULL || dat == NULL) return false;
       hig::real_t dat_norm = 0.0,
-                  ref_norm = norm_l2(ref, mask, size);
-      if(mean == NULL) dat_norm = norm_l2(dat, mask, size);
-      else dat_norm = norm_l2(mean, mask, size);
+                  ref_norm = norm_l1(ref, mask, size);
+      if(mean == NULL) dat_norm = norm_l1(dat, mask, size);
+      else dat_norm = norm_l1(mean, mask, size);
       double dist_sum = 0.0;
       for(unsigned int i = 0; i < size; ++ i) {
         hig::real_t n_dat = dat[i] / dat_norm,
@@ -376,9 +376,9 @@ class SqrtUnitVectorNormL1Distance : public DistanceMeasure {
       } // for
       if(mean != NULL) for(unsigned int i = 0; i < size; ++ i) sqrt_mean[i] = sqrt(mean[i]);
       hig::real_t dat_norm = 0.0,
-                  ref_norm = norm_l2(&sqrt_ref[0], mask, size);
-      if(mean == NULL) dat_norm = norm_l2(&sqrt_dat[0], mask, size);
-      else dat_norm = norm_l2(&sqrt_mean[0], mask, size);
+                  ref_norm = norm_l1(&sqrt_ref[0], mask, size);
+      if(mean == NULL) dat_norm = norm_l1(&sqrt_dat[0], mask, size);
+      else dat_norm = norm_l1(&sqrt_mean[0], mask, size);
       double dist_sum = 0.0;
       for(unsigned int i = 0; i < size; ++ i) {
         hig::real_t n_dat = sqrt_dat[i] / dat_norm,
@@ -470,6 +470,241 @@ class SqrtCNormL2DistanceSquare : public DistanceMeasure {
 }; // class SqrtCNormL2DistanceSquare
 
 
+/**
+ * cube-rooted versions
+ */
+
+// NL1X
+class CbrtUnitVectorNormL1Distance : public DistanceMeasure {
+  public:
+    CbrtUnitVectorNormL1Distance() { }
+    ~CbrtUnitVectorNormL1Distance() { }
+
+    bool operator()(hig::real_t*& ref, hig::real_t*& dat,
+                    unsigned int*& mask, unsigned int size,
+                    std::vector<hig::real_t>& dist,
+                    hig::real_t* mean = NULL) const {
+      if(ref == NULL || dat == NULL) return false;
+      std::vector<hig::real_t> cbrt_ref, cbrt_dat, cbrt_mean;
+      cbrt_ref.resize(size); cbrt_dat.resize(size); cbrt_mean.resize(size);
+      for(unsigned int i = 0; i < size; ++ i) {
+        cbrt_ref[i] = cbrt(ref[i]);
+        cbrt_dat[i] = cbrt(dat[i]);
+      } // for
+      if(mean != NULL) for(unsigned int i = 0; i < size; ++ i) cbrt_mean[i] = cbrt(mean[i]);
+      hig::real_t dat_norm = 0.0,
+                  ref_norm = norm_l1(&cbrt_ref[0], mask, size);
+      if(mean == NULL) dat_norm = norm_l1(&cbrt_dat[0], mask, size);
+      else dat_norm = norm_l1(&cbrt_mean[0], mask, size);
+      double dist_sum = 0.0;
+      for(unsigned int i = 0; i < size; ++ i) {
+        hig::real_t n_dat = cbrt_dat[i] / dat_norm,
+                    n_ref = cbrt_ref[i] / ref_norm;
+        hig::real_t temp = mask[i] * fabs(n_dat - n_ref);
+        dist_sum += temp;
+      } // for
+      dist.clear();
+      dist.push_back((hig::real_t) dist_sum);
+      return true;
+    } // operator()
+}; // class CbrtUnitVectorNormL1Distance
+
+
+// NL2X [default]
+class CbrtUnitVectorNormL2DistanceSquare : public DistanceMeasure {
+  public:
+    CbrtUnitVectorNormL2DistanceSquare() { }
+    ~CbrtUnitVectorNormL2DistanceSquare() { }
+
+    bool operator()(hig::real_t*& ref, hig::real_t*& dat,
+                    unsigned int*& mask, unsigned int size,
+                    std::vector<hig::real_t>& dist,
+                    hig::real_t* mean = NULL) const {
+      if(ref == NULL || dat == NULL) return false;
+      std::vector<hig::real_t> cbrt_ref, cbrt_dat, cbrt_mean;
+      cbrt_ref.resize(size); cbrt_dat.resize(size); cbrt_mean.resize(size);
+      for(unsigned int i = 0; i < size; ++ i) {
+        cbrt_ref[i] = cbrt(ref[i]);
+        cbrt_dat[i] = cbrt(dat[i]);
+      } // for
+      if(mean != NULL) for(unsigned int i = 0; i < size; ++ i) cbrt_mean[i] = cbrt(mean[i]);
+      hig::real_t dat_norm = 0.0,
+                  ref_norm = norm_l2(&cbrt_ref[0], mask, size);
+      if(mean == NULL) dat_norm = norm_l2(&cbrt_dat[0], mask, size);
+      else dat_norm = norm_l2(&cbrt_mean[0], mask, size);
+      double dist_sum = 0.0;
+      for(unsigned int i = 0; i < size; ++ i) {
+        hig::real_t n_dat = cbrt_dat[i] / dat_norm,
+                    n_ref = cbrt_ref[i] / ref_norm;
+        hig::real_t temp = mask[i] * (n_dat - n_ref);
+        dist_sum += temp * temp;
+      } // for
+      dist.clear();
+      dist.push_back((hig::real_t) dist_sum);
+      return true;
+    } // operator()
+}; // class CbrtUnitVectorNormL2DistanceSquare
+
+
+// NCX
+class CbrtCNormL2DistanceSquare : public DistanceMeasure {
+  public:
+    CbrtCNormL2DistanceSquare() { }
+    ~CbrtCNormL2DistanceSquare() { }
+
+    bool operator()(hig::real_t*& ref, hig::real_t*& dat,
+                    unsigned int*& mask, unsigned int size,
+                    std::vector<hig::real_t>& dist,
+                    hig::real_t* mean = NULL) const {
+      if(ref == NULL || dat == NULL) return false;
+      std::vector<hig::real_t> cbrt_ref, cbrt_dat, cbrt_mean;
+      cbrt_ref.resize(size); cbrt_dat.resize(size); cbrt_mean.resize(size);
+      for(unsigned int i = 0; i < size; ++ i) {
+        cbrt_ref[i] = cbrt(ref[i]);
+        cbrt_dat[i] = cbrt(dat[i]);
+      } // for
+      if(mean != NULL) for(unsigned int i = 0; i < size; ++ i) cbrt_mean[i] = cbrt(mean[i]);
+      hig::real_t dat_norm = 0.0, dot_prod = 0.0;
+      if(mean == NULL) {
+        dat_norm = norm_l2(&cbrt_dat[0], mask, size);
+        dot_prod = vec_dot(&cbrt_dat[0], &cbrt_ref[0], mask, size);
+      } else {
+        dat_norm = norm_l2(&cbrt_mean[0], mask, size);
+        dot_prod = vec_dot(&cbrt_mean[0], &cbrt_ref[0], mask, size);
+      } // if-else
+      hig::real_t c = dot_prod / (dat_norm * dat_norm);
+      double dist_sum = 0.0;
+      for(unsigned int i = 0; i < size; ++ i) {
+        hig::real_t n_dat = c * cbrt_dat[i],
+                    n_ref = cbrt_ref[i];
+        hig::real_t temp = mask[i] * fabs(n_ref - n_dat);
+        dist_sum += temp * temp;
+      } // for
+      dist.clear();
+      dist.push_back((hig::real_t) dist_sum);
+      return true;
+    } // operator()
+}; // class CbrtCNormL2DistanceSquare
+
+
+/**
+ * log versions
+ */
+
+// NL1X
+class LogUnitVectorNormL1Distance : public DistanceMeasure {
+  public:
+    LogUnitVectorNormL1Distance() { }
+    ~LogUnitVectorNormL1Distance() { }
+
+    bool operator()(hig::real_t*& ref, hig::real_t*& dat,
+                    unsigned int*& mask, unsigned int size,
+                    std::vector<hig::real_t>& dist,
+                    hig::real_t* mean = NULL) const {
+      if(ref == NULL || dat == NULL) return false;
+      std::vector<hig::real_t> log_ref, log_dat, log_mean;
+      log_ref.resize(size); log_dat.resize(size); log_mean.resize(size);
+      for(unsigned int i = 0; i < size; ++ i) {
+        log_ref[i] = log(ref[i]);
+        log_dat[i] = log(dat[i]);
+      } // for
+      if(mean != NULL) for(unsigned int i = 0; i < size; ++ i) log_mean[i] = log(mean[i]);
+      hig::real_t dat_norm = 0.0,
+                  ref_norm = norm_l1(&log_ref[0], mask, size);
+      if(mean == NULL) dat_norm = norm_l1(&log_dat[0], mask, size);
+      else dat_norm = norm_l1(&log_mean[0], mask, size);
+      double dist_sum = 0.0;
+      for(unsigned int i = 0; i < size; ++ i) {
+        hig::real_t n_dat = log_dat[i] / dat_norm,
+                    n_ref = log_ref[i] / ref_norm;
+        hig::real_t temp = mask[i] * fabs(n_dat - n_ref);
+        dist_sum += temp;
+      } // for
+      dist.clear();
+      dist.push_back((hig::real_t) dist_sum);
+      return true;
+    } // operator()
+}; // class LogUnitVectorNormL1Distance
+
+
+// NL2X [default]
+class LogUnitVectorNormL2DistanceSquare : public DistanceMeasure {
+  public:
+    LogUnitVectorNormL2DistanceSquare() { }
+    ~LogUnitVectorNormL2DistanceSquare() { }
+
+    bool operator()(hig::real_t*& ref, hig::real_t*& dat,
+                    unsigned int*& mask, unsigned int size,
+                    std::vector<hig::real_t>& dist,
+                    hig::real_t* mean = NULL) const {
+      if(ref == NULL || dat == NULL) return false;
+      std::vector<hig::real_t> log_ref, log_dat, log_mean;
+      log_ref.resize(size); log_dat.resize(size); log_mean.resize(size);
+      for(unsigned int i = 0; i < size; ++ i) {
+        log_ref[i] = log(ref[i]);
+        log_dat[i] = log(dat[i]);
+      } // for
+      if(mean != NULL) for(unsigned int i = 0; i < size; ++ i) log_mean[i] = log(mean[i]);
+      hig::real_t dat_norm = 0.0,
+                  ref_norm = norm_l2(&log_ref[0], mask, size);
+      if(mean == NULL) dat_norm = norm_l2(&log_dat[0], mask, size);
+      else dat_norm = norm_l2(&log_mean[0], mask, size);
+      double dist_sum = 0.0;
+      for(unsigned int i = 0; i < size; ++ i) {
+        hig::real_t n_dat = log_dat[i] / dat_norm,
+                    n_ref = log_ref[i] / ref_norm;
+        hig::real_t temp = mask[i] * (n_dat - n_ref);
+        dist_sum += temp * temp;
+      } // for
+      dist.clear();
+      dist.push_back((hig::real_t) dist_sum);
+      return true;
+    } // operator()
+}; // class LogUnitVectorNormL2DistanceSquare
+
+
+// NCX
+class LogCNormL2DistanceSquare : public DistanceMeasure {
+  public:
+    LogCNormL2DistanceSquare() { }
+    ~LogCNormL2DistanceSquare() { }
+
+    bool operator()(hig::real_t*& ref, hig::real_t*& dat,
+                    unsigned int*& mask, unsigned int size,
+                    std::vector<hig::real_t>& dist,
+                    hig::real_t* mean = NULL) const {
+      if(ref == NULL || dat == NULL) return false;
+      std::vector<hig::real_t> log_ref, log_dat, log_mean;
+      log_ref.resize(size); log_dat.resize(size); log_mean.resize(size);
+      for(unsigned int i = 0; i < size; ++ i) {
+        log_ref[i] = log(ref[i]);
+        log_dat[i] = log(dat[i]);
+      } // for
+      if(mean != NULL) for(unsigned int i = 0; i < size; ++ i) log_mean[i] = log(mean[i]);
+      hig::real_t dat_norm = 0.0, dot_prod = 0.0;
+      if(mean == NULL) {
+        dat_norm = norm_l2(&log_dat[0], mask, size);
+        dot_prod = vec_dot(&log_dat[0], &log_ref[0], mask, size);
+      } else {
+        dat_norm = norm_l2(&log_mean[0], mask, size);
+        dot_prod = vec_dot(&log_mean[0], &log_ref[0], mask, size);
+      } // if-else
+      hig::real_t c = dot_prod / (dat_norm * dat_norm);
+      double dist_sum = 0.0;
+      for(unsigned int i = 0; i < size; ++ i) {
+        hig::real_t n_dat = c * log_dat[i],
+                    n_ref = log_ref[i];
+        hig::real_t temp = mask[i] * fabs(n_ref - n_dat);
+        dist_sum += temp * temp;
+      } // for
+      dist.clear();
+      dist.push_back((hig::real_t) dist_sum);
+      return true;
+    } // operator()
+}; // class LogCNormL2DistanceSquare
+
+
+/*
 // sqrt with unit-length normalized/scaled chi2 (with L1-norm)
 class SqrtUnitLengthNormalizedDifferenceL1Norm : public DistanceMeasure {
   public:
@@ -565,7 +800,7 @@ class SqrtConstNormalizedDifferenceL2NormSquare : public DistanceMeasure {
       return true;
     } // operator()
 }; // class SqrtConstNormalizedDifferenceL2NormSquare
-
+*/
 
 /**
  * with residual vector for pounders

@@ -46,7 +46,8 @@ namespace hig {
     return 0;
   } // EvaluateFunction()
 
-  /* convergence test for pounders */
+
+  /* convergence test */
   PetscErrorCode convergence_test(Tao tao, void * ctx) {
     PetscErrorCode ierr;
     PetscInt iter;    // iteration number
