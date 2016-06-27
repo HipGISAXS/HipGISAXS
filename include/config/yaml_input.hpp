@@ -46,7 +46,7 @@ namespace YAML {
 
   /* Refrective index */
   template<> struct convert <hig::RefractiveIndex> {
-    static bool decode(const Node &node, hig::RefractiveIndex & refindex){
+    static bool decode(const Node &node, hig::RefractiveIndex &refindex){
       // delta
       if (node["delta"])
         refindex.delta(node["delta"].as<hig::real_t>());
@@ -84,6 +84,20 @@ namespace YAML {
         return true;
       }
       return false;
+    }
+  };
+
+  /* integer vector */
+  template<> struct convert <std::vector<int> > {
+    static bool decode(const Node &node, std::vector<int> & vec){
+      if (node.IsSequence()) {
+        for (int i = 0; i < node.size(); i++)
+          vec.push_back(node[i].as<int>());
+      } else {
+        std::cerr << "error: trying to convert illegal type to int-vector." << std::endl;
+        return false;
+      }
+      return true;
     }
   };
 
@@ -147,6 +161,7 @@ namespace YAML {
           }
         }
       }
+      return true;
     }
   };
 }
@@ -155,23 +170,11 @@ namespace hig {
 
   class YAMLInput : public Input {
     private:
-      typedef std::vector<real_t> vectorf_t;
       typedef std::vector<int> vectori_t;
 
       /* YAML */
       YAML::Node config_;
  
-      /*containers */
-      shape_list_t shapes_;
-      layer_list_t layers_;
-      layer_key_t layer_key_map_;
-      unitcell_list_t unitcells_;
-      structure_list_t structures_;
-      ScatteringParams scattering_;
-      DetectorParams detector_;
-      ComputeParams compute_;
-      FittingParams fitting_;
-
       /* helpers */
       int num_shapes_;
       int num_layers_;
@@ -194,6 +197,7 @@ namespace hig {
     
       void init();
       bool read_input(const char *);
+      bool read_shape_param(const YAML::Node &, ShapeParam &);
       bool extract_shapes();
       bool extract_layers();
       bool extract_unitcells();
@@ -208,6 +212,17 @@ namespace hig {
       bool update_params(map_t & params) { return false; }
       const std::string& path() const { return compute_.pathprefix(); }
       const std::string& runname() const { return compute_.runname(); }
+
+      Shape & shape(std::string key) { return shapes_[key]; }
+      Unitcell & unitcell(std::string key) { return unitcells_[key]; }
+      const shape_list_t & shapes() const { return shapes_; }
+      const layer_list_t & layers() const { return layers_;}
+      const unitcell_list_t & unitcells() const { return unitcells_; }
+      const structure_list_t & structures() const { return structures_; }
+      const ScatteringParams & scattering() const { return scattering_; }
+      const DetectorParams & detector() const { return detector_; }
+      const ComputeParams & compute() const { return compute_; }
+      const FittingParams & fitting() const { return fitting_; }
 
   }; // class YAMLInput
 

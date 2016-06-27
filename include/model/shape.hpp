@@ -28,6 +28,7 @@
 
 #include <common/enums.hpp>
 #include <common/globals.hpp>
+#include <model/common.hpp>
 
 namespace hig {
 
@@ -110,6 +111,7 @@ namespace hig {
       std::string key_;
       ShapeName name_;      /* name of a predefined shape, or custom file */
       std::string name_str_;    /* shape file name: used for custom shape only */
+      RefractiveIndex refindex_;
       vector3_t originvec_;
       real_t xrot_, yrot_, zrot_;
       shape_param_list_t params_;  // a map of all params (key is the type)
@@ -136,6 +138,9 @@ namespace hig {
       void originvec(real_t a, real_t b, real_t c) {
         originvec_[0] = a; originvec_[1] = b; originvec_[2] = c; }
 
+      void refindex(RefractiveIndex & n) { refindex_ = n; }
+      void refindex_beta(real_t b) { refindex_.beta(b); }
+      void refindex_delta(real_t d) { refindex_.delta(d); }
       void zrot(real_t d) { zrot_ = d; }
       void yrot(real_t d) { yrot_ = d; }
       void xrot(real_t d) { xrot_ = d; }
@@ -145,6 +150,7 @@ namespace hig {
         name_ = sh.name_;
         name_str_ = sh.name_str_;
         originvec_ = sh.originvec_;
+        refindex_ = sh.refindex_;
         zrot_ = sh.zrot_;
         yrot_ = sh.yrot_;
         xrot_ = sh.xrot_;
@@ -165,6 +171,8 @@ namespace hig {
       real_t yrot() const { return yrot_; }
       real_t xrot() const { return xrot_; }
       vector3_t originvec() const { return originvec_; }
+      RefractiveIndex refindex() const { return refindex_; }
+      complex_t one_minus_n2() const { return refindex_.one_minus_n2(); }
       std::string filename() const { return name_str_; }
       shape_param_list_t& param_list() { return params_; }
       shape_param_iterator_t param_begin() { return params_.begin(); }

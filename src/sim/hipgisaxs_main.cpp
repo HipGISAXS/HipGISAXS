@@ -76,17 +76,21 @@ namespace hig {
     // nothing to do here yet ...
   } // HipGISAXS::~HipGISAXS()
 
-
   // read and parse the input file
   bool HipGISAXS::construct_input(const char * filename) {
     std::string ext = boost::filesystem::extension(std::string(filename));
-    if (ext.compare("hig")) input_ = new HiGInput();
-    else if (ext.compare("yaml") || ext.compare("yml")) input_ = new YAMLInput();
-    else {
+    bool err = false;
+    if (ext.compare(".hig") == 0) {
+      input_ = new HiGInput();
+      err = input_->construct_input_config(filename);
+    } else if ((ext.compare(".yaml") == 0) || (ext.compare(".yml") == 0)) {
+      input_ = new YAMLInput();
+      err = input_->construct_input_config(filename);
+    } else {
       std::cerr << "error: unrecogonizable files extension" << std::endl;
       return false;
     }
-    return input_->construct_input_config(filename);
+    return err;
   }
 
 
@@ -124,11 +128,10 @@ namespace hig {
     } // if
 
     //photon conversion
-    real_t photon = 0.0;
-    real_t lambda = 0.0;
-    std::string unit;
+    real_t lambda = 0.;
+    real_t photon = input_->scattering().energy();
+    std::string unit = input_->scattering().unit();
     freq_ = 0; k0_ = 0;
-    input_->scattering().photon_energy(photon, unit);
     if(unit == "ev") {
       photon = photon / 1000;    // in keV
       lambda = 1.23984 / photon;
@@ -781,14 +784,6 @@ namespace hig {
       std::string struct_dist = (*s).second.grain_orientation();
       int num_grains = ndx;
 
-      /*for(int i = 0; i < ndx; ++ i) std::cout << nn[i] << " ";
-      std::cout << std::endl;
-      for(int i = 0; i < ndx; ++ i) std::cout << nn[ndx + i] << " ";
-      std::cout << std::endl;
-      for(int i = 0; i < ndx; ++ i) std::cout << nn[2 * ndx + i] << " ";
-      std::cout << std::endl;
-      std::exit(1); */
-
       int r1axis, r2axis, r3axis;
       if ( struct_dist == "bragg" ){
         r1axis = 2;
@@ -807,12 +802,6 @@ namespace hig {
       if(smaster) {
         std::cout << "-- Grains: " << num_grains << std::endl;
       } // if
-
-      //std::cout << "DD: " << std::endl;
-      //for(unsigned int d = 0; d < num_grains; ++ d) {
-      //  std::cerr << dd[d] << "\t" << dd[num_grains + d] << "\t" << dd[num_grains * 2 + d]
-      //        << std::endl;
-      //} // for*/
 
       /* grain scalings */
       std::vector<vector3_t> scaling_samples;
@@ -835,19 +824,6 @@ namespace hig {
         scaling_weights.push_back(1.);
       } // if-else
 
-      /*
-         // for testing
-         if(master) {
-         std::cerr << "************ grain scaling distribution **************" << std::endl;
-         std::cerr << " LENGTH = " << scaling_samples.size() << std::endl;
-         for(std::vector<vector3_t>::iterator i = scaling_samples.begin();
-         i != scaling_samples.end(); ++i) {
-         std::cerr << "scaling = [ " << (*i)[0] << " " << (*i)[1] << " " << (*i)[2] << " ]"
-         << std::endl;
-         } // for
-         } // if
-       */
-
       /* grain repetitions */
       bool is_grain_repetition_dist = false;
       std::vector<vector3_t> all_grains_repeats;
@@ -865,17 +841,6 @@ namespace hig {
         vector3_t grain_repeats = (*s).second.grain_repetition();
         all_grains_repeats.push_back(grain_repeats);
       } // if-else
-
-      // for testing
-      //if(master) {
-      //  std::cout << "************ grain repetition distribution **************" << std::endl;
-      //  std::cout << " LENGTH = " << all_grains_repeats.size() << std::endl;
-      //  for(std::vector<vector3_t>::iterator i = all_grains_repeats.begin();
-      //      i != all_grains_repeats.end(); ++ i) {
-      //    std::cout << "[ " << (*i)[0] << " " << (*i)[1] << " " << (*i)[2] << " ]"
-      //        << std::endl;
-      //  } // for
-      //} // if
 
       int num_repeat_scaling;
       if (scaling_samples.size() == all_grains_repeats.size())
@@ -1019,6 +984,7 @@ namespace hig {
           real_t xrot = shape.xrot();
           std::string shape_file = shape.filename();
           shape_param_list_t shape_params = shape.param_list();
+          complex_t dn2 = multilayer_[order].one_minus_n2() - shape.one_minus_n2();
 
           // update rotation matrix
           rot = rot *  RotMatrix_t(0, xrot) * RotMatrix_t(1, yrot) * RotMatrix_t(2, zrot);
@@ -1053,7 +1019,7 @@ namespace hig {
             } // if*/
 
             // for each location, add the FFs
-            for(unsigned int i = 0; i < sz; ++ i) ff[i] += eff[i]; 
+            for(unsigned int i = 0; i < sz; ++ i) ff[i] += dn2 * eff[i]; 
           } // for l
         } // for e
 
@@ -1125,7 +1091,6 @@ namespace hig {
               //            << std::endl;
               //  return false;
               //} // if
-              complex_t dn2 = multilayer_[order].one_minus_n2() - curr_struct->one_minus_n2();
               if(input_->scattering().experiment() == "gisaxs") {  // GISAXS
                 for(unsigned int i = 0; i < imsize; ++ i) {
                   unsigned int curr_index   = i;
@@ -1133,7 +1098,7 @@ namespace hig {
                   unsigned int curr_index_1 = 1 * imsize + i;
                   unsigned int curr_index_2 = 2 * imsize + i;
                   unsigned int curr_index_3 = 3 * imsize + i;
-                  base_id[curr_index] = dn2 * weight * 
+                  base_id[curr_index] = weight * 
                                        (fc[curr_index_0] * sf[curr_index_0] * ff[curr_index_0] +
                                         fc[curr_index_1] * sf[curr_index_1] * ff[curr_index_1] +
                                         fc[curr_index_2] * sf[curr_index_2] * ff[curr_index_2] +
@@ -1143,8 +1108,7 @@ namespace hig {
                 for(unsigned int i = 0; i < imsize; ++ i) {
                   unsigned int curr_index   = i;
                   unsigned int curr_index_0 = i; 
-                  base_id[curr_index] = dn2 * weight * 
-                                       (fc[curr_index_0] * sf[curr_index_0] * ff[curr_index_0]);
+                  base_id[curr_index] = weight * (sf[curr_index_0] * ff[curr_index_0]);
                 } // for i
               } // if-else
               if(input_->compute().save_ff()){
@@ -1718,43 +1682,10 @@ namespace hig {
       } // if-else
     } else if(distribution == "gaussian" || distribution == "normal") {
       // gaussian distribution
-/*      real_t mean = (*s).second.ensemble_distribution_p1();
-      real_t sd = (*s).second.ensemble_distribution_p2();
-      woo::MTNormalRandomNumberGenerator rgen(mean, sd);
-      if(dim == 3) {
-        vector3_t nd = maxgrains;
-        unsigned int size = nd[0] * nd[1] * nd[2];
-        d = new (std::nothrow) real_t[dim * size];
-        real_t* d1 = d;
-        real_t* d2 = d + size;
-        real_t* d3 = d2 + size;
-
-        //real_t max_x = vol_[0];
-        //real_t max_y = vol_[1];
-        //real_t max_z = vol_[2];
-        real_t max_x = spaced_cell[0] * (nd[0] - 1);
-        real_t max_y = spaced_cell[1] * (nd[1] - 1);
-        real_t max_z = spaced_cell[2] * (nd[2] - 1);
-
-        // compute x for each grain
-        for(unsigned int i = 0; i < size; ++ i);
-
-      } else if(dim == 2) {
-        std::cerr << "error: dim == 2 case not implemented" << std::endl;
-        // ...
-        return false;
-      } else if(dim == 1) {
-        std::cerr << "error: dim == 1 case not implemented" << std::endl;
-        // ...
-        return false;
       } else {
-        std::cerr << "error: invalid dim size " << dim << std::endl;
-        return false;
-      } // if-else
-*/    } else {
       // read .spa file ...
       std::cerr << "uh-oh: seems like you wanted to read distribution from a file" << std::endl;
-      std::cerr << "sorry dear, this has not been implemented yet" << std::endl;
+      std::cerr << "FU, this has not been implemented yet" << std::endl;
       return false;
     } // if-else
 

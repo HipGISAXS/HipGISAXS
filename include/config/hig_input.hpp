@@ -42,6 +42,7 @@
 #include <file/read_oo_input.hpp>
 
 #include <config/temp_helpers.hpp>
+#include <model/fitting_params.hpp>
 
 namespace hig {
 
@@ -54,20 +55,11 @@ namespace hig {
     private:
       /*containers */
 
-      shape_list_t shapes_;
-      layer_list_t layers_;
-      layer_key_t layer_key_map_;
-      unitcell_list_t unitcells_;
-      structure_list_t structures_;
-      ScatteringParams scattering_;
-      DetectorParams detector_;
-      ComputeParams compute_;
-      bool struct_in_layer_;
-
       std::vector<real_t> shape_def_;  /* shape definition from a file */
       // there may be multiple shape files ... do this later ...
 
       /* helpers */
+      bool struct_in_layer_;
 
       Token curr_token_;
       Token past_token_;
@@ -86,55 +78,22 @@ namespace hig {
       Structure curr_structure_;
       std::vector <real_t> curr_vector_;    // to store values in a vector while parsing it
 
-      /* fitting related */
-      FittingParams fitting_;
 
       analysis_algo_list_t analysis_algos_;            // list of algorithms
-
-      class ParamSpace {            // TODO: move it out ...
-        public:
-
-        real_t min_;
-        real_t max_;
-        real_t step_;
-
-        ParamSpace(): min_(0), max_(0), step_(-1) { }
-        ParamSpace(real_t a, real_t b): min_(a), max_(b), step_(-1) { }
-        ParamSpace(real_t a, real_t b, real_t c): min_(a), max_(b), step_(c) { }
-        ~ParamSpace() { }
-        void clear() { min_ = 0; max_ = 0; step_ = -1; }
-      }; // class ParamSpace
-
       std::map <std::string, std::string> param_key_map_;      // maps keys to param strings
       std::map <std::string, ParamSpace> param_space_key_map_;  // maps keys to param space
+
       // TODO: ...
       //FitReferenceData reference_data_[1];    // TODO temp: data about the reference data
       std::vector <FitReferenceData> reference_data_;
       bool reference_data_set_;
 
       /* helpers */
-
-      class FitParam {            // TODO: move it out ...
-        public:
-
-        std::string key_;
-        std::string variable_;
-        ParamSpace range_;
-        real_t init_;
-
-        FitParam(): key_(""), variable_(""), range_(), init_(0) { }
-        ~FitParam() { }
-        void clear() { key_ = ""; variable_ = ""; range_.clear(); init_ = 0; }
-        void init() { clear(); }
-      };
-
       std::map <std::string, FitParam> param_data_key_map_;  // temporary, to be merged above ...
-
       FitParam curr_fit_param_;
       AnalysisAlgorithmData curr_fit_algo_;
       AnalysisAlgorithmParamData curr_fit_algo_param_;
       FitReferenceData curr_ref_data_;
-
 
       /**
        * methods

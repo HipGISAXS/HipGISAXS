@@ -66,7 +66,8 @@ namespace hig {
 
 
   void Lattice::init() {
-    a_[0] = a_[1] = a_[2] = b_[0] = b_[1] = b_[2] = c_[0] = c_[1] = c_[2] = 0.0;
+    a_[1] = a_[2] = b_[0] = b_[2] = c_[0] = c_[1] = 0.0;
+    a_[0] = b_[1] = c_[2] = 1.;
     t_[0] = t_[1] = t_[2] = 0.0;
     abc_set_ = false;
     type_ = lattice_cubic;    // default values

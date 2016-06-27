@@ -37,7 +37,7 @@
 
 namespace hig {
   class Input {
-    private:
+    protected:
       shape_list_t shapes_;
       layer_list_t layers_;
       layer_key_t layer_key_map_;
@@ -54,14 +54,14 @@ namespace hig {
 
       Shape & shape(std::string key) { return shapes_[key]; }
       Unitcell & unitcell(std::string key) { return unitcells_[key]; }
-      const shape_list_t & shapes() const { return shapes_; }
-      const layer_list_t & layers() const { return layers_;}
-      const unitcell_list_t & unitcells() const { return unitcells_; }
-      const structure_list_t & structures() const { return structures_; }
-      const ScatteringParams & scattering() const { return scattering_; }
-      const DetectorParams & detector() const { return detector_; }
-      const ComputeParams & compute() const { return compute_; }
-      const FittingParams & fitting() const { return fitting_; }
+      virtual const shape_list_t & shapes() const { return shapes_; }
+      virtual const layer_list_t & layers() const { return layers_;}
+      virtual const unitcell_list_t & unitcells() const { return unitcells_; }
+      virtual const structure_list_t & structures() const { return structures_; }
+      virtual const ScatteringParams & scattering() const { return scattering_; }
+      virtual const DetectorParams & detector() const { return detector_; }
+      virtual const ComputeParams & compute() const { return compute_; }
+      virtual const FittingParams & fitting() const { return fitting_; }
   };
 } // namespace
 #endif // INPUT__H

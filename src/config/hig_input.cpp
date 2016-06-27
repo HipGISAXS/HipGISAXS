@@ -182,7 +182,7 @@ namespace hig {
               case layer_token:  // nothing to do :-/ ??
                 break;
 
-              case struct_grain_token:  // nothing to do :-/ ??
+              case shape_token:  // nothing to do :-/ ??
                 break;
 
               default:
@@ -240,6 +240,7 @@ namespace hig {
                 break;
             }
             */
+            curr_structure_.construct_lattice_vectors();
             structures_[curr_structure_.key()] = curr_structure_;
             curr_structure_.clear();
             break;
@@ -1056,8 +1057,8 @@ namespace hig {
             curr_layer_.refindex_delta(num);
             break;
 
-          case struct_grain_token:
-            curr_structure_.grain_refindex_delta(num);
+          case shape_token:
+            curr_shape_.refindex_delta(num);
             break;
 
           default:
@@ -1076,8 +1077,8 @@ namespace hig {
             curr_layer_.refindex_beta(num);
             break;
 
-          case struct_grain_token:
-            curr_structure_.grain_refindex_beta(num);
+          case shape_token:
+            curr_shape_.refindex_beta(num);
             break;
 
           default:

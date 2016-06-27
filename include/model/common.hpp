@@ -37,8 +37,8 @@ namespace hig {
       RefractiveIndex(real_t delta, real_t beta): delta_(delta), beta_(beta) { }
       ~RefractiveIndex() { }
 
-      real_t delta() { return delta_; }
-      real_t beta() { return beta_; }
+      real_t delta() const { return delta_; }
+      real_t beta() const { return beta_; }
       complex_t one_minus_n2() const { return (complex_t(2*delta_, 2*beta_)); }
 
       void delta(real_t a) { delta_ = a; }

@@ -36,8 +36,14 @@ namespace hig {
     int num_layers = layers.size();
 
     // first layer is always the air/vacuum
+    Layer vacuum;
+    vacuum.key("vaccum");
+    vacuum.refindex(RefractiveIndex(0, 0));
+    vacuum.order(0);
+    vacuum.thickness(0);
+    layers_.push_back(vacuum); 
+
     Layer substr;
-    substr.thickness(1.0E+10);
     layer_citerator_t curr;
     for (curr = layers.begin(); curr != layers.end(); curr++){
       int order = curr->second.order();

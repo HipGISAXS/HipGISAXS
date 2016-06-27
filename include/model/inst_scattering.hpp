@@ -95,10 +95,8 @@ namespace hig {
 
       real_t spot_area() const { return spot_area_; }
       Photon photon_energy() const { return photon_; }
-      void photon_energy(real_t & val, std::string & unit) const {
-        val = photon_.value_;
-        unit = photon_.unit_;
-      }
+      real_t energy() const { return photon_.value_; }
+      std::string unit() const { return photon_.unit_; }
 
       real_t alphai_min() const { return alpha_i_.min_; }
       void alphai(real_t & ai_min, real_t & ai_max, real_t & ai_step) const {
