@@ -317,7 +317,7 @@ namespace hig {
         curr_structure_.iratio(curr_struct["iratio"].as<real_t>());
 
       if (curr_struct["transvec"])
-        curr_structure_.grain_transvec(curr_struct.as<vector3_t>());
+        curr_structure_.grain_transvec(curr_struct["transvec"].as<vector3_t>());
 
       if (curr_struct["grain"]) {
         YAML::Node grain = curr_struct["grain"];
