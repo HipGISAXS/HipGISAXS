@@ -62,6 +62,11 @@ namespace hig {
     TaoView(tao, PETSC_VIEWER_STDOUT_SELF);
 
     ierr = TaoGetSolutionStatus(tao, &iter, &f, &gnorm, &cnorm, &xdiff, &reason); CHKERRQ(ierr);
+    std::cout << "** [lmvm] iteration number                  : " << iter << std::endl
+              << "**        function value (f)                : " << f << std::endl
+              << "**        gradient norm square (gnorm)      : " << gnorm << std::endl
+              << "**        infeasibility (cnorm)             : " << cnorm << std::endl
+              << "**        trust region step length (xdiff)  : " << xdiff << std::endl;
     #ifdef PETSC_37
       ierr = TaoGetTolerances(tao, &gatol, &grtol, &gttol); CHKERRQ(ierr);
     #else
@@ -69,7 +74,8 @@ namespace hig {
     #endif
     ierr = TaoGetMaximumIterations(tao, &maxiter); CHKERRQ(ierr);
     std::cout << "++ Optimization iteration " << iter << " / " << maxiter << " done." << std::endl;
-    if(gnorm <= gatol) {
+    //if(gnorm <= gatol) {
+    if(f <= gatol) {
       #ifdef PETSC_37
         TaoSetConvergedReason(tao, TAO_CONVERGED_ATOL);
       #else
