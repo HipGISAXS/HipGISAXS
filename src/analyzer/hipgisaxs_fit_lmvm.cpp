@@ -33,6 +33,12 @@ namespace hig {
   // Declare user function for tao
   PetscErrorCode HipGISAXSFormFunctionGradient(TaoSolver, Vec, PetscReal *, Vec, void *);
 
+  // context for lmvm
+  typedef struct {
+    ObjectiveFunction* obj_func_;
+    std::vector<hig::real_t> psteps_;
+  } lmvm_ctx_t;
+
 
   bool FitLMVMAlgo::run(int argc, char **argv, int algo_num, int img_num) {
 
@@ -45,7 +51,10 @@ namespace hig {
     PetscErrorCode ierr;
     PetscInitialize(&argc, &argv, (char*) 0, help);
 
-    std::vector<std::pair<hig::real_t, hig::real_t> > plimits = HiGInput::instance().fit_param_limits();
+    //std::vector<std::pair<hig::real_t, hig::real_t> > plimits = HiGInput::instance().fit_param_limits();
+    //std::vector<hig::real_t> psteps = HiGInput::instance().fit_param_steps();
+    plimits_ = HiGInput::instance().fit_param_limits();
+    psteps_ = HiGInput::instance().fit_param_step_values();
 
     Vec x0, xmin, xmax;
     double y;
@@ -56,10 +65,10 @@ namespace hig {
       y = (double) x0_[i];
       VecSetValues(x0, 1, &i, &y, INSERT_VALUES);
       std::cout << "** " << y << " [ ";
-      y = (double) plimits[i].first;
+      y = (double) plimits_[i].first;
       VecSetValues(xmin, 1, &i, &y, INSERT_VALUES);
       std::cout << y << " ";
-      y = (double) plimits[i].second;
+      y = (double) plimits_[i].second;
       VecSetValues(xmax, 1, &i, &y, INSERT_VALUES);
       std::cout << y << " ] " << std::endl;
     } // for
@@ -82,11 +91,17 @@ namespace hig {
     ierr = VecCreateSeq(PETSC_COMM_SELF, num_obs_, &f);
 
     ierr = TaoCreate(PETSC_COMM_SELF, &tao);
-    ierr = TaoSetType(tao, TAOLMVM);
+    //ierr = TaoSetType(tao, TAOLMVM);
+    ierr = TaoSetType(tao, TAOBLMVM);
 
     ierr = TaoSetFromOptions(tao);
 
-    ierr = TaoSetObjectiveAndGradientRoutine(tao, HipGISAXSFormFunctionGradient, obj_func_);
+    lmvm_ctx_t ctx;
+    ctx.obj_func_ = obj_func_;
+    ctx.psteps_ = psteps_;
+
+    //ierr = TaoSetObjectiveAndGradientRoutine(tao, HipGISAXSFormFunctionGradient, obj_func_);
+    ierr = TaoSetObjectiveAndGradientRoutine(tao, HipGISAXSFormFunctionGradient, (void*) &ctx);
     ierr = TaoSetConvergenceTest(tao, &convergence_test, NULL);
 
     TaoSetMaximumIterations(tao, max_iter_);
@@ -173,6 +188,7 @@ namespace hig {
 
 
   PetscErrorCode HipGISAXSFormFunctionGradient(Tao tao, Vec X, PetscReal *f, Vec G, void *ptr) {
+    lmvm_ctx_t* ctx = (lmvm_ctx_t*) ptr;
     PetscInt i, j, size;
     PetscReal fxp, fxm, dx = 0.04;
     PetscReal *x, *g;
@@ -186,15 +202,17 @@ namespace hig {
 
     /* Compute Objective Funtion at X */
     for(i = 0; i < size; ++ i) xvec.push_back(x[i]);
-    *f = EvaluateFunction(tao, xvec, ptr);
+    *f = EvaluateFunction(tao, xvec, ctx->obj_func_);
 
     /* Evaluate gradients */
     for(i = 0; i < size; ++ i) {
       xpvec = xmvec = xvec;
-      xpvec[i] = xvec[i] + 0.5 * dx;
-      xmvec[i] = xvec[i] - 0.5 * dx;
-      fxp = EvaluateFunction(tao, xpvec, ptr);
-      fxm = EvaluateFunction(tao, xmvec, ptr);
+      real_t pstep = ctx->psteps_[i];
+      pstep = (pstep > TINY_) ? pstep : dx;
+      xpvec[i] = xvec[i] + 0.5 * pstep;
+      xmvec[i] = xvec[i] - 0.5 * pstep;
+      fxp = EvaluateFunction(tao, xpvec, ctx->obj_func_);
+      fxm = EvaluateFunction(tao, xmvec, ctx->obj_func_);
       g[i] = (fxp - fxm) / dx;
     } // for
 

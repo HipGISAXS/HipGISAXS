@@ -34,6 +34,8 @@ namespace hig {
 
     private:
       unsigned int num_obs_;
+      std::vector<std::pair<hig::real_t, hig::real_t> > plimits_;   // parameter limits/bounds
+      std::vector<hig::real_t> psteps_;                             // parameter step sizes
 
     public:
       FitLMVMAlgo() { name_= algo_lmvm; max_iter_ = 200; max_hist_ = 200; tol_ = 1e-6; }
