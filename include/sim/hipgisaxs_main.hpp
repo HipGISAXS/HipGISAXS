@@ -5,11 +5,6 @@
  *  Created: Jun 11, 2012
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
- *  Developers: Slim Chourou <stchourou@lbl.gov>
- *              Abhinav Sarje <asarje@lbl.gov>
- *              Elaine Chan <erchan@lbl.gov>
- *              Alexander Hexemer <ahexemer@lbl.gov>
- *              Xiaoye Li <xsli@lbl.gov>
  *
  *  Licensing: The HipGISAXS software is only available to be downloaded and
  *  used by employees of academic research institutions, not-for-profit
@@ -149,24 +144,29 @@ namespace hig {
       void printfc(const char*, complex_t*, unsigned int);
       void printfr(const char*, real_t*, unsigned int);
 
-      real_t gaussian (real_t x, real_t mean, real_t sigma) {
+      real_t gaussian(real_t x, real_t mean, real_t sigma) {
         return (1/(sigma*SQRT_2PI_)*std::exp(-(x-mean)*(x-mean)/(2*sigma*sigma)));
-      }
+      } // gaussian()
 
-            real_t gaussian3d (vector3_t x, vector3_t mean, vector3_t sigma) {
-                vector3_t t1 = (x-mean)*(x-mean);
-                vector3_t t2 = sigma*sigma;
-                real_t xx = 0;
-                real_t kk = 1;
-                int ndim = 0;
-                for (int i = 0; i < 3; i++)
-                    if (sigma[i] > 0 ) {
-                        xx += t1[i]/t2[i];
-                        kk *= sigma[i];
-                        ndim++;
-                    }
-                return (1./(std::pow(SQRT_2PI_,ndim)*kk) * std::exp(-0.5*xx));
-            }
+      real_t gaussian3d(vector3_t x, vector3_t mean, vector3_t sigma) {
+        vector3_t t1 = (x-mean) * (x-mean);
+        vector3_t t2 = sigma * sigma;
+        real_t xx = 0;
+        real_t kk = 1;
+        int ndim = 0;
+        for(int i = 0; i < 3; ++ i) {
+          if(sigma[i] > 0) {
+            xx += t1[i] / t2[i];
+            kk *= sigma[i];
+            ++ ndim;
+          } // if
+        } // for
+        return (1. / (std::pow(SQRT_2PI_, ndim) * kk) * std::exp(-0.5 * xx));
+      } // gaussian3d()
+
+      real_t cauchy(real_t x, real_t l, real_t s) {
+        return 1.0 / (PI_ * s * (1.0 + ((x - l) / s) * ((x - l) / s)));
+      } // cauchy()
 
     public:
       HipGISAXS(int, char**);

@@ -53,13 +53,14 @@ namespace hig {
 
 
   ParticleSwarmOptimization::ParticleSwarmOptimization(int narg, char** args,
-      ObjectiveFunction* obj, unsigned int algo_num, bool tune_omega = false, int type = 0) :
+                                                       ObjectiveFunction* obj,
+                                                       unsigned int algo_num,
+                                                       bool tune_omega = false,
+                                                       int type = 0) :
       rand_(time(NULL)), type_(type) {
     name_ = algo_pso;
-    max_hist_ = 100;
-    //tol_ = 1e-8;
+    max_hist_ = 200;
     tol_ = HiGInput::instance().analysis_tolerance(algo_num);
-
     obj_func_ = obj;
 
     foresee_num_ = 5;      // TODO: make it modifiable
@@ -126,8 +127,8 @@ namespace hig {
       multi_node_ = (*obj_func_).multi_node_comm();
       // the root communicator
       root_comm_ = (*multi_node_).universe_key();
-      std::cout << "** MPI Size: " << (*multi_node_).size(root_comm_);
-      std::cout << ", my rank: " << (*multi_node_).rank(root_comm_) << std::endl;
+      std::cout << "** MPI Size: " << (*multi_node_).size(root_comm_)
+                << ", my rank: " << (*multi_node_).rank(root_comm_) << std::endl;
       rand_.reset(time(NULL) + (*multi_node_).rank(root_comm_));
     #else
       root_comm_ = "world";
@@ -148,7 +149,7 @@ namespace hig {
     } // for
     if(min_limits.size() < num_params_) min_limits.resize(num_params_, 0.0);
     if(max_limits.size() < num_params_) max_limits.resize(num_params_,
-                                std::numeric_limits<real_t>::max());
+                                                          std::numeric_limits<real_t>::max());
     constraints_.param_values_min_ = min_limits;
     constraints_.param_values_max_ = max_limits;
 
@@ -429,7 +430,7 @@ namespace hig {
   } // ParticleSwarmOptimization::get_best_values()
 
 
-  bool ParticleSwarmOptimization::run(int narg, char** args, int img_num) {
+  bool ParticleSwarmOptimization::run(int narg, char** args, int algo_num, int img_num) {
     std::cout << "Running Particle Swarm Optimization ..." << std::endl;
 
     if(!(*obj_func_).set_reference_data(img_num)) return false;
@@ -487,8 +488,8 @@ namespace hig {
       #ifdef USE_MPI
       if((*multi_node_).is_master(root_comm_))
       #endif
-        std::cout << "@@@@@@ Generation time: " << elapsed << " ms. [total: "
-              << total_time << " ms.]" << std::endl;
+        std::cout << "@@@ Generation time: " << elapsed << " ms. [total: "
+                  << total_time << " ms.]" << std::endl;
     } // for
     
     // set the final values
@@ -498,10 +499,9 @@ namespace hig {
     #ifdef USE_MPI
     if((*multi_node_).is_master(root_comm_)) {
     #endif
-      std::cout << "@@@@@@ Global best: ";
+      std::cout << "@@@ Global best: ";
       std::cout << best_fitness_ << " [ ";
-      for(int j = 0; j < num_params_; ++ j)
-        std::cout << params_[j] << ": " << best_values_[j] << " ";
+      for(int j = 0; j < num_params_; ++ j) std::cout << params_[j] << ": " << best_values_[j] << " ";
       std::cout << "]" << std::endl;
       std::ofstream outfile("hipgisaxs_fit_params.txt");
       for(int j = 0; j < num_params_; ++ j)
@@ -522,16 +522,16 @@ namespace hig {
     #ifdef USE_MPI
     myrank = (*multi_node_).rank(root_comm_);
     #endif
+
     for(int i = 0; i < num_particles_; ++ i) {
       std::cout << myrank << ": Particle " << i << std::endl;
       // construct param map
-      //parameter_map_t curr_particle;
       real_vec_t curr_particle;
-      for(int j = 0; j < num_params_; ++ j)
-        curr_particle.push_back(particles_[i].param_values_[j]);
-        //curr_particle[params_[j]] = particles_[i].param_values_[j];
+      for(int j = 0; j < num_params_; ++ j) curr_particle.push_back(particles_[i].param_values_[j]);
+
       // tell hipgisaxs about the communicator to work with
       (*obj_func_).update_sim_comm(particle_comm_);
+
       // compute the fitness
       real_vec_t curr_fitness = (*obj_func_)(curr_particle);
 
@@ -562,16 +562,13 @@ namespace hig {
         cfilename_s << "convergence." << myrank << "." << i << ".dat";
         std::string prefix(HiGInput::instance().param_pathprefix() + "/" + HiGInput::instance().runname());
         std::ofstream out(prefix + "/" + cfilename_s.str(), std::ios::app);
+        out.precision(10);
         out << myrank << "\t" << i << "\t" << curr_fitness[0] << "\t";
         for(int j = 0; j < num_params_; ++ j) out << particles_[i].param_values_[j] << "\t";
         out << particles_[i].best_fitness_ << "\t";
         for(int j = 0; j < num_params_; ++ j) out << particles_[i].best_values_[j] << "\t";
         out << std::endl;
         out.close();
-        //std::cout << "@@@@ " << i + 1 << ": " << curr_fitness[0] << " "
-        //  << particles_[i].best_fitness_ << " [ ";
-        //for(int j = 0; j < num_params_; ++ j) std::cout << particles_[i].param_values_[j] << " ";
-        //std::cout << "]" << std::endl;
       #ifdef USE_MPI
       } // if
       #endif
@@ -579,34 +576,20 @@ namespace hig {
 
     #ifdef USE_MPI
       // communicate and find globally best fitness
-      real_t new_best_fitness; int best_rank;
-      /*if((*multi_node_).size(particle_comm_) > 1 && num_particles_ == 1) {
-        // in the case when multiple procs work on one particle,
-        // only the master needs to communicate with other masters (for other particles)
-        // TODO ...
-        std::cout << "error: this case has not been implemented yet" << std::endl;
-        return false;
-        if(!(*multi_node_).allreduce(pmasters_comm_, best_fitness_, new_best_fitness, best_rank,
-                        woo::comm::minloc))
-          return false;
-        best_fitness_ = new_best_fitness;
-      } else {
-        if(!(*multi_node_).allreduce(root_comm_, best_fitness_, new_best_fitness, best_rank,
-                        woo::comm::minloc))
-          return false;
-        best_fitness_ = new_best_fitness;
-      } // if-else*/
+      real_t new_best_fitness = 0.0; int best_rank = -1;
       // all particle masters find the proc with global min
       if(!(*multi_node_).allreduce(pmasters_comm_, best_fitness_, new_best_fitness, best_rank,
-                      woo::comm::minloc))
+                                   woo::comm::minloc))
         return false;
+      best_fitness_ = new_best_fitness;   // this makes sense only on particle masters, but doesnt hurt
       // the best rank proc broadcasts its best values to all other particle masters
-      //if(!(*multi_node_).broadcast(root_comm_, best_values_, best_rank)) return false;
       if(!(*multi_node_).broadcast(pmasters_comm_, best_values_, best_rank)) return false;
       // also broadcast to other procs responsible for same particle, if is the case
       if((*multi_node_).size(particle_comm_) > 1) {
+        if(!(*multi_node_).broadcast(particle_comm_, best_fitness_,
+                                     (*multi_node_).master(particle_comm_))) return false;
         if(!(*multi_node_).broadcast(particle_comm_, best_values_,
-                      (*multi_node_).master(particle_comm_))) return false;
+                                     (*multi_node_).master(particle_comm_))) return false;
       } // if
     #endif
 
@@ -636,23 +619,12 @@ namespace hig {
     if(tune_omega_) pso_omega_ /= 2.0;
     std::cout << myrank << ": Omega = " << pso_omega_ << std::endl;
 
-    /*std::cout << "~~~~ Generation best: ";
-    for(int i = 0; i < num_particles_; ++ i) {
-      std::cout << "[ ";
-      for(int j = 0; j < num_params_; ++ j)
-        std::cout << particles_[i].param_values_[j] << " ";
-      std::cout << "]\t";
-    } // for
-    std::cout << std::endl;*/
-
     // print the global best - only root master does this
     #ifdef USE_MPI
     if((*multi_node_).is_master(root_comm_)) {
     #endif
-      std::cout << "@@@@@@ Global best: ";
-      std::cout << best_fitness_ << " [ ";
-      for(int j = 0; j < num_params_; ++ j)
-        std::cout << params_[j] << ": " << best_values_[j] << " ";
+      std::cout << "@@@ Global best: " << best_fitness_ << " [ ";
+      for(int j = 0; j < num_params_; ++ j) std::cout << params_[j] << ": " << best_values_[j] << " ";
       std::cout << "]" << std::endl;
     #ifdef USE_MPI
     } // if

@@ -34,7 +34,7 @@ namespace hig {
   PetscErrorCode HipGISAXSFormFunctionGradient(TaoSolver, Vec, PetscReal *, Vec, void *);
 
 
-  bool FitLMVMAlgo::run(int argc, char **argv, int img_num) {
+  bool FitLMVMAlgo::run(int argc, char **argv, int algo_num, int img_num) {
 
     if(!(*obj_func_).set_reference_data(img_num)) return false;
 

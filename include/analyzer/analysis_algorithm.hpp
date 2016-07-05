@@ -30,14 +30,7 @@ namespace hig {
       real_vec_t xn_;               // final param values
 
     public:
-      AnalysisAlgorithm(): max_iter_(200), max_hist_(100), tol_(1e-4), num_params_(0) { }
-      /*AnalysisAlgorithm(ObjectiveFunction* func):
-          max_iter_(200), max_hist_(100), tol_(1e-4) {
-        obj_func_ = func;
-        num_params_ = (*obj_func_).num_fit_params();
-        x0_ = (*obj_func_).fit_param_init_values();
-      } // AnalysisAlgorithm()*/
-
+      AnalysisAlgorithm(): max_iter_(200), max_hist_(200), tol_(1e-6), num_params_(0) { }
       ~AnalysisAlgorithm() { }
 
       bool init_params(const real_vec_t& X0);
@@ -46,7 +39,7 @@ namespace hig {
       real_vec_t get_param_values() const { return xn_; }
       real_t tolerance() const { return tol_; }
 
-      virtual bool run(int, char**, int) = 0;
+      virtual bool run(int, char**, int, int) = 0;
 
     }; // class AnalysisAlgorithm
 

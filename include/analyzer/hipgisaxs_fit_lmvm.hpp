@@ -47,7 +47,7 @@ namespace hig {
 
       ~FitLMVMAlgo() { }
 
-      bool run(int argc,char **argv, int);
+      bool run(int argc,char **argv, int, int);
       void print();
 
   }; // class FitLMVMAlgo

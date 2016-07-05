@@ -175,7 +175,7 @@ namespace hig {
 
       bool init();
 
-      bool run(int, char**, int);              // simulate
+      bool run(int, char**, int, int);              // simulate
       parameter_map_t get_best_values() const;
       #ifdef USE_MPI
         bool is_master() const { return (*multi_node_).is_master(root_comm_); }

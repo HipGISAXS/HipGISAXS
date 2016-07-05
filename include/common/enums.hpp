@@ -31,6 +31,7 @@ namespace hig {
     shape_null,
     shape_error,
     shape_box,        /* box */
+    shape_cube,       /* same as box */
     shape_cylinder,      /* cylinder */
     shape_sphere,      /* sphere */
     shape_truncpyr,      /* truncated pyramid */
@@ -84,10 +85,12 @@ namespace hig {
   enum StatisticType {
     stat_null,
     stat_error,
-    stat_gaussian,      /* gaussian distribution */
+    stat_gaussian,    /* gaussian distribution */
     stat_none,        /* default */
     stat_random,      /* random distribution */
-    stat_range,        /* range of values (basically same as stat_random) */
+    stat_range,       /* range of values (basically same as stat_random) */
+    stat_cauchy,      /* cauchy distribution */
+    stat_t,           /* t distribution */
     stat_uniform      /* uniform distribution */
   }; // enum StatisticType
 

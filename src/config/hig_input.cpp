@@ -801,12 +801,15 @@ namespace hig {
       case struct_ensemble_orient_rot3_token:
       case struct_ensemble_orient_rot_axis_token:
       case struct_ensemble_orient_rot_angles_token:
+      case struct_ensemble_orient_rot_anglelocation_token:
       case struct_ensemble_orient_rot_anglemean_token:
+      case struct_ensemble_orient_rot_anglescale_token:
       case struct_ensemble_orient_rot_anglesd_token:
         break;
 
       case mean_token:
       case stddev_token:
+      case nsamples_token:
         break;
 
       case compute_token:
@@ -1153,6 +1156,10 @@ namespace hig {
         curr_structure_.percusyevick_putVolf(num);
 
       case struct_iratio_token:
+        if (num <= 0) {
+          std::cerr << "error: iratio can't be a negative number or zeros" << std::endl;
+          return false;
+        }
         curr_structure_.iratio(num);
         break;
 
@@ -1242,6 +1249,20 @@ namespace hig {
         }
         break;
 
+      case nsamples_token:
+        switch (get_curr_parent()){
+          case struct_grain_lattice_a_token:
+            curr_structure_.grain_scaling_a_nsamples(num);
+            break;
+          case struct_grain_lattice_b_token:
+            curr_structure_.grain_scaling_b_nsamples(num);
+            break;
+          case struct_grain_lattice_c_token:
+            curr_structure_.grain_scaling_c_nsamples(num);
+            break;
+          }
+        break;
+
       case struct_grain_repetition_token:
         curr_vector_.push_back(num);
         if(curr_vector_.size() > 3) {
@@ -1274,6 +1295,24 @@ namespace hig {
         } // if
         break;
 
+      case struct_ensemble_orient_rot_anglelocation_token:
+        parent = get_curr_parent();
+        switch(parent) {
+          case struct_ensemble_orient_rot1_token:
+            curr_structure_.grain_orientation_rot1_anglelocation(num);
+            break;
+          case struct_ensemble_orient_rot2_token:
+            curr_structure_.grain_orientation_rot2_anglelocation(num);
+            break;
+          case struct_ensemble_orient_rot3_token:
+            curr_structure_.grain_orientation_rot3_anglelocation(num);
+            break;
+          default:
+            std::cerr << "error: something wrong in the rot angle location" << std::endl;
+            return false;
+        } // switch
+        break;
+
       case struct_ensemble_orient_rot_anglemean_token:
         parent = get_curr_parent();
         switch(parent) {
@@ -1288,6 +1327,24 @@ namespace hig {
             break;
           default:
             std::cerr << "error: something wrong in the rot angle mean" << std::endl;
+            return false;
+        } // switch
+        break;
+
+      case struct_ensemble_orient_rot_anglescale_token:
+        parent = get_curr_parent();
+        switch(parent) {
+          case struct_ensemble_orient_rot1_token:
+            curr_structure_.grain_orientation_rot1_anglescale(num);
+            break;
+          case struct_ensemble_orient_rot2_token:
+            curr_structure_.grain_orientation_rot2_anglescale(num);
+            break;
+          case struct_ensemble_orient_rot3_token:
+            curr_structure_.grain_orientation_rot3_anglescale(num);
+            break;
+          default:
+            std::cerr << "error: something wrong in the rot angle scale" << std::endl;
             return false;
         } // switch
         break;
@@ -1912,6 +1969,32 @@ namespace hig {
             default:
               std::cerr << "error: invalid parameter found in a shape" << std::endl;
               return false;
+          } // switch
+          ++ param;
+        } // while
+        return true;
+
+      case shape_cube:
+        while(param != shape.param_end()) {
+          switch((*param).second.type()) {
+            case param_height:
+              max_dim[0] = max((*param).second.max(), (*param).second.min());
+              min_dim[0] = -max_dim[0];
+              max_dim[1] = max((*param).second.max(), (*param).second.min());
+              min_dim[1] = -max_dim[1];
+              max_dim[2] = max((*param).second.max(), (*param).second.min());
+              min_dim[2] = -max_dim[0];
+              break;
+            case param_xsize:
+              case param_ysize:
+              case param_radius:
+              case param_edge:
+              case param_baseangle:
+              // do nothing
+              break;
+            default:
+              std::cerr << "error: invalid parameter found in a shape" << std::endl;
+            return false;
           } // switch
           ++ param;
         } // while
@@ -2691,11 +2774,11 @@ namespace hig {
       real_t new_val = (*p).second;
       // check if new_val is within the param space
       ParamSpace ps = param_space_key_map_.at((*p).first);  // if not exist, exception!!
-      if(new_val < ps.min_ || new_val > ps.max_) {
-        std::cerr << "warning: given parameter value out of range space. resetting to limit."
-              << std::endl;
-        new_val = std::max(std::min(new_val, ps.max_), ps.min_);
-      } // if
+      //if(new_val < ps.min_ || new_val > ps.max_) {
+      //  std::cerr << "warning: given parameter value out of range space. resetting to limit."
+      //        << std::endl;
+      //  new_val = std::max(std::min(new_val, ps.max_), ps.min_);
+      //} // if
       std::string param = param_key_map_.at((*p).first);  // if not exist, exception!!
       // get first component from the string
       std::string keyword, rem_param;

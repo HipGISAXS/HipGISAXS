@@ -157,7 +157,9 @@ namespace hig {
         KeyWords_[std::string("algoparam")]       = fit_algorithm_param_token;
         KeyWords_[std::string("alphai")]          = instrument_scatter_alphai_token;
         KeyWords_[std::string("angles")]          = struct_ensemble_orient_rot_angles_token;
+        KeyWords_[std::string("anglelocation")]   = struct_ensemble_orient_rot_anglelocation_token;
         KeyWords_[std::string("anglemean")]       = struct_ensemble_orient_rot_anglemean_token;
+        KeyWords_[std::string("anglescale")]      = struct_ensemble_orient_rot_anglescale_token;
         KeyWords_[std::string("anglesd")]         = struct_ensemble_orient_rot_anglesd_token;
         KeyWords_[std::string("axis")]            = struct_ensemble_orient_rot_axis_token;
         KeyWords_[std::string("b")]               = struct_grain_lattice_b_token;
@@ -264,6 +266,7 @@ namespace hig {
         KeyWords_[std::string("zrot")]            = shape_zrot_token;
         KeyWords_[std::string("mean")]            = mean_token;
         KeyWords_[std::string("stddev")]          = stddev_token;
+        KeyWords_[std::string("nsamples")]        = nsamples_token;
         KeyWords_[std::string("paracrystal")]     = struct_paracrystal;
         KeyWords_[std::string("percusyevick")]    = struct_percusyevick;
         KeyWords_[std::string("dimensions")]      = struct_dims;
@@ -276,6 +279,7 @@ namespace hig {
         /* shape name keywords */
 
         ShapeKeyWords_[std::string("box")]        = shape_box;
+        ShapeKeyWords_[std::string("cube")]       = shape_cube;
         ShapeKeyWords_[std::string("cylinder")]   = shape_cylinder;
         ShapeKeyWords_[std::string("hcylinder")]  = shape_horizontal_cylinder;
         ShapeKeyWords_[std::string("randcylinders")]  = shape_random_cylinders;
@@ -301,12 +305,14 @@ namespace hig {
 
         /* statistic type keywords */
 
-        StatisticKeyWords_[std::string("none")]    = stat_none;
-        StatisticKeyWords_[std::string("single")]  = stat_none;
+        StatisticKeyWords_[std::string("none")]     = stat_none;
+        StatisticKeyWords_[std::string("single")]   = stat_none;
         StatisticKeyWords_[std::string("uniform")]  = stat_uniform;
-        StatisticKeyWords_[std::string("random")]  = stat_random;
-        StatisticKeyWords_[std::string("range")]  = stat_range;
-        StatisticKeyWords_[std::string("gaussian")]  = stat_gaussian;
+        StatisticKeyWords_[std::string("random")]   = stat_random;
+        StatisticKeyWords_[std::string("range")]    = stat_range;
+        StatisticKeyWords_[std::string("gaussian")] = stat_gaussian;
+        StatisticKeyWords_[std::string("cauchy")]   = stat_cauchy;
+        StatisticKeyWords_[std::string("t")]        = stat_t;
 
         /* lattice type keywords */
 

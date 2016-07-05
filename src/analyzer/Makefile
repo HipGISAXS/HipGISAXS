@@ -53,6 +53,27 @@ andromeda-gnu:
 		"HDF5_LIBS = -lhdf5 -lz"                                \
 		)
 
+test-andromeda-gnu:
+	( $(MAKE) test                               \
+		"MPI_DIR = /usr/local/openmpi"                          \
+		"PETSC_DIR = /usr/local/petsc-3.6.3"                    \
+		"PETSC_VERSION = \"3.6\""                               \
+		"HIPGISAXS_DIR = ../.."                                 \
+		"HDF5_DIR = /usr/local/hdf5-1.8.9"                      \
+		"TIFF_DIR = /usr/local/tiff-4.0.2"                      \
+		"BOOST_DIR = /usr/local/boost"                          \
+		"SZIP_DIR = /usr/local/szip-2.1"                        \
+		"CUDA_DIR = /usr/local/cuda"                            \
+		"CXX = mpicxx"                                          \
+		"CXX_FLAGS = -std=c++11 -fopenmp -DUSE_MPI"             \
+		"CXX_FLAGS += -O3"                                      \
+		"OPT_FLAGS = -O3"                                       \
+		"DBG_FLAGS = -g"                                        \
+		"MPI_LIBS = -lmpi -lmpi_cxx"                            \
+		"PETSC_LIBS = -lpetsc"                                  \
+		"HDF5_LIBS = -lhdf5 -lz"                                \
+		)
+
 # with intel don't use mpi for now as it has not been tested
 andromeda-intel:
 	( $(MAKE) hipgisaxs install                               \
@@ -151,7 +172,7 @@ SRC_DIR = $(PREFIX)
 BIN_DIR = $(PREFIX)
 PREC_FLAG = -DDOUBLEP    ## double precision is default
 
-ALL_FLAGS = $(CXX_FLAGS) $(PREC_FLAG) $(PETSC_FLAG)
+ALL_FLAGS = $(CXX_FLAGS) $(PREC_FLAG) $(PETSC_FLAG) -g
 
 all: andromeda-gnu
 	@echo $(PETSC_VERSION)

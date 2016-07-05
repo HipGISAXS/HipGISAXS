@@ -29,8 +29,8 @@ namespace hig {
     for(int i = 0; i < HiGInput::instance().num_analysis_data(); ++ i) {
       for(int j = 0; j < wf_.size(); ++ j) {
         // the flag is primarily for the test mode
-        if(flag < 0) wf_[j]->run(argc, argv, -1);    // ref data to be computed when flag < 0
-        else wf_[j]->run(argc, argv, i);             // ref data to be read when flag >= 0
+        if(flag < 0) wf_[j]->run(argc, argv, j, -1);    // ref data to be computed when flag < 0
+        else wf_[j]->run(argc, argv, j, i);             // ref data to be read when flag >= 0
         all_results.push_back(wf_[j]->get_param_values());
       } // for
     } // for

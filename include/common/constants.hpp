@@ -3,7 +3,6 @@
  *
  *  File: constants.hpp
  *  Created: Aug 25, 2012
- *  Modified: Wed 08 Oct 2014 12:13:01 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *

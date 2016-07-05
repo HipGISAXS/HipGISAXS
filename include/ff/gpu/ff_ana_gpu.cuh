@@ -62,6 +62,9 @@ namespace hig {
                 const std::vector<real_t>&, const std::vector<real_t>&,
                 const std::vector<real_t>&, const std::vector<real_t>&,
                 const RotMatrix_t &, const std::vector<real_t>&, std::vector<complex_t>&);
+      bool compute_cube(const real_t, const real_t,
+                const std::vector<real_t>&, const std::vector<real_t>&,
+                const RotMatrix_t &, const std::vector<real_t>&, std::vector<complex_t>&);
       bool compute_cylinder(const real_t, const real_t,
                 const std::vector<real_t>&, const std::vector<real_t>&,
                 const std::vector<real_t>&, const std::vector<real_t>&,

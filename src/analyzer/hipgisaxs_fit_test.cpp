@@ -98,8 +98,9 @@ int main(int narg, char** args) {
   } // if
   std::string algo(arg_map.at("-algo")[0]);
   if(algo.compare("pounders") == 0) {
-    (*obj_func).set_distance_measure(new ResidualVector());
-    ana_algo = new hig::FitPOUNDERSAlgo(obj_func);
+    //(*obj_func).set_distance_measure(new ResidualVector());
+    (*obj_func).set_distance_measure(new RelativeResidualVector());
+    ana_algo = new hig::FitPOUNDERSAlgo(narg, args, obj_func, 0);
   } else if(algo.compare("pso") == 0) {
     if(arg_map.count("-pso_omega") < 1 ||
         arg_map.count("-pso_phi1") < 1 ||
@@ -111,7 +112,8 @@ int main(int narg, char** args) {
             << std::endl;
       return -1;
     } // if
-    (*obj_func).set_distance_measure(new AbsoluteDifferenceSquareNorm());
+    //(*obj_func).set_distance_measure(new AbsoluteDifferenceSquareNorm());
+    (*obj_func).set_distance_measure(new ScaledRelativeAbsoluteDifferenceSquare());
     ana_algo = new hig::ParticleSwarmOptimization(narg, args, obj_func,
                             atof(arg_map.at("-pso_omega")[0].c_str()),
                             atof(arg_map.at("-pso_phi1")[0].c_str()),
@@ -121,10 +123,11 @@ int main(int narg, char** args) {
                             false, 0);
   } else if(algo.compare("bruteforce") == 0) {
     (*obj_func).set_distance_measure(new AbsoluteDifferenceSquareNorm());
-    ana_algo = new hig::BruteForceOptimization(narg, args, obj_func);
-    } else if(algo.compare ("lmvm") == 0) {
-        (*obj_func).set_distance_measure(new AbsoluteDifferenceSquareNorm());
-        ana_algo = new hig::FitLMVMAlgo (obj_func);
+    ana_algo = new hig::BruteForceOptimization(narg, args, obj_func, 0);
+  } else if(algo.compare ("lmvm") == 0) {
+    //(*obj_func).set_distance_measure(new AbsoluteDifferenceSquareNorm());
+    (*obj_func).set_distance_measure(new RelativeAbsoluteDifferenceSquare());
+    ana_algo = new hig::FitLMVMAlgo(narg, args, obj_func, 0);
   } else {
     std::cerr << "error: unknown analysis algorithm specified" << std::endl;
     std::cerr << "valid values are: pounders, pso, bruteforce" << std::endl;
