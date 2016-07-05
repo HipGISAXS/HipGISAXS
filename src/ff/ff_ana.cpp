@@ -73,7 +73,7 @@ namespace hig {
                                     ) {
 
     #ifdef FF_VERBOSE
-      std::cout << "-- Computing form factor analytically ... " << std::endl;
+      std::cerr << "-- Computing form factor analytically ... " << std::endl;
     #endif
 //    #ifdef TIME_DETAIL_1
       woo::BoostChronoTimer compute_timer;
@@ -165,7 +165,7 @@ namespace hig {
 
     #ifdef TIME_DETAIL_1
       compute_timer.stop();
-      std::cout << "**               FF compute time: " << compute_timer.elapsed_msec() << " ms."
+      std::cerr << "**               FF compute time: " << compute_timer.elapsed_msec() << " ms."
             << std::endl;
     #endif // TIME_DETAIL_1
 

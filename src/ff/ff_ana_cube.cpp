@@ -85,7 +85,7 @@ namespace hig {
     #ifdef FF_ANA_GPU
       // on gpu
       #ifdef FF_VERBOSE
-        std::cout << "-- Computing cube FF on GPU ..." << std::endl;
+        std::cerr << "-- Computing cube FF on GPU ..." << std::endl;
       #endif
 
       std::vector<real_t> transvec_v;
@@ -95,7 +95,7 @@ namespace hig {
       gff_.compute_cube(tau, eta, x, distr_x, rot_, transvec_v, ff);
     #else
       // on cpu
-      std::cout << "-- Computing cube FF on CPU ..." << std::endl;
+      std::cerr << "-- Computing cube FF on CPU ..." << std::endl;
       // initialize ff
       ff.clear();  ff.resize(nqz, CMPLX_ZERO_);
 
@@ -128,7 +128,7 @@ namespace hig {
     #endif // FF_ANA_GPU
     #ifdef TIME_DETAIL_2
       maintimer.stop();
-      std::cout << "**           Cube FF compute time: " << maintimer.elapsed_msec() << " ms." << std::endl;
+      std::cerr << "**           Cube FF compute time: " << maintimer.elapsed_msec() << " ms." << std::endl;
     #endif // TIME_DETAIL_2
 
     return true;
