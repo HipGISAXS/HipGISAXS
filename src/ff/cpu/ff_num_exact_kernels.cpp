@@ -18,7 +18,9 @@
 #include <cmath>
 #include <cstring>
 
+#ifdef PROFILE_INTEL_VTUNE
 #include <ittnotify.h>
+#endif
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -249,8 +251,12 @@ namespace hig {
     woo::BoostChronoTimer timer;
     timer.start();
 
+    #ifdef PROFILE_INTEL_SDE
     __SSC_MARK(0x111);      // start tracing (intel sde)
+    #endif
+    #ifdef PROFILE_INTEL_VTUNE
     __itt_resume();         // start vtune
+    #endif
 
     // NOTE: each thread accesses all triangles. TODO ... improve this later
 
@@ -266,8 +272,12 @@ namespace hig {
       ff[i_z] = avx_hreduce_cp(ff_temp);
     } // for
 
+    #ifdef PROFILE_INTEL_VTUNE
     __itt_pause();
+    #endif
+    #ifdef PROFILE_INTEL_SDE
     __SSC_MARK(0x222);
+    #endif
 
     timer.stop();
     compute_time = timer.elapsed_msec();

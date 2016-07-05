@@ -19,8 +19,9 @@
 #include <cmath>
 #include <cstring>
 
-// temporary for profiling
+#ifdef PROFILE_INTEL_VTUNE
 #include <ittnotify.h>
+#endif
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -152,8 +153,12 @@ namespace hig {
     woo::BoostChronoTimer timer;
     timer.start();
 
+    #ifdef PROFILE_INTEL_SDE
     __SSC_MARK(0x111);      // start tracing (intel sde)
+    #endif
+    #ifdef PROFILE_INTEL_VTUNE
     __itt_resume();         // start vtune
+    #endif
 
     #pragma omp parallel for schedule(runtime)
     for(int i_z = 0; i_z < nqz; ++ i_z) {
@@ -165,8 +170,12 @@ namespace hig {
       ff[i_z] = ff_temp;
     } // for
 
+    #ifdef PROFILE_INTEL_VTUNE
     __itt_pause();
+    #endif
+    #ifdef PROFILE_INTEL_SDE
     __SSC_MARK(0x222);
+    #endif
 
     timer.stop();
     compute_time = timer.elapsed_msec();

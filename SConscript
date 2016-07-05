@@ -383,6 +383,8 @@ add_option("dbgl", "debug build, no optimization, debug logging", 0, True,
 add_option("with-cuda", "Enable GPU support", 0, False)
 add_option("with-mic", "Enable Intel MIC support", 0, False)
 add_option("with-mpi", "Enable MPI parallelization", 0, False)
+add_option("with-mkl", "Enable Intel MKL", 0, False)
+add_option("with-avx", "Enable AVX optimizations", 0, False)
 add_option("with-parallel-hdf5", "Enable parallel HDF5 data format support", 0, False)
 add_option("with-papi", "Enable PAPI profiling", 0, False)
 add_option("use-single", "Use single precision floating point arithmatic", 0, False)
@@ -391,6 +393,9 @@ add_option("detail-time", "Output detailed timings", 0, False)
 add_option("detail-mem", "Output detailed memory usage", 0, False)
 add_option("verbose", "Be verbose", 0, False)
 add_option("with-tau", "Compile with TAU for profiling", 0, False)
+add_option("with-vtune", "Compile for profiling with Intel VTune", 0, False)
+add_option("with-sde", "Compile for profiling with Intel SDE", 0, False)
+add_option("with-pcm", "Compile for profiling with Intel PCM", 0, False)
 
 printLocalInfo()
 
@@ -410,12 +415,17 @@ if release_build and using_debug:
     print("error: release build cannot have debug enabled. make a choice first.")
     Exit(1)
 using_cuda = _has_option("with-cuda")
+using_mkl = _has_option("with-mkl")
 using_mic = _has_option("with-mic")      ## disabling MIC version
 using_mpi = _has_option("with-mpi")
 using_parallel_hdf5 = _has_option("with-parallel-hdf5")
 using_papi = _has_option("with-papi")
 using_single = _has_option("use-single")
 using_tau = _has_option("with-tau")
+using_vtune = _has_option("with-vtune")
+using_sde = _has_option("with-sde")
+using_pcm = _has_option("with-pcm")
+using_avx = _has_option('with-avx')
 
 if not using_mpi and using_parallel_hdf5:
     print("error: to enable parallel HDF5 support, you need to enable MPI as well.")
@@ -514,7 +524,7 @@ if _has_option("cpppath"):
 #print env['LIBPATH']
 #print env['ENV']
 
-use_mkl = False
+use_mkl = using_mkl
 
 ## call configure
 if not get_option('clean'):
@@ -522,7 +532,6 @@ if not get_option('clean'):
 
     ## MKL with intel only (Edison)
     if env['TOOLCHAIN'] == toolchain_intel:
-      use_mkl = True
       if 'MKL_INC' in env['ENV']:
         add_include_path(env['ENV']['MKL_INC'])
       if 'MKL_LIBDIR' in env['ENV']:
@@ -553,7 +562,13 @@ if not get_option('clean'):
     #mpi_libs = ["mpi_cxx", "mpi"]
     #gpu_libs = ["cudart", "cufft", "cudadevrt", "nvToolsExt"]
     gpu_libs = ["cudart"]
+    
+    ## profiling libs
     papi_libs = ["papi"]
+    intelvtune_libs = [ 'ittnotify' ]
+    intelsde_libs = []
+    intelpcm_libs = [ 'intelpcm' ]
+
     ## required flags
     detail_flags = []
     if _has_option("detail-time"): detail_flags += ['TIME_DETAIL_1', 'TIME_DETAIL_2']
@@ -564,17 +579,40 @@ if not get_option('clean'):
     mic_flags = [] #['USE_MIC', 'FF_MIC_OPT', 'FF_NUM_MIC_SWAP', 'FF_NUM_MIC_KB']
     cpu_flags = ['FF_NUM_CPU_FUSED', 'FF_CPU_OPT']
     ## choose at most one of the following
-    if use_mkl: cpu_flags += [ 'FF_CPU_OPT_MKL' ]
-    env.Append(CCFLAGS = ["-mkl"])
-    env.Append(LINKFLAGS = ["-mkl"])
-    #cpu_flags += [ 'INTEL_AVX', 'FF_CPU_OPT_AVX' ]
+    if use_mkl:
+      cpu_flags += [ 'FF_CPU_OPT_MKL' ]
+      env.Append(CCFLAGS = ["-mkl"])
+      env.Append(LINKFLAGS = ["-mkl"])
+    if using_avx: cpu_flags += [ 'INTEL_AVX', 'FF_CPU_OPT_AVX' ]
 
     mpi_flags = ['USE_MPI']
     parallel_hdf5_flags = ['USE_PARALLEL_HDF5']
-    papi_flags = ['PROFILE_PAPI']
 
-    all_flags = detail_flags
-    all_libs = boost_libs + tiff_libs + mkl_libs + other_libs + [ 'ittnotify' ]
+    ## profiling flags
+    papi_flags = ['PROFILE_PAPI']
+    intelsde_flags = [ 'PROFILE_INTEL_SDE' ]
+    intelvtune_flags = [ 'PROFILE_INTEL_VTUNE' ]
+    intelpcm_flags = [ 'PROFILE_INTEL_PCM' ]
+
+    profile_flags = []
+    profile_libs = []
+    if using_papi:
+      profile_flags += papi_flags
+      profile_libs += papi_libs
+    if using_vtune:
+      profile_flags += intelvtune_flags
+      profile_libs += intelvtune_libs
+    if using_sde:
+      profile_flags += intelsde_flags
+      profile_libs += intelsde_libs
+    if using_pcm:
+      profile_flags += intelpcm_flags
+      profile_libs += intelpcm_libs
+
+
+    all_flags = detail_flags + profile_flags
+    all_libs = boost_libs + tiff_libs + mkl_libs + other_libs + profile_libs
+
 
     if using_cuda:
         all_libs += gpu_libs
@@ -610,7 +648,7 @@ if not get_option('clean'):
         print("Enabling use of accelerator: %s" % using_accelerator)
 
     if not using_mic:
-      env.Append(CCFLAGS = ["-mavx", "-mtune=core-avx2"]) #, "-msse4.1", "-msse4.2", "-mssse3"])
+      env.Append(CCFLAGS = ["-mavx", "-mtune=core-avx2"])
       #env.Append(CCFLAGS = ["-no-vec"])
 
     if using_debug:

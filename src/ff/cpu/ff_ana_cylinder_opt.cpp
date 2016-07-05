@@ -16,7 +16,12 @@
 
 #include <cstring>
 
+#ifdef PROFILE_INTEL_VTUNE
 #include <ittnotify.h>  // for vtune
+#endif
+#ifdef PROFILE_INTEL_PCM
+#include <cpucounters.h>  // from the intel pcm package
+#endif
 
 #ifdef PROFILE_PAPI
 # include <papi.h>
@@ -339,15 +344,43 @@ namespace hig {
     //PAPI_start_counters(papi_events, 3);
     PAPI_start_counters(papi_events, 2);
     #endif // PROFILE_PAPI
-
+    #ifdef PROFILE_INTEL_SDE
     __SSC_MARK(0x111);    // for intel sde
+    #endif
+    #ifdef PROFILE_INTEL_VTUNE
     __itt_resume();       // for intel vtune
+    #endif
+    #ifdef PROFILE_INTEL_PCM
+    PCM *m = PCM::getInstance();
+    SystemCounterState before_state, after_state;
+    #pragma omp master
+    {
+    if(m->program() != PCM::Success) std::cerr << "error: failed to get PCM object" << std::endl;
+    before_state = getSystemCounterState();
+    }
+    #pragma omp barrier
+    #endif
 
     cylinder_kernel_opt(r, h, transvec, ff);
 
+    #ifdef PROFILE_INTEL_PCM
+    uint64_t bytes_read, bytes_write;
+    #pragma omp master
+    {
+    after_state = getSystemCounterState();
+    bytes_read = getBytesReadFromMC(before_state, after_state);
+    bytes_write = getBytesWrittenToMC(before_state, after_state);
+    m->cleanup();
+    std::cout << "++               DRAM bytes read: " << bytes_read << " bytes" << std::endl;
+    std::cout << "++            DRAM bytes written: " << bytes_write << " bytes" << std::endl;
+    }
+    #endif
+    #ifdef PROFILE_INTEL_VTUNE
     __itt_pause();
+    #endif
+    #ifdef PROFILE_INTEL_SDE
     __SSC_MARK(0x222);
-
+    #endif
     #ifdef PROFILE_PAPI
     PAPI_stop_counters(papi_counter_values[thread_id], 3);
     #endif
