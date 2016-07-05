@@ -462,9 +462,11 @@ namespace hig {
             std::cerr << "done." << std::endl;
           } // if
           #else
-            for (int i = 0; i < nrow_;  i++)
+            for (int i = 0; i < nrow_;  i++){
               for (int j = 0; j < ncol_; j++)
                 std::cout << final_data[i * ncol_ + j] << ", ";
+              std::cout << std::endl;
+            }
           #endif // FILEIO
 
           // also compute averaged values over phi and tilt
