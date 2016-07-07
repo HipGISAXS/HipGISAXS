@@ -1549,7 +1549,7 @@ namespace hig {
     if(master) {
       // convolute/smear the computed intensities
       real_t sigma = HiGInput::instance().scattering_smearing();
-      if(sigma > 0.0) {
+      if(sigma > TINY_) {
         woo::BoostChronoTimer smear_timer;
         #if VERBOSE_LEVEL > VERBOSE_LEVEL_ONE
         std::cout << "-- Smearing the result with sigma = " << sigma << " ... " << std::flush;

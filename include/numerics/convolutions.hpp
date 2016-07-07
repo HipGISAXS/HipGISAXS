@@ -122,7 +122,7 @@ namespace hig {
         delete[] data;
         data = conv_data;
         return true;
-      } // convolution_gaussian_2d()
+      } // convolution_gaussian_2d_naive()
 
 
       inline real_t gaussian(int x, real_t sigma) {
@@ -130,35 +130,29 @@ namespace hig {
       } // gaussian()
 
 
-      bool convolution_gaussian_2d(real_t*& data, unsigned int nx, unsigned int ny, 
-          real_t sigma) {
+      bool convolution_gaussian_2d(real_t*& data, unsigned int nx, unsigned int ny, real_t sigma) {
         real_t* conv_data = new (std::nothrow) real_t[nx * ny];
 
         // compute the gaussian matrix to avoid computation of gaussian() every time
         int i6sigma = (int) (6 * sigma);
         int gn = 2 * i6sigma + 1;
         real_t * gauss_map = new real_t[gn];
-        for(int i = 0;  i < gn; ++ i) { 
-          gauss_map[i] = gaussian(i-i6sigma, sigma); 
-        }
+        for(int i = 0;  i < gn; ++ i) gauss_map[i] = gaussian(i - i6sigma, sigma); 
 
         // first do horizontal smearing
         #pragma omp parallel for collapse(2)
         for(int j = 0; j < ny; ++ j) {
           for(int i = 0; i < nx; ++ i) {
             real_t sum = 0.0;
-            real_t norm = 0;
-            int ibeg = std::max(0, i-i6sigma);
-            int iend = std::min((int) nx, i+i6sigma);
-            for(int k = ibeg; k < iend; ++ k) {
-              //sum += data[j * nx + k] * gaussian(k - i, sigma);
-              sum += data[j * nx + k] * gauss_map[k-ibeg];
+            real_t norm = 0.0;
+            int ibeg = std::max(0, i - i6sigma);
+            int iend = std::min((int) nx, i + i6sigma);
+            for(int k = ibeg; k <= iend; ++ k) {
+              sum += data[j * nx + k] * gauss_map[k - ibeg];
               norm += gauss_map[k-ibeg];
             } // for
-            if ( norm > 0 )
-              conv_data[j * nx + i] = sum / norm;
-            else
-              conv_data[j * nx + i] = 0;
+            if(norm > TINY_) conv_data[j * nx + i] = sum / norm;
+            else conv_data[j * nx + i] = 0;
           } // for
         } // for
 
@@ -167,31 +161,29 @@ namespace hig {
         for(int i = 0; i < nx; ++ i) {
           for(int j = 0; j < ny; ++ j) {
             real_t sum = 0.0;
-            real_t norm = 0;
-            int jbeg = std::max(0, j-i6sigma);
-            int jend = std::min((int) ny, j+i6sigma);
-            for(int l = jbeg; l < jend; ++ l) {
-              //sum += conv_data[l * nx + i] * gaussian(l - j, sigma);
-              sum += conv_data[l * nx + i] * gauss_map[l-jbeg];
-              norm+= gauss_map[l-jbeg];
+            real_t norm = 0.0;
+            int jbeg = std::max(0, j - i6sigma);
+            int jend = std::min((int) ny, j + i6sigma);
+            for(int l = jbeg; l <= jend; ++ l) {
+              sum += conv_data[l * nx + i] * gauss_map[l - jbeg];
+              norm += gauss_map[l - jbeg];
             } // for
-            if (norm > 0 )
-              data[j * nx + i] = sum / norm;
-            else
-              data[j * nx + i] = 0;
+            if(norm > TINY_) data[j * nx + i] = sum / norm;
+            else data[j * nx + i] = 0;
           } // for
         } // for
 
         delete[] conv_data;
-                delete [] gauss_map;
+        delete[] gauss_map;
+
         return true;
-      } // convolution_gaussian_2d_new()
+      } // convolution_gaussian_2d()
 
 
-            bool gaussian_fft ( real_t * &data, unsigned nx, unsigned ny, real_t sigma) {
-                real_t  * image_f;
-                real_t  * filter, * filter_f;
-            }
+      bool gaussian_fft ( real_t * &data, unsigned nx, unsigned ny, real_t sigma) {
+        real_t  * image_f;
+        real_t  * filter, * filter_f;
+      }
 
 /*      bool compute_conv_2d_valid1(unsigned int a_xsize, unsigned int a_ysize, const double *a,
                   unsigned int b_xsize, unsigned int b_ysize, const double *b,
