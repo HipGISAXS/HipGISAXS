@@ -464,7 +464,7 @@ namespace hig {
           #else
             for (int i = 0; i < nrow_;  i++){
               for (int j = 0; j < ncol_; j++)
-                std::cout << final_data[i * ncol_ + j] << ", ";
+                std::cout << final_data[i * ncol_ + j] << " ";
               std::cout << std::endl;
             }
           #endif // FILEIO
@@ -952,6 +952,7 @@ namespace hig {
         RotMatrix_t r3(r3axis, rot3); 
 
         // order of multiplication is important
+        std::cerr << "Grain rotations: " << rot1 << " " << rot2 << " " << rot3 << std::endl;
         RotMatrix_t rot = rot_ * r3 * r2 * r1;
 
         /* center of unit cell replica */
@@ -998,8 +999,8 @@ namespace hig {
           shape_param_list_t shape_params = shape.param_list();
           complex_t dn2 = multilayer_[order].one_minus_n2() - shape.one_minus_n2();
 
-          // update rotation matrix
-          rot = rot *  RotMatrix_t(0, xrot) * RotMatrix_t(1, yrot) * RotMatrix_t(2, zrot);
+          // shape rotation matrix
+          RotMatrix_t shape_rot = rot *  RotMatrix_t(0, xrot) * RotMatrix_t(1, yrot) * RotMatrix_t(2, zrot);
 
           for(Unitcell::location_iterator_t l = (*e).second.begin(); l != (*e).second.end(); ++ l) {
             vector3_t transvec = (*l);
@@ -1020,15 +1021,12 @@ namespace hig {
             fftimer.resume();
             //read_form_factor("curr_ff.out");
             form_factor(eff, shape_name, shape_file, shape_params, transvec,
-                  shape_tau, shape_eta, rot
+                  shape_tau, shape_eta, shape_rot
                   #ifdef USE_MPI
                     , grain_comm
                   #endif
                   );
             fftimer.pause();
-            /*if(!check_finite(eff.ff(), sz)) {
-              std::cerr << "** ARRAY CHECK ** eff failed check" << std::endl;
-            } // if*/
 
             // for each location, add the FFs
             for(unsigned int i = 0; i < sz; ++ i) ff[i] += dn2 * eff[i]; 
@@ -1040,10 +1038,6 @@ namespace hig {
           std::cerr << "**               FF compute time: "
                     << fftimer.elapsed_msec() << " ms." << std::endl;
 #endif
-        /*if(!check_finite(&ff[0], ff.size())) {
-          std::cerr << "** ARRAY CHECK ** ff failed check" << std::endl;
-        } // if*/
-
 
         sftimer.start(); sftimer.pause();
         for (int i_scale = 0; i_scale < num_repeat_scaling; i_scale++) {
@@ -1708,9 +1702,6 @@ namespace hig {
   bool HipGISAXS::orientation_distribution(structure_citerator_t s, real_t* dd, int & ndx, int ndy, 
                         real_t* &nn, real_t* &wght) {
     std::string distribution = (*s).second.grain_orientation();
-    //vector2_t tau = (*s).second.rotation_tau();
-    //vector2_t eta = (*s).second.rotation_eta();
-    //vector2_t zeta = (*s).second.rotation_zeta();
     vector3_t rot1 = (*s).second.rotation_rot1();
     vector3_t rot2 = (*s).second.rotation_rot2();
     vector3_t rot3 = (*s).second.rotation_rot3();
