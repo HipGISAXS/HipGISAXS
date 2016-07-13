@@ -60,7 +60,7 @@ namespace hig {
     }
     memcpy(sf_, rhs.sf_, nz_ * sizeof(complex_t));
     #ifdef SF_GPU
-      gsf_.init(HiGInput::instance().experiment());
+      gsf_.init(ny_, ny_, nz_);
     #endif
     return *this;
   } // StructureFactor::operator=()
@@ -302,7 +302,7 @@ namespace hig {
     else if(expt == "gisaxs") nz_ = QGrid::instance().nqz_extended();
     sf_ = new (std::nothrow) complex_t[nz_];
     if(sf_ == NULL) return false;
-    gsf_.init(expt);
+    gsf_.init(ny_, ny_, nz_);
     bool ret = gsf_.compute(expt, center, lattice, repet, scaling, rot
                         //#ifdef USE_MPI
                         //  , world_comm, comm_key

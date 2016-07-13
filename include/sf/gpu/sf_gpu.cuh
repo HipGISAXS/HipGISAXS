@@ -56,7 +56,7 @@ namespace hig {
       StructureFactorG();
       ~StructureFactorG();
 
-      bool init(std::string);
+      bool init(unsigned int, unsigned int, unsigned int);
       //bool run_init(const real_t*, const std::vector<real_t>&);
       bool clear();
       bool destroy();

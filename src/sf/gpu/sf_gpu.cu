@@ -49,7 +49,7 @@ namespace hig {
   } // StructureFactorG::~StructureFactorG()
 
 
-  bool StructureFactorG::init(std::string expt) {
+  bool StructureFactorG::init(unsigned int nx, unsigned int ny, unsigned int nz) {
     // allocate device buffers
     // copy qgrid to device memory
 
@@ -60,13 +60,10 @@ namespace hig {
       return false;
     } // if
 
-    nqx_ = QGrid::instance().nqx();
-    nqy_ = QGrid::instance().nqy();
-    if(expt == "gisaxs") {
-      nqz_ = QGrid::instance().nqz_extended();
-    } else {
-      nqz_ = QGrid::instance().nqz();
-    } // if-else
+    nqx_ = nx;
+    nqy_ = ny;
+    nqz_ = nz;
+      
     cudaMalloc((void**) &qx_, nqx_ * sizeof(real_t));
     cudaMalloc((void**) &qy_, nqy_ * sizeof(real_t));
     cudaMalloc((void**) &qz_, nqz_ * sizeof(cucomplex_t));
