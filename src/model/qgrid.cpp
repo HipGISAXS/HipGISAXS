@@ -84,7 +84,7 @@ namespace hig {
     } // if-else
 
     if(mpi_rank == 0) {
-      std::cout << "**                  Q-grid range: ("
+      std::cerr << "**                  Q-grid range: ("
             << qx_[0] << ", " << qy_[0] << ", " << qz_.back()
             << ") x ("
             << qx_.back() << ", " << qy_.back() << ", " << qz_[0]
@@ -174,7 +174,7 @@ namespace hig {
     } // if
 
     if(mpi_rank == 0) {
-      std::cout << "**              New Q-grid range: ("
+      std::cerr << "**              New Q-grid range: ("
                 << qx_[0] << ", " << qy_[0] << ", " << qz_.back() << ") x ("
                 << qx_.back() << ", " << qy_.back() << ", " << qz_[0] << ")" << std::endl;
     } // if

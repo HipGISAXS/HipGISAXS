@@ -176,7 +176,7 @@ namespace hig {
               lc(lattice->c() * scaling[2]);
 
     #ifdef SF_VERBOSE
-      if(master) std::cout << "-- Computing structure factor on CPU ... " << std::flush;
+      if(master) std::cerr << "-- Computing structure factor on CPU ... " << std::flush;
     #endif
 
     std::complex<real_t> unit_c(1, 0);
@@ -267,21 +267,21 @@ namespace hig {
     maintimer.stop();
 
     #ifdef SF_VERBOSE
-      if(master) std::cout << "done. " << std::endl;
+      if(master) std::cerr << "done. " << std::endl;
     #endif
 
     if(master) {
       #ifdef TIME_DETAIL_1
-        std::cout << "**               SF compute time: "
+        std::cerr << "**               SF compute time: "
                 << computetimer.elapsed_msec()  << " ms." << std::endl;
-        //std::cout << "**                 Total SF time: "
+        //std::cerr << "**                 Total SF time: "
         //          << maintimer.elapsed_msec() << " ms." << std::endl;
 
 
         //  save_sf(  QGrid::instance().nqx(),   QGrid::instance().nqy(),   QGrid::instance().nqz(), "/home/stchourou/sf.dat");
 
         //int naninfs = count_naninfs(nx_, ny_, nz_, sf_);
-        //std::cout << " ------- " << naninfs << " / " << nx_ * ny_ * nz_ << " nans or infs" << std::endl;
+        //std::cerr << " ------- " << naninfs << " / " << nx_ * ny_ * nz_ << " nans or infs" << std::endl;
       #endif // TIME_DETAIL_1
     } // if
 

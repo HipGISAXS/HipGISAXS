@@ -120,7 +120,7 @@ namespace hig {
     sim_comm_ = root_comm_;
 
     if(master) {
-      std::cout << std::endl
+      std::cerr << std::endl
           << "*******************************************************************" << std::endl
           << "******************** HipGISAXS v1.0-beta Testing ******************" << std::endl
           << "*******************************************************************" << std::endl
@@ -144,9 +144,10 @@ namespace hig {
       return false;
     } // if-else
 
-    std::cout << "**                    Wavelength: " << lambda << std::endl;
+    std::cerr << "**                    Wavelength: " << lambda << std::endl;
     k0_ = 2 * PI_ / lambda;
 
+    #ifdef FILEIO
     // create output directory
     if(master) {    // this is not quite good for mpi ... improve ...
       output_subdir_ = input_->compute().pathprefix() + "/" + input_->compute().runname();
@@ -155,6 +156,7 @@ namespace hig {
         return false;
       } // if
     } // if
+    #endif // FILEIO
 
     #ifdef USE_MPI
       multi_node_.barrier(root_comm_);
@@ -184,20 +186,20 @@ namespace hig {
 
     #ifdef _OPENMP
       if(master)
-        std::cout << "++      Number of OpenMP threads: "
+        std::cerr << "++      Number of OpenMP threads: "
               << omp_get_max_threads() << std::endl;
     #endif
 
     #if defined USE_GPU || defined FF_ANA_GPU || defined FF_NUM_GPU
-      if(master) std::cout << "-- Waking up GPU(s) ..." << std::flush;
+      if(master) std::cerr << "-- Waking up GPU(s) ..." << std::flush;
       init_gpu();
-      if(master) std::cout << " it woke up!" << std::endl;
+      if(master) std::cerr << " it woke up!" << std::endl;
     #elif defined USE_MIC
-      if(master) std::cout << "-- Waking up MIC(s) ..." << std::flush;
+      if(master) std::cerr << "-- Waking up MIC(s) ..." << std::flush;
       init_mic();
-      if(master) std::cout << " done." << std::endl;
+      if(master) std::cerr << " done." << std::endl;
     #else
-      if(master) std::cout << "-- Not set up to use any accelerator!" << std::endl;
+      if(master) std::cerr << "-- Not set up to use any accelerator!" << std::endl;
     #endif
 
     return true;
@@ -300,7 +302,7 @@ namespace hig {
     else num_tilt = (tilt_max - tilt_min) / tilt_step + 1;
 
     if(master) {
-      std::cout << "**                  Num alphai: " << num_alphai << std::endl
+      std::cerr << "**                  Num alphai: " << num_alphai << std::endl
             << "**                     Num phi: " << num_phi << std::endl
             << "**                    Num tilt: " << num_tilt << std::endl;
     } // if
@@ -406,7 +408,7 @@ namespace hig {
           real_t tilt_rad = tilt * PI_ / 180;
 
           if(tmaster) {
-            std::cout << "-- Computing GISAXS "
+            std::cerr << "-- Computing GISAXS "
                   << i * num_phi * num_tilt + j * num_tilt + k + 1 << " / "
                   << num_alphai * num_phi * num_tilt
                   << " [alphai = " << alpha_i << ", phi = " << phi
@@ -426,11 +428,12 @@ namespace hig {
             return false;
           } // if
 
+          #ifdef FILEIO
           if(tmaster) {
-            std::cout << "-- Constructing GISAXS image ... " << std::flush;
+            std::cerr << "-- Constructing GISAXS image ... " << std::flush;
             Image img(ncol_, nrow_, input_->compute().palette());
             img.construct_image(final_data, 0); // merge this into the contructor ...
-            std::cout << "done." << std::endl;
+            std::cerr << "done." << std::endl;
 
             if(x_max < x_min) x_max = x_min;
             // define output filename
@@ -443,21 +446,28 @@ namespace hig {
                       "/img_ai=" + alphai_s + "_rot=" + phi_s +
                       "_tilt=" + tilt_s + ".tif");
 
-            std::cout << "**                    Image size: " << ncol_  << " x " << nrow_
+            std::cerr << "**                    Image size: " << ncol_  << " x " << nrow_
                   << std::endl;
-            std::cout << "-- Saving image in " << output << " ... " << std::flush;
+            std::cerr << "-- Saving image in " << output << " ... " << std::flush;
             img.save(output);
-            std::cout << "done." << std::endl;
+            std::cerr << "done." << std::endl;
 
             // save the actual data into a file also
             std::string data_file(output_subdir_ + 
                     "/gisaxs_ai=" + alphai_s + "_rot=" + phi_s +
                     "_tilt=" + tilt_s + ".out");
-            std::cout << "-- Saving raw data in " << data_file << " ... "
+            std::cerr << "-- Saving raw data in " << data_file << " ... "
                 << std::flush;
             save_gisaxs(final_data, data_file);
-            std::cout << "done." << std::endl;
+            std::cerr << "done." << std::endl;
           } // if
+          #else
+            for (int i = 0; i < nrow_;  i++){
+              for (int j = 0; j < ncol_; j++)
+                std::cout << final_data[i * ncol_ + j] << " ";
+              std::cout << std::endl;
+            }
+          #endif // FILEIO
 
           // also compute averaged values over phi and tilt
           if(num_phi > 1 || num_tilt > 1) {
@@ -557,6 +567,7 @@ namespace hig {
 
       #endif
 
+      #ifdef FILEIO
       if(amaster && (num_phi > 1 || num_tilt > 1)) {
         if(averaged_data != NULL) {
           Image img(ncol_, nrow_);
@@ -568,20 +579,21 @@ namespace hig {
           alphai_b << alpha_i; alphai_s = alphai_b.str();
           std::string output(output_subdir_ + 
                     "/img_ai=" + alphai_s + "_averaged.tif");
-          std::cout << "-- Saving averaged image in " << output << " ... " << std::flush;
+          std::cerr << "-- Saving averaged image in " << output << " ... " << std::flush;
           img.save(output);
-          std::cout << "done." << std::endl;
+          std::cerr << "done." << std::endl;
 
           // save the actual data into a file also
           std::string data_file(output_subdir_ + 
                   "/gisaxs_ai=" + alphai_s + "_averaged.out");
-          std::cout << "-- Saving averaged raw data in " << data_file << " ... " << std::flush;
+          std::cerr << "-- Saving averaged raw data in " << data_file << " ... " << std::flush;
           save_gisaxs(averaged_data, data_file);
-          std::cout << "done." << std::endl;
+          std::cerr << "done." << std::endl;
 
           delete[] averaged_data;
         } // if
       } // if
+      #endif // FILEIO
 
     } // for alphai
     #ifdef USE_MPI
@@ -590,7 +602,7 @@ namespace hig {
 
     sim_timer.stop();
     if(master) {
-      std::cout << "**         Total simulation time: " << sim_timer.elapsed_msec() << " ms."
+      std::cerr << "**         Total simulation time: " << sim_timer.elapsed_msec() << " ms."
             << std::endl;
     } // if
 
@@ -642,7 +654,7 @@ namespace hig {
     real_t alphai = alpha_i * PI_ / 180;
     real_t phi_rad = phi_min * PI_ / 180;
     real_t tilt_rad = tilt_min * PI_ / 180;
-    if(master) std::cout << "-- Computing GISAXS ... " << std::endl << std::flush;
+    if(master) std::cerr << "-- Computing GISAXS ... " << std::endl << std::flush;
     /* run a gisaxs simulation */
     if(!run_gisaxs(alpha_i, alphai, phi_rad, tilt_rad, final_data,
           #ifdef USE_MPI
@@ -654,7 +666,7 @@ namespace hig {
     } // if
     sim_timer.stop();
     if(master)
-      std::cout << "**        Total Simulation time: " << sim_timer.elapsed_msec()
+      std::cerr << "**        Total Simulation time: " << sim_timer.elapsed_msec()
             << " ms." << std::endl;
 
     return true;
@@ -682,7 +694,7 @@ namespace hig {
     #ifdef USE_MPI
       bool master = multi_node_.is_master(comm_key);
       int ss = multi_node_.size(comm_key);
-      //std::cout << "****************** MPI size for this simulation: " << ss << std::endl;
+      //std::cerr << "****************** MPI size for this simulation: " << ss << std::endl;
     #else
       bool master = true;
     #endif
@@ -756,7 +768,7 @@ namespace hig {
       // compute t, lattice, ndoms, dd, nn, id etc.
 
       if(smaster) {
-        std::cout << "-- Processing structure " << s_num + 1 << " ..." << std::endl;
+        std::cerr << "-- Processing structure " << s_num + 1 << " ..." << std::endl;
       } // if
 
       const Structure *curr_struct = &((*s).second);
@@ -800,7 +812,7 @@ namespace hig {
       }
 
       if(smaster) {
-        std::cout << "-- Grains: " << num_grains << std::endl;
+        std::cerr << "-- Grains: " << num_grains << std::endl;
       } // if
 
       /* grain scalings */
@@ -918,7 +930,7 @@ namespace hig {
       for(int grain_i = grain_min; grain_i < grain_max; grain_i ++) {  // or distributions
 
         if(gmaster) {
-          std::cout << "-- Processing grain " << grain_i + 1 << " / " << num_grains << " ..."
+          std::cerr << "-- Processing grain " << grain_i + 1 << " / " << num_grains << " ..."
                 << std::endl;
         } // if
         #ifdef USE_GPU
@@ -940,6 +952,7 @@ namespace hig {
         RotMatrix_t r3(r3axis, rot3); 
 
         // order of multiplication is important
+        std::cerr << "Grain rotations: " << rot1 << " " << rot2 << " " << rot3 << std::endl;
         RotMatrix_t rot = rot_ * r3 * r2 * r1;
 
         /* center of unit cell replica */
@@ -961,7 +974,7 @@ namespace hig {
         if(input_->scattering().experiment() == "gisaxs") sz = nqz_extended_;
         ff.clear();
         ff.resize(sz, CMPLX_ZERO_);
-        /*std::cout << "** ARRAY CHECK ** (sz=" << sz << ")" << std::endl;
+        /*std::cerr << "** ARRAY CHECK ** (sz=" << sz << ")" << std::endl;
         if(!check_finite(QGrid::instance().qx(), QGrid::instance().nqx())) {
           std::cerr << "** ARRAY CHECK ** qx failed check (sz=" << QGrid::instance().nqx() << ")" << std::endl;
         } // if
@@ -986,8 +999,8 @@ namespace hig {
           shape_param_list_t shape_params = shape.param_list();
           complex_t dn2 = multilayer_[order].one_minus_n2() - shape.one_minus_n2();
 
-          // update rotation matrix
-          rot = rot *  RotMatrix_t(0, xrot) * RotMatrix_t(1, yrot) * RotMatrix_t(2, zrot);
+          // shape rotation matrix
+          RotMatrix_t shape_rot = rot *  RotMatrix_t(0, xrot) * RotMatrix_t(1, yrot) * RotMatrix_t(2, zrot);
 
           for(Unitcell::location_iterator_t l = (*e).second.begin(); l != (*e).second.end(); ++ l) {
             vector3_t transvec = (*l);
@@ -1008,15 +1021,12 @@ namespace hig {
             fftimer.resume();
             //read_form_factor("curr_ff.out");
             form_factor(eff, shape_name, shape_file, shape_params, transvec,
-                  shape_tau, shape_eta, rot
+                  shape_tau, shape_eta, shape_rot
                   #ifdef USE_MPI
                     , grain_comm
                   #endif
                   );
             fftimer.pause();
-            /*if(!check_finite(eff.ff(), sz)) {
-              std::cerr << "** ARRAY CHECK ** eff failed check" << std::endl;
-            } // if*/
 
             // for each location, add the FFs
             for(unsigned int i = 0; i < sz; ++ i) ff[i] += dn2 * eff[i]; 
@@ -1025,13 +1035,9 @@ namespace hig {
 
         fftimer.stop();
 #ifndef FF_VERBOSE
-          std::cout << "**               FF compute time: "
+          std::cerr << "**               FF compute time: "
                     << fftimer.elapsed_msec() << " ms." << std::endl;
 #endif
-        /*if(!check_finite(&ff[0], ff.size())) {
-          std::cerr << "** ARRAY CHECK ** ff failed check" << std::endl;
-        } // if*/
-
 
         sftimer.start(); sftimer.pause();
         for (int i_scale = 0; i_scale < num_repeat_scaling; i_scale++) {
@@ -1055,7 +1061,7 @@ namespace hig {
             grain_repeats = all_grains_repeats[0]; // same repeat for all grains
 
 #ifdef SF_VERBOSE
-          std::cout << "-- Distribution sample " << i_scale + 1 << " / "
+          std::cerr << "-- Distribution sample " << i_scale + 1 << " / "
               << scaling_samples.size() << ".\n";
  #endif
 
@@ -1125,7 +1131,7 @@ namespace hig {
             } else {
               /* perform slicing */
               // not yet implemented ...
-              std::cout << "uh-oh: ever thought about implementing the slicing scheme?"
+              std::cerr << "uh-oh: ever thought about implementing the slicing scheme?"
                         << std::endl;
               //return false;
             } // if-else
@@ -1134,10 +1140,10 @@ namespace hig {
         } // for i_scale
         sftimer.stop();
         #ifndef SF_VERBOSE
-          std::cout << "**               SF compute time: "
+          std::cerr << "**               SF compute time: "
                     << sftimer.elapsed_msec() << " ms." << std::endl;
         #else
-          std::cout << sftimer.elapsed_msec() << " ms." << std::endl;
+          std::cerr << sftimer.elapsed_msec() << " ms." << std::endl;
         #endif
 
         // clean form factor before going to next
@@ -1389,15 +1395,15 @@ namespace hig {
       real_t sigma = input_->scattering().smearing();
       if(sigma > 0.0) {
         woo::BoostChronoTimer smear_timer;
-        std::cout << "-- Smearing the result with sigma = " << sigma << " ... " << std::flush;
+        std::cerr << "-- Smearing the result with sigma = " << sigma << " ... " << std::flush;
         if(img3d == NULL) {
           std::cerr << "error: there is no img3d. you are so in the dumps!" << std::endl;
         } // if
         smear_timer.start();
         gaussian_smearing(img3d, sigma);
         smear_timer.stop();
-        std::cout << "done." << std::endl;
-        std::cout << "**                 Smearing time: "
+        std::cerr << "done." << std::endl;
+        std::cerr << "**                 Smearing time: "
               << smear_timer.elapsed_msec() << " ms." << std::endl;
       } // if
     } // if master
@@ -1696,9 +1702,6 @@ namespace hig {
   bool HipGISAXS::orientation_distribution(structure_citerator_t s, real_t* dd, int & ndx, int ndy, 
                         real_t* &nn, real_t* &wght) {
     std::string distribution = (*s).second.grain_orientation();
-    //vector2_t tau = (*s).second.rotation_tau();
-    //vector2_t eta = (*s).second.rotation_eta();
-    //vector2_t zeta = (*s).second.rotation_zeta();
     vector3_t rot1 = (*s).second.rotation_rot1();
     vector3_t rot2 = (*s).second.rotation_rot2();
     vector3_t rot3 = (*s).second.rotation_rot3();
@@ -1911,7 +1914,7 @@ namespace hig {
         generate_repetition_range(min_x, max_x, num_grains, vals_x);
         break;
       case stat_gaussian:
-        std::cout << "uh-oh: gaussian distribution for grain repetitions is not yet supported!"
+        std::cerr << "uh-oh: gaussian distribution for grain repetitions is not yet supported!"
               << std::endl;
         return false;
         break;
@@ -1930,7 +1933,7 @@ namespace hig {
         generate_repetition_range(min_y, max_y, num_grains, vals_y);
         break;
       case stat_gaussian:
-        std::cout << "uh-oh: gaussian distribution for grain repetitions is not yet supported!"
+        std::cerr << "uh-oh: gaussian distribution for grain repetitions is not yet supported!"
               << std::endl;
         return false;
         break;
@@ -1949,7 +1952,7 @@ namespace hig {
         generate_repetition_range(min_z, max_z, num_grains, vals_z);
         break;
       case stat_gaussian:
-        std::cout << "uh-oh: gaussian distribution for grain repetitions is not yet supported!"
+        std::cerr << "uh-oh: gaussian distribution for grain repetitions is not yet supported!"
               << std::endl;
         return false;
         break;
@@ -2004,10 +2007,10 @@ namespace hig {
    */
 
   bool HipGISAXS::update_params(const map_t& params) {
-    std::cout << "Updating HipGISAXS parameters: ";
+    std::cerr << "Updating HipGISAXS parameters: ";
     for(map_t::const_iterator i = params.begin(); i != params.end(); ++ i)
-      std::cout << (*i).first << " = " << (*i).second << "; ";
-    std::cout << std::endl;
+      std::cerr << (*i).first << " = " << (*i).second << "; ";
+    std::cerr << std::endl;
     return input_->update_params(params);
   } // HipGISAXS::update_params()
 
@@ -2030,22 +2033,22 @@ namespace hig {
   
   
   void HipGISAXS::printfr(const char* name, real_t* arr, unsigned int size) {
-    std::cout << name << ":" << std::endl;
-    if(arr == NULL) { std::cout << "NULL" << std::endl; return; }
+    std::cerr << name << ":" << std::endl;
+    if(arr == NULL) { std::cerr << "NULL" << std::endl; return; }
     for(unsigned int i = 0; i < size; ++ i) {
-      std::cout << arr[i] << "\t";
+      std::cerr << arr[i] << "\t";
     } // for
-    std::cout << std::endl;
+    std::cerr << std::endl;
   } // HipGISAXS::printfr()
  
 
   void HipGISAXS::printfc(const char* name, complex_t* arr, unsigned int size) {
-    std::cout << name << ":" << std::endl;
-    if(arr == NULL) { std::cout << "NULL" << std::endl; return; }
+    std::cerr << name << ":" << std::endl;
+    if(arr == NULL) { std::cerr << "NULL" << std::endl; return; }
     for(unsigned int i = 0; i < size; ++ i) {
-      std::cout << arr[i].real() << "," << arr[i].imag() << "\t";
+      std::cerr << arr[i].real() << "," << arr[i].imag() << "\t";
     } // for
-    std::cout << std::endl;
+    std::cerr << std::endl;
   } // HipGISAXS::printfc()
  
 

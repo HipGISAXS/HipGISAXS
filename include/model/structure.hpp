@@ -31,6 +31,10 @@
 #include <common/enums.hpp>
 #include <model/common.hpp>
 
+#ifdef DEBUG
+#include <iostream>
+#endif 
+
 namespace hig {
 
   // make stuff private (with help of friend) ...
@@ -163,39 +167,48 @@ namespace hig {
     friend class Structure;
   }; // class GrainScaling
 
+  class Rotation {
+    private: 
+      char axis_;    // x y or z
+      std::string stat_;
+      vector2_t angles_;
+      real_t mean_;  // for gaussian
+      real_t sd_;  // for gaussian
+      bool mean_set_;
+
+    public:
+      Rotation() : axis_('n'), mean_(0), sd_(0), mean_set_(false) { }
+      ~Rotation() { }
+      void init();
+
+      // getters 
+      char axis() const { return axis_; }
+      std::string stat() const { return stat_; }
+      vector2_t angles() const { return angles_; }
+      real_t angle_mean() const { return mean_; }
+      real_t angle_sd() const { return sd_; }
+
+      // setters 
+      void stat(std::string stat) { stat_ = stat; }
+      void axis(char c) { axis_ = c; }
+      void angles(vector2_t v) { angles_ = v; }
+      void angles(real_t a, real_t b) { angles_[0] = a; angles_[1] = b; }
+
+      void angles_min(real_t val) { angles_[0] = val; if(!mean_set_) mean_ = val; }
+      void angles_max(real_t val) { angles_[1] = val; }
+
+      void angle_mean(real_t val) { mean_ = val; mean_set_ = true; }
+      void angle_sd(real_t val) { sd_ = val; }
+#ifdef DEBUG
+      void print(){
+        std::cout << "orientation = { axis: " << axis_ << ", stat: " << stat_ << ", angles: [ " 
+                   << angles_[0] << " " << angles_[1] 
+                   << " ], mean: " << mean_ << ", std: " << sd_ << " }" << std::endl; 
+      }
+#endif
+    }; // class Rotation
 
   class GrainOrientations {
-
-    class Rotation {
-      private: 
-        char axis_;    // x y or z
-        vector2_t angles_;
-        real_t mean_;  // for gaussian
-        real_t sd_;  // for gaussian
-        bool mean_set_;
-
-      public:
-        Rotation() : axis_('n'), mean_(0), sd_(0), mean_set_(false) { }
-        ~Rotation() { }
-
-        void init();
-
-        char axis() { return axis_; }
-        vector2_t angles() { return angles_; }
-
-        void axis(char c) { axis_ = c; }
-        void angles(vector2_t v) { angles_ = v; }
-        void angles(real_t a, real_t b) { angles_[0] = a; angles_[1] = b; }
-
-        void angles_min(real_t val) { angles_[0] = val; if(!mean_set_) mean_ = val; }
-        void angles_max(real_t val) { angles_[1] = val; }
-
-        void angle_mean(real_t val) { mean_ = val; mean_set_ = true; }
-        void angle_sd(real_t val) { sd_ = val; }
-        real_t angle_mean() { return mean_; }
-        real_t angle_sd() { return sd_; }
-
-    }; // class Rotation
 
     private:
       std::string stat_;    // "single", "range", "random", "filename.ori" - change to enum?
@@ -216,6 +229,9 @@ namespace hig {
       Rotation rot3() const { return rot3_; }
 
       void stat(std::string s) { stat_ = s; }
+      void rot1(const Rotation & rot) { rot1_ = rot; }
+      void rot2(const Rotation & rot) { rot2_ = rot; }
+      void rot3(const Rotation & rot) { rot3_ = rot; }
 
       void rot1_angles(vector2_t r) { rot1_.angles(r); }
       void rot2_angles(vector2_t r) { rot2_.angles(r); }
@@ -408,6 +424,10 @@ namespace hig {
       void maxgrains(real_t a, real_t b, real_t c) {
         maxgrains_[0] = a; maxgrains_[1] = b; maxgrains_[2] = c; }
 
+      void grain_orientation_rot1(const Rotation & rot) { orientations_.rot1(rot); }
+      void grain_orientation_rot2(const Rotation & rot) { orientations_.rot2(rot); }
+      void grain_orientation_rot3(const Rotation & rot) { orientations_.rot3(rot); }
+
       void grain_orientation_rot1_angles(vector2_t v) { orientations_.rot1_angles(v); }
       void grain_orientation_rot2_angles(vector2_t v) { orientations_.rot2_angles(v); }
       void grain_orientation_rot3_angles(vector2_t v) { orientations_.rot3_angles(v); }
@@ -488,6 +508,11 @@ namespace hig {
       void grain_xrepetition_stat(StatisticType s) { grain_.xrepetition_stat(s); }
       void grain_yrepetition_stat(StatisticType s) { grain_.yrepetition_stat(s); }
       void grain_zrepetition_stat(StatisticType s) { grain_.zrepetition_stat(s); }
+
+
+      void grain_orientation_rot1(const Rotation & rot) { ensemble_.grain_orientation_rot1(rot); }
+      void grain_orientation_rot2(const Rotation & rot) { ensemble_.grain_orientation_rot2(rot); }
+      void grain_orientation_rot3(const Rotation & rot) { ensemble_.grain_orientation_rot3(rot); }
 
       void grain_orientation_rot1_angles(vector2_t v) { ensemble_.grain_orientation_rot1_angles(v); }
       void grain_orientation_rot2_angles(vector2_t v) { ensemble_.grain_orientation_rot2_angles(v); }

@@ -109,7 +109,7 @@ namespace hig {
     return true;
   }
 
-  bool YAMLInput::extract_shapes(){
+  bool YAMLInput::decode_shapes(){
     YAML::Node shapes = config_["shapes"];
     num_shapes_ = shapes.size();
     for (int i = 0; i < num_shapes_; i++){
@@ -124,6 +124,12 @@ namespace hig {
       curr_shape_.name(TokenMapper::instance().get_shapename_token(name));
       RefractiveIndex refindex = curr_shape["refindex"].as<RefractiveIndex>();
       curr_shape_.refindex(refindex);
+
+      // shape rotation
+      if (curr_shape["xrot"]) curr_shape_.xrot(curr_shape["xrot"].as<real_t>());
+      if (curr_shape["yrot"]) curr_shape_.yrot(curr_shape["yrot"].as<real_t>());
+      if (curr_shape["zrot"]) curr_shape_.zrot(curr_shape["zrot"].as<real_t>());
+
       YAML::Node params = curr_shape["params"];
       if (params.Type() != YAML::NodeType::Sequence){
         std::cerr << "Error: Ill formed YAML Node at shape params." << std::endl;
@@ -140,7 +146,7 @@ namespace hig {
     return true;
   }
 
-  bool YAMLInput::extract_unitcells(){
+  bool YAMLInput::decode_unitcells(){
     if (config_["unitcells"]){
       YAML::Node unitcells = config_["unitcells"];
       for (int i = 0; i < unitcells.size(); i++){
@@ -171,7 +177,7 @@ namespace hig {
     return false; // TODO create a defualt unitcell
   }
 
-  bool YAMLInput::extract_layers(){
+  bool YAMLInput::decode_layers(){
     bool found_substr = false;
     YAML::Node layers = config_["layers"];
     num_layers_ = layers.size();
@@ -221,7 +227,7 @@ namespace hig {
     return true;
   }
 
-  bool YAMLInput::extract_instrumentation(){
+  bool YAMLInput::decode_instrumentation(){
     YAML::Node node = config_["instrumentation"];
     // scattering parameters
     YAML::Node scattering = node["scattering"];
@@ -234,8 +240,8 @@ namespace hig {
     else scattering_.experiment(scattering["expt"].as<std::string>());
   }
 
-  bool YAMLInput::extract_compute_params(){
-    // extract values 
+  bool YAMLInput::decode_compute_params(){
+    // decode values 
     YAML::Node node = config_["computation"];
     if (node["path"]) {
       compute_.pathprefix(node["path"].as<std::string>());
@@ -295,8 +301,8 @@ namespace hig {
     return true;
   }
     
-  /* extract structures */
-  bool YAMLInput::extract_structures(){
+  /* decode structures */
+  bool YAMLInput::decode_structures(){
     YAML::Node structs = config_["structures"];
     num_structs_ = structs.size();
     for (int i = 0; i < structs.size(); i++){
@@ -331,9 +337,8 @@ namespace hig {
         // get lattice type or lattice vectors
         switch (grain["lattice"].Type()){
           case YAML::NodeType::Scalar:
-            curr_structure_.lattice_type(
-              TokenMapper::instance().get_lattice_type(
-                grain["lattice"].as<std::string>()));
+            curr_structure_.lattice_type(TokenMapper::instance().get_lattice_type(
+                                           grain["lattice"].as<std::string>()));
             if (grain["hkl"])
               curr_structure_.lattice_hkl(grain["hkl"].as<std::string>());
             break;
@@ -348,6 +353,32 @@ namespace hig {
               TokenMapper::instance().get_lattice_type("cubic"));
             break;
         } // switch
+
+
+        if (grain["type"]){
+          std::string grain_type = grain["type"].as<std::string>();
+          switch (TokenMapper::instance().get_keyword_token(grain_type)) {
+            case struct_paracrystal:
+              curr_structure_.paracrystal_init();
+              if (grain["dimensions"]) 
+                curr_structure_.paracrystal_putDimensions(grain["dimensions"].as<int>());
+              if (grain["xspacing"]){
+                curr_structure_.paracrystal_putDistXMean(grain["xspacing"]["mean"].as<real_t>());
+                curr_structure_.paracrystal_putDistXStddev(grain["xspacing"]["std"].as<real_t>());
+              }
+              if (grain["yspacing"]){
+                curr_structure_.paracrystal_putDistYMean(grain["yspacing"]["mean"].as<real_t>());
+                curr_structure_.paracrystal_putDistYStddev(grain["yspacing"]["std"].as<real_t>());
+              }
+              if (grain["domain"])
+                curr_structure_.paracrystal_putDomainSize(grain["domain"].as<real_t>());
+              else {
+                std::cerr << "error: missing \"domain\" keyword for paracrystal." << std::endl;
+                return false;
+              }
+              break;
+          }
+        }
 
         // Grain size (repetition)
         real_t t1;
@@ -480,32 +511,10 @@ namespace hig {
 
         if (ensemble["orientations"]){
           YAML::Node orientations = ensemble["orientations"];
-          // get the distribution type
-          curr_structure_.ensemble_orientation_stat(orientations["stat"].as<std::string>());          
-          if (orientations["rot1"]){
-            curr_structure_.grain_orientation_rot1_axis(orientations["rot1"]["axis"].as<char>());
-            curr_structure_.grain_orientation_rot1_angles(orientations["rot1"]["angles"].as<vector2_t>());
-            if (orientations["rot1"]["mean"])
-              curr_structure_.grain_orientation_rot1_anglemean(orientations["rot1"]["mean"].as<real_t>());
-            if (orientations["rot1"]["stddev"])
-              curr_structure_.grain_orientation_rot1_anglesd(orientations["rot1"]["stddev"].as<real_t>());
-          } // rot1
-          if (orientations["rot2"]){
-            curr_structure_.grain_orientation_rot2_axis(orientations["rot2"]["axis"].as<char>());
-            curr_structure_.grain_orientation_rot2_angles(orientations["rot2"]["angles"].as<vector2_t>());
-            if (orientations["rot2"]["mean"])
-              curr_structure_.grain_orientation_rot2_anglemean(orientations["rot2"]["mean"].as<real_t>());
-            if (orientations["rot2"]["stddev"])
-              curr_structure_.grain_orientation_rot2_anglesd(orientations["rot2"]["stddev"].as<real_t>());
-          } // rot2
-          if (orientations["rot3"]){
-            curr_structure_.grain_orientation_rot3_axis(orientations["rot3"]["axis"].as<char>());
-            curr_structure_.grain_orientation_rot3_angles(orientations["rot3"]["angles"].as<vector2_t>());
-            if (orientations["rot3"]["mean"])
-              curr_structure_.grain_orientation_rot3_anglemean(orientations["rot3"]["mean"].as<real_t>());
-            if (orientations["rot3"]["stddev"])
-              curr_structure_.grain_orientation_rot3_anglesd(orientations["rot3"]["stddev"].as<real_t>());
-          } // rot3
+          if (orientations["stat"]) curr_structure_.ensemble_orientation_stat(orientations["stat"].as<std::string>());
+          if (orientations["rot1"]) curr_structure_.grain_orientation_rot1(orientations["rot1"].as<Rotation>());
+          if (orientations["rot2"]) curr_structure_.grain_orientation_rot2(orientations["rot1"].as<Rotation>());
+          if (orientations["rot3"]) curr_structure_.grain_orientation_rot3(orientations["rot1"].as<Rotation>());
         } //orientation
       } // if curr_struct["ensemble"]
       structures_[key] = curr_structure_;
@@ -520,22 +529,22 @@ namespace hig {
     if (!read_input(input_yaml)) return false;
 
     // shapes
-    if (!extract_shapes()) return false;
+    if (!decode_shapes()) return false;
 
     // layers
-    if (!extract_layers()) return false;
+    if (!decode_layers()) return false;
 
      // unitcell
-    if (!extract_unitcells()) return false;
+    if (!decode_unitcells()) return false;
 
      // structrues
-     if (!extract_structures()) return false;
+     if (!decode_structures()) return false;
 
      // instrumentation (energy etc) 
-     // if (!extract_instrumentation()) return false;
+     // if (!decode_instrumentation()) return false;
 
      // compute parameters
-     if (!extract_compute_params()) return false;
+     if (!decode_compute_params()) return false;
 
 
      return true;

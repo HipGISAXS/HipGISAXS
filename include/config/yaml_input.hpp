@@ -101,6 +101,32 @@ namespace YAML {
     }
   };
 
+  /* fundamental of grian orientations */
+  template<> struct convert <hig::Rotation> {
+    static bool decode(const Node &node, hig::Rotation &rot) {
+      if (!node.IsMap()) {
+        std::cerr << "error: ill-formed grain orientations." << std::endl;
+        return false;
+      }
+
+      hig::vector2_t angles;
+      // parse rotation
+      if (node["axis"]) rot.axis(node["axis"].as<char>());
+      else {
+        std::cerr << "error: axis is not defined in grain orinentation." << std::endl;
+        return false;
+      }
+      if (node["min"])  angles[0] = node["min"].as<hig::real_t>();
+      if (node["max"])  angles[1] = node["max"].as<hig::real_t>();
+      else (angles[1] = angles[0]);
+      // set angles
+      rot.angles(angles);
+      if (node["mean"]) rot.angle_mean(node["mean"].as<hig::real_t>());
+      if (node["std"]) rot.angle_sd(node["std"].as<hig::real_t>());
+      if (node["stat"]) rot.stat(node["stat"].as<std::string>());
+      return true;
+    }
+  };
   /* shape parameter */
   template<> struct convert <hig::ShapeParam> {
     static bool decode(const Node &node, hig::ShapeParam & param) {
@@ -198,12 +224,12 @@ namespace hig {
       void init();
       bool read_input(const char *);
       bool read_shape_param(const YAML::Node &, ShapeParam &);
-      bool extract_shapes();
-      bool extract_layers();
-      bool extract_unitcells();
-      bool extract_instrumentation();
-      bool extract_compute_params();
-      bool extract_structures();
+      bool decode_shapes();
+      bool decode_layers();
+      bool decode_unitcells();
+      bool decode_instrumentation();
+      bool decode_compute_params();
+      bool decode_structures();
       
     public:
     
