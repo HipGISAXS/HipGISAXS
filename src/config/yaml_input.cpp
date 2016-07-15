@@ -335,10 +335,12 @@ namespace hig {
         }
 
         // get lattice type or lattice vectors
+        std::string lattstr;
         switch (grain["lattice"].Type()){
           case YAML::NodeType::Scalar:
-            curr_structure_.lattice_type(TokenMapper::instance().get_lattice_type(
-                                           grain["lattice"].as<std::string>()));
+            lattstr = grain["lattice"].as<std::string>();
+            if (lattstr.compare("hexagonal")==0) lattstr = "hex"; 
+            curr_structure_.lattice_type(TokenMapper::instance().get_lattice_type(lattstr));
             if (grain["hkl"])
               curr_structure_.lattice_hkl(grain["hkl"].as<std::string>());
             break;

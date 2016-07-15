@@ -952,7 +952,6 @@ namespace hig {
         RotMatrix_t r3(r3axis, rot3); 
 
         // order of multiplication is important
-        std::cerr << "Grain rotations: " << rot1 << " " << rot2 << " " << rot3 << std::endl;
         RotMatrix_t rot = rot_ * r3 * r2 * r1;
 
         /* center of unit cell replica */
