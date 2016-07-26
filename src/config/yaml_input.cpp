@@ -515,8 +515,8 @@ namespace hig {
           YAML::Node orientations = ensemble["orientations"];
           if (orientations["stat"]) curr_structure_.ensemble_orientation_stat(orientations["stat"].as<std::string>());
           if (orientations["rot1"]) curr_structure_.grain_orientation_rot1(orientations["rot1"].as<Rotation>());
-          if (orientations["rot2"]) curr_structure_.grain_orientation_rot2(orientations["rot1"].as<Rotation>());
-          if (orientations["rot3"]) curr_structure_.grain_orientation_rot3(orientations["rot1"].as<Rotation>());
+          if (orientations["rot2"]) curr_structure_.grain_orientation_rot2(orientations["rot2"].as<Rotation>());
+          if (orientations["rot3"]) curr_structure_.grain_orientation_rot3(orientations["rot3"].as<Rotation>());
         } //orientation
       } // if curr_struct["ensemble"]
       structures_[key] = curr_structure_;
