@@ -1582,6 +1582,7 @@ namespace hig {
             break;
 
           case struct_grain_xrepetition_token:
+            curr_structure_.grain_xrepetition_stat(TokenMapper::instance().get_stattype_token(str));
             break;
 
           case struct_grain_yrepetition_token:
