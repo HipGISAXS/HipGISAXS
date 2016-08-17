@@ -84,21 +84,21 @@ int main(int narg, char** args) {
       ana.add_analysis_algo(new hig::ComputeObjectiveFunction(narg, args, &hip_func, i));
     } else if(algo == hig::algo_lmvm) {
       // original ones
-      //hip_func.set_distance_measure(new UnitVectorNormL1Distance());        // L1
-      hip_func.set_distance_measure(new UnitVectorNormL2DistanceSquare());  // L2/default
-      //hip_func.set_distance_measure(new CNormL2DistanceSquare());
+      //hip_func.set_distance_measure(new UnitVectorNormL1Distance());            // L1
+      //hip_func.set_distance_measure(new UnitVectorNormL2DistanceSquare());      // L2
+      //hip_func.set_distance_measure(new CNormL2DistanceSquare());               // C
       // sqrt versions
       //hip_func.set_distance_measure(new SqrtUnitVectorNormL1Distance());        // L1
-      //hip_func.set_distance_measure(new SqrtUnitVectorNormL2DistanceSquare());  // L2/default
-      //hip_func.set_distance_measure(new SqrtCNormL2DistanceSquare());
+      hip_func.set_distance_measure(new SqrtUnitVectorNormL2DistanceSquare());  // L2
+      //hip_func.set_distance_measure(new SqrtCNormL2DistanceSquare());           // C
       // cbrt versions
       //hip_func.set_distance_measure(new CbrtUnitVectorNormL1Distance());        // L1
-      //hip_func.set_distance_measure(new CbrtUnitVectorNormL2DistanceSquare());  // L2/default
-      //hip_func.set_distance_measure(new CbrtCNormL2DistanceSquare());
+      //hip_func.set_distance_measure(new CbrtUnitVectorNormL2DistanceSquare());  // L2
+      //hip_func.set_distance_measure(new CbrtCNormL2DistanceSquare());           // C
       // log versions
-      //hip_func.set_distance_measure(new LogUnitVectorNormL1Distance());        // L1
-      //hip_func.set_distance_measure(new LogUnitVectorNormL2DistanceSquare());  // L2/default
-      //hip_func.set_distance_measure(new LogCNormL2DistanceSquare());
+      //hip_func.set_distance_measure(new LogUnitVectorNormL1Distance());         // L1
+      //hip_func.set_distance_measure(new LogUnitVectorNormL2DistanceSquare());   // L2
+      //hip_func.set_distance_measure(new LogCNormL2DistanceSquare());            // C
       ana.add_analysis_algo(new hig::FitLMVMAlgo(narg, args, &hip_func, i));
     } else if(algo == hig::algo_pso) {
       hip_func.set_distance_measure(new UnitVectorNormL2DistanceSquare());

@@ -22,7 +22,7 @@ bragg-gnu:
 	( $(MAKE) hipgisaxs install                               \
 		"HIPGISAXS_DIR = ../.."                                 \
 		"PETSC_DIR = /usr/local/petsc"                          \
-		"PETSC_VERSION = \"3.6\""                               \
+		"PETSC_VERSION = \"3.7\""                               \
 		"CUDA_DIR = /usr/local/cuda"                            \
 		"CXX = mpicxx"                                          \
 		"CXX_FLAGS = -std=c++11 -fopenmp -DUSE_MPI"             \
@@ -180,6 +180,13 @@ all: andromeda-gnu
 	@echo $(PETSC_VERSION)
 
 
+ifeq ($(PETSC_VERSION), "3.7")
+PETSC_FLAG += -DPETSC_37
+TAO_DIR =
+TAO_INCL =
+TAO_LDFLAGS =
+TAO_LIBS =
+else
 ifeq ($(PETSC_VERSION), "3.6")
 PETSC_FLAG += -DPETSC_36
 TAO_DIR =
@@ -203,6 +210,7 @@ TAO_INCL = -I $(TAO_DIR)/include
 TAO_LDFLAGS = -L $(TAO_DIR)/lib
 endif
 TAO_LIBS = -ltao
+endif
 endif
 endif
 

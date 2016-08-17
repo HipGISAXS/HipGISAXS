@@ -246,7 +246,6 @@ namespace hig {
     real_t *gisaxs_data = NULL;
     // construct param_vals
     std::vector <std::string> params = hipgisaxs_.fit_param_keys();
-    // TODO check if param values are within range ...
     std::map <std::string, real_t> param_vals;
     for(int i = 0; i < x.size(); ++ i) param_vals[params[i]] = x[i];
 

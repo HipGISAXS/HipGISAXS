@@ -89,7 +89,7 @@ namespace hig {
     //if(gnorm <= gatol) {
     if(f <= gatol) {
       #ifdef PETSC_37
-        TaoSetConvergedReason(tao, TAO_CONVERGED_ATOL);
+        TaoSetConvergedReason(tao, TAO_CONVERGED_GATOL);
       #else
         TaoSetConvergedReason(tao, TAO_CONVERGED_GATOL);
       #endif
