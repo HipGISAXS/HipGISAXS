@@ -443,6 +443,9 @@ if using_tau:
   CXXCOMPILER = "tau_cxx.sh"
   CCCOMPILER = "tau_cc.sh"
 
+if 'CXX' in os.environ: CXXCOMPILER = os.environ['CXX']
+if 'CC' in os.environ: CCCOMPILER = os.environ['CC']
+
 # initialize the environment with gathered stuff so far
 env = Environment(BUILD_DIR=variant_dir,
                     ENV = os.environ,

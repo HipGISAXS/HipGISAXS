@@ -150,6 +150,22 @@ titan-gnu:
 		"HIPGISAXS_LIBS = -lhipgisaxs -lcudart"                 \
 		)
 
+daint-gnu:
+	( $(MAKE) hipgisaxs install                               \
+		"PETSC_DIR = $(CRAY_PETSC_DIR)"                              \
+		"PETSC_VERSION = \"3.6\""                               \
+		"HIPGISAXS_DIR = ../.."                                 \
+		"BOOST_DIR = $(BOOST_ROOT)"                              \
+		"CUDA_DIR = $(CRAY_CUDATOOLKIT_DIR)"                    \
+		"CXX = CC"                                              \
+		"CXX_FLAGS = -std=c++11 -fopenmp -DUSE_MPI"             \
+		"CXX_FLAGS += -O3"                                      \
+		"OPT_FLAGS = -O3"                                       \
+		"DBG_FLAGS = -g"                                        \
+		"PETSC_LIBS = -lcraypetsc_gnu_real-64"                     \
+		"HIPGISAXS_LIBS = -lhipgisaxs -lcuda"                 \
+		)
+
 ifdef MPI_DIR
 MPI_LDFLAGS = -L $(MPI_DIR)/lib
 endif
