@@ -78,12 +78,12 @@ namespace hig {
 
   // read and parse the input file
   bool HipGISAXS::construct_input(const char * filename) {
-    std::string ext = boost::filesystem::extension(std::string(filename));
+    std::string path(filename);
     bool err = false;
-    if (ext.compare(".hig") == 0) {
+    if (path.find(".hig") != std::string::npos){
       input_ = new HiGInput();
       err = input_->construct_input_config(filename);
-    } else if ((ext.compare(".yaml") == 0) || (ext.compare(".yml") == 0)) {
+    } else if ((path.find(".yaml") != std::string::npos ) || (path.find(".yml") != std::string::npos)) {
       input_ = new YAMLInput();
       err = input_->construct_input_config(filename);
     } else {
@@ -699,20 +699,6 @@ namespace hig {
       bool master = true;
     #endif
 
-    /**************************
-    // compute propagation coefficients/fresnel coefficients
-    // this can also go into run_init() ...
-    complex_t *amm = NULL, *apm = NULL, *amp = NULL, *app = NULL;
-    complex_t *rk1 = NULL, *rk2 = NULL, *rk1rk2 = NULL, *tk1tk2 = NULL, *h0 = NULL;
-    // TODO : where is fc used ?????????? ....................
-    complex_t* fc = NULL;
-    if(!compute_propagation_coefficients(alphai, amm, apm, amp, app,
-                        rk1, rk2, rk1rk2, tk1tk2, h0, fc)) {
-      if(master) std::cerr << "error: failed to compute propogation coefficients" << std::endl;
-      return false;
-    } // if
-    ****************************/
-
     /* loop over all structures and grains/grains */
     auto s = input_->structures().cbegin();
     int num_structs = num_structures_;
@@ -1111,9 +1097,7 @@ namespace hig {
                 } // for i
               } else { // SAXS
                 for(unsigned int i = 0; i < imsize; ++ i) {
-                  unsigned int curr_index   = i;
-                  unsigned int curr_index_0 = i; 
-                  base_id[curr_index] = weight * (sf[curr_index_0] * ff[curr_index_0]);
+                  base_id[i] = weight * sf[i] * ff[i];
                 } // for i
               } // if-else
               if(input_->compute().save_ff()){

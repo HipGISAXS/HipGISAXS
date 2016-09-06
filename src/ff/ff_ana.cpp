@@ -203,7 +203,7 @@ namespace hig {
     complex_t unitc(0, 1.0);
     complex_t temp = 2.0 * exp(unitc * value * y / (real_t) 2.0) *
               sin(value * y / (real_t) 2.0) / value;
-    if(fabs(temp) <= 1e-14) temp = y;
+    if(std::abs(temp) <= 1e-14) temp = y;
     return temp;
   } // AnalyticFormFactor::fq_inv()
 

@@ -209,7 +209,8 @@ namespace hig {
       for (real_t k = 0; k < repeats[1]; k++){
         for (real_t l = 0; l < repeats[2]; l++){
           vector3_t G = mra * h + mrb * k + mrc * l;
-          if ((G[0] < qmin[0]) || (G[0] > qmax[0])) continue;
+          real_t Gp = sign(G[1]) * std::sqrt(G[0]*G[0] + G[1]*G[1]);
+          if ((Gp < qmin[0]) || (Gp > qmax[0])) continue;
           if ((G[2] < qmin[1]) || (G[2] > qmax[1])) continue;
           if (G.norm() > 0 ){
             real_t G_proj = std::sqrt(G[0] * G[0] + G[1] * G[1]);
