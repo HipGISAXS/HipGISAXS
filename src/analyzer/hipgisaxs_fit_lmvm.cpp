@@ -70,18 +70,24 @@ namespace hig {
     ierr = TaoSetFromOptions(tao);
     TaoSetMaximumIterations(tao, max_iter_);
 
-    TaoSetTolerances(tao, tol_, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT);
+    #ifdef PETSC_37
+      TaoSetTolerances(tao, tol_, tol_, tol_);
+    #else
+      TaoSetTolerances(tao, tol_, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT);
+    #endif
     TaoDefaultMonitor(tao, PETSC_NULL);
 
     ierr = TaoSetInitialVector(tao, x0);
-    #ifdef PETSC_36
+    #ifdef PETSC_37
+      ierr = TaoSetConvergenceHistory(tao, hist, resid, NULL, NULL, max_hist_, PETSC_TRUE); CHKERRQ(ierr);
+    #elif defined PETSC_36
       ierr = TaoSetHistory(tao, hist, resid, NULL, NULL, nhist, PETSC_TRUE);
     #else
       ierr = TaoSetHistory(tao, hist, resid, 0, nhist, PETSC_TRUE);
     #endif // PETSC_36
     ierr = TaoSolve(tao);
     ierr = TaoGetTerminationReason(tao, &reason);
-    #ifdef PETSC_36
+    #if defined PETSC_36 || defined PETSC_37
       TaoGetHistory(tao, NULL, NULL, NULL, NULL, &nhist);
     #else
       TaoGetHistory(tao, 0, 0, 0, &nhist);

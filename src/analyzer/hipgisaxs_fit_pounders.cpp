@@ -228,8 +228,8 @@ namespace hig {
     std::cout << "** [pounders] converged reason: " << reason << std::endl;
 
     #ifdef PETSC_37
-      ierr = TaoGetConvergenceHistory(tao, &hist, &resid, NULL, NULL, &nhist);
-      //ierr = TaoGetConvergenceHistory(tao, NULL, NULL, NULL, NULL, &nhist);
+      //ierr = TaoGetConvergenceHistory(tao, &hist, &resid, NULL, NULL, &nhist);
+      ierr = TaoGetConvergenceHistory(tao, NULL, NULL, NULL, NULL, &nhist);
     #elif defined PETSC_36
       //ierr = TaoGetConvergenceHistory(tao, &hist, &resid, NULL, NULL, &nhist); CHKERRQ(ierr);
       ierr = TaoGetConvergenceHistory(tao, NULL, NULL, NULL, NULL, &nhist); CHKERRQ(ierr);

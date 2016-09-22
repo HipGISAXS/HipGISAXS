@@ -20,14 +20,16 @@ intel:
 
 bragg-gnu:
 	( $(MAKE) hipgisaxs install                               \
+		"HIPGISAXS_DIR = ../.."                                 \
+		"CUDA_DIR = /usr/local/cuda"                            \
+		"PETSC_DIR = /usr/local/petsc"    			                \
+		"PETSC_VERSION = \"3.7\""                               \
 		"CXX = mpicxx"                                          \
 		"CXX_FLAGS = -std=c++11 -fopenmp -DUSE_MPI"             \
 		"CXX_FLAGS += -O3"                                      \
 		"OPT_FLAGS = -O3"                                       \
 		"DBG_FLAGS = -g"                                        \
 		"MPI_LIBS = -lmpi -lmpi_cxx"                            \
-		"PETSC_INCL = -I $(PETSC_DIR)/include"                  \
-		"PETSC_LDFLAGS = -L $(PETSC_DIR)/lib"                   \
 		"PETSC_LIBS = -lpetsc"                                  \
 		"HDF5_LIBS = -lhdf5 -lz"                                \
 		)
@@ -178,6 +180,13 @@ all: andromeda-gnu
 	@echo $(PETSC_VERSION)
 
 
+ifeq ($(PETSC_VERSION), "3.7")
+PETSC_FLAG += -DPETSC_37
+TAO_DIR =
+TAO_INCL =
+TAO_LDFLAGS =
+TAO_LIBS =
+else
 ifeq ($(PETSC_VERSION), "3.6")
 PETSC_FLAG += -DPETSC_36
 TAO_DIR =
@@ -201,6 +210,7 @@ TAO_INCL = -I $(TAO_DIR)/include
 TAO_LDFLAGS = -L $(TAO_DIR)/lib
 endif
 TAO_LIBS = -ltao
+endif
 endif
 endif
 
