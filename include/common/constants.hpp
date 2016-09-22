@@ -44,6 +44,9 @@ namespace hig {
   // miscellaneous helpers
   // const int VERBOSE_LEVEL_ONE = 1;
 
+  // fitting related constants
+  const int MAX_ITER_REG_ = 10;
+
 } // namespace
 
 #endif // __CONSTANTS_HPP__

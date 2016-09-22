@@ -886,6 +886,7 @@ namespace hig {
       case fit_algorithm_param_value_token:
       case fit_algorithm_restart_token:
       case fit_algorithm_tolerance_token:
+      case fit_algorithm_regularization_token:
         break;
 
       default:
@@ -1471,6 +1472,10 @@ namespace hig {
 
       case fit_algorithm_tolerance_token:
         curr_fit_algo_.tolerance(num);
+        break;
+
+      case fit_algorithm_regularization_token:
+        curr_fit_algo_.regularization(num);
         break;
 
       default:

@@ -21,9 +21,9 @@ intel:
 bragg-gnu:
 	( $(MAKE) hipgisaxs install                               \
 		"HIPGISAXS_DIR = ../.."                                 \
-		"CUDA_DIR = /usr/local/cuda"                            \
-		"PETSC_DIR = /usr/local/petsc"    			                \
+		"PETSC_DIR = /usr/local/petsc"                          \
 		"PETSC_VERSION = \"3.7\""                               \
+		"CUDA_DIR = /usr/local/cuda"                            \
 		"CXX = mpicxx"                                          \
 		"CXX_FLAGS = -std=c++11 -fopenmp -DUSE_MPI"             \
 		"CXX_FLAGS += -O3"                                      \
@@ -150,6 +150,22 @@ titan-gnu:
 		"HIPGISAXS_LIBS = -lhipgisaxs -lcudart"                 \
 		)
 
+daint-gnu:
+	( $(MAKE) hipgisaxs install                               \
+		"PETSC_DIR = $(CRAY_PETSC_DIR)"                              \
+		"PETSC_VERSION = \"3.6\""                               \
+		"HIPGISAXS_DIR = ../.."                                 \
+		"BOOST_DIR = $(BOOST_ROOT)"                              \
+		"CUDA_DIR = $(CRAY_CUDATOOLKIT_DIR)"                    \
+		"CXX = CC"                                              \
+		"CXX_FLAGS = -std=c++11 -fopenmp -DUSE_MPI"             \
+		"CXX_FLAGS += -O3"                                      \
+		"OPT_FLAGS = -O3"                                       \
+		"DBG_FLAGS = -g"                                        \
+		"PETSC_LIBS = -lcraypetsc_gnu_real-64"                     \
+		"HIPGISAXS_LIBS = -lhipgisaxs -lcuda"                 \
+		)
+
 ifdef MPI_DIR
 MPI_LDFLAGS = -L $(MPI_DIR)/lib
 endif
@@ -239,7 +255,8 @@ ALL_LDFLAGS = $(MPI_LDFLAGS) $(TAO_LDFLAGS) $(GCC_LDFLAGS) $(PETSC_LDFLAGS) \
 		          $(HIPGISAXS_LDFLAGS) $(HDF5_LDFLAGS) $(TIFF_LDFLAGS) $(BOOST_LDFLAGS)
 ALL_LIBS = $(MPI_LIBS) $(TAO_LIBS) $(PETSC_LIBS) $(HIPGISAXS_LIBS) $(HDF5_LIBS) $(TIFF_LIBS) $(BOOST_LIBS)
 
-OBJECTS = ImageData.o analysis_algorithm.o objective_func.o hipgisaxs_ana.o objective_func_hipgisaxs.o
+OBJECTS = ImageData.o analysis_algorithm.o objective_func.o hipgisaxs_ana.o \
+					objective_func_hipgisaxs.o hipgisaxs_compute_objective.o
 
 POUND_OBJS = hipgisaxs_fit_pounders.o
 POUND_HIP_OBJS = $(POUND_OBJS) hipgisaxs_fit_pounders_main.o

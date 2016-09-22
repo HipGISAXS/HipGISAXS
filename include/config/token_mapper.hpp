@@ -253,6 +253,7 @@ namespace hig {
         KeyWords_[std::string("thickness")]       = layer_thickness_token;
         KeyWords_[std::string("tilt")]            = instrument_scatter_tilt_token;
         KeyWords_[std::string("tolerance")]       = fit_algorithm_tolerance_token;
+        KeyWords_[std::string("regularization")]  = fit_algorithm_regularization_token;
         KeyWords_[std::string("totalpixels")]     = instrument_detector_totpix_token;
         KeyWords_[std::string("transvec")]        = struct_grain_transvec_token;
         KeyWords_[std::string("type")]            = type_token;
@@ -342,6 +343,7 @@ namespace hig {
         FittingAlgorithmKeyWords_[std::string("pounders")]    = algo_pounders;
         FittingAlgorithmKeyWords_[std::string("pso")]      = algo_pso;
         FittingAlgorithmKeyWords_[std::string("bruteforce")]  = algo_bruteforce;
+        FittingAlgorithmKeyWords_[std::string("none_pounders")]    = algo_none_pounders;
 
         /* fitting algorithm parameter keywords */
 

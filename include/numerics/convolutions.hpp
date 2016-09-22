@@ -134,7 +134,7 @@ namespace hig {
         real_t* conv_data = new (std::nothrow) real_t[nx * ny];
 
         // compute the gaussian matrix to avoid computation of gaussian() every time
-        int i6sigma = (int) (6 * sigma);
+        int i6sigma = (int) ceil(6 * sigma);
         int gn = 2 * i6sigma + 1;
         real_t * gauss_map = new real_t[gn];
         for(int i = 0;  i < gn; ++ i) gauss_map[i] = gaussian(i - i6sigma, sigma); 
@@ -147,9 +147,9 @@ namespace hig {
             real_t norm = 0.0;
             int ibeg = std::max(0, i - i6sigma);
             int iend = std::min((int) nx, i + i6sigma);
-            for(int k = ibeg; k <= iend; ++ k) {
+            for(int k = ibeg; k < iend; ++ k) {
               sum += data[j * nx + k] * gauss_map[k - ibeg];
-              norm += gauss_map[k-ibeg];
+              norm += gauss_map[k - ibeg];
             } // for
             if(norm > TINY_) conv_data[j * nx + i] = sum / norm;
             else conv_data[j * nx + i] = 0;
@@ -164,7 +164,7 @@ namespace hig {
             real_t norm = 0.0;
             int jbeg = std::max(0, j - i6sigma);
             int jend = std::min((int) ny, j + i6sigma);
-            for(int l = jbeg; l <= jend; ++ l) {
+            for(int l = jbeg; l < jend; ++ l) {
               sum += conv_data[l * nx + i] * gauss_map[l - jbeg];
               norm += gauss_map[l - jbeg];
             } // for

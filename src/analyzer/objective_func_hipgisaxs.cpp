@@ -33,14 +33,14 @@ namespace hig {
     n_ver_ = hipgisaxs_.nrow();
 
     ref_data_ = NULL;
+    mean_data_ = NULL;
     mask_data_.clear();
     mask_set_ = false;
     pdist_ = d;
-    //curr_dist_.clear();
 
-    reg_alpha_ = 0;     // starting with some big value
-    //reg_alpha_ = 10;     // starting with some big value
-                          // TODO: make this configurable from the input
+    reg_alpha_ = 0.0;
+
+    set_mean_data();
 
   } // HipGISAXSObjectiveFunction::HipGISAXSObjectiveFunction()
 
@@ -61,19 +61,21 @@ namespace hig {
     n_ver_ = hipgisaxs_.nrow();
 
     ref_data_ = NULL;
+    mean_data_ = NULL;
     mask_data_.clear();
     mask_set_ = false;
     pdist_ = NULL;
 
-    reg_alpha_ = 0;     // starting with some big value
-    //reg_alpha_ = 10;     // starting with some big value
-                          // TODO: make this configurable from the input
+    reg_alpha_ = 0.0;
+
+    set_mean_data();
 
   } // HipGISAXSObjectiveFunction::HipGISAXSObjectiveFunction()
 
 
   HipGISAXSObjectiveFunction::~HipGISAXSObjectiveFunction() {
     if(ref_data_ != NULL) delete ref_data_;
+    if(mean_data_ != NULL) delete[] mean_data_;
   } // HipGISAXSObjectiveFunction::~HipGISAXSObjectiveFunction()
 
 
@@ -214,24 +216,52 @@ namespace hig {
   } // HipGISAXSObjectiveFunction::read_edf_mask_data()
 
 
+  // computes and sets the simulated data with mean parameter vector values
+  bool HipGISAXSObjectiveFunction::set_mean_data(void) {
+    mean_data_ = NULL;
+
+    // construct mean param_vals
+    std::vector <std::string> params = hipgisaxs_.fit_param_keys();
+    std::map <std::string, real_t> param_vals;
+    for(int i = 0; i < params.size(); ++ i)
+      param_vals[params[i]] = HiGInput::instance().param_space_mean(params[i]);
+
+    std::cout << "-- Mean/estimated parameter values: ";
+    for(std::map<std::string, real_t>::iterator i = param_vals.begin(); i != param_vals.end(); ++ i)
+      std::cout << (*i).first << ": " << (*i).second << "  ";
+    std::cout << std::endl;
+
+    hipgisaxs_.update_params(param_vals);
+    hipgisaxs_.compute_gisaxs(mean_data_);
+
+    return true;
+  } // HipGISAXSObjectiveFunction::set_mean_data()
+
+
   real_vec_t HipGISAXSObjectiveFunction::operator()(const real_vec_t& x) {
+
+    //bool use_mean = true;    // temporary
+    bool use_mean = false;    // temporary
+
     real_t *gisaxs_data = NULL;
     // construct param_vals
     std::vector <std::string> params = hipgisaxs_.fit_param_keys();
-    // TODO check if param values are within range ...
     std::map <std::string, real_t> param_vals;
     for(int i = 0; i < x.size(); ++ i) param_vals[params[i]] = x[i];
 
     std::cout << "-- Parameter values input to objective function: ";
     for(std::map<std::string, real_t>::iterator i = param_vals.begin(); i != param_vals.end(); ++ i)
-      std::cout << (*i).first << " = " << (*i).second << "\t";
+      std::cout << (*i).first << ": " << (*i).second << "  ";
     std::cout << std::endl;
 
     real_vec_t curr_dist;
 
-    // update and compute gisaxs
+    /**
+     * update and compute gisaxs
+     */
     hipgisaxs_.update_params(param_vals);
     hipgisaxs_.compute_gisaxs(gisaxs_data);
+
     // only the master process does the following
     if(hipgisaxs_.is_master()) {
       if(gisaxs_data == NULL) {
@@ -247,14 +277,19 @@ namespace hig {
           std::cerr << "** ARRAY CHECK ** gisaxs_data failed check" << std::endl;
       #endif // MEMDEBUG
 
-      // compute error/distance
+      /**
+       * compute error/distance
+       */
       std::cout << "-- Computing distance..." << std::endl;
       real_t* ref_data = (*ref_data_).data();
       if(ref_data == NULL) std::cerr << "error: ref_data is NULL" << std::endl;
       unsigned int* mask_data = &(mask_data_[0]);
-      (*pdist_)(ref_data, gisaxs_data, mask_data, n_par_ * n_ver_, curr_dist);
 
-      // add regularization term
+      // distance function
+      if(use_mean) (*pdist_)(ref_data, gisaxs_data, mask_data, n_par_ * n_ver_, curr_dist, mean_data_);
+      else (*pdist_)(ref_data, gisaxs_data, mask_data, n_par_ * n_ver_, curr_dist);
+
+      /** regularization **/
       // compute regularization = (alpha / 2) * || x - x_mean || ^ 2
       double pmean = 0.0;
       for(std::map<std::string, real_t>::const_iterator i = param_vals.begin();
@@ -265,11 +300,13 @@ namespace hig {
         pmean += ptemp;
       } // for
       // for better alpha selection, plot pmean vs. curr_dist
-      reg_alpha_ /= 5;    // calculate new alpha
-      double reg = (reg_alpha_ / 2) * pmean;
+      real_t reg = (reg_alpha_ / 2) * pmean;
+      std::cout << "## reg_const: " << reg_alpha_ << ", param_norm: " << pmean
+                << ", reg_value: " << reg << ", dist[0]: " << curr_dist[0] << std::endl;
+      real_t reg_dist = reg / curr_dist.size();   // distribute it across the distance vector
       for(auto i = 0; i < curr_dist.size(); ++ i) {
-        if((boost::math::isfinite)(curr_dist[i])) curr_dist[i] += reg;
-        else curr_dist[i] = 0.0;
+        if((boost::math::isfinite)(curr_dist[i])) curr_dist[i] += reg_dist;
+        else curr_dist[i] = 1e6;    // some large number
       } // for
 
       // write to output file

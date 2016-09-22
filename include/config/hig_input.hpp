@@ -352,7 +352,7 @@ namespace hig {
       } // fit_param_step_values()
       // return mean value of given parameter
       real_t param_space_mean(const std::string& key) {
-        return (param_space_key_map_[key].max_ - param_space_key_map_[key].min_) / 2.0;
+        return (param_space_key_map_[key].max_ - param_space_key_map_[key].min_) / 2.0 + param_space_key_map_[key].min_;
       } // param_space_mean()
       std::string reference_data_path(int i) const { return reference_data_[i].image_path(); }
       std::string reference_data_mask(int i) const { return reference_data_[i].image_mask(); }
@@ -382,6 +382,7 @@ namespace hig {
         return analysis_algos_[i].param(pstr, val);
       } // analysis_algo_param()
       real_t analysis_tolerance(int i) const { return analysis_algos_[i].tolerance(); }
+      real_t analysis_regularization(int i) const { return analysis_algos_[i].regularization(); }
 
       /* printing for testing */
       void print_all();

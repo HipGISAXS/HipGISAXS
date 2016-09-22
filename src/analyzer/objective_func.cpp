@@ -46,7 +46,8 @@ namespace hig {
     return 0;
   } // EvaluateFunction()
 
-  /* convergence test for pounders */
+
+  /* convergence test */
   PetscErrorCode convergence_test(Tao tao, void * ctx) {
     PetscErrorCode ierr;
     PetscInt iter;    // iteration number
@@ -58,14 +59,35 @@ namespace hig {
     PetscReal gatol, grtol, gttol, fatol, frtol;
     PetscInt maxiter;
 
+    TaoView(tao, PETSC_VIEWER_STDOUT_SELF);
+
     ierr = TaoGetSolutionStatus(tao, &iter, &f, &gnorm, &cnorm, &xdiff, &reason); CHKERRQ(ierr);
+    std::cout << "** [status] iteration number                  : " << iter << std::endl
+              << "**          function value (f)                : " << f << std::endl
+              << "**          gradient norm square (gnorm)      : " << gnorm << std::endl
+              << "**          infeasibility (cnorm)             : " << cnorm << std::endl
+              << "**          trust region step length (xdiff)  : " << xdiff << std::endl;
+
+    Vec xi; PetscInt size; PetscReal y;
+    //VecCreateSeq(PETSC_COMM_SELF, num_params_, &xi);
+    TaoGetSolutionVector(tao, &xi);
+    VecGetSize(xi, &size);
+    std::cout << "**          current parameter vector          : [ ";
+    for(PetscInt j = 0; j < size; ++ j) {
+      VecGetValues(xi, 1, &j, &y);
+      std::cout << y << " ";
+    } // for
+    std::cout << "]" << std::endl;
+
     #ifdef PETSC_37
       ierr = TaoGetTolerances(tao, &gatol, &grtol, &gttol); CHKERRQ(ierr);
     #else
       ierr = TaoGetTolerances(tao, &fatol, &frtol, &gatol, &grtol, &gttol); CHKERRQ(ierr);
     #endif
     ierr = TaoGetMaximumIterations(tao, &maxiter); CHKERRQ(ierr);
-    if(gnorm <= gatol) {
+    std::cout << "++ optimization iteration " << iter << " / " << maxiter << " done." << std::endl;
+    //if(gnorm <= gatol) {
+    if(f <= gatol) {
       #ifdef PETSC_37
         TaoSetConvergedReason(tao, TAO_CONVERGED_GATOL);
       #else
