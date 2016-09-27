@@ -75,40 +75,40 @@ int main(int narg, char** args) {
     } // if
 
     if(algo == hig::algo_pounders) {
-      //hip_func.set_distance_measure(new ResidualVector());
-      //hip_func.set_distance_measure(new RelativeResidualVector());
-      hip_func.set_distance_measure(new UnitLengthNormalizedResidualVector());
+      // pounders fitting (uses petsc)
+      //hip_func.set_distance_measure(new SqrtUnitVectorNormL2DistanceResidualVector());
+      //hip_func.set_distance_measure(new SqrtCNormL2DistanceResidualVector());
+      //hip_func.set_distance_measure(new SqrtUnitVectorNormL2DistanceSquareResidualVector());
+      hip_func.set_distance_measure(new SqrtCNormL2DistanceSquareResidualVector());
       ana.add_analysis_algo(new hig::FitPOUNDERSAlgo(narg, args, &hip_func, i));
-    } else if(algo == hig::algo_none_pounders) {    // dont fit, just compute the obj function
-      hip_func.set_distance_measure(new UnitLengthNormalizedResidualVector());
-      ana.add_analysis_algo(new hig::ComputeObjectiveFunction(narg, args, &hip_func, i));
+
     } else if(algo == hig::algo_lmvm) {
-      // original ones
-      //hip_func.set_distance_measure(new UnitVectorNormL1Distance());            // L1
-      //hip_func.set_distance_measure(new UnitVectorNormL2DistanceSquare());      // L2
-      //hip_func.set_distance_measure(new CNormL2DistanceSquare());               // C
-      // sqrt versions
-      //hip_func.set_distance_measure(new SqrtUnitVectorNormL1Distance());        // L1
-      hip_func.set_distance_measure(new SqrtUnitVectorNormL2DistanceSquare());  // L2
-      //hip_func.set_distance_measure(new SqrtCNormL2DistanceSquare());           // C
-      // cbrt versions
-      //hip_func.set_distance_measure(new CbrtUnitVectorNormL1Distance());        // L1
-      //hip_func.set_distance_measure(new CbrtUnitVectorNormL2DistanceSquare());  // L2
-      //hip_func.set_distance_measure(new CbrtCNormL2DistanceSquare());           // C
-      // log versions
-      //hip_func.set_distance_measure(new LogUnitVectorNormL1Distance());         // L1
-      //hip_func.set_distance_measure(new LogUnitVectorNormL2DistanceSquare());   // L2
-      //hip_func.set_distance_measure(new LogCNormL2DistanceSquare());            // C
+      // lmvm fitting (uses petsc)
+      //hip_func.set_distance_measure(new SqrtUnitVectorNormL2DistanceSquare());
+      hip_func.set_distance_measure(new SqrtCNormL2DistanceSquare());           // default
       ana.add_analysis_algo(new hig::FitLMVMAlgo(narg, args, &hip_func, i));
+
     } else if(algo == hig::algo_pso) {
-      hip_func.set_distance_measure(new UnitVectorNormL2DistanceSquare());
+      // particle swarm optimization
+      //hip_func.set_distance_measure(new UnitVectorNormL2DistanceSquare());
+      //hip_func.set_distance_measure(new SqrtUnitVectorNormL2DistanceSquare());
+      hip_func.set_distance_measure(new SqrtCNormL2DistanceSquare());           // default
       ana.add_analysis_algo(new hig::ParticleSwarmOptimization(narg, args, &hip_func, i, false, 0));
+
     } else if(algo == hig::algo_bruteforce) {
+      // brute force: try all possibilities
       hip_func.set_distance_measure(new UnitVectorNormL2DistanceSquare());
       ana.add_analysis_algo(new hig::BruteForceOptimization(narg, args, &hip_func, i));
+
+    } else if(algo == hig::algo_none_pounders) {
+      // compute the objective function, do not fit
+      hip_func.set_distance_measure(new UnitLengthNormalizedResidualVector());
+      ana.add_analysis_algo(new hig::ComputeObjectiveFunction(narg, args, &hip_func, i));
+
     } else if(algo == hig::algo_error) {
       std::cerr << "error: unknown optimization algorithm encountered" << std::endl;
       return -1;
+
     } else {
       std::cerr << "error: NULL optimization algorithm encountered" << std::endl;
       return -1;

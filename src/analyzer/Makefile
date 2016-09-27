@@ -7,6 +7,8 @@
 ## * titan-intel
 ## Note: all the Intel versions need to be tested first, so dont use them for now.
 
+HIPGISAXS_DIR=../..
+
 default:
 	( $(MAKE) error )
 
