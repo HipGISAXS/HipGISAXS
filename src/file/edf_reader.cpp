@@ -196,7 +196,7 @@ namespace hig {
     edf << "Dim_2             = " << ncol_     << std::endl;
     edf << "Size              = " << size * sizeof(float)  << std::endl;
     edf << "DataType          = " << type      << std::endl;
-
+    
     // First 1024 bytes are reserved for header
     edf.seekp(1024);
     for (int i = 0; i < size; i++ ){

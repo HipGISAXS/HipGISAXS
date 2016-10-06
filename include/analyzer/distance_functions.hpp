@@ -228,6 +228,24 @@ class AbsoluteDifferenceSquareNorm : public DistanceMeasure {
     } // operator()
 }; // class AbsoluteDifferenceNorm
 
+//! L-2 norm of difference in logrithms \f$ d = \| \ln R - \ln S \|_2 \f$
+class LogDifferenceNorm2 : public DistanceMeasure {
+  public:
+    bool operator()(hig::real_t *& ref, hig::real_t *& data, unsigned *& mask, unsigned size,
+      std::vector<hig::real_t> & dist) const {
+      if (ref == NULL || data == NULL) return false;
+      double scale = 1.0E+06;
+      double dist_sum = 0.;
+      for (int i = 0; i < size; i++ ){
+        if (mask[i] != 0){ // if mask is non-zero
+          double temp = std::log(1. + data[i]) - std::log(1. +  + ref[i]);
+          dist_sum = temp * temp;
+        }
+      }
+      dist.push_back(dist_sum * scale);
+      return true;
+    }
+};
 
 // normalized sum of absolute differences
 class AbsoluteDifferenceNorm : public DistanceMeasure {

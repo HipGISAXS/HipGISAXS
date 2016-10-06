@@ -47,7 +47,7 @@ namespace hig {
       /* compute numerically */
       is_analytic_ = false;
       numeric_ff_.init(rot, ff_);
-      numeric_ff_.compute2(shape_filename.c_str(), ff_, rot
+      numeric_ff_.compute(shape_filename.c_str(), ff_, rot
                 #ifdef USE_MPI
                   , multi_node, comm_key
                 #endif

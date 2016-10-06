@@ -525,9 +525,9 @@ namespace hig {
 
             // Save the data into EDF file for HipIES (TODO: should change to Nexus file later)
             std::string edf_file(HiGInput::instance().param_pathprefix() +
-                  "/" + HiGInput::instance().runname() +
-                  "/gisaxs_ai=" + alphai_s + "_rot=" + phi_s +
-                  "_tilt=" + tilt_s + ".edf");
+                    "/" + HiGInput::instance().runname() +
+                    "/gisaxs_ai=" + alphai_s + "_rot=" + phi_s +
+                    "_tilt=" + tilt_s + ".edf");
             std::cout << "-- Saving data in " << edf_file << " ... " << std::flush;
             EDFWriter edf(edf_file.c_str());
             edf.setEnergy(1.23984E+03 * k0_ / 2 / PI_);
@@ -934,7 +934,6 @@ namespace hig {
         vector3_t mean = s->second.grain_scaling();
         vector3_t stddev = s->second.grain_scaling_stddev();
         std::vector<int> scaling_nvals = s->second.grain_scaling_nvals();
-
         // if sigma is zeros set sampling count to 1
         for(int i = 0; i < 3; i++) if (stddev[i] == 0) scaling_nvals[i] = 1;
         construct_scaling_distribution(dist, mean, stddev, scaling_nvals, scaling_samples,
@@ -1414,11 +1413,9 @@ namespace hig {
     } // for
 
     if(iratios_sum != 1.0) {
-      for(int i = 0; i < iratios.size(); i++) iratios[i] /= iratios_sum;
-      //std::cerr << "error: iratios of all structures must add to 1.0 ("
-      //      << iratios_sum << ")" << std::endl;
-      //return false;
-    } // if
+      for (int i = 0; i < iratios.size(); i++)
+        iratios[i] /= iratios_sum;
+    } // if*/
 
     real_t* all_struct_intensity = NULL;
     complex_t* all_c_struct_intensity = NULL;
@@ -1477,7 +1474,10 @@ namespace hig {
     #endif
 
     if(master) {
-      if(all_struct_intensity != NULL) normalize(all_struct_intensity, nrow_ * ncol_);
+      // normalize
+      //if(all_struct_intensity != NULL)
+      //  normalize(all_struct_intensity, nrow_ * ncol_);
+
       img3d = new (std::nothrow) real_t[nrow_ * ncol_];
       if(img3d == nullptr) {
         std::cerr << "error: unable to allocate memeory." << std::endl;
@@ -1544,6 +1544,8 @@ namespace hig {
       if(all_c_struct_intensity != NULL) delete[] all_c_struct_intensity;
       all_struct_intensity = NULL;
       all_c_struct_intensity = NULL;
+
+      if(img3d != NULL) normalize(img3d, nrow_ * ncol_);
     } // if master
 
     if(master) {
@@ -2489,17 +2491,7 @@ namespace hig {
       min[i] = mean[i] - width * stddev[i];
       dx[i] = (2 * width) * stddev[i] / (nvals[i] + 1);
     } // for
-    /*for (int i = 0; i < nvals[0]; ++ i) {
-      for (int j = 0; j < nvals[1]; ++ j) {
-        for (int k = 0; k < nvals[2]; ++ k) {
-          temp[0] = min[0] + i * dx[0] + rng.rand() * dx[0];
-          temp[1] = min[1] + j * dx[1] + rng.rand() * dx[1];
-          temp[2] = min[2] + k * dx[2] + rng.rand() * dx[2];
-          samples.push_back(temp);
-          weights.push_back(gaussian3d(temp, mean, stddev));
-        } // for
-      } // for
-    } // for*/
+
     int nsamples = std::max(nvals[0], std::max(nvals[1], nvals[2]));
     for (int i = 0; i < nsamples; ++ i) {
       temp[0] = min[0] + i * dx[0] + rng.rand() * dx[0];

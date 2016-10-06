@@ -215,6 +215,7 @@ namespace hig {
     vector3_t temp_la(lattice->a() * scaling[0]),
               temp_lb(lattice->b() * scaling[1]),
               temp_lc(lattice->c() * scaling[2]);
+
     vector3_t l_t = lattice->t();
 
     vector3_t arot = rot * temp_la;

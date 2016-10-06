@@ -1261,7 +1261,7 @@ namespace hig {
           case struct_grain_lattice_c_token:
             curr_structure_.grain_scaling_c_nsamples(num);
             break;
-          }
+        }
         break;
 
       case struct_grain_repetition_token:
@@ -1625,6 +1625,7 @@ namespace hig {
             break;
 
           case struct_grain_xrepetition_token:
+            curr_structure_.grain_xrepetition_stat(TokenMapper::instance().get_stattype_token(str));
             break;
 
           case struct_grain_yrepetition_token:
@@ -1991,10 +1992,10 @@ namespace hig {
               min_dim[2] = -max_dim[0];
               break;
             case param_xsize:
-              case param_ysize:
-              case param_radius:
-              case param_edge:
-              case param_baseangle:
+            case param_ysize:
+            case param_radius:
+            case param_edge:
+            case param_baseangle:
               // do nothing
               break;
             default:

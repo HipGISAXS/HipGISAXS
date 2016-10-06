@@ -72,6 +72,9 @@ namespace hig {
 
     private:
       /* compute ff for various shapes */
+      bool compute_cube(unsigned , unsigned, unsigned, std::vector<complex_t> &, 
+               shape_param_list_t&, real_t, real_t, vector3_t &);
+
       bool compute_box(unsigned int nqx, unsigned int nqy, unsigned int nqz,
               std::vector<complex_t>& ff,
               ShapeName shape, shape_param_list_t& params,

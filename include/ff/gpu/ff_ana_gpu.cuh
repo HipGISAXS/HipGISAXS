@@ -57,6 +57,10 @@ namespace hig {
 
       void grid_size(unsigned int, unsigned int);
 
+      bool compute_cube(const real_t, const real_t,
+                const std::vector<real_t>&, const std::vector<real_t>&,
+                const RotMatrix_t &, const std::vector<real_t>&, std::vector<complex_t>&);
+
       bool compute_box(const real_t, const real_t,
                 const std::vector<real_t>&, const std::vector<real_t>&,
                 const std::vector<real_t>&, const std::vector<real_t>&,
