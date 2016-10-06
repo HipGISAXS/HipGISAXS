@@ -1474,10 +1474,6 @@ namespace hig {
     #endif
 
     if(master) {
-      // normalize
-      //if(all_struct_intensity != NULL)
-      //  normalize(all_struct_intensity, nrow_ * ncol_);
-
       img3d = new (std::nothrow) real_t[nrow_ * ncol_];
       if(img3d == nullptr) {
         std::cerr << "error: unable to allocate memeory." << std::endl;
@@ -1545,7 +1541,6 @@ namespace hig {
       all_struct_intensity = NULL;
       all_c_struct_intensity = NULL;
 
-      if(img3d != NULL) normalize(img3d, nrow_ * ncol_);
     } // if master
 
     if(master) {
