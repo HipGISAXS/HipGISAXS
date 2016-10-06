@@ -102,18 +102,6 @@ namespace hig{
     //unsigned int size() { return n_par_ * n_ver_; }
     unsigned int size() { return data_.size(); }
 
-    void normalize(){
-      real_t minval = 1.E+100;
-      real_t maxval = 1.E-100;
-      for (int i = 0; i < n_par_ * n_ver_; i++){
-        if (data_[i] < minval) minval = data_[i];
-        if (data_[i] > maxval) maxval = data_[i];
-      }
-      // normalize
-      real_t temp = maxval - minval;
-      for (int i = 0; i < n_par_ * n_ver_; i++){ data_[i] = (data_[i] - minval)/temp; }
-    }
-
     void print() const;
   }; /* class ImageData */
 

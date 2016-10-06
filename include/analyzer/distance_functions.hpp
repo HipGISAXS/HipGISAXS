@@ -234,7 +234,6 @@ class LogDifferenceNorm2 : public DistanceMeasure {
     bool operator()(hig::real_t *& ref, hig::real_t *& data, unsigned *& mask, unsigned size,
       std::vector<hig::real_t> & dist) const {
       if (ref == NULL || data == NULL) return false;
-      double scale = 1.0E+06;
       double dist_sum = 0.;
       for (int i = 0; i < size; i++ ){
         if (mask[i] != 0){ // if mask is non-zero
@@ -242,7 +241,7 @@ class LogDifferenceNorm2 : public DistanceMeasure {
           dist_sum = temp * temp;
         }
       }
-      dist.push_back(dist_sum * scale);
+      dist.push_back(dist_sum);
       return true;
     }
 };

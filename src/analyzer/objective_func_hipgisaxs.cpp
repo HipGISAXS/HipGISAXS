@@ -123,7 +123,6 @@ namespace hig {
       switch(ref_type) {
         case reference_file_ascii:
           ref_data_ = new ImageData(ref_filename);
-          ref_data_->normalize();
           break;
 
         case reference_file_edf:
@@ -131,7 +130,6 @@ namespace hig {
           edfreader = new EDFReader(ref_filename.c_str());
           edfreader->get_data(temp_data, temp_n_par, temp_n_ver);
           ref_data_->set_data(temp_data, temp_n_par, temp_n_ver);
-          ref_data_->normalize();
           delete edfreader;
           break;
 
