@@ -271,6 +271,7 @@ namespace hig {
       } // if
 
       #ifdef MEMDEBUG
+        std::cerr << "** MEMDEBUG enabled" << std::endl;
         if(!hipgisaxs_.check_finite((*ref_data_).data(), n_par_ * n_ver_))
           std::cerr << "** ARRAY CHECK ** ref_data_ failed check" << std::endl;
         if(!hipgisaxs_.check_finite(gisaxs_data, n_par_ * n_ver_))

@@ -46,7 +46,10 @@ class DistanceMeasure {
     // element-wise product
     hig::real_t vec_dot(hig::real_t* a, hig::real_t* b, unsigned int*& mask, unsigned int size) const {
       hig::real_t sum = 0.0;
-      for(unsigned int i = 0; i < size; ++ i) sum += mask[i] * fabs(a[i] * b[i]);
+      for(unsigned int i = 0; i < size; ++ i) {
+        hig::real_t temp = fabs(a[i] * b[i]);
+        sum += mask[i] * (std::isnan(temp) ? 0 : temp);
+      } // for
       return sum;
     } // vec_dot()
 
@@ -481,8 +484,9 @@ class SqrtCNormL2DistanceSquare : public DistanceMeasure {
       for(unsigned int i = 0; i < size; ++ i) {
         hig::real_t n_dat = c * sqrt_dat[i],
                     n_ref = sqrt_ref[i];
-        hig::real_t temp = mask[i] * fabs(n_ref - n_dat);
-        dist_sum += temp * temp;
+        hig::real_t temp = fabs(n_ref - n_dat);
+        temp = std::isnan(temp) ? 0 : temp;
+        dist_sum += mask[i] * temp * temp;
       } // for
       dist.clear();
       dist.push_back((hig::real_t) dist_sum);
