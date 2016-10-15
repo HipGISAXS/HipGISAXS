@@ -3,7 +3,6 @@
  *
  *  File: reduce.cuh
  *  Created: Feb 12, 2013
- *  Modified: Wed 08 Oct 2014 12:15:07 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Copyright (c) 2012-2013 Abhinav Sarje

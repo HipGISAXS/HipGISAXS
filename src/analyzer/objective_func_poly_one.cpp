@@ -3,7 +3,6 @@
  *
  *  File:
  *  Created: Feb 03, 2014
- *  Modified: Wed 08 Oct 2014 12:17:42 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */

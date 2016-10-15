@@ -3,7 +3,6 @@
   *
   *  File: woo_mpitimers.hpp
   *  Created: Nov 21, 2012
-  *  Modified: Tue 18 Feb 2014 10:54:41 AM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */

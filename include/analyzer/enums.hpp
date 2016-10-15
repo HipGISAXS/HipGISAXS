@@ -3,14 +3,9 @@
  *
  *  File: enums.hpp
  *  Created: Dec 26, 2013
- *  Modified: Mon 27 Jan 2014 08:22:01 AM PST
- *  Description: Defines the common enums used.
  *
  *  Author: Slim Chourou <stchourou@lbl.gov>
- *  Developers: Slim Chourou <stchourou@lbl.gov>
- *              Abhinav Sarje <asarje@lbl.gov>
- *              Alexander Hexemer <ahexemer@lbl.gov>
- *              Xiaoye Li <xsli@lbl.gov>
+ *          Abhinav Sarje <asarje@lbl.gov>
  *
  *  Licensing: The AnalyzeHipGISAXS software is only available to be downloaded and
  *  used by employees of academic research institutions, not-for-profit

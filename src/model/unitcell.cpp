@@ -5,11 +5,6 @@
  *  Created: Feb 18, 2015
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
- *  Developers: Abhinav Sarje <asarje@lbl.gov>
- *              Singanallur Venkatakrishnan <svvenkatakrishnan@lbl.gov>
- *              Dinesh Kumar <dkumar@lbl.gov>
- *              Alexander Hexemer <ahexemer@lbl.gov>
- *              Xiaoye Li <xsli@lbl.gov>
  *
  *  Licensing: The HipGISAXS software is only available to be downloaded and
  *  used by employees of academic research institutions, not-for-profit

@@ -3,15 +3,8 @@
  *
  *  File: input.hpp
  *
- *  Author: Dinesh Kumar
- *  Email:  dkumar@lbl.gov
- *  Date create:  
- *  Date modified: 
- *  Developers: Slim Chourou <stchourou@lbl.gov>
- *              Abhinav Sarje <asarje@lbl.gov>
- *              Elaine Chan <erchan@lbl.gov>
- *              Alexander Hexemer <ahexemer@lbl.gov>
- *              Xiaoye Li <xsli@lbl.gov>
+ *  Author: Dinesh Kumar <dkumar@lbl.gov>
+ *          Abhinav Sarje <asarje@lbl.gov>
  *
  *  Licensing: The HipGISAXS software is only available to be downloaded and
  *  used by employees of academic research institutions, not-for-profit
@@ -21,8 +14,8 @@
  *  NON-COMMERCIAL END USER LICENSE AGREEMENT.
  */
 
-#ifndef INPUT__H
-#define INPUT__H
+#ifndef __INPUT_H__
+#define __INPUT_H__
 
 #include <common/typedefs.hpp>
 #include <model/shape.hpp>
@@ -36,7 +29,9 @@
 
 
 namespace hig {
+
   class Input {
+
     protected:
       shape_list_t shapes_;
       layer_list_t layers_;
@@ -63,5 +58,7 @@ namespace hig {
       virtual const ComputeParams & compute() const { return compute_; }
       virtual const FittingParams & fitting() const { return fitting_; }
   };
+
 } // namespace
-#endif // INPUT__H
+
+#endif // __INPUT_H__

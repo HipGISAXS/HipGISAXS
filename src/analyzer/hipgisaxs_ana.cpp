@@ -5,10 +5,6 @@
  *  Created: Dec 26, 2013
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
- *  Developers: Slim Chourou <stchourou@lbl.gov>
- *              Abhinav Sarje <asarje@lbl.gov>
- *              Alexander Hexemer <ahexemer@lbl.gov>
- *              Xiaoye Li <xsli@lbl.gov>
  *
  *  Licensing: The AnalyzeHipGISAXS software is only available to be downloaded and
  *  used by employees of academic research institutions, not-for-profit

@@ -3,14 +3,8 @@
  *
  *  File: qgrid.hpp
  *  Created: Jun 17, 2012
- *  Modified: Wed 08 Oct 2014 12:13:02 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
- *  Developers: Slim Chourou <stchourou@lbl.gov>
- *              Abhinav Sarje <asarje@lbl.gov>
- *              Elaine Chan <erchan@lbl.gov>
- *              Alexander Hexemer <ahexemer@lbl.gov>
- *              Xiaoye Li <xsli@lbl.gov>
  *
  *  Licensing: The HipGISAXS software is only available to be downloaded and
  *  used by employees of academic research institutions, not-for-profit
@@ -20,8 +14,8 @@
  *  NON-COMMERCIAL END USER LICENSE AGREEMENT.
  */
 
-#ifndef _QGRID_HPP_
-#define _QGRID_HPP_
+#ifndef __QGRID_HPP__
+#define __QGRID_HPP__
 
 #include <vector>
 
@@ -129,4 +123,4 @@ namespace hig {
 
 } // namespace hig
 
-#endif /* QGRID_HPP_ */
+#endif // __QGRID_HPP__ */

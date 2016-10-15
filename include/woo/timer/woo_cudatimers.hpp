@@ -3,7 +3,6 @@
  *
  *  File: woo_cudatimers.hpp
  *  Created: Nov 21, 2012
- *  Modified: Wed 22 Oct 2014 05:37:47 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *  Copyright (c) 2012-2013 Abhinav Sarje

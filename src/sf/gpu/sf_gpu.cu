@@ -3,14 +3,8 @@
  *
  *  File: sf_gpu.cu
  *  Created: Oct 15, 2012
- *  Modified: Thu 15 Oct 2015 02:22:31 PM EDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
- *  Developers: Abhinav Sarje <asarje@lbl.gov>
- *              Dinesh Kumar <dkumar@lbl.gov>
- *              Alexander Hexemer <ahexemer@lbl.gov>
- *              Xiaoye Li <xsli@lbl.gov>
- *
  *  Licensing: The HipGISAXS software is only available to be downloaded and
  *  used by employees of academic research institutions, not-for-profit
  *  research laboratories, or governmental research facilities. Please read the

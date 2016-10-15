@@ -1,17 +1,9 @@
 /**
  *  Project: HipGISAXS (High-Performance GISAXS)
  *
- *  File:
+ *  File: fitting_params.hpp
  *
- *  Author: Dinesh Kumar
- *  Email:  dkumar@lbl.gov
- *  Date create: Apr-19, 2016
- *  Date modified: 
- *  Developers: Slim Chourou <stchourou@lbl.gov>
- *              Abhinav Sarje <asarje@lbl.gov>
- *              Elaine Chan <erchan@lbl.gov>
- *              Alexander Hexemer <ahexemer@lbl.gov>
- *              Xiaoye Li <xsli@lbl.gov>
+ *  Author: Abhinav Sarje <asarje@lbl.gov>
  *
  *  Licensing: The HipGISAXS software is only available to be downloaded and
  *  used by employees of academic research institutions, not-for-profit
@@ -22,8 +14,8 @@
  */
 
 
-#ifndef FITTING_PARAMS__H
-#define FITTING_PARAMS__H
+#ifndef __FITTING_PARAMS_H__
+#define __FITTING_PARAMS_H__
 
 #include <config/temp_helpers.hpp>
 #include <common/typedefs.hpp>
@@ -93,4 +85,4 @@ namespace hig {
 
   
 
-#endif // FITTING_PARAMS__H
+#endif // __FITTING_PARAMS_H__

@@ -1,11 +1,8 @@
 /***
-  *  $Id$
-  *
   *  Project:
   *
   *  File: woo_gtodtimers.hpp
   *  Created: Nov 21, 2012
-  *  Modified: Sun 31 Mar 2013 03:48:36 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */

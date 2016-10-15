@@ -3,7 +3,6 @@
  *
  *  File: objective_func.cpp
  *  Created: Feb 02, 2014
- *  Modified: Tue 24 May 2016 08:15:09 PM EDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */

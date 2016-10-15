@@ -5,11 +5,6 @@
  *  Created: Jun 05, 2012
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
- *  Developers: Slim Chourou <stchourou@lbl.gov>
- *              Abhinav Sarje <asarje@lbl.gov>
- *              Elaine Chan <erchan@lbl.gov>
- *              Alexander Hexemer <ahexemer@lbl.gov>
- *              Xiaoye Li <xsli@lbl.gov>
  *
  *  Licensing: The HipGISAXS software is only available to be downloaded and
  *  used by employees of academic research institutions, not-for-profit
@@ -19,8 +14,8 @@
  *  NON-COMMERCIAL END USER LICENSE AGREEMENT.
  */
 
-#ifndef _TOKEN_MAPPER_HPP_
-#define _TOKEN_MAPPER_HPP_
+#ifndef __TOKEN_MAPPER_HPP__
+#define __TOKEN_MAPPER_HPP__
 
 #include <unordered_map>
 #include <string>
@@ -387,4 +382,4 @@ namespace hig {
 
 } // namespace hig
 
-#endif /* _TOKEN_MAPPER_HPP_ */
+#endif /* __TOKEN_MAPPER_HPP__ */

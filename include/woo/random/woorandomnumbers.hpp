@@ -3,7 +3,6 @@
  *
  *  File: woorandomnumbers.hpp
  *  Created: Aug 25, 2013
- *  Modified: Sun 25 Aug 2013 01:53:52 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */

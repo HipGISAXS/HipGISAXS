@@ -1,11 +1,8 @@
 /***
-  *  $Id$
-  *
   *  Project:
   *
   *  File: woo_boosttimers.hpp
   *  Created: Nov 21, 2012
-  *  Modified: Thu 22 Nov 2012 12:45:35 PM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */
