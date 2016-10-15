@@ -29,21 +29,28 @@ namespace hig {
   MultiLayer::MultiLayer(){
     layers_.resize(0);
   }
-  void MultiLayer::init(){
+
+  // TODO check errors and return false on error
+  bool MultiLayer::init(const layer_list_t & layers){
     // get number of layer including substrate
-    int num_layers = HiGInput::instance().num_of_layers();
+    int num_layers = layers.size();
 
     // first layer is always the air/vacuum
+    Layer vacuum;
+    vacuum.key("vaccum");
+    vacuum.refindex(RefractiveIndex(0, 0));
+    vacuum.order(0);
+    vacuum.thickness(0);
+    layers_.push_back(vacuum); 
+
     Layer substr;
-    substr.thickness(1.0E+10);
-    layer_citerator_t curr_;
-    for (curr_ = HiGInput::instance().layers_begin(); 
-            curr_ != HiGInput::instance().layers_end(); curr_++){
-      int order = curr_->second.order();
+    layer_citerator_t curr;
+    for (curr = layers.begin(); curr != layers.end(); curr++){
+      int order = curr->second.order();
       if (order == -1)
-        substr = curr_->second;
+        substr = curr->second;
       else
-        layers_.push_back(curr_->second);
+        layers_.push_back(curr->second);
     }
     layers_.push_back(substr);
 
@@ -53,6 +60,7 @@ namespace hig {
       z -= layers_[i].thickness();
       layers_[i].z_val(z);
     }
+    return true;
   }
 
   void MultiLayer::clear(){

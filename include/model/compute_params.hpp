@@ -62,6 +62,7 @@ namespace hig {
       const std::string& runname() const { return runname_; }
       bool saveff() const { return saveff_; }
       bool savesf() const { return savesf_; }
+      StructCorrelationType param_structcorrelation() const { return correlation_; }
 
       /* setters */
 
@@ -85,7 +86,15 @@ namespace hig {
       void structcorrelation(StructCorrelationType c) { correlation_ = c; }
 
       /* getters */
-      //OutputRegion output_region() { return output_region_; }
+      OutputRegion output_region() const { return output_region_; }
+      OutputRegionType output_region_type() const { return output_region_.type_; }
+      vector2_t output_minpoint() const { return output_region_.minpoint_; }
+      vector2_t output_maxpoint() const { return output_region_.maxpoint_; }
+      std::vector<int> resolution() const { return resolution_; }
+      std::string palette() const { return palette_; }
+      int nslices() const { return nslices_; }
+      bool save_ff() const { return saveff_; }
+      bool save_sf() const { return savesf_; }
 
       /* modifiers (updates) */
       bool update_param(const std::string&, real_t);

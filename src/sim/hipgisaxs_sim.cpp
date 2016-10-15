@@ -61,7 +61,6 @@ int main(int narg, char** args) {
   } // if
 
   readtimer.stop();
-  //hig::HiGInput::instance().print_all();  // for testing
 
   /* run the simulation */
   if(!my_gisaxs.run_all_gisaxs()) {

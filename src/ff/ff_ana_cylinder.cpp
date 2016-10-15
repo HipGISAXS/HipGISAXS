@@ -87,7 +87,7 @@ namespace hig {
 #ifdef FF_ANA_GPU
     // on gpu
     #ifdef FF_VERBOSE
-      std::cout << "-- Computing cylinder FF on GPU ..." << std::endl;
+      std::cerr << "-- Computing cylinder FF on GPU ..." << std::endl;
     #endif
 
     std::vector<real_t> transvec_v;
@@ -97,7 +97,7 @@ namespace hig {
     gff_.compute_cylinder(tau, eta, r, distr_r, h, distr_h, rot_, transvec_v, ff);
 #else
     // on cpu
-    std::cout << "-- Computing cylinder FF on CPU ..." << std::endl;
+    std::cerr << "-- Computing cylinder FF on CPU ..." << std::endl;
 
     ff.clear(); ff.resize(nqz_, complex_t(0.,0.));
 
@@ -123,7 +123,7 @@ namespace hig {
 #endif // FF_ANA_GPU
 #ifdef TIME_DETAIL_2
     maintimer.stop();
-    std::cout << "**      Cylinder FF compute time: " << maintimer.elapsed_msec() << " ms." << std::endl;
+    std::cerr << "**      Cylinder FF compute time: " << maintimer.elapsed_msec() << " ms." << std::endl;
 #endif // TIME_DETAIL_2
 
     return true;

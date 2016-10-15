@@ -31,6 +31,7 @@
 #include <common/constants.hpp>
 #include <config/tokens.hpp>
 #include <config/token_mapper.hpp>
+#include <config/input.hpp>
 #include <model/shape.hpp>
 #include <model/layer.hpp>
 #include <model/unitcell.hpp>
@@ -41,6 +42,7 @@
 #include <file/read_oo_input.hpp>
 
 #include <config/temp_helpers.hpp>
+#include <model/fitting_params.hpp>
 
 namespace hig {
 
@@ -48,25 +50,16 @@ namespace hig {
   // for that create a class with generic 'object type' and parent, children pointers
   // ...
 
-  class HiGInput {
+  class HiGInput : public Input {
 
     private:
       /*containers */
-
-      shape_list_t shapes_;
-      layer_list_t layers_;
-      layer_key_t layer_key_map_;
-      unitcell_list_t unitcells_;
-      structure_list_t structures_;
-      ScatteringParams scattering_;
-      DetectorParams detector_;
-      ComputeParams compute_;
-      bool struct_in_layer_;
 
       std::vector<real_t> shape_def_;  /* shape definition from a file */
       // there may be multiple shape files ... do this later ...
 
       /* helpers */
+      bool struct_in_layer_;
 
       Token curr_token_;
       Token past_token_;
@@ -85,65 +78,26 @@ namespace hig {
       Structure curr_structure_;
       std::vector <real_t> curr_vector_;    // to store values in a vector while parsing it
 
-      /* fitting related */
 
       analysis_algo_list_t analysis_algos_;            // list of algorithms
-
-      class ParamSpace {            // TODO: move it out ...
-        public:
-
-        real_t min_;
-        real_t max_;
-        real_t step_;
-
-        ParamSpace(): min_(0), max_(0), step_(-1) { }
-        ParamSpace(real_t a, real_t b): min_(a), max_(b), step_(-1) { }
-        ParamSpace(real_t a, real_t b, real_t c): min_(a), max_(b), step_(c) { }
-        ~ParamSpace() { }
-        void clear() { min_ = 0; max_ = 0; step_ = -1; }
-      }; // class ParamSpace
-
       std::map <std::string, std::string> param_key_map_;      // maps keys to param strings
       std::map <std::string, ParamSpace> param_space_key_map_;  // maps keys to param space
+
       // TODO: ...
       std::vector <FitReferenceData> reference_data_;
       bool reference_data_set_;
 
       /* helpers */
-
-      class FitParam {            // TODO: move it out ...
-        public:
-
-        std::string key_;
-        std::string variable_;
-        ParamSpace range_;
-        real_t init_;
-
-        FitParam(): key_(""), variable_(""), range_(), init_(0) { }
-        ~FitParam() { }
-        void clear() { key_ = ""; variable_ = ""; range_.clear(); init_ = 0; }
-        void init() { clear(); }
-      };
-
       std::map <std::string, FitParam> param_data_key_map_;  // temporary, to be merged above ...
-
       FitParam curr_fit_param_;
       AnalysisAlgorithmData curr_fit_algo_;
       AnalysisAlgorithmParamData curr_fit_algo_param_;
       FitReferenceData curr_ref_data_;
 
-
       /**
        * methods
        */
 
-      /* singleton */
-
-      HiGInput();
-      HiGInput(const HiGInput&);
-      HiGInput& operator=(const HiGInput&);
-
-      void init();
 
       /* setters */
 
@@ -200,15 +154,15 @@ namespace hig {
       void print_fit_algos();
 
     public:
+
+      HiGInput();
+      HiGInput(const HiGInput&);
+      HiGInput& operator=(const HiGInput&);
+      void init();
       // TODO: ...
       //typedef HiGIterators <Shape> shape_iterator_t;
       //typedef std::unordered_map <std::string, Structure>::iterator structure_iterator_t;
       //typedef structure_list_t::iterator structure_iterator_t;
-
-      static HiGInput& instance() {
-        static HiGInput hig_input;
-        return hig_input;
-      } // instance()
 
       bool construct_input_config(const char* filename);
       bool construct_lattice_vectors();

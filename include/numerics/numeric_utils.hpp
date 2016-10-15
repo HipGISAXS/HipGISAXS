@@ -20,6 +20,9 @@
  *  NON-COMMERCIAL END USER LICENSE AGREEMENT.
  */
 
+#ifndef NUMERIC_UTILS__H
+#define NUMERIC_UTILS__H
+
 #include <complex>
 #include <cmath>
 
@@ -31,6 +34,13 @@ namespace hig {
 
   extern double gamma(double x);
   extern complex_t cbessj(complex_t zz, int order);
+
+  /* sign of a real value */
+  inline real_t sign(real_t val) {
+    if (val < 0) return -1;
+    if (val > 0) return 1;
+    return 0;
+  }
 
   INLINE
   vector3_t cross(vector3_t & u, vector3_t & v){
@@ -56,3 +66,6 @@ namespace hig {
   }
 
 } // namespace hig
+
+
+#endif // NUMERIC_UTILS__H

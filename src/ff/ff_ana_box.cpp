@@ -97,7 +97,7 @@ namespace hig {
     #ifdef FF_ANA_GPU
       // on gpu
       #ifdef FF_VERBOSE
-        std::cout << "-- Computing box FF on GPU ..." << std::endl;
+        std::cerr << "-- Computing box FF on GPU ..." << std::endl;
       #endif
 
       std::vector<real_t> transvec_v;
@@ -107,7 +107,7 @@ namespace hig {
       gff_.compute_box(tau, eta, x, distr_x, y, distr_y, z, distr_z, rot_, transvec_v, ff);
     #else
       // on cpu
-      std::cout << "-- Computing box FF on CPU ..." << std::endl;
+      std::cerr << "-- Computing box FF on CPU ..." << std::endl;
       // initialize ff
       ff.clear();  ff.resize(nqz, CMPLX_ZERO_);
 
@@ -144,7 +144,7 @@ namespace hig {
     #endif // FF_ANA_GPU
     #ifdef TIME_DETAIL_2
       maintimer.stop();
-      std::cout << "**           Box FF compute time: " << maintimer.elapsed_msec() << " ms." << std::endl;
+      std::cerr << "**           Box FF compute time: " << maintimer.elapsed_msec() << " ms." << std::endl;
     #endif // TIME_DETAIL_2
 
     return true;

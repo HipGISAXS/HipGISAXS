@@ -57,6 +57,7 @@ namespace hig {
 
       /* setters */
       void key(std::string s) { key_ = s; }
+      void refindex(RefractiveIndex d) { refindex_ = d; }
       void refindex_delta(real_t d) { refindex_.delta(d); }
       void refindex_beta(real_t d) { refindex_.beta(d); }
       void order(real_t d) { order_ = (int) d; }
@@ -90,7 +91,7 @@ namespace hig {
       }
 
       // hipgisaxs style init and clear
-      void init();
+      bool init(const layer_list_t &);
       void clear();
 
       //gets

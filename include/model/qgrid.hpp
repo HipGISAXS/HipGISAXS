@@ -26,6 +26,7 @@
 #include <vector>
 
 #include <common/globals.hpp>
+#include <model/compute_params.hpp>
 
 namespace hig {
 
@@ -65,7 +66,7 @@ namespace hig {
       } // instance()
 
       /* create the Q-grid */
-      bool create(real_t, real_t, real_t, int);
+      bool create(const ComputeParams &, real_t, real_t, int);
       bool create_qz_extended(real_t, real_t, complex_t); 
       bool create_test();
 
