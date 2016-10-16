@@ -232,6 +232,10 @@ namespace hig {
         return input_->fitting().fit_param_init_values();
       } // fit_param_init_values()
 
+      real_t param_space_mean(const std::string& key) { return input_->param_space_mean(key); }
+      const std::string& path() const { return input_->path(); }
+      const std::string& runname() const { return input_->runname(); }
+
       bool override_qregion(unsigned int n_par, unsigned int n_ver, unsigned int i);
 
       #ifdef USE_MPI

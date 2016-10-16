@@ -229,6 +229,8 @@ namespace hig {
     public:
     
       YAMLInput();
+      ~YAMLInput() { }
+
       bool construct_input_config(const char *);
       bool update_params(map_t & params) { return false; }
       const std::string& path() const { return compute_.pathprefix(); }

@@ -151,8 +151,10 @@ namespace hig {
     public:
 
       HiGInput();
-      HiGInput(const HiGInput&);
+      //HiGInput(const HiGInput&);
       HiGInput& operator=(const HiGInput&);
+      ~HiGInput() { }
+
       void init();
       // TODO: ...
       //typedef HiGIterators <Shape> shape_iterator_t;

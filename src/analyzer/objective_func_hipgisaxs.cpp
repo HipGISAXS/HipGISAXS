@@ -223,7 +223,7 @@ namespace hig {
     std::vector <std::string> params = hipgisaxs_.fit_param_keys();
     std::map <std::string, real_t> param_vals;
     for(int i = 0; i < params.size(); ++ i)
-      param_vals[params[i]] = HiGInput::instance().param_space_mean(params[i]);
+      param_vals[params[i]] = hipgisaxs_.param_space_mean(params[i]);
 
     std::cout << "-- Mean/estimated parameter values: ";
     for(std::map<std::string, real_t>::iterator i = param_vals.begin(); i != param_vals.end(); ++ i)
@@ -293,7 +293,7 @@ namespace hig {
       double pmean = 0.0;
       for(std::map<std::string, real_t>::const_iterator i = param_vals.begin();
           i != param_vals.end(); ++ i) {
-        double x_mean = HiGInput::instance().param_space_mean((*i).first);
+        double x_mean = hipgisaxs_.param_space_mean((*i).first);
         double ptemp = ((*i).second - x_mean);
         ptemp *= ptemp;
         pmean += ptemp;
@@ -314,7 +314,7 @@ namespace hig {
       int myrank = hipgisaxs_.rank();
       std::stringstream cfilename;
       cfilename << "distance." << myrank << ".dat";
-      std::string prefix(HiGInput::instance().param_pathprefix() + "/" + HiGInput::instance().runname());
+      std::string prefix(hipgisaxs_.path() + "/" + hipgisaxs_.runname());
       std::ofstream out(prefix + "/" + cfilename.str(), std::ios::app);
       out.precision(10);
       for(real_vec_t::const_iterator i = curr_dist.begin(); i != curr_dist.end(); ++ i) out << *i << " ";

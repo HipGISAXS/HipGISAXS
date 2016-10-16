@@ -22,7 +22,7 @@ namespace hig {
   bool HipGISAXSAnalyzer::analyze(int argc, char **argv, int flag) {
 
     std::vector <real_vec_t> all_results;
-    for(int i = 0; i < HiGInput::instance().num_analysis_data(); ++ i) {
+    for(int i = 0; i < num_algo_; ++ i) {
       for(int j = 0; j < wf_.size(); ++ j) {
         // the flag is primarily for the test mode
         if(flag < 0) wf_[j]->run(argc, argv, j, -1);    // ref data to be computed when flag < 0

@@ -33,6 +33,7 @@ namespace hig {
   class Input {
 
     protected:
+
       shape_list_t shapes_;
       layer_list_t layers_;
       layer_key_t layer_key_map_;
@@ -44,6 +45,10 @@ namespace hig {
       FittingParams fitting_;
       
     public:
+
+      Input() { }
+      ~Input() { }
+
       virtual bool construct_input_config(const char *) { return false; }
       virtual bool update_params(const map_t & params) { return false; }
 
@@ -57,6 +62,10 @@ namespace hig {
       virtual const DetectorParams & detector() const { return detector_; }
       virtual const ComputeParams & compute() const { return compute_; }
       virtual const FittingParams & fitting() const { return fitting_; }
+
+      virtual real_t param_space_mean(const std::string& key) { return fitting_.param_space_mean(key); }
+      virtual const std::string& path() const { }
+      virtual const std::string& runname() const { }
   };
 
 } // namespace

@@ -43,6 +43,7 @@ namespace hig {
 
   typedef std::map<std::string, FitParam> fit_params_map_t;
 
+  // TODO ... 
   class FittingParams {
     private:
       fit_params_map_t fit_params_;
@@ -80,6 +81,8 @@ namespace hig {
         std::vector<real_t> init_vals;
         return init_vals;
       }
+      real_t param_space_mean(const std::string& key) { return 0; }
+
   };
 }
 
