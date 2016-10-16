@@ -1,7 +1,7 @@
 /**
- *  Project: AnalyzeHipGISAXS (High-Performance GISAXS Data Analysis)
+ *  Project: HipGISAXS (High-Performance GISAXS)
  *
- *  File: Analyzer.hpp
+ *  File: hipgisaxs_ana.hpp
  *  Created: Dec 26, 2013
  *  Description: The main analysis class that executes the workflows defined therein wrt
  *  the inputs (a priori structural info)  and datasets (expt. data) provided.
@@ -45,6 +45,8 @@ namespace hig {
       } // add_analysis_algo()
 
       bool analyze(int argc,char **argv, int);
+
+      real_t tolerance(int n) const { return wf_[n]->tolerance(); }
 
   }; // class HipGISAXSAnalyzer
 

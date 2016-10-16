@@ -41,7 +41,7 @@ namespace hig {
       FitLMVMAlgo() { name_= algo_lmvm; max_iter_ = 200; max_hist_ = 200; tol_ = 1e-6; }
       FitLMVMAlgo(int narg, char** args, ObjectiveFunction* obj, unsigned int algo_num) {
         name_= algo_lmvm; obj_func_ = obj; max_iter_ = 200; max_hist_ = 200;
-        tol_ = HiGInput::instance().analysis_tolerance(algo_num);
+        tol_ = (*obj_func_).analysis_tolerance(algo_num);
         num_obs_ = (*obj_func_).data_size();
         num_params_ = (*obj_func_).num_fit_params();
         x0_ = (*obj_func_).fit_param_init_values();

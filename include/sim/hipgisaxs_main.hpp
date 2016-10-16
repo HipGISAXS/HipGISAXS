@@ -205,15 +205,19 @@ namespace hig {
       } // rank()
 
       // fitting related ... TODO: improve
-      std::vector <std::string> fit_param_keys() const {
-        return input_->fitting().fit_param_keys();
-      } // get_fit_param_keys()
+
+      int num_analysis_algos() const { return input_->num_analysis_algos(); }
+      FittingAlgorithmName analysis_algo(int n) const { return input_->analysis_algo(n); }
+      real_t analysis_tolerance(int n) const { return input_->analysis_tolerance(n); }
+      real_t analysis_regularization(int n) const { return input_->analysis_regularization(n); }
+      bool analysis_algo_param(int n, std::string name, real_t& value) const {
+        return input_->analysis_algo_param(n, name, value); }
+
+      std::vector <std::string> fit_param_keys() const { return input_->fitting().fit_param_keys(); }
+      real_vec_t fit_param_step_values() const { return input_->fitting().fit_param_step_values(); }
       std::vector <std::pair <real_t, real_t> > fit_param_limits() const {
-        return input_->fitting().fit_param_limits();
-      } // get_fit_param_keys()
-      real_vec_t fit_param_step_values() const {
-        return input_->fitting().fit_param_step_values();
-      } // fit_param_step_values()
+        return input_->fitting().fit_param_limits(); }
+
       unsigned int nqx() const { return nqx_; }
       unsigned int nqy() const { return nqy_; }
       unsigned int nqz() const { return nqz_; }

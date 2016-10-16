@@ -53,8 +53,8 @@ namespace hig {
 
     //std::vector<std::pair<hig::real_t, hig::real_t> > plimits = HiGInput::instance().fit_param_limits();
     //std::vector<hig::real_t> psteps = HiGInput::instance().fit_param_steps();
-    plimits_ = HiGInput::instance().fit_param_limits();
-    psteps_ = HiGInput::instance().fit_param_step_values();
+    plimits_ = (*obj_func_).fit_param_limits();
+    psteps_ = (*obj_func_).fit_param_step_values();
 
     Vec x0, xmin, xmax;
     double y;
@@ -73,7 +73,7 @@ namespace hig {
       std::cout << y << " ] " << std::endl;
     } // for
 
-    real_t reg_init = HiGInput::instance().analysis_regularization(algo_num);
+    real_t reg_init = (*obj_func_).analysis_regularization(algo_num);
     real_t reg_factor = reg_init;
 
     for(int reg_iter = 0; reg_iter < MAX_ITER_REG_; ++ reg_iter) {

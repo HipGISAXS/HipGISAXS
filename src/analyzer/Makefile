@@ -250,12 +250,14 @@ BOOST_LDFLAGS = -L $(BOOST_DIR)/lib
 endif
 BOOST_LIBS = -lboost_system -lboost_filesystem -lboost_timer -lboost_chrono
 
+YAML_LIBS = -lyaml-cpp
+
 
 ## all objs and libs                                                                                                                           
 ALL_INCL= $(TAO_INCL) $(PETSC_INCL) $(HDF5_INCL) $(TIFF_INCL) $(BOOST_INCL) $(HIPGISAXS_INCL)
 ALL_LDFLAGS = $(MPI_LDFLAGS) $(TAO_LDFLAGS) $(GCC_LDFLAGS) $(PETSC_LDFLAGS) \
 		          $(HIPGISAXS_LDFLAGS) $(HDF5_LDFLAGS) $(TIFF_LDFLAGS) $(BOOST_LDFLAGS)
-ALL_LIBS = $(MPI_LIBS) $(TAO_LIBS) $(PETSC_LIBS) $(HIPGISAXS_LIBS) $(HDF5_LIBS) $(TIFF_LIBS) $(BOOST_LIBS)
+ALL_LIBS = $(MPI_LIBS) $(TAO_LIBS) $(PETSC_LIBS) $(HIPGISAXS_LIBS) $(HDF5_LIBS) $(TIFF_LIBS) $(BOOST_LIBS) $(YAML_LIBS)
 
 OBJECTS = ImageData.o analysis_algorithm.o objective_func.o hipgisaxs_ana.o \
 					objective_func_hipgisaxs.o hipgisaxs_compute_objective.o

@@ -21,6 +21,7 @@
 #include <common/typedefs.hpp>
 
 namespace hig {
+
   struct ParamSpace {
     real_t min_;
     real_t max_;
@@ -29,7 +30,7 @@ namespace hig {
     ParamSpace(real_t a, real_t b): min_(a), max_(b), step_(-1) {}
     ParamSpace(real_t a, real_t b, real_t c): min_(a), max_(b), step_(c) {}
     void clear(){ min_ = 0; max_ = 0; step_ = -1; }
-  };
+  }; // struct ParamSpace
 
   struct FitParam {
     std::string key_;
@@ -39,7 +40,7 @@ namespace hig {
 
     void clear() { key_ = ""; variable_ = ""; range_.clear(); init_ = 0; }
     void init() { clear(); }
-  };
+  }; // struct FitParam
 
   typedef std::map<std::string, FitParam> fit_params_map_t;
 
@@ -82,10 +83,8 @@ namespace hig {
         return init_vals;
       }
       real_t param_space_mean(const std::string& key) { return 0; }
+  }; // class FittingParams
 
-  };
 }
-
-  
 
 #endif // __FITTING_PARAMS_H__

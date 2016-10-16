@@ -63,6 +63,12 @@ namespace hig {
       virtual const ComputeParams & compute() const { return compute_; }
       virtual const FittingParams & fitting() const { return fitting_; }
 
+      virtual real_t analysis_tolerance(int) const { }
+      virtual real_t analysis_regularization(int) const { }
+      virtual int num_analysis_algos() const { }
+      virtual FittingAlgorithmName analysis_algo(int n) const { }
+      virtual bool analysis_algo_param(int i, const std::string pstr, real_t& val) const { }
+
       virtual real_t param_space_mean(const std::string& key) { return fitting_.param_space_mean(key); }
       virtual const std::string& path() const { }
       virtual const std::string& runname() const { }

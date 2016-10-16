@@ -43,10 +43,19 @@ namespace hig {
       unsigned int n_par() const { return n_par_; }
       unsigned int n_ver() const { return n_ver_; }
       unsigned int data_size() const { return n_par_ * n_ver_; }
+      real_t analysis_tolerance(int n) const { return hipgisaxs_.analysis_tolerance(n); }
+      real_t analysis_regularization(int n) const { return hipgisaxs_.analysis_regularization(n); }
       std::vector <std::string> fit_param_keys() const { return hipgisaxs_.fit_param_keys(); }
       std::vector <real_pair_t> fit_param_limits() const { return hipgisaxs_.fit_param_limits(); }
       real_vec_t fit_param_step_values() const { return hipgisaxs_.fit_param_step_values(); }
       real_vec_t fit_param_init_values() const { return hipgisaxs_.fit_param_init_values(); }
+      int num_analysis_algos() const { return hipgisaxs_.num_analysis_algos(); }
+      FittingAlgorithmName analysis_algo(int n) const { return hipgisaxs_.analysis_algo(n); }
+      bool analysis_algo_param(int n, const std::string name, real_t& value) const {
+        return hipgisaxs_.analysis_algo_param(n, name, value); } 
+
+      std::string param_pathprefix() const { return hipgisaxs_.path(); }
+      std::string runname() const { return hipgisaxs_.runname(); }
 
       #ifdef USE_MPI
         woo::MultiNode* multi_node_comm() { return hipgisaxs_.multi_node_comm(); }

@@ -60,33 +60,34 @@ namespace hig {
       rand_(time(NULL)), type_(type) {
     name_ = algo_pso;
     max_hist_ = 200;
-    tol_ = HiGInput::instance().analysis_tolerance(algo_num);
     obj_func_ = obj;
+
+    tol_ = (*obj_func_).analysis_tolerance(algo_num);
 
     foresee_num_ = 5;      // TODO: make it modifiable
 
     real_t temp_val = 0.0;
 
     // mandatory PSO parameters
-    if(!HiGInput::instance().analysis_algo_param(algo_num, "pso_omega", pso_omega_)) {
+    if(!(*obj_func_).analysis_algo_param(algo_num, "pso_omega", pso_omega_)) {
       std::cerr << "error: mandatory PSO parameter 'pso_omega' missing" << std::endl;
       exit(-1);
     } // if
-    if(!HiGInput::instance().analysis_algo_param(algo_num, "pso_phi1", pso_phi1_)) {
+    if(!(*obj_func_).analysis_algo_param(algo_num, "pso_phi1", pso_phi1_)) {
       std::cerr << "error: mandatory PSO parameter 'pso_phi1' missing" << std::endl;
       exit(-1);
     } // if
-    if(!HiGInput::instance().analysis_algo_param(algo_num, "pso_phi2", pso_phi2_)) {
+    if(!(*obj_func_).analysis_algo_param(algo_num, "pso_phi2", pso_phi2_)) {
       std::cerr << "error: mandatory PSO parameter 'pso_phi2' missing" << std::endl;
       exit(-1);
     } // if
-    if(!HiGInput::instance().analysis_algo_param(algo_num, "pso_num_particles", temp_val)) {
+    if(!(*obj_func_).analysis_algo_param(algo_num, "pso_num_particles", temp_val)) {
       std::cerr << "error: mandatory PSO parameter 'pso_num_particles' missing" << std::endl;
       exit(-1);
     } else {
       num_particles_ = (unsigned int) temp_val;
     } // if-else
-    if(!HiGInput::instance().analysis_algo_param(algo_num, "pso_num_generations", temp_val)) {
+    if(!(*obj_func_).analysis_algo_param(algo_num, "pso_num_generations", temp_val)) {
       std::cerr << "error: mandatory PSO parameter 'pso_num_generations' missing" << std::endl;
       exit(-1);
     } else {
@@ -95,14 +96,14 @@ namespace hig {
     num_particles_global_ = num_particles_;
 
     // optional PSO parameters
-    if(!HiGInput::instance().analysis_algo_param(algo_num, "pso_tune_omega", temp_val)) {
+    if(!(*obj_func_).analysis_algo_param(algo_num, "pso_tune_omega", temp_val)) {
       std::cerr << "warning: optional PSO parameter 'pso_tune_omega' defaulted" << std::endl;
       tune_omega_ = false;
     } else {
       if(temp_val > 0.5) tune_omega_ = true;
       else tune_omega_ = false;
     } // if-else
-    if(!HiGInput::instance().analysis_algo_param(algo_num, "pso_type", temp_val)) {
+    if(!(*obj_func_).analysis_algo_param(algo_num, "pso_type", temp_val)) {
       std::cerr << "warning: optional PSO parameter 'pso_type' defaulted" << std::endl;
       type_ = 0;  // base algorithm
     } else {
@@ -560,7 +561,7 @@ namespace hig {
       #endif
         std::stringstream cfilename_s;
         cfilename_s << "convergence." << myrank << "." << i << ".dat";
-        std::string prefix(HiGInput::instance().param_pathprefix() + "/" + HiGInput::instance().runname());
+        std::string prefix((*obj_func_).param_pathprefix() + "/" + (*obj_func_).runname());
         std::ofstream out(prefix + "/" + cfilename_s.str(), std::ios::app);
         out.precision(10);
         out << myrank << "\t" << i << "\t" << curr_fitness[0] << "\t";

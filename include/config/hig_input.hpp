@@ -275,8 +275,13 @@ namespace hig {
       structure_iterator_t structure_begin() { return structures_.begin(); }
       structure_iterator_t structure_end() { return structures_.end(); }
 
-      /* fitting related */
+
+      /**
+       * fitting related
+       */
+
       bool update_params(const map_t&);
+
       // return list of parameter keys
       std::vector <std::string> fit_param_keys() const {
         std::vector <std::string> key_list;
@@ -284,7 +289,8 @@ namespace hig {
             i != param_space_key_map_.end(); ++ i)
           key_list.push_back((*i).first);
         return key_list;
-      } // get_fit_param_keys()
+      } // fit_param_keys()
+
       // return list of min-max for all parameters
       std::vector <std::pair <real_t, real_t> > fit_param_limits() const {
         std::vector <std::pair <real_t, real_t> > plimits;
@@ -292,7 +298,8 @@ namespace hig {
             i != param_space_key_map_.end(); ++ i)
           plimits.push_back(std::pair<real_t, real_t>((*i).second.min_, (*i).second.max_));
         return plimits;
-      } // get_fit_param_limits()
+      } // fit_param_limits()
+
       // return list of step values for all parameters
       real_vec_t fit_param_step_values() const {
         real_vec_t steps;
@@ -301,21 +308,7 @@ namespace hig {
           steps.push_back((*i).second.step_);
         return steps;
       } // fit_param_step_values()
-      // return mean value of given parameter
-      real_t param_space_mean(const std::string& key) {
-        return (param_space_key_map_[key].max_ - param_space_key_map_[key].min_) / 2.0 + param_space_key_map_[key].min_;
-      } // param_space_mean()
-      std::string reference_data_path(int i) const { return reference_data_[i].image_path(); }
-      std::string reference_data_mask(int i) const { return reference_data_[i].image_mask(); }
-      OutputRegionType reference_region_type(int i) const {
-        return reference_data_[i].get_region_type();
-      } // reference_region_type()
-      real_t reference_region_min_x(int i) const { return reference_data_[i].region_min_x(); }
-      real_t reference_region_min_y(int i) const { return reference_data_[i].region_min_y(); }
-      real_t reference_region_max_x(int i) const { return reference_data_[i].region_max_x(); }
-      real_t reference_region_max_y(int i) const { return reference_data_[i].region_max_y(); }
-      int num_analysis_data() const { return 1; }    // temp
-      int num_fit_params() const { return param_key_map_.size(); }
+
       std::vector <real_t> fit_param_init_values() const {
         std::vector<real_t> init_vec;
         std::cout << "Initial Vector: ";
@@ -327,15 +320,36 @@ namespace hig {
         std::cout << std::endl;
         return init_vec;
       } // fit_param_init_vector()
+
+      // return mean value of given parameter
+      real_t param_space_mean(const std::string& key) {
+        return (param_space_key_map_[key].max_ - param_space_key_map_[key].min_) / 2.0
+                + param_space_key_map_[key].min_;
+      } // param_space_mean()
+
+      std::string reference_data_path(int i) const { return reference_data_[i].image_path(); }
+      std::string reference_data_mask(int i) const { return reference_data_[i].image_mask(); }
+      OutputRegionType reference_region_type(int i) const {
+        return reference_data_[i].get_region_type(); }
+      real_t reference_region_min_x(int i) const { return reference_data_[i].region_min_x(); }
+      real_t reference_region_min_y(int i) const { return reference_data_[i].region_min_y(); }
+      real_t reference_region_max_x(int i) const { return reference_data_[i].region_max_x(); }
+      real_t reference_region_max_y(int i) const { return reference_data_[i].region_max_y(); }
+      int num_analysis_data() const { return 1; }    // temp
+      int num_fit_params() const { return param_key_map_.size(); }
+
       int num_analysis_algos() const { return analysis_algos_.size(); }
       FittingAlgorithmName analysis_algo(int i) const { return analysis_algos_[i].name(); }
-      bool analysis_algo_param(int i, const std::string pstr, real_t& val) const {
-        return analysis_algos_[i].param(pstr, val);
-      } // analysis_algo_param()
       real_t analysis_tolerance(int i) const { return analysis_algos_[i].tolerance(); }
       real_t analysis_regularization(int i) const { return analysis_algos_[i].regularization(); }
+      bool analysis_algo_param(int i, const std::string pstr, real_t& val) const {
+        return analysis_algos_[i].param(pstr, val); }
 
-      /* printing for testing */
+
+      /**
+       * for debug
+       */
+
       void print_all();
 
   }; // class HiGInput
