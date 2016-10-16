@@ -6,7 +6,8 @@ hipGisaxsInput = {
 		param = { type = "xsize", min = 16 },
 		param = { type = "ysize", min = 16 },
     param = { type = "height", min = 8 },
-		param = { type = "baseangle", min = 54.73}
+		param = { type = "baseangle", min = 54.73},
+		refindex = { delta = 9.4E-06, beta = 3.37E-08 }
 	},
   unitcell = {
 		key = "u1",
@@ -23,8 +24,7 @@ hipGisaxsInput = {
 	structure = {
 		key = "st1",
 		grain = {
-			unitcell:key = "u1",
-			refindex = { delta = 9.4E-06, beta = 3.37E-08 }
+			unitcell:key = "u1"
 		}
 	},
 	instrumentation = {

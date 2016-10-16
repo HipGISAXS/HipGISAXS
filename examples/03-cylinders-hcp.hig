@@ -3,6 +3,7 @@ hipGisaxsInput = {
 		key = "s1",	 		# a unique key to identify this shape in this file
 		name = "cylinder",		# shape name
 		originvec = [0 0 0],
+		refindex = { delta = 8.50028573E-06, beta = 3.138E-07 },
 		param = { type = "radius", min = 5 },
 		param = { type = "height", min = 150 }
 	},
@@ -22,7 +23,6 @@ hipGisaxsInput = {
 		key = "st1",
 		grain = {
 			unitcell:key = "u1",
-			refindex = { delta = 8.50028573E-06, beta = 3.138E-07 },
       lattice = {type = "hcp" },		        # lattice forming grain
 			repetition = [100 10 2], 
 			scaling = 50					# scaling factor for lattice vectors

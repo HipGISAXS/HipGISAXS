@@ -577,7 +577,9 @@ if not get_option('clean'):
     parallel_hdf5_flags = ['USE_PARALLEL_HDF5']
     papi_flags = ['PROFILE_PAPI']
 
-    all_flags = detail_flags
+    ioflags = ['FILEIO']
+
+    all_flags = detail_flags + ioflags
     all_libs = boost_libs + tiff_libs + mkl_libs + other_libs
 
     if using_cuda:

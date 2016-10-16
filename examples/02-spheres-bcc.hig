@@ -3,6 +3,7 @@ hipGisaxsInput = {
 		key = "s1",	 		# a unique key to identify this shape in this file
 		name = "sphere",		# shape name
 		originvec = [0 0 0],
+		refindex = { delta = 9.4E-06, beta = 3.37E-08 },
 		param = { type = "radius", min = 5 }
 	},
   unitcell = {
@@ -21,7 +22,6 @@ hipGisaxsInput = {
 		key = "st1",
 		grain = {
 			unitcell:key = "u1",
-			refindex = { delta = 9.4E-06, beta = 3.37E-08 },
       lattice = {type = "bcc" },		        # lattice forming grain
 			repetition = [100 100 10],
 			scaling = 15					# scaling factor for lattice vectors

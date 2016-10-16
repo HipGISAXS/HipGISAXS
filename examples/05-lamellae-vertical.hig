@@ -3,6 +3,7 @@ hipGisaxsInput = {
 		key = "s1",	 		# a unique key to identify this shape in this file
 		name = "box",		# shape name
 		originvec = [0 0 0],
+		refindex = { delta = 8.50028573E-06, beta = 3.138E-07 },
 		param = { type = "xsize", min = 500 },
 		param = { type = "ysize", min = 10 },
 		param = { type = "height", min = 150 }
@@ -23,7 +24,6 @@ hipGisaxsInput = {
 		key = "st1",
 		grain = {
 			unitcell:key = "u1",
-			refindex = { delta = 8.50028573E-06, beta = 3.138E-07 },
       lattice = {a=[1 0 0],b=[0 1 0],c=[0 0 1] },		        # lattice forming grain
 			scaling = 60,					# scaling factor for lattice vectors
 			repetition=[1 1000 1]
