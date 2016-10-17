@@ -5,11 +5,6 @@
  *  Created: Jun 11, 2012
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
- *  Developers: Slim Chourou <stchourou@lbl.gov>
- *              Abhinav Sarje <asarje@lbl.gov>
- *              Elaine Chan <erchan@lbl.gov>
- *              Alexander Hexemer <ahexemer@lbl.gov>
- *              Xiaoye Li <xsli@lbl.gov>
  *
  *  Licensing: The HipGISAXS software is only available to be downloaded and
  *  used by employees of academic research institutions, not-for-profit
@@ -182,7 +177,7 @@ namespace hig {
               case layer_token:  // nothing to do :-/ ??
                 break;
 
-              case struct_grain_token:  // nothing to do :-/ ??
+              case shape_token:  // nothing to do :-/ ??
                 break;
 
               default:
@@ -240,6 +235,7 @@ namespace hig {
                 break;
             }
             */
+            curr_structure_.construct_lattice_vectors();
             structures_[curr_structure_.key()] = curr_structure_;
             curr_structure_.clear();
             break;
@@ -1059,8 +1055,8 @@ namespace hig {
             curr_layer_.refindex_delta(num);
             break;
 
-          case struct_grain_token:
-            curr_structure_.grain_refindex_delta(num);
+          case shape_token:
+            curr_shape_.refindex_delta(num);
             break;
 
           default:
@@ -1079,8 +1075,8 @@ namespace hig {
             curr_layer_.refindex_beta(num);
             break;
 
-          case struct_grain_token:
-            curr_structure_.grain_refindex_beta(num);
+          case shape_token:
+            curr_shape_.refindex_beta(num);
             break;
 
           default:
@@ -2778,8 +2774,8 @@ namespace hig {
     //print_all();
     for(map_t::const_iterator p = params.begin(); p != params.end(); ++ p) {
       real_t new_val = (*p).second;
-      // check if new_val is within the param space
       ParamSpace ps = param_space_key_map_.at((*p).first);  // if not exist, exception!!
+      // check if new_val is within the param space
       //if(new_val < ps.min_ || new_val > ps.max_) {
       //  std::cerr << "warning: given parameter value out of range space. resetting to limit."
       //        << std::endl;

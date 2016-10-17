@@ -56,7 +56,7 @@ namespace hig {
     obj_func_ = obj;
     max_iter_ = 200;
     max_hist_ = 200;
-    tol_ = HiGInput::instance().analysis_tolerance(algo_num);
+    tol_ = (*obj_func_).analysis_tolerance(algo_num);
     num_obs_ = (*obj_func_).data_size();
     num_params_ = (*obj_func_).num_fit_params();
     x0_ = (*obj_func_).fit_param_init_values();
@@ -86,49 +86,53 @@ namespace hig {
     } // for
 
     if(img_num >= 0) {
-    if(HiGInput::instance().analysis_algo_param(algo_num, "pounders_delta", pdelta)) {
-      std::stringstream arg1; arg1 << "-tao_pounders_delta";
-      //newargs[newnarg] = new char[arg1.str().size() + 1];
-      newargs[newnarg] = new char[str_max];
-      strncpy(newargs[newnarg], arg1.str().c_str(), str_max);
-      ++ newnarg;
-      std::stringstream arg2; arg2 << pdelta;
-      //newargs[newnarg] = new char[arg2.str().size() + 1];
-      newargs[newnarg] = new char[str_max];
-      strncpy(newargs[newnarg], arg2.str().c_str(), str_max);
-      ++ newnarg;
-      isdelta = true;
-    } else {
-      std::cerr << "warning: default pounders_delta being used" << std::endl;
-    } // if-else
-    if(HiGInput::instance().analysis_algo_param(algo_num, "pounders_npmax", pnpmax)) {
-      std::stringstream arg1; arg1 << "-tao_pounders_npmax";
-      //newargs[newnarg] = new char[arg1.str().size() + 1];
-      newargs[newnarg] = new char[str_max];
-      strncpy(newargs[newnarg], arg1.str().c_str(), str_max);
-      ++ newnarg;
-      std::stringstream arg2; arg2 << pnpmax;
-      //newargs[newnarg] = new char[arg2.str().size() + 1];
-      newargs[newnarg] = new char[str_max];
-      strncpy(newargs[newnarg], arg2.str().c_str(), str_max);
-      ++ newnarg;
-    } else {
-      std::cerr << "warning: default pounders_npmax being used" << std::endl;
-    } // if-else
-    if(HiGInput::instance().analysis_algo_param(algo_num, "pounders_gqt", pgqt)) {
-      std::stringstream arg1; arg1 << "-tao_pounders_gqt";
-      //newargs[newnarg] = new char[arg1.str().size() + 1];
-      newargs[newnarg] = new char[str_max];
-      strncpy(newargs[newnarg], arg1.str().c_str(), str_max);
-      ++ newnarg;
-      std::stringstream arg2; arg2 << pgqt;
-      //newargs[newnarg] = new char[arg2.str().size() + 1];
-      newargs[newnarg] = new char[str_max];
-      strncpy(newargs[newnarg], arg2.str().c_str(), str_max);
-      ++ newnarg;
-    } else {
-      std::cerr << "warning: default pounders_gqt being used" << std::endl;
-    } // if-else
+
+      if((*obj_func_).analysis_algo_param(algo_num, "pounders_delta", pdelta)) {
+        std::stringstream arg1; arg1 << "-tao_pounders_delta";
+        //newargs[newnarg] = new char[arg1.str().size() + 1];
+        newargs[newnarg] = new char[str_max];
+        strncpy(newargs[newnarg], arg1.str().c_str(), str_max);
+        ++ newnarg;
+        std::stringstream arg2; arg2 << pdelta;
+        //newargs[newnarg] = new char[arg2.str().size() + 1];
+        newargs[newnarg] = new char[str_max];
+        strncpy(newargs[newnarg], arg2.str().c_str(), str_max);
+        ++ newnarg;
+        isdelta = true;
+      } else {
+        std::cerr << "warning: default pounders_delta being used" << std::endl;
+      } // if-else
+
+      if((*obj_func_).analysis_algo_param(algo_num, "pounders_npmax", pnpmax)) {
+        std::stringstream arg1; arg1 << "-tao_pounders_npmax";
+        //newargs[newnarg] = new char[arg1.str().size() + 1];
+        newargs[newnarg] = new char[str_max];
+        strncpy(newargs[newnarg], arg1.str().c_str(), str_max);
+        ++ newnarg;
+        std::stringstream arg2; arg2 << pnpmax;
+        //newargs[newnarg] = new char[arg2.str().size() + 1];
+        newargs[newnarg] = new char[str_max];
+        strncpy(newargs[newnarg], arg2.str().c_str(), str_max);
+        ++ newnarg;
+      } else {
+        std::cerr << "warning: default pounders_npmax being used" << std::endl;
+      } // if-else
+
+      if((*obj_func_).analysis_algo_param(algo_num, "pounders_gqt", pgqt)) {
+        std::stringstream arg1; arg1 << "-tao_pounders_gqt";
+        //newargs[newnarg] = new char[arg1.str().size() + 1];
+        newargs[newnarg] = new char[str_max];
+        strncpy(newargs[newnarg], arg1.str().c_str(), str_max);
+        ++ newnarg;
+        std::stringstream arg2; arg2 << pgqt;
+        //newargs[newnarg] = new char[arg2.str().size() + 1];
+        newargs[newnarg] = new char[str_max];
+        strncpy(newargs[newnarg], arg2.str().c_str(), str_max);
+        ++ newnarg;
+      } else {
+        std::cerr << "warning: default pounders_gqt being used" << std::endl;
+      } // if-else
+
     } // if
 
     // temp ...
@@ -140,7 +144,7 @@ namespace hig {
 
     // need to free the newargs memory ... TODO ...
 
-    std::vector<std::pair<hig::real_t, hig::real_t> > plimits = HiGInput::instance().fit_param_limits();
+    std::vector<std::pair<hig::real_t, hig::real_t> > plimits = (*obj_func_).fit_param_limits();
 
     Vec x0,         // initial parameter vector
         xmin, xmax; // parameter min and max limits (bounds)
@@ -161,7 +165,7 @@ namespace hig {
       std::cout << y << "\t]" << std::endl;
     } // for
 
-    real_t reg_init = HiGInput::instance().analysis_regularization(algo_num);
+    real_t reg_init = (*obj_func_).analysis_regularization(algo_num);
     real_t reg_factor = reg_init;
 
     for(int reg_iter = 0; reg_iter < MAX_ITER_REG_; ++ reg_iter) {

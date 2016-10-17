@@ -5,11 +5,6 @@
  *  Created: Jun 09, 2012
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
- *  Developers: Slim Chourou <stchourou@lbl.gov>
- *              Abhinav Sarje <asarje@lbl.gov>
- *              Elaine Chan <erchan@lbl.gov>
- *              Alexander Hexemer <ahexemer@lbl.gov>
- *              Xiaoye Li <xsli@lbl.gov>
  *
  *  Licensing: The HipGISAXS software is only available to be downloaded and
  *  used by employees of academic research institutions, not-for-profit
@@ -19,8 +14,8 @@
  *  NON-COMMERCIAL END USER LICENSE AGREEMENT.
  */
 
-#ifndef _STRUCTURE_HPP_
-#define _STRUCTURE_HPP_
+#ifndef __STRUCTURE_HPP__
+#define __STRUCTURE_HPP__
 
 #include <string>
 #include <vector>
@@ -30,6 +25,10 @@
 #include <common/globals.hpp>
 #include <common/enums.hpp>
 #include <model/common.hpp>
+
+#ifdef DEBUG
+#include <iostream>
+#endif 
 
 namespace hig {
 
@@ -164,70 +163,88 @@ namespace hig {
   }; // class GrainScaling
 
 
-  class GrainOrientations {
-
-    class Rotation {
-      private: 
-        char axis_;         // x y or z
-        vector2_t angles_;
-        real_t mean_;       // mean for gaussian
-        real_t sd_;         // standard deviation for gaussian
-        bool mean_set_;
-        real_t location_;   // location parameter for various distribution (= mean in gaussian)
-        real_t scale_;      // scale parameter for various distributions (= sd in gaussian)
-        bool location_set_;
-        // TODO: get rid of mean and sd, and replace by location and scale ...
-
-      public:
-        Rotation() : axis_('n'),
-                     mean_(0), sd_(0), mean_set_(false),
-                     location_(0), scale_(0), location_set_(false) {
-        } // Rotation()
-        ~Rotation() { }
-
-        void init();
-
-        char axis() { return axis_; }
-        vector2_t angles() { return angles_; }
-
-        void axis(char c) { axis_ = c; }
-        void angles(vector2_t v) { angles_ = v; }
-        void angles(real_t a, real_t b) { angles_[0] = a; angles_[1] = b; }
-
-        void angles_min(real_t val) { angles_[0] = val; if(!mean_set_) mean_ = val; }
-        void angles_max(real_t val) { angles_[1] = val; }
-
-        void angle_mean(real_t val) { mean_ = val; mean_set_ = true; }
-        void angle_sd(real_t val) { sd_ = val; }
-        real_t angle_mean() { return mean_; }
-        real_t angle_sd() { return sd_; }
-
-        void angle_location(real_t val) { location_ = val; location_set_ = true; }
-        void angle_scale(real_t val) { scale_ = val; }
-        real_t angle_location() { return location_; }
-        real_t angle_scale() { return scale_; }
-
-    }; // class Rotation
+  class Rotation {
 
     private:
+
+      char axis_;         // 'x' 'y' or 'z'
+      std::string stat_;
+      vector2_t angles_;
+      real_t mean_;       // for gaussian
+      real_t sd_;         // for gaussian
+      bool mean_set_;
+      real_t location_;   // location parameter for various distribution (= mean in gaussian)
+      real_t scale_;      // scale parameter for various distributions (= sd in gaussian)
+      bool location_set_;
+
+    public:
+
+      Rotation() : axis_('n'),
+                   mean_(0), sd_(0), mean_set_(false),
+                   location_(0), scale_(0), location_set_(false) { }
+      ~Rotation() { }
+      void init();
+
+      // getters 
+      char axis() const { return axis_; }
+      std::string stat() const { return stat_; }
+      vector2_t angles() const { return angles_; }
+      real_t angle_mean() const { return mean_; }
+      real_t angle_sd() const { return sd_; }
+      real_t angle_location() const { return location_; }
+      real_t angle_scale() const { return scale_; }
+
+      // setters 
+      void stat(std::string stat) { stat_ = stat; }
+      void axis(char c) { axis_ = c; }
+      void angles(vector2_t v) { angles_ = v; }
+      void angles(real_t a, real_t b) { angles_[0] = a; angles_[1] = b; }
+
+      void angles_min(real_t val) { angles_[0] = val; if(!mean_set_) mean_ = val; }
+      void angles_max(real_t val) { angles_[1] = val; }
+
+      void angle_mean(real_t val) { mean_ = val; mean_set_ = true; }
+      void angle_sd(real_t val) { sd_ = val; }
+      void angle_location(real_t val) { location_ = val; location_set_ = true; }
+      void angle_scale(real_t val) { scale_ = val; }
+
+      #ifdef DEBUG
+        void print(){
+          std::cout << "orientation = { axis: " << axis_ << ", stat: " << stat_ << ", angles: [ " 
+                     << angles_[0] << " " << angles_[1] 
+                     << " ], mean: " << mean_ << ", std: " << sd_ << " }" << std::endl; 
+        }
+      #endif
+
+  }; // class Rotation
+
+
+  class GrainOrientations {
+
+    private:
+
       std::string stat_;   // "single", "range", "random", "filename.ori" - change to enum?
       Rotation rot1_;      // rotation 1
       Rotation rot2_;      // rotation 2
       Rotation rot3_;      // rotation 3
 
     public:
+
       GrainOrientations();
       ~GrainOrientations();
 
       void init();
       void clear();
 
-      std::string stat() { return stat_; }
-      Rotation rot1() { return rot1_; }
-      Rotation rot2() { return rot2_; }
-      Rotation rot3() { return rot3_; }
+      std::string stat() const { return stat_; }
+      Rotation rot1() const { return rot1_; }
+      Rotation rot2() const { return rot2_; }
+      Rotation rot3() const { return rot3_; }
 
       void stat(std::string s) { stat_ = s; }
+      void rot1(const Rotation & rot) { rot1_ = rot; }
+      void rot2(const Rotation & rot) { rot2_ = rot; }
+      void rot3(const Rotation & rot) { rot3_ = rot; }
 
       void rot1_angles(vector2_t r) { rot1_.angles(r); }
       void rot2_angles(vector2_t r) { rot2_.angles(r); }
@@ -329,7 +346,8 @@ namespace hig {
 
   class Grain {
     private:
-      //std::string shape_key_;
+      int layer_order_;
+      std::string shape_key_;
       std::string unitcell_key_;
       std::string layer_key_;
       bool in_layer_;
@@ -352,8 +370,10 @@ namespace hig {
 
       bool lattice_abc_set() { return lattice_.abc_set(); }
 
+      void shape_key(std::string s) { shape_key_ = s; }
       void unitcell_key(std::string s) { unitcell_key_ = s; }
       void layer_key(std::string s) { layer_key_ = s; in_layer_ = true; }
+      void layer_order(int d) { layer_order_ = d; }
 
       void lattice_vec_a(vector3_t v) { lattice_.a(v); }
       void lattice_vec_b(vector3_t v) { lattice_.b(v); }
@@ -427,6 +447,10 @@ namespace hig {
       void maxgrains(real_t a, real_t b, real_t c) {
         maxgrains_[0] = a; maxgrains_[1] = b; maxgrains_[2] = c; }
 
+      void grain_orientation_rot1(const Rotation & rot) { orientations_.rot1(rot); }
+      void grain_orientation_rot2(const Rotation & rot) { orientations_.rot2(rot); }
+      void grain_orientation_rot3(const Rotation & rot) { orientations_.rot3(rot); }
+
       void grain_orientation_rot1_angles(vector2_t v) { orientations_.rot1_angles(v); }
       void grain_orientation_rot2_angles(vector2_t v) { orientations_.rot2_angles(v); }
       void grain_orientation_rot3_angles(vector2_t v) { orientations_.rot3_angles(v); }
@@ -491,14 +515,19 @@ namespace hig {
       void lattice_vec_c(real_t a, real_t b, real_t c) { grain_.lattice_vec_c(a, b, c); }
       void lattice_abc_set(bool v) { grain_.lattice_abc_set(v); }
 
+      void grain_shape_key(std::string s) { grain_.shape_key(s); }
       void grain_unitcell_key(std::string s) { grain_.unitcell_key(s); }
       void grain_layer_key(std::string s) { grain_.layer_key(s); }
+      void grain_layer_order(int d){ grain_.layer_order(d); }
 
       void grain_transvec(vector3_t v) { grain_.transvec(v); }
       void grain_repetition(vector3_t v) { grain_.repetition(v); }
       void grain_transvec(real_t v, real_t w, real_t x) { grain_.transvec(v, w, x); }
       void grain_repetition(real_t v, real_t w, real_t x) { grain_.repetition(v, w, x); }
 
+      void grain_repetition_min(vector3_t);
+      void grain_repetition_max(vector3_t);
+      void grain_repetition_stat(std::vector<StatisticType>);
       void grain_is_repetition_dist(bool b) { grain_.is_repetition_dist(b); }
       void grain_xrepetition_min(unsigned int v) { grain_.xrepetition_min(v); }
       void grain_yrepetition_min(unsigned int v) { grain_.yrepetition_min(v); }
@@ -509,6 +538,11 @@ namespace hig {
       void grain_xrepetition_stat(StatisticType s) { grain_.xrepetition_stat(s); }
       void grain_yrepetition_stat(StatisticType s) { grain_.yrepetition_stat(s); }
       void grain_zrepetition_stat(StatisticType s) { grain_.zrepetition_stat(s); }
+
+
+      void grain_orientation_rot1(const Rotation & rot) { ensemble_.grain_orientation_rot1(rot); }
+      void grain_orientation_rot2(const Rotation & rot) { ensemble_.grain_orientation_rot2(rot); }
+      void grain_orientation_rot3(const Rotation & rot) { ensemble_.grain_orientation_rot3(rot); }
 
       void grain_orientation_rot1_angles(vector2_t v) { ensemble_.grain_orientation_rot1_angles(v); }
       void grain_orientation_rot2_angles(vector2_t v) { ensemble_.grain_orientation_rot2_angles(v); }
@@ -554,6 +588,10 @@ namespace hig {
       void grain_scaling_a_nsamples (int num) { grain_.scaling_.nvals_[0] = num; }
       void grain_scaling_b_nsamples (int num) { grain_.scaling_.nvals_[1] = num; }
       void grain_scaling_c_nsamples (int num) { grain_.scaling_.nvals_[2] = num; }
+      void grain_scaling_mean(vector3_t v) { grain_.scaling_.mean_ = v; }
+      void grain_scaling_stddev(vector3_t v) { grain_.scaling_.stddev_ = v; }
+      void grain_scaling_stat(std::vector<StatisticType> v) { grain_.scaling_.dist_ = v; }
+      void grain_scaling_nsamples(std::vector<int> v) { grain_.scaling_.nvals_ = v; }
 
       void ensemble_spacing(vector3_t v) { ensemble_.spacing(v); }
       void ensemble_maxgrains(vector3_t v) { ensemble_.maxgrains(v); }
@@ -618,26 +656,27 @@ namespace hig {
       vector3_t grain_repetition() const { return grain_.repetition_; }
       bool grain_is_repetition_dist() const { return grain_.is_repetition_dist_; }
       const GrainRepetitions& grain_repetitiondist() const { return grain_.repetitiondist_; }
-      std::string grain_orientation() { return ensemble_.orientations_.stat(); }
-      RefractiveIndex grain_refindex() { return grain_.refindex_; }
-      complex_t one_minus_n2() { return grain_.refindex_.one_minus_n2(); }
-      const std::string& grain_unitcell_key() { return grain_.unitcell_key_; }
-      const std::string& grain_layer_key() { return grain_.layer_key_; }
+      std::string grain_orientation() const { return ensemble_.orientations_.stat(); }
+      RefractiveIndex grain_refindex() const { return grain_.refindex_; }
+      complex_t one_minus_n2() const { return grain_.refindex_.one_minus_n2(); }
+      const std::string& grain_unitcell_key() const { return grain_.unitcell_key_; }
+      const std::string& grain_layer_key() const { return grain_.layer_key_; }
+      int layer_order() const { return grain_.layer_order_; }
       bool grain_in_layer() { return grain_.in_layer_; }
-      vector3_t grain_transvec() { return grain_.transvec_; }
+      vector3_t grain_transvec() const { return grain_.transvec_; }
 
-            // scaling related params
-            bool grain_scaling_is_dist () {
-                for (int i = 0; i < 3; i++)
-                    if ( grain_.scaling_.stddev_[i] > 0 )
-                        return true;
-                return false;
-            }
+      // scaling related params
+      bool grain_scaling_is_dist () const {
+        for (int i = 0; i < 3; i++)
+          if ( grain_.scaling_.stddev_[i] > 0 )
+            return true;
+        return false;
+      }
+
       vector3_t grain_scaling() const { return grain_.scaling_.mean_; }
-            vector3_t grain_scaling_stddev() const { return grain_.scaling_.stddev_; }
-            std::vector<StatisticType> grain_scaling_dist() const { return grain_.scaling_.dist_; }
-            std::vector<int> grain_scaling_nvals() { return grain_.scaling_.nvals_; }
-
+      vector3_t grain_scaling_stddev() const { return grain_.scaling_.stddev_; }
+      std::vector<StatisticType> grain_scaling_dist() const { return grain_.scaling_.dist_; }
+      std::vector<int> grain_scaling_nvals() const { return grain_.scaling_.nvals_; }
 
       vector3_t ensemble_spacing() const { return ensemble_.spacing_; }
       vector3_t ensemble_maxgrains() const { return ensemble_.maxgrains_; }
@@ -647,41 +686,38 @@ namespace hig {
       vector2_t rotation_eta() { return ensemble_.orientations_.rot2().angles(); }
       vector2_t rotation_zeta() { return ensemble_.orientations_.rot3().angles(); }
 
-      vector3_t rotation_rot1() {
+      vector3_t rotation_rot1() const {
         char axis = ensemble_.orientations_.rot1().axis();
         if(axis == 'n') return vector3_t(0, 0, 0);
         vector2_t angs = ensemble_.orientations_.rot1().angles();
         return vector3_t((real_t) ((char)axis - 'x'), angs[0], angs[1]);
-        //return vector3_t((real_t) axis, angs[0], angs[1]);
       } // rotation_rot1()
-      vector3_t rotation_rot2() {
+      vector3_t rotation_rot2() const {
         char axis = ensemble_.orientations_.rot2().axis();
         if(axis == 'n') return vector3_t(0, 0, 0);
         vector2_t angs = ensemble_.orientations_.rot2().angles();
         return vector3_t((real_t) ((char)axis - 'x'), angs[0], angs[1]);
-        //return vector3_t((real_t) axis, angs[0], angs[1]);
       } // rotation_rot2()
-      vector3_t rotation_rot3() {
+      vector3_t rotation_rot3() const {
         char axis = ensemble_.orientations_.rot3().axis();
         if(axis == 'n') return vector3_t(0, 0, 0);
         vector2_t angs = ensemble_.orientations_.rot3().angles();
         return vector3_t((real_t) ((char)axis - 'x'), angs[0], angs[1]);
-        //return vector3_t((real_t) axis, angs[0], angs[1]);
       } // rotation_rot3()
 
-      real_t rotation_rot1_anglemean() { return ensemble_.orientations_.rot1().angle_mean(); }
-      real_t rotation_rot2_anglemean() { return ensemble_.orientations_.rot2().angle_mean(); }
-      real_t rotation_rot3_anglemean() { return ensemble_.orientations_.rot3().angle_mean(); }
-      real_t rotation_rot1_anglesd() { return ensemble_.orientations_.rot1().angle_sd(); }
-      real_t rotation_rot2_anglesd() { return ensemble_.orientations_.rot2().angle_sd(); }
-      real_t rotation_rot3_anglesd() { return ensemble_.orientations_.rot3().angle_sd(); }
+      real_t rotation_rot1_anglemean() const { return ensemble_.orientations_.rot1().angle_mean(); }
+      real_t rotation_rot2_anglemean() const { return ensemble_.orientations_.rot2().angle_mean(); }
+      real_t rotation_rot3_anglemean() const { return ensemble_.orientations_.rot3().angle_mean(); }
+      real_t rotation_rot1_anglesd() const { return ensemble_.orientations_.rot1().angle_sd(); }
+      real_t rotation_rot2_anglesd() const { return ensemble_.orientations_.rot2().angle_sd(); }
+      real_t rotation_rot3_anglesd() const { return ensemble_.orientations_.rot3().angle_sd(); }
 
-      real_t rotation_rot1_anglelocation() { return ensemble_.orientations_.rot1().angle_location(); }
-      real_t rotation_rot2_anglelocation() { return ensemble_.orientations_.rot2().angle_location(); }
-      real_t rotation_rot3_anglelocation() { return ensemble_.orientations_.rot3().angle_location(); }
-      real_t rotation_rot1_anglescale() { return ensemble_.orientations_.rot1().angle_scale(); }
-      real_t rotation_rot2_anglescale() { return ensemble_.orientations_.rot2().angle_scale(); }
-      real_t rotation_rot3_anglescale() { return ensemble_.orientations_.rot3().angle_scale(); }
+      real_t rotation_rot1_anglelocation() const { return ensemble_.orientations_.rot1().angle_location(); }
+      real_t rotation_rot2_anglelocation() const { return ensemble_.orientations_.rot2().angle_location(); }
+      real_t rotation_rot3_anglelocation() const { return ensemble_.orientations_.rot3().angle_location(); }
+      real_t rotation_rot1_anglescale() const { return ensemble_.orientations_.rot1().angle_scale(); }
+      real_t rotation_rot2_anglescale() const { return ensemble_.orientations_.rot2().angle_scale(); }
+      real_t rotation_rot3_anglescale() const { return ensemble_.orientations_.rot3().angle_scale(); }
 
       /* modifiers (updates) */
       bool update_param(const std::string&, real_t);
@@ -698,7 +734,8 @@ namespace hig {
 
   typedef std::unordered_map <std::string, Structure> structure_list_t;
   typedef structure_list_t::iterator structure_iterator_t;
+  typedef structure_list_t::const_iterator structure_citerator_t;
 
 } // namespace hig
 
-#endif /* _STRUCTURE_HPP_ */
+#endif // __STRUCTURE_HPP__

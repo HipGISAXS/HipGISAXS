@@ -3,14 +3,8 @@
  *
  *  File: sf_gpu.cu
  *  Created: Oct 15, 2012
- *  Modified: Thu 15 Oct 2015 02:22:31 PM EDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
- *  Developers: Abhinav Sarje <asarje@lbl.gov>
- *              Dinesh Kumar <dkumar@lbl.gov>
- *              Alexander Hexemer <ahexemer@lbl.gov>
- *              Xiaoye Li <xsli@lbl.gov>
- *
  *  Licensing: The HipGISAXS software is only available to be downloaded and
  *  used by employees of academic research institutions, not-for-profit
  *  research laboratories, or governmental research facilities. Please read the
@@ -49,7 +43,7 @@ namespace hig {
   } // StructureFactorG::~StructureFactorG()
 
 
-  bool StructureFactorG::init(std::string expt) {
+  bool StructureFactorG::init(unsigned int nx, unsigned int ny, unsigned int nz) {
     // allocate device buffers
     // copy qgrid to device memory
 
@@ -60,13 +54,10 @@ namespace hig {
       return false;
     } // if
 
-    nqx_ = QGrid::instance().nqx();
-    nqy_ = QGrid::instance().nqy();
-    if(expt == "gisaxs") {
-      nqz_ = QGrid::instance().nqz_extended();
-    } else {
-      nqz_ = QGrid::instance().nqz();
-    } // if-else
+    nqx_ = nx;
+    nqy_ = ny;
+    nqz_ = nz;
+      
     cudaMalloc((void**) &qx_, nqx_ * sizeof(real_t));
     cudaMalloc((void**) &qy_, nqy_ * sizeof(real_t));
     cudaMalloc((void**) &qz_, nqz_ * sizeof(cucomplex_t));

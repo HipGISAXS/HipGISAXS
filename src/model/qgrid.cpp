@@ -27,46 +27,20 @@ namespace hig {
   /**
    * create Q-grid in reciprocal space
    */
-  bool QGrid::create(real_t freq, real_t alpha_i, real_t k0, int mpi_rank) {
-    vector2_t total_pixels = HiGInput::instance().detector_total_pixels();
-    vector2_t min_point = HiGInput::instance().param_output_minpoint();
-    vector2_t max_point = HiGInput::instance().param_output_maxpoint();
-    OutputRegionType type = HiGInput::instance().param_output_type();
+  bool QGrid::create(const ComputeParams & params, real_t alpha_i, real_t k0, int mpi_rank) {
+    vector2_t min_point = params.output_minpoint();
+    vector2_t max_point = params.output_maxpoint();
+    OutputRegionType type = params.output_region_type();
+    std::vector<int> pixels = params.resolution();
 
-    vector2_t beam = HiGInput::instance().detector_direct_beam();
-    real_t pixel_size = HiGInput::instance().detector_pixel_size();
-    real_t sd_distance = HiGInput::instance().detector_sd_distance();
-    std::vector<int> pixels = HiGInput::instance().param_resolution();
     nrow_ = pixels[1];
     ncol_ = pixels[0];
-    qmin_ = HiGInput::instance().param_output_minpoint();
-    qmax_ = HiGInput::instance().param_output_maxpoint();
-
-    /* one-pixel range in k-space
-     * in order to resolve a pixel, dq must be <= qpixel and lower to resolve subpixels */
-    vector3_t q0 = pixel_to_kspace(vector2_t(0, 0), k0, alpha_i, pixel_size, sd_distance, beam);
-    vector3_t q1 = pixel_to_kspace(vector2_t(1, 1), k0, alpha_i, pixel_size, sd_distance, beam);
-
     vector3_t qmax, qmin, step;
-
     qmin[0] = 0.0; qmax[0] = 0.0;
 
     if(type == region_pixels) {
-      vector3_t temp_qmin = pixel_to_kspace(min_point, k0, alpha_i, pixel_size, sd_distance, beam);
-      vector3_t temp_qmax = pixel_to_kspace(max_point, k0, alpha_i, pixel_size, sd_distance, beam);
-      qmax[1] = max(fabs(temp_qmax[1]), fabs(temp_qmin[1]));
-      qmin[1] = min(fabs(temp_qmax[1]), fabs(temp_qmin[1]));
-      //qmin[1] = - qmax[1];
-      qmax[2] = max(temp_qmax[2], temp_qmin[2]);
-      qmin[2] = min(temp_qmax[2], temp_qmin[2]);
-      step[0] = fabs(qmax[0] - qmin[0]) / 2;      // why ... ?
-      step[1] = fabs(q1[1] - q0[1]) / pixels[0];
-      step[2] = fabs(q1[2] - q0[2]) / pixels[1];
-      if(HiGInput::instance().experiment() == "saxs") {
-        qmin[0] = qmin[1] = qmin[2] = 0;
-        step[0] = 0; step[1] = 1;
-        qmax[0] = qmax[1] = 0;
-      } // if
+      std::cerr << "error: output data in pixel-space is not implemented yet.\nPlease use qspace." << std::endl;
+      return false;
     } else if(type == region_qspace) {
 
       /* calculate the angles */
@@ -110,7 +84,7 @@ namespace hig {
     } // if-else
 
     if(mpi_rank == 0) {
-      std::cout << "**                  Q-grid range: ("
+      std::cerr << "**                  Q-grid range: ("
             << qx_[0] << ", " << qy_[0] << ", " << qz_.back()
             << ") x ("
             << qx_.back() << ", " << qy_.back() << ", " << qz_[0]
@@ -202,7 +176,7 @@ namespace hig {
     } // if
 
     if(mpi_rank == 0) {
-      std::cout << "**              New Q-grid range: ("
+      std::cerr << "**              New Q-grid range: ("
                 << qx_[0] << ", " << qy_[0] << ", " << qz_.back() << ") x ("
                 << qx_.back() << ", " << qy_.back() << ", " << qz_[0] << ")" << std::endl;
     } // if

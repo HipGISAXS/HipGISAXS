@@ -5,10 +5,6 @@
  *  Created: Oct 16, 2012
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
- *  Developers: Abhinav Sarje <asarje@lbl.gov>
- *              Dinesh Kumar <dkumar@lbl.gov>
- *              Alexander Hexemer <ahexemer@lbl.gov>
- *              Xiaoye Li <xsli@lbl.gov>
  *
  *  Licensing: The HipGISAXS software is only available to be downloaded and
  *  used by employees of academic research institutions, not-for-profit
@@ -56,7 +52,7 @@ namespace hig {
       StructureFactorG();
       ~StructureFactorG();
 
-      bool init(std::string);
+      bool init(unsigned int, unsigned int, unsigned int);
       //bool run_init(const real_t*, const std::vector<real_t>&);
       bool clear();
       bool destroy();

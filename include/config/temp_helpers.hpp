@@ -7,10 +7,16 @@
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
 
+#ifndef TEMP_HELPERS__H
+#define TEMP_HELPERS__H
+
 #include <string>
 #include <vector>
 #include <map>
 
+#include <config/tokens.hpp>
+#include <config/token_mapper.hpp>
+#include <common/typedefs.hpp>
 namespace hig {
 
   class FitReferenceData {
@@ -155,3 +161,5 @@ namespace hig {
 
 
 } // namespace hig
+
+#endif // TEMP_HELPERS__H

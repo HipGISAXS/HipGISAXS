@@ -39,7 +39,7 @@ namespace hig {
     std::cout << help << " [ " << img_num << " ]" << std::endl;
 
     // initial vector = x0_
-    std::vector<std::pair<hig::real_t, hig::real_t> > plimits = HiGInput::instance().fit_param_limits();
+    std::vector<std::pair<hig::real_t, hig::real_t> > plimits = obj_func_->fit_param_limits();
 
     std::cout << "** [none] parameter vector: [ ";
     for(real_vec_t::iterator i = x0_.begin(); i != x0_.end(); ++ i) std::cout << *i << " ";

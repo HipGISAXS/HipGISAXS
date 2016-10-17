@@ -3,14 +3,8 @@
  *
  *  File: shape.hpp
  *  Created: Jun 05, 2012
- *  Modified: Wed 08 Oct 2014 12:13:02 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
- *  Developers: Slim Chourou <stchourou@lbl.gov>
- *              Abhinav Sarje <asarje@lbl.gov>
- *              Elaine Chan <erchan@lbl.gov>
- *              Alexander Hexemer <ahexemer@lbl.gov>
- *              Xiaoye Li <xsli@lbl.gov>
  *
  *  Licensing: The HipGISAXS software is only available to be downloaded and
  *  used by employees of academic research institutions, not-for-profit
@@ -20,14 +14,15 @@
  *  NON-COMMERCIAL END USER LICENSE AGREEMENT.
  */
 
-#ifndef _SHAPE_HPP_
-#define _SHAPE_HPP_
+#ifndef __SHAPE_HPP__
+#define __SHAPE_HPP__
 
 #include <string>
 #include <unordered_map>
 
 #include <common/enums.hpp>
 #include <common/globals.hpp>
+#include <model/common.hpp>
 
 namespace hig {
 
@@ -110,6 +105,7 @@ namespace hig {
       std::string key_;
       ShapeName name_;      /* name of a predefined shape, or custom file */
       std::string name_str_;    /* shape file name: used for custom shape only */
+      RefractiveIndex refindex_;
       vector3_t originvec_;
       real_t xrot_, yrot_, zrot_;
       shape_param_list_t params_;  // a map of all params (key is the type)
@@ -136,6 +132,9 @@ namespace hig {
       void originvec(real_t a, real_t b, real_t c) {
         originvec_[0] = a; originvec_[1] = b; originvec_[2] = c; }
 
+      void refindex(RefractiveIndex & n) { refindex_ = n; }
+      void refindex_beta(real_t b) { refindex_.beta(b); }
+      void refindex_delta(real_t d) { refindex_.delta(d); }
       void zrot(real_t d) { zrot_ = d; }
       void yrot(real_t d) { yrot_ = d; }
       void xrot(real_t d) { xrot_ = d; }
@@ -145,6 +144,7 @@ namespace hig {
         name_ = sh.name_;
         name_str_ = sh.name_str_;
         originvec_ = sh.originvec_;
+        refindex_ = sh.refindex_;
         zrot_ = sh.zrot_;
         yrot_ = sh.yrot_;
         xrot_ = sh.xrot_;
@@ -165,6 +165,8 @@ namespace hig {
       real_t yrot() const { return yrot_; }
       real_t xrot() const { return xrot_; }
       vector3_t originvec() const { return originvec_; }
+      RefractiveIndex refindex() const { return refindex_; }
+      complex_t one_minus_n2() const { return refindex_.one_minus_n2(); }
       std::string filename() const { return name_str_; }
       shape_param_list_t& param_list() { return params_; }
       shape_param_iterator_t param_begin() { return params_.begin(); }
@@ -182,4 +184,4 @@ namespace hig {
 
 } // namespace hig
 
-#endif /* _SHAPE_HPP_ */
+#endif // __SHAPE_HPP__

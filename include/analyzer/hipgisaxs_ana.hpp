@@ -1,17 +1,12 @@
 /**
- *  Project: AnalyzeHipGISAXS (High-Performance GISAXS Data Analysis)
+ *  Project: HipGISAXS (High-Performance GISAXS)
  *
- *  File: Analyzer.hpp
+ *  File: hipgisaxs_ana.hpp
  *  Created: Dec 26, 2013
- *  Modified: Wed 08 Oct 2014 12:11:41 PM PDT
  *  Description: The main analysis class that executes the workflows defined therein wrt
  *  the inputs (a priori structural info)  and datasets (expt. data) provided.
  *
- *  Author: Slim Chourou <stchourou@lbl.gov>
- *  Developers: Slim Chourou <stchourou@lbl.gov>
- *              Abhinav Sarje <asarje@lbl.gov>
- *              Alexander Hexemer <ahexemer@lbl.gov>
- *              Xiaoye Li <xsli@lbl.gov>
+ *  Author: Abhinav Sarje <asarje@lbl.gov>
  *
  *  Licensing: The AnalyzeHipGISAXS software is only available to be downloaded and
  *  used by employees of academic research institutions, not-for-profit
@@ -28,6 +23,7 @@
 
 #include <common/typedefs.hpp>
 #include <analyzer/analysis_algorithm.hpp>
+#include <config/input.hpp>
 
 
 namespace hig {
@@ -35,14 +31,22 @@ namespace hig {
   class HipGISAXSAnalyzer {
 
     private :
-      std::vector <AnalysisAlgorithm*> wf_;    // the workflow
+      std::vector <AnalysisAlgorithm*> wf_;   // the workflow
+      int num_algo_;                          // the input container
 
     public:
       HipGISAXSAnalyzer() { }
       ~HipGISAXSAnalyzer() { }
 
-      bool add_analysis_algo(AnalysisAlgorithm* algo) { wf_.push_back(algo); return true; }
+      bool add_analysis_algo(AnalysisAlgorithm* algo) {
+        wf_.push_back(algo);
+        num_algo_ = wf_.size();
+        return true;
+      } // add_analysis_algo()
+
       bool analyze(int argc,char **argv, int);
+
+      real_t tolerance(int n) const { return wf_[n]->tolerance(); }
 
   }; // class HipGISAXSAnalyzer
 

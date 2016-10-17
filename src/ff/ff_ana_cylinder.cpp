@@ -3,14 +3,8 @@
  *
  *  File: ff_ana_cylinder.cpp
  *  Created: Jul 12, 2012
- *  Modified: Wed 22 Oct 2014 05:30:11 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
- *  Developers: Slim Chourou <stchourou@lbl.gov>
- *              Abhinav Sarje <asarje@lbl.gov>
- *              Elaine Chan <erchan@lbl.gov>
- *              Alexander Hexemer <ahexemer@lbl.gov>
- *              Xiaoye Li <xsli@lbl.gov>
  *
  *  Licensing: The HipGISAXS software is only available to be downloaded and
  *  used by employees of academic research institutions, not-for-profit
@@ -87,7 +81,7 @@ namespace hig {
 #ifdef FF_ANA_GPU
     // on gpu
     #ifdef FF_VERBOSE
-      std::cout << "-- Computing cylinder FF on GPU ..." << std::endl;
+      std::cerr << "-- Computing cylinder FF on GPU ..." << std::endl;
     #endif
 
     std::vector<real_t> transvec_v;
@@ -97,7 +91,7 @@ namespace hig {
     gff_.compute_cylinder(tau, eta, r, distr_r, h, distr_h, rot_, transvec_v, ff);
 #else
     // on cpu
-    std::cout << "-- Computing cylinder FF on CPU ..." << std::endl;
+    std::cerr << "-- Computing cylinder FF on CPU ..." << std::endl;
 
     ff.clear(); ff.resize(nqz_, complex_t(0.,0.));
 
@@ -123,7 +117,7 @@ namespace hig {
 #endif // FF_ANA_GPU
 #ifdef TIME_DETAIL_2
     maintimer.stop();
-    std::cout << "**      Cylinder FF compute time: " << maintimer.elapsed_msec() << " ms." << std::endl;
+    std::cerr << "**      Cylinder FF compute time: " << maintimer.elapsed_msec() << " ms." << std::endl;
 #endif // TIME_DETAIL_2
 
     return true;

@@ -65,8 +65,8 @@ int main(int narg, char** args) {
     } // if-else
   } // if*/
 
-  for(int i = 0; i < hig::HiGInput::instance().num_analysis_algos(); ++ i) {
-    hig::FittingAlgorithmName algo = hig::HiGInput::instance().analysis_algo(i);
+  for(int i = 0; i < hip_func.num_analysis_algos(); ++ i) {
+    hig::FittingAlgorithmName algo = hip_func.analysis_algo(i);
 
     if(i > 0) {
       std::cout << "warning: currently hipgisaxs supports only one analysis algorithm at a time"

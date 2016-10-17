@@ -3,7 +3,6 @@
  *
  *  File: objective_func.cpp
  *  Created: Feb 02, 2014
- *  Modified: Tue 24 May 2016 08:15:09 PM EDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */
@@ -86,6 +85,7 @@ namespace hig {
 
 
   ReferenceFileType get_reference_file_type(const std::string& fname) {
+    std::cout << "input file = " << fname << std::endl;
     size_t len = fname.size();
     char temp_ext[16];
     int extlen = 0;
@@ -99,6 +99,7 @@ namespace hig {
     temp_ext[extlen] = '\0';
     std::string temp_ext2(temp_ext);
     std::string ext(temp_ext2.rbegin(), temp_ext2.rend());
+    std::cout << "-- Input pattern type: " << temp_ext << " " << temp_ext2 << std::endl;
     std::cout << "-- Input pattern type: " << ext << std::endl;
     if(ext.compare(std::string("edf")) == 0) return reference_file_edf;
     if(ext.compare(std::string("EDF")) == 0) return reference_file_edf;
@@ -223,8 +224,9 @@ namespace hig {
     // construct mean param_vals
     std::vector <std::string> params = hipgisaxs_.fit_param_keys();
     std::map <std::string, real_t> param_vals;
-    for(int i = 0; i < params.size(); ++ i)
-      param_vals[params[i]] = HiGInput::instance().param_space_mean(params[i]);
+    for(int i = 0; i < params.size(); ++ i) {
+      param_vals[params[i]] = hipgisaxs_.param_space_mean(params[i]);
+    } // for
 
     std::cout << "-- Mean/estimated parameter values: ";
     for(std::map<std::string, real_t>::iterator i = param_vals.begin(); i != param_vals.end(); ++ i)
@@ -295,7 +297,7 @@ namespace hig {
       double pmean = 0.0;
       for(std::map<std::string, real_t>::const_iterator i = param_vals.begin();
           i != param_vals.end(); ++ i) {
-        double x_mean = HiGInput::instance().param_space_mean((*i).first);
+        double x_mean = hipgisaxs_.param_space_mean((*i).first);
         double ptemp = ((*i).second - x_mean);
         ptemp *= ptemp;
         pmean += ptemp;
@@ -307,7 +309,7 @@ namespace hig {
       real_t reg_dist = reg / curr_dist.size();   // distribute it across the distance vector
       for(auto i = 0; i < curr_dist.size(); ++ i) {
         if((boost::math::isfinite)(curr_dist[i])) curr_dist[i] += reg_dist;
-        else curr_dist[i] = 1e6;    // some large number
+        else curr_dist[i] = 1e8;    // some large number
       } // for
 
       // write to output file
@@ -316,7 +318,7 @@ namespace hig {
       int myrank = hipgisaxs_.rank();
       std::stringstream cfilename;
       cfilename << "distance." << myrank << ".dat";
-      std::string prefix(HiGInput::instance().param_pathprefix() + "/" + HiGInput::instance().runname());
+      std::string prefix(hipgisaxs_.path() + "/" + hipgisaxs_.runname());
       std::ofstream out(prefix + "/" + cfilename.str(), std::ios::app);
       out.precision(10);
       for(real_vec_t::const_iterator i = curr_dist.begin(); i != curr_dist.end(); ++ i) out << *i << " ";

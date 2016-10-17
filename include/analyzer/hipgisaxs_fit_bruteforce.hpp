@@ -3,7 +3,6 @@
  *
  *  File: hipgisaxs_fit_bruteforce.hpp
  *  Created: Feb 07, 2014
- *  Modified: Wed 08 Oct 2014 12:11:48 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *

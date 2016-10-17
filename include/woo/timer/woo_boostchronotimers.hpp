@@ -3,7 +3,6 @@
   *
   *  File: woo_boostchronotimers.hpp
   *  Created: Nov 21, 2012
-  *  Modified: Tue 18 Feb 2014 11:00:42 AM PST
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */

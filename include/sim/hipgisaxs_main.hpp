@@ -22,7 +22,9 @@
 
 #include <common/typedefs.hpp>
 #include <common/globals.hpp>
+#include <config/input.hpp>
 #include <config/hig_input.hpp>
+#include <config/yaml_input.hpp>
 #include <model/common.hpp>
 #include <model/layer.hpp>
 #include <model/qgrid.hpp>
@@ -53,6 +55,8 @@ namespace hig {
       vector3_t cell_;    /* stores the domain size in each dimension */
       RotMatrix_t rot_;
       MultiLayer multilayer_; 
+      Input * input_;
+      std::string output_subdir_;
 
       class SampleRotation {
         friend class HipGISAXS;
@@ -128,8 +132,8 @@ namespace hig {
       bool normalize(real_t*&, unsigned int);
 
       bool illuminated_volume(real_t, real_t, int, RefractiveIndex);
-      bool spatial_distribution(structure_iterator_t, real_t, int, int&, int&, real_t*&);
-      bool orientation_distribution(structure_iterator_t, real_t*, int &, int, real_t*&, real_t *&);
+      bool spatial_distribution(structure_citerator_t, real_t, int, int&, int&, real_t*&);
+      bool orientation_distribution(structure_citerator_t, real_t*, int &, int, real_t*&, real_t *&);
       bool generate_repetition_range(unsigned int, unsigned int, int, std::vector<unsigned int>&);
       bool construct_repetition_distribution(const GrainRepetitions&, int, std::vector<vector3_t>&);
       bool construct_scaling_distribution(std::vector<StatisticType>, 
@@ -172,9 +176,7 @@ namespace hig {
       HipGISAXS(int, char**);
       ~HipGISAXS();
 
-      bool construct_input(const char* filename) {
-        return HiGInput::instance().construct_input_config(filename);
-      } // construct_input()
+      bool construct_input(const char* filename);
 
       /* loops over all configs and computes GISAXS for each */
       bool run_all_gisaxs(int = 0, int = 0, int = 0);
@@ -200,35 +202,37 @@ namespace hig {
         #else
           return 0;
         #endif
-      } // is_master()
+      } // rank()
 
       // fitting related ... TODO: improve
-      std::vector <std::string> fit_param_keys() const {
-        return HiGInput::instance().fit_param_keys();
-      } // get_fit_param_keys()
+
+      int num_analysis_algos() const { return input_->num_analysis_algos(); }
+      FittingAlgorithmName analysis_algo(int n) const { return input_->analysis_algo(n); }
+      real_t analysis_tolerance(int n) const { return input_->analysis_tolerance(n); }
+      real_t analysis_regularization(int n) const { return input_->analysis_regularization(n); }
+      bool analysis_algo_param(int n, std::string name, real_t& value) const {
+        return input_->analysis_algo_param(n, name, value); }
+
+      std::vector <std::string> fit_param_keys() const { return input_->fit_param_keys(); }
+      real_vec_t fit_param_step_values() const { return input_->fit_param_step_values(); }
       std::vector <std::pair <real_t, real_t> > fit_param_limits() const {
-        return HiGInput::instance().fit_param_limits();
-      } // get_fit_param_keys()
-      real_vec_t fit_param_step_values() const {
-        return HiGInput::instance().fit_param_step_values();
-      } // fit_param_step_values()
+        return input_->fit_param_limits(); }
+
       unsigned int nqx() const { return nqx_; }
       unsigned int nqy() const { return nqy_; }
       unsigned int nqz() const { return nqz_; }
       unsigned int ncol() const { return ncol_; }
       unsigned int nrow() const { return nrow_; }
 
-      string_t reference_data_path(int i) const {
-        return HiGInput::instance().reference_data_path(i);
-      } // reference_data_path()
-      string_t reference_data_mask(int i) const {
-        return HiGInput::instance().reference_data_mask(i);
-      } // reference_data_mask()
+      string_t reference_data_path(int i) const { return input_->reference_data_path(i); }
+      string_t reference_data_mask(int i) const { return input_->reference_data_mask(i); }
 
-      int num_fit_params() const { return HiGInput::instance().num_fit_params(); }
-      std::vector<real_t> fit_param_init_values() const {
-        return HiGInput::instance().fit_param_init_values();
-      } // fit_param_init_values()
+      int num_fit_params() const { return input_->num_fit_params(); }
+      std::vector<real_t> fit_param_init_values() const { return input_->fit_param_init_values(); }
+
+      real_t param_space_mean(const std::string& key) { return input_->param_space_mean(key); }
+      const std::string& path() const { return input_->path(); }
+      const std::string& runname() const { return input_->runname(); }
 
       bool override_qregion(unsigned int n_par, unsigned int n_ver, unsigned int i);
 

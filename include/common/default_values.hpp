@@ -3,7 +3,6 @@
  *
  *  File: default_values.hpp
  *  Created: Jul 12, 2013
- *  Modified: Wed 08 Oct 2014 12:13:01 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *

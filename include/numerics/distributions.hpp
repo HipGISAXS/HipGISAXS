@@ -3,7 +3,6 @@
  *
  *  File: distributions.hpp
  *  Created: Jul 02, 2012
- *  Modified: Wed 08 Oct 2014 12:13:09 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  *

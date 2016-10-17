@@ -271,7 +271,6 @@ def do_configure(myenv):
         print("error: C toolchain does not match the identified C++ toolchain")
         Exit(1)
     conf.env['TOOLCHAIN'] = toolchain
-    print toolchain
 
     if not conf.CheckCHeader('assert.h'):
         print("error: C header 'assert.h' missing in your compiler installation!")
@@ -391,6 +390,7 @@ add_option("detail-time", "Output detailed timings", 0, False)
 add_option("detail-mem", "Output detailed memory usage", 0, False)
 add_option("verbose", "Be verbose", 0, False)
 add_option("with-tau", "Compile with TAU for profiling", 0, False)
+add_option("with-yaml", "Use YAML input files.", 0, False)
 
 printLocalInfo()
 
@@ -416,6 +416,7 @@ using_parallel_hdf5 = _has_option("with-parallel-hdf5")
 using_papi = _has_option("with-papi")
 using_single = _has_option("use-single")
 using_tau = _has_option("with-tau")
+using_yaml = _has_option("with-yaml")
 
 if not using_mpi and using_parallel_hdf5:
     print("error: to enable parallel HDF5 support, you need to enable MPI as well.")
@@ -437,8 +438,8 @@ if using_mpi:
     CXXCOMPILER = "mpicxx"
     CCCOMPILER = "mpicc"
 else:
-    CXXCOMPILER = "g++"
-    CCCOMPILER = "gcc"
+    CXXCOMPILER = "c++"
+    CCCOMPILER = "cc"
 if using_tau:
   CXXCOMPILER = "tau_cxx.sh"
   CCCOMPILER = "tau_cc.sh"
@@ -549,6 +550,8 @@ if not get_option('clean'):
       other_libs = ["m", "stdc++"]
       if using_mic:
         other_libs.append("pfm")
+    elif platform == "osx":
+        other_libs = [ "m" ]
     else:
       other_libs = ["m", "gomp"]
     ## optional libs
@@ -574,7 +577,9 @@ if not get_option('clean'):
     parallel_hdf5_flags = ['USE_PARALLEL_HDF5']
     papi_flags = ['PROFILE_PAPI']
 
-    all_flags = detail_flags
+    ioflags = ['FILEIO']
+
+    all_flags = detail_flags + ioflags
     all_libs = boost_libs + tiff_libs + mkl_libs + other_libs
 
     if using_cuda:
@@ -630,6 +635,11 @@ if not get_option('clean'):
     # use double-precision as defualt
     if not using_single:
         env.Append(CPPDEFINES = ['DOUBLEP'])
+
+    # yaml
+    yaml_headers = ['yaml-cpp/yaml.h']
+    yaml_libs = ['yaml-cpp']
+    env.Append(LIBS = yaml_libs)
 
     ## print stuff
     #for item in sorted(env.Dictionary().items()):

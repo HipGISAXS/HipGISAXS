@@ -3,7 +3,6 @@
  *
  *  File: woo_bupctimers.h
  *  Created: Feb 23, 2014
- *  Modified: Sun 23 Feb 2014 04:39:52 PM PST
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
  */

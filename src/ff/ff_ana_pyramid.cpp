@@ -5,11 +5,6 @@
  *  Created: Jul 12, 2012
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
- *  Developers: Slim Chourou <stchourou@lbl.gov>
- *              Abhinav Sarje <asarje@lbl.gov>
- *              Elaine Chan <erchan@lbl.gov>
- *              Alexander Hexemer <ahexemer@lbl.gov>
- *              Xiaoye Li <xsli@lbl.gov>
  *
  *  Licensing: The HipGISAXS software is only available to be downloaded and
  *  used by employees of academic research institutions, not-for-profit
@@ -117,7 +112,7 @@ namespace hig {
     #endif
 
     #ifdef FF_ANA_GPU
-      std::cout << "-- Computing pyramid FF on GPU ..." << std::endl;
+      std::cerr << "-- Computing pyramid FF on GPU ..." << std::endl;
       std::vector<real_t> transvec_v; 
       transvec_v.push_back(transvec[0]);
       transvec_v.push_back(transvec[1]);
@@ -125,7 +120,7 @@ namespace hig {
       gff_.compute_pyramid(tau, eta, x, distr_x, y, distr_y, h, distr_h, b, distr_b, rot_, transvec_v, ff);
     #else
 
-      std::cout << "-- Computing pyramid FF on CPU ..." << std::endl;
+      std::cerr << "-- Computing pyramid FF on CPU ..." << std::endl;
       ff.clear(); ff.resize(nqz_, CMPLX_ZERO_);
 
       #pragma omp parallel for 
@@ -153,7 +148,7 @@ namespace hig {
 
     #ifdef TIME_DETAIL_2
       maintimer.stop();
-      std::cout << "** Trunc Pyramid FF compute time: " << maintimer.elapsed_msec() << " ms."
+      std::cerr << "** Trunc Pyramid FF compute time: " << maintimer.elapsed_msec() << " ms."
             << std::endl;
     #endif
 

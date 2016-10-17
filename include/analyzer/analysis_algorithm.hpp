@@ -3,7 +3,9 @@
  *
  *  File: analysis_algorithm.hpp
  *  Created: Feb 02, 2014
- *  Modified: Wed 08 Oct 2014 12:10:40 PM PDT
+ *
+ *  Author: Abhinav Sarje <asarje@lbl.gov>
+ *
  */
 
 #ifndef __ANALYSIS_ALGORITHM_HPP__

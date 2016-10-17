@@ -3,14 +3,8 @@
  *
  *  File: globals.hpp
  *  Created: Jun 05, 2012
- *  Modified: Wed 08 Oct 2014 06:32:15 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
- *  Developers: Slim Chourou <stchourou@lbl.gov>
- *              Abhinav Sarje <asarje@lbl.gov>
- *              Elaine Chan <erchan@lbl.gov>
- *              Alexander Hexemer <ahexemer@lbl.gov>
- *              Xiaoye Li <xsli@lbl.gov>
  *
  *  Licensing: The HipGISAXS software is only available to be downloaded and
  *  used by employees of academic research institutions, not-for-profit
@@ -143,6 +137,10 @@ namespace hig {
     INLINE real_t & operator[](int i) {
       return vec_[i];
     } // operator[]
+
+    INLINE real_t operator[](int i) const {
+      return vec_[i];
+    } // read_only
 
     INLINE vector3_t operator+(int toadd) {
       return vector3_t(vec_[0] + toadd, vec_[1] + toadd, vec_[2] + toadd);

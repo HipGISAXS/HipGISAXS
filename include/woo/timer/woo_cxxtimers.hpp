@@ -1,11 +1,8 @@
 /***
-  *  $Id$
-  *
   *  Project:
   *
   *  File: woo_cxxtimers.hpp
   *  Created: Nov 21, 2012
-  *  Modified: Sun 31 Mar 2013 02:04:12 PM PDT
   *
   *  Author: Abhinav Sarje <asarje@lbl.gov>
   */

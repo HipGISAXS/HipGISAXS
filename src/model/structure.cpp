@@ -5,11 +5,6 @@
  *  Created: Jun 12, 2012
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
- *  Developers: Slim Chourou <stchourou@lbl.gov>
- *              Abhinav Sarje <asarje@lbl.gov>
- *              Elaine Chan <erchan@lbl.gov>
- *              Alexander Hexemer <ahexemer@lbl.gov>
- *              Xiaoye Li <xsli@lbl.gov>
  *
  *  Licensing: The HipGISAXS software is only available to be downloaded and
  *  used by employees of academic research institutions, not-for-profit
@@ -66,7 +61,8 @@ namespace hig {
 
 
   void Lattice::init() {
-    a_[0] = a_[1] = a_[2] = b_[0] = b_[1] = b_[2] = c_[0] = c_[1] = c_[2] = 0.0;
+    a_[1] = a_[2] = b_[0] = b_[2] = c_[0] = c_[1] = 0.0;
+    a_[0] = b_[1] = c_[2] = 1.;
     t_[0] = t_[1] = t_[2] = 0.0;
     abc_set_ = false;
     type_ = lattice_cubic;    // default values
@@ -208,7 +204,8 @@ namespace hig {
       for (real_t k = 0; k < repeats[1]; k++){
         for (real_t l = 0; l < repeats[2]; l++){
           vector3_t G = mra * h + mrb * k + mrc * l;
-          if ((G[0] < qmin[0]) || (G[0] > qmax[0])) continue;
+          real_t Gp = sign(G[1]) * std::sqrt(G[0]*G[0] + G[1]*G[1]);
+          if ((Gp < qmin[0]) || (Gp > qmax[0])) continue;
           if ((G[2] < qmin[1]) || (G[2] > qmax[1])) continue;
           if (G.norm() > 0 ){
             real_t G_proj = std::sqrt(G[0] * G[0] + G[1] * G[1]);
@@ -356,8 +353,9 @@ namespace hig {
 
 
   void Grain::init() {
-    layer_key_ = "";
-    in_layer_ = false;
+    layer_key_ = "air";
+    in_layer_ = true; 
+    layer_order_ = 0;
     lattice_.init();
     transvec_[0] = transvec_[1] = transvec_[2] = 0;
     repetition_[0] = repetition_[1] = repetition_[2] = 1;
@@ -406,6 +404,21 @@ namespace hig {
   Structure::Structure() { iratio_ = 1.0; type_ = default_type; }
   Structure::~Structure() { }
 
+  void Structure::grain_repetition_min(vector3_t v){
+    grain_.xrepetition_min((unsigned) v[0]);
+    grain_.yrepetition_min((unsigned) v[1]);
+    grain_.zrepetition_min((unsigned) v[2]);
+  }
+  void Structure::grain_repetition_max(vector3_t v){
+    grain_.xrepetition_max((unsigned) v[0]);
+    grain_.yrepetition_max((unsigned) v[1]);
+    grain_.zrepetition_max((unsigned) v[2]);
+  }
+  void Structure::grain_repetition_stat(std::vector<StatisticType> v){
+    grain_.xrepetition_stat(v[0]);
+    grain_.yrepetition_stat(v[1]);
+    grain_.zrepetition_stat(v[2]);
+  }
 
   void Structure::init() {
     key_ = "";

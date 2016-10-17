@@ -5,11 +5,6 @@
  *  Created: Jun 18, 2012
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
- *  Developers: Slim Chourou <stchourou@lbl.gov>
- *              Abhinav Sarje <asarje@lbl.gov>
- *              Elaine Chan <erchan@lbl.gov>
- *              Alexander Hexemer <ahexemer@lbl.gov>
- *              Xiaoye Li <xsli@lbl.gov>
  *
  *  Licensing: The HipGISAXS software is only available to be downloaded and
  *  used by employees of academic research institutions, not-for-profit
@@ -60,7 +55,7 @@ namespace hig {
     }
     memcpy(sf_, rhs.sf_, nz_ * sizeof(complex_t));
     #ifdef SF_GPU
-      gsf_.init(HiGInput::instance().experiment());
+      gsf_.init(ny_, ny_, nz_);
     #endif
     return *this;
   } // StructureFactor::operator=()
@@ -176,7 +171,7 @@ namespace hig {
               lc(lattice->c() * scaling[2]);
 
     #ifdef SF_VERBOSE
-      if(master) std::cout << "-- Computing structure factor on CPU ... " << std::flush;
+      if(master) std::cerr << "-- Computing structure factor on CPU ... " << std::flush;
     #endif
 
     std::complex<real_t> unit_c(1, 0);
@@ -267,21 +262,21 @@ namespace hig {
     maintimer.stop();
 
     #ifdef SF_VERBOSE
-      if(master) std::cout << "done. " << std::endl;
+      if(master) std::cerr << "done. " << std::endl;
     #endif
 
     if(master) {
       #ifdef TIME_DETAIL_1
-        std::cout << "**               SF compute time: "
+        std::cerr << "**               SF compute time: "
                 << computetimer.elapsed_msec()  << " ms." << std::endl;
-        //std::cout << "**                 Total SF time: "
+        //std::cerr << "**                 Total SF time: "
         //          << maintimer.elapsed_msec() << " ms." << std::endl;
 
 
         //  save_sf(  QGrid::instance().nqx(),   QGrid::instance().nqy(),   QGrid::instance().nqz(), "/home/stchourou/sf.dat");
 
         //int naninfs = count_naninfs(nx_, ny_, nz_, sf_);
-        //std::cout << " ------- " << naninfs << " / " << nx_ * ny_ * nz_ << " nans or infs" << std::endl;
+        //std::cerr << " ------- " << naninfs << " / " << nx_ * ny_ * nz_ << " nans or infs" << std::endl;
       #endif // TIME_DETAIL_1
     } // if
 
@@ -302,7 +297,7 @@ namespace hig {
     else if(expt == "gisaxs") nz_ = QGrid::instance().nqz_extended();
     sf_ = new (std::nothrow) complex_t[nz_];
     if(sf_ == NULL) return false;
-    gsf_.init(expt);
+    gsf_.init(ny_, ny_, nz_);
     bool ret = gsf_.compute(expt, center, lattice, repet, scaling, rot
                         //#ifdef USE_MPI
                         //  , world_comm, comm_key

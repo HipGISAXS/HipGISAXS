@@ -3,14 +3,8 @@
  *
  *  File: layer.hpp
  *  Created: Jun 13, 2012
- *  Modified: Wed 08 Oct 2014 12:13:02 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
- *  Developers: Slim Chourou <stchourou@lbl.gov>
- *              Abhinav Sarje <asarje@lbl.gov>
- *              Elaine Chan <erchan@lbl.gov>
- *              Alexander Hexemer <ahexemer@lbl.gov>
- *              Xiaoye Li <xsli@lbl.gov>
  *
  *  Licensing: The HipGISAXS software is only available to be downloaded and
  *  used by employees of academic research institutions, not-for-profit
@@ -20,8 +14,8 @@
  *  NON-COMMERCIAL END USER LICENSE AGREEMENT.
  */
 
-#ifndef _LAYER_HPP_
-#define _LAYER_HPP_
+#ifndef __LAYER_HPP__
+#define __LAYER_HPP__
 
 #include <string>
 #include <map>
@@ -57,6 +51,7 @@ namespace hig {
 
       /* setters */
       void key(std::string s) { key_ = s; }
+      void refindex(RefractiveIndex d) { refindex_ = d; }
       void refindex_delta(real_t d) { refindex_.delta(d); }
       void refindex_beta(real_t d) { refindex_.beta(d); }
       void order(real_t d) { order_ = (int) d; }
@@ -90,7 +85,7 @@ namespace hig {
       }
 
       // hipgisaxs style init and clear
-      void init();
+      bool init(const layer_list_t &);
       void clear();
 
       //gets
@@ -107,4 +102,4 @@ namespace hig {
   };
 } // namespace hig
 
-#endif /* _LAYER_HPP_ */
+#endif // __LAYER_HPP__

@@ -3,14 +3,8 @@
  *
  *  File: compute_params.hpp
  *  Created: Jun 05, 2012
- *  Modified: Wed 08 Oct 2014 12:13:02 PM PDT
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
- *  Developers: Slim Chourou <stchourou@lbl.gov>
- *              Abhinav Sarje <asarje@lbl.gov>
- *              Elaine Chan <erchan@lbl.gov>
- *              Alexander Hexemer <ahexemer@lbl.gov>
- *              Xiaoye Li <xsli@lbl.gov>
  *
  *  Licensing: The HipGISAXS software is only available to be downloaded and
  *  used by employees of academic research institutions, not-for-profit
@@ -20,8 +14,8 @@
  *  NON-COMMERCIAL END USER LICENSE AGREEMENT.
  */
 
-#ifndef _COMPUTE_PARAMS_HPP_
-#define _COMPUTE_PARAMS_HPP_
+#ifndef __COMPUTE_PARAMS_HPP__
+#define __COMPUTE_PARAMS_HPP__
 
 #include <iostream>
 #include <string>
@@ -62,6 +56,7 @@ namespace hig {
       const std::string& runname() const { return runname_; }
       bool saveff() const { return saveff_; }
       bool savesf() const { return savesf_; }
+      StructCorrelationType param_structcorrelation() const { return correlation_; }
 
       /* setters */
 
@@ -85,7 +80,15 @@ namespace hig {
       void structcorrelation(StructCorrelationType c) { correlation_ = c; }
 
       /* getters */
-      //OutputRegion output_region() { return output_region_; }
+      OutputRegion output_region() const { return output_region_; }
+      OutputRegionType output_region_type() const { return output_region_.type_; }
+      vector2_t output_minpoint() const { return output_region_.minpoint_; }
+      vector2_t output_maxpoint() const { return output_region_.maxpoint_; }
+      std::vector<int> resolution() const { return resolution_; }
+      std::string palette() const { return palette_; }
+      int nslices() const { return nslices_; }
+      bool save_ff() const { return saveff_; }
+      bool save_sf() const { return savesf_; }
 
       /* modifiers (updates) */
       bool update_param(const std::string&, real_t);
@@ -110,4 +113,4 @@ namespace hig {
 
 } // namespace hig
 
-#endif /* _COMPUTE_PARAMS_HPP_ */
+#endif /* __COMPUTE_PARAMS_HPP__ */

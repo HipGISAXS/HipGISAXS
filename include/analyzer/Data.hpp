@@ -3,14 +3,9 @@
  *
  *  File: Data.hpp
  *  Created: Dec 26, 2013
- *  Modified: Wed 08 Oct 2014 12:11:22 PM PDT
  *  Description: Abstract class for gisaxs data
  *
  *  Author: Slim Chourou <stchourou@lbl.gov>
- *  Developers: Slim Chourou <stchourou@lbl.gov>
- *        Abhinav Sarje <asarje@lbl.gov>
- *        Alexander Hexemer <ahexemer@lbl.gov>
- *        Xiaoye Li <xsli@lbl.gov>
  *
  *  Licensing: The AnalyzeHipGISAXS software is only available to be downloaded and
  *  used by employees of academic research institutions, not-for-profit
