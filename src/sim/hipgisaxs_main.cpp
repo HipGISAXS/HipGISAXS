@@ -49,7 +49,7 @@
 #define VERBOSE_LEVEL_TWO  2
 
 #ifndef VERBOSE_LEVEL
-#define VERBOSE_LEVEL VERBOSE_LEVEL_ONE
+#define VERBOSE_LEVEL VERBOSE_LEVEL_TWO
 #endif
 
 namespace hig {
@@ -901,15 +901,26 @@ namespace hig {
         bool gmaster = true;
       #endif // USE_MPI
 
-      complex_t *grain_ids = NULL;
+      //complex_t *grain_ids = NULL;
+      //if(gmaster) {    // only the structure master needs this
+      //  grain_ids = new (std::nothrow) complex_t[num_gr * nrow_ * ncol_];
+      //  if(grain_ids == NULL) {
+      //    std::cerr << "error: could not allocate memory for 'id'" << std::endl;
+      //    return false;
+      //  } // if
+      //  // initialize to 0
+      //  memset(grain_ids, 0 , num_gr * nrow_ * ncol_ * sizeof(complex_t));
+      //} // if
+
+      real_t *grain_id = NULL;
       if(gmaster) {    // only the structure master needs this
-        grain_ids = new (std::nothrow) complex_t[num_gr * nrow_ * ncol_];
-        if(grain_ids == NULL) {
+        grain_id = new (std::nothrow) real_t[nrow_ * ncol_];
+        if(grain_id == NULL) {
           std::cerr << "error: could not allocate memory for 'id'" << std::endl;
           return false;
         } // if
         // initialize to 0
-        memset(grain_ids, 0 , num_gr * nrow_ * ncol_ * sizeof(complex_t));
+        memset(grain_id, 0 , nrow_ * ncol_ * sizeof(real_t));
       } // if
 
       // loop over grains - each process processes num_gr grains
@@ -948,8 +959,6 @@ namespace hig {
         vector3_t center = rot * curr_dd_vec + curr_transvec;
 
         /* compute structure factor and form factor */
-
-        // TODO: parallel tasks ...
 
         woo::BoostChronoTimer sftimer, fftimer;
         fftimer.start(); fftimer.pause();
@@ -1077,35 +1086,32 @@ namespace hig {
           sftimer.pause();
 
           /* compute intensities using sf and ff */
-          // TODO: parallelize ...
           if(gmaster) {  // grain master
-            complex_t* base_id = grain_ids + (grain_i - grain_min) * nrow_ * ncol_;
+            //complex_t* base_id = grain_ids + (grain_i - grain_min) * nrow_ * ncol_;
+            real_t* base_id = grain_id;
             unsigned int nslices = input_->compute().nslices();
             unsigned int imsize = nrow_ * ncol_;
             if(nslices <= 1) {
               /* without slicing */
-              //if(single_layer_refindex_.delta() < 0 || single_layer_refindex_.beta() < 0) {
-              //  // this should never happen
-              //  std::cerr << "error: single layer information not correctly set"
-              //            << std::endl;
-              //  return false;
-              //} // if
-              if(input_->scattering().experiment() == "gisaxs") {  // GISAXS
+              if(input_->scattering().experiment() == "gisaxs") { // GISAXS
                 for(unsigned int i = 0; i < imsize; ++ i) {
                   unsigned int curr_index   = i;
                   unsigned int curr_index_0 = i; 
                   unsigned int curr_index_1 = 1 * imsize + i;
                   unsigned int curr_index_2 = 2 * imsize + i;
                   unsigned int curr_index_3 = 3 * imsize + i;
-                  base_id[curr_index] = weight * 
-                                       (fc[curr_index_0] * sf[curr_index_0] * ff[curr_index_0] +
-                                        fc[curr_index_1] * sf[curr_index_1] * ff[curr_index_1] +
-                                        fc[curr_index_2] * sf[curr_index_2] * ff[curr_index_2] +
-                                        fc[curr_index_3] * sf[curr_index_3] * ff[curr_index_3]);
+                  //base_id[curr_index] = weight * 
+                  complex_t temp = weight * 
+                                   (fc[curr_index_0] * sf[curr_index_0] * ff[curr_index_0] +
+                                   fc[curr_index_1] * sf[curr_index_1] * ff[curr_index_1] +
+                                   fc[curr_index_2] * sf[curr_index_2] * ff[curr_index_2] +
+                                   fc[curr_index_3] * sf[curr_index_3] * ff[curr_index_3]);
+                  base_id[curr_index] += temp.real() * temp.real() + temp.imag() * temp.imag();
                 } // for i
-              } else { // SAXS
+              } else {                                            // SAXS
                 for(unsigned int i = 0; i < imsize; ++ i) {
-                  base_id[i] = weight * sf[i] * ff[i];
+                  complex_t temp = weight * sf[i] * ff[i];
+                  base_id[i] = temp.real() * temp.real() + temp.imag() * temp.imag();
                 } // for i
               } // if-else
               if(input_->compute().save_ff()){
@@ -1144,16 +1150,19 @@ namespace hig {
 
       } // for num_gr
 
-      complex_t* id = NULL;
+      //complex_t* id = NULL;
+      real_t* id = NULL;
       #ifdef USE_MPI
         if(multi_node_.size(struct_comm) > 1) {
           // collect grain_ids from all procs in struct_comm
           if(smaster) {
-            id = new (std::nothrow) complex_t[num_grains * nrow_ * ncol_];
+            //id = new (std::nothrow) complex_t[num_grains * nrow_ * ncol_];
+            id = new (std::nothrow) real_t[multi_node_.size(struct_comm) * nrow_ * ncol_];
           } // if
           int *proc_sizes = new (std::nothrow) int[multi_node_.size(struct_comm)];
           int *proc_displacements = new (std::nothrow) int[multi_node_.size(struct_comm)];
-          multi_node_.gather(struct_comm, &num_gr, 1, proc_sizes, 1);
+          //multi_node_.gather(struct_comm, &num_gr, 1, proc_sizes, 1);
+          for(int i = 0; i < multi_node_.size(struct_comm); ++ i) proc_sizes[i] = 1;
           if(smaster) {
             // make sure you get data only from the gmasters
             for(int i = 0; i < multi_node_.size(struct_comm); ++ i)
@@ -1162,22 +1171,38 @@ namespace hig {
             for(int i = 1; i < multi_node_.size(struct_comm); ++ i)
               proc_displacements[i] = proc_displacements[i - 1] + proc_sizes[i - 1];
           } // if
-          multi_node_.gatherv(struct_comm, grain_ids, gmaster * num_gr * nrow_ * ncol_,
+          //multi_node_.gatherv(struct_comm, grain_ids, gmaster * num_gr * nrow_ * ncol_,
+          //                    id, proc_sizes, proc_displacements);
+          multi_node_.gatherv(struct_comm, grain_id, gmaster * nrow_ * ncol_,
                               id, proc_sizes, proc_displacements);
           delete[] proc_displacements;
           delete[] proc_sizes;
-          if(gmaster) {
-            if(grain_ids != NULL) delete[] grain_ids;
-            grain_ids = NULL;
+
+          //if(gmaster) {
+          //  if(grain_ids != NULL) delete[] grain_ids;
+          //  grain_ids = NULL;
+          //} // if
+
+          // reduce data from all procs [ alt. use reduction instead of gatherv above ]
+          if(smaster) {
+            for(int z = 0; z < nrow_ * ncol_; ++ z) {
+              real_t sum = 0.0;
+              for(int p = 1; p < multi_node_.size(struct_comm); ++ p) sum += id[p * nrow_ * ncol_ + z];
+              grain_id[z] = sum;
+            } // for
+            if(id != NULL) delete[] id;
+            id = grain_id;
           } // if
         } else {
-          id = grain_ids;
+          //id = grain_ids;
+          id = grain_id;
         } // if-else
 
         delete[] gmasters;
         multi_node_.free(grain_comm);
       #else
-        id = grain_ids;
+        //id = grain_ids;
+        id = grain_id;
       #endif
 
       delete[] nn;
@@ -1185,7 +1210,6 @@ namespace hig {
       delete[] wght;
 
       if(smaster) {
-        // FIXME: double check the following correlation stuff ...
         // new stuff for grain/ensemble correlation
         unsigned int soffset = 0;
         switch(input_->compute().param_structcorrelation()) {
@@ -1195,14 +1219,15 @@ namespace hig {
             // intensity = sum_struct(struct_intensity)
             soffset = s_num * nrow_ * ncol_;
             for(unsigned int i = 0; i < nrow_ * ncol_ ; ++ i) {
-              unsigned int curr_index = i;
-              real_t sum = 0.0;
-              for(int d = 0; d < num_grains; ++ d) {
-                unsigned int id_index = d * nrow_ * ncol_ + curr_index;
-                sum += id[id_index].real() * id[id_index].real() + 
-                  id[id_index].imag() * id[id_index].imag();
-              } // for d
-              struct_intensity[soffset + curr_index] = sum;
+              //unsigned int curr_index = i;
+              //real_t sum = 0.0;
+              //for(int d = 0; d < num_grains; ++ d) {
+              //  unsigned int id_index = d * nrow_ * ncol_ + curr_index;
+              //  sum += id[id_index].real() * id[id_index].real() + 
+              //         id[id_index].imag() * id[id_index].imag();
+              //} // for d
+              //struct_intensity[soffset + curr_index] = sum;
+              struct_intensity[soffset + i] = id[i];
             } // for i
             break;
 
@@ -1701,7 +1726,7 @@ namespace hig {
         //rand_dim_x = max(1,
         //      (int)std::floor(max_density[0] * max_density[1] * max_density[2] / 4.0));
         // TEMPORARY HACK ... FIXME ...
-        rand_dim_x = maxgrains[0] * maxgrains[1] * maxgrains[2];
+        rand_dim_x = maxgrains[0] * maxgrains[1] * maxgrains[2];    // number of grains
         rand_dim_y = 3;
 
         // construct random matrix
