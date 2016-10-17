@@ -323,8 +323,6 @@ namespace hig {
 
       // return mean value of given parameter
       real_t param_space_mean(const std::string& key) const {
-        //std::cout << "  max: " << param_space_key_map_.at(key).max_
-        //          << " min: " << param_space_key_map_.at(key).min_ << std::endl;
         return (param_space_key_map_.at(key).max_ - param_space_key_map_.at(key).min_) / 2.0
                 + param_space_key_map_.at(key).min_;
       } // param_space_mean()

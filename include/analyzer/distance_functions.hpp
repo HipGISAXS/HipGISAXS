@@ -479,10 +479,9 @@ class SqrtCNormL2DistanceSquare : public DistanceMeasure {
       hig::real_t c = dot_prod / (dat_norm * dat_norm);
       double dist_sum = 0.0;
       for(unsigned int i = 0; i < size; ++ i) {
-        hig::real_t n_dat = c * sqrt_dat[i],
-                    n_ref = sqrt_ref[i];
-        hig::real_t temp = mask[i] * std::fabs(n_ref - n_dat);
-        //hig::real_t temp = mask[i] * std::fabs(1.0 - n_dat / n_ref); ///////////////////////
+        double n_dat = c * sqrt_dat[i],
+               n_ref = sqrt_ref[i];
+        double temp = mask[i] * std::fabs(n_ref - n_dat);
         temp = std::isfinite(temp) ? temp : 0.0;
         dist_sum += temp * temp;
       } // for

@@ -2774,8 +2774,8 @@ namespace hig {
     //print_all();
     for(map_t::const_iterator p = params.begin(); p != params.end(); ++ p) {
       real_t new_val = (*p).second;
-      // check if new_val is within the param space
       ParamSpace ps = param_space_key_map_.at((*p).first);  // if not exist, exception!!
+      // check if new_val is within the param space
       //if(new_val < ps.min_ || new_val > ps.max_) {
       //  std::cerr << "warning: given parameter value out of range space. resetting to limit."
       //        << std::endl;

@@ -230,10 +230,10 @@ namespace hig {
   bool HipGISAXS::override_qregion(unsigned int ny, unsigned int nz, unsigned int i) {
 
     OutputRegionType type = input_->compute().output_region().type_;
-    real_t miny = input_->fitting().reference_region_min_x(i);
-    real_t minz = input_->fitting().reference_region_min_y(i);
-    real_t maxy = input_->fitting().reference_region_max_x(i);
-    real_t maxz = input_->fitting().reference_region_max_y(i);
+    real_t miny = input_->reference_region_min_x(i);
+    real_t minz = input_->reference_region_min_y(i);
+    real_t maxy = input_->reference_region_max_x(i);
+    real_t maxz = input_->reference_region_max_y(i);
 
     #ifdef USE_MPI
       // this is done at the universal level

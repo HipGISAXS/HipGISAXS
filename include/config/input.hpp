@@ -80,6 +80,10 @@ namespace hig {
       virtual std::string reference_data_path(int i) const { }
       virtual std::string reference_data_mask(int i) const { }
       virtual int num_fit_params() const { }
+      virtual real_t reference_region_min_x(int i) const { }
+      virtual real_t reference_region_min_y(int i) const { }
+      virtual real_t reference_region_max_x(int i) const { }
+      virtual real_t reference_region_max_y(int i) const { }
   };
 
 } // namespace

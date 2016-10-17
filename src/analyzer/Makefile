@@ -192,7 +192,7 @@ SRC_DIR = $(PREFIX)
 BIN_DIR = $(PREFIX)
 PREC_FLAG = -DDOUBLEP    ## double precision is default
 
-ALL_FLAGS = $(CXX_FLAGS) $(PREC_FLAG) $(PETSC_FLAG) -g
+ALL_FLAGS = -g $(CXX_FLAGS) $(PREC_FLAG) $(PETSC_FLAG)
 
 all: andromeda-gnu
 	@echo $(PETSC_VERSION)

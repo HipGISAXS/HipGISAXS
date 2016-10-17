@@ -226,7 +226,6 @@ namespace hig {
     std::map <std::string, real_t> param_vals;
     for(int i = 0; i < params.size(); ++ i) {
       param_vals[params[i]] = hipgisaxs_.param_space_mean(params[i]);
-      std::cout << "++++++++++++++++ " << params[i] << " -> " << param_vals[params[i]] << std::endl;
     } // for
 
     std::cout << "-- Mean/estimated parameter values: ";
@@ -309,7 +308,7 @@ namespace hig {
       real_t reg_dist = reg / curr_dist.size();   // distribute it across the distance vector
       for(auto i = 0; i < curr_dist.size(); ++ i) {
         if((boost::math::isfinite)(curr_dist[i])) curr_dist[i] += reg_dist;
-        else curr_dist[i] = 1e6;    // some large number
+        else curr_dist[i] = 1e8;    // some large number
       } // for
 
       // write to output file
