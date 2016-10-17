@@ -791,14 +791,14 @@ namespace hig {
       int num_grains = ndx;
 
       int r1axis, r2axis, r3axis;
-      if ( struct_dist == "bragg" ){
+      if(struct_dist == "bragg") {
         r1axis = 2;
         r2axis = 0;
         r3axis = 1;
         // TODO this is a hack
-        if (dd) delete [] dd;
-        dd = new real_t[ndx * 3];
-        for (int i = 0; i < ndx * 3; i++) dd[i] = REAL_ZERO_;
+        if(dd) delete[] dd;
+        dd = new (std::nothrow) real_t[ndx * 3];
+        for(int i = 0; i < ndx * 3; i++) dd[i] = REAL_ZERO_;
       } else {
         r1axis = (int) (*s).second.rotation_rot1()[0];
         r2axis = (int) (*s).second.rotation_rot2()[0];
@@ -837,8 +837,8 @@ namespace hig {
         is_grain_repetition_dist = true;
         // get nvalues from scaling distribution
         int num_repeats;
-        if(scaling_samples.size() > 1) num_repeats = scaling_samples.size();    // CHECK ...
-        else num_repeats = num_grains;          // CHECK ...
+        if(scaling_samples.size() > 1) num_repeats = scaling_samples.size();
+        else num_repeats = num_grains;
         construct_repetition_distribution((*s).second.grain_repetitiondist(), 
                                           num_repeats, all_grains_repeats);
       } else {
@@ -1883,7 +1883,7 @@ namespace hig {
     vector3_t rot2 = (*s).second.rotation_rot2();
     vector3_t rot3 = (*s).second.rotation_rot3();
 
-    if (distribution == "bragg"){
+    if(distribution == "bragg") {
       real_vec_t angles;
       Lattice * lattice = (Lattice *) s->second.lattice();
       vector3_t gr_scaling = s->second.grain_scaling();
@@ -1902,29 +1902,26 @@ namespace hig {
       return true;
     }
     nn = new (std::nothrow) real_t[ndx * ndy];
-    if (nn == NULL) {
+    if(nn == NULL) {
       std::cerr << "error: could not allocate memory" << std::endl;
       return false;
-    }
+    } // if
     wght = new (std::nothrow) real_t[ndx * ndy];
-    if (wght == NULL) {
+    if(wght == NULL) {
       std::cerr << "error: could not allocate memory" << std::endl;
       return false;
-    }
+    } // if
     // TODO i believe constructing nn may not be needed ...
     if(distribution == "single") {    // single
       for(int x = 0; x < ndx; ++ x) {
-        //nn[x] = tau[0] * PI_ / 180;
         nn[x] = rot1[1] * PI_ / 180;
       } // for x
       if(ndy < 2) return true;
       for(int x = 0; x < ndx; ++ x) {
-        //nn[ndx + x] = eta[0] * PI_ / 180;
         nn[ndx + x] = rot2[1] * PI_ / 180;
       } // for x
       if(ndy < 3) return true;
       for(int x = 0; x < ndx; ++ x) {
-        //nn[2 * ndx + x] = zeta[0] * PI_ / 180;
         nn[2 * ndx + x] = rot3[1] * PI_ / 180;
       } // for x
       return true;
@@ -1933,31 +1930,20 @@ namespace hig {
         nn[x] = (real_t(rand()) / RAND_MAX) * 2 * PI_;
       } // for x
     } else if(distribution == "range") {  // range
-      //real_t dtau = fabs(tau[1] - tau[0]);
-      //real_t deta = fabs(eta[1] - eta[0]);
-      //real_t dzeta = fabs(zeta[1] - zeta[0]);
       real_t drot1 = fabs(rot1[2] - rot1[1]);
       real_t drot2 = fabs(rot2[2] - rot2[1]);
       real_t drot3 = fabs(rot3[2] - rot3[1]);
       for(int x = 0; x < ndx; ++ x) {
-        //nn[x] = (tau[0] + (real_t(rand()) / RAND_MAX) * dtau) * PI_ / 180;
         nn[x] = (rot1[1] + (real_t(rand()) / RAND_MAX) * drot1) * PI_ / 180;
       } // for x
       if(ndy < 2) return true;
       for(int x = 0; x < ndx; ++ x) {
-        //nn[ndx + x] = (eta[0] + (real_t(rand()) / RAND_MAX) * deta) * PI_ / 180;
         nn[ndx + x] = (rot2[1] + (real_t(rand()) / RAND_MAX) * drot2) * PI_ / 180;
       } // for x
       if(ndy < 3) return true;
       for(int x = 0; x < ndx; ++ x) {
-        //nn[2 * ndx + x] = (zeta[0] + (real_t(rand()) / RAND_MAX) * dzeta) * PI_ / 180;
         nn[2 * ndx + x] = (rot3[1] + (real_t(rand()) / RAND_MAX) * drot3) * PI_ / 180;
       } // for x
-      /*real_t da = PI_ / (2 * (ndx - 1));
-      for(int x = 0; x < ndx; ++ x) {
-        nn[x] = x * da;
-      } // for x
-      for(int x = 0; x < 2 * ndx; ++ x) nn[ndx + x] = 0;*/
       return true;
     } else if(distribution == "gaussian" || distribution == "normal") {  // gaussian
       real_t mean1 = (*s).second.rotation_rot1_anglemean();
