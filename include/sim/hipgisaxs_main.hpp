@@ -213,10 +213,10 @@ namespace hig {
       bool analysis_algo_param(int n, std::string name, real_t& value) const {
         return input_->analysis_algo_param(n, name, value); }
 
-      std::vector <std::string> fit_param_keys() const { return input_->fitting().fit_param_keys(); }
-      real_vec_t fit_param_step_values() const { return input_->fitting().fit_param_step_values(); }
+      std::vector <std::string> fit_param_keys() const { return input_->fit_param_keys(); }
+      real_vec_t fit_param_step_values() const { return input_->fit_param_step_values(); }
       std::vector <std::pair <real_t, real_t> > fit_param_limits() const {
-        return input_->fitting().fit_param_limits(); }
+        return input_->fit_param_limits(); }
 
       unsigned int nqx() const { return nqx_; }
       unsigned int nqy() const { return nqy_; }
@@ -224,17 +224,11 @@ namespace hig {
       unsigned int ncol() const { return ncol_; }
       unsigned int nrow() const { return nrow_; }
 
-      string_t reference_data_path(int i) const {
-        return input_->fitting().reference_data_path();
-      } // reference_data_path()
-      string_t reference_data_mask(int i) const {
-        return input_->fitting().reference_data_mask();
-      } // reference_data_mask()
+      string_t reference_data_path(int i) const { return input_->reference_data_path(i); }
+      string_t reference_data_mask(int i) const { return input_->reference_data_mask(i); }
 
-      int num_fit_params() const { return input_->fitting().num_fit_params(); }
-      std::vector<real_t> fit_param_init_values() const {
-        return input_->fitting().fit_param_init_values();
-      } // fit_param_init_values()
+      int num_fit_params() const { return input_->num_fit_params(); }
+      std::vector<real_t> fit_param_init_values() const { return input_->fit_param_init_values(); }
 
       real_t param_space_mean(const std::string& key) { return input_->param_space_mean(key); }
       const std::string& path() const { return input_->path(); }
