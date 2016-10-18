@@ -49,7 +49,7 @@
 #define VERBOSE_LEVEL_TWO  2
 
 #ifndef VERBOSE_LEVEL
-#define VERBOSE_LEVEL VERBOSE_LEVEL_TWO
+#define VERBOSE_LEVEL VERBOSE_LEVEL_ONE
 #endif
 
 namespace hig {
