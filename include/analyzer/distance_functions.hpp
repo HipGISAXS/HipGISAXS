@@ -441,7 +441,6 @@ class SqrtUnitVectorNormL2DistanceSquare : public DistanceMeasure {
                   ref_norm = norm_l2(&sqrt_ref[0], mask, size);
       if(mean == NULL) dat_norm = norm_l2(&sqrt_dat[0], mask, size);
       else dat_norm = norm_l2(&sqrt_mean[0], mask, size);
-      std::cout << "+++++++++++++++ " << dat_norm << " " << ref_norm << std::endl;
       double dist_sum = 0.0;
       for(unsigned int i = 0; i < size; ++ i) {
         double n_dat = sqrt_dat[i] / dat_norm,
