@@ -39,7 +39,10 @@ class DistanceMeasure {
     // L2 norm
     hig::real_t norm_l2(hig::real_t* arr, unsigned int*& mask, unsigned int size) const {
       hig::real_t sum = 0.0;
-      for(unsigned int i = 0; i < size; ++ i) sum += mask[i] * arr[i] * arr[i];
+      for(unsigned int i = 0; i < size; ++ i) {
+        hig::real_t temp = arr[i] * arr[i];
+        sum += mask[i] * (std::isnan(temp) ? 0 : temp);
+      } // for
       return sqrt(sum);
     } // norm_l2()
 
@@ -438,11 +441,13 @@ class SqrtUnitVectorNormL2DistanceSquare : public DistanceMeasure {
                   ref_norm = norm_l2(&sqrt_ref[0], mask, size);
       if(mean == NULL) dat_norm = norm_l2(&sqrt_dat[0], mask, size);
       else dat_norm = norm_l2(&sqrt_mean[0], mask, size);
+      std::cout << "+++++++++++++++ " << dat_norm << " " << ref_norm << std::endl;
       double dist_sum = 0.0;
       for(unsigned int i = 0; i < size; ++ i) {
-        hig::real_t n_dat = sqrt_dat[i] / dat_norm,
-                    n_ref = sqrt_ref[i] / ref_norm;
-        hig::real_t temp = mask[i] * (n_dat - n_ref);
+        double n_dat = sqrt_dat[i] / dat_norm,
+               n_ref = sqrt_ref[i] / ref_norm;
+        double temp = mask[i] * std::fabs(n_ref - n_dat);
+        temp = std::isfinite(temp) ? temp : 0.0;
         dist_sum += temp * temp;
       } // for
       dist.clear();
