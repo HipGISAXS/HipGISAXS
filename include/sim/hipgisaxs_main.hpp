@@ -149,10 +149,13 @@ namespace hig {
       void printfr(const char*, real_t*, unsigned int);
 
       real_t gaussian(real_t x, real_t mean, real_t sigma) {
-        return (1/(sigma*SQRT_2PI_)*std::exp(-(x-mean)*(x-mean)/(2*sigma*sigma)));
+        if(sigma < TINY_) {   // to make sure no nans occur ... some better way?
+          return (x - mean < TINY_) ? 1.0 : 0.0;
+        } // if
+        return (1.0 / (sigma * SQRT_2PI_) * std::exp(-(x - mean) * (x - mean) / (2 * sigma * sigma)));
       } // gaussian()
 
-      real_t gaussian3d(vector3_t x, vector3_t mean, vector3_t sigma) {
+      /*real_t gaussian3d(vector3_t x, vector3_t mean, vector3_t sigma) {
         vector3_t t1 = (x-mean) * (x-mean);
         vector3_t t2 = sigma * sigma;
         real_t xx = 0;
@@ -166,6 +169,17 @@ namespace hig {
           } // if
         } // for
         return (1. / (std::pow(SQRT_2PI_, ndim) * kk) * std::exp(-0.5 * xx));
+      } // gaussian3d()*/
+
+      real_t gaussian3d(vector3_t x, vector3_t mean, vector3_t sigma) {
+        vector3_t t1 = (x - mean) * (x - mean);
+        vector3_t t2 = sigma * sigma;
+        vector3_t g;
+        for(int i = 0; i < 3; ++ i) {
+          if(sigma[i] > TINY_) g[i] = 1.0 / (SQRT_2PI_ * sigma[i]) * std::exp(-0.5 * t1[i] / t2[i]);
+          else g[i] = (x[i] - mean[i] < TINY_) ? 1.0 : 0.0;
+        } // for
+        return g[0] * g[1] * g[2];
       } // gaussian3d()
 
       real_t cauchy(real_t x, real_t l, real_t s) {

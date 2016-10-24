@@ -78,21 +78,21 @@ int main(int narg, char** args) {
       // pounders fitting (uses petsc)
       //hip_func.set_distance_measure(new SqrtUnitVectorNormL2DistanceResidualVector());
       //hip_func.set_distance_measure(new SqrtCNormL2DistanceResidualVector());
-      //hip_func.set_distance_measure(new SqrtUnitVectorNormL2DistanceSquareResidualVector());
-      hip_func.set_distance_measure(new SqrtCNormL2DistanceSquareResidualVector());
+      hip_func.set_distance_measure(new SqrtUnitVectorNormL2DistanceSquareResidualVector());
+      //hip_func.set_distance_measure(new SqrtCNormL2DistanceSquareResidualVector());
       ana.add_analysis_algo(new hig::FitPOUNDERSAlgo(narg, args, &hip_func, i));
 
     } else if(algo == hig::algo_lmvm) {
       // lmvm fitting (uses petsc)
-      //hip_func.set_distance_measure(new SqrtUnitVectorNormL2DistanceSquare());
-      hip_func.set_distance_measure(new SqrtCNormL2DistanceSquare());           // default
+      hip_func.set_distance_measure(new SqrtUnitVectorNormL2DistanceSquare());
+      //hip_func.set_distance_measure(new SqrtCNormL2DistanceSquare());           // default
       ana.add_analysis_algo(new hig::FitLMVMAlgo(narg, args, &hip_func, i));
 
     } else if(algo == hig::algo_pso) {
       // particle swarm optimization
       //hip_func.set_distance_measure(new UnitVectorNormL2DistanceSquare());
-      //hip_func.set_distance_measure(new SqrtUnitVectorNormL2DistanceSquare());
-      hip_func.set_distance_measure(new SqrtCNormL2DistanceSquare());           // default
+      hip_func.set_distance_measure(new SqrtUnitVectorNormL2DistanceSquare());
+      //hip_func.set_distance_measure(new SqrtCNormL2DistanceSquare());           // default
       ana.add_analysis_algo(new hig::ParticleSwarmOptimization(narg, args, &hip_func, i, false, 0));
 
     } else if(algo == hig::algo_bruteforce) {
