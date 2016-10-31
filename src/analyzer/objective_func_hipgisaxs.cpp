@@ -152,6 +152,9 @@ namespace hig {
         n_ver_ = ref_data_->n_ver();
         hipgisaxs_.override_qregion(n_par_, n_ver_, i);
       } // if
+
+      std::string mask_filename = hipgisaxs_.reference_data_mask(i);
+      ref_type = get_reference_file_type(mask_filename);
       if(ref_type == reference_file_edf) {
         if(!read_edf_mask_data(hipgisaxs_.reference_data_mask(i))) return false;
       } else {
@@ -178,6 +181,7 @@ namespace hig {
       mask_data_.resize(n_par_ * n_ver_, 1);
       return true;
     } // if
+    std::cout << "+++++++++++++ reading mask: " << filename << std::endl;
     std::ifstream maskf(filename);
     if(!maskf.is_open()) {
       std::cerr << "error: could not open mask data file " << filename << std::endl;
