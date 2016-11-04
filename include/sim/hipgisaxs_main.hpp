@@ -183,7 +183,8 @@ namespace hig {
       } // gaussian3d()
 
       real_t cauchy(real_t x, real_t l, real_t s) {
-        return 1.0 / (PI_ * s * (1.0 + ((x - l) / s) * ((x - l) / s)));
+        if(s > TINY_) return 1.0 / (PI_ * s * (1.0 + ((x - l) / s) * ((x - l) / s)));
+        else return (x - l < TINY_) ? 1.0 : 0.0;
       } // cauchy()
 
     public:
