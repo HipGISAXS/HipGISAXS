@@ -3,7 +3,7 @@ import os, sys, argparse
 import numpy as np
 import matplotlib.pyplot as plt
 
-from xrayutilities import io as xio
+#from xrayutilities import io as xio
 
 
 def abort(msg):
@@ -14,7 +14,7 @@ def load_matrix(fname):
   ext = fname.split('.')[-1]
   if ext == 'out': return np.loadtxt(fname)
   elif ext == 'edf' or ext == 'EDF':
-    e = xio.edf.EDFFile(fname)
+    e = xrayutilities.io.edf.EDFFile(fname)
     data = e.data
     return np.array(data)
   else: abort('unknown file format '+ext)
