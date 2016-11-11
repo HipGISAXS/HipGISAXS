@@ -184,7 +184,7 @@ namespace hig {
 
       real_t cauchy(real_t x, real_t l, real_t s) {
         if(s > TINY_) return 1.0 / (PI_ * s * (1.0 + ((x - l) / s) * ((x - l) / s)));
-        else return (x - l < TINY_) ? 1.0 : 0.0;
+        else return (x - l > TINY_) ? 0.0 : 1.0;
       } // cauchy()
 
     public:

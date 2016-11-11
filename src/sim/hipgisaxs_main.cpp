@@ -872,21 +872,21 @@ namespace hig {
 
       int grain_min = 0;
       int num_gr = num_grains;
-      int grain_max = num_gr;
+      int grain_max = num_grains;
 
       #ifdef USE_MPI
         // divide among processors
         int num_procs = multi_node_.size(struct_comm);
         int rank = multi_node_.rank(struct_comm);
         int grain_color = 0;
-        if(num_procs > num_gr) {
-          grain_color = rank % num_gr;
+        if(num_procs > num_grains) {
+          grain_color = rank % num_grains;
           grain_min = grain_color;
           num_gr = 1;
         } else {
           grain_color = rank;
-          grain_min = ((num_gr / num_procs) * rank + min(rank, num_gr % num_procs));
-          num_gr = (num_gr / num_procs) + (rank < num_gr % num_procs);
+          grain_min = ((num_grains / num_procs) * rank + min(rank, num_grains % num_procs));
+          num_gr = (num_grains / num_procs) + (rank < num_grains % num_procs);
         } // if-else
         grain_max = grain_min + num_gr;
         woo::comm_t grain_comm = "grain";
@@ -1187,7 +1187,7 @@ namespace hig {
           if(smaster) {
             for(int z = 0; z < nrow_ * ncol_; ++ z) {
               real_t sum = 0.0;
-              for(int p = 1; p < multi_node_.size(struct_comm); ++ p) sum += id[p * nrow_ * ncol_ + z];
+              for(int p = 0; p < multi_node_.size(struct_comm); ++ p) sum += id[p * nrow_ * ncol_ + z];
               grain_id[z] = sum;
             } // for
             if(id != NULL) delete[] id;
@@ -1952,12 +1952,14 @@ namespace hig {
       real_t sd2 = (*s).second.rotation_rot2_anglesd();
       real_t mean3 = (*s).second.rotation_rot3_anglemean();
       real_t sd3 = (*s).second.rotation_rot3_anglesd();
-      /*woo::MTNormalRandomNumberGenerator rgen1(mean1, sd1);
-      woo::MTNormalRandomNumberGenerator rgen2(mean1, sd2);
-      woo::MTNormalRandomNumberGenerator rgen3(mean1, sd3);
       real_t drot1 = fabs(rot1[2] - rot1[1]);
       real_t drot2 = fabs(rot2[2] - rot2[1]);
       real_t drot3 = fabs(rot3[2] - rot3[1]);
+
+      // sampling
+      /*woo::MTNormalRandomNumberGenerator rgen1(mean1, sd1);
+      woo::MTNormalRandomNumberGenerator rgen2(mean1, sd2);
+      woo::MTNormalRandomNumberGenerator rgen3(mean1, sd3);
       if(drot1 > 1e-20) {
         for(int x = 0; x < ndx; ++ x) {
           real_t temp;
@@ -1996,10 +1998,7 @@ namespace hig {
       } // if*/
 
       // for the gaussian weighting with regular instead of gaussian sampling
-      real_t drot1 = rot1[2] - rot1[1];
-      real_t drot2 = rot2[2] - rot2[1];
-      real_t drot3 = rot3[2] - rot3[1];
-      if(fabs(drot1) > 1e-20) {
+      if(drot1 > TINY_) {
         drot1 /= ndx;
         for(int x = 0; x < ndx; ++ x) {
           real_t temp = rot1[1] + x * drot1;
@@ -2010,9 +2009,9 @@ namespace hig {
         for(int x = 0; x < ndx; ++ x) { 
           nn[x] = rot1[1] * PI_ / 180;
           wght[x] = 1;
-        }
-      } // if
-      if(fabs(drot2) > 1e-20) {
+        } // for x
+      } // if-else
+      if(drot2 > TINY_) {
         drot2 /= ndx;
         for(int x = 0; x < ndx; ++ x) {
           real_t temp = rot2[1] + x * drot2;
@@ -2023,9 +2022,9 @@ namespace hig {
         for(int x = 0; x < ndx; ++ x) {
           nn[ndx + x] = rot2[1] * PI_ / 180;
           wght[ndx + x] = 1;
-        }
-      } // if
-      if(fabs(drot3) > 1e-20) {
+        } // for x
+      } // if-else
+      if(drot3 > TINY_) {
         drot3 /= ndx;
         for(int x = 0; x < ndx; ++ x) {
           real_t temp = rot3[1] + x * drot3;
@@ -2036,8 +2035,8 @@ namespace hig {
         for(int x = 0; x < ndx; ++ x) { 
           nn[2 * ndx + x] = rot3[1] * PI_ / 180;
           wght[2 * ndx + x] = 1;
-        }
-      } // if
+        } // for x
+      } // if-else
     } else if(distribution == "cauchy") {  // cauchy
       real_t location1 = (*s).second.rotation_rot1_anglelocation();
       real_t scale1 = (*s).second.rotation_rot1_anglescale();
@@ -2046,10 +2045,10 @@ namespace hig {
       real_t location3 = (*s).second.rotation_rot3_anglelocation();
       real_t scale3 = (*s).second.rotation_rot3_anglescale();
       // weighting with regular instead of sampling
-      real_t drot1 = (rot1[2] - rot1[1]) / ndx;
-      real_t drot2 = (rot2[2] - rot2[1]) / ndx;
-      real_t drot3 = (rot3[2] - rot3[1]) / ndx;
-      if(fabs(drot1) > TINY_) {
+      real_t drot1 = fabs(rot1[2] - rot1[1]) / (ndx - 1);
+      real_t drot2 = fabs(rot2[2] - rot2[1]) / (ndx - 1);
+      real_t drot3 = fabs(rot3[2] - rot3[1]) / (ndx - 1);
+      if(drot1 > TINY_) {
         for(int x = 0; x < ndx; ++ x) {
           real_t temp = rot1[1] + x * drot1;
           nn[x] = temp * PI_ / 180;
@@ -2059,10 +2058,9 @@ namespace hig {
         for(int x = 0; x < ndx; ++ x) { 
           nn[x] = rot1[1] * PI_ / 180;
           wght[x] = 1;
-        }
-      } // if
-      if(ndy < 2) return true;
-      if(fabs(drot2) > TINY_) {
+        } // for x
+      } // if-else
+      if(drot2 > TINY_) {
         for(int x = 0; x < ndx; ++ x) {
           real_t temp = rot2[1] + x * drot2;
           nn[ndx + x] =  temp * PI_ / 180;
@@ -2072,10 +2070,9 @@ namespace hig {
         for(int x = 0; x < ndx; ++ x) {
           nn[ndx + x] = rot2[1] * PI_ / 180;
           wght[ndx + x] = 1;
-        }
-      } // if
-      if(ndy < 3) return true;
-      if(fabs(drot3) > TINY_) {
+        } // for x
+      } // if-else
+      if(drot3 > TINY_) {
         for(int x = 0; x < ndx; ++ x) {
           real_t temp = rot3[1] + x * drot3;
           nn[2 * ndx + x] = temp * PI_ / 180;
@@ -2085,8 +2082,8 @@ namespace hig {
         for(int x = 0; x < ndx; ++ x) { 
           nn[2 * ndx + x] = rot3[1] * PI_ / 180;
           wght[2 * ndx + x] = 1;
-        }
-      } // if
+        } // for x
+      } // if-else
       return true;
     } else {
       // TODO read .ori file ...
