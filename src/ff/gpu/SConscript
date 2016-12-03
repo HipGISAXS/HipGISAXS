@@ -15,7 +15,7 @@ cuda_flags += ['-gencode', 'arch=compute_20,code=sm_21']
 cuda_flags += ['-gencode', 'arch=compute_30,code=sm_30']
 cuda_flags += ['-gencode', 'arch=compute_35,code=sm_35']
 #NVCC_FLAGS += -Xptxas -v -Xcompiler -v -Xlinker -v
-cuda_flags += ['--ptxas-options="-v"']
+#cuda_flags += ['--ptxas-options="-v"']
 cuda_flags += ['-use_fast_math', '-ftz=true', '-prec-div=false']
 #cuda_flags += -G -lineinfo #-DFINDBLOCK #-DAXIS_ROT
 #NVLIB_FLAGS = -Xlinker -lgomp
