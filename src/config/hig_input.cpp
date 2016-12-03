@@ -1012,7 +1012,7 @@ namespace hig {
         } else {
           curr_vector_.push_back(num);
           if(curr_vector_.size() > 3) {
-            std::cerr << "error : scaling can be a scalar, vector[3] or a distribution." << std::endl;
+            std::cerr << "error: scaling can be a scalar, vector[3] or a distribution" << std::endl;
             return false;
           } // if
         } // if-else

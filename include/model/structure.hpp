@@ -575,7 +575,7 @@ namespace hig {
       void grain_refindex_delta(real_t d) { grain_.refindex_delta(d); }
       void grain_refindex_beta(real_t d) { grain_.refindex_beta(d); }
 
-            // set grain scaling parameters
+      // set grain scaling parameters
       void grain_scaling_a_stat (StatisticType s) { grain_.scaling_.dist_[0] = s; }
       void grain_scaling_b_stat (StatisticType s) { grain_.scaling_.dist_[1] = s; }
       void grain_scaling_c_stat (StatisticType s) { grain_.scaling_.dist_[2] = s; }
@@ -666,12 +666,12 @@ namespace hig {
       vector3_t grain_transvec() const { return grain_.transvec_; }
 
       // scaling related params
-      bool grain_scaling_is_dist () const {
-        for (int i = 0; i < 3; i++)
-          if ( grain_.scaling_.stddev_[i] > 0 )
-            return true;
+      bool grain_scaling_is_dist() const {
+        for(int i = 0; i < 3; i++)
+          if(grain_.scaling_.stddev_[i] > 0) return true;
         return false;
-      }
+      } // grain_scaling_is_dist()
+      bool grain_scaling_is_dist(int i) const { return (grain_.scaling_.dist_[i] != stat_none); }
 
       vector3_t grain_scaling() const { return grain_.scaling_.mean_; }
       vector3_t grain_scaling_stddev() const { return grain_.scaling_.stddev_; }

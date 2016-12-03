@@ -29,28 +29,28 @@
 namespace hig {
 
 
-    /** grain scaling methods
-     */
+  /** grain scaling methods
+   */
 
-    GrainScaling::GrainScaling() {
+  GrainScaling::GrainScaling() {
     init();
   } // GrainScaling::GrainScaling()
 
-    void GrainScaling::init() {
-        mean_[0] = mean_[1] = mean_[2] = 1;
-        stddev_[0] = stddev_[1] = stddev_[2] = 0;
-        for (int i = 0; i < 3; i++) {
-            dist_.push_back(stat_gaussian);
-            nvals_.push_back(40);
-        } // for
-    } // GrainScaling::init()
+  void GrainScaling::init() {
+    mean_[0] = mean_[1] = mean_[2] = 1;
+    stddev_[0] = stddev_[1] = stddev_[2] = 0;
+    for(int i = 0; i < 3; ++ i) {
+      dist_.push_back(stat_none);
+      nvals_.push_back(40);   // FIXME
+    } // for
+  } // GrainScaling::init()
 
-    void GrainScaling::clear() {
-        mean_[0] = mean_[1] = mean_[2] = 0;
-        stddev_[0] = stddev_[1] = stddev_[2] = 0;
-        dist_.clear();
-        nvals_.clear();
-    } // GrainScaling::clear()
+  void GrainScaling::clear() {
+      mean_[0] = mean_[1] = mean_[2] = 0;
+      stddev_[0] = stddev_[1] = stddev_[2] = 0;
+      dist_.clear();
+      nvals_.clear();
+  } // GrainScaling::clear()
 
 
   /** lattice functions

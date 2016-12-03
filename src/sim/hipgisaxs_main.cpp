@@ -803,7 +803,7 @@ namespace hig {
         r1axis = (int) (*s).second.rotation_rot1()[0];
         r2axis = (int) (*s).second.rotation_rot2()[0];
         r3axis = (int) (*s).second.rotation_rot3()[0];
-      }
+      } // if-else
 
       #if VERBOSE_LEVEL > VERBOSE_LEVEL_ONE
       if(smaster) {
@@ -812,23 +812,27 @@ namespace hig {
       #endif
 
       /* grain scalings */
-      std::vector<vector3_t> scaling_samples;
-      std::vector<real_t> scaling_weights;
       bool is_scaling_distribution = false;
-      if (s->second.grain_scaling_is_dist()) {
-        is_scaling_distribution = true;
-        std::vector<StatisticType> dist = s->second.grain_scaling_dist();
-        vector3_t mean = s->second.grain_scaling();
-        vector3_t stddev = s->second.grain_scaling_stddev();
-        std::vector<int> scaling_nvals = s->second.grain_scaling_nvals();
-        // if sigma is zeros set sampling count to 1
-        for(int i = 0; i < 3; i++) if (stddev[i] == 0) scaling_nvals[i] = 1;
-        construct_scaling_distribution(dist, mean, stddev, scaling_nvals, scaling_samples,
-                                       scaling_weights);
-      } else {
-        scaling_samples.push_back(s->second.grain_scaling());
-        scaling_weights.push_back(1.);
-      } // if-else
+      std::vector<StatisticType> dist = s->second.grain_scaling_dist();
+      vector3_t mean, stddev;
+      std::vector<int> scaling_nvals;
+      for(int i = 0; i < 3; ++ i) {
+        if(s->second.grain_scaling_is_dist(i)) {
+          is_scaling_distribution = true;
+          mean[i] = s->second.grain_scaling()[i];
+          stddev[i] = s->second.grain_scaling_stddev()[i];
+          // if sigma is zero set sampling count to 1
+          if(stddev[i] == 0) scaling_nvals.push_back(1);
+          else scaling_nvals.push_back(s->second.grain_scaling_nvals()[i]);
+        } else {
+          mean[i] = s->second.grain_scaling()[i];
+          stddev[i] = 0;
+          scaling_nvals.push_back(1);
+        } // if-else
+      } // for
+      std::vector<real_t> scaling_samples, scaling_weights;
+      construct_scaling_distribution(dist, mean, stddev, scaling_nvals,
+                                     scaling_samples, scaling_weights);
 
       /* grain repetitions */
       bool is_grain_repetition_dist = false;
@@ -846,17 +850,16 @@ namespace hig {
         all_grains_repeats.push_back(grain_repeats);
       } // if-else
 
-      int num_repeat_scaling;
-      if (scaling_samples.size() == all_grains_repeats.size())
-        num_repeat_scaling = scaling_samples.size();
-      else if ((scaling_samples.size() == 1) && (all_grains_repeats.size() > 1))
-        num_repeat_scaling = all_grains_repeats.size();
-      else if ((scaling_samples.size() > 1) && (all_grains_repeats.size() == 1))
-        num_repeat_scaling = scaling_samples.size();
-      else {
+      int num_repeat_scaling,
+          num_scaling = scaling_samples.size() / 3,
+          num_repeats = all_grains_repeats.size();
+      if(num_scaling == num_repeats) num_repeat_scaling = num_scaling;
+      else if(num_scaling == 1) num_repeat_scaling = num_repeats;
+      else if(num_repeats == 1) num_repeat_scaling = num_scaling;
+      else {  // they are both > 1 and unequal
         std::cerr << "error: scaling and repetition distributions are not aligned." << std::endl;
         return false;
-      }
+      } // if-else
 
       // FIXME .. get it from multilayer object
       vector3_t curr_transvec = curr_struct->grain_transvec();
@@ -867,8 +870,8 @@ namespace hig {
                            // ... incomplete
       } // if-else
 
-      /* computing dwba ff for each grain in structure (*s) with
-       * ensemble containing num_grains grains */
+      /** computing dwba ff for each grain in structure (*s) with
+          ensemble containing num_grains grains */
 
       int grain_min = 0;
       int num_gr = num_grains;
@@ -900,17 +903,6 @@ namespace hig {
       #else
         bool gmaster = true;
       #endif // USE_MPI
-
-      //complex_t *grain_ids = NULL;
-      //if(gmaster) {    // only the structure master needs this
-      //  grain_ids = new (std::nothrow) complex_t[num_gr * nrow_ * ncol_];
-      //  if(grain_ids == NULL) {
-      //    std::cerr << "error: could not allocate memory for 'id'" << std::endl;
-      //    return false;
-      //  } // if
-      //  // initialize to 0
-      //  memset(grain_ids, 0 , num_gr * nrow_ * ncol_ * sizeof(complex_t));
-      //} // if
 
       real_t *grain_id = NULL;
       if(gmaster) {    // only the structure master needs this
@@ -969,16 +961,6 @@ namespace hig {
         if(input_->scattering().experiment() == "gisaxs") sz = nqz_extended_;
         ff.clear();
         ff.resize(sz, CMPLX_ZERO_);
-        /*std::cerr << "** ARRAY CHECK ** (sz=" << sz << ")" << std::endl;
-        if(!check_finite(QGrid::instance().qx(), QGrid::instance().nqx())) {
-          std::cerr << "** ARRAY CHECK ** qx failed check (sz=" << QGrid::instance().nqx() << ")" << std::endl;
-        } // if
-        if(!check_finite(QGrid::instance().qy(), QGrid::instance().nqy())) {
-          std::cerr << "** ARRAY CHECK ** qy failed check (sz=" << QGrid::instance().nqy() << ")" << std::endl;
-        } // if
-        if(!check_finite(QGrid::instance().qz_extended(), QGrid::instance().nqz_extended())) {
-          std::cerr << "** ARRAY CHECK ** qz failed check (sz=" << QGrid::instance().nqz_extended() << ")" << std::endl;
-        } // if*/
 
         // loop over all elements in the unit cell
         for(Unitcell::element_iterator_t e = curr_unitcell.element_begin();
@@ -1040,25 +1022,27 @@ namespace hig {
         } // if*/
 
         sftimer.start(); sftimer.pause();
-        for (int i_scale = 0; i_scale < num_repeat_scaling; i_scale++) {
+        for(int i_scale = 0; i_scale < num_repeat_scaling; ++ i_scale) {
 
           /* set the scalig for this grain */
           vector3_t grain_scaling;
           real_t scaling_wght = 1.0;
-          if (is_scaling_distribution) {
-            grain_scaling = scaling_samples[i_scale];
+          if(s->second.grain_scaling_is_dist()) {
+            grain_scaling[0] = scaling_samples[i_scale];
+            grain_scaling[1] = scaling_samples[i_scale + num_scaling];
+            grain_scaling[2] = scaling_samples[i_scale + num_scaling * 2];
             scaling_wght = scaling_weights[i_scale];
           } else {
-            grain_scaling = scaling_samples[0];
+            grain_scaling[0] = scaling_samples[0];
+            grain_scaling[1] = scaling_samples[1];
+            grain_scaling[2] = scaling_samples[2];
             scaling_wght = scaling_weights[0];
           } // if-else
 
           /* set the repetition for this grain */
           vector3_t grain_repeats;
-          if (is_grain_repetition_dist)
-            grain_repeats = all_grains_repeats[grain_i % all_grains_repeats.size()];
-          else
-            grain_repeats = all_grains_repeats[0]; // same repeat for all grains
+          if(is_grain_repetition_dist) grain_repeats = all_grains_repeats[grain_i % num_repeats];
+          else grain_repeats = all_grains_repeats[0]; // same repeat for all grains
 
           #if VERBOSE_LEVEL > VERBOSE_LEVEL_ONE
           #ifdef SF_VERBOSE
@@ -2185,38 +2169,59 @@ namespace hig {
     return true;
   } // HipGISAXS::construct_repetition_distribution()
 
+
   bool HipGISAXS::construct_scaling_distribution(std::vector<StatisticType> dist,
                                                  vector3_t mean, vector3_t stddev,
                                                  std::vector<int> nvals,
-                                                 std::vector<vector3_t> &samples,
+                                                 std::vector<real_t> &samples,
                                                  std::vector<real_t> &weights) {
     woo::MTRandomNumberGenerator rng;
-    real_t width = 4;
-    for (int i = 0; i < 3; ++ i) {
-      if (dist[i] != stat_gaussian) {
-        std::cerr << "error: only Gaussian distribution for scaling is implemented."
-            << std::endl;
-        return false;
-      } // if
-    } // for
-    vector3_t temp;
-    vector3_t min, dx;
-    for (int i = 0; i < 3; ++ i) {
-      min[i] = mean[i] - width * stddev[i];
-      dx[i] = (2 * width) * stddev[i] / (nvals[i] + 1);
-    } // for
+    real_t width = 4;                         // FIXME: this is just temporary
+    real_t temp, min, dx;
+    int max_nvals = std::max(nvals[0], std::max(nvals[1], nvals[2]));
 
-    int nsamples = std::max(nvals[0], std::max(nvals[1], nvals[2]));
-    for (int i = 0; i < nsamples; ++ i) {
-      temp[0] = min[0] + i * dx[0] + rng.rand() * dx[0];
-      temp[1] = min[1] + i * dx[1] + rng.rand() * dx[1];
-      temp[2] = min[2] + i * dx[2] + rng.rand() * dx[2];
-      samples.push_back(temp);
-      weights.push_back(gaussian3d(temp, mean, stddev));
+    for(int i = 0; i < 3; ++ i) {
+
+      switch(dist[i]) {
+
+        case stat_none:
+          std::cout << "**** " << i << " is none" << std::endl;
+          samples.push_back(mean[i]);
+          weights.push_back(1.0);
+          break;
+
+        case stat_gaussian:
+          std::cout << "**** " << i << " is gaussian" << std::endl;
+          min = mean[i] - width * stddev[i];
+          dx = (2 * width) * stddev[i] / (max_nvals + 1);
+          for(int j = 0; j < max_nvals; ++ j) {
+            temp = min + j * dx + rng.rand() * dx;
+            samples.push_back(temp);
+            weights.push_back(gaussian(temp, mean[i], stddev[i]));
+          } // for
+          break;
+
+        case stat_cauchy:
+          std::cout << "**** " << i << " is cauchy" << std::endl;
+          min = mean[i] - width * stddev[i];
+          dx = (2 * width) * stddev[i] / (max_nvals + 1);
+          for(int j = 0; j < max_nvals; ++ j) {
+            temp = min + j * dx + rng.rand() * dx;
+            samples.push_back(temp);
+            weights.push_back(cauchy(temp, mean[i], stddev[i]));
+          } // for
+          break;
+
+        default:
+          std::cerr << "error: unsupported distribution for scaling specified" << std::endl;
+          return false;
+
+      } // switch
     } // for
 
     return true;
   } // HipGISAXS::construct_scaling_distribution()
+
 
   /**
    * fitting related functions
