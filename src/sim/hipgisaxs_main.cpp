@@ -23,7 +23,7 @@
 #include <cmath>
 #include <iomanip>
 #ifdef _OPENMP
-#include <omp.h>
+  #include <omp.h>
 #endif // _OPENMP
 
 #include <woo/timer/woo_boostchronotimers.hpp>
@@ -88,8 +88,13 @@ namespace hig {
       input_ = new HiGInput();
       err = input_->construct_input_config(filename);
     } else if ((path.find(".yaml") != std::string::npos ) || (path.find(".yml") != std::string::npos)) {
-      input_ = new YAMLInput();
-      err = input_->construct_input_config(filename);
+      #ifdef YAML
+        input_ = new YAMLInput();
+        err = input_->construct_input_config(filename);
+      #else
+        std::cerr << "error: HipGISAXS was built without YAML support" << std::endl;
+        return false;
+      #endif
     } else {
       std::cerr << "error: unrecogonizable files extension" << std::endl;
       return false;

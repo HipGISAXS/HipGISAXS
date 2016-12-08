@@ -14,6 +14,8 @@
  *  NON-COMMERCIAL END USER LICENSE AGREEMENT.
  */
 
+#ifdef YAML
+
 #include <cfloat>
 #include <config/yaml_input.hpp>
 #include <utils/utilities.hpp>
@@ -22,6 +24,7 @@
 
 
 namespace hig {
+
   YAMLInput::YAMLInput() {
     shapes_.clear();
     unitcells_.clear();
@@ -549,3 +552,4 @@ namespace hig {
 
 } // namespace hig
 
+#endif // YAML

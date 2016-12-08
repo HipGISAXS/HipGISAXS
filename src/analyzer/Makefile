@@ -108,7 +108,7 @@ nersc-intel:
 		"TIFF_DIR = $(HOME)/local/tiff-4.0.2-edison-intel"      \
 		"TAO_DIR = $(HOME)/local/tao-2.2.0-intel/lib64/python2.6/site-packages/tao"	\
 		"CXX = CC"                                              \
-		"CXX_FLAGS = -std=c++11 -openmp -DUSE_MPI"              \
+		"CXX_FLAGS = -std=c++11 -qopenmp -DUSE_MPI"              \
 		"CXX_FLAGS += -O3"                                      \
 		"OPT_FLAGS = -O3"                                       \
 		"DBG_FLAGS = -g"                                        \

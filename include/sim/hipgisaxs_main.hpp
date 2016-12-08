@@ -24,13 +24,16 @@
 #include <common/globals.hpp>
 #include <config/input.hpp>
 #include <config/hig_input.hpp>
-#include <config/yaml_input.hpp>
 #include <model/common.hpp>
 #include <model/layer.hpp>
 #include <model/qgrid.hpp>
 #include <ff/ff.hpp>
 #include <sf/sf.hpp>
 #include <image/image.hpp>
+
+#ifdef YAML
+  #include <config/yaml_input.hpp>
+#endif
 
 namespace hig {
 
