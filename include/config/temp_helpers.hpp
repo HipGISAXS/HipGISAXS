@@ -90,30 +90,31 @@ namespace hig {
 
 
   class AnalysisAlgorithmData {
+
     private:
-      //std::vector <AnalysisAlgorithmParamData> params_;
+
       analysis_algo_param_map_t params_map_;
       int order_;
       real_t tolerance_;
       real_t regularization_;
       FittingAlgorithmName name_;
       std::string name_str_;
+      FittingDistanceMetric distance_metric_;
       bool restart_;
 
     public:
+
       AnalysisAlgorithmData() { regularization_ = 0.0; }
       ~AnalysisAlgorithmData() { }
 
       bool init() { return clear(); }
 
       bool clear() {
-        //params_.clear();
         params_map_.clear();
         return true;
       } // clear()
 
       bool add_param(const AnalysisAlgorithmParamData& p) {
-        //params_.push_back(p);
         params_map_[p.type()] = p;
         return true;
       } // add_param()
@@ -123,11 +124,13 @@ namespace hig {
       bool regularization(real_t r) { regularization_ = r; return true; }
       bool name(FittingAlgorithmName n) { name_ = n; return true; }
       bool name_str(std::string n) { name_str_ = n; return true; }
+      bool distance_metric(FittingDistanceMetric m) { distance_metric_ = m; return true; }
       bool restart(bool r) { restart_ = r; return true; }
 
       FittingAlgorithmName name() const { return name_; }
       real_t tolerance() const { return tolerance_; }
       real_t regularization() const { return regularization_; }
+      FittingDistanceMetric distance_metric() const { return distance_metric_; }
 
       bool param(const std::string pstr, real_t& val) const {
         FitAlgorithmParamType type = TokenMapper::instance().get_fit_algorithm_param_token(pstr);
@@ -149,11 +152,7 @@ namespace hig {
             i != params_map_.end(); ++ i) {
           std::cout << "  "; (*i).second.print();
         } // for
-        //for(std::vector <AnalysisAlgorithmParamData>::const_iterator i = params_.begin();
-        //    i != params_.end(); ++ i) {
-        //  std::cout << "  ";
-        //  (*i).print();
-        //} // for
+        std::cout << "  Distance Metric: " << distance_metric_ << std::endl;
       } // print()
   }; // class AnalysisAlgorithmData
 

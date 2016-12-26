@@ -206,13 +206,14 @@ namespace hig {
     fit_reference_data_npoints_parallel_token,
     fit_reference_data_npoints_perpendicular_token,
     fit_algorithm_token,
+    fit_algorithm_distance_metric_token,
     fit_algorithm_name_token,
     fit_algorithm_order_token,
     fit_algorithm_param_token,
     fit_algorithm_param_value_token,
+    fit_algorithm_regularization_token,
     fit_algorithm_restart_token,
-    fit_algorithm_tolerance_token,
-    fit_algorithm_regularization_token
+    fit_algorithm_tolerance_token
   }; // enum TokenType
 
 

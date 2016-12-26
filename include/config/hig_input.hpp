@@ -344,6 +344,8 @@ namespace hig {
       real_t analysis_regularization(int i) const { return analysis_algos_[i].regularization(); }
       bool analysis_algo_param(int i, const std::string pstr, real_t& val) const {
         return analysis_algos_[i].param(pstr, val); }
+      FittingDistanceMetric analysis_distance_metric(int i) const {
+        return analysis_algos_[i].distance_metric(); }
 
 
       /**

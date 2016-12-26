@@ -163,7 +163,7 @@ namespace hig {
   /**
    * distance metrics for fitting reference data comparison
    */
-  enum FittingDistanceMetricType {
+  enum FittingDistanceMetric {
     metric_error,                         /* error type */
     metric_null,                          /* default null type */
     metric_sqrt_unit_norm_l1,             /* sqrt of intensities, unit normalized, l1 distance */

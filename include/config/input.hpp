@@ -68,6 +68,7 @@ namespace hig {
       virtual int num_analysis_algos() const { }
       virtual FittingAlgorithmName analysis_algo(int n) const { }
       virtual bool analysis_algo_param(int i, const std::string pstr, real_t& val) const { }
+      virtual FittingDistanceMetric analysis_distance_metric(int i) const { }
 
       virtual const std::string& path() const { }
       virtual const std::string& runname() const { }

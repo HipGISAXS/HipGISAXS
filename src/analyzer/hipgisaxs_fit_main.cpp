@@ -66,53 +66,64 @@ int main(int narg, char** args) {
   } // if*/
 
   for(int i = 0; i < hip_func.num_analysis_algos(); ++ i) {
-    hig::FittingAlgorithmName algo = hip_func.analysis_algo(i);
-
     if(i > 0) {
       std::cout << "warning: currently hipgisaxs supports only one analysis algorithm at a time"
             << std::endl;
       break;
     } // if
 
-    if(algo == hig::algo_pounders) {
-      // pounders fitting (uses petsc)
-      //hip_func.set_distance_measure(new SqrtUnitVectorNormL2DistanceResidualVector());
-      //hip_func.set_distance_measure(new SqrtCNormL2DistanceResidualVector());
-      //hip_func.set_distance_measure(new SqrtUnitVectorNormL2DistanceSquareResidualVector());
-      hip_func.set_distance_measure(new SqrtCNormL2DistanceSquareResidualVector());
-      ana.add_analysis_algo(new hig::FitPOUNDERSAlgo(narg, args, &hip_func, i));
+    hig::FittingAlgorithmName algo = hip_func.analysis_algo(i);
+    hig::FittingDistanceMetric dist_metric = hip_func.analysis_distance_metric(i);
 
-    } else if(algo == hig::algo_lmvm) {
-      // lmvm fitting (uses petsc)
-      //hip_func.set_distance_measure(new SqrtUnitVectorNormL2DistanceSquare());
-      hip_func.set_distance_measure(new SqrtCNormL2DistanceSquare());           // default
-      ana.add_analysis_algo(new hig::FitLMVMAlgo(narg, args, &hip_func, i));
+    // set the distance metric
+    switch(dist_metric) {
+      case hig::metric_sqrt_unit_norm_l2:
+        hip_func.set_distance_measure(new SqrtUnitVectorNormL2DistanceSquare());
+        break;
+      case hig::metric_sqrt_c_norm_l2:
+        hip_func.set_distance_measure(new SqrtCNormL2DistanceSquare());
+        break;
+      case hig::metric_cbrt_unit_norm_l2:
+        hip_func.set_distance_measure(new CbrtUnitVectorNormL2DistanceSquare());
+        break;
+      case hig::metric_cbrt_c_norm_l2:
+        hip_func.set_distance_measure(new CbrtCNormL2DistanceSquare());
+        break;
+      case hig::metric_sqrt_unit_norm_l2_residual:
+        hip_func.set_distance_measure(new SqrtUnitVectorNormL2DistanceSquareResidualVector());
+        break;
+      case hig::metric_sqrt_c_norm_l2_residual:
+        hip_func.set_distance_measure(new SqrtCNormL2DistanceSquareResidualVector());
+        break;
+      default:
+        std::cerr << "error: unsupported distance metric encountered" << std::endl;
+        return -1;
+    } // switch
 
-    } else if(algo == hig::algo_pso) {
-      // particle swarm optimization
-      hip_func.set_distance_measure(new UnitVectorNormL2DistanceSquare());
-      //hip_func.set_distance_measure(new SqrtUnitVectorNormL2DistanceSquare());
-      //hip_func.set_distance_measure(new SqrtCNormL2DistanceSquare());           // default
-      ana.add_analysis_algo(new hig::ParticleSwarmOptimization(narg, args, &hip_func, i, false, 0));
-
-    } else if(algo == hig::algo_bruteforce) {
-      // brute force: try all possibilities
-      hip_func.set_distance_measure(new UnitVectorNormL2DistanceSquare());
-      ana.add_analysis_algo(new hig::BruteForceOptimization(narg, args, &hip_func, i));
-
-    } else if(algo == hig::algo_none_pounders) {
-      // compute the objective function, do not fit
-      hip_func.set_distance_measure(new UnitLengthNormalizedResidualVector());
-      ana.add_analysis_algo(new hig::ComputeObjectiveFunction(narg, args, &hip_func, i));
-
-    } else if(algo == hig::algo_error) {
-      std::cerr << "error: unknown optimization algorithm encountered" << std::endl;
-      return -1;
-
-    } else {
-      std::cerr << "error: NULL optimization algorithm encountered" << std::endl;
-      return -1;
-    } // if-else
+    // set the analysis algorithm
+    switch(algo) {
+      case hig::algo_pounders:      // pounders fitting (uses petsc/tao)
+        ana.add_analysis_algo(new hig::FitPOUNDERSAlgo(narg, args, &hip_func, i));
+        break;
+      case hig::algo_lmvm:          // lmvm fitting (uses petsc/tao)
+        ana.add_analysis_algo(new hig::FitLMVMAlgo(narg, args, &hip_func, i));
+        break;
+      case hig::algo_pso:           // particle swarm optimization
+        ana.add_analysis_algo(new hig::ParticleSwarmOptimization(narg, args, &hip_func, i, false, 0));
+        break;
+      case hig::algo_bruteforce:    // brute force: try all possibilities
+        ana.add_analysis_algo(new hig::BruteForceOptimization(narg, args, &hip_func, i));
+        break;
+      case hig::algo_none_pounders: // compute the objective function, do not fit
+        ana.add_analysis_algo(new hig::ComputeObjectiveFunction(narg, args, &hip_func, i));
+        break;
+      case hig::algo_error:
+        std::cerr << "error: unknown optimization algorithm encountered" << std::endl;
+        return -1;
+      default:
+        std::cerr << "error: unsupported optimization algorithm encountered" << std::endl;
+        return -1;
+    } // switch
 
   } // for
 

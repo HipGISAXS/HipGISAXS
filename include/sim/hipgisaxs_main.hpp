@@ -211,6 +211,8 @@ namespace hig {
       real_t analysis_regularization(int n) const { return input_->analysis_regularization(n); }
       bool analysis_algo_param(int n, std::string name, real_t& value) const {
         return input_->analysis_algo_param(n, name, value); }
+      FittingDistanceMetric analysis_distance_metric(int n) const {
+        return input_->analysis_distance_metric(n); }
 
       std::vector <std::string> fit_param_keys() const { return input_->fit_param_keys(); }
       real_vec_t fit_param_step_values() const { return input_->fit_param_step_values(); }

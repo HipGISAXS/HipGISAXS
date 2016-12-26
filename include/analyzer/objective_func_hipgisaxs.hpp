@@ -53,6 +53,8 @@ namespace hig {
       FittingAlgorithmName analysis_algo(int n) const { return hipgisaxs_.analysis_algo(n); }
       bool analysis_algo_param(int n, const std::string name, real_t& value) const {
         return hipgisaxs_.analysis_algo_param(n, name, value); } 
+      FittingDistanceMetric analysis_distance_metric(int n) const {
+        return hipgisaxs_.analysis_distance_metric(n); }
 
       std::string param_pathprefix() const { return hipgisaxs_.path(); }
       std::string runname() const { return hipgisaxs_.runname(); }

@@ -26,19 +26,25 @@
 namespace hig {
 
   class TokenMapper {
+
     private:
-      std::unordered_map <std::string, TokenType> KeyWords_;
-      std::unordered_map <std::string, ShapeName> ShapeKeyWords_;
-      std::unordered_map <std::string, ShapeParamType> ShapeParamKeyWords_;
-      std::unordered_map <std::string, StatisticType> StatisticKeyWords_;
-      std::unordered_map <std::string, LatticeType> LatticeKeyWords_;
-      std::unordered_map <std::string, OutputRegionType> OutputRegionKeyWords_;
+
+      std::unordered_map <std::string, TokenType>             KeyWords_;
+      std::unordered_map <std::string, ShapeName>             ShapeKeyWords_;
+      std::unordered_map <std::string, ShapeParamType>        ShapeParamKeyWords_;
+      std::unordered_map <std::string, StatisticType>         StatisticKeyWords_;
+      std::unordered_map <std::string, LatticeType>           LatticeKeyWords_;
+      std::unordered_map <std::string, OutputRegionType>      OutputRegionKeyWords_;
       std::unordered_map <std::string, StructCorrelationType> StructCorrelationKeyWords_;
-      std::unordered_map <std::string, FittingAlgorithmName> FittingAlgorithmKeyWords_;
+      std::unordered_map <std::string, FittingAlgorithmName>  FittingAlgorithmKeyWords_;
       std::unordered_map <std::string, FitAlgorithmParamType> FitAlgorithmParamKeyWords_;
-      std::unordered_map <std::string, bool> BooleanKeyWords_;
+      std::unordered_map <std::string, FittingDistanceMetric> FittingDistanceMetricKeyWords_;
+      std::unordered_map <std::string, bool>                  BooleanKeyWords_;
 
     public:
+
+      // this is a singleton class
+
       static TokenMapper& instance() {
         static TokenMapper token_mapper;
         return token_mapper;
@@ -131,6 +137,12 @@ namespace hig {
       } // get_fit_algorithm_name()
 
 
+      FittingDistanceMetric get_fit_distance_metric(std::string str) {
+        if(FittingDistanceMetricKeyWords_.count(str) > 0) return FittingDistanceMetricKeyWords_[str];
+        else return metric_error;
+      } // 
+
+
       bool get_boolean(std::string str) {
         if(BooleanKeyWords_.count(str) > 0) return BooleanKeyWords_[str];
         else return false;
@@ -165,8 +177,11 @@ namespace hig {
         KeyWords_[std::string("computation")]     = compute_token;
         KeyWords_[std::string("delta")]           = refindex_delta_token;
         KeyWords_[std::string("detector")]        = instrument_detector_token;
+        KeyWords_[std::string("dimensions")]      = struct_dims;
         KeyWords_[std::string("directbeam")]      = instrument_detector_dirbeam_token;
+        KeyWords_[std::string("distancemetric")]  = fit_algorithm_distance_metric_token;
         KeyWords_[std::string("distribution")]    = struct_ensemble_distribution_token;
+        KeyWords_[std::string("domain")]          = struct_paracrystal_domain_size;
         KeyWords_[std::string("element")]         = unitcell_element_token;
         KeyWords_[std::string("ensemble")]        = struct_ensemble_token;
         KeyWords_[std::string("expt")]            = instrument_scatter_expt_token;
@@ -190,11 +205,13 @@ namespace hig {
         KeyWords_[std::string("max")]             = max_token;
         KeyWords_[std::string("maxgrains")]       = struct_ensemble_maxgrains_token;
         KeyWords_[std::string("maxpoint")]        = compute_outregion_maxpoint_token;
+        KeyWords_[std::string("mean")]            = mean_token;
         KeyWords_[std::string("method")]          = compute_method_token;
         KeyWords_[std::string("min")]             = min_token;
         KeyWords_[std::string("minpoint")]        = compute_outregion_minpoint_token;
         KeyWords_[std::string("name")]            = shape_name_token;
         KeyWords_[std::string("npoints")]         = fit_reference_data_npoints_token;
+        KeyWords_[std::string("nsamples")]        = nsamples_token;
         KeyWords_[std::string("nslices")]         = compute_nslices_token;
         KeyWords_[std::string("nvalues")]         = shape_param_nvalues_token;
         KeyWords_[std::string("order")]           = layer_order_token;
@@ -205,10 +222,12 @@ namespace hig {
         KeyWords_[std::string("p1")]              = shape_param_p1_token;    // mean
         KeyWords_[std::string("p2")]              = shape_param_p2_token;    // std dev
         KeyWords_[std::string("palette")]         = compute_palette_token;
+        KeyWords_[std::string("paracrystal")]     = struct_paracrystal;
         KeyWords_[std::string("parallel")]        = fit_reference_data_npoints_parallel_token;
         KeyWords_[std::string("param")]           = shape_param_token;
         KeyWords_[std::string("path")]            = fit_reference_data_path_token;
         KeyWords_[std::string("pathprefix")]      = compute_path_token;
+        KeyWords_[std::string("percusyevick")]    = struct_percusyevick;
         KeyWords_[std::string("perpendicular")]   = fit_reference_data_npoints_perpendicular_token;
         KeyWords_[std::string("photon")]          = instrument_scatter_photon_token;
         KeyWords_[std::string("pixelsize")]       = instrument_detector_pixsize_token;
@@ -217,11 +236,9 @@ namespace hig {
         KeyWords_[std::string("range")]           = fit_param_range_token;
         KeyWords_[std::string("regmax")]          = fit_reference_data_region_max_token;
         KeyWords_[std::string("regmin")]          = fit_reference_data_region_min_token;
+        KeyWords_[std::string("regularization")]  = fit_algorithm_regularization_token;
         KeyWords_[std::string("repetition")]      = struct_grain_repetition_token;
         KeyWords_[std::string("repetitiondist")]  = struct_grain_repetitiondist_token;
-        KeyWords_[std::string("xrepetition")]     = struct_grain_xrepetition_token;
-        KeyWords_[std::string("yrepetition")]     = struct_grain_yrepetition_token;
-        KeyWords_[std::string("zrepetition")]     = struct_grain_zrepetition_token;
         KeyWords_[std::string("restart")]         = fit_algorithm_restart_token;
         KeyWords_[std::string("referencedata")]   = fit_reference_data_token;
         KeyWords_[std::string("refindex")]        = refindex_token;
@@ -242,13 +259,13 @@ namespace hig {
         KeyWords_[std::string("spacing")]         = struct_ensemble_spacing_token;
         KeyWords_[std::string("spotarea")]        = instrument_scatter_spotarea_token;
         KeyWords_[std::string("stat")]            = stat_token;
+        KeyWords_[std::string("stddev")]          = stddev_token;
         KeyWords_[std::string("step")]            = step_token;
         KeyWords_[std::string("structcorrelation")] = compute_structcorr_token;
         KeyWords_[std::string("structure")]       = struct_token;
         KeyWords_[std::string("thickness")]       = layer_thickness_token;
         KeyWords_[std::string("tilt")]            = instrument_scatter_tilt_token;
         KeyWords_[std::string("tolerance")]       = fit_algorithm_tolerance_token;
-        KeyWords_[std::string("regularization")]  = fit_algorithm_regularization_token;
         KeyWords_[std::string("totalpixels")]     = instrument_detector_totpix_token;
         KeyWords_[std::string("transvec")]        = struct_grain_transvec_token;
         KeyWords_[std::string("type")]            = type_token;
@@ -257,48 +274,41 @@ namespace hig {
         KeyWords_[std::string("unitcell:key")]    = struct_grain_ukey_token;
         KeyWords_[std::string("value")]           = instrument_scatter_photon_value_token;
         KeyWords_[std::string("variable")]        = fit_param_variable_token;
-        KeyWords_[std::string("xrot")]            = shape_xrot_token;
-        KeyWords_[std::string("yrot")]            = shape_yrot_token;
-        KeyWords_[std::string("zrot")]            = shape_zrot_token;
-        KeyWords_[std::string("mean")]            = mean_token;
-        KeyWords_[std::string("stddev")]          = stddev_token;
-        KeyWords_[std::string("nsamples")]        = nsamples_token;
-        KeyWords_[std::string("paracrystal")]     = struct_paracrystal;
-        KeyWords_[std::string("percusyevick")]    = struct_percusyevick;
-        KeyWords_[std::string("dimensions")]      = struct_dims;
-        KeyWords_[std::string("xspacing")]        = struct_paracrystal_xspacing;
-        KeyWords_[std::string("yspacing")]        = struct_paracrystal_yspacing;
-        KeyWords_[std::string("domain")]          = struct_paracrystal_domain_size;
         KeyWords_[std::string("volfraction")]     = struct_percusyevick_volfract;
-
+        KeyWords_[std::string("xrepetition")]     = struct_grain_xrepetition_token;
+        KeyWords_[std::string("xrot")]            = shape_xrot_token;
+        KeyWords_[std::string("xspacing")]        = struct_paracrystal_xspacing;
+        KeyWords_[std::string("yrepetition")]     = struct_grain_yrepetition_token;
+        KeyWords_[std::string("yrot")]            = shape_yrot_token;
+        KeyWords_[std::string("yspacing")]        = struct_paracrystal_yspacing;
+        KeyWords_[std::string("zrepetition")]     = struct_grain_zrepetition_token;
+        KeyWords_[std::string("zrot")]            = shape_zrot_token;
       
         /* shape name keywords */
 
-        ShapeKeyWords_[std::string("box")]        = shape_box;
-        ShapeKeyWords_[std::string("cube")]       = shape_cube;
-        ShapeKeyWords_[std::string("cylinder")]   = shape_cylinder;
-        ShapeKeyWords_[std::string("hcylinder")]  = shape_horizontal_cylinder;
+        ShapeKeyWords_[std::string("box")]            = shape_box;
+        ShapeKeyWords_[std::string("cube")]           = shape_cube;
+        ShapeKeyWords_[std::string("cylinder")]       = shape_cylinder;
+        ShapeKeyWords_[std::string("hcylinder")]      = shape_horizontal_cylinder;
         ShapeKeyWords_[std::string("randcylinders")]  = shape_random_cylinders;
-        ShapeKeyWords_[std::string("sphere")]     = shape_sphere;
-        ShapeKeyWords_[std::string("pyramid")]    = shape_pyramid;
-        ShapeKeyWords_[std::string("trunccone")]  = shape_trunccone;
-        ShapeKeyWords_[std::string("prism3")]     = shape_prism3;
-        ShapeKeyWords_[std::string("prism6")]     = shape_prism6;
-        ShapeKeyWords_[std::string("prism3x")]    = shape_prism3x;
-        ShapeKeyWords_[std::string("sawtooth")]   = shape_sawtooth;
-        ShapeKeyWords_[std::string("custom")]     = shape_custom;
+        ShapeKeyWords_[std::string("sphere")]         = shape_sphere;
+        ShapeKeyWords_[std::string("pyramid")]        = shape_pyramid;
+        ShapeKeyWords_[std::string("trunccone")]      = shape_trunccone;
+        ShapeKeyWords_[std::string("prism3")]         = shape_prism3;
+        ShapeKeyWords_[std::string("prism6")]         = shape_prism6;
+        ShapeKeyWords_[std::string("prism3x")]        = shape_prism3x;
+        ShapeKeyWords_[std::string("sawtooth")]       = shape_sawtooth;
+        ShapeKeyWords_[std::string("custom")]         = shape_custom;
       
         /* shape parameter type keywords */
 
         ShapeParamKeyWords_[std::string("radius")]    = param_radius;
-        ShapeParamKeyWords_[std::string("xsize")]    = param_xsize;
-        ShapeParamKeyWords_[std::string("ysize")]    = param_ysize;
+        ShapeParamKeyWords_[std::string("xsize")]     = param_xsize;
+        ShapeParamKeyWords_[std::string("ysize")]     = param_ysize;
         ShapeParamKeyWords_[std::string("height")]    = param_height;
-        ShapeParamKeyWords_[std::string("edge")]    = param_edge;
-        ShapeParamKeyWords_[std::string("baseangle")]  = param_baseangle;
+        ShapeParamKeyWords_[std::string("edge")]      = param_edge;
+        ShapeParamKeyWords_[std::string("baseangle")] = param_baseangle;
       
-
-
         /* statistic type keywords */
 
         StatisticKeyWords_[std::string("none")]     = stat_none;
@@ -312,12 +322,12 @@ namespace hig {
 
         /* lattice type keywords */
 
-        LatticeKeyWords_[std::string("bcc")]  = lattice_bcc;
+        LatticeKeyWords_[std::string("bcc")]    = lattice_bcc;
         LatticeKeyWords_[std::string("cubic")]  = lattice_cubic;
-        LatticeKeyWords_[std::string("fcc")]  = lattice_fcc;
-        LatticeKeyWords_[std::string("fco")]  = lattice_fco;
-        LatticeKeyWords_[std::string("hcp")]  = lattice_hcp;
-        LatticeKeyWords_[std::string("hex")]  = lattice_hex;
+        LatticeKeyWords_[std::string("fcc")]    = lattice_fcc;
+        LatticeKeyWords_[std::string("fco")]    = lattice_fco;
+        LatticeKeyWords_[std::string("hcp")]    = lattice_hcp;
+        LatticeKeyWords_[std::string("hex")]    = lattice_hex;
 
         /* output region type keywords */
 
@@ -327,29 +337,42 @@ namespace hig {
 
         /* structure grain/ensemble correlation keywords */
 
-        StructCorrelationKeyWords_[std::string("nGnE")]  = structcorr_nGnE;
+        StructCorrelationKeyWords_[std::string("nGnE")] = structcorr_nGnE;
         StructCorrelationKeyWords_[std::string("nGE")]  = structcorr_nGE;
         StructCorrelationKeyWords_[std::string("GnE")]  = structcorr_GnE;
-        StructCorrelationKeyWords_[std::string("GE")]  = structcorr_GE;
+        StructCorrelationKeyWords_[std::string("GE")]   = structcorr_GE;
 
         /* fitting algorithm name keywords */
 
-        FittingAlgorithmKeyWords_[std::string("lmvm")]    = algo_lmvm;
-        FittingAlgorithmKeyWords_[std::string("pounders")]    = algo_pounders;
-        FittingAlgorithmKeyWords_[std::string("pso")]      = algo_pso;
-        FittingAlgorithmKeyWords_[std::string("bruteforce")]  = algo_bruteforce;
-        FittingAlgorithmKeyWords_[std::string("none_pounders")]    = algo_none_pounders;
+        FittingAlgorithmKeyWords_[std::string("lmvm")]          = algo_lmvm;
+        FittingAlgorithmKeyWords_[std::string("pounders")]      = algo_pounders;
+        FittingAlgorithmKeyWords_[std::string("pso")]           = algo_pso;
+        FittingAlgorithmKeyWords_[std::string("bruteforce")]    = algo_bruteforce;
+        FittingAlgorithmKeyWords_[std::string("none_pounders")] = algo_none_pounders;
 
         /* fitting algorithm parameter keywords */
 
         // pounders
-        FitAlgorithmParamKeyWords_[std::string("pounders_delta")]  = algo_pounders_param_delta;
+        FitAlgorithmParamKeyWords_[std::string("pounders_delta")]       = algo_pounders_param_delta;
+
         // pso
-        FitAlgorithmParamKeyWords_[std::string("pso_omega")]    = algo_pso_param_omega;
-        FitAlgorithmParamKeyWords_[std::string("pso_phi1")]      = algo_pso_param_phi1;
-        FitAlgorithmParamKeyWords_[std::string("pso_phi2")]      = algo_pso_param_phi2;
-        FitAlgorithmParamKeyWords_[std::string("pso_num_particles")]= algo_pso_param_nparticle;
+        FitAlgorithmParamKeyWords_[std::string("pso_omega")]            = algo_pso_param_omega;
+        FitAlgorithmParamKeyWords_[std::string("pso_phi1")]             = algo_pso_param_phi1;
+        FitAlgorithmParamKeyWords_[std::string("pso_phi2")]             = algo_pso_param_phi2;
+        FitAlgorithmParamKeyWords_[std::string("pso_num_particles")]    = algo_pso_param_nparticle;
         FitAlgorithmParamKeyWords_[std::string("pso_num_generations")]  = algo_pso_param_ngen;
+
+        /* fitting distance metric keywords */
+
+        FittingDistanceMetricKeyWords_[std::string("sqrt_unit_l1")]           = metric_sqrt_unit_norm_l1;
+        FittingDistanceMetricKeyWords_[std::string("sqrt_unit_l2")]           = metric_sqrt_unit_norm_l2;
+        FittingDistanceMetricKeyWords_[std::string("sqrt_c_l2")]              = metric_sqrt_c_norm_l2;
+        FittingDistanceMetricKeyWords_[std::string("cbrt_unit_l1")]           = metric_cbrt_unit_norm_l1;
+        FittingDistanceMetricKeyWords_[std::string("cbrt_unit_l2")]           = metric_cbrt_unit_norm_l2;
+        FittingDistanceMetricKeyWords_[std::string("cbrt_c_l2")]              = metric_cbrt_c_norm_l2;
+        FittingDistanceMetricKeyWords_[std::string("sqrt_unit_l1_residual")]  = metric_sqrt_unit_norm_l1_residual;
+        FittingDistanceMetricKeyWords_[std::string("sqrt_unit_l2_residual")]  = metric_sqrt_unit_norm_l2_residual;
+        FittingDistanceMetricKeyWords_[std::string("sqrt_c_l2_residual")]     = metric_sqrt_c_norm_l2_residual;
 
         /* boolean keywords */
 
@@ -365,6 +388,7 @@ namespace hig {
         BooleanKeyWords_[std::string("no")]       = false;
         BooleanKeyWords_[std::string("No")]       = false;
         BooleanKeyWords_[std::string("NO")]       = false;
+
     } // TokenMapper()
 
     // singleton

@@ -885,6 +885,9 @@ namespace hig {
       case fit_algorithm_regularization_token:
         break;
 
+      case fit_algorithm_distance_metric_token:
+        break;
+
       default:
         std::cerr << "error: non keyword token in keyword's position"
               << std::endl;
@@ -1764,6 +1767,11 @@ namespace hig {
       case fit_algorithm_name_token:
         curr_fit_algo_.name(TokenMapper::instance().get_fit_algorithm_name(str));
         curr_fit_algo_.name_str(str);
+        break;
+
+      case fit_algorithm_distance_metric_token:
+        std::cout << "********* dm: " << str << ", " << TokenMapper::instance().get_fit_distance_metric(str) << std::endl;
+        curr_fit_algo_.distance_metric(TokenMapper::instance().get_fit_distance_metric(str));
         break;
 
       case fit_algorithm_restart_token:
