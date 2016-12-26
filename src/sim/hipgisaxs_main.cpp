@@ -2185,13 +2185,11 @@ namespace hig {
       switch(dist[i]) {
 
         case stat_none:
-          std::cout << "**** " << i << " is none" << std::endl;
           samples.push_back(mean[i]);
           weights.push_back(1.0);
           break;
 
         case stat_gaussian:
-          std::cout << "**** " << i << " is gaussian" << std::endl;
           min = mean[i] - width * stddev[i];
           dx = (2 * width) * stddev[i] / (max_nvals + 1);
           for(int j = 0; j < max_nvals; ++ j) {
@@ -2202,7 +2200,6 @@ namespace hig {
           break;
 
         case stat_cauchy:
-          std::cout << "**** " << i << " is cauchy" << std::endl;
           min = mean[i] - width * stddev[i];
           dx = (2 * width) * stddev[i] / (max_nvals + 1);
           for(int j = 0; j < max_nvals; ++ j) {
