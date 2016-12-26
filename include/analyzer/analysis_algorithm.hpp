@@ -12,7 +12,7 @@
 #define __ANALYSIS_ALGORITHM_HPP__
 
 #include <common/typedefs.hpp>
-#include <analyzer/enums.hpp>
+//#include <analyzer/enums.hpp>
 #include <analyzer/objective_func.hpp>
 
 

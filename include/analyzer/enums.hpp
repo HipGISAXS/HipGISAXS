@@ -20,7 +20,7 @@
 
 namespace hig{
 
-  enum AlgoType{
+  enum AlgoType {
     fit_brute_force=0,
     fit_cg,
     fit_pounders,
@@ -33,7 +33,7 @@ namespace hig{
     ml_classify
   };
 
-  enum ImgMode{
+  enum ImgMode {
     q_space=0,
     angles,
     pixels

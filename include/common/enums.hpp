@@ -113,6 +113,14 @@ namespace hig {
     structcorr_GE,      /* both correlated */
   }; // enum StructCorrelationType
 
+
+  /**
+   * fitting related enums
+   */
+
+  /**
+   * fitting algorithms
+   */
   enum FittingAlgorithmName {
     algo_error,         /* error type */
     algo_null,          /* default, no algorithm */
@@ -125,6 +133,10 @@ namespace hig {
     algo_none_pso       /* dont fit, evaluate objective */
   }; // enum FittingAlgorithmName
 
+
+  /**
+   * parameters for various fitting algorithms
+   */
   enum FitAlgorithmParamType {
     algo_param_error,      /* error type */
     algo_param_null,      /* default, null parameter */
@@ -136,12 +148,34 @@ namespace hig {
     algo_pso_param_ngen      /* number of generations for pso algorithm */
   }; // enum FitAlgorithmParamType
 
+
+  /**
+   * file type of the reference data in fitting
+   */
   enum ReferenceFileType {
     reference_file_null,    /* default, null type */
     reference_file_error,    /* error type */
     reference_file_ascii,    /* plain text file */
     reference_file_edf      /* EDF file format */
   }; // ReferenceFileType
+
+
+  /**
+   * distance metrics for fitting reference data comparison
+   */
+  enum FittingDistanceMetricType {
+    metric_error,                         /* error type */
+    metric_null,                          /* default null type */
+    metric_sqrt_unit_norm_l1,             /* sqrt of intensities, unit normalized, l1 distance */
+    metric_sqrt_unit_norm_l2,             /* sqrt of intensities, unit normalized, l2 distance */
+    metric_sqrt_c_norm_l2,                /* sqrt of intensities, c normalized, l2 distance */
+    metric_cbrt_unit_norm_l1,             /* cbrt of intensities, unit normalized, l1 distance */
+    metric_cbrt_unit_norm_l2,             /* cbrt of intensities, unit normalized, l2 distance */
+    metric_cbrt_c_norm_l2,                /* cbrt of intensities, c normalized, l2 distance */
+    metric_sqrt_unit_norm_l1_residual,    /* sqrt of intensities, unit norm, l2 dist, residual */
+    metric_sqrt_unit_norm_l2_residual,    /* sqrt of intensities, unit norm, l1 dist, residual */
+    metric_sqrt_c_norm_l2_residual        /* sqrt of intensities, c norm, l2 dist, residual */
+  }; // enum FittingDistanceMetricType
 
 } // namespace hig
 
