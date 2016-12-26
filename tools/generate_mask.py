@@ -21,7 +21,7 @@ MASK_X_END = 182
 MASK_Y_BEGIN = 0
 MASK_Y_END = 332
 
-MASK_BEGINS = [ (145, 0), (0, 285) ]
+MASK_BEGINS = [ (145, 0), (0, 270) ]
 MASK_ENDS = [ (182, 332), (327, 332) ]
 
 
