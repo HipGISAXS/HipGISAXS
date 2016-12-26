@@ -5,6 +5,7 @@
  *  Created: Oct 15, 2012
  *
  *  Author: Abhinav Sarje <asarje@lbl.gov>
+ *
  *  Licensing: The HipGISAXS software is only available to be downloaded and
  *  used by employees of academic research institutions, not-for-profit
  *  research laboratories, or governmental research facilities. Please read the
@@ -17,8 +18,6 @@
 #include <complex>
 #include <cuComplex.h>
 
-#include <woo/timer/woo_boostchronotimers.hpp>
-//#include <sf/sf.hpp>
 #include <sf/gpu/sf_gpu.cuh>
 #include <model/qgrid.hpp>
 #include <common/typedefs.hpp>

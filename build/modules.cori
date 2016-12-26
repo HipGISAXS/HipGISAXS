@@ -1,5 +1,17 @@
+## gcc above 4.9 not compatible with intel compilers!!
+## cray-petsc 3.4.4 gives errors!!
+
+module unload darshan       ## necessary when using vtune
+
 module load python scons
 module load gcc/4.9.3
 module load boost
-#module load cray-petsc
+module load cray-petsc
 #module load papi
+#module load sde
+#module load vtune
+
+
+export TIFFDIR=$HOME/local/tiff-4.0.4-cori
+export LD_LIBRARY_PATH=$TIFFDIR/lib:$LD_LIBRARY_PATH
+export CRAY_LD_LIBRARY_PATH=$TIFFDIR/lib:$CRAY_LD_LIBRARY_PATH
