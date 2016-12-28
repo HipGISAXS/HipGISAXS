@@ -138,14 +138,16 @@ namespace hig {
    * parameters for various fitting algorithms
    */
   enum FitAlgorithmParamType {
-    algo_param_error,      /* error type */
-    algo_param_null,      /* default, null parameter */
+    algo_param_error,           /* error type */
+    algo_param_null,            /* default, null parameter */
     algo_pounders_param_delta,  /* delta for pounders algorithm */
-    algo_pso_param_omega,    /* omega for pso algorithm */
-    algo_pso_param_phi1,    /* phi1 for pso algorithm */
-    algo_pso_param_phi2,    /* phi2 for pso algorithm */
-    algo_pso_param_nparticle,  /* number of particles for pso algorithm */
-    algo_pso_param_ngen      /* number of generations for pso algorithm */
+    algo_pso_param_omega,       /* omega for pso algorithm */
+    algo_pso_param_phi1,        /* phi1 for pso algorithm */
+    algo_pso_param_phi2,        /* phi2 for pso algorithm */
+    algo_pso_param_nparticle,   /* number of particles for pso algorithm */
+    algo_pso_param_ngen,        /* number of generations for pso algorithm */
+    algo_pso_param_tune_omega,  /* flag to enable tuning pso omega parameter */
+    algo_pso_param_type         /* type of the pso algorithm flavor */
   }; // enum FitAlgorithmParamType
 
 
