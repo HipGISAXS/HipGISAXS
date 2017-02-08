@@ -311,13 +311,10 @@ namespace hig {
 
       std::vector <real_t> fit_param_init_values() const {
         std::vector<real_t> init_vec;
-        std::cout << "Initial Vector: ";
         for(std::map<std::string, FitParam>::const_iterator i = param_data_key_map_.begin();
             i != param_data_key_map_.end(); ++ i) {
           init_vec.push_back((*i).second.init_);
-          std::cout << (*i).second.init_ << " ";
         } // for
-        std::cout << std::endl;
         return init_vec;
       } // fit_param_init_vector()
 

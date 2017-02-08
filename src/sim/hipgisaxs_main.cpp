@@ -129,7 +129,7 @@ namespace hig {
     sim_comm_ = root_comm_;
 
     if(master) {
-      std::cerr << std::endl
+      std::cout << std::endl
           << "*******************************************************************" << std::endl
           << "************************* HipGISAXS 1.0 ***************************" << std::endl
           << "*******************************************************************" << std::endl
@@ -153,7 +153,8 @@ namespace hig {
       return false;
     } // if-else
 
-    std::cerr << "**                    Wavelength: " << lambda << std::endl;
+    if(master) std::cout << "**                    Wavelength: " << lambda << std::endl;
+
     k0_ = 2 * PI_ / lambda;
 
     #ifdef FILEIO
@@ -195,20 +196,20 @@ namespace hig {
 
     #ifdef _OPENMP
       if(master)
-        std::cerr << "++      Number of OpenMP threads: "
+        std::cout << "++      Number of OpenMP threads: "
               << omp_get_max_threads() << std::endl;
     #endif
 
     #if defined USE_GPU || defined FF_ANA_GPU || defined FF_NUM_GPU
-      if(master) std::cerr << "-- Waking up GPU(s) ..." << std::flush;
+      if(master) std::cout << "-- Waking up GPU(s) ..." << std::flush;
       init_gpu();
-      if(master) std::cerr << " it woke up!" << std::endl;
+      if(master) std::cout << " it woke up!" << std::endl;
     #elif defined USE_MIC
-      if(master) std::cerr << "-- Waking up MIC(s) ..." << std::flush;
+      if(master) std::cout << "-- Waking up MIC(s) ..." << std::flush;
       init_mic();
-      if(master) std::cerr << " done." << std::endl;
+      if(master) std::cout << " done." << std::endl;
     #else
-      if(master) std::cerr << "-- Not set up to use any accelerator!" << std::endl;
+      if(master) std::cout << "-- Not set up to use any accelerator!" << std::endl;
     #endif
 
     return true;
@@ -311,7 +312,7 @@ namespace hig {
     else num_tilt = (tilt_max - tilt_min) / tilt_step + 1;
 
     if(master) {
-      std::cerr << "**                  Num alphai: " << num_alphai << std::endl
+      std::cout << "**                  Num alphai: " << num_alphai << std::endl
             << "**                     Num phi: " << num_phi << std::endl
             << "**                    Num tilt: " << num_tilt << std::endl;
     } // if
@@ -417,7 +418,7 @@ namespace hig {
           real_t tilt_rad = tilt * PI_ / 180;
 
           if(tmaster) {
-            std::cerr << "-- Computing GISAXS "
+            std::cout << "-- Computing GISAXS "
                   << i * num_phi * num_tilt + j * num_tilt + k + 1 << " / "
                   << num_alphai * num_phi * num_tilt
                   << " [alphai = " << alpha_i << ", phi = " << phi
@@ -439,10 +440,10 @@ namespace hig {
 
           #ifdef FILEIO
           if(tmaster) {
-            std::cerr << "-- Constructing GISAXS image ... " << std::flush;
+            std::cout << "-- Constructing GISAXS image ... " << std::flush;
             Image img(ncol_, nrow_, input_->compute().palette());
             img.construct_image(final_data, 0); // merge this into the contructor ...
-            std::cerr << "done." << std::endl;
+            std::cout << "done." << std::endl;
 
             if(x_max < x_min) x_max = x_min;
             // define output filename
@@ -455,20 +456,20 @@ namespace hig {
                       "/img_ai=" + alphai_s + "_rot=" + phi_s +
                       "_tilt=" + tilt_s + ".tif");
 
-            std::cerr << "**                    Image size: " << ncol_  << " x " << nrow_
+            std::cout << "**                    Image size: " << ncol_  << " x " << nrow_
                   << std::endl;
-            std::cerr << "-- Saving image in " << output << " ... " << std::flush;
+            std::cout << "-- Saving image in " << output << " ... " << std::flush;
             img.save(output);
-            std::cerr << "done." << std::endl;
+            std::cout << "done." << std::endl;
 
             // save the actual data into a file also
             std::string data_file(output_subdir_ + 
                     "/gisaxs_ai=" + alphai_s + "_rot=" + phi_s +
                     "_tilt=" + tilt_s + ".out");
-            std::cerr << "-- Saving raw data in " << data_file << " ... "
+            std::cout << "-- Saving raw data in " << data_file << " ... "
                 << std::flush;
             save_gisaxs(final_data, data_file);
-            std::cerr << "done." << std::endl;
+            std::cout << "done." << std::endl;
           } // if
           #else
             for (int i = 0; i < nrow_;  i++){
@@ -588,16 +589,16 @@ namespace hig {
           alphai_b << alpha_i; alphai_s = alphai_b.str();
           std::string output(output_subdir_ + 
                     "/img_ai=" + alphai_s + "_averaged.tif");
-          std::cerr << "-- Saving averaged image in " << output << " ... " << std::flush;
+          std::cout << "-- Saving averaged image in " << output << " ... " << std::flush;
           img.save(output);
-          std::cerr << "done." << std::endl;
+          std::cout << "done." << std::endl;
 
           // save the actual data into a file also
           std::string data_file(output_subdir_ + 
                   "/gisaxs_ai=" + alphai_s + "_averaged.out");
-          std::cerr << "-- Saving averaged raw data in " << data_file << " ... " << std::flush;
+          std::cout << "-- Saving averaged raw data in " << data_file << " ... " << std::flush;
           save_gisaxs(averaged_data, data_file);
-          std::cerr << "done." << std::endl;
+          std::cout << "done." << std::endl;
 
           delete[] averaged_data;
         } // if
@@ -611,7 +612,7 @@ namespace hig {
 
     sim_timer.stop();
     if(master) {
-      std::cerr << "**         Total simulation time: " << sim_timer.elapsed_msec() << " ms."
+      std::cout << "**         Total simulation time: " << sim_timer.elapsed_msec() << " ms."
             << std::endl;
     } // if
 
@@ -676,7 +677,7 @@ namespace hig {
     sim_timer.stop();
     #if VERBOSE_LEVEL > VERBOSE_LEVEL_ZERO
     if(master)
-      std::cerr << "**        Total Simulation time: " << sim_timer.elapsed_msec()
+      std::cout << "**        Total Simulation time: " << sim_timer.elapsed_msec()
             << " ms." << std::endl;
     #endif
 
@@ -766,7 +767,7 @@ namespace hig {
 
       #if VERBOSE_LEVEL > VERBOSE_LEVEL_ONE
       if(smaster) {
-        std::cerr << "-- Processing structure " << s_num + 1 << " ..." << std::endl;
+        std::cout << "-- Processing structure " << s_num + 1 << " ..." << std::endl;
       } // if
       #endif
 
@@ -812,7 +813,7 @@ namespace hig {
 
       #if VERBOSE_LEVEL > VERBOSE_LEVEL_ONE
       if(smaster) {
-        std::cerr << "-- Grains: " << num_grains << std::endl;
+        std::cout << "-- Grains: " << num_grains << std::endl;
       } // if
       #endif
 
@@ -1069,7 +1070,7 @@ namespace hig {
                     , grain_comm
                   #endif
                   )){
-              std::cerr << "Error: aborting run due to previous errors" << std::endl;
+              std::cerr << "error: aborting run due to previous errors" << std::endl;
               std::exit(1);
           }
           sftimer.pause();
@@ -1127,10 +1128,10 @@ namespace hig {
         sftimer.stop();
         #if VERBOSE_LEVEL > VERBOSE_LEVEL_ONE
         #ifndef SF_VERBOSE
-          std::cerr << "**               SF compute time: "
+          std::cout << "**               SF compute time: "
                     << sftimer.elapsed_msec() << " ms." << std::endl;
         #else
-          std::cerr << sftimer.elapsed_msec() << " ms." << std::endl;
+          std::cout << sftimer.elapsed_msec() << " ms." << std::endl;
         #endif
         #endif
 
@@ -1857,7 +1858,7 @@ namespace hig {
       } else {
       // read .spa file ...
       std::cerr << "uh-oh: seems like you wanted to read distribution from a file" << std::endl;
-      std::cerr << "FU, this has not been implemented yet" << std::endl;
+      std::cerr << "       this has not been implemented yet" << std::endl;
       return false;
     } // if-else
 
@@ -1884,8 +1885,8 @@ namespace hig {
         for (int i = 0; i < ndx * 3; i++) nn[i] = REAL_ZERO_;
         for (int i = 0; i < ndx; i++) nn[i] = angles[i];
       } else {
-        std::cerr << "Failed to calculate orientations for Bragg condition" << std::endl;
-        std::cerr << "This is a bug, please report it." << std::endl;
+        std::cerr << "error: failed to calculate orientations for Bragg condition" << std::endl;
+        std::cerr << "       this is a bug, please report it." << std::endl;
         return false;
       }
       return true;
@@ -2077,7 +2078,7 @@ namespace hig {
     } else {
       // TODO read .ori file ...
       std::cerr << "uh-oh: I guess you wanted to read orientations from a file" << std::endl;
-      std::cerr << "too bad, its not implemented yet" << std::endl;
+      std::cerr << "       too bad, its not implemented yet" << std::endl;
       return false;
     } // if-else
 
