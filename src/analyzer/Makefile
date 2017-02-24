@@ -39,8 +39,8 @@ bragg-gnu:
 andromeda-gnu:
 	( $(MAKE) hipgisaxs install                               \
 		"MPI_DIR = /usr/local/openmpi"                          \
-		"PETSC_DIR = /usr/local/petsc-3.6.3"                    \
-		"PETSC_VERSION = \"3.6\""                               \
+		"PETSC_DIR = /usr/local/petsc-3.7.4"                    \
+		"PETSC_VERSION = \"3.7\""                               \
 		"HIPGISAXS_DIR = ../.."                                 \
 		"HDF5_DIR = /usr/local/hdf5-1.8.9"                      \
 		"TIFF_DIR = /usr/local/tiff-4.0.2"                      \
