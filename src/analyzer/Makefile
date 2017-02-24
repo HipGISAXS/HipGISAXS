@@ -101,7 +101,7 @@ andromeda-intel:
 nersc-intel:
 	( $(MAKE) hipgisaxs install                               \
 		"PETSC_DIR = $(PETSC_DIR)"                              \
-		"PETSC_VERSION = \"3.6\""                               \
+		"PETSC_VERSION = \"3.7\""                               \
 		"HIPGISAXS_DIR = ../.."                                 \
 		"BOOST_DIR = $(BOOST_DIR)"                              \
 		"HDF5_DIR = $(HOME)/local/hdf5-1.8.9-edison-intel"      \
@@ -114,8 +114,9 @@ nersc-intel:
 		"DBG_FLAGS = -g"                                        \
 		"PETSC_LIBS = -lcraypetsc_intel_real"                   \
 		"HIPGISAXS_LIBS = -lhipgisaxs -lstdc++"                 \
-		"HDF5_LIBS = -lhdf5 -lz"                                \
 		)
+
+#"HDF5_LIBS = -lhdf5 -lz"                                \
 
 nersc-gnu:
 	( $(MAKE) hipgisaxs install                               \

@@ -361,6 +361,8 @@ namespace hig {
         FitAlgorithmParamKeyWords_[std::string("pso_phi2")]             = algo_pso_param_phi2;
         FitAlgorithmParamKeyWords_[std::string("pso_num_particles")]    = algo_pso_param_nparticle;
         FitAlgorithmParamKeyWords_[std::string("pso_num_generations")]  = algo_pso_param_ngen;
+        FitAlgorithmParamKeyWords_[std::string("pso_tune_omega")]       = algo_pso_param_tune_omega;
+        FitAlgorithmParamKeyWords_[std::string("pso_type")]             = algo_pso_param_type;
 
         /* fitting distance metric keywords */
 

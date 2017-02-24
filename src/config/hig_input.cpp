@@ -1770,7 +1770,6 @@ namespace hig {
         break;
 
       case fit_algorithm_distance_metric_token:
-        std::cout << "********* dm: " << str << ", " << TokenMapper::instance().get_fit_distance_metric(str) << std::endl;
         curr_fit_algo_.distance_metric(TokenMapper::instance().get_fit_distance_metric(str));
         break;
 

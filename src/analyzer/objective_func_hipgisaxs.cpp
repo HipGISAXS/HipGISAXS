@@ -85,7 +85,7 @@ namespace hig {
 
 
   ReferenceFileType get_reference_file_type(const std::string& fname) {
-    std::cout << "input file = " << fname << std::endl;
+    //std::cout << "input file = " << fname << std::endl;
     size_t len = fname.size();
     char temp_ext[16];
     int extlen = 0;
@@ -99,8 +99,6 @@ namespace hig {
     temp_ext[extlen] = '\0';
     std::string temp_ext2(temp_ext);
     std::string ext(temp_ext2.rbegin(), temp_ext2.rend());
-    std::cout << "-- Input pattern type: " << temp_ext << " " << temp_ext2 << std::endl;
-    std::cout << "-- Input pattern type: " << ext << std::endl;
     if(ext.compare(std::string("edf")) == 0) return reference_file_edf;
     if(ext.compare(std::string("EDF")) == 0) return reference_file_edf;
     if(ext.compare(std::string("txt")) == 0) return reference_file_ascii;
@@ -181,7 +179,7 @@ namespace hig {
       mask_data_.resize(n_par_ * n_ver_, 1);
       return true;
     } // if
-    std::cout << "+++++++++++++ reading mask: " << filename << std::endl;
+    //std::cout << "+++++++++++++ reading mask: " << filename << std::endl;
     std::ifstream maskf(filename);
     if(!maskf.is_open()) {
       std::cerr << "error: could not open mask data file " << filename << std::endl;

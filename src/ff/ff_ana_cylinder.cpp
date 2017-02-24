@@ -91,7 +91,9 @@ namespace hig {
     gff_.compute_cylinder(tau, eta, r, distr_r, h, distr_h, rot_, transvec_v, ff);
 #else
     // on cpu
-    std::cerr << "-- Computing cylinder FF on CPU ..." << std::endl;
+    #ifdef FF_VERBOSE
+      std::cerr << "-- Computing cylinder FF on CPU ..." << std::endl;
+    #endif
 
     ff.clear(); ff.resize(nqz_, complex_t(0.,0.));
 
