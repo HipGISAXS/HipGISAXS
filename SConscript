@@ -615,8 +615,8 @@ if not get_option('clean'):
     if using_accelerator != None:
         print("Enabling use of accelerator: %s" % using_accelerator)
 
-    if not using_mic:
-      env.Append(CCFLAGS = ["-march=core-avx2"]) #, "-msse4.1", "-msse4.2", "-mssse3"])
+    #if not using_mic:
+      #env.Append(CCFLAGS = ["-march=core-avx2"]) #, "-msse4.1", "-msse4.2", "-mssse3"])
       #env.Append(CCFLAGS = ["-no-vec"])
 
     if using_debug:
@@ -658,7 +658,7 @@ if not get_option('clean'):
         ## remove openmp flag from CCFLAGS and LINKFLAGS
         old_ccflags = gpuenv['CCFLAGS']
         ccflags = []
-        flags_to_remove = ['-fopenmp', '-openmp', '-Wno-unused-local-typedefs', "-mavx", "-mtune=core-avx2"]
+        flags_to_remove = ['-fopenmp', '-openmp', '-Wno-unused-local-typedefs', "-mavx", "-march=core-avx2"]
         for flag in old_ccflags:
             if flag not in flags_to_remove:
                 ccflags += [ flag ]

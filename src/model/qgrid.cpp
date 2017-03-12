@@ -39,49 +39,39 @@ namespace hig {
     qmin[0] = 0.0; qmax[0] = 0.0;
 
     if(type == region_pixels) {
-      std::cerr << "error: output data in pixel-space is not implemented yet.\nPlease use qspace." << std::endl;
+      std::cerr << "error: output data in pixel-space is not implemented yet. "
+                << "Please use qspace." << std::endl;
       return false;
     } else if(type == region_qspace) {
-
-      /* calculate the angles */
       // calculate angles in vertical direction
-      real_t dq = (max_point[1] - min_point[1])/(pixels[1]-1);
+      real_t dq = (max_point[1] - min_point[1]) / (pixels[1] - 1.0);
       alpha_.resize(pixels[1]);
-      for (int i = 0; i < pixels[1]; i++){
+      for (int i = 0; i < pixels[1]; ++ i) {
         real_t qpt = min_point[1] + i * dq;
-        alpha_[i] = std::asin(qpt/k0 - std::sin(alpha_i));
+        alpha_[i] = std::asin(qpt / k0 - std::sin(alpha_i));
       }
-
       // calculate angles in horizontal direction
-      dq = (max_point[0] - min_point[0])/(pixels[0]-1);
+      dq = (max_point[0] - min_point[0]) / (pixels[0] - 1.0);
       real_t cos_ai = std::cos(alpha_i);
       real_t cos_af = std::cos(alpha_[0]);
       real_vec_t theta; theta.resize(pixels[0]);
-      for (int i = 0; i < pixels[0]; i++){
+      for (int i = 0; i < pixels[0]; ++ i) {
         real_t qpt = min_point[0] + i * dq;
-        real_t kf2    = std::pow(qpt / k0, 2);
-        real_t tmp = (cos_af * cos_af + cos_ai * cos_ai - kf2)/(2 * cos_af * cos_ai);
-#ifdef DOUBLEP
-        if (tmp > 1.0) tmp = 1.0;
-#else
-        if (tmp > 1.f) tmp = 1.f;
-#endif
+        real_t kf2 = std::pow(qpt / k0, 2);
+        real_t tmp = std::min(1.0, (cos_af * cos_af + cos_ai * cos_ai - kf2) / (2 * cos_af * cos_ai));
         theta[i] = sgn(qpt) * std::acos(tmp);
       }
-
-      /* calculate q-vectors on the Ewald sphere for every pixel
-       * on the detector.
-       */
+      // calculate q-vectors on the Ewald sphere for every pixel on the detector
       std::reverse(alpha_.begin(), alpha_.end());
       for (int i = 0; i < pixels[1]; i++) {
         for (int j = 0; j < pixels[0]; j++) {
           real_t tth = theta[j];
           real_t alf = alpha_[i];
-          qx_.push_back (k0 * (std::cos(alf) * std::cos(tth) - std::cos(alpha_i)));
-          qy_.push_back (k0 * (std::cos(alf) * std::sin(tth)));
-          qz_.push_back (k0 * (std::sin(alf) + std::sin(alpha_i)));
-        }
-      }
+          qx_.push_back(k0 * (std::cos(alf) * std::cos(tth) - std::cos(alpha_i)));
+          qy_.push_back(k0 * (std::cos(alf) * std::sin(tth)));
+          qz_.push_back(k0 * (std::sin(alf) + std::sin(alpha_i)));
+        } // for
+      } // for
     } else {
       std::cerr << "error: unknown output region type" << std::endl;
       return false;
@@ -89,10 +79,8 @@ namespace hig {
 
     if(mpi_rank == 0) {
       std::cerr << "**                  Q-grid range: ("
-            << qx_[0] << ", " << qy_[0] << ", " << qz_.back()
-            << ") x ("
-            << qx_.back() << ", " << qy_.back() << ", " << qz_[0]
-            << ")" << std::endl;
+                << qx_[0] << ", " << qy_[0] << ", " << qz_.back() << ") x ("
+                << qx_.back() << ", " << qy_.back() << ", " << qz_[0] << ")" << std::endl;
     } // if
 
     return true;
@@ -100,7 +88,6 @@ namespace hig {
 
 
   bool QGrid::create_qz_extended(real_t k0, real_t alpha_i, complex_t dnl_q) {
-
     // reset qz_extended_ 
     size_t imsize = nrow_ * ncol_;
     qz_extended_.clear();
